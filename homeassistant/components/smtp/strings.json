@@ -74,11 +74,9 @@
     "step": {
       "init": {
         "data": {
-          "debug": "Enable debug mode",
           "timeout": "Connection timeout"
         },
         "data_description": {
-          "debug": "Enables debug logging for the connection and for all messages sent to and received from the server.",
           "timeout": "Maximum time to wait for SMTP server responses before terminating the request."
         }
       }

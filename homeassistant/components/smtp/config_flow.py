@@ -21,7 +21,6 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    CONF_DEBUG,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -35,7 +34,6 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
-    BooleanSelector,
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
@@ -52,7 +50,6 @@ from .const import (
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
     CONF_SERVER,
-    DEFAULT_DEBUG,
     DEFAULT_ENCRYPTION,
     DEFAULT_HOST,
     DEFAULT_PORT,
@@ -111,8 +108,7 @@ OPTIONS_SCHEMA = vol.Schema(
                 )
             ),
             vol.Coerce(int),
-        ),
-        vol.Optional(CONF_DEBUG, default=DEFAULT_DEBUG): BooleanSelector(),
+        )
     }
 )
 
@@ -176,10 +172,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
 
-        options = {
-            CONF_DEBUG: import_info.pop(CONF_DEBUG, DEFAULT_DEBUG),
-            CONF_TIMEOUT: import_info.pop(CONF_TIMEOUT, DEFAULT_TIMEOUT),
-        }
+        options = {CONF_TIMEOUT: import_info.pop(CONF_TIMEOUT, DEFAULT_TIMEOUT)}
         self._async_abort_entries_match(import_info)
 
         errors = await self.hass.async_add_executor_job(validate_input, import_info)

@@ -16,7 +16,6 @@ from homeassistant.components.smtp.const import (
 )
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState, FlowType
 from homeassistant.const import (
-    CONF_DEBUG,
     CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
@@ -245,13 +244,11 @@ async def test_options_flow(
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_DEBUG: True,
             CONF_TIMEOUT: 10,
         },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
-        CONF_DEBUG: True,
         CONF_TIMEOUT: 10,
     }

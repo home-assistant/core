@@ -14,7 +14,6 @@ from homeassistant.components.smtp.const import (
 )
 from homeassistant.config_entries import ConfigSubentryData
 from homeassistant.const import (
-    CONF_DEBUG,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SENDER,
@@ -77,7 +76,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_VERIFY_SSL: True,
         },
         options={
-            CONF_DEBUG: False,
             CONF_TIMEOUT: 5,
         },
         entry_id="123456789",
