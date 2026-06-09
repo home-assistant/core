@@ -348,6 +348,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             # Use ffmpeg to convert to raw PCM audio with the appropriate format
             proc = await asyncio.create_subprocess_exec(
                 self._ffmpeg_manager.binary,
+                "-protocol_whitelist",
+                "http,https,file,tcp,tls",
                 "-i",
                 announcement.media_id,
                 "-f",
@@ -357,8 +359,6 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
                 "-ar",
                 str(_TTS_SAMPLE_RATE),
                 "-nostats",
-                "-protocol_whitelist",
-                "http,https,file",
                 "pipe:",
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
