@@ -1,11 +1,12 @@
-"""Utility functions to combine state attributes from multiple entities."""
+"""Utility functions for Group integration."""
 
 from collections.abc import Callable, Iterator
 from itertools import groupby
 from math import atan2, cos, degrees, radians, sin
 from typing import Any
 
-from homeassistant.core import State
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers import entity_registry as er
 
 
 def find_state_attributes(states: list[State], key: str) -> Iterator[Any]:
@@ -99,3 +100,16 @@ def reduce_attribute(
         return attrs[0]
 
     return reduce(*attrs)
+
+
+def async_hide_members(
+    hass: HomeAssistant, members: list[str], hidden_by: er.RegistryEntryHider | None
+) -> None:
+    """Hide or unhide group members."""
+    registry = er.async_get(hass)
+    for member in members:
+        if not (entity_id := er.async_resolve_entity_id(registry, member)):
+            continue
+        if entity_id not in registry.entities:
+            continue
+        registry.async_update_entity(entity_id, hidden_by=hidden_by)
