@@ -35,7 +35,7 @@ async def test_log_filtering(
 
     assert await async_setup_component(
         hass,
-        "logger",
+        DOMAIN,
         {
             "logger": {
                 "default": "warning",
@@ -104,7 +104,7 @@ async def test_setting_level(hass: HomeAssistant) -> None:
     with patch("logging.getLogger", mocks.__getitem__):
         assert await async_setup_component(
             hass,
-            "logger",
+            DOMAIN,
             {
                 "logger": {
                     "default": "warning",
@@ -169,7 +169,7 @@ async def test_can_set_level_from_yaml(hass: HomeAssistant) -> None:
 
     assert await async_setup_component(
         hass,
-        "logger",
+        DOMAIN,
         {
             "logger": {
                 "logs": {
@@ -223,7 +223,7 @@ async def test_can_set_level_from_store(
         "key": "core.logger",
         "version": 1,
     }
-    assert await async_setup_component(hass, "logger", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await _assert_log_levels(hass)
     _reset_logging()
 
@@ -336,7 +336,7 @@ async def test_can_set_integration_level_from_store(
         "key": "core.logger",
         "version": 1,
     }
-    assert await async_setup_component(hass, "logger", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     assert logging.getLogger(INTEGRATION_NS).isEnabledFor(logging.DEBUG) is False
     assert logging.getLogger(INTEGRATION_NS).isEnabledFor(logging.WARNING) is True
@@ -363,7 +363,7 @@ async def test_chattier_log_level_wins_1(
     }
     assert await async_setup_component(
         hass,
-        "logger",
+        DOMAIN,
         {
             "logger": {
                 "logs": {
@@ -397,7 +397,7 @@ async def test_chattier_log_level_wins_2(
         "version": 1,
     }
     assert await async_setup_component(
-        hass, "logger", {"logger": {"logs": {INTEGRATION_NS: "debug"}}}
+        hass, DOMAIN, {"logger": {"logs": {INTEGRATION_NS: "debug"}}}
     )
 
     assert logging.getLogger(INTEGRATION_NS).isEnabledFor(logging.DEBUG) is True
@@ -421,7 +421,7 @@ async def test_log_once_removed_from_store(
     }
     hass_storage["core.logger"] = store_contents
 
-    assert await async_setup_component(hass, "logger", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     assert hass_storage["core.logger"]["data"] == store_contents["data"]
 
@@ -438,7 +438,7 @@ async def test_services_require_admin(
     hass: HomeAssistant, hass_read_only_user: MockUser, service: str
 ) -> None:
     """Test logger services require admin."""
-    assert await async_setup_component(hass, "logger", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     with pytest.raises(Unauthorized):
         await hass.services.async_call(
