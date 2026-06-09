@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import Final, override
 
 from whirlpool.appliance import Appliance
+from whirlpool.oven import Cavity as OvenCavity, CookMode, Oven
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import UnitOfTemperature
@@ -14,9 +15,26 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import WhirlpoolConfigEntry
 from .const import DOMAIN
-from .entity import WhirlpoolEntity
+from .entity import WhirlpoolEntity, WhirlpoolOvenEntity
 
 PARALLEL_UPDATES = 1
+
+# Selectable oven cook modes (Standby is not user-selectable). The option
+# strings match the translations under entity.select.oven_cook_mode.
+OVEN_COOK_MODES: Final[dict[CookMode, str]] = {
+    CookMode.Bake: "bake",
+    CookMode.ConvectBake: "convection_bake",
+    CookMode.Broil: "broil",
+    CookMode.ConvectBroil: "convection_broil",
+    CookMode.ConvectRoast: "convection_roast",
+    CookMode.KeepWarm: "keep_warm",
+    CookMode.AirFry: "air_fry",
+}
+OPTION_TO_OVEN_COOK_MODE: Final = {v: k for k, v in OVEN_COOK_MODES.items()}
+
+# Target temperature (Celsius) used when a mode is selected while the oven is
+# idle and has no target set yet.
+DEFAULT_OVEN_TEMP = 175
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,11 +67,18 @@ async def async_setup_entry(
     """Set up the select platform."""
     appliances_manager = config_entry.runtime_data
 
-    async_add_entities(
+    entities: list[SelectEntity] = [
         WhirlpoolSelectEntity(refrigerator, description)
         for refrigerator in appliances_manager.refrigerators
         for description in REFRIGERATOR_DESCRIPTIONS
+    ]
+    entities.extend(
+        WhirlpoolOvenCookModeSelect(oven, cavity)
+        for oven in appliances_manager.ovens
+        for cavity in (OvenCavity.Upper, OvenCavity.Lower)
+        if oven.get_oven_cavity_exists(cavity)
     )
+    async_add_entities(entities)
 
 
 class WhirlpoolSelectEntity(WhirlpoolEntity, SelectEntity):
@@ -84,3 +109,30 @@ class WhirlpoolSelectEntity(WhirlpoolEntity, SelectEntity):
                 translation_domain=DOMAIN,
                 translation_key="invalid_value_set",
             ) from err
+
+
+class WhirlpoolOvenCookModeSelect(WhirlpoolOvenEntity, SelectEntity):
+    """Settable cook mode for an oven cavity."""
+
+    _appliance: Oven
+    _attr_options = list(OVEN_COOK_MODES.values())
+
+    def __init__(self, appliance: Oven, cavity: OvenCavity) -> None:
+        """Initialize the oven cook mode select."""
+        super().__init__(appliance, cavity, "oven_cook_mode", "-cook_mode")
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the current cook mode, if it is a selectable one."""
+        return OVEN_COOK_MODES.get(self._appliance.get_cook_mode(self.cavity))
+
+    async def async_select_option(self, option: str) -> None:
+        """Set the cook mode, keeping the current/last target temperature."""
+        target = self._appliance.get_target_temp(self.cavity) or DEFAULT_OVEN_TEMP
+        WhirlpoolOvenCookModeSelect._check_service_request(
+            await self._appliance.set_cook(
+                target_temp=target,
+                mode=OPTION_TO_OVEN_COOK_MODE[option],
+                cavity=self.cavity,
+            )
+        )
