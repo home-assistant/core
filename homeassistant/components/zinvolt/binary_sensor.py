@@ -30,7 +30,7 @@ POINT_ENTITIES = {
 class ZinvoltBatteryStateDescription(BinarySensorEntityDescription):
     """Binary sensor description for Zinvolt battery state."""
 
-    is_on_fn: Callable[[ZinvoltData], bool]
+    is_on_fn: Callable[[ZinvoltData], bool | None]
 
 
 SENSORS: tuple[ZinvoltBatteryStateDescription, ...] = (
@@ -60,6 +60,7 @@ async def async_setup_entry(
         ZinvoltPointBinarySensor(coordinator, battery.serial_number, point)
         for coordinator in entry.runtime_data.values()
         for battery in coordinator.battery_units.values()
+        if battery.serial_number in coordinator.data.batteries
         for point in coordinator.data.batteries[battery.serial_number].points
         if point in POINT_ENTITIES
     )
@@ -84,7 +85,7 @@ class ZinvoltBatteryStateBinarySensor(ZinvoltEntity, BinarySensorEntity):
         )
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
