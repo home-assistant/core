@@ -10,6 +10,7 @@ from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import async_init_integration, create_entry
+from .conftest import MockedAnovaWebsocketHandler
 
 from tests.common import MockConfigEntry
 
@@ -60,6 +61,32 @@ async def test_websocket_failure(
     """Test that we successfully handle a websocket failure on setup."""
     entry = await async_init_integration(hass)
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_websocket_reconnects_on_disconnect(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test that the integration automatically reconnects when the websocket drops."""
+    entry = await async_init_integration(hass)
+
+    initial_call_count = entry.runtime_data.api.create_websocket.call_count
+    ws_handler = entry.runtime_data.api.websocket_handler
+    assert isinstance(ws_handler, MockedAnovaWebsocketHandler)
+
+    ws_handler.simulate_disconnect()
+    # First call lets _wait_for_disconnect complete and schedules the done callback.
+    # Second call processes the done callback, creates the reconnect task, and waits for it.
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert entry.runtime_data.api.create_websocket.call_count == initial_call_count + 1
+    new_ws_handler = entry.runtime_data.api.websocket_handler
+    assert new_ws_handler is not ws_handler
+    for coordinator in entry.runtime_data.coordinators:
+        device = new_ws_handler.devices.get(coordinator.device_unique_id)
+        assert device is not None
+        assert device.update_listener == coordinator.async_set_updated_data
 
 
 async def test_migration_removing_devices_in_config_entry(

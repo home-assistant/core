@@ -1,5 +1,6 @@
 """The Anova integration."""
 
+import asyncio
 import logging
 from typing import TYPE_CHECKING
 
@@ -11,8 +12,9 @@ from anova_wifi import (
     WebsocketFailure,
 )
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import aiohttp_client
 
@@ -21,6 +23,58 @@ from .coordinator import AnovaConfigEntry, AnovaCoordinator, AnovaData
 PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+@callback
+def _async_setup_disconnect_listener(
+    hass: HomeAssistant,
+    entry: AnovaConfigEntry,
+) -> None:
+    """Register a done callback on the websocket listener task to reconnect on drop."""
+    ws_handler = entry.runtime_data.api.websocket_handler
+    if ws_handler is None or ws_handler._message_listener is None:  # noqa: SLF001
+        return
+
+    @callback
+    def _async_on_message_listener_done(task: asyncio.Future[None]) -> None:
+        if task.cancelled():
+            return
+        if entry.state is not ConfigEntryState.LOADED:
+            return
+        entry.async_create_background_task(
+            hass,
+            _async_reconnect_websocket(hass, entry),
+            "anova_websocket_reconnect",
+        )
+
+    ws_handler._message_listener.add_done_callback(  # noqa: SLF001
+        _async_on_message_listener_done
+    )
+
+
+async def _async_reconnect_websocket(
+    hass: HomeAssistant,
+    entry: AnovaConfigEntry,
+) -> None:
+    """Reconnect the Anova websocket and re-wire device coordinators."""
+    _LOGGER.warning("Anova websocket connection lost, attempting to reconnect")
+    try:
+        await entry.runtime_data.api.create_websocket()
+    except (NoDevicesFound, WebsocketFailure) as err:
+        _LOGGER.warning("Failed to reconnect to Anova websocket: %s", err)
+        return
+
+    ws_handler = entry.runtime_data.api.websocket_handler
+    if ws_handler is None:
+        return
+
+    for coordinator in entry.runtime_data.coordinators:
+        device = ws_handler.devices.get(coordinator.device_unique_id)
+        if device is not None:
+            coordinator.anova_device = device
+            device.set_update_listener(coordinator.async_set_updated_data)
+
+    _async_setup_disconnect_listener(hass, entry)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
@@ -60,13 +114,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> boo
     coordinators = [AnovaCoordinator(hass, entry, device) for device in devices]
     entry.runtime_data = AnovaData(api_jwt=api.jwt, coordinators=coordinators, api=api)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    _async_setup_disconnect_listener(hass, entry)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AnovaConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Disconnect from WS
+        ws_handler = entry.runtime_data.api.websocket_handler
+        if ws_handler is not None and ws_handler._message_listener is not None:  # noqa: SLF001
+            ws_handler._message_listener.cancel()  # noqa: SLF001
         await entry.runtime_data.api.disconnect_websocket()
     return unload_ok
 
