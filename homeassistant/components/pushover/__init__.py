@@ -65,7 +65,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a pushover config entry."""
     # Remove this entry's service instance from the cancel service registry.
-    services: dict = hass.data.get(DOMAIN, {}).get("services", {})
+    services: dict = hass.data[DOMAIN].get("services", {})
     services.pop(entry.entry_id, None)
 
     # When the last entry is removed, unregister the cancel service too.
