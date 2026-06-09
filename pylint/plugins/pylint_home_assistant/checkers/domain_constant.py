@@ -1,4 +1,8 @@
-"""Plugin to encourage correct use of DOMAIN constants in tests."""
+"""Plugin to prevent incorrect use of Platform enum in tests.
+
+This plugin checks for common test helper functions and methods
+where a domain is expected, and ensures the argument is not a Platform.
+"""
 
 from dataclasses import dataclass
 
@@ -15,7 +19,6 @@ class ArgumentCheckInfo:
 
     position: int | None
     name: str
-    allow_iterable: bool = False
 
 
 _FUNCTION_CHECKS: list[tuple[str, ArgumentCheckInfo]] = [
@@ -27,11 +30,8 @@ _METHOD_CHECKS: list[tuple[str, str, ArgumentCheckInfo]] = [
     ("hass.config_entries.flow", "async_init", ArgumentCheckInfo(0, "handler")),
     ("hass.services", "async_call", ArgumentCheckInfo(0, "domain")),
     ("hass.services", "call", ArgumentCheckInfo(0, "domain")),
-    ("hass.states", "async_entity_ids", ArgumentCheckInfo(0, "domain_filter", True)),
+    ("hass.states", "async_entity_ids", ArgumentCheckInfo(0, "domain_filter")),
 ]
-
-_DOMAIN_CONSTANTS: set[str] = {"DOMAIN", "domain"}
-_DOMAIN_SUFFIXES: tuple[str, ...] = ("_DOMAIN", "_domain")
 
 
 def _check_call_node_domain_arguments(node: nodes.Call) -> nodes.NodeNG | None:
@@ -73,18 +73,19 @@ def _check_call_node_domain_argument(
             None,
         )
 
-    if argument_node and not _check_domain_argument(
-        argument_node, arg_info.allow_iterable
-    ):
+    if argument_node and not _check_domain_argument(argument_node):
         return argument_node
 
     return None
 
 
-def _check_domain_argument(arg_node: nodes.NodeNG, allow_iterable: bool) -> bool:
+def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
     """Ensure the argument node is a domain constant or variable.
 
-    We allow:
+    We currently only disallow `Platform.Xyz`
+
+    The plugin can be extended in the future to improve consistencey and
+    only allow certain patterns for domain arguments, such as:
         - x.DOMAIN/x.domain attribute (including *_DOMAIN/*_domain)
         - DOMAIN/domain name (including *_DOMAIN/*_domain)
         - string literals
@@ -94,29 +95,10 @@ def _check_domain_argument(arg_node: nodes.NodeNG, allow_iterable: bool) -> bool
     """
     match arg_node:
         case nodes.Attribute():
-            if (
-                attrname := arg_node.attrname
-            ) in _DOMAIN_CONSTANTS or attrname.endswith(_DOMAIN_SUFFIXES):
-                return True
-        case nodes.Const():
-            if isinstance(arg_node.value, str):
-                return True
-        case nodes.Name():
-            if (node_name := arg_node.name) in _DOMAIN_CONSTANTS or node_name.endswith(
-                _DOMAIN_SUFFIXES
-            ):
-                return True
-        case nodes.Subscript():
-            # Ignore subscripts like dict["key"]
-            return True
-        case nodes.Tuple():
-            if allow_iterable:
-                return all(
-                    _check_domain_argument(element, allow_iterable=False)
-                    for element in arg_node.elts
-                )
+            if arg_node.expr.as_string() == "Platform":
+                return False
 
-    return False
+    return True
 
 
 class DomainConstantChecker(BaseChecker):
