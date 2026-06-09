@@ -128,7 +128,6 @@ def store_live_activity_token(
 ) -> None:
     """Store a per-activity APNs token and start cleanup when needed."""
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    was_empty = not live_activity_tokens
     live_activity_tokens.setdefault(webhook_id, {})[activity_tag] = {
         ATTR_TOKEN: token,
         ATTR_LIVE_ACTIVITY_EXPIRES_AT: expires_at,
@@ -136,8 +135,7 @@ def store_live_activity_token(
     hass.data[DOMAIN][DATA_STORE].async_delay_save(
         partial(savable_state, hass), STORAGE_SAVE_DELAY_SECONDS
     )
-    if was_empty:
-        async_schedule_next_cleanup(hass)
+    async_schedule_next_cleanup(hass)
 
 
 @callback
