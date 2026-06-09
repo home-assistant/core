@@ -104,12 +104,14 @@ async def test_multiple_channels_create_separate_devices(
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entries) == 4
+    assert len(entries) == 6
     assert {entry.unique_id for entry in entries} == {
         "dev-1_ch9$mute",
         "dev-1_ch10$mute",
-        "dev-1_ch9$camera",
-        "dev-1_ch10$camera",
+        "dev-1_ch9$camera_sd",
+        "dev-1_ch9$camera_hd",
+        "dev-1_ch10$camera_sd",
+        "dev-1_ch10$camera_hd",
     }
     for entry in entries:
         device_key = entry.unique_id.split("$", 1)[0]

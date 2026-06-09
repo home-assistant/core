@@ -43,21 +43,11 @@
       }
     },
     "camera": {
-      "camera": {
-        "name": "Live view"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "live_resolution": "Live stream resolution"
-        },
-        "data_description": {
-          "live_resolution": "Resolution of the live stream URL returned by Imou"
-        },
-        "title": "Configure Imou"
+      "camera_hd": {
+        "name": "Live view HD"
+      },
+      "camera_sd": {
+        "name": "Live view SD"
       }
     }
   },
@@ -68,12 +58,6 @@
         "eu": "Europe",
         "na": "North America",
         "sg": "Singapore (Asia-Pacific)"
-      }
-    },
-    "live_resolution": {
-      "options": {
-        "hd": "HD",
-        "sd": "SD"
       }
     }
   }

@@ -3,22 +3,22 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE, PARAM_STORAGE_USED
+from pyimouapi.const import (
+    PARAM_HD,
+    PARAM_MOTION_DETECT,
+    PARAM_STATE,
+    PARAM_STORAGE_USED,
+)
 from pyimouapi.exceptions import ImouException
 import pytest
 
 from homeassistant.components.camera import async_get_image, async_get_stream_source
 from homeassistant.components.imou.camera import (
+    CAMERA_STREAM_RESOLUTION_SD,
     PYIMOUAPI_LIVE_PROTOCOL,
     PYIMOUAPI_SNAPSHOT_WAIT_SECONDS,
 )
-from homeassistant.components.imou.const import (
-    CONF_OPTION_LIVE_RESOLUTION,
-    DEFAULT_LIVE_RESOLUTION,
-    LIVE_RESOLUTION_HD,
-    PARAM_HEADER_DETECT,
-    PYIMOUAPI_LIVE_RESOLUTIONS,
-)
+from homeassistant.components.imou.const import PARAM_HEADER_DETECT
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -38,6 +38,7 @@ def _camera_entity_id(
     config_entry: MockConfigEntry,
     *,
     device_key: str = "d1_1",
+    camera_key: str = "camera_sd",
 ) -> str:
     """Return the entity id for a channel camera."""
     entry = next(
@@ -45,7 +46,7 @@ def _camera_entity_id(
         for registry_entry in er.async_entries_for_config_entry(
             entity_registry, config_entry.entry_id
         )
-        if registry_entry.unique_id == f"{device_key}$camera"
+        if registry_entry.unique_id == f"{device_key}${camera_key}"
     )
     return entry.entity_id
 
@@ -65,22 +66,26 @@ def _camera_entity_id(
     indirect=True,
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_camera_entity_registered_for_channel_device(
+async def test_camera_entities_registered_for_channel_device(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Channel devices register a live view camera entity."""
-    entry = next(
+    """Channel devices register SD and HD live view camera entities."""
+    entries = [
         registry_entry
         for registry_entry in er.async_entries_for_config_entry(
             entity_registry, mock_config_entry.entry_id
         )
-        if registry_entry.unique_id == "d1_1$camera"
-    )
-    assert entry.domain == "camera"
-    assert entry.translation_key == "camera"
-    assert hass.states.get(entry.entity_id) is not None
+        if registry_entry.domain == "camera"
+    ]
+    assert {entry.unique_id for entry in entries} == {
+        "d1_1$camera_sd",
+        "d1_1$camera_hd",
+    }
+    assert {entry.translation_key for entry in entries} == {"camera_sd", "camera_hd"}
+    for entry in entries:
+        assert hass.states.get(entry.entity_id) is not None
 
 
 @pytest.mark.parametrize(
@@ -108,6 +113,13 @@ async def test_no_camera_without_channel(
 
 
 @pytest.mark.parametrize(
+    ("camera_key", "expected_resolution"),
+    [
+        ("camera_sd", CAMERA_STREAM_RESOLUTION_SD),
+        ("camera_hd", PARAM_HD),
+    ],
+)
+@pytest.mark.parametrize(
     "imou_mock_devices",
     [
         [
@@ -127,55 +139,22 @@ async def test_camera_stream_source(
     entity_registry: er.EntityRegistry,
     init_integration: MagicMock,
     mock_config_entry: MockConfigEntry,
+    camera_key: str,
+    expected_resolution: str,
 ) -> None:
-    """Fetching stream source calls the vendor library with pyimouapi defaults."""
+    """Fetching stream source calls the vendor library with the entity resolution."""
     init_integration.async_get_device_stream.return_value = TEST_STREAM_URL
 
-    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    entity_id = _camera_entity_id(
+        entity_registry, mock_config_entry, camera_key=camera_key
+    )
     stream_source = await async_get_stream_source(hass, entity_id)
 
     assert stream_source == TEST_STREAM_URL
     init_integration.async_get_device_stream.assert_awaited_once()
     call = init_integration.async_get_device_stream.await_args
     assert call is not None
-    assert call.args[1] == PYIMOUAPI_LIVE_RESOLUTIONS[DEFAULT_LIVE_RESOLUTION]
-    assert call.args[2] == PYIMOUAPI_LIVE_PROTOCOL
-
-
-@pytest.mark.parametrize(
-    "imou_mock_devices",
-    [
-        [
-            create_online_device(
-                "d1",
-                "Device 1",
-                channel_id="1",
-                button_keys=(),
-            )
-        ]
-    ],
-    indirect=True,
-)
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_camera_stream_source_uses_live_resolution_option(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    init_integration: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Stream source honors the live resolution config entry option."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={CONF_OPTION_LIVE_RESOLUTION: LIVE_RESOLUTION_HD},
-    )
-    init_integration.async_get_device_stream.return_value = TEST_STREAM_URL
-
-    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
-    await async_get_stream_source(hass, entity_id)
-
-    call = init_integration.async_get_device_stream.await_args
-    assert call is not None
-    assert call.args[1] == PYIMOUAPI_LIVE_RESOLUTIONS[LIVE_RESOLUTION_HD]
+    assert call.args[1] == expected_resolution
     assert call.args[2] == PYIMOUAPI_LIVE_PROTOCOL
 
 
@@ -299,14 +278,19 @@ async def test_camera_entities_removed_when_device_leaves_account(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Camera entities are removed when the device is no longer on the account."""
-    camera_entry = next(
+    camera_entries = [
         entry
         for entry in er.async_entries_for_config_entry(
             entity_registry, mock_config_entry.entry_id
         )
-        if entry.unique_id == "d1_1$camera"
-    )
-    assert hass.states.get(camera_entry.entity_id).state != STATE_UNAVAILABLE
+        if entry.domain == "camera"
+    ]
+    assert {entry.unique_id for entry in camera_entries} == {
+        "d1_1$camera_sd",
+        "d1_1$camera_hd",
+    }
+    for camera_entry in camera_entries:
+        assert hass.states.get(camera_entry.entity_id).state != STATE_UNAVAILABLE
 
     mock_imou_ha_device_manager.async_get_devices.return_value = []
 
@@ -318,4 +302,5 @@ async def test_camera_entities_removed_when_device_leaves_account(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
         == []
     )
-    assert hass.states.get(camera_entry.entity_id) is None
+    for camera_entry in camera_entries:
+        assert hass.states.get(camera_entry.entity_id) is None

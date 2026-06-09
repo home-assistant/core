@@ -1,8 +1,14 @@
 """Support for Imou camera entities."""
 
+from dataclasses import dataclass
 from typing import Any
 
-from pyimouapi.const import PARAM_MOTION_DETECT, PARAM_STATE, PARAM_STORAGE_USED
+from pyimouapi.const import (
+    PARAM_HD,
+    PARAM_MOTION_DETECT,
+    PARAM_STATE,
+    PARAM_STORAGE_USED,
+)
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import ImouHaDevice
 
@@ -11,23 +17,33 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_OPTION_LIVE_RESOLUTION,
-    DEFAULT_LIVE_RESOLUTION,
-    PARAM_HEADER_DETECT,
-    PYIMOUAPI_LIVE_RESOLUTIONS,
-    imou_device_identifier,
-)
+from .const import PARAM_HEADER_DETECT, imou_device_identifier
 from .coordinator import ImouConfigEntry, ImouDataUpdateCoordinator
 from .entity import ImouEntity
 
 PARALLEL_UPDATES = 1
 
-ENTITY_TYPE_CAMERA = "camera"
+CAMERA_STREAM_RESOLUTION_SD = "SD"
 
-# Defaults for pyimouapi ImouHaDeviceManager APIs without HA options (see async_get_stream_url).
+# Defaults for pyimouapi ImouHaDeviceManager APIs (see async_get_stream_url).
 PYIMOUAPI_LIVE_PROTOCOL = "https"
 PYIMOUAPI_SNAPSHOT_WAIT_SECONDS = 3
+
+
+@dataclass(frozen=True, kw_only=True)
+class ImouCameraEntityDescription:
+    """Description of an Imou camera entity for a device channel."""
+
+    key: str
+    resolution: str
+
+
+CAMERA_ENTITIES = (
+    ImouCameraEntityDescription(
+        key="camera_sd", resolution=CAMERA_STREAM_RESOLUTION_SD
+    ),
+    ImouCameraEntityDescription(key="camera_hd", resolution=PARAM_HD),
+)
 
 
 def _iter_cameras(
@@ -48,9 +64,10 @@ async def async_setup_entry(
     def _add_cameras(new_devices: list[ImouHaDevice]) -> None:
         device_keys = {imou_device_identifier(device) for device in new_devices}
         async_add_entities(
-            ImouCamera(coordinator, device)
+            ImouCamera(coordinator, device, description)
             for device in _iter_cameras(coordinator)
             if imou_device_identifier(device) in device_keys
+            for description in CAMERA_ENTITIES
         )
 
     coordinator.new_device_callbacks.append(_add_cameras)
@@ -71,19 +88,19 @@ class ImouCamera(ImouEntity, Camera):
         self,
         coordinator: ImouDataUpdateCoordinator,
         device: ImouHaDevice,
+        description: ImouCameraEntityDescription,
     ) -> None:
         """Initialize the camera entity."""
+        self._camera_description = description
         Camera.__init__(self)
-        super().__init__(coordinator, ENTITY_TYPE_CAMERA, device)
+        super().__init__(coordinator, description.key, device)
 
     async def stream_source(self) -> str | None:
         """Return the live stream URL from the Imou cloud."""
-        options = self.coordinator.config_entry.options
-        resolution = options.get(CONF_OPTION_LIVE_RESOLUTION, DEFAULT_LIVE_RESOLUTION)
         try:
             return await self.coordinator.device_manager.async_get_device_stream(
                 self.device,
-                PYIMOUAPI_LIVE_RESOLUTIONS[resolution],
+                self._camera_description.resolution,
                 PYIMOUAPI_LIVE_PROTOCOL,
             )
         except ImouException as err:
