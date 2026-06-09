@@ -13,6 +13,7 @@ import yaml
 
 from homeassistant.components import conversation, cover, media_player, weather
 from homeassistant.components.conversation import (
+    DOMAIN,
     async_get_agent,
     default_agent,
     get_agent_manager,
@@ -87,7 +88,7 @@ class OrderBeerIntentHandler(intent.IntentHandler):
 async def init_components(hass: HomeAssistant) -> None:
     """Initialize relevant components with empty configs."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, "intent", {})
 
 
@@ -266,7 +267,7 @@ async def test_expose_flag_automatically_set(
 
     assert async_get_assistant_settings(hass, conversation.DOMAIN) == {}
 
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     with patch("homeassistant.components.http.start_http_server_and_save_config"):
         await hass.async_start()
@@ -2486,7 +2487,7 @@ async def test_custom_sentences_config(
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
         hass,
-        "conversation",
+        DOMAIN,
         {"conversation": {"intents": {"StealthMode": ["engage stealth mode"]}}},
     )
     assert await async_setup_component(hass, "intent", {})
@@ -2723,7 +2724,7 @@ async def test_custom_sentences_priority(
         custom_sentences_file.seek(0)
 
         assert await async_setup_component(hass, "homeassistant", {})
-        assert await async_setup_component(hass, "conversation", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         assert await async_setup_component(hass, "light", {})
         assert await async_setup_component(hass, "intent", {})
         assert await async_setup_component(
@@ -2768,7 +2769,7 @@ async def test_config_sentences_priority(
     assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(
         hass,
-        "conversation",
+        DOMAIN,
         {
             "conversation": {
                 "intents": {

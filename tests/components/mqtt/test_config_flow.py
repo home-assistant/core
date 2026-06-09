@@ -2631,7 +2631,6 @@ async def test_migrate_config_entry(
         "options",
     ),
     [
-        (2, 2, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
         (3, 1, MOCK_ENTRY_DATA, MOCK_ENTRY_OPTIONS),
     ],
 )

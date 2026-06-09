@@ -12,7 +12,7 @@ import pytest
 from homeassistant import core
 from homeassistant.components import logbook, recorder
 from homeassistant.components.automation import ATTR_SOURCE, EVENT_AUTOMATION_TRIGGERED
-from homeassistant.components.logbook import websocket_api
+from homeassistant.components.logbook import DOMAIN, websocket_api
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.util import get_instance
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
@@ -372,7 +372,7 @@ async def test_get_events_future_start_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get_events with a future start time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     future = dt_util.utcnow() + timedelta(hours=10)
 
@@ -397,7 +397,7 @@ async def test_get_events_bad_start_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get_events bad start time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -418,7 +418,7 @@ async def test_get_events_bad_end_time(
 ) -> None:
     """Test get_events bad end time."""
     now = dt_util.utcnow()
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -439,7 +439,7 @@ async def test_get_events_invalid_filters(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get_events invalid filters."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -1968,7 +1968,7 @@ async def test_event_stream_bad_start_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test event_stream bad start time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -2205,7 +2205,7 @@ async def test_event_stream_bad_end_time(
     recorder_mock: Recorder, hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test event_stream bad end time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     utc_now = dt_util.utcnow()
 
