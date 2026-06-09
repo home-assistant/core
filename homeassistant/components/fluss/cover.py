@@ -15,7 +15,7 @@ from .const import DOMAIN
 from .coordinator import FlussApiClientError, FlussConfigEntry
 from .entity import FlussEntity
 
-PARALLEL_UPDATES = 0
+PARALLEL_UPDATES = 1
 
 STATUS_OPEN = "Open"
 STATUS_CLOSED = "Closed"
