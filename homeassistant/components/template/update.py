@@ -180,12 +180,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             "_attr_release_summary",
             template_validators.string(self, CONF_RELEASE_SUMMARY),
         )
-        self.setup_template(
-            CONF_RELEASE_NOTES,
-            "",
-            template_validators.string(self, CONF_RELEASE_NOTES),
-            on_update=self._store_release_notes_template,
-        )
+
         self.setup_template(
             CONF_RELEASE_URL,
             "_attr_release_url",
@@ -202,6 +197,13 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             template_validators.number(self, CONF_UPDATE_PERCENTAGE, 0.0, 100.0),
             self._update_update_percentage,
         )
+
+        self._on_demand_templates = {}
+
+        if CONF_RELEASE_NOTES in config:
+            template = config[CONF_RELEASE_NOTES]
+            template.hass = self.hass
+            self._on_demand_templates[CONF_RELEASE_NOTES] = template
 
         self._attr_supported_features = UpdateEntityFeature(0)
         if config[CONF_BACKUP]:
@@ -258,11 +260,13 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
 
     def release_notes(self) -> str | None:
         """Return release notes rendered on demand."""
-        if (release_notes_template := self._templates.get(CONF_RELEASE_NOTES)) is None:
+        if (
+            release_notes_template := self._on_demand_templates.get(CONF_RELEASE_NOTES)
+        ) is None:
             return None
 
         try:
-            return release_notes_template.template.async_render(
+            return release_notes_template.async_render(
                 variables={
                     "this": TemplateStateFromEntityId(self.hass, self.entity_id),
                     **self._render_script_variables(),
@@ -271,22 +275,11 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             )
         except TemplateError as err:
             _LOGGER.error(
-                (
-                    "TemplateError('%s') "
-                    "while processing template '%s' "
-                    "for attribute '%s' in entity '%s'"
-                ),
+                "TemplateError('%s') while rendering release notes for entity '%s'",
                 err,
-                release_notes_template.template,
-                CONF_RELEASE_NOTES,
                 self.entity_id,
             )
             return None
-
-    @callback
-    def _store_release_notes_template(self, result: str | None) -> None:
-        """Store the rendered release notes template for later use."""
-        # There is no attribute to store the release notes in, so this dummy function is needed.
 
 
 class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
