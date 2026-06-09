@@ -56,7 +56,7 @@ class YotoOAuth2FlowHandler(
         await self.async_set_unique_id(user_id)
 
         if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            self._abort_if_unique_id_mismatch()
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
             )

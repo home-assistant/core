@@ -192,7 +192,7 @@ async def test_reauth_flow(
 @pytest.mark.usefixtures(
     "current_request_with_host", "setup_credentials", "mock_setup_entry"
 )
-async def test_reauth_wrong_account(
+async def test_reauth_unique_id_mismatch(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
@@ -213,7 +213,7 @@ async def test_reauth_wrong_account(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "wrong_account"
+    assert result["reason"] == "unique_id_mismatch"
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
