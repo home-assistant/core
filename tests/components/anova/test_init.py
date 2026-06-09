@@ -1,8 +1,8 @@
 """Test init for Anova."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
-from anova_wifi import AnovaApi
+from anova_wifi import AnovaApi, WebsocketFailure
 
 from homeassistant.components.anova.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -87,6 +87,40 @@ async def test_websocket_reconnects_on_disconnect(
         device = new_ws_handler.devices.get(coordinator.device_unique_id)
         assert device is not None
         assert device.update_listener == coordinator.async_set_updated_data
+
+
+async def test_websocket_reconnects_after_auth_expiry(
+    hass: HomeAssistant,
+    anova_api: AnovaApi,
+) -> None:
+    """Test that the integration re-authenticates and reconnects when auth has expired."""
+    entry = await async_init_integration(hass)
+
+    ws_handler = entry.runtime_data.api.websocket_handler
+    assert isinstance(ws_handler, MockedAnovaWebsocketHandler)
+
+    # Simulate: first create_websocket call fails (stale JWT), then succeeds after re-auth.
+    original_side_effect = entry.runtime_data.api.create_websocket.side_effect
+    call_count = 0
+
+    async def create_websocket_after_reauth():
+        nonlocal call_count
+        call_count += 1
+        if call_count == 1:
+            raise WebsocketFailure("Token expired")
+        await original_side_effect()
+
+    entry.runtime_data.api.create_websocket.side_effect = create_websocket_after_reauth
+    entry.runtime_data.api.authenticate = AsyncMock()
+
+    ws_handler.simulate_disconnect()
+    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    entry.runtime_data.api.authenticate.assert_called_once()
+    assert call_count == 2
+    new_ws_handler = entry.runtime_data.api.websocket_handler
+    assert new_ws_handler is not ws_handler
 
 
 async def test_migration_removing_devices_in_config_entry(

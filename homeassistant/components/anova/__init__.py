@@ -11,6 +11,7 @@ from anova_wifi import (
     NoDevicesFound,
     WebsocketFailure,
 )
+from anova_wifi.exceptions import LoginUnreachable
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICES, CONF_PASSWORD, CONF_USERNAME, Platform
@@ -60,7 +61,18 @@ async def _async_reconnect_websocket(
     _LOGGER.warning("Anova websocket connection lost, attempting to reconnect")
     try:
         await entry.runtime_data.api.create_websocket()
-    except (NoDevicesFound, WebsocketFailure) as err:
+    except WebsocketFailure:
+        try:
+            await entry.runtime_data.api.authenticate()
+        except (InvalidLogin, LoginUnreachable) as err:
+            _LOGGER.warning("Failed to re-authenticate with Anova: %s", err)
+            return
+        try:
+            await entry.runtime_data.api.create_websocket()
+        except (NoDevicesFound, WebsocketFailure) as err:
+            _LOGGER.warning("Failed to reconnect to Anova websocket: %s", err)
+            return
+    except NoDevicesFound as err:
         _LOGGER.warning("Failed to reconnect to Anova websocket: %s", err)
         return
 
