@@ -193,17 +193,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
     component.async_register_entity_service(
         TodoServices.UPDATE_LIST,
-        vol.All(
-            cv.make_entity_service_schema(
-                {
-                    vol.Optional(ATTR_STATUS): vol.In(
-                        {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
-                    ),
-                }
-            ),
-            cv.has_at_least_one_key(  # allow this to be extended later
-                ATTR_STATUS,
-            ),
+        cv.make_entity_service_schema(
+            {
+                # Note that future updates might make this Optional
+                vol.Required(ATTR_STATUS): vol.In(
+                    {TodoItemStatus.NEEDS_ACTION, TodoItemStatus.COMPLETED},
+                ),
+            }
         ),
         _async_update_todo_list,
         required_features=[TodoListEntityFeature.UPDATE_TODO_LIST],
