@@ -123,8 +123,8 @@ class ShoppingData:
         self, item_id: str | None, info: dict[str, Any], context: Context | None = None
     ) -> dict[str, JsonValueType]:
         """Update a shopping list item."""
+        # This method is optimised a single update.
         item = next((itm for itm in self.items if itm["id"] == item_id), None)
-
         if item is None:
             raise NoMatchingShoppingListItem(
                 f"Item '{item_id}' not found in shopping list"
@@ -147,19 +147,19 @@ class ShoppingData:
         context: Context | None = None,
     ) -> list[dict[str, JsonValueType]]:
         """Update multiple shopping list items."""
-        # Shortcut empty update
+        # This method is optimised for lots of updates.
         if not items:
-            return []
+            return []  # Shortcut for no updates
 
-        # Get both a list of valid ids and their locations in one pass.
+        # Get both a list of valid existing ids and their locations in one pass.
         items_index = {
             uid: idx
             for idx, itm in enumerate(self.items)
             if isinstance((uid := itm["id"]), str) and uid
         }
 
-        # Look for missing or invalid IDs. Only report the first one
-        # and stop before changing anything.
+        # Only report the first missing/invalid ID and stop before changing
+        # anything.
         first_missing_uid = next(
             (uid for uid, *_ in items if uid not in items_index), None
         )
@@ -168,16 +168,16 @@ class ShoppingData:
                 f"Item '{first_missing_uid}' not found in shopping list"
             )
 
-        # Apply updates and keep track of changes
+        # Only keep track of final state of changed items
         changed: dict[str, dict[str, JsonValueType]] = {}
         for uid, info in items:
             assert uid  # reassure the linter
             info = ITEM_UPDATE_SCHEMA(info)
-            if info:
+            if info:  # skip empty updates
                 assert isinstance(info, dict)  # reassure the linter
                 item = self.items[items_index[uid]]
                 item.update(info)
-                changed[uid] = item  # only track final state
+                changed[uid] = item
 
         await self.hass.async_add_executor_job(self.save)
         self._async_notify()
@@ -186,7 +186,7 @@ class ShoppingData:
         for item in changed_items:
             self.hass.bus.async_fire(
                 EVENT_SHOPPING_LIST_UPDATED,
-                {"action": "update", "item": item},  # only notify final states
+                {"action": "update", "item": item},
                 context=context,
             )
 

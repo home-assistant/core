@@ -28,7 +28,7 @@ async def async_setup_entry(
 
 
 def _prepare_update(item: TodoItem) -> tuple[str | None, dict[str, JsonValueType]]:
-    """Convert a HomeAssistant TodoItem to an ShoppingList item update."""
+    """Convert a HomeAssistant TodoItem to a ShoppingList item update."""
     # Leave checking the validity of the values to the update methods
     info: dict[str, JsonValueType] = {}
 

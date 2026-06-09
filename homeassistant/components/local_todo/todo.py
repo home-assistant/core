@@ -182,7 +182,6 @@ class LocalTodoListEntity(TodoListEntity):
         """Update multiple items in the To-do list."""
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
-            # Only edit items for which something changes
             await self.hass.async_add_executor_job(
                 _todo_store_bulk_edit, todo_store, items
             )

@@ -280,9 +280,9 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     async def async_update_todo_items(self, items: list[TodoItem]) -> None:
         """Update multiple items in the To-do list."""
-        # Note that there is no fallback to async_update_todo_item since
-        # integrations need to do bulk updates efficiently, but logically this
-        # should be the same as the following.
+        # Note that there is no automatic fallback to async_update_todo_item
+        # since integrations need to do bulk updates efficiently. However,
+        # logically, this must have the same effect as the following.
         #
         # for item in items:
         #     await self.async_update_todo_item(item)
@@ -492,13 +492,12 @@ async def _async_add_todo_item(entity: TodoListEntity, call: ServiceCall) -> Non
 
 
 def _prepare_update(entity: TodoListEntity, data: dict[str, Any]) -> dict[str, Any]:
-    # Note that extra fields in data are ignored.
+    """Prepare a partial update based on the fields present in the service call.
 
+    Note that extra fields in data are ignored.
+    """
     _validate_supported_features(entity.supported_features, data)
 
-    # Prepare an update based on the fields present in the service call.
-    # This allows explicitly clearing any of the extended fields present
-    # and set to None.
     info = {}
     if summary := data.get(ATTR_RENAME):
         info["summary"] = summary
@@ -527,8 +526,6 @@ async def _async_update_todo_item(entity: TodoListEntity, call: ServiceCall) -> 
             translation_placeholders={"item": item},
         )
 
-    # Perform a partial update on the existing entity based on the fields
-    # present in the update.
     updated_data = _prepare_update(entity, call.data)
     updated_item = dataclasses.replace(found, **updated_data)
 
@@ -584,10 +581,10 @@ async def _async_update_todo_list(entity: TodoListEntity, call: ServiceCall) -> 
     if not updated_data:
         return  # Shortcut for empty update
 
-    updated_items = [
-        new_item
+    updated_items = [  # only store items changed by update
+        updated_item
         for item in todo_items
-        if (new_item := dataclasses.replace(item, **updated_data)) != item
+        if (updated_item := dataclasses.replace(item, **updated_data)) != item
     ]
     if not updated_items:
         return  # Shortcut for no changes
