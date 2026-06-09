@@ -914,7 +914,7 @@ async def test_miscale_s400_packet1(hass: HomeAssistant) -> None:
 
 
 async def test_miscale_s400_packet2(hass: HomeAssistant) -> None:
-    """Test MiScale S400 second packet: impedance_high only."""
+    """Test MiScale S400 second packet: impedance_high + profile_id + stabilized."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="8C:D0:B2:F6:BE:EF",
