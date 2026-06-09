@@ -142,7 +142,7 @@ class OPNsenseSensorEntity(
 
         if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
             # Should be the number of seconds until the device expires, so convert to a timestamp
-            if isinstance(value, int):
+            if type(value) is int:
                 return dt_util.utcnow() + timedelta(seconds=value)
             return None
 
