@@ -93,7 +93,7 @@ async def _async_cancel_service_handler(service: ServiceCall) -> None:
         _LOGGER.debug("No Pushover service instances registered; nothing to cancel")
         return
 
-    for entry_id, instance in instances.items():
+    for entry_id, instance in list(instances.items()):
         _LOGGER.debug("Running cancel on entry %s (tag=%r)", entry_id, tag)
         await service.hass.async_add_executor_job(instance.cancel_by_tag, tag)
 
