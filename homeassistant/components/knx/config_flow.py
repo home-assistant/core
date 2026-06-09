@@ -940,7 +940,7 @@ class KNXOptionsFlow(OptionsFlowWithReload):
         """Update the ConfigEntry and finish the flow."""
         return self.async_create_entry(
             title="",
-            data=self.initial_data | self.new_entry_data,
+            options=self.initial_options | self.new_entry_options,
         )
 
     async def async_step_init(
