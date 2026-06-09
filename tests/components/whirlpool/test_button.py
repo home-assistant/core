@@ -15,9 +15,21 @@ from . import init_integration, snapshot_whirlpool_entities
 
 @pytest.fixture(
     params=[
-        ("button.single_cavity_oven_stop", "mock_oven_single_cavity_api", whirlpool.oven.Cavity.Upper),
-        ("button.dual_cavity_oven_upper_oven_stop", "mock_oven_dual_cavity_api", whirlpool.oven.Cavity.Upper),
-        ("button.dual_cavity_oven_lower_oven_stop", "mock_oven_dual_cavity_api", whirlpool.oven.Cavity.Lower),
+        (
+            "button.single_cavity_oven_stop",
+            "mock_oven_single_cavity_api",
+            whirlpool.oven.Cavity.Upper,
+        ),
+        (
+            "button.dual_cavity_oven_upper_oven_stop",
+            "mock_oven_dual_cavity_api",
+            whirlpool.oven.Cavity.Upper,
+        ),
+        (
+            "button.dual_cavity_oven_lower_oven_stop",
+            "mock_oven_dual_cavity_api",
+            whirlpool.oven.Cavity.Lower,
+        ),
     ]
 )
 def oven_button_entity(
