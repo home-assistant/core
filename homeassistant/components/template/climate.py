@@ -229,7 +229,7 @@ def hvac_modes_list(
                 result = _string_to_list(result)
 
         if isinstance(result, (list, tuple)) and all(
-            isinstance(value, (str)) for value in result
+            isinstance(value, str) for value in result
         ):
             validated = []
             invalid = []
@@ -357,7 +357,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
             template_validators.list_of_strings(self, CONF_SWING_MODES),
         )
 
-        # Swing Mode
+        # Swing Horizontal Mode
         self.setup_template(
             CONF_SWING_HORIZONTAL_MODE, "_attr_swing_horizontal_mode", cv.string
         )
@@ -408,7 +408,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
             if HVACMode.OFF in render:
                 self._attr_supported_features |= supported_features
             else:
-                self._attr_supported_features ^= supported_features
+                self._attr_supported_features &= ~supported_features
 
         self._attr_hvac_modes = render
 
@@ -527,7 +527,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         """Set one or more target temperatures."""
         common_params: dict[str, Any] = {}
         write_state = False
-        if (attr := kwargs.get(ATTR_TEMPERATURE)) and (
+        if (attr := kwargs.get(ATTR_TEMPERATURE)) is not None and (
             temperature := template_validators.number(
                 self,
                 f"{SET_TEMPERATURE_ACTION} {ATTR_TEMPERATURE}",
