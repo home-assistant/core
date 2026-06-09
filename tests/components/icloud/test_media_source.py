@@ -412,36 +412,70 @@ async def test_resolve_media(
 
 
 @pytest.mark.parametrize(
-    ("media_content_id", "service", "has_value", "exception", "exc_message"),
+    ("media_content_id", "exception", "exc_message"),
     [
         (
             "/invalid_account_id/album/album_id1/photo_id1",
-            None,
-            None,
             Unresolvable,
             "Config entry not found for account: invalid_account_id",
         ),
         (
             "/test_account_id/invalid_view/album_id1/photo_id1",
-            None,
-            None,
             Unresolvable,
             "Invalid album view type",
         ),
         (
             "/test_account_id/album/invalid_album_id/photo_id1",
-            None,
-            None,
             Unresolvable,
             "Album not found",
         ),
         (
             "/test_account_id/shared/invalid_album_id/photo_id1",
-            None,
-            None,
             Unresolvable,
             "Album not found",
         ),
+        (
+            "/test_account_id/shared/stream_id2/shared_id3",
+            Unresolvable,
+            "Unsupported media type",
+        ),
+        (
+            "",
+            Unresolvable,
+            "Incomplete media source identifier",
+        ),
+    ],
+    ids=[
+        "invalid_account_id",
+        "invalid_view",
+        "invalid_album_id_in_album_view",
+        "invalid_album_id_in_shared_view",
+        "unknown_photo_type_in_shared_stream",
+        "unknown_account",
+    ],
+)
+@pytest.mark.usefixtures("icloud_client")
+async def test_resolve_media_exceptions(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    media_content_id: str,
+    exception: type[Exception],
+    exc_message: str,
+) -> None:
+    """Test resolving media with exceptions."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    with pytest.raises(exception, match=exc_message):
+        await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}{media_content_id}", None)
+
+
+@pytest.mark.parametrize(
+    ("media_content_id", "service", "has_value", "exception", "exc_message"),
+    [
         (
             "/test_account_id/album/album_id1/photo_id1",
             "api",
@@ -498,26 +532,8 @@ async def test_resolve_media(
             Exception,
             "Incomplete media source identifier",
         ),
-        (
-            "/test_account_id/shared/stream_id2/shared_id3",
-            None,
-            None,
-            Unresolvable,
-            "Unsupported media type",
-        ),
-        (
-            "",
-            None,
-            None,
-            Unresolvable,
-            "Incomplete media source identifier",
-        ),
     ],
     ids=[
-        "invalid_account_id",
-        "invalid_view",
-        "invalid_album_id_in_album_view",
-        "invalid_album_id_in_shared_view",
         "api_not_available_for_album_view",
         "photos_not_available_for_album_view",
         "api_not_available_for_shared_view",
@@ -526,11 +542,9 @@ async def test_resolve_media(
         "shared_streams_not_available_for_shared_view",
         "stream_not_available_for_shared_stream",
         "album_not_available_for_album",
-        "unknown_photo_type_in_shared_stream",
-        "unknown_account",
     ],
 )
-async def test_resolve_media_exceptions(
+async def test_resolve_media_service_exceptions(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     icloud_client: AsyncMock,
@@ -540,27 +554,26 @@ async def test_resolve_media_exceptions(
     exception: type[Exception],
     exc_message: str,
 ) -> None:
-    """Test resolving media with exceptions."""
+    """Test resolving media with serviceexceptions."""
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    if service and exception:
-        parent = icloud_client
-        properties = service.split(".")
+    parent = icloud_client
+    properties = service.split(".")
 
-        while len(properties) > 1:
-            prop = properties.pop(0)
-            p_mock = PropertyMock()
-            setattr(parent, prop, p_mock)
-            parent = p_mock
-        setattr(
-            parent,
-            properties[0],
-            None if not has_value else PropertyMock(side_effect=exception()),
-        )
+    while len(properties) > 1:
+        prop = properties.pop(0)
+        p_mock = PropertyMock()
+        setattr(parent, prop, p_mock)
+        parent = p_mock
+    setattr(
+        parent,
+        properties[0],
+        None if not has_value else PropertyMock(side_effect=exception()),
+    )
 
     with pytest.raises(exception, match=exc_message):
         await async_resolve_media(hass, f"{URI_SCHEME}{DOMAIN}{media_content_id}", None)
@@ -636,6 +649,40 @@ async def test_resolve_media_not_configured(
 
 
 @pytest.mark.usefixtures("icloud_client")
+async def test_resolve_media_no_cache(
+    hass: HomeAssistant,
+) -> None:
+    """Test resolving media with no photo cache configured."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="test_account_id",
+        title="Test iCloud Account",
+        data={
+            "username": "test_user",
+            "password": "test_pass",
+            "with_family": False,
+            "max_interval": 0,
+            "gps_accuracy_threshold": 0,
+        },
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    config_entry.runtime_data.photo_cache = None
+
+    with pytest.raises(Unresolvable, match="Config entry not loaded"):
+        await async_resolve_media(
+            hass,
+            f"{URI_SCHEME}{DOMAIN}/test_account_id/album/album_id1/photo_id1",
+            None,
+        )
+
+
+@pytest.mark.usefixtures("icloud_client")
 async def test_media_source_view_requires_auth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -687,6 +734,26 @@ async def test_media_source_view_missing_version_returns_404(
     assert config_entry.state is ConfigEntryState.LOADED
 
     image_id = b64encode(b"test_account_id/album/album_id1/photo_id1").decode()
+    client = await hass_client()
+    resp = await client.get(f"/api/icloud/media_source/serve/thumb/{image_id}")
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.usefixtures("icloud_client")
+async def test_media_source_view_missing_photo_returns_404(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test media source view returns 404 when photo is missing."""
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    image_id = b64encode(b"test_account_id/album/album_id1/photo_id4").decode()
     client = await hass_client()
     resp = await client.get(f"/api/icloud/media_source/serve/thumb/{image_id}")
 
@@ -853,9 +920,8 @@ async def test_media_source_view_streams_content_and_headers_cache_tests(
             hdrs.LAST_MODIFIED: "Mon, 01 Jan 2024 00:00:00 GMT",
             hdrs.CONTENT_LENGTH: "6",
         }
-        if size := kwargs.get("headers", {}).get(
-            hdrs.RANGE
-        ):  # to verify that headers are passed correctly
+        if size := kwargs.get("headers", {}).get(hdrs.RANGE):
+            # to verify that headers are passed correctly
             upstream_resp.headers[hdrs.CONTENT_RANGE] = f"bytes {size.split('=')[1]}/6"
             upstream_resp.headers[hdrs.CONTENT_LENGTH] = size.split("/")[0].split("-")[
                 1

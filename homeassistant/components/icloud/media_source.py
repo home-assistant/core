@@ -71,6 +71,12 @@ def _get_icloud_account_and_title(
     return entry.runtime_data, entry.title
 
 
+async def async_setup_photo_cache(hass, account):
+    """Set up the photo cache for the iCloud account."""
+    if account.photo_cache is None:
+        account.photo_cache = PhotoCache()
+
+
 async def _get_photo_library(
     hass: HomeAssistant,
     icloud_account: IcloudAccount,
@@ -136,6 +142,7 @@ async def _get_photo_asset(
         """Get photo asset synchronously."""
         for item in album.photos:
             if item.id == identifier.photo_id:
+                PhotoCache.instance(icloud_account).set(identifier.photo_id, item)
                 return item
         return None
 
@@ -147,14 +154,13 @@ async def _get_photo_asset(
             translation_key="incomplete_media_source_identifier",
         )
 
-    photo: PhotoAsset | None = PhotoCache.instance(icloud_account).get(
-        identifier.photo_id
+    photo: PhotoAsset | None = await hass.async_add_executor_job(
+        PhotoCache.instance(icloud_account).get, identifier.photo_id
     )
     if photo is None:
         album: BasePhotoAlbum = await _get_photo_album(hass, icloud_account, identifier)
         photo = await hass.async_add_executor_job(_get_photo_asset_sync, album)
-        if photo is not None:
-            PhotoCache.instance(icloud_account).set(identifier.photo_id, photo)
+
     if photo is None:
         raise Unresolvable(
             translation_domain=DOMAIN,
@@ -190,10 +196,12 @@ class PhotoCache:
 
     @classmethod
     def instance(cls, icloud_account: IcloudAccount) -> PhotoCache:
-        """Get the singleton instance of the photo cache."""
-
+        """Get the account instance of the photo cache."""
         if icloud_account.photo_cache is None:
-            icloud_account.photo_cache = cls()
+            raise Unresolvable(
+                translation_domain=DOMAIN,
+                translation_key="config_entry_not_loaded",
+            )
         return icloud_account.photo_cache
 
     def __init__(self, max_size: int = MAX_PHOTO_CACHE_SIZE) -> None:
@@ -602,7 +610,11 @@ class IcloudMediaSourceView(HomeAssistantView):
             _LOGGER.error("Error decoding iCloud media source identifier: %s", err)
             raise web.HTTPBadRequest from err
 
-        photo = await _get_photo_asset(self._hass, identifier)
+        try:
+            photo = await _get_photo_asset(self._hass, identifier)
+        except Unresolvable as err:
+            _LOGGER.error("Error resolving iCloud media source: %s", err)
+            raise web.HTTPNotFound from err
 
         url = photo.versions.get(version, {}).get("url")
         if url is None and version.startswith("thumb"):

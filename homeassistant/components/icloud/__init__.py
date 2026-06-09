@@ -20,7 +20,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
-from .media_source import async_setup_mediasource
+from .media_source import async_setup_mediasource, async_setup_photo_cache
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -64,6 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
     entry.runtime_data = account
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_setup_photo_cache(hass, account)
 
     return True
 
