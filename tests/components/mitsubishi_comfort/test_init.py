@@ -158,6 +158,34 @@ async def test_setup_entry_resolves_address_from_entry(
     )
 
 
+async def test_setup_entry_prunes_stale_addresses(
+    hass: HomeAssistant,
+    mock_setup_integration: tuple[AsyncMock, MagicMock],
+) -> None:
+    """Test a stored address for a device no longer on the account is dropped."""
+    stale_mac = dr.format_mac("99:99:99:99:99:99")
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_ADDRESSES: {
+                dr.format_mac(MOCK_MAC): MOCK_ADDRESS,
+                stale_mac: "192.168.1.99",
+            },
+        },
+        unique_id="user-12345",
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    # The owned device keeps its address; the stale one is pruned.
+    assert entry.data[CONF_ADDRESSES] == {dr.format_mac(MOCK_MAC): MOCK_ADDRESS}
+
+
 async def test_setup_entry_skips_incomplete_devices(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,

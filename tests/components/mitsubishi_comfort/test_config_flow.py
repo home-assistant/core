@@ -220,6 +220,35 @@ async def test_dhcp_unregistered_device_ignored(
     mock_reload.assert_not_called()
 
 
+async def test_dhcp_device_without_current_entry_aborts(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test DHCP aborts when the registered device has no current owning entry.
+
+    The device exists in the registry but belongs only to an ignored entry, so
+    there is nothing to update.
+    """
+    ignored_entry = MockConfigEntry(
+        domain=DOMAIN, source=config_entries.SOURCE_IGNORE, unique_id="ignored"
+    )
+    ignored_entry.add_to_hass(hass)
+    _register_device(device_registry, ignored_entry)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=_dhcp_info("192.168.1.253"),
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    mock_reload.assert_not_called()
+
+
 async def test_dhcp_no_account_aborts(hass: HomeAssistant) -> None:
     """Test DHCP discovery with no configured account aborts without a flow."""
     result = await hass.config_entries.flow.async_init(
@@ -272,6 +301,29 @@ class TestOptionsFlow:
         assert mock_config_entry.data[CONF_ADDRESSES][dr.format_mac(MOCK_MAC)] == (
             "192.168.1.50"
         )
+
+    async def test_clears_device_ip(
+        self,
+        hass: HomeAssistant,
+        device_registry: dr.DeviceRegistry,
+        mock_config_entry: MockConfigEntry,
+    ) -> None:
+        """Test submitting a blank field removes the device's stored IP."""
+        mock_config_entry.add_to_hass(hass)
+        _register_device(device_registry, mock_config_entry)
+        # The fixture entry starts with a stored address for the device.
+        assert dr.format_mac(MOCK_MAC) in mock_config_entry.data[CONF_ADDRESSES]
+
+        result = await hass.config_entries.options.async_init(
+            mock_config_entry.entry_id
+        )
+        result = await hass.config_entries.options.async_configure(
+            result["flow_id"], {dr.format_mac(MOCK_MAC): ""}
+        )
+        await hass.async_block_till_done()
+
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert dr.format_mac(MOCK_MAC) not in mock_config_entry.data[CONF_ADDRESSES]
 
     async def test_rejects_invalid_ip(
         self,
