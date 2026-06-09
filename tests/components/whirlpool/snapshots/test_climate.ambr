@@ -193,3 +193,267 @@
     'state': 'cool',
   })
 # ---
+# name: test_all_entities[climate.dual_cavity_oven_lower_oven-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 290,
+      'min_temp': 30,
+      'preset_modes': list([
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+      'target_temp_step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.dual_cavity_oven_lower_oven',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Lower oven',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Lower oven',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': 'oven_lower',
+    'unique_id': 'said_oven_dual_lower',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[climate.dual_cavity_oven_lower_oven-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 180,
+      'friendly_name': 'Dual cavity oven Lower oven',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 290,
+      'min_temp': 30,
+      'preset_mode': 'bake',
+      'preset_modes': list([
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 5,
+      'temperature': 200,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.dual_cavity_oven_lower_oven',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[climate.dual_cavity_oven_upper_oven-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 290,
+      'min_temp': 30,
+      'preset_modes': list([
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+      'target_temp_step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.dual_cavity_oven_upper_oven',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Upper oven',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Upper oven',
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': 'oven_upper',
+    'unique_id': 'said_oven_dual_upper',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[climate.dual_cavity_oven_upper_oven-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 180,
+      'friendly_name': 'Dual cavity oven Upper oven',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 290,
+      'min_temp': 30,
+      'preset_mode': 'bake',
+      'preset_modes': list([
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 5,
+      'temperature': 200,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.dual_cavity_oven_upper_oven',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_all_entities[climate.single_cavity_oven-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 290,
+      'min_temp': 30,
+      'preset_modes': list([
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+      'target_temp_step': 5,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.single_cavity_oven',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'whirlpool',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 401>,
+    'translation_key': 'oven',
+    'unique_id': 'said_oven_single',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[climate.single_cavity_oven-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 180,
+      'friendly_name': 'Single cavity oven',
+      'hvac_action': <HVACAction.OFF: 'off'>,
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 290,
+      'min_temp': 30,
+      'preset_mode': 'bake',
+      'preset_modes': list([
+        'bake',
+        'convection_bake',
+        'broil',
+        'convection_broil',
+        'convection_roast',
+        'keep_warm',
+        'air_fry',
+      ]),
+      'supported_features': <ClimateEntityFeature: 401>,
+      'target_temp_step': 5,
+      'temperature': 200,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.single_cavity_oven',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
