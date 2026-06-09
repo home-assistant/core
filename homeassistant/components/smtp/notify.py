@@ -104,7 +104,11 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    ssl_context = create_client_context() if discovery_info[CONF_VERIFY_SSL] else None
+    ssl_context = (
+        await hass.async_add_executor_job(create_client_context)
+        if discovery_info[CONF_VERIFY_SSL]
+        else None
+    )
     mail_service = MailNotificationService(
         discovery_info[CONF_SERVER],
         discovery_info[CONF_PORT],
