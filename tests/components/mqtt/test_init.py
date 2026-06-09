@@ -875,7 +875,7 @@ async def test_reload_without_entry(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
     """Test reloading without a valid config entry set up."""
-    # Setup the MQTT integration withouut entry
+    # Setup the MQTT integration without entry
     assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     with caplog.at_level(logging.DEBUG):
