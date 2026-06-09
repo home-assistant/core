@@ -1,5 +1,6 @@
 """Tests for the OPNsense sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 import pytest
@@ -192,6 +193,7 @@ async def test_native_value_is_none_when_sensor_unavailable(
 
 
 @pytest.mark.usefixtures("mock_opnsense_client")
+@pytest.mark.freeze_time("2026-06-01T10:00:00+00:00")
 async def test_expires_sensor_returns_timestamp_for_int_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -199,7 +201,6 @@ async def test_expires_sensor_returns_timestamp_for_int_value(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test timestamp sensor converts integer seconds to a timestamp."""
-    now = dt_util.utcnow()
     arp_devices = [
         {
             "expires": 120,
@@ -232,4 +233,6 @@ async def test_expires_sensor_returns_timestamp_for_int_value(
     state = hass.states.get(expires_entity.entity_id)
     assert state is not None
     assert state.state != "unknown"
-    assert dt_util.parse_datetime(state.state) >= now
+    assert dt_util.parse_datetime(state.state) == dt_util.utcnow() + timedelta(
+        seconds=120
+    )
