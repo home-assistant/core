@@ -842,23 +842,44 @@ async def test_media_source_view_streams_content_and_headers_cache_tests(
 
     # Mock upstream iCloud response stream
     class _Content:
-        async def iter_chunked(self, _size: int):
-            yield b"abc"
-            yield b"def"
+        def __init__(self, max_size) -> None:
+            self.max_size = max_size
 
-    upstream_resp = AsyncMock()
-    upstream_resp.status = HTTPStatus.OK
-    upstream_resp.reason = "OK"
-    upstream_resp.headers = {
-        hdrs.CONTENT_TYPE: "image/jpeg",
-        hdrs.LAST_MODIFIED: "Mon, 01 Jan 2024 00:00:00 GMT",
-        hdrs.CONTENT_LENGTH: "6",
-    }
-    upstream_resp.content = _Content()
-    upstream_resp.release.return_value = None
+        async def iter_chunked(self, _size: int):
+            data = b"abcdef"
+            chunk_size = 3
+            if self.max_size and len(data) > self.max_size:
+                yield data[: self.max_size]
+            else:
+                for i in range(0, len(data), chunk_size):
+                    yield data[i : i + chunk_size]
+
+    def mock_get(url, *args, **kwargs):
+        upstream_resp = AsyncMock()
+        upstream_resp.status = HTTPStatus.OK
+        upstream_resp.reason = "OK"
+        upstream_resp.headers = {
+            hdrs.CONTENT_TYPE: "image/jpeg",
+            hdrs.LAST_MODIFIED: "Mon, 01 Jan 2024 00:00:00 GMT",
+            hdrs.CONTENT_LENGTH: "6",
+        }
+        if size := kwargs.get("headers", {}).get(
+            hdrs.RANGE
+        ):  # to verify that headers are passed correctly
+            upstream_resp.headers[hdrs.CONTENT_RANGE] = f"bytes {size.split('=')[1]}/6"
+            upstream_resp.headers[hdrs.CONTENT_LENGTH] = size.split("/")[0].split("-")[
+                1
+            ]
+            upstream_resp.status = HTTPStatus.PARTIAL_CONTENT
+            upstream_resp.reason = "Partial Content"
+        upstream_resp.content = _Content(
+            int(upstream_resp.headers[hdrs.CONTENT_LENGTH])
+        )
+        upstream_resp.release.return_value = None
+        return upstream_resp
 
     mock_session = AsyncMock()
-    mock_session.get.return_value = upstream_resp
+    mock_session.get.side_effect = mock_get
 
     mock_photo = SimpleNamespace(
         filename=expected_filename,
@@ -887,7 +908,9 @@ async def test_media_source_view_streams_content_and_headers_cache_tests(
     image_id1 = b64encode(media_content_id1.encode()).decode()
     image_id2 = b64encode(media_content_id2.encode()).decode()
     client = await hass_client()
-    resp = await client.get(f"/api/icloud/media_source/serve/original/{image_id1}")
+    resp = await client.get(
+        f"/api/icloud/media_source/serve/original/{image_id1}",
+    )
 
     assert resp.status == HTTPStatus.OK
     assert await resp.read() == b"abcdef"
@@ -898,9 +921,12 @@ async def test_media_source_view_streams_content_and_headers_cache_tests(
     )
 
     # get the same item from the cache to verify that works as well
-    resp = await client.get(f"/api/icloud/media_source/serve/original/{image_id1}")
-    assert resp.status == HTTPStatus.OK
-    assert await resp.read() == b"abcdef"
+    resp = await client.get(
+        f"/api/icloud/media_source/serve/original/{image_id1}",
+        headers={hdrs.RANGE: "bytes=0-2"},
+    )
+    assert resp.status == HTTPStatus.PARTIAL_CONTENT
+    assert await resp.read() == b"ab"
 
     # get the same item from the cache to verify that works as well
     resp = await client.get(f"/api/icloud/media_source/serve/original/{image_id2}")

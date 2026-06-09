@@ -603,14 +603,22 @@ class IcloudMediaSourceView(HomeAssistantView):
         photo = await _get_photo_asset(self._hass, identifier)
 
         url = photo.versions.get(version, {}).get("url")
+        if url is None and version.startswith("thumb"):
+            # try the medium version for thumbnails if the requested version is not available, as some videos only have a medium version and no separate thumbnail version
+            url = photo.versions.get(version.replace("thumb", "medium"), {}).get("url")
         if url is None:
             raise web.HTTPNotFound
+
+        request_headers = {}
+        if hdrs.RANGE in request.headers:
+            request_headers[hdrs.RANGE] = request.headers[hdrs.RANGE]
 
         icloud_response = await self.session.get(
             url,
             timeout=ClientTimeout(
                 connect=15, sock_connect=15, sock_read=30, total=None
             ),
+            headers=request_headers,
         )
 
         response_headers: dict[str, str] = {}
@@ -618,12 +626,16 @@ class IcloudMediaSourceView(HomeAssistantView):
         response_headers[hdrs.CONTENT_DISPOSITION] = (
             f'attachment;filename="{urllib.parse.quote(photo.filename, safe="")}"'
         )
-        response_headers[hdrs.CONTENT_TYPE] = icloud_response.headers.get(
-            hdrs.CONTENT_TYPE, "application/octet-stream"
-        )
-        response_headers[hdrs.LAST_MODIFIED] = icloud_response.headers.get(
-            hdrs.LAST_MODIFIED, "0"
-        )
+
+        for header in (
+            hdrs.CONTENT_TYPE,
+            hdrs.LAST_MODIFIED,
+            hdrs.ACCEPT_RANGES,
+            hdrs.CONTENT_RANGE,
+        ):
+            if header in icloud_response.headers:
+                response_headers[header] = icloud_response.headers[header]
+
         response = web.StreamResponse(
             status=icloud_response.status,
             reason=icloud_response.reason,
