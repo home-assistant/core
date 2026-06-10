@@ -386,6 +386,7 @@ FLOWS = {
         "kegtron",
         "keymitt_ble",
         "kiosker",
+        "klik_aan_klik_uit",
         "kmtronic",
         "knocki",
         "knx",
