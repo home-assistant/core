@@ -172,7 +172,6 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
-                translation_placeholders={"error": str(err)},
             ) from err
         except UnauthorizedError as er:
             self.coordinator.config_entry.async_start_reauth(self.hass)
@@ -193,7 +192,6 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
-                translation_placeholders={"error": str(err)},
             ) from err
         except UnauthorizedError as er:
             self.coordinator.config_entry.async_start_reauth(self.hass)
