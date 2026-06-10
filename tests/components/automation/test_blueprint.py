@@ -12,6 +12,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import automation
+from homeassistant.components.automation import DOMAIN
 from homeassistant.components.blueprint import models
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, callback
@@ -141,7 +142,7 @@ async def test_notify_leaving_zone(
 
         # Verify trigger works
         await hass.services.async_call(
-            "automation",
+            DOMAIN,
             "trigger",
             {"entity_id": "automation.automation_0"},
             blocking=True,
@@ -228,7 +229,7 @@ async def test_motion_light(hass: HomeAssistant) -> None:
 
     # Verify trigger works
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.automation_0"},
     )

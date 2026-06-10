@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.singleton import singleton
 from homeassistant.helpers.trace import (
-    record_template_errors_cv,
+    suppress_template_error_logging_cv,
     trace_stack_cv,
     trace_stack_top,
 )
@@ -632,14 +632,13 @@ def make_logging_undefined(
         return jinja2.StrictUndefined
 
     def _log_with_logger(level: int, msg: str) -> None:
-        # When a consumer such as the subscribe_condition websocket command has
-        # opted in, record the error on the active trace element instead of
-        # logging it, so repeated evaluations don't spam the log.
-        if record_template_errors_cv.get() and (
-            node := trace_stack_top(trace_stack_cv)
-        ):
+        # Record the error on the active trace element so it is surfaced in the
+        # trace. Consumers such as the subscribe_condition websocket command can
+        # opt in to additionally suppress the (otherwise repeated) log entry.
+        if node := trace_stack_top(trace_stack_cv):
             node.add_template_error(msg)
-            return
+            if suppress_template_error_logging_cv.get():
+                return
 
         template, action = template_cv.get() or ("", "rendering or compiling")
         _LOGGER.log(

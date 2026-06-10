@@ -2,7 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
-from pyhelty import FanMode
+from pyhelty import FanMode, HeltyError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -20,6 +20,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -166,3 +167,22 @@ async def test_fan_turn_on_with_preset(
         blocking=True,
     )
     mock_helty_client.async_set_fan_mode.assert_awaited_with(FanMode.FREE_COOLING)
+
+
+async def test_fan_set_mode_error(
+    hass: HomeAssistant,
+    mock_helty_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a device failure while setting the mode raises a HomeAssistantError."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_helty_client.async_set_fan_mode.side_effect = HeltyError
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PRESET_MODE,
+            {ATTR_ENTITY_ID: FAN_ENTITY, ATTR_PRESET_MODE: "boost"},
+            blocking=True,
+        )

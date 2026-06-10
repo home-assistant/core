@@ -12,6 +12,7 @@ import yaml
 
 from homeassistant import config as hass_config
 from homeassistant.components import notify
+from homeassistant.components.notify import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.discovery import async_load_platform
@@ -650,7 +651,7 @@ async def test_messages_to_targets_route(hass: HomeAssistant, tmp_path: Path) ->
     )
 
     await hass.services.async_call(
-        "notify",
+        DOMAIN,
         "test_target_name",
         {"message": "my message", "title": "my title", "data": {"hello": "world"}},
     )

@@ -262,12 +262,12 @@ async def test_trigger_service_ignoring_condition(
     assert caplog.record_tuples[0][1] == logging.WARNING
 
     await hass.services.async_call(
-        "automation", "trigger", {"entity_id": "automation.test"}, blocking=True
+        DOMAIN, "trigger", {"entity_id": "automation.test"}, blocking=True
     )
     assert len(calls) == 1
 
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.test", "skip_condition": True},
         blocking=True,
@@ -275,7 +275,7 @@ async def test_trigger_service_ignoring_condition(
     assert len(calls) == 2
 
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.test", "skip_condition": False},
         blocking=True,
@@ -1777,7 +1777,7 @@ async def test_automation_bad_config_validation(
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both automations are setup
-    assert set(hass.states.async_entity_ids("automation")) == {
+    assert set(hass.states.async_entity_ids(DOMAIN)) == {
         "automation.bad_automation",
         "automation.good_automation",
     }
@@ -3187,7 +3187,7 @@ async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) ->
     )
     context = Context()
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.hello"},
         blocking=True,
@@ -3684,7 +3684,7 @@ async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> Non
     assert len(calls) == 0
 
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "turn_on",
         {"entity_id": "automation.automation_1"},
         blocking=True,

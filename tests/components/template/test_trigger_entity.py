@@ -360,7 +360,7 @@ async def test_reload_stops_script_and_unsubscribes_triggers(
         autospec=True,
         return_value={"template": []},
     ):
-        await hass.services.async_call("template", SERVICE_RELOAD, blocking=True)
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
         await hass.async_block_till_done()
 
     # Script should be stopped and unloaded

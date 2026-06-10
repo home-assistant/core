@@ -27,6 +27,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
+from homeassistant.components.overkiz import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
@@ -1253,7 +1254,7 @@ async def test_set_cover_position_and_tilt_executes_single_command(
     await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
 
     await hass.services.async_call(
-        "overkiz",
+        DOMAIN,
         "set_cover_position_and_tilt",
         {
             ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
@@ -1294,7 +1295,7 @@ async def test_set_cover_position_and_tilt_inverts_boundaries(
     await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
 
     await hass.services.async_call(
-        "overkiz",
+        DOMAIN,
         "set_cover_position_and_tilt",
         {
             ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
@@ -1334,7 +1335,7 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
         pytest.raises(ServiceValidationError),
     ):
         await hass.services.async_call(
-            "overkiz",
+            DOMAIN,
             "set_cover_position_and_tilt",
             {
                 ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
