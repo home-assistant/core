@@ -37,6 +37,20 @@ async def test_invalid_mower_creates_issue(
     assert issue.translation_placeholders == {
         "mower_name": mower_name,
     }
+
+    # Simulate reloading home assistant by reloading the integration
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.ERROR
+    assert issue.is_fixable is False
+    assert issue.translation_key == "invalid_mower"
+    assert issue.translation_placeholders == {
+        "mower_name": mower_name,
+    }
+
+    # Simulate mower behaving properly during runtime
     mock_automower_client.invalid_mowers.clear()
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
