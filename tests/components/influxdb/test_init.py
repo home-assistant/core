@@ -352,7 +352,7 @@ async def test_setup_config_ssl(
     indirect=["mock_client"],
 )
 async def test_setup_config_path(
-    hass: HomeAssistant, mock_client, config_ext: dict, expected_path: bool
+    hass: HomeAssistant, mock_client, config_ext: dict, expected_path: str | None
 ) -> None:
     """Test that path='/' is not passed to InfluxDBClient, but other paths are."""
     config = BASE_V1_CONFIG.copy()
