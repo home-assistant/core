@@ -69,6 +69,7 @@ PARTITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_NAME): cv.string,
         vol.Required(CONF_ARM_HOME_MODE, default=DEFAULT_CONF_ARM_HOME_MODE): vol.All(
+            vol.Any(vol.Coerce(str), int),
             selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=ARM_HOME_MODE_OPTIONS,
