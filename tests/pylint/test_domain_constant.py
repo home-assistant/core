@@ -238,6 +238,13 @@ async_setup_component(hass, Platform.Something, {})
             ("Platform.Something", "async_setup_component"),
             id="attribute_platform",
         ),
+        pytest.param(
+            """
+hass.states.async_entity_ids((Platform.SENSOR, DOMAIN))
+""",
+            ("(Platform.SENSOR, DOMAIN)", "hass.states.async_entity_ids"),
+            id="attribute_platform_tuple",
+        ),
     ],
 )
 def test_domain_argument_flagged(

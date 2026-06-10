@@ -19,6 +19,7 @@ class ArgumentCheckInfo:
 
     position: int | None
     name: str
+    allow_iterable: bool = False
 
 
 _FUNCTION_CHECKS: list[tuple[str, ArgumentCheckInfo]] = [
@@ -30,7 +31,7 @@ _METHOD_CHECKS: list[tuple[str, str, ArgumentCheckInfo]] = [
     ("hass.config_entries.flow", "async_init", ArgumentCheckInfo(0, "handler")),
     ("hass.services", "async_call", ArgumentCheckInfo(0, "domain")),
     ("hass.services", "call", ArgumentCheckInfo(0, "domain")),
-    ("hass.states", "async_entity_ids", ArgumentCheckInfo(0, "domain_filter")),
+    ("hass.states", "async_entity_ids", ArgumentCheckInfo(0, "domain_filter", True)),
 ]
 
 
@@ -73,13 +74,15 @@ def _check_call_node_domain_argument(
             None,
         )
 
-    if argument_node and not _check_domain_argument(argument_node):
+    if argument_node and not _check_domain_argument(
+        argument_node, arg_info.allow_iterable
+    ):
         return argument_node
 
     return None
 
 
-def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
+def _check_domain_argument(arg_node: nodes.NodeNG, allow_iterable: bool = True) -> bool:
     """Ensure the argument node is a domain constant or variable.
 
     We currently only disallow `Platform.Xyz`
@@ -98,6 +101,12 @@ def _check_domain_argument(arg_node: nodes.NodeNG) -> bool:
         case nodes.Attribute():
             if arg_node.expr.as_string() == "Platform":
                 return False
+        case nodes.Tuple():
+            if allow_iterable:
+                return all(
+                    _check_domain_argument(element, allow_iterable=False)
+                    for element in arg_node.elts
+                )
 
     return True
 
