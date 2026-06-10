@@ -10,5 +10,5 @@
   "iot_class": "cloud_push",
   "loggers": ["yoto_api"],
   "quality_scale": "bronze",
-  "requirements": ["yoto-api==3.1.5"]
+  "requirements": ["yoto-api==4.0.2"]
 }
