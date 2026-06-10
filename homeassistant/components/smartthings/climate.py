@@ -428,10 +428,11 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         if hvac_mode == HVACMode.OFF:
             await self.async_turn_off()
             return
-        tasks = []
         # Turn on the device if it's off before setting mode.
+        # Some Samsung AC units reject mode commands sent concurrently
+        # with the power on command, so we await turn_on first.
         if self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH) == "off":
-            tasks.append(self.async_turn_on())
+            await self.async_turn_on()
 
         mode = STATE_TO_AC_MODE[hvac_mode]
         # If new hvac_mode is HVAC_MODE_FAN_ONLY and
@@ -445,38 +446,32 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
                     mode = fan_mode
                     break
 
-        tasks.append(
-            self.execute_device_command(
-                Capability.AIR_CONDITIONER_MODE,
-                Command.SET_AIR_CONDITIONER_MODE,
-                argument=mode,
-            )
+        await self.execute_device_command(
+            Capability.AIR_CONDITIONER_MODE,
+            Command.SET_AIR_CONDITIONER_MODE,
+            argument=mode,
         )
-        await asyncio.gather(*tasks)
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        tasks = []
         # operation mode
         if operation_mode := kwargs.get(ATTR_HVAC_MODE):
             if operation_mode == HVACMode.OFF:
-                tasks.append(self.async_turn_off())
-            else:
-                if (
-                    self.get_attribute_value(Capability.SWITCH, Attribute.SWITCH)
-                    == "off"
-                ):
-                    tasks.append(self.async_turn_on())
-                tasks.append(self.async_set_hvac_mode(operation_mode))
+                await self.async_turn_off()
+                # temperature
+                await self.execute_device_command(
+                    Capability.THERMOSTAT_COOLING_SETPOINT,
+                    Command.SET_COOLING_SETPOINT,
+                    argument=kwargs[ATTR_TEMPERATURE],
+                )
+                return
+            await self.async_set_hvac_mode(operation_mode)
         # temperature
-        tasks.append(
-            self.execute_device_command(
-                Capability.THERMOSTAT_COOLING_SETPOINT,
-                Command.SET_COOLING_SETPOINT,
-                argument=kwargs[ATTR_TEMPERATURE],
-            )
+        await self.execute_device_command(
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Command.SET_COOLING_SETPOINT,
+            argument=kwargs[ATTR_TEMPERATURE],
         )
-        await asyncio.gather(*tasks)
 
     async def async_turn_on(self) -> None:
         """Turn device on."""
