@@ -21,7 +21,7 @@ DATA_DELETED_IDS = "deleted_ids"
 DATA_DEVICES = "devices"
 
 DATA_LIVE_ACTIVITY_TOKENS = "live_activity_tokens"
-DATA_LIVE_ACTIVITY_CLEANUP_UNSUB = "live_activity_cleanup_unsub"
+DATA_LIVE_ACTIVITY_CLEANUP_CANCEL = "live_activity_cleanup_cancel"
 DATA_STORE = "store"
 DATA_NOTIFY = "notify"
 DATA_PUSH_CHANNEL = "push_channel"

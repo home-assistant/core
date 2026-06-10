@@ -1,7 +1,6 @@
 """Live Activity webhook handlers."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-import logging
 from typing import Any
 
 from aiohttp.web import Response
@@ -15,9 +14,7 @@ from homeassistant.helpers import config_validation as cv
 from ..const import ATTR_LIVE_ACTIVITY_EXPIRES_AT, ATTR_PUSH_TOKEN, ATTR_TAG
 from ..helpers import empty_okay_response
 from ..webhook import WEBHOOK_COMMANDS, validate_schema
-from . import remove_live_activity_token, store_live_activity_token
-
-_LOGGER = logging.getLogger(__name__)
+from .store import remove_live_activity_token, store_live_activity_token
 
 
 @WEBHOOK_COMMANDS.register("live_activity_token")
@@ -52,13 +49,5 @@ async def webhook_live_activity_dismissed(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, str]
 ) -> Response:
     """Remove a stored Live Activity token when the activity ends on device."""
-    webhook_id = config_entry.data[CONF_WEBHOOK_ID]
-    activity_tag = data[ATTR_TAG]
-    if not remove_live_activity_token(hass, webhook_id, activity_tag):
-        _LOGGER.debug(
-            "Received live_activity_dismissed for tag %s but no tokens stored "
-            "for webhook %s",
-            activity_tag,
-            webhook_id,
-        )
+    remove_live_activity_token(hass, config_entry.data[CONF_WEBHOOK_ID], data[ATTR_TAG])
     return empty_okay_response()

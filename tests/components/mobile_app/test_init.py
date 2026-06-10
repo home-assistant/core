@@ -21,7 +21,7 @@ from homeassistant.components.mobile_app.const import (
     STORAGE_VERSION,
     STORAGE_VERSION_MINOR,
 )
-from homeassistant.components.mobile_app.live_activity import (
+from homeassistant.components.mobile_app.live_activity.store import (
     async_cleanup_expired_live_activity_tokens,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
@@ -630,12 +630,13 @@ async def test_cloudhook_change_listener_update(
 
 
 @pytest.mark.usefixtures("create_registrations")
-async def test_unload_preserves_live_activity_tokens(
+async def test_reload_preserves_live_activity_tokens(
     hass: HomeAssistant, webhook_client: TestClient
 ) -> None:
-    """Test that live activity tokens survive an unload so they are available after reload."""
+    """Test that live activity tokens survive a reload so the same token is reused."""
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
     webhook_id = config_entry.data["webhook_id"]
+    expires_at = dt_util.utcnow().timestamp() + 3600
 
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
@@ -644,16 +645,27 @@ async def test_unload_preserves_live_activity_tokens(
             "data": {
                 "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
-                "expires_at": dt_util.utcnow().timestamp() + 3600,
+                "expires_at": expires_at,
             },
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert webhook_id in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    expected = {
+        webhook_id: {
+            "washer_cycle": {
+                "token": (
+                    "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                ),
+                "expires_at": expires_at,
+            },
+        },
+    }
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == expected
 
-    await hass.config_entries.async_unload(config_entry.entry_id)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert webhook_id in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == expected
 
 
 @pytest.mark.usefixtures("create_registrations")
@@ -663,6 +675,7 @@ async def test_remove_entry_cleans_live_activity_tokens(
     """Test that live activity tokens are removed when the entry is deleted."""
     config_entry = hass.config_entries.async_entries("mobile_app")[1]
     webhook_id = config_entry.data["webhook_id"]
+    expires_at = dt_util.utcnow().timestamp() + 3600
 
     resp = await webhook_client.post(
         f"/api/webhook/{webhook_id}",
@@ -671,16 +684,25 @@ async def test_remove_entry_cleans_live_activity_tokens(
             "data": {
                 "tag": "washer_cycle",
                 "push_token": "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2",
-                "expires_at": dt_util.utcnow().timestamp() + 3600,
+                "expires_at": expires_at,
             },
         },
     )
     assert resp.status == HTTPStatus.OK
-    assert webhook_id in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {
+        webhook_id: {
+            "washer_cycle": {
+                "token": (
+                    "a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2c3d4e5f6a1b2"
+                ),
+                "expires_at": expires_at,
+            },
+        },
+    }
 
     await hass.config_entries.async_remove(config_entry.entry_id)
 
-    assert webhook_id not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
 
 
 async def test_storage_migration_adds_live_activity_tokens(

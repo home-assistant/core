@@ -910,12 +910,16 @@ async def test_notify_live_activity_uses_stored_token(
     }
 
 
-async def test_notify_live_activity_falls_back_to_push_to_start(
+async def test_notify_live_activity_start(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
     hass_admin_user: MockUser,
 ) -> None:
-    """Test that live_update without a stored token falls back to the push-to-start token."""
+    """Test starting a new Live Activity with the push-to-start token.
+
+    When there is no stored per-tag token yet, a ``live_update`` notification
+    starts a fresh activity using the device's push-to-start token.
+    """
     push_url = "https://mobile-push.home-assistant.dev/push"
     now = datetime.now() + timedelta(hours=24)
     iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -1060,10 +1064,15 @@ async def test_notify_normal_notification_ignores_live_activity_tokens(
     }
 
 
-async def test_notify_live_activity_preserves_documented_flat_fields(
+async def test_notify_live_activity_update_passes_data_through(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
-    """Test the docs' flat fields pass through unchanged for relay translation."""
+    """Test that an update leaves all data fields flat and adds event=update.
+
+    Core does not translate the payload, so arbitrary fields (documented flat
+    fields, when/when_relative, an explicit content_state) all pass through
+    unchanged with only event=update added.
+    """
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
         "washer_cycle": {
             "token": "TOKEN",
@@ -1087,85 +1096,8 @@ async def test_notify_live_activity_preserves_documented_flat_fields(
                 "critical_text": "Rinse",
                 "notification_icon": "mdi:washing-machine",
                 "notification_icon_color": "#2196F3",
-            },
-        },
-        blocking=True,
-    )
-
-    call_json = aioclient_mock.mock_calls[0][2]
-    assert call_json["data"]["event"] == "update"
-    assert call_json["data"] == {
-        "live_update": True,
-        "tag": "washer_cycle",
-        "progress": 900,
-        "progress_max": 3600,
-        "chronometer": True,
-        "critical_text": "Rinse",
-        "notification_icon": "mdi:washing-machine",
-        "notification_icon_color": "#2196F3",
-        "event": "update",
-    }
-
-
-@pytest.mark.freeze_time("2026-01-01T00:00:00Z")
-async def test_notify_live_activity_when_relative_passes_through(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
-) -> None:
-    """Test when + when_relative remain flat for relay translation."""
-    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
-        "timer": {
-            "token": "TOKEN",
-            "expires_at": dt_util.utcnow().timestamp() + 3600,
-        }
-    }
-
-    await hass.services.async_call(
-        "notify",
-        "mobile_app_test",
-        {
-            "message": "Countdown",
-            "target": ["mock-webhook_id"],
-            "data": {
-                "live_update": True,
-                "tag": "timer",
                 "when": 300,
                 "when_relative": True,
-            },
-        },
-        blocking=True,
-    )
-
-    call_data = aioclient_mock.mock_calls[0][2]["data"]
-    assert call_data == {
-        "live_update": True,
-        "tag": "timer",
-        "when": 300,
-        "when_relative": True,
-        "event": "update",
-    }
-
-
-async def test_notify_live_activity_explicit_content_state_passes_through(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
-) -> None:
-    """Test that explicit content_state passes through without Core translation."""
-    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
-        "washer_cycle": {
-            "token": "TOKEN",
-            "expires_at": dt_util.utcnow().timestamp() + 3600,
-        }
-    }
-
-    await hass.services.async_call(
-        "notify",
-        "mobile_app_test",
-        {
-            "message": "Rinsing",
-            "target": ["mock-webhook_id"],
-            "data": {
-                "live_update": True,
-                "tag": "washer_cycle",
-                "progress": 100,
                 "content_state": {"progress": 999},
             },
         },
@@ -1175,7 +1107,14 @@ async def test_notify_live_activity_explicit_content_state_passes_through(
     assert aioclient_mock.mock_calls[0][2]["data"] == {
         "live_update": True,
         "tag": "washer_cycle",
-        "progress": 100,
+        "progress": 900,
+        "progress_max": 3600,
+        "chronometer": True,
+        "critical_text": "Rinse",
+        "notification_icon": "mdi:washing-machine",
+        "notification_icon_color": "#2196F3",
+        "when": 300,
+        "when_relative": True,
         "content_state": {"progress": 999},
         "event": "update",
     }
@@ -1203,11 +1142,19 @@ async def test_notify_clear_notification_ends_known_live_activity(
         blocking=True,
     )
 
-    call_json = aioclient_mock.mock_calls[0][2]
-    assert call_json["live_activity_token"] == "TOKEN_TO_END"
-    assert call_json["data"]["event"] == "end"
-    assert call_json["message"] == "clear_notification"
-    assert "mock-webhook_id" not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    assert aioclient_mock.mock_calls[0][2] == {
+        "push_token": "PUSH_TOKEN",
+        "live_activity_token": "TOKEN_TO_END",
+        "message": "clear_notification",
+        "data": {"tag": "washer_cycle", "event": "end"},
+        "registration_info": {
+            "app_id": "io.homeassistant.mobile_app",
+            "app_version": "1.0",
+            "os_version": "5.0.6",
+            "webhook_id": "mock-webhook_id",
+        },
+    }
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
 
 
 async def test_notify_clear_notification_allows_same_tag_to_start_again(
@@ -1289,12 +1236,30 @@ async def test_notify_clear_notification_allows_same_tag_to_start_again(
         blocking=True,
     )
 
-    assert aioclient_mock.mock_calls[0][2]["live_activity_token"] == "TOKEN_TO_END"
-    assert aioclient_mock.mock_calls[0][2]["data"]["event"] == "end"
-    assert aioclient_mock.mock_calls[1][2]["live_activity_token"] == (
-        "PUSH_TO_START_HEX_TOKEN"
-    )
-    assert aioclient_mock.mock_calls[1][2]["data"]["event"] == "start"
+    assert aioclient_mock.mock_calls[0][2] == {
+        "push_token": "FCM_TOKEN",
+        "live_activity_token": "TOKEN_TO_END",
+        "message": "clear_notification",
+        "data": {"tag": "laundry", "event": "end"},
+        "registration_info": {
+            "app_id": "io.robbie.HomeAssistant",
+            "app_version": "2024.1",
+            "os_version": "17.2",
+            "webhook_id": "ios-webhook-1",
+        },
+    }
+    assert aioclient_mock.mock_calls[1][2] == {
+        "push_token": "FCM_TOKEN",
+        "live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+        "message": "Laundry started",
+        "data": {"live_update": True, "tag": "laundry", "event": "start"},
+        "registration_info": {
+            "app_id": "io.robbie.HomeAssistant",
+            "app_version": "2024.1",
+            "os_version": "17.2",
+            "webhook_id": "ios-webhook-1",
+        },
+    }
 
 
 async def test_notify_clear_notification_without_stored_token_passes_through(
@@ -1312,10 +1277,17 @@ async def test_notify_clear_notification_without_stored_token_passes_through(
         blocking=True,
     )
 
-    call_json = aioclient_mock.mock_calls[0][2]
-    assert "live_activity_token" not in call_json
-    assert "event" not in call_json.get("data", {})
-    assert call_json["message"] == "clear_notification"
+    assert aioclient_mock.mock_calls[0][2] == {
+        "push_token": "PUSH_TOKEN",
+        "message": "clear_notification",
+        "data": {"tag": "no_such_activity"},
+        "registration_info": {
+            "app_id": "io.homeassistant.mobile_app",
+            "app_version": "1.0",
+            "os_version": "5.0.6",
+            "webhook_id": "mock-webhook_id",
+        },
+    }
 
 
 async def test_notify_clear_notification_without_tag_passes_through(
@@ -1339,6 +1311,100 @@ async def test_notify_clear_notification_without_tag_passes_through(
         blocking=True,
     )
 
-    call_json = aioclient_mock.mock_calls[0][2]
-    assert "live_activity_token" not in call_json
-    assert call_json["message"] == "clear_notification"
+    assert aioclient_mock.mock_calls[0][2] == {
+        "push_token": "PUSH_TOKEN",
+        "message": "clear_notification",
+        "registration_info": {
+            "app_id": "io.homeassistant.mobile_app",
+            "app_version": "1.0",
+            "os_version": "5.0.6",
+            "webhook_id": "mock-webhook_id",
+        },
+    }
+
+
+async def test_notify_non_apple_device_skips_live_activity(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    hass_admin_user: MockUser,
+) -> None:
+    """Test that a non-Apple device never enters the Live Activity code path."""
+    push_url = "https://mobile-push.home-assistant.dev/push"
+    now = datetime.now() + timedelta(hours=24)
+    iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    aioclient_mock.post(
+        push_url,
+        json={
+            "rateLimits": {
+                "successful": 1,
+                "errors": 0,
+                "maximum": 150,
+                "resetsAt": iso_time,
+            }
+        },
+    )
+
+    entry = MockConfigEntry(
+        data={
+            "app_data": {
+                "push_token": "FCM_TOKEN",
+                "push_url": push_url,
+                "push_to_start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+            },
+            "app_id": "io.homeassistant.companion.android",
+            "app_name": "Home Assistant",
+            "app_version": "2024.1",
+            "device_id": "android-device-1",
+            "device_name": "Pixel",
+            "manufacturer": "Google",
+            "model": "Pixel 8",
+            "os_name": "Android",
+            "os_version": "14",
+            "supports_encryption": False,
+            "user_id": hass_admin_user.id,
+            "webhook_id": "android-webhook-1",
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="Pixel entry",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
+
+    # A stored token would be resolved on an Apple device, but must be ignored here.
+    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["android-webhook-1"] = {
+        "laundry": {
+            "token": "SHOULD_NOT_USE_THIS",
+            "expires_at": dt_util.utcnow().timestamp() + 3600,
+        }
+    }
+
+    with patch(
+        "homeassistant.components.mobile_app.notify.prepare_live_activity_remote_push"
+    ) as mock_prepare:
+        await hass.services.async_call(
+            "notify",
+            "mobile_app_pixel",
+            {
+                "message": "Laundry started",
+                "target": ["android-webhook-1"],
+                "data": {"live_update": True, "tag": "laundry"},
+            },
+            blocking=True,
+        )
+
+    mock_prepare.assert_not_called()
+    assert aioclient_mock.mock_calls[0][2] == {
+        "push_token": "FCM_TOKEN",
+        "message": "Laundry started",
+        "data": {"live_update": True, "tag": "laundry"},
+        "registration_info": {
+            "app_id": "io.homeassistant.companion.android",
+            "app_version": "2024.1",
+            "os_version": "14",
+            "webhook_id": "android-webhook-1",
+        },
+    }

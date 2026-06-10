@@ -46,7 +46,7 @@ from .const import (
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
-    DATA_LIVE_ACTIVITY_CLEANUP_UNSUB,
+    DATA_LIVE_ACTIVITY_CLEANUP_CANCEL,
     DATA_LIVE_ACTIVITY_TOKENS,
     DATA_PENDING_UPDATES,
     DATA_PUSH_CHANNEL,
@@ -59,7 +59,7 @@ from .const import (
 )
 from .helpers import async_is_local_only_user, savable_state
 from .http_api import RegistrationsView
-from .live_activity import async_cleanup_expired_live_activity_tokens
+from .live_activity.store import async_cleanup_expired_live_activity_tokens
 from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
@@ -89,7 +89,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         DATA_DELETED_IDS: app_config.get(DATA_DELETED_IDS, []),
         DATA_DEVICES: {},
         DATA_LIVE_ACTIVITY_TOKENS: app_config[DATA_LIVE_ACTIVITY_TOKENS],
-        DATA_LIVE_ACTIVITY_CLEANUP_UNSUB: None,
+        DATA_LIVE_ACTIVITY_CLEANUP_CANCEL: None,
         DATA_PUSH_CHANNEL: {},
         DATA_STORE: store,
         DATA_PENDING_UPDATES: {sensor_type: {} for sensor_type in SENSOR_TYPES},

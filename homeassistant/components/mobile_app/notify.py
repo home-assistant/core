@@ -2,7 +2,6 @@
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
-from collections.abc import Callable
 from functools import partial
 from http import HTTPStatus
 import logging
@@ -22,7 +21,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID, ATTR_MANUFACTURER
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -241,7 +240,7 @@ class MobileAppNotificationService(BaseNotificationService):
         self, entry: ConfigEntry, data: dict[str, Any]
     ) -> None:
         """Send a message to a target."""
-        on_success_callback: Callable[[], object] | None = None
+        on_success_callback: CALLBACK_TYPE | None = None
         if entry.data[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
             data, on_success_callback = prepare_live_activity_remote_push(
                 self.hass, entry.data, data
