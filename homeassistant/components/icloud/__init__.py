@@ -59,6 +59,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
     await hass.async_add_executor_job(account.setup)
 
     entry.runtime_data = account
+    entry.async_on_unload(account.cancel_fetch)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -7,6 +7,13 @@ import os.path
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
+    async_create_multi_pan_migration_issue,
+    async_delete_multi_pan_migration_issue,
+)
+from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
+    multi_pan_addon_using_device,
+)
 from homeassistant.components.homeassistant_hardware.util import guess_firmware_info
 from homeassistant.components.usb import (
     USBDevice,
@@ -92,6 +99,16 @@ async def async_setup_entry(
             translation_key="device_disconnected",
         )
 
+    try:
+        uses_multi_pan = await multi_pan_addon_using_device(hass, device_path)
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
+
+    if uses_multi_pan:
+        async_create_multi_pan_migration_issue(hass, DOMAIN, entry)
+    else:
+        async_delete_multi_pan_migration_issue(hass, DOMAIN, entry)
+
     # Create and store the firmware update coordinator in runtime_data
     session = async_get_clientsession(hass)
     coordinator = FirmwareUpdateCoordinator(
@@ -122,10 +139,6 @@ async def async_migrate_entry(
     _LOGGER.debug(
         "Migrating from version %s.%s", config_entry.version, config_entry.minor_version
     )
-
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         if config_entry.minor_version == 1:
@@ -222,7 +235,24 @@ async def async_migrate_entry(
             )
 
             if canonical.entry_id != config_entry.entry_id:
-                # The canonical entry's migration will remove this duplicate.
+                if canonical.minor_version < 5:
+                    # The canonical entry has not been migrated yet and its
+                    # migration will remove this duplicate.
+                    return False
+
+                # The canonical entry is already fully migrated and will not run
+                # a migration that removes this duplicate, so remove it here. The
+                # entry can't remove itself while its setup lock is held, so
+                # schedule the removal instead.
+                _LOGGER.warning(
+                    "Removing duplicate config entry %s for serial %s in favor of %s",
+                    config_entry.entry_id,
+                    serial_number,
+                    canonical.entry_id,
+                )
+                hass.async_create_task(
+                    hass.config_entries.async_remove(config_entry.entry_id)
+                )
                 return False
 
             for duplicate in duplicates:

@@ -458,7 +458,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                     raise ConfigEntryAuthFailed from err
 
                 if self.config_entry:
-                    self.config_entry.async_start_reauth(self.hass)
+                    self.config_entry.async_start_reauth_if_available(self.hass)
                 return
 
             # Recoverable error
@@ -536,7 +536,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
                 raise
 
             if self.config_entry:
-                self.config_entry.async_start_reauth(self.hass)
+                self.config_entry.async_start_reauth_if_available(self.hass)
         except NotImplementedError as err:
             self.last_exception = err
             self.last_update_success = False

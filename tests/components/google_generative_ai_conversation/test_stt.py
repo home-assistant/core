@@ -21,7 +21,7 @@ from . import API_ERROR_500, CLIENT_ERROR_BAD_REQUEST
 
 from tests.common import MockConfigEntry
 
-TEST_CHAT_MODEL = "models/gemini-2.5-flash"
+TEST_CHAT_MODEL = "models/gemini-3.1-flash-lite"
 TEST_PROMPT = "Please transcribe the audio."
 
 

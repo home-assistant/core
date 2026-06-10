@@ -70,7 +70,7 @@ async def test_diagnostic_sensors(
 
     for entity_id in (
         "sensor.yardian_smart_sprinkler_zone_delay",
-        "sensor.yardian_smart_sprinkler_water_hammer_reduction",
+        "sensor.yardian_smart_sprinkler_water_hammer_duration",
     ):
         reg_entry = entity_registry.async_get(entity_id)
         assert reg_entry is not None

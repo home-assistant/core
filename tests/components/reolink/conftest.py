@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from reolink_aio.api import Chime
+from reolink_aio.enums import ConnectionEnum
 from reolink_aio.exceptions import ReolinkError
 
 from homeassistant.components.reolink.config_flow import DEFAULT_PROTOCOL
@@ -50,6 +51,7 @@ TEST_CAM_MODEL = "RLC-123"
 TEST_DUO_MODEL = "Reolink Duo PoE"
 TEST_PRIVACY = True
 TEST_BC_PORT = 5678
+TEST_BC_CON = ConnectionEnum.tcp.value
 
 
 @pytest.fixture
@@ -128,6 +130,8 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.firmware_update_available.return_value = False
     host_mock.session_active = True
     host_mock.timeout = 60
+    host_mock.broken_cmds = ["GetManualRec"]
+    host_mock.baichuan_cmds = ["GetPtzCurPos"]
     host_mock.renewtimer.return_value = 600
     host_mock.wifi_connection.return_value = False
     host_mock.wifi_signal.return_value = -45
@@ -162,6 +166,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan_only = False
     # Disable tcp push by default for tests
     host_mock.baichuan.port = TEST_BC_PORT
+    host_mock.baichuan.connection_type = ConnectionEnum(TEST_BC_CON)
     host_mock.baichuan.events_active = False
     host_mock.baichuan.login_sucess = True
     host_mock.baichuan.subscribe_events = AsyncMock()

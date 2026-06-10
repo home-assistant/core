@@ -50,7 +50,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
         """Update Duck DNS."""
 
         retry_after = BACKOFF_INTERVALS[
-            min(self.failed, len(BACKOFF_INTERVALS))
+            min(self.failed, len(BACKOFF_INTERVALS) - 1)
         ].total_seconds()
 
         try:
