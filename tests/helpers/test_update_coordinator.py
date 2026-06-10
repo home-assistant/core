@@ -1779,6 +1779,38 @@ async def test_pending_save_flushed_on_shutdown(
     assert update_coordinator.RESTORE_STORAGE_KEY not in hass_storage
 
 
+async def test_deferred_save_does_not_outlive_entry_removal(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test a save deferred behind the store load cannot outlive entry removal.
+
+    A push before the store was loaded defers the save to a task. The task is
+    started eagerly and queues on the store load ahead of the removal cleanup,
+    so the cleanup always runs after the deferred save and removes its data.
+    """
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+    crd: update_coordinator.RestoreDataUpdateCoordinator[Any] = (
+        update_coordinator.RestoreDataUpdateCoordinator(
+            hass,
+            _LOGGER,
+            config_entry=entry,
+            name="test",
+            storage_key=RESTORE_KEY,
+        )
+    )
+
+    # Push and remove the entry without yielding to the event loop in between
+    crd.async_set_updated_data({"value": "pushed"})
+    await hass.config_entries.async_remove(entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+    await flush_restore_store(hass)
+
+    store_data = hass_storage.get(update_coordinator.RESTORE_STORAGE_KEY, {})
+    assert entry.entry_id not in store_data.get("data", {})
+
+
 async def test_no_persist_initial_none(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
