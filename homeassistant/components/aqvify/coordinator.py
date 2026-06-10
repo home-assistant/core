@@ -54,21 +54,53 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
         """Set up the coordinator."""
         try:
             await self.api_client.async_get_account_id()
-        except AqvifyAuthException as err:
-            raise ConfigEntryAuthFailed(f"Invalid Aqvify API key: {err}") from err
-        except (ClientResponseError, TimeoutError) as err:
+        except AqvifyAuthException:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_api_key",
+            ) from None
+        except ClientResponseError as err:
             raise ConfigEntryNotReady(
-                f"Failed to connect to Aqvify API: {err}"
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                },
+            ) from err
+        except TimeoutError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="api_timeout",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                },
             ) from err
 
     async def _async_update_data(self) -> AqvifyCoordinatorData:
         """Fetch device state."""
         try:
             devices = await self.api_client.async_get_devices()
+        except AqvifyAuthException:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_api_key",
+            ) from None
         except ClientResponseError as err:
-            raise UpdateFailed(f"Error communicating with Aqvify API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                },
+            ) from err
         except TimeoutError as err:
-            raise UpdateFailed(f"Timeout communicating with Aqvify API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_timeout",
+                translation_placeholders={
+                    "entry": self.config_entry.title,
+                },
+            ) from err
 
         device_data = {}
         for device in devices.devices.values():
@@ -77,13 +109,26 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 device_data[
                     device_key
                 ] = await self.api_client.async_get_device_latest_data(device_key)
+            except AqvifyAuthException:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_api_key",
+                ) from None
             except ClientResponseError as err:
                 raise UpdateFailed(
-                    f"Error communicating with Aqvify API: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={
+                        "entry": self.config_entry.title,
+                    },
                 ) from err
             except TimeoutError as err:
                 raise UpdateFailed(
-                    f"Timeout communicating with Aqvify API: {err}"
+                    translation_domain=DOMAIN,
+                    translation_key="api_timeout",
+                    translation_placeholders={
+                        "entry": self.config_entry.title,
+                    },
                 ) from err
 
         return AqvifyCoordinatorData(

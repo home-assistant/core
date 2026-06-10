@@ -633,7 +633,7 @@ azure-storage-blob==12.24.0
 b2sdk==2.10.4
 
 # homeassistant.components.holiday
-babel==2.15.0
+babel==2.18.0
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -1580,7 +1580,7 @@ millheater==0.14.1
 minio==7.1.12
 
 # homeassistant.components.mitsubishi_comfort
-mitsubishi-comfort==0.3.0
+mitsubishi-comfort==0.3.1
 
 # homeassistant.components.moat
 moat-ble==0.1.1
@@ -2636,7 +2636,7 @@ python-dropbox-api==0.1.3
 python-duco-connectivity==0.6.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.4.0
+python-ecobee-api==0.4.1
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
@@ -3469,7 +3469,7 @@ zhong-hong-hvac==1.0.13
 ziggo-mediabox-xl==1.1.0
 
 # homeassistant.components.zinvolt
-zinvolt==0.4.3
+zinvolt==1.0.0
 
 # homeassistant.components.zoneminder
 zm-py==0.5.4
