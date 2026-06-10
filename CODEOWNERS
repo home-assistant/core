@@ -947,6 +947,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/kiosker/ @Claeysson
 /homeassistant/components/kitchen_sink/ @home-assistant/core
 /tests/components/kitchen_sink/ @home-assistant/core
+/homeassistant/components/klik_aan_klik_uit/ @Phunkafizer
+/tests/components/klik_aan_klik_uit/ @Phunkafizer
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knocki/ @joostlek @jgatto1 @JakeBosh
