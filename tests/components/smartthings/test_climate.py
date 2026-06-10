@@ -292,23 +292,17 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
         ),
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Command.SET_COOLING_SETPOINT,
-            MAIN,
-            argument=23.0,
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.SWITCH,
-            Command.ON,
-            MAIN,
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
             MAIN,
             argument="auto",
+        ),
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Command.SET_COOLING_SETPOINT,
+            MAIN,
+            argument=23.0,
         ),
     ]
 
@@ -336,17 +330,17 @@ async def test_ac_set_temperature_and_hvac_mode(
     assert devices.execute_device_command.mock_calls == [
         call(
             "96a5ef74-5832-a84b-f1f7-ca799957065d",
-            Capability.THERMOSTAT_COOLING_SETPOINT,
-            Command.SET_COOLING_SETPOINT,
-            MAIN,
-            argument=23.0,
-        ),
-        call(
-            "96a5ef74-5832-a84b-f1f7-ca799957065d",
             Capability.AIR_CONDITIONER_MODE,
             Command.SET_AIR_CONDITIONER_MODE,
             MAIN,
             argument="auto",
+        ),
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Command.SET_COOLING_SETPOINT,
+            MAIN,
+            argument=23.0,
         ),
     ]
 
