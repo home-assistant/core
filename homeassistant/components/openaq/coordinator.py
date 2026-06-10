@@ -1,23 +1,14 @@
 """Data coordinator for the OpenAQ integration."""
 
 import asyncio
-from collections.abc import Mapping, Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 from types import MappingProxyType
-from typing import Any, cast
+from typing import TypeVar
 
-import httpx
-from openaq import AsyncOpenAQ
-from openaq.shared.responses import (
-    Coordinates,
-    Latest,
-    Location,
-    Parameter,
-    ParameterBase,
-    Sensor,
-)
-from openaq.shared.transport import check_response
+from openaq import OpenAQ
+from openaq.core.responses import Latest, Location, Parameter, ParameterBase, Sensor
 
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
 from homeassistant.const import (
@@ -25,9 +16,7 @@ from homeassistant.const import (
     CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import location as location_util
 
 from .const import (
     CONF_LOCATION_ID,
@@ -38,6 +27,7 @@ from .const import (
 )
 
 UPDATE_INTERVAL = timedelta(minutes=10)
+_T = TypeVar("_T")
 
 OPENAQ_UNIT_ALIASES = {
     "µg/m³": CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
@@ -61,12 +51,20 @@ class OpenAQMeasurement:
 
 
 @dataclass(slots=True)
+class OpenAQSensorMetadata:
+    """OpenAQ sensor metadata for a parameter."""
+
+    parameter: str
+    unit: str | None
+
+
+@dataclass(slots=True)
 class OpenAQLocationData:
     """Latest OpenAQ data for a configured location."""
 
     location_id: int
     name: str
-    distance_to_home: float | None
+    sensor_metadata: MappingProxyType[str, OpenAQSensorMetadata]
     measurements: MappingProxyType[str, OpenAQMeasurement]
 
 
@@ -74,64 +72,26 @@ class OpenAQLocationData:
 class OpenAQRuntimeData:
     """Runtime data for the OpenAQ integration."""
 
-    client: AsyncOpenAQ
+    client: OpenAQ
     coordinators: dict[str, OpenAQDataUpdateCoordinator]
 
 
 type OpenAQConfigEntry = ConfigEntry[OpenAQRuntimeData]
 
 
-class HomeAssistantOpenAQTransport:
-    """OpenAQ transport using Home Assistant's shared httpx client."""
-
-    def __init__(self, client: httpx.AsyncClient) -> None:
-        """Initialize the transport."""
-        self.client = client
-
-    async def send_request(
-        self,
-        method: str,
-        url: str,
-        params: httpx.QueryParams | Mapping[str, str | int | float | bool] | None,
-        headers: httpx.Headers | Mapping[str, str],
-    ) -> httpx.Response:
-        """Send a request through Home Assistant's shared httpx client."""
-        response = await self.client.request(
-            method=method,
-            url=url,
-            params=params,
-            headers=headers,
-        )
-        return check_response(response)
-
-    async def close(self) -> None:
-        """The OpenAQ SDK calls this when closing, but Home Assistant owns the shared httpx client."""
-
-
-def create_openaq_client(api_key: str, httpx_client: httpx.AsyncClient) -> AsyncOpenAQ:
-    """Create an OpenAQ client with a Home Assistant managed transport."""
-    return AsyncOpenAQ(
-        api_key=api_key,
-        # Avoid importing the SDK's private transport type just for this cast.
-        transport=cast(Any, HomeAssistantOpenAQTransport(httpx_client)),
-    )
-
-
-async def async_create_openaq_client(hass: HomeAssistant, api_key: str) -> AsyncOpenAQ:
+def create_openaq_client(api_key: str) -> OpenAQ:
     """Create an OpenAQ client."""
-    return create_openaq_client(api_key, get_async_client(hass))
+    return OpenAQ(api_key=api_key)
+
+
+async def async_create_openaq_client(hass: HomeAssistant, api_key: str) -> OpenAQ:
+    """Create an OpenAQ client."""
+    return await hass.async_add_executor_job(create_openaq_client, api_key)
 
 
 def normalize_parameter(parameter: Parameter | ParameterBase) -> str:
     """Normalize an OpenAQ parameter object to its canonical name."""
     return parameter.name.lower().replace(".", "").replace("_", "")
-
-
-def _as_float(value: float | None) -> float | None:
-    """Return value as a float when it is a numeric sensor value."""
-    if isinstance(value, (float, int)):
-        return float(value)
-    return None
 
 
 def _normalize_unit(unit: str | None) -> str | None:
@@ -141,34 +101,31 @@ def _normalize_unit(unit: str | None) -> str | None:
     return OPENAQ_UNIT_ALIASES.get(unit, unit)
 
 
-def _distance_to_home(hass: HomeAssistant, location: Location) -> float | None:
-    """Return the distance in meters from Home Assistant to the OpenAQ location."""
-    coordinates: Coordinates = location.coordinates
-    latitude = _as_float(coordinates.latitude)
-    longitude = _as_float(coordinates.longitude)
-    if latitude is None or longitude is None:
-        return None
-    return location_util.distance(
-        hass.config.latitude,
-        hass.config.longitude,
-        latitude,
-        longitude,
-    )
-
-
 def _sensor_metadata_by_id(
     sensors: Sequence[Sensor],
-) -> dict[int, tuple[str, str | None]]:
+) -> dict[int, OpenAQSensorMetadata]:
     """Return parameter metadata keyed by OpenAQ sensor id."""
-    metadata: dict[int, tuple[str, str | None]] = {}
+    metadata: dict[int, OpenAQSensorMetadata] = {}
     for sensor in sensors:
         parameter = sensor.parameter
         parameter_name = normalize_parameter(parameter)
-        metadata[sensor.id] = (
-            parameter_name,
-            _normalize_unit(parameter.units),
+        metadata[sensor.id] = OpenAQSensorMetadata(
+            parameter=parameter_name,
+            unit=_normalize_unit(parameter.units),
         )
     return metadata
+
+
+def normalize_sensor_metadata(
+    sensors: Sequence[Sensor],
+) -> MappingProxyType[str, OpenAQSensorMetadata]:
+    """Normalize OpenAQ sensor metadata by parameter name."""
+    return MappingProxyType(
+        {
+            metadata.parameter: metadata
+            for metadata in _sensor_metadata_by_id(sensors).values()
+        }
+    )
 
 
 def normalize_latest_measurements(
@@ -179,32 +136,14 @@ def normalize_latest_measurements(
     measurements: dict[str, OpenAQMeasurement] = {}
 
     for latest in latest_results:
-        value = _as_float(latest.value)
-        if value is None or latest.sensors_id not in sensor_metadata:
+        if latest.value is None or latest.sensors_id not in sensor_metadata:
             continue
-        parameter, unit = sensor_metadata[latest.sensors_id]
-        measurements[parameter] = OpenAQMeasurement(parameter, value, unit)
+        metadata = sensor_metadata[latest.sensors_id]
+        measurements[metadata.parameter] = OpenAQMeasurement(
+            metadata.parameter, float(latest.value), metadata.unit
+        )
 
     return MappingProxyType(measurements)
-
-
-def _first_exception(exc: BaseException) -> BaseException:
-    """Return the first nested exception."""
-    if isinstance(exc, BaseExceptionGroup):
-        return _first_exception(exc.exceptions[0])
-    return exc
-
-
-def _exception_group_cause(
-    err: ExceptionGroup, exception_types: tuple[type[Exception], ...] | None = None
-) -> BaseException:
-    """Return the exception to chain from an exception group."""
-    if (
-        exception_types is not None
-        and (subgroup := err.subgroup(exception_types)) is not None
-    ):
-        return _first_exception(subgroup)
-    return _first_exception(err)
 
 
 class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
@@ -217,7 +156,8 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         hass: HomeAssistant,
         config_entry: OpenAQConfigEntry,
         subentry: ConfigSubentry,
-        client: AsyncOpenAQ,
+        client: OpenAQ,
+        client_lock: asyncio.Lock | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -228,10 +168,18 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
+        self._client_lock = client_lock or asyncio.Lock()
         self.subentry = subentry
         self.location_id: int = subentry.data[CONF_LOCATION_ID]
         self._location: Location | None = None
         self._sensors: Sequence[Sensor] | None = None
+
+    async def _async_run_openaq_job(
+        self, target: Callable[..., _T], *args: object
+    ) -> _T:
+        """Run a blocking OpenAQ SDK call."""
+        async with self._client_lock:
+            return await self.hass.async_add_executor_job(target, *args)
 
     async def _async_update_data(self) -> OpenAQLocationData:
         """Fetch data from OpenAQ."""
@@ -239,43 +187,41 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
         sensors: Sequence[Sensor]
         if self._location is None or self._sensors is None:
             try:
-                async with asyncio.TaskGroup() as tg:
-                    location_task = tg.create_task(
-                        self.client.locations.get(self.location_id)
-                    )
-                    latest_task = tg.create_task(
-                        self.client.locations.latest(self.location_id)
-                    )
-                    sensors_task = tg.create_task(
-                        self.client.locations.sensors(self.location_id)
-                    )
-            except ExceptionGroup as err:
-                if err.subgroup(OPENAQ_AUTH_EXCEPTIONS) is not None:
-                    raise UpdateFailed(
-                        translation_domain=DOMAIN,
-                        translation_key="authentication_failed",
-                    ) from _exception_group_cause(err, OPENAQ_AUTH_EXCEPTIONS)
+                location_response = await self._async_run_openaq_job(
+                    self.client.locations.get, self.location_id
+                )
+                latest_response = await self._async_run_openaq_job(
+                    self.client.locations.latest, self.location_id
+                )
+                sensors_response = await self._async_run_openaq_job(
+                    self.client.locations.sensors, self.location_id
+                )
+            except OPENAQ_AUTH_EXCEPTIONS as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="authentication_failed",
+                ) from err
+            except Exception as err:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="unable_to_fetch",
-                ) from _exception_group_cause(err)
-            location_response = location_task.result()
-            latest_response = latest_task.result()
-            sensors_response = sensors_task.result()
+                ) from err
             if not location_response.results:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="unable_to_fetch",
                 )
-            self._location = location_response.results[0]
-            self._sensors = sensors_response.results
-            location = self._location
-            sensors = self._sensors
+            location = location_response.results[0]
+            sensors = sensors_response.results
+            self._location = location
+            self._sensors = sensors
         else:
             location = self._location
             sensors = self._sensors
             try:
-                latest_response = await self.client.locations.latest(self.location_id)
+                latest_response = await self._async_run_openaq_job(
+                    self.client.locations.latest, self.location_id
+                )
             except OPENAQ_AUTH_EXCEPTIONS as err:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -286,11 +232,16 @@ class OpenAQDataUpdateCoordinator(DataUpdateCoordinator[OpenAQLocationData]):
                     translation_domain=DOMAIN,
                     translation_key="unable_to_fetch",
                 ) from err
+            except Exception as err:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="unable_to_fetch",
+                ) from err
 
         measurements = normalize_latest_measurements(latest_response.results, sensors)
         return OpenAQLocationData(
             location_id=self.location_id,
             name=location.name,
-            distance_to_home=_distance_to_home(self.hass, location),
+            sensor_metadata=normalize_sensor_metadata(sensors),
             measurements=measurements,
         )
