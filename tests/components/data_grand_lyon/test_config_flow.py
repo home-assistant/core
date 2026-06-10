@@ -337,7 +337,7 @@ async def test_stop_subentry_invalid_stop_id(
     mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test typing a non-numeric stop ID re-renders the form with an error."""
+    """Test a non-numeric stop ID re-renders the form with an error and recovers."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -354,6 +354,23 @@ async def test_stop_subentry_invalid_stop_id(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_STOP_ID: "invalid_stop_id"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_STOP_ID: "200"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pick_line"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_LINE: "T1"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "T1 - Stop 200"
+    assert result["data"] == {CONF_LINE: "T1", CONF_STOP_ID: 200}
+    assert result["unique_id"] == "T1_200"
 
 
 async def test_stop_subentry_picker_already_configured(
@@ -488,7 +505,7 @@ async def test_velov_station_subentry_invalid_station_id(
     mock_config_entry: MockConfigEntry,
     mock_tcl_client: AsyncMock,
 ) -> None:
-    """Test typing a non-numeric station ID re-renders the form with an error."""
+    """Test a non-numeric station ID re-renders the form with an error and recovers."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -505,6 +522,16 @@ async def test_velov_station_subentry_invalid_station_id(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {CONF_STATION_ID: "invalid_station_id"}
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {CONF_STATION_ID: "1001"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Vélo'v 1001"
+    assert result["data"] == {CONF_STATION_ID: 1001}
+    assert result["unique_id"] == "velov_1001"
 
 
 async def test_velov_station_subentry_already_configured(
