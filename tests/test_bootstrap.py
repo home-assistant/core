@@ -265,6 +265,8 @@ async def test_async_enable_logging_log_file_ignores_disable_env(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test an explicit log file ignores the managed log file disable env."""
+    cleanup_log_files()
+
     monkeypatch.setenv("HA_DISABLE_LOG_FILE", "invalid")
 
     with (
