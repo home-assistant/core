@@ -223,6 +223,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                     site_id,
                     stale_err,
                 )
+                await info_coordinator.async_shutdown()
                 continue
 
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(
