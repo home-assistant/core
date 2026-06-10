@@ -42,7 +42,7 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a MELCloud Home config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        unique_id=MOCK_USER_INPUT[CONF_EMAIL],
+        unique_id="user-uuid-1",
         title=MOCK_USER_INPUT[CONF_EMAIL],
         data=MOCK_USER_INPUT,
     )

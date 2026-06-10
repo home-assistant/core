@@ -87,13 +87,10 @@ async def test_form_exceptions(
 
 
 @pytest.mark.usefixtures("mock_melcloud_client")
-async def test_duplicate_entry(hass: HomeAssistant) -> None:
+async def test_duplicate_entry(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test we handle duplicate entries."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="user-uuid-1",
-        data=MOCK_USER_INPUT,
-    )
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
