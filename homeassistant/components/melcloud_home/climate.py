@@ -229,40 +229,24 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def swing_modes(self) -> list[str] | None:
+    def swing_modes(self) -> list[str]:
         """Return vertical vane positions as swing modes."""
-        return (
-            list(ATA_VANE_VERTICAL_TO_HA.values())
-            if self.unit.settings.get("VaneVerticalDirection") is not None
-            else None
-        )
+        return list(ATA_VANE_VERTICAL_TO_HA.values())
 
     @property
-    def swing_mode(self) -> str | None:
+    def swing_mode(self) -> str:
         """Return the current vertical vane direction."""
-        return (
-            ATA_VANE_VERTICAL_TO_HA.get(self.unit.settings["VaneVerticalDirection"])
-            if self.unit.settings.get("VaneVerticalDirection") is not None
-            else None
-        )
+        return ATA_VANE_VERTICAL_TO_HA[self.unit.settings["VaneVerticalDirection"]]
 
     @property
-    def swing_horizontal_modes(self) -> list[str] | None:
+    def swing_horizontal_modes(self) -> list[str]:
         """Return horizontal vane positions as swing modes."""
-        return (
-            list(ATA_VANE_HORIZONTAL_TO_HA.values())
-            if self.unit.settings.get("VaneHorizontalDirection") is not None
-            else None
-        )
+        return list(ATA_VANE_HORIZONTAL_TO_HA.values())
 
     @property
-    def swing_horizontal_mode(self) -> str | None:
+    def swing_horizontal_mode(self) -> str:
         """Return the current horizontal vane direction."""
-        return (
-            ATA_VANE_HORIZONTAL_TO_HA.get(self.unit.settings["VaneHorizontalDirection"])
-            if self.unit.settings.get("VaneHorizontalDirection") is not None
-            else None
-        )
+        return ATA_VANE_HORIZONTAL_TO_HA[self.unit.settings["VaneHorizontalDirection"]]
 
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set the horizontal vane direction."""
