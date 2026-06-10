@@ -905,7 +905,7 @@ async def test_restored_native_value_rejected_when_malformed(
     ``sensor.py``:
     ``isinstance(value, (int, float)) and not isinstance(value, bool)``
     is uniform across the 10 telemetry sensors — walking every registry
-    entry adds noise without coverage. One sensor (voltage) × 5
+    entry adds noise without coverage. One sensor (voltage) x 5
     adversarial shapes is the right floor.
 
     All 5 cases are GREEN-on-arrival regression pins: the existing

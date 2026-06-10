@@ -66,7 +66,7 @@ async def _lazy_setup(hass: HomeAssistant, entry: MockConfigEntry) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Test 1 – seed-only path
+# Test 1 - seed-only path
 # ---------------------------------------------------------------------------
 
 
@@ -94,7 +94,7 @@ async def test_seed_only_soc_creates_only_soc_entity(
 
 
 # ---------------------------------------------------------------------------
-# Test 2 – pre-warm catches an SSE-only metric
+# Test 2 - pre-warm catches an SSE-only metric
 # ---------------------------------------------------------------------------
 
 
@@ -133,7 +133,7 @@ async def test_prewarm_catches_sse_only_metric(
 
 
 # ---------------------------------------------------------------------------
-# Test 3 – post-window dispatcher creates entity on late arrival
+# Test 3 - post-window dispatcher creates entity on late arrival
 # ---------------------------------------------------------------------------
 
 
@@ -182,7 +182,7 @@ async def test_post_window_dispatcher_creates_entity(
 
 
 # ---------------------------------------------------------------------------
-# Test 4 – soc-time-only-then-frac regression (predicate correctness gate)
+# Test 4 - soc-time-only-then-frac regression (predicate correctness gate)
 # ---------------------------------------------------------------------------
 
 
@@ -235,7 +235,7 @@ async def test_soc_time_only_then_frac_regression(
 
 
 # ---------------------------------------------------------------------------
-# Test 5 – dispatcher idempotency
+# Test 5 - dispatcher idempotency
 # ---------------------------------------------------------------------------
 
 
@@ -289,7 +289,7 @@ async def test_dispatcher_idempotent_on_repeated_frames(
 
 
 # ---------------------------------------------------------------------------
-# Test 6 – multi-vehicle isolation
+# Test 6 - multi-vehicle isolation
 # ---------------------------------------------------------------------------
 
 
@@ -353,7 +353,7 @@ async def test_multi_vehicle_entity_isolation(
 
 
 # ---------------------------------------------------------------------------
-# Test 7 – pre-warm timeout discipline (regression guard)
+# Test 7 - pre-warm timeout discipline (regression guard)
 # ---------------------------------------------------------------------------
 
 
@@ -393,7 +393,7 @@ async def test_prewarm_timeout_setup_completes_with_stuck_sse(
 
 
 # ---------------------------------------------------------------------------
-# Test 8 – absent-metric entities are never created
+# Test 8 - absent-metric entities are never created
 # ---------------------------------------------------------------------------
 
 
@@ -420,7 +420,7 @@ async def test_absent_metric_entities_not_created(
 
 
 # ---------------------------------------------------------------------------
-#  – SoE + odometer sensors (lazy-creation + native/suggested units)
+#  - SoE + odometer sensors (lazy-creation + native/suggested units)
 # ---------------------------------------------------------------------------
 
 
@@ -596,7 +596,7 @@ async def test_invalid_soe_or_odometer_frame_does_not_create(
 
 
 # ---------------------------------------------------------------------------
-#  – Ref Consumption (LTS) + Battery Capacity (DIAGNOSTIC/STATIC) +
+#  - Ref Consumption (LTS) + Battery Capacity (DIAGNOSTIC/STATIC) +
 #            State of Health (LTS) sensors
 # ---------------------------------------------------------------------------
 
@@ -721,7 +721,7 @@ async def test_soh_sensor_lazy_creates_on_first_frac_frame(
     entity_registry: er.EntityRegistry,
     mock_seed_responses: AsyncMock,
 ) -> None:
-    """A ``soh.frac`` frame lazy-creates the State-of-Health sensor (`frac × 100` %).
+    """A ``soh.frac`` frame lazy-creates the State-of-Health sensor (`frac x 100` %).
 
     Defines the description with
     ``state_class=SensorStateClass.MEASUREMENT`` (LTS-tracked drift —

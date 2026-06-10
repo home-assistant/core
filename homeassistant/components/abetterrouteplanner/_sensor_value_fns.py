@@ -110,8 +110,8 @@ def _battery_capacity_wh(frame: Mapping[str, Any]) -> float | None:
 def _soh_percent(frame: Mapping[str, Any]) -> float | None:
     """Extract State of Health as a percentage (higher = healthier), or None.
 
-    ABRP delivers ``soh.frac`` as a 0.0–1.0 fraction. Multiplied by 100 to
-    surface a familiar 0–100% scale; intentionally NOT clamped at 100 — a
+    ABRP delivers ``soh.frac`` as a 0.0-1.0 fraction. Multiplied by 100 to
+    surface a familiar 0-100% scale; intentionally NOT clamped at 100 — a
     post-recalibration overshoot (``frac > 1.0``) is meaningful drift the
     LTS sum is meant to capture, so flattening it would lose signal.
     """

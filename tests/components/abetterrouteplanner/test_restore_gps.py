@@ -384,7 +384,7 @@ async def test_atomic_pair_malformed_coords_omits_restoration(
     bool-exclusion guard — if either field fails, BOTH stay None.
 
     Parametrize
-    + sibling-symmetry: every bad-shape × every side
+    + sibling-symmetry: every bad-shape x every side
     (4 lat-side + 4 lng-side - 1 dedup since ``null_both`` is shared = 7
     cases). Pins atomic-pair semantic from both directions; a regression
     that drops only one side's guard surfaces as a partial-restore on the

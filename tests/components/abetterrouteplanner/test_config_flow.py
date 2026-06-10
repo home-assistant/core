@@ -899,7 +899,7 @@ async def test_reconfigure_unions_prior_known_with_current_garage(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert config_entry.data["vehicle_ids"] == ["1"]
-    # Union semantic: prior KNOWN ∪ current garage = {"1", "2"} ∪ {"1"} = {"1", "2"}.
+    # Union semantic: prior KNOWN U current garage = {"1", "2"} U {"1"} = {"1", "2"}.
     assert sorted(config_entry.data["known_vehicle_ids"]) == ["1", "2"]
 
 

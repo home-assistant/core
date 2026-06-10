@@ -941,7 +941,7 @@ def test_parse_catalog_entry_explicit_null_is_none(field: str) -> None:
 #
 # the helper does not
 # iterate a registry, so the parametrize floor is per-shape — each case
-# below pins one cell in the year×title state machine plus one
+# below pins one cell in the yearxtitle state machine plus one
 # longest-prefix-wins case plus one corrupted-catalog filter case.
 # ---------------------------------------------------------------------------
 
@@ -1166,7 +1166,7 @@ def test_compute_device_model_parametrized(
     catalog: dict[str, Any],
     expected: str | None,
 ) -> None:
-    """Pin :func:`_compute_device_model` across the year×title state machine.
+    """Pin :func:`_compute_device_model` across the yearxtitle state machine.
 
     Each case exercises one cell of the composition formula plus the
     longest-prefix selection logic.
