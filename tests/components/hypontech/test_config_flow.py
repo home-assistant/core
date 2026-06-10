@@ -1,11 +1,12 @@
 """Test the Hypontech Cloud config flow."""
 
-from unittest.mock import AsyncMock
+from typing import cast
+from unittest.mock import AsyncMock, Mock
 
 from hyponcloud import AuthenticationError
 import pytest
 
-from homeassistant.components.hypontech.const import DOMAIN
+from homeassistant.components.hypontech.const import CONF_OEM, DEFAULT_OEM, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -13,9 +14,17 @@ from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+NEXEN_OEM = 4
+TEST_ACCOUNT_ID = "2123456789123456789"
 TEST_USER_INPUT = {
     CONF_USERNAME: "test@example.com",
     CONF_PASSWORD: "test-password",
+    CONF_OEM: str(DEFAULT_OEM),
+}
+TEST_ENTRY_DATA = {
+    CONF_USERNAME: "test@example.com",
+    CONF_PASSWORD: "test-password",
+    CONF_OEM: DEFAULT_OEM,
 }
 
 
@@ -35,9 +44,30 @@ async def test_user_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "test@example.com"
-    assert result["data"] == TEST_USER_INPUT
-    assert result["result"].unique_id == "2123456789123456789"
+    assert result["data"] == TEST_ENTRY_DATA
+    assert result["result"].unique_id == TEST_ACCOUNT_ID
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_flow_with_oem(
+    hass: HomeAssistant, mock_hyponcloud: AsyncMock, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a successful user flow with a non-default OEM."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**TEST_USER_INPUT, CONF_OEM: str(NEXEN_OEM)}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "test@example.com"
+    assert result["data"] == {**TEST_ENTRY_DATA, CONF_OEM: NEXEN_OEM}
+    assert result["result"].unique_id == f"{NEXEN_OEM}:{TEST_ACCOUNT_ID}"
+    assert len(mock_setup_entry.mock_calls) == 1
+    hyponcloud_class = cast(Mock, mock_hyponcloud.hyponcloud_class)
+    assert hyponcloud_class.call_args.kwargs["oem"] == NEXEN_OEM
 
 
 @pytest.mark.parametrize(
@@ -114,6 +144,7 @@ async def test_reauth_flow(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "password"
+    assert mock_config_entry.data[CONF_OEM] == DEFAULT_OEM
 
 
 @pytest.mark.parametrize(

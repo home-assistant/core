@@ -13,10 +13,12 @@
     "step": {
       "reauth_confirm": {
         "data": {
+          "oem": "OEM",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
+          "oem": "The Hypontech Cloud OEM portal to use.",
           "password": "[%key:component::hypontech::config::step::user::data_description::password%]",
           "username": "[%key:component::hypontech::config::step::user::data_description::username%]"
         },
@@ -24,10 +26,12 @@
       },
       "user": {
         "data": {
+          "oem": "OEM",
           "password": "[%key:common::config_flow::data::password%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
         "data_description": {
+          "oem": "The Hypontech Cloud OEM portal to use.",
           "password": "Your Hypontech Cloud account password.",
           "username": "Your Hypontech Cloud account username."
         }
