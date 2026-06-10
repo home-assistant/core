@@ -773,6 +773,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._entry_id = config_entry.entry_id
         self._store_manager = _async_get_restore_store_manager(hass)
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator and restore stored data."""
         await super()._async_setup()
@@ -783,12 +784,8 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         """Restore the data from the store.
 
         Called automatically by async_config_entry_first_refresh. Coordinators not
-        driven by that method must call this once before their first update. Does
-        nothing if data is already loaded.
+        driven by that method must call this once before their first update.
         """
-        if self.data is not None:
-            return
-        # Compare against None so falsy but valid payloads like [] or {} are restored.
         stored = self._store_manager.async_get(self._entry_id, self._storage_key)
         if stored is not None:
             self.data = stored
@@ -801,6 +798,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         )
 
     @callback
+    @override
     def _async_refresh_finished(self) -> None:
         """Persist data after a successful refresh."""
         super()._async_refresh_finished()
@@ -808,6 +806,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
             self._schedule_save()
 
     @callback
+    @override
     def async_set_updated_data(self, data: _DataT) -> None:
         """Manually update data and persist it."""
         # The base method does not route through _async_refresh_finished, so persist
