@@ -1,6 +1,5 @@
 """Tests for the iTach remote platform."""
 
-from collections.abc import Iterable
 import logging
 from typing import Any
 from unittest.mock import MagicMock, call, patch
@@ -8,6 +7,7 @@ from unittest.mock import MagicMock, call, patch
 import pytest
 
 from homeassistant.components.itach import remote
+from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
     CONF_DEVICES,
     CONF_HOST,
@@ -17,10 +17,9 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity import Entity
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.setup import async_setup_component
 
-# Test helpers: _default_config(), _capture_added_entities()
+# Test helpers.
 
 
 def _default_config(**overrides: Any) -> dict[str, Any]:
@@ -45,60 +44,75 @@ def _default_config(**overrides: Any) -> dict[str, Any]:
     return config
 
 
-def _capture_added_entities() -> tuple[list[Entity], AddEntitiesCallback]:
-    """Return an entity list and add_entities callback."""
-    added_entities: list[Entity] = []
+def _remote_config(**overrides: Any) -> dict[str, Any]:
+    """Return a Home Assistant remote config for the iTach platform."""
+    return {
+        REMOTE_DOMAIN: [
+            {
+                "platform": "itach",
+                **_default_config(**overrides),
+            }
+        ]
+    }
 
-    def add_entities(
-        new_entities: Iterable[Entity], update_before_add: bool = False
-    ) -> None:
-        added_entities.extend(new_entities)
 
-    return added_entities, add_entities
+async def _async_setup_itach_remote(
+    hass: HomeAssistant,
+    **overrides: Any,
+) -> None:
+    """Set up the iTach remote platform through Home Assistant."""
+    assert await async_setup_component(
+        hass,
+        REMOTE_DOMAIN,
+        _remote_config(**overrides),
+    )
+    await hass.async_block_till_done()
 
 
-def test_setup_platform_creates_entity(hass: HomeAssistant) -> None:
+async def test_setup_platform_creates_entity(hass: HomeAssistant) -> None:
     """Test setup creates one remote entity from YAML config."""
     mock_itach = MagicMock()
     mock_itach.ready.return_value = True
-    added_entities, add_entities = _capture_added_entities()
 
     with patch(
         "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
         return_value=mock_itach,
     ):
-        remote.setup_platform(hass, _default_config(), add_entities)
+        await _async_setup_itach_remote(hass)
 
-    assert len(added_entities) == 1
-    assert added_entities[0].name == "TV"
+    state = hass.states.get("remote.tv")
+
+    assert state is not None
+    assert state.state == "off"
 
 
-def test_setup_platform_initializes_library(hass: HomeAssistant) -> None:
+async def test_setup_platform_initializes_library(hass: HomeAssistant) -> None:
     """Test setup initializes the pyitachip2ir client with YAML values."""
     mock_itach = MagicMock()
     mock_itach.ready.return_value = True
-    _added_entities, add_entities = _capture_added_entities()
 
     with patch(
         "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
         return_value=mock_itach,
     ) as mock_itach_class:
-        remote.setup_platform(
+        await _async_setup_itach_remote(
             hass,
-            _default_config(**{CONF_MAC: "AA:BB:CC:DD:EE:FF"}),
-            add_entities,
+            **{CONF_MAC: "AA:BB:CC:DD:EE:FF"},
         )
 
-    mock_itach_class.assert_called_once_with("AA:BB:CC:DD:EE:FF", "192.168.1.50", 4998)
+    mock_itach_class.assert_called_once_with(
+        "AA:BB:CC:DD:EE:FF",
+        "192.168.1.50",
+        4998,
+    )
 
 
-def test_setup_platform_ready_failure(
+async def test_setup_platform_ready_failure(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test setup does not add entities when iTach is not ready."""
+    """Test setup does not create an entity when iTach is not ready."""
     mock_itach = MagicMock()
     mock_itach.ready.return_value = False
-    added_entities, add_entities = _capture_added_entities()
 
     caplog.set_level(logging.ERROR)
 
@@ -106,49 +120,43 @@ def test_setup_platform_ready_failure(
         "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
         return_value=mock_itach,
     ):
-        remote.setup_platform(hass, _default_config(), add_entities)
+        await _async_setup_itach_remote(hass)
 
-    assert not added_entities
+    assert hass.states.get("remote.tv") is None
     mock_itach.ready.assert_called_once_with(remote.CONNECT_TIMEOUT)
     mock_itach.addDevice.assert_not_called()
     assert "Unable to find iTach" in caplog.text
 
 
-def test_setup_platform_adds_device_with_command_table(
+async def test_setup_platform_adds_device_with_command_table(
     hass: HomeAssistant,
 ) -> None:
     """Test setup adds a device with the expected command table."""
     mock_itach = MagicMock()
     mock_itach.ready.return_value = True
-    _added_entities, add_entities = _capture_added_entities()
-
-    config = _default_config(
-        **{
-            CONF_DEVICES: [
+    devices = [
+        {
+            CONF_NAME: "TV",
+            "modaddr": 1,
+            "connaddr": 2,
+            "commands": [
                 {
-                    CONF_NAME: "TV",
-                    "modaddr": 1,
-                    "connaddr": 2,
-                    "commands": [
-                        {
-                            CONF_NAME: "ON",
-                            "data": "sendir-on",
-                        },
-                        {
-                            CONF_NAME: "OFF",
-                            "data": "sendir-off",
-                        },
-                    ],
-                }
-            ]
+                    CONF_NAME: "ON",
+                    "data": "sendir-on",
+                },
+                {
+                    CONF_NAME: "OFF",
+                    "data": "sendir-off",
+                },
+            ],
         }
-    )
+    ]
 
     with patch(
         "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
         return_value=mock_itach,
     ):
-        remote.setup_platform(hass, config, add_entities)
+        await _async_setup_itach_remote(hass, **{CONF_DEVICES: devices})
 
     mock_itach.addDevice.assert_called_once_with(
         "TV",
@@ -217,33 +225,29 @@ def test_update_calls_library_update() -> None:
     mock_itach.update.assert_called_once_with()
 
 
-def test_setup_platform_uses_default_values(hass: HomeAssistant) -> None:
+async def test_setup_platform_uses_default_values(hass: HomeAssistant) -> None:
     """Test setup uses default values for optional YAML fields."""
     mock_itach = MagicMock()
     mock_itach.ready.return_value = True
-    added_entities, add_entities = _capture_added_entities()
-
-    config = _default_config(
-        **{
-            CONF_DEVICES: [
+    devices = [
+        {
+            "connaddr": 2,
+            "commands": [
                 {
-                    "connaddr": 2,
-                    "commands": [
-                        {
-                            CONF_NAME: "ON",
-                            "data": "sendir-on",
-                        },
-                    ],
-                }
-            ]
+                    CONF_NAME: "ON",
+                    "data": "sendir-on",
+                },
+            ],
         }
-    )
+    ]
 
     with patch(
         "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
         return_value=mock_itach,
     ) as mock_itach_class:
-        remote.setup_platform(hass, config, add_entities)
+        await _async_setup_itach_remote(hass, **{CONF_DEVICES: devices})
+
+    states = hass.states.async_all(REMOTE_DOMAIN)
 
     mock_itach_class.assert_called_once_with(None, "192.168.1.50", 4998)
     mock_itach.addDevice.assert_called_once_with(
@@ -252,44 +256,38 @@ def test_setup_platform_uses_default_values(hass: HomeAssistant) -> None:
         2,
         "ON\nsendir-on\n",
     )
-    assert len(added_entities) == 1
-    assert added_entities[0].name == DEVICE_DEFAULT_NAME
+    assert len(states) == 1
+    assert states[0].name == DEVICE_DEFAULT_NAME
 
 
-def test_setup_platform_uses_empty_string_placeholders_for_empty_commands(
+async def test_setup_platform_uses_empty_string_placeholders_for_empty_commands(
     hass: HomeAssistant,
 ) -> None:
     """Test setup converts empty command names and data to placeholders."""
     mock_itach = MagicMock()
     mock_itach.ready.return_value = True
-    _added_entities, add_entities = _capture_added_entities()
-
-    config = _default_config(
-        **{
-            CONF_DEVICES: [
+    devices = [
+        {
+            CONF_NAME: "TV",
+            "connaddr": 1,
+            "commands": [
                 {
-                    CONF_NAME: "TV",
-                    "connaddr": 1,
-                    "commands": [
-                        {
-                            CONF_NAME: "",
-                            "data": "",
-                        },
-                        {
-                            CONF_NAME: "   ",
-                            "data": "   ",
-                        },
-                    ],
-                }
-            ]
+                    CONF_NAME: "",
+                    "data": "",
+                },
+                {
+                    CONF_NAME: "   ",
+                    "data": "   ",
+                },
+            ],
         }
-    )
+    ]
 
     with patch(
         "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
         return_value=mock_itach,
     ):
-        remote.setup_platform(hass, config, add_entities)
+        await _async_setup_itach_remote(hass, **{CONF_DEVICES: devices})
 
     mock_itach.addDevice.assert_called_once_with(
         "TV",
