@@ -414,7 +414,9 @@ async def test_update_rate_limit_cookie_refresh_backoff(
     assert coordinator.last_update_success is False
     assert hass.states.get(ALARM_ENTITY_ID).state == STATE_UNAVAILABLE
     assert isinstance(coordinator.last_exception, update_coordinator.UpdateFailed)
-    assert coordinator.last_exception.retry_after == RATE_LIMIT_BACKOFF[0].total_seconds()
+    assert (
+        coordinator.last_exception.retry_after == RATE_LIMIT_BACKOFF[0].total_seconds()
+    )
 
 
 async def test_update_rate_limit_backoff_escalates(
@@ -429,13 +431,17 @@ async def test_update_rate_limit_backoff_escalates(
     mock_verisure.update_cookie.side_effect = RateLimitError("AUT_00021")
 
     await _async_trigger_coordinator_update(hass, freezer)
-    assert coordinator.last_exception.retry_after == RATE_LIMIT_BACKOFF[0].total_seconds()
+    assert (
+        coordinator.last_exception.retry_after == RATE_LIMIT_BACKOFF[0].total_seconds()
+    )
 
     freezer.tick(RATE_LIMIT_BACKOFF[0] + timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert coordinator.last_exception.retry_after == RATE_LIMIT_BACKOFF[1].total_seconds()
+    assert (
+        coordinator.last_exception.retry_after == RATE_LIMIT_BACKOFF[1].total_seconds()
+    )
 
 
 async def test_update_rate_limit_backoff_resets_on_success(
