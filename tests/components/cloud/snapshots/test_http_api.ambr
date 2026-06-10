@@ -94,12 +94,15 @@
   remote_server | us-west-1
   certificate_status | ready
   instance_id | 12345678901234567890
+  iot_state | connected
+  iot_tries | 0
+  remote_latency_avg_by_location | {'Earth': 13.37, 'Moon': None}
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
-  
+
   </details>
-  
+
   ## Latency by location
   
   Location | Latency (ms)
@@ -210,36 +213,38 @@
   remote_server | us-west-1
   certificate_status | ready
   instance_id | 12345678901234567890
+  iot_state | connected
+  iot_tries | 0
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
-  
+
   </details>
-  
+
   ## Installed packages
-  
+
   <details><summary>Installed packages</summary>
-  
+
   Package | Version
   --- | ---
   hass-nabucasa | 1.2.3
   homeassistant | 3.2.1
-  
+
   </details>
-  
+
   ## Full logs
-  
+
   <details><summary>Logs</summary>
-  
+
   ```logs
   2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] This message will be dropped since this test patches MAX_RECORDS
   2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
   2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
   2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
   ```
-  
+
   </details>
-  
+
   '''
 # ---
 # name: test_download_support_package_integration_load_error
@@ -290,35 +295,37 @@
   remote_server | us-west-1
   certificate_status | ready
   instance_id | 12345678901234567890
+  iot_state | connected
+  iot_tries | 0
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok
-  
+
   </details>
-  
+
   ## Installed packages
-  
+
   <details><summary>Installed packages</summary>
-  
+
   Package | Version
   --- | ---
   hass-nabucasa | 1.2.3
   homeassistant | 3.2.1
-  
+
   </details>
-  
+
   ## Full logs
-  
+
   <details><summary>Logs</summary>
-  
+
   ```logs
   2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] This message will be dropped since this test patches MAX_RECORDS
   2025-02-10 12:00:00.000 INFO (MainThread) [hass_nabucasa.iot] Hass nabucasa log
   2025-02-10 12:00:00.000 WARNING (MainThread) [snitun.utils.aiohttp_client] Snitun log
   2025-02-10 12:00:00.000 ERROR (MainThread) [homeassistant.components.cloud.client] Cloud log
   ```
-  
+
   </details>
-  
+
   '''
 # ---
