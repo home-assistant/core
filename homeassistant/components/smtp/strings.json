@@ -77,7 +77,7 @@
           "timeout": "Connection timeout"
         },
         "data_description": {
-          "timeout": "Maximum time to wait for SMTP server responses before terminating the request."
+          "timeout": "Maximum time to wait for a response from the SMTP server before the connection attempt is aborted."
         }
       }
     }
