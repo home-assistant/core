@@ -1,6 +1,6 @@
 """Tests for todo platform of local_todo."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
 from datetime import datetime
 import textwrap
 from typing import Any
@@ -27,11 +27,12 @@ from .conftest import TEST_ENTITY
 
 from tests.typing import WebSocketGenerator
 
+type WsGetItemsType = Callable[[], Coroutine[Any, Any, list[dict[str, str]]]]
+type WsMoveItemType = Callable[[str, str | None], Coroutine[Any, Any, dict[str, Any]]]
+
 
 @pytest.fixture
-async def ws_get_items(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[], Awaitable[dict[str, str]]]:
+async def ws_get_items(hass_ws_client: WebSocketGenerator) -> WsGetItemsType:
     """Fixture to fetch items from the todo websocket."""
 
     async def get() -> list[dict[str, str]]:
@@ -51,12 +52,10 @@ async def ws_get_items(
 
 
 @pytest.fixture
-async def ws_move_item(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[str, str | None], Awaitable[None]]:
+async def ws_move_item(hass_ws_client: WebSocketGenerator) -> WsMoveItemType:
     """Fixture to move an item in the todo list."""
 
-    async def move(uid: str, previous_uid: str | None) -> None:
+    async def move(uid: str, previous_uid: str | None) -> dict[str, Any]:
         # Fetch items using To-do platform
         client = await hass_ws_client()
         data = {
@@ -67,8 +66,7 @@ async def ws_move_item(
         if previous_uid is not None:
             data["previous_uid"] = previous_uid
         await client.send_json_auto_id(data)
-        resp = await client.receive_json()
-        assert resp.get("success")
+        return await client.receive_json()
 
     return move
 
@@ -106,7 +104,7 @@ async def test_add_item(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -151,7 +149,7 @@ async def test_add_item(
 async def test_remove_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -195,7 +193,7 @@ async def test_remove_item(
 async def test_bulk_remove(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test removing multiple todo items."""
     for i in range(5):
@@ -269,7 +267,7 @@ EXPECTED_UPDATE_ITEM = {
 async def test_update_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
     expected_state: str,
@@ -396,7 +394,7 @@ async def test_update_item(
 async def test_update_existing_field(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -447,7 +445,7 @@ async def test_update_existing_field(
 async def test_rename(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test renaming a todo item."""
 
@@ -521,8 +519,8 @@ async def test_rename(
 async def test_move_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-    ws_move_item: Callable[[str, str | None], Awaitable[None]],
+    ws_get_items: WsGetItemsType,
+    ws_move_item: WsMoveItemType,
     src_idx: int,
     dst_idx: int | None,
     expected_items: list[str],
@@ -547,7 +545,8 @@ async def test_move_item(
     previous_uid = None
     if dst_idx is not None:
         previous_uid = uids[dst_idx]
-    await ws_move_item(uids[src_idx], previous_uid)
+    resp = await ws_move_item(uids[src_idx], previous_uid)
+    assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 4
@@ -583,7 +582,7 @@ async def test_move_item_previous_unknown(
     hass: HomeAssistant,
     setup_integration: None,
     hass_ws_client: WebSocketGenerator,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test moving a todo item that does not exist."""
 
@@ -739,7 +738,7 @@ async def test_parse_existing_ics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     snapshot: SnapshotAssertion,
     expected_state: str,
 ) -> None:
