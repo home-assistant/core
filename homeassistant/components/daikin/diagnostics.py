@@ -3,12 +3,7 @@
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
-from homeassistant.const import (
-    CONF_API_KEY,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_UUID,
-)
+from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
 from homeassistant.core import HomeAssistant
 
 from .coordinator import DaikinConfigEntry
