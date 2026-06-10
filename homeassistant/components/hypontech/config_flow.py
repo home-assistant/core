@@ -22,7 +22,8 @@ from .const import CONF_OEM, DEFAULT_OEM, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 OEM_OPTIONS = [
-    SelectOptionDict(value=str(oem.id), label=oem.name) for oem in KNOWN_OEMS
+    SelectOptionDict(value=str(oem.id), label=f"{oem.name} ({oem.monitoring_url})")
+    for oem in KNOWN_OEMS
 ]
 
 

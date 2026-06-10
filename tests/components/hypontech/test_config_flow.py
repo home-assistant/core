@@ -3,9 +3,10 @@
 from typing import cast
 from unittest.mock import AsyncMock, Mock
 
-from hyponcloud import AuthenticationError
+from hyponcloud import KNOWN_OEMS, AuthenticationError
 import pytest
 
+from homeassistant.components.hypontech.config_flow import OEM_OPTIONS
 from homeassistant.components.hypontech.const import CONF_OEM, DEFAULT_OEM, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -26,6 +27,17 @@ TEST_ENTRY_DATA = {
     CONF_PASSWORD: "test-password",
     CONF_OEM: DEFAULT_OEM,
 }
+
+
+def test_oem_options_include_portal_url() -> None:
+    """Test OEM options include their portal URLs."""
+    assert [
+        {
+            "value": str(oem.id),
+            "label": f"{oem.name} ({oem.monitoring_url})",
+        }
+        for oem in KNOWN_OEMS
+    ] == OEM_OPTIONS
 
 
 async def test_user_flow(
