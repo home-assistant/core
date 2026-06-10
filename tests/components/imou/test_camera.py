@@ -3,14 +3,10 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
-from pyimouapi.const import (
-    PARAM_HD,
-    PARAM_MOTION_DETECT,
-    PARAM_STATE,
-    PARAM_STORAGE_USED,
-)
+from pyimouapi.const import PARAM_HD, PARAM_MOTION_DETECT, PARAM_STATE
 from pyimouapi.exceptions import ImouException
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.camera import async_get_image, async_get_stream_source
 from homeassistant.components.imou.camera import (
@@ -27,7 +23,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import create_online_device
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 TEST_STREAM_URL = "https://example.com/live.m3u8"
 TEST_IMAGE_BYTES = b"fake-image-bytes"
@@ -65,27 +61,17 @@ def _camera_entity_id(
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_camera_entities_registered_for_channel_device(
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "init_integration_stable_camera"
+)
+async def test_camera_entities_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Channel devices register SD and HD live view camera entities."""
-    entries = [
-        registry_entry
-        for registry_entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if registry_entry.domain == "camera"
-    ]
-    assert {entry.unique_id for entry in entries} == {
-        "d1_1$camera_sd",
-        "d1_1$camera_hd",
-    }
-    assert {entry.translation_key for entry in entries} == {"camera_sd", "camera_hd"}
-    for entry in entries:
-        assert hass.states.get(entry.entity_id) is not None
+    """Snapshot camera entities and states for a channel device."""
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 @pytest.mark.parametrize(
@@ -193,35 +179,88 @@ async def test_camera_image(
 
 
 @pytest.mark.parametrize(
+    "camera_key",
+    ["camera_sd", "camera_hd"],
+)
+@pytest.mark.parametrize(
     "imou_mock_devices",
     [
-        [
-            create_online_device(
-                "d1",
-                "Device 1",
-                channel_id="1",
-                button_keys=(),
-                switches={
-                    PARAM_HEADER_DETECT: {PARAM_STATE: True},
-                    PARAM_MOTION_DETECT: {PARAM_STATE: False},
-                },
-                sensors={PARAM_STORAGE_USED: {PARAM_STATE: "10"}},
-            )
-        ]
+        pytest.param(
+            [
+                create_online_device(
+                    "d1",
+                    "Device 1",
+                    channel_id="1",
+                    button_keys=(),
+                )
+            ],
+            id="no_detect_switches",
+        ),
+        pytest.param(
+            [
+                create_online_device(
+                    "d1",
+                    "Device 1",
+                    channel_id="1",
+                    button_keys=(),
+                    switches={
+                        PARAM_HEADER_DETECT: {PARAM_STATE: True},
+                        PARAM_MOTION_DETECT: {PARAM_STATE: False},
+                    },
+                )
+            ],
+            id="header_detect_on",
+        ),
+        pytest.param(
+            [
+                create_online_device(
+                    "d1",
+                    "Device 1",
+                    channel_id="1",
+                    button_keys=(),
+                    switches={
+                        PARAM_HEADER_DETECT: {PARAM_STATE: False},
+                        PARAM_MOTION_DETECT: {PARAM_STATE: True},
+                    },
+                )
+            ],
+            id="motion_detect_on",
+        ),
+        pytest.param(
+            [
+                create_online_device(
+                    "d1",
+                    "Device 1",
+                    channel_id="1",
+                    button_keys=(),
+                    switches={
+                        PARAM_HEADER_DETECT: {PARAM_STATE: True},
+                        PARAM_MOTION_DETECT: {PARAM_STATE: True},
+                    },
+                )
+            ],
+            id="both_detect_on",
+        ),
     ],
     indirect=True,
 )
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_camera_motion_detection_state_attribute(
+@pytest.mark.usefixtures(
+    "entity_registry_enabled_by_default", "init_integration_stable_camera"
+)
+async def test_camera_state(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    camera_key: str,
 ) -> None:
-    """Camera exposes motion detection in state when a detect switch is on."""
-    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    """Snapshot full camera state for motion detection switch combinations."""
+    entity_id = _camera_entity_id(
+        entity_registry, mock_config_entry, camera_key=camera_key
+    )
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes["motion_detection"] is True
+    assert state == snapshot
 
 
 @pytest.mark.parametrize(
