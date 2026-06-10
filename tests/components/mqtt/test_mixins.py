@@ -664,6 +664,7 @@ async def test_visible_by_default_with_user_override(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test enabling an entity that was not enabled or not visible by default."""
     await mqtt_mock_entry()
@@ -749,6 +750,10 @@ async def test_visible_by_default_with_user_override(
     assert entry.hidden
     assert entry.hidden_by is er.RegistryEntryHider.USER
     assert device_registry.async_get(device_id) is not None
+    assert (
+        "Restored entity sensor.test was configured as visible by default, "
+        "but was hidden by the user before, and will remain hidden" in caplog.text
+    )
 
 
 @pytest.mark.parametrize(

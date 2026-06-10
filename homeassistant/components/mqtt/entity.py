@@ -1436,19 +1436,21 @@ class MqttEntity(
         ) or (
             deleted_entry
             and self._config[CONF_VISIBLE_BY_DEFAULT]
-            and deleted_entry.hidden_by is er.RegistryEntryHider.INTEGRATION
+            and deleted_entry.hidden_by is not None
         ):
             # Enable previous deleted entity,
             # if it was not disabled by the user.
             # Only reset hidden by flag if it was not hidden by the user.
-            hidden_by_user = deleted_entry.hidden_by is er.RegistryEntryHider.USER
-            if hidden_by_user and self._config[CONF_VISIBLE_BY_DEFAULT]:
+            if (
+                deleted_entry.hidden_by is er.RegistryEntryHider.USER
+                and self._config[CONF_VISIBLE_BY_DEFAULT]
+            ):
                 _LOGGER.info(
                     "Restored entity %s was configured as visible by default, "
                     "but was hidden by the user before, and will remain hidden",
                     self.entity_id,
                 )
-            if hidden_by_user:
+            if deleted_entry.hidden_by is er.RegistryEntryHider.USER:
                 hidden_by: er.RegistryEntryHider | None = er.RegistryEntryHider.USER
             else:
                 hidden_by = (
