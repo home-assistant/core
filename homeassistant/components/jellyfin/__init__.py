@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -61,6 +62,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> 
     entry.async_on_unload(client.stop)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: JellyfinConfigEntry) -> bool:
+    """Migrate an old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        new_data = {**entry.data, CONF_URL: entry.data[CONF_URL].rstrip("/")}
+        hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
     return True
 
