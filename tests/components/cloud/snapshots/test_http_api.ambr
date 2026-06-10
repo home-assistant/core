@@ -96,7 +96,6 @@
   instance_id | 12345678901234567890
   iot_state | connected
   iot_tries | 0
-  remote_latency_avg_by_location | {'Earth': 13.37, 'Moon': None}
   can_reach_cert_server | Exception: Unexpected exception
   can_reach_cloud_auth | Failed: unreachable
   can_reach_cloud | ok

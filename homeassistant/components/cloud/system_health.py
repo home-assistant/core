@@ -50,13 +50,6 @@ async def system_health_info(hass: HomeAssistant) -> dict[str, Any]:
             data["iot_last_disconnect_clean"] = disconnect.clean
             data["iot_last_disconnect_reason"] = disconnect.reason
 
-        remote_latency_avg_by_location: dict[str, float | None] = {}
-        for location, result in cloud.remote.latency_by_location.items():
-            remote_latency_avg_by_location[location] = result.get("avg")
-
-        if remote_latency_avg_by_location:
-            data["remote_latency_avg_by_location"] = remote_latency_avg_by_location
-
     data["can_reach_cert_server"] = system_health.async_check_can_reach_url(
         hass, f"https://{cloud.acme_server}/directory"
     )

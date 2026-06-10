@@ -131,7 +131,6 @@ async def test_cloud_system_health_with_cert_and_disconnect(
         fingerprint="abc123def456",
         alternative_names=["custom.example.com"],
     )
-    cloud.remote.latency_by_location = {"fra": {"avg": 12.4}, "iad": {"avg": None}}
     cloud.iot.state = "connected"
     cloud.iot.tries = 2
     cloud.iot.last_disconnect_reason = DisconnectReason(
@@ -152,5 +151,3 @@ async def test_cloud_system_health_with_cert_and_disconnect(
     assert info["iot_last_disconnect_clean"] is False
     assert info["iot_last_disconnect_reason"] == "ping_timeout"
     assert info["iot_tries"] == 2
-    assert info["remote_latency_avg_by_location"]["fra"] == 12.4
-    assert info["remote_latency_avg_by_location"]["iad"] is None
