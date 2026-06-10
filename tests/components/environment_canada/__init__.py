@@ -1,6 +1,7 @@
 """Tests for the Environment Canada integration."""
 
 from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.environment_canada.const import CONF_STATION, DOMAIN
@@ -17,10 +18,10 @@ FIXTURE_USER_INPUT = {
 }
 
 
-async def init_integration(hass: HomeAssistant, ec_data) -> MockConfigEntry:
-    """Set up the Environment Canada integration in Home Assistant."""
+def build_mocks(ec_data) -> tuple[MagicMock, MagicMock, MagicMock]:
+    """Build the weather, AQHI and radar library mocks used during setup."""
 
-    def mock_ec():
+    def mock_ec() -> MagicMock:
         ec_mock = MagicMock()
         ec_mock.station_id = FIXTURE_USER_INPUT[CONF_STATION]
         ec_mock.lat = FIXTURE_USER_INPUT[CONF_LATITUDE]
@@ -28,9 +29,6 @@ async def init_integration(hass: HomeAssistant, ec_data) -> MockConfigEntry:
         ec_mock.language = FIXTURE_USER_INPUT[CONF_LANGUAGE]
         ec_mock.update = AsyncMock()
         return ec_mock
-
-    config_entry = MockConfigEntry(domain=DOMAIN, data=FIXTURE_USER_INPUT, title="Home")
-    config_entry.add_to_hass(hass)
 
     weather_mock = mock_ec()
     ec_data["metadata"].timestamp = datetime(2022, 10, 4, tzinfo=UTC)
@@ -47,6 +45,22 @@ async def init_integration(hass: HomeAssistant, ec_data) -> MockConfigEntry:
     radar_mock.metadata = {"attribution": "Data provided by Environment Canada"}
     radar_mock.clear_cache = MagicMock()
 
+    return weather_mock, mock_ec(), radar_mock
+
+
+async def init_integration(
+    hass: HomeAssistant,
+    ec_data,
+    options: dict[str, Any] | None = None,
+) -> MockConfigEntry:
+    """Set up the Environment Canada integration in Home Assistant."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=FIXTURE_USER_INPUT, title="Home", options=options or {}
+    )
+    config_entry.add_to_hass(hass)
+
+    weather_mock, aqhi_mock, radar_mock = build_mocks(ec_data)
+
     with (
         patch(
             "homeassistant.components.environment_canada.ECWeather",
@@ -54,7 +68,7 @@ async def init_integration(hass: HomeAssistant, ec_data) -> MockConfigEntry:
         ),
         patch(
             "homeassistant.components.environment_canada.ECAirQuality",
-            return_value=mock_ec(),
+            return_value=aqhi_mock,
         ),
         patch(
             "homeassistant.components.environment_canada.ECMap",
