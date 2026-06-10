@@ -459,10 +459,10 @@ async def test_standing_fan_oscillation_switches(
 
 
 @pytest.mark.parametrize(
-    ("service", "mock_method"),
+    ("service", "mock_method", "expected_arg"),
     [
-        (SERVICE_TURN_ON, "set_vertical_oscillation"),
-        (SERVICE_TURN_OFF, "set_vertical_oscillation"),
+        (SERVICE_TURN_ON, "set_vertical_oscillation", True),
+        (SERVICE_TURN_OFF, "set_vertical_oscillation", False),
     ],
 )
 async def test_circulator_fan_pro_vertical_oscillation_switch(
@@ -470,6 +470,7 @@ async def test_circulator_fan_pro_vertical_oscillation_switch(
     mock_entry_encrypted_factory: Callable[[str], MockConfigEntry],
     service: str,
     mock_method: str,
+    expected_arg: bool,
 ) -> None:
     """Test the Circulator Fan Pro vertical oscillation switch."""
     inject_bluetooth_service_info(hass, CIRCULATOR_FAN_PRO_SERVICE_INFO)
@@ -494,4 +495,4 @@ async def test_circulator_fan_pro_vertical_oscillation_switch(
             blocking=True,
         )
 
-        mocked_instance.assert_awaited_once()
+        mocked_instance.assert_awaited_once_with(expected_arg)
