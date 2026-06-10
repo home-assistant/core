@@ -14,7 +14,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .coordinator import SmgwSensorCoordinator, ThebenConfigEntry, ThebenRuntimeData
-from .smgw import ConexaSMGW, checkNetworkConnection
+from .smgw import ConexaSMGW, ConexaSmgwErr, checkNetworkConnection
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bo
     # Get initial data
     try:
         await coordinator.async_config_entry_first_refresh()
-    except Exception as e:
+    except ConexaSmgwErr as e:
         raise ConfigEntryError("Failed to fetch initial data") from e
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

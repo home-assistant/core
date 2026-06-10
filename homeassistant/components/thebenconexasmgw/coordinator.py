@@ -13,6 +13,7 @@ from homeassistant.helpers.event import (
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
+from .const import MAX_MEASUREMENT_AGE, MAX_RETRIES
 from .smgw import ConexaSMGW
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,7 +82,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
             age = (now_utc - meter_datetime).total_seconds()
             _LOGGER.debug("Data age in seconds: %s", age)
 
-            if age > 100 and self.retries < 2:
+            if age > MAX_MEASUREMENT_AGE and self.retries < MAX_RETRIES:
                 _LOGGER.debug(
                     "Data is quite old (age: %s seconds). Likely because the SMGW was busy, retrying in 60 seconds",
                     age,
@@ -115,3 +116,13 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
         """Triggered at a retry."""
         _LOGGER.debug("Starting out of schedule poll at %s", now)
         await self.async_refresh()
+
+    async def async_shutdown(self) -> None:
+        """Cancel any updates before shutting down."""
+        self._scheduled_updates()
+
+        if self._unscheduled_updates is not None:
+            self._unscheduled_updates()
+            self._unscheduled_updates = None
+
+        await super().async_shutdown()
