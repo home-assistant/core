@@ -220,17 +220,6 @@ DESCRIPTIONS = (
         options=[member.name.lower() for member in EventHistory.error.enum],
     ),
     GardenaBluetoothSensorEntityDescription(
-        key="valve_activation_reason",
-        translation_key="activation_reason",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.ENUM,
-        char=Valve.activation_reason,
-        get=lambda x: (
-            x.name.lower() if isinstance(x, Valve.activation_reason.enum) else None
-        ),
-        options=[member.name.lower() for member in Valve.activation_reason.enum],
-    ),
-    GardenaBluetoothSensorEntityDescription(
         key="aqua_contour_activation_reason",
         translation_key="activation_reason",
         entity_category=EntityCategory.DIAGNOSTIC,
