@@ -31,12 +31,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Data Grand Lyon binary sensor entities."""
-    coordinator = entry.runtime_data
+    velov_coordinator = entry.runtime_data.velov_coordinator
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VELOV_STATION):
         async_add_entities(
             (
-                DataGrandLyonVelovBinarySensor(coordinator, subentry, description)
+                DataGrandLyonVelovBinarySensor(velov_coordinator, subentry, description)
                 for description in VELOV_BINARY_SENSOR_DESCRIPTIONS
             ),
             config_subentry_id=subentry.subentry_id,
@@ -50,6 +50,5 @@ class DataGrandLyonVelovBinarySensor(DataGrandLyonVelovEntity, BinarySensorEntit
     def is_on(self) -> bool:
         """Return true if the station is open."""
         return (
-            self.coordinator.data.velov_stations[self._subentry_id].status
-            == VelovStationStatus.OPEN
+            self.coordinator.data[self._subentry_id].status == VelovStationStatus.OPEN
         )

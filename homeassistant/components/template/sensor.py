@@ -22,7 +22,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_SENSORS,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -113,7 +112,6 @@ async def async_setup_platform(
         TriggerSensorEntity,
         async_add_entities,
         discovery_info,
-        legacy_key=CONF_SENSORS,
     )
 
 
@@ -189,8 +187,11 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, config: ConfigType) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)

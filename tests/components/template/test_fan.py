@@ -45,7 +45,6 @@ TEST_AVAILABILITY_ENTITY = "binary_sensor.availability"
 
 TEST_FAN = TemplatePlatformSetup(
     fan.DOMAIN,
-    "fans",
     "test_fan",
     make_test_trigger(
         TEST_INPUT_BOOLEAN, TEST_STATE_ENTITY_ID, TEST_AVAILABILITY_ENTITY
@@ -170,26 +169,6 @@ async def setup_single_attribute_state_fan(
         state_template,
         {**OPTIMISTIC_ON_OFF_ACTIONS, **extra_config},
     )
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style", "extra_config"),
-    [
-        (
-            1,
-            "{{ states('sensor.test_state') }}",
-            ConfigurationStyle.LEGACY,
-            OPTIMISTIC_ON_OFF_ACTIONS,
-        )
-    ],
-)
-@pytest.mark.usefixtures("setup_state_fan")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("fan")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(

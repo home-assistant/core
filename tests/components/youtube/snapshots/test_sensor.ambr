@@ -34,6 +34,22 @@
 # name: test_sensor.2
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'friendly_name': 'Google for Developers Videos',
+      'icon': 'mdi:filmstrip-box-multiple',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'videos',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_videos',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5798',
+  })
+# ---
+# name: test_sensor.3
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
       'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',
       'friendly_name': 'Google for Developers Views',
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -77,6 +93,22 @@
   })
 # ---
 # name: test_sensor_without_uploaded_video.2
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Google for Developers Videos',
+      'icon': 'mdi:filmstrip-box-multiple',
+      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      'unit_of_measurement': 'videos',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.google_for_developers_videos',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5798',
+  })
+# ---
+# name: test_sensor_without_uploaded_video.3
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'entity_picture': 'https://yt3.ggpht.com/fca_HuJ99xUxflWdex0XViC3NfctBFreIl8y4i9z411asnGTWY-Ql3MeH_ybA4kNaOjY7kyA=s800-c-k-c0x00ffffff-no-rj',

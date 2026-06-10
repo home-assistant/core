@@ -355,8 +355,8 @@ class EcovacsVacuum(
                 name = info.get("nick", info["name"])
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
-                    translation_key="vacuum_send_command_area_not_supported",
-                    translation_placeholders={"name": name},
+                    translation_key="vacuum_send_command_not_supported",
+                    translation_placeholders={"command": command, "name": name},
                 )
 
             if command == "spot_area":

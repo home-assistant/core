@@ -27,6 +27,7 @@ from homeassistant.const import (
     UnitOfPressure,
     UnitOfTemperature,
     UnitOfVolume,
+    UnitOfVolumeFlowRate,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -394,7 +395,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
     },
@@ -447,7 +448,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
     },
@@ -565,7 +566,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.GAS_METER_TIME,
                 translation_key="gas_meter_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ],
         Attribute.GAS_METER_VOLUME: [
@@ -726,7 +727,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
                 component_fn=lambda component: component == "cavity-01",
                 component_translation_key={
                     "cavity-01": "oven_completion_time_cavity_01",
@@ -1196,7 +1197,7 @@ CAPABILITY_TO_SENSORS: dict[
                 key=Attribute.COMPLETION_TIME,
                 translation_key="completion_time",
                 device_class=SensorDeviceClass.TIMESTAMP,
-                value_fn=dt_util.parse_datetime,
+                value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
                 component_fn=lambda component: component == "sub",
                 component_translation_key={
                     "sub": "washer_sub_completion_time",
@@ -1277,6 +1278,35 @@ CAPABILITY_TO_SENSORS: dict[
                 value_fn=lambda value: dt_util.parse_datetime(value) if value else None,
             )
         ]
+    },
+    Capability.MIRRORHAPPY40050_COPPER_WATER_METER: {
+        Attribute.ENERGY_USAGE_DAY: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ENERGY_USAGE_DAY,
+                translation_key="water_usage_day",
+                device_class=SensorDeviceClass.WATER,
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                native_unit_of_measurement=UnitOfVolume.GALLONS,
+            )
+        ],
+        Attribute.ENERGY_USAGE_MONTH: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.ENERGY_USAGE_MONTH,
+                translation_key="water_usage_month",
+                device_class=SensorDeviceClass.WATER,
+                state_class=SensorStateClass.TOTAL_INCREASING,
+                native_unit_of_measurement=UnitOfVolume.GALLONS,
+            )
+        ],
+        Attribute.POWER_CURRENT: [
+            SmartThingsSensorEntityDescription(
+                key=Attribute.POWER_CURRENT,
+                translation_key="water_usage_current",
+                state_class=SensorStateClass.MEASUREMENT,
+                device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
+                native_unit_of_measurement=UnitOfVolumeFlowRate.GALLONS_PER_MINUTE,
+            )
+        ],
     },
 }
 

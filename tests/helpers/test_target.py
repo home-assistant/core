@@ -297,9 +297,13 @@ def registries_mock(hass: HomeAssistant) -> None:
             entity_in_area_b.entity_id: entity_in_area_b,
             config_entity_with_my_label.entity_id: config_entity_with_my_label,
             diag_entity_with_my_label.entity_id: diag_entity_with_my_label,
-            entity_with_label1_and_label2_from_device.entity_id: entity_with_label1_and_label2_from_device,
+            entity_with_label1_and_label2_from_device.entity_id: (
+                entity_with_label1_and_label2_from_device
+            ),
             entity_with_label1_from_device.entity_id: entity_with_label1_from_device,
-            entity_with_label1_from_device_and_different_area.entity_id: entity_with_label1_from_device_and_different_area,
+            entity_with_label1_from_device_and_different_area.entity_id: (
+                entity_with_label1_from_device_and_different_area
+            ),
             entity_with_labels_from_device.entity_id: entity_with_labels_from_device,
             entity_with_my_label.entity_id: entity_with_my_label,
             hidden_entity_with_my_label.entity_id: hidden_entity_with_my_label,

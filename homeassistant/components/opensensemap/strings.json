@@ -1,0 +1,35 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "Failed to connect to openSenseMap.",
+      "invalid_station": "The provided station ID does not exist on openSenseMap."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_station": "[%key:component::opensensemap::config::abort::invalid_station%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "station_id": "Station ID"
+        },
+        "data_description": {
+          "station_id": "The unique identifier of your openSenseMap station. You can find it in the URL when viewing the station on opensensemap.org."
+        },
+        "description": "Add an openSenseMap station to monitor its measurements.",
+        "title": "Add openSenseMap station"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} using YAML is being removed but there was a connection error importing your YAML configuration.\n\nEnsure connection to {integration_title} works and restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to set up the integration manually.",
+      "title": "The {integration_title} YAML configuration import failed"
+    },
+    "deprecated_yaml_import_issue_invalid_station": {
+      "description": "Configuring {integration_title} using YAML is being removed but the configured station could not be found.\n\nVerify the station ID and restart Home Assistant to try again or remove the {integration_title} YAML configuration from your configuration.yaml file and continue to set up the integration manually.",
+      "title": "[%key:component::opensensemap::issues::deprecated_yaml_import_issue_cannot_connect::title%]"
+    }
+  }
+}

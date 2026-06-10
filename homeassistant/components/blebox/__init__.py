@@ -6,7 +6,6 @@ from blebox_uniapi.box import Box
 from blebox_uniapi.error import Error
 from blebox_uniapi.session import ApiHost
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -18,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import DEFAULT_SETUP_TIMEOUT
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .helpers import get_maybe_authenticated_session
-
-type BleBoxConfigEntry = ConfigEntry[Box]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,9 +30,8 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
-
-PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BleBoxConfigEntry) -> bool:
@@ -57,7 +54,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleBoxConfigEntry) -> bo
         _LOGGER.error("Identify failed at %s:%d (%s)", api_host.host, api_host.port, ex)
         raise ConfigEntryNotReady from ex
 
-    entry.runtime_data = product
+    coordinator = BleBoxCoordinator(hass, entry, product)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

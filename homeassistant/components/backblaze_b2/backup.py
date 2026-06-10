@@ -20,12 +20,12 @@ from homeassistant.components.backup import (
     OnProgressCallback,
     suggested_filename,
 )
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_iterator import AsyncIteratorReader
 
 from . import BackblazeConfigEntry
 from .const import (
-    CONF_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
     METADATA_FILE_SUFFIX,

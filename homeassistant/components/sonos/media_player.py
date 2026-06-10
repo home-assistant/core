@@ -3,7 +3,9 @@
 import datetime
 from functools import partial
 import logging
+import os
 from typing import TYPE_CHECKING, Any
+from urllib.parse import urlparse
 
 from soco import SoCo, alarms
 from soco.core import (
@@ -35,6 +37,8 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
     RepeatMode,
+    SearchMedia,
+    SearchMediaQuery,
     async_process_play_media_url,
 )
 from homeassistant.components.plex import PLEX_URI_SCHEME
@@ -88,6 +92,7 @@ SONOS_TO_REPEAT = {meaning: mode for mode, meaning in REPEAT_TO_SONOS.items()}
 
 UPNP_ERRORS_TO_IGNORE = ["701", "711", "712"]
 ANNOUNCE_NOT_SUPPORTED_ERRORS: list[str] = ["globalError"]
+ANNOUNCE_AUDIOCLIP_SUPPORTED_FORMATS: frozenset[str] = frozenset({".mp3", ".wav"})
 
 
 async def async_setup_entry(
@@ -124,6 +129,7 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.PLAY_MEDIA
         | MediaPlayerEntityFeature.PREVIOUS_TRACK
         | MediaPlayerEntityFeature.REPEAT_SET
+        | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SHUFFLE_SET
@@ -457,6 +463,15 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if kwargs.get(ATTR_MEDIA_ANNOUNCE):
             volume = kwargs.get("extra", {}).get("volume")
+            ext = os.path.splitext(urlparse(media_id).path)[1].lower()
+            if ext and ext not in ANNOUNCE_AUDIOCLIP_SUPPORTED_FORMATS:
+                _LOGGER.warning(
+                    "Sonos AudioClip announce only supports MP3 and WAV; "
+                    "%s has extension %s and will be attempted as a clip anyway on %s",
+                    media_id,
+                    ext,
+                    self.speaker.zone_name,
+                )
             _LOGGER.debug("Playing %s using websocket audioclip", media_id)
             try:
                 assert self.speaker.websocket
@@ -804,6 +819,18 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
             self.get_browse_image_url,
             media_content_id,
             media_content_type,
+        )
+
+    async def async_search_media(
+        self,
+        query: SearchMediaQuery,
+    ) -> SearchMedia:
+        """Search the music library for media matching the query."""
+        return await media_browser.async_search_media(
+            self.hass,
+            self.media,
+            self.get_browse_image_url,
+            query,
         )
 
     async def async_join_players(self, group_members: list[str]) -> None:

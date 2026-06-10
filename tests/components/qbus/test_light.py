@@ -34,7 +34,7 @@ _PAYLOAD_LIGHT_SET_STATE_OFF = '{"id": "UL15", "type": "action", "action": "off"
 _TOPIC_LIGHT_STATE = "cloudapp/QBUSMQTTGW/UL1/UL15/state"
 _TOPIC_LIGHT_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL15/setState"
 
-_LIGHT_ENTITY_ID = "light.media_room"
+_LIGHT_ENTITY_ID = "light.media_room_media_room"
 
 
 async def test_light(

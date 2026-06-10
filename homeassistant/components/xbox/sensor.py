@@ -152,7 +152,8 @@ def now_playing_attributes(person: Person, title: Title | None) -> dict[str, Any
         attributes.update(
             {
                 "achievements": (
-                    f"{achievement.current_achievements} / {achievement.total_achievements}"
+                    f"{achievement.current_achievements}"
+                    f" / {achievement.total_achievements}"
                 ),
                 "gamerscore": (
                     f"{achievement.current_gamerscore} / {achievement.total_gamerscore}"

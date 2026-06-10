@@ -81,8 +81,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
     ) as err:
         raise ConfigEntryAuthFailed from err
     except AirOSKeyDataMissingError as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryError("key_data_missing") from err
     except Exception as err:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryError("unknown") from err
 
     airos_class: type[AirOS8 | AirOS6] = (
@@ -113,10 +115,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> boo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: AirOSConfigEntry) -> bool:
     """Migrate old config entry."""
-
-    # This means the user has downgraded from a future version
-    if entry.version > 2:
-        return False
 
     # 1.1 Migrate config_entry to add advanced ssl settings
     if entry.version == 1 and entry.minor_version == 1:

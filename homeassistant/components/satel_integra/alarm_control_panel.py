@@ -45,12 +45,7 @@ async def async_setup_entry(
 
     runtime_data = config_entry.runtime_data
 
-    partition_subentries = filter(
-        lambda entry: entry.subentry_type == SUBENTRY_TYPE_PARTITION,
-        config_entry.subentries.values(),
-    )
-
-    for subentry in partition_subentries:
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_PARTITION):
         partition_num: int = subentry.data[CONF_PARTITION_NUMBER]
         arm_home_mode: int = subentry.data[CONF_ARM_HOME_MODE]
 

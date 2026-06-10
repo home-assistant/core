@@ -15,6 +15,8 @@ _LOGGER = logging.getLogger(__name__)
 class EcobeeBaseEntity(Entity):
     """Base methods for Ecobee entities."""
 
+    _attr_has_entity_name = True
+
     def __init__(self, data: EcobeeData, thermostat_index: int) -> None:
         """Initiate base methods for Ecobee entities."""
         self.data = data

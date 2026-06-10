@@ -629,7 +629,8 @@ async def async_setup_entry(
                 )
             )
         elif info.platform_hint == "notification":
-            # prevent duplicate entities for values that are already represented as binary sensors
+            # prevent duplicate entities for values that are
+            # already represented as binary sensors
             if is_valid_notification_binary_sensor(info):
                 return
             entities.append(

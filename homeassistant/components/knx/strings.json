@@ -1094,6 +1094,9 @@
     "integration_not_loaded": {
       "message": "KNX integration is not loaded."
     },
+    "service_event_register_ga_not_found": {
+      "message": "Could not find registered event for `{group_addresses}` to remove."
+    },
     "service_exposure_remove_not_found": {
       "message": "Could not find exposure for `{group_address}` to remove."
     },

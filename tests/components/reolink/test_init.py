@@ -133,7 +133,7 @@ async def test_failures_parametrized(
     )
     await hass.async_block_till_done()
 
-    assert config_entry.state == expected
+    assert config_entry.state is expected
 
 
 async def test_firmware_error_twice(
@@ -1154,7 +1154,7 @@ async def test_firmware_update_delay(
     call_count: int,
 ) -> None:
     """Test delay of firmware update check."""
-    now = datetime.now(UTC)
+    now = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     check_delay = (
         now
         + timedelta(seconds=seconds)

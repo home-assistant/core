@@ -580,17 +580,17 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
 
         if tool_results:
             messages.append(_create_google_tool_response_content(tool_results))
-        generateContentConfig = self.create_generate_content_config()
-        generateContentConfig.tools = tools or None
-        generateContentConfig.system_instruction = (
+        generate_content_config = self.create_generate_content_config()
+        generate_content_config.tools = tools or None
+        generate_content_config.system_instruction = (
             prompt if supports_system_instruction else None
         )
-        generateContentConfig.automatic_function_calling = (
+        generate_content_config.automatic_function_calling = (
             AutomaticFunctionCallingConfig(disable=True, maximum_remote_calls=None)
         )
         if structure:
-            generateContentConfig.response_mime_type = "application/json"
-            generateContentConfig.response_schema = _format_schema(
+            generate_content_config.response_mime_type = "application/json"
+            generate_content_config.response_schema = _format_schema(
                 convert(
                     structure,
                     custom_serializer=(
@@ -608,7 +608,7 @@ class GoogleGenerativeAILLMBaseEntity(Entity):
                 *messages,
             ]
         chat = self._genai_client.aio.chats.create(
-            model=model_name, history=messages, config=generateContentConfig
+            model=model_name, history=messages, config=generate_content_config
         )
         user_message = chat_log.content[-1]
         assert isinstance(user_message, conversation.UserContent)
@@ -754,7 +754,7 @@ async def async_prepare_files_for_prompt(
                 config={"http_options": {"timeout": TIMEOUT_MILLIS}},
             )
 
-        if uploaded_file.state == FileState.FAILED:
+        if uploaded_file.state is FileState.FAILED:
             raise HomeAssistantError(
                 f"File `{uploaded_file.name}` processing"
                 " failed, reason:"
@@ -766,7 +766,7 @@ async def async_prepare_files_for_prompt(
     tasks = [
         asyncio.create_task(wait_for_file_processing(part))
         for part in prompt_parts
-        if part.state != FileState.ACTIVE
+        if part.state is not FileState.ACTIVE
     ]
     async with asyncio.timeout(TIMEOUT_MILLIS / 1000):
         await asyncio.gather(*tasks)
