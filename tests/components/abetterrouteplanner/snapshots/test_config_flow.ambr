@@ -1,0 +1,45 @@
+# serializer version: 1
+# name: test_full_flow
+  dict({
+    'auth_implementation': 'abetterrouteplanner',
+    'known_vehicle_ids': list([
+      '941349991303',
+    ]),
+    'token': dict({
+      'access_token': 'mock-access-token',
+      'expires_at': 1767229200.0,
+      'expires_in': 3600,
+      'id_token': 'header.eyJzdWIiOiAidXNlci1zdWItMTIzNDUifQ.signature',
+      'refresh_token': 'mock-refresh-token',
+      'token_type': 'Bearer',
+    }),
+    'vehicle_ids': list([
+      '941349991303',
+    ]),
+  })
+# ---
+# name: test_reconfigure_picker_defaults_to_current_selection
+  dict({
+    'vehicle_ids': SelectSelector(
+      allowed_context_keys=dict({
+      }),
+      config=dict({
+        'custom_value': False,
+        'mode': 'list',
+        'multiple': True,
+        'options': list([
+          dict({
+            'label': 'Vehicle 1',
+            'value': '1',
+          }),
+          dict({
+            'label': 'Vehicle 2',
+            'value': '2',
+          }),
+        ]),
+        'sort': False,
+      }),
+      selector_type='select',
+    ),
+  })
+# ---

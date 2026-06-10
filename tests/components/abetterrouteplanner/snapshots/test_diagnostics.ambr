@@ -1,0 +1,115 @@
+# serializer version: 1
+# name: test_diagnostics_snapshot
+  dict({
+    'entry': dict({
+      'data': dict({
+        'auth_implementation': 'abetterrouteplanner',
+        'known_vehicle_ids': list([
+          '941349991303',
+          '524289123456',
+        ]),
+        'token': '**REDACTED**',
+        'vehicle_ids': list([
+          '941349991303',
+        ]),
+      }),
+      'declined_vehicle_ids': list([
+        '524289123456',
+      ]),
+      'entry_id': '01TESTDIAGNOSTICSENTRYID001',
+      'known_vehicle_ids': list([
+        '524289123456',
+        '941349991303',
+      ]),
+      'selected_vehicle_ids': list([
+        '941349991303',
+      ]),
+      'source': 'user',
+      'title_includes_display_name': False,
+      'version': 1,
+    }),
+    'garage': list([
+      dict({
+        'device_manufacturer': None,
+        'device_model': None,
+        'name': '**REDACTED**',
+        'paint': None,
+        'vehicle_id': 941349991303,
+        'vehicle_model': 'rivian:r2:26:ncma91:rwd:w21',
+      }),
+      dict({
+        'device_manufacturer': None,
+        'device_model': None,
+        'name': '**REDACTED**',
+        'paint': None,
+        'vehicle_id': 524289123456,
+        'vehicle_model': 'rivian:r1s:24:max:tri:w22',
+      }),
+    ]),
+    'garage_coordinator': dict({
+      'last_exception_type': None,
+      'last_update_success': True,
+      'last_update_success_time': '2026-05-23T12:00:00+00:00',
+      'listener_count': 3,
+      'update_interval_seconds': 600.0,
+    }),
+    'id_token_claims': dict({
+      'sub': '**REDACTED**',
+    }),
+    'registry': dict({
+      'device_count': 1,
+      'entities_by_domain': dict({
+        'sensor': 1,
+      }),
+      'entity_count': 1,
+    }),
+    'sse_state': dict({
+      'connect_count': 1,
+      'connected': True,
+      'current_backoff_seconds': 0,
+      'last_attempt_at': '2026-05-23T12:00:00+00:00',
+      'last_connect_at': '2026-05-23T12:00:00+00:00',
+      'last_disconnect_at': None,
+      'last_disconnect_reason': None,
+    }),
+    'telemetry_coordinator': dict({
+      'last_exception_type': None,
+      'last_update_success': True,
+      'last_update_success_time': '2026-05-23T12:00:00+00:00',
+      'listener_count': 1,
+      'presence_predicates_registered': list([
+        'battery_capacity',
+        'battery_temperature',
+        'calibrated_ref_cons',
+        'charging_state',
+        'odometer',
+        'power',
+        'range',
+        'soc',
+        'soe',
+        'soh',
+        'voltage',
+      ]),
+      'presence_seen': list([
+        list([
+          941349991303,
+          'soc',
+        ]),
+      ]),
+      'providers': dict({
+      }),
+      'update_interval_seconds': None,
+    }),
+    'telemetry_field_names': dict({
+      '941349991303': list([
+        'soc',
+        'vehicleId',
+      ]),
+    }),
+    'token_metadata': dict({
+      'expires_at': 1900000000.0,
+      'has_id_token': True,
+      'token_type': 'Bearer',
+    }),
+  })
+# ---
