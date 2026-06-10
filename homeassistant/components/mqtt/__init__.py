@@ -483,7 +483,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 continue
             options[key] = data.pop(key)
 
-    # Bump config entry to version 2.1 from version 1.2
+    # Bump config entry to version 2.1
     hass.config_entries.async_update_entry(
         entry,
         data=data,
