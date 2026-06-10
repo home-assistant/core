@@ -326,6 +326,7 @@ async def test_add_item_service_extended_fields(
 ) -> None:
     """Test adding an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= supported_entity_feature
     await create_mock_platform(hass, [test_entity])
 
@@ -625,6 +626,7 @@ async def test_update_todo_item_extended_fields(
 ) -> None:
     """Test updating an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= supported_entity_feature
     await create_mock_platform(hass, [test_entity])
 
@@ -711,6 +713,7 @@ async def test_update_todo_item_extended_fields_overwrite_existing_values(
 ) -> None:
     """Test updating an item in a To-do list."""
 
+    assert test_entity._attr_supported_features is not None
     test_entity._attr_supported_features |= (
         TodoListEntityFeature.SET_DESCRIPTION_ON_ITEM
         | TodoListEntityFeature.SET_DUE_DATE_ON_ITEM
