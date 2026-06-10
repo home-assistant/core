@@ -1336,22 +1336,14 @@ async def test_eventbus_listen_once_run_immediately_coro(hass: HomeAssistant) ->
 async def test_eventbus_nested_fire_dispatch_order(hass: HomeAssistant) -> None:
     """Test dispatch order when a listener fires an event synchronously.
 
-    Event dispatch is reentrant: an event fired from within a synchronous
-    listener is dispatched immediately, nested inside the dispatch of the
-    outer event.
-
     The implementation of event listeners is such that listeners are called
     in the order they were registered
 
-    As a result, the order in which a listener observes the two
-    events depends on its registration position relative to the listener
-    which fires the nested event: listeners registered before it observe
-    fire order, listeners registered after it observe the nested event
-    first.
-
-    This test documents the current behavior rather than guarantees it: a
-    non-reentrant (queued) dispatch would make all listeners observe fire
-    order.
+    Event dispatch is however non-reentrant: an event fired from within a
+    synchronous listener is queued and dispatched after the dispatch of the
+    outer event completes. All listeners therefore observe events in fire
+    order, regardless of their registration position relative to the
+    listener which fires the nested event.
     """
     observed_before: list[str] = []
     observed_after: list[str] = []
@@ -1378,13 +1370,47 @@ async def test_eventbus_nested_fire_dispatch_order(hass: HomeAssistant) -> None:
 
     hass.bus.async_fire("test_outer")
 
-    # Registered before the nesting listener: observes fire order.
+    # All listeners observe fire order, regardless of registration position
+    # relative to the nesting listener.
     assert observed_before == ["test_outer", "test_nested"]
-    # Registered after the nesting listener: observes inverted order.
-    assert observed_after == ["test_nested", "test_outer"]
+    assert observed_after == ["test_outer", "test_nested"]
 
     for unsub in unsubs:
         unsub()
+
+
+async def test_eventbus_nested_fire_endless_loop_guard(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that event listeners firing events in an endless loop are stopped.
+
+    Without the guard, a listener which unconditionally fires an event it
+    also listens to would keep the dispatch drain loop running forever.
+    """
+    calls: list[ha.Event] = []
+
+    @ha.callback
+    def refire(event: ha.Event) -> None:
+        calls.append(event)
+        hass.bus.async_fire("test_loop")
+
+    unsub = hass.bus.async_listen("test_loop", refire)
+
+    with patch.object(ha, "_MAX_QUEUED_EVENT_DISPATCHES", 10):
+        hass.bus.async_fire("test_loop")
+
+    # The top-level dispatch plus 10 queued dispatches, then the loop is
+    # aborted and the queued event dropped.
+    assert len(calls) == 11
+    assert "listeners are likely firing events in an endless loop" in caplog.text
+    assert "test_loop" in caplog.text
+
+    unsub()
+
+    # The bus remains functional after the aborted dispatch
+    events = async_capture_events(hass, "test_after")
+    hass.bus.async_fire("test_after")
+    assert len(events) == 1
 
 
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:
