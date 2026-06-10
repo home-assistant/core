@@ -102,6 +102,7 @@ OPTIONS_SCHEMA = vol.Schema(
             NumberSelector(
                 NumberSelectorConfig(
                     min=1,
+                    max=1800,
                     step=1,
                     unit_of_measurement=UnitOfTime.SECONDS,
                     mode=NumberSelectorMode.BOX,
