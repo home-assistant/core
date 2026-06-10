@@ -1,7 +1,5 @@
 """Test Tuya sensor platform."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -13,7 +11,13 @@ from tuya_sharing import CustomerDevice, Manager
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, json
+from homeassistant.util import json as json_util
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from . import TuyaNotificationHelper, check_selective_state_update, initialize_entry
 
@@ -27,7 +31,7 @@ def platform_autouse():
         yield
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "no_quirk")
 async def test_platform_setup_and_discovery(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -183,3 +187,140 @@ async def test_delta_report_sensor(
     state = hass.states.get(entity_id)
     assert state is not None
     assert float(state.state) == pytest.approx(0.6)  # unchanged
+
+
+@pytest.mark.parametrize(
+    (
+        "mock_device_code",
+        "entity_id",
+        "dpcode",
+        "tuya_uom",
+        "expected_msg",
+    ),
+    [
+        (
+            "dlq_0tnvg2xaisqdadcf",
+            "sensor.yi_lu_dai_ji_liang_ci_bao_chi_tong_duan_qi_total_energy",
+            "add_ele",
+            "invalid_uom",
+            (
+                "Incompatible unit invalid_uom replaced by entity description "
+                "unit kWh for device class energy in sensor entity "
+                "tuya.fcdadqsiax2gvnt0qldadd_ele; use a quirk "
+                "(https://github.com/home-assistant-libs/tuya-device-handlers) "
+                "to override"
+            ),
+        ),
+        (
+            "hjjcy_9f8pjxsmaqnk2tzr",
+            "sensor.mt15_mt29_temperature",
+            "temp_current",
+            "invalid_uom",
+            (
+                "Device class temperature ignored for incompatible unit invalid_uom "
+                "in sensor entity tuya.rzt2knqamsxjp8f9ycjjhtemp_current"
+            ),
+        ),
+        (
+            "qxj_xbwbniyt6bgws9ia",
+            "sensor.sws_16600_wifi_sh_air_pressure",
+            "atmospheric_pressture",
+            "invalid_uom",
+            (
+                "Device class pressure ignored for incompatible unit invalid_uom "
+                "in sensor entity tuya.ai9swgb6tyinbwbxjxqatmospheric_pressture"
+            ),
+        ),
+    ],
+)
+async def test_invalid_uom(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    entity_id: str,
+    dpcode: str,
+    tuya_uom: str,
+    expected_msg: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid unit of measurement."""
+    values = json_util.json_loads_object(mock_device.status_range[dpcode].values)
+    values["unit"] = tuya_uom
+    mock_device.status_range[dpcode].values = json.json_dumps(values)
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get(entity_id)
+    assert state is not None, f"{entity_id} does not exist"
+    assert expected_msg in caplog.text
+
+
+@pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
+@pytest.mark.parametrize(
+    ("temp_unit_convert", "ha_unit_system", "expected_value"),
+    [
+        pytest.param(
+            "c",
+            METRIC_SYSTEM,
+            "14.0",
+            id="device_c_ha_c",
+        ),
+        pytest.param(
+            "c",
+            US_CUSTOMARY_SYSTEM,
+            "57.2",
+            id="device_c_ha_f",
+        ),
+        pytest.param(
+            "f",
+            METRIC_SYSTEM,
+            "-10.0",
+            id="device_f_ha_c",
+        ),
+        pytest.param(
+            "f",
+            US_CUSTOMARY_SYSTEM,
+            "14.0",
+            id="device_f_ha_f",
+        ),
+    ],
+)
+async def test_temp_unit_convert_sensor(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    temp_unit_convert: str,
+    ha_unit_system: UnitSystem,
+    expected_value: str,
+) -> None:
+    """Test temperature sensors respect TEMP_UNIT_CONVERT and HA unit system."""
+    hass.config.units = ha_unit_system
+    mock_device.status["temp_unit_convert"] = temp_unit_convert
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("sensor.inverter_pool_heat_pump_outside_temperature")
+    assert state is not None
+    assert state.state == expected_value
+
+
+@pytest.mark.parametrize("mock_device_code", ["znrb_gpzittzfnzhduquz"])
+async def test_temp_unit_convert_sensor_invalid(
+    hass: HomeAssistant,
+    mock_manager: Manager,
+    mock_config_entry: MockConfigEntry,
+    mock_device: CustomerDevice,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that device class is removed when TEMP_UNIT_CONVERT is an invalid value."""
+    mock_device.status["temp_unit_convert"] = "k"
+    await initialize_entry(hass, mock_manager, mock_config_entry, mock_device)
+
+    state = hass.states.get("sensor.inverter_pool_heat_pump_temperature")
+    assert state is not None
+    assert state.attributes.get("device_class") is None
+    assert state.attributes.get("unit_of_measurement") == ""
+    assert (
+        "Device class temperature ignored for incompatible unit  in "
+        "sensor entity tuya.zuqudhznfzttizpgbrnztemp_current"
+    ) in caplog.text

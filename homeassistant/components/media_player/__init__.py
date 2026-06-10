@@ -1,10 +1,8 @@
 """Component to interface with various media players."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
-from collections.abc import Callable
+from collections.abc import Callable, Container, Mapping
 from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
@@ -14,7 +12,7 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, Required, TypedDict, final
+from typing import Any, Final, Required, TypedDict, final, override
 from urllib.parse import quote, urlparse
 
 import aiohttp
@@ -26,7 +24,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -52,7 +50,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import HomeAssistant, SupportsResponse
+from homeassistant.core import HomeAssistant, SupportsResponse, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -157,6 +155,7 @@ class MediaPlayerDeviceClass(StrEnum):
     TV = "tv"
     SPEAKER = "speaker"
     RECEIVER = "receiver"
+    PROJECTOR = "projector"
 
 
 DEVICE_CLASSES_SCHEMA = vol.All(vol.Lower, vol.Coerce(MediaPlayerDeviceClass))
@@ -170,7 +169,9 @@ def _promote_media_fields(data: dict[str, Any]) -> dict[str, Any]:
     if ATTR_MEDIA in data and isinstance(data[ATTR_MEDIA], dict):
         if ATTR_MEDIA_CONTENT_TYPE in data or ATTR_MEDIA_CONTENT_ID in data:
             raise vol.Invalid(
-                f"Play media cannot contain '{ATTR_MEDIA}' and '{ATTR_MEDIA_CONTENT_ID}' or '{ATTR_MEDIA_CONTENT_TYPE}'"
+                f"Play media cannot contain '{ATTR_MEDIA}' and "
+                f"'{ATTR_MEDIA_CONTENT_ID}' or "
+                f"'{ATTR_MEDIA_CONTENT_TYPE}'"
             )
         media_data = data[ATTR_MEDIA]
 
@@ -1248,7 +1249,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
 
-    requires_auth = False
+    use_query_token_for_auth = True
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
@@ -1261,6 +1262,15 @@ class MediaPlayerImageView(HomeAssistantView):
         """Initialize a media player view."""
         self.component = component
 
+    @callback
+    @override
+    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
+        """Return valid auth tokens, which can be used for query token authentication."""
+        if (player := self.component.get_entity(match_info["entity_id"])) is None:
+            return ()
+
+        return (player.access_token,)
+
     async def get(
         self,
         request: web.Request,
@@ -1270,21 +1280,9 @@ class MediaPlayerImageView(HomeAssistantView):
     ) -> web.Response:
         """Start a get request."""
         if (player := self.component.get_entity(entity_id)) is None:
-            status = (
-                HTTPStatus.NOT_FOUND
-                if request[KEY_AUTHENTICATED]
-                else HTTPStatus.UNAUTHORIZED
-            )
-            return web.Response(status=status)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         assert isinstance(player, MediaPlayerEntity)
-        authenticated = (
-            request[KEY_AUTHENTICATED]
-            or request.query.get("token") == player.access_token
-        )
-
-        if not authenticated:
-            return web.Response(status=HTTPStatus.UNAUTHORIZED)
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")
@@ -1295,7 +1293,7 @@ class MediaPlayerImageView(HomeAssistantView):
             data, content_type = await player.async_get_media_image()
 
         if data is None:
-            return web.Response(status=HTTPStatus.INTERNAL_SERVER_ERROR)
+            return web.Response(status=HTTPStatus.NOT_FOUND)
 
         headers: LooseHeaders = {CACHE_CONTROL: "max-age=3600"}
         return web.Response(body=data, content_type=content_type, headers=headers)

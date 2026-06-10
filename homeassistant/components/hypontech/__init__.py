@@ -1,7 +1,5 @@
 """The Hypontech Cloud integration."""
 
-from __future__ import annotations
-
 from hyponcloud import AuthenticationError, HyponCloud, RequestError
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform

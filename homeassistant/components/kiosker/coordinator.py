@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Kiosker."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -20,12 +18,12 @@ from kiosker import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_API_TOKEN, DOMAIN, POLL_INTERVAL, PORT
+from .const import DOMAIN, POLL_INTERVAL, PORT
 
 _LOGGER = logging.getLogger(__name__)
 

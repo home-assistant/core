@@ -1,7 +1,5 @@
 """Config flow for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from ipaddress import AddressValueError, IPv4Address
 from typing import Any, TypedDict
 
@@ -153,7 +151,12 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         self._model = discovery_info.hostname[:-16].replace("-", " ")
         self._friendly_name = discovery_info.properties[ATTR_FRIENDLY_NAME]
         self._serial_number = discovery_info.properties[ATTR_SERIAL_NUMBER]
-        self._beolink_jid = f"{discovery_info.properties[ATTR_TYPE_NUMBER]}.{discovery_info.properties[ATTR_ITEM_NUMBER]}.{self._serial_number}@products.bang-olufsen.com"
+        type_number = discovery_info.properties[ATTR_TYPE_NUMBER]
+        item_number = discovery_info.properties[ATTR_ITEM_NUMBER]
+        self._beolink_jid = (
+            f"{type_number}.{item_number}"
+            f".{self._serial_number}@products.bang-olufsen.com"
+        )
 
         await self.async_set_unique_id(self._serial_number)
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
@@ -166,7 +169,7 @@ class BeoConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_zeroconf_confirm()
 
     async def _create_entry(self) -> ConfigFlowResult:
-        """Create the config entry for a discovered or manually configured Bang & Olufsen device."""
+        """Create the config entry for a Bang & Olufsen device."""
         return self.async_create_entry(
             title=self._friendly_name,
             data=EntryData(

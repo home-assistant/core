@@ -1,7 +1,5 @@
 """Mathematical and statistical functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from functools import wraps
 import math
@@ -169,8 +167,10 @@ class MathExtension(BaseTemplateExtension):
     def arc_tangent2(*args: Any, default: Any = _SENTINEL) -> Any:
         """Filter and function to calculate four quadrant arc tangent of y / x.
 
-        The parameters to atan2 may be passed either in an iterable or as separate arguments
-        The default value may be passed either as a positional or in a keyword argument
+        The parameters to atan2 may be passed either in an
+        iterable or as separate arguments. The default value
+        may be passed either as a positional or in a keyword
+        argument.
         """
         try:
             if 1 <= len(args) <= 2 and isinstance(args[0], (list, tuple)):
@@ -209,8 +209,9 @@ class MathExtension(BaseTemplateExtension):
         if len(args) == 0:
             raise TypeError("average expected at least 1 argument, got 0")
 
-        # If first argument is iterable and more than 1 argument provided but not a named
-        # default, then use 2nd argument as default.
+        # If first argument is iterable and more than 1
+        # argument provided but not a named default,
+        # then use 2nd argument as default.
         if isinstance(args[0], Iterable):
             average_list = args[0]
             if len(args) > 1 and default is _SENTINEL:
@@ -238,8 +239,9 @@ class MathExtension(BaseTemplateExtension):
         if len(args) == 0:
             raise TypeError("median expected at least 1 argument, got 0")
 
-        # If first argument is a list or tuple and more than 1 argument provided but not a named
-        # default, then use 2nd argument as default.
+        # If first argument is a list or tuple and more than 1
+        # argument provided but not a named default,
+        # then use 2nd argument as default.
         if isinstance(args[0], Iterable):
             median_list = args[0]
             if len(args) > 1 and default is _SENTINEL:
@@ -267,8 +269,9 @@ class MathExtension(BaseTemplateExtension):
         if not args:
             raise TypeError("statistical_mode expected at least 1 argument, got 0")
 
-        # If first argument is a list or tuple and more than 1 argument provided but not a named
-        # default, then use 2nd argument as default.
+        # If first argument is a list or tuple and more than 1
+        # argument provided but not a named default,
+        # then use 2nd argument as default.
         if len(args) == 1 and isinstance(args[0], Iterable):
             mode_list = args[0]
         elif isinstance(args[0], list | tuple):
@@ -403,7 +406,8 @@ class MathExtension(BaseTemplateExtension):
     def wrap(value: Any, min_value: Any, max_value: Any) -> Any:
         """Filter and function to wrap a value within a range.
 
-        Wraps value cyclically within [min_value, max_value) (inclusive min, exclusive max).
+        Wraps value cyclically within [min_value, max_value)
+        (inclusive min, exclusive max).
         """
         try:
             value_num = float(value)
@@ -439,7 +443,8 @@ class MathExtension(BaseTemplateExtension):
         the specified number of discrete steps.
 
         The edges parameter controls how out-of-bounds input values are handled:
-        - "none": No special handling; values outside the input range are extrapolated into the output range.
+        - "none": No special handling; values outside the
+          input range are extrapolated into the output range.
         - "clamp": Values outside the input range are clamped to the nearest boundary.
         - "wrap": Values outside the input range are wrapped around cyclically.
         - "mirror": Values outside the input range are mirrored back into the range.
@@ -484,7 +489,9 @@ class MathExtension(BaseTemplateExtension):
         steps = max(steps, 0)
 
         if not steps and (in_min_num == out_min_num and in_max_num == out_max_num):
-            return value_num  # No remapping needed. Save some cycles and floating-point precision.
+            # No remapping needed. Save some cycles and
+            # floating-point precision.
+            return value_num
 
         normalized = (value_num - in_min_num) / (in_max_num - in_min_num)
 

@@ -1,12 +1,10 @@
 """Support for Tuya Cover."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
 from tuya_device_handlers.definition.cover import (
-    TuyaCoverDefinition,
+    CoverDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.device_wrapper.cover import (
@@ -206,7 +204,7 @@ class TuyaCoverEntity(TuyaEntity, CoverEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: TuyaCoverEntityDescription,
-        definition: TuyaCoverDefinition,
+        definition: CoverDefinition,
     ) -> None:
         """Init Tuya Cover."""
         super().__init__(device, device_manager, description)

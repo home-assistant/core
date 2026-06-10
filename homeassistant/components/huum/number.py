@@ -1,7 +1,5 @@
 """Control for steamer."""
 
-from __future__ import annotations
-
 import logging
 
 from huum.const import SaunaStatus

@@ -1,7 +1,5 @@
 """Button platform for Proxmox VE."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -304,7 +302,10 @@ async def async_setup_entry(
 
 
 class ProxmoxBaseButton(ButtonEntity):
-    """Common base for Proxmox buttons. Basically to ensure the async_press logic isn't duplicated."""
+    """Common base for Proxmox buttons.
+
+    Ensures the async_press logic isn't duplicated.
+    """
 
     entity_description: ButtonEntityDescription
     coordinator: ProxmoxCoordinator

@@ -18,13 +18,13 @@ async def test_buttons(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test standard OpenGarage buttons."""
-    entry = entity_registry.async_get("button.abcdef_restart")
+    entry = entity_registry.async_get("button.garage_abcdef_restart")
     assert entry
     assert entry.unique_id == "12345_restart"
     await hass.services.async_call(
         button.DOMAIN,
         button.SERVICE_PRESS,
-        {ATTR_ENTITY_ID: "button.abcdef_restart"},
+        {ATTR_ENTITY_ID: "button.garage_abcdef_restart"},
         blocking=True,
     )
     assert len(mock_opengarage.reboot.mock_calls) == 1

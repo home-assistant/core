@@ -3,14 +3,17 @@
 from datetime import timedelta
 import logging
 
-from env_canada import ECAirQuality, ECRadar, ECWeather
+from env_canada import ECAirQuality, ECMap, ECWeather
 
 from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_STATION
+from .const import CONF_STATION, DOMAIN
 from .coordinator import ECConfigEntry, ECDataUpdateCoordinator, ECRuntimeData
+from .services import async_setup_services
 
 DEFAULT_RADAR_UPDATE_INTERVAL = timedelta(minutes=5)
 DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
@@ -18,6 +21,14 @@ DEFAULT_WEATHER_UPDATE_INTERVAL = timedelta(minutes=5)
 PLATFORMS = [Platform.CAMERA, Platform.SENSOR, Platform.WEATHER]
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Environment Canada services."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) -> bool:
@@ -43,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, config_entry: ECConfigEntry) ->
         errors = errors + 1
         _LOGGER.warning("Unable to retrieve Environment Canada weather")
 
-    radar_data = ECRadar(coordinates=(lat, lon))
+    radar_data = ECMap(coordinates=(lat, lon), layer="precip_type", legend=False)
     radar_coordinator = ECDataUpdateCoordinator(
         hass, config_entry, radar_data, "radar", DEFAULT_RADAR_UPDATE_INTERVAL
     )

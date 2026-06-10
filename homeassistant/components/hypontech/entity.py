@@ -1,14 +1,10 @@
 """Base entity for the Hypontech Cloud integration."""
 
-from __future__ import annotations
-
-from hyponcloud import PlantData
-
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import HypontechDataCoordinator
+from .coordinator import HypontechDataCoordinator, HypontechPlant
 
 
 class HypontechEntity(CoordinatorEntity[HypontechDataCoordinator]):
@@ -38,12 +34,13 @@ class HypontechPlantEntity(CoordinatorEntity[HypontechDataCoordinator]):
         plant = coordinator.data.plants[plant_id]
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, plant_id)},
-            name=plant.plant_name,
+            name=plant.info.plant_name,
             manufacturer="Hypontech",
+            model=plant.info.plant_type,
         )
 
     @property
-    def plant(self) -> PlantData:
+    def plant(self) -> HypontechPlant:
         """Return the plant data."""
         return self.coordinator.data.plants[self.plant_id]
 

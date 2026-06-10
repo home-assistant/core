@@ -1,7 +1,5 @@
 """Support for LG webOS TV notification service."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiowebostv import WebOsClient
@@ -53,10 +51,7 @@ class LgWebOSNotificationService(BaseNotificationService):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="notify_device_off",
-                translation_placeholders={
-                    "name": str(self._entry.title),
-                    "func": __name__,
-                },
+                translation_placeholders={"name": str(self._entry.title)},
             )
         try:
             await client.send_message(message, icon_path=icon_path)

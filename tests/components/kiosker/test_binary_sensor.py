@@ -1,7 +1,5 @@
 """Test the Kiosker binary sensors."""
 
-from __future__ import annotations
-
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 

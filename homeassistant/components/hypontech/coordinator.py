@@ -1,11 +1,16 @@
 """The coordinator for Hypontech Cloud integration."""
 
-from __future__ import annotations
-
+import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
 
-from hyponcloud import HyponCloud, OverviewData, PlantData, RequestError
+from hyponcloud import (
+    HyponCloud,
+    OverviewData,
+    PlantData,
+    PlantMonitorData,
+    RequestError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -15,11 +20,19 @@ from .const import DOMAIN, LOGGER
 
 
 @dataclass
+class HypontechPlant:
+    """Store a plant together with its real-time monitor data."""
+
+    info: PlantData
+    monitor: PlantMonitorData
+
+
+@dataclass
 class HypontechCoordinatorData:
     """Store coordinator data."""
 
     overview: OverviewData
-    plants: dict[str, PlantData]
+    plants: dict[str, HypontechPlant]
 
 
 type HypontechConfigEntry = ConfigEntry[HypontechDataCoordinator]
@@ -52,11 +65,17 @@ class HypontechDataCoordinator(DataUpdateCoordinator[HypontechCoordinatorData]):
         try:
             overview = await self.api.get_overview()
             plants = await self.api.get_list()
+            monitors = await asyncio.gather(
+                *(self.api.get_monitor(plant.plant_id) for plant in plants)
+            )
         except RequestError as ex:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="connection_error"
             ) from ex
         return HypontechCoordinatorData(
             overview=overview,
-            plants={plant.plant_id: plant for plant in plants},
+            plants={
+                plant.plant_id: HypontechPlant(info=plant, monitor=monitor)
+                for plant, monitor in zip(plants, monitors, strict=True)
+            },
         )

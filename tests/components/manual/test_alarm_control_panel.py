@@ -42,6 +42,7 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
     """Test setup."""
     mock = MagicMock()
     add_entities = mock.MagicMock()
+    # pylint: disable-next=home-assistant-tests-direct-platform-async-setup-entry
     await demo.async_setup_entry(hass, {}, add_entities)
     assert add_entities.call_count == 1
 
@@ -1336,6 +1337,33 @@ async def test_restore_state(hass: HomeAssistant, expected_state) -> None:
     state = hass.states.get("alarm_control_panel.test")
     assert state
     assert state.state == expected_state
+
+
+async def test_restore_state_invalid(hass: HomeAssistant) -> None:
+    """Ensure invalid restored state does not crash entity setup."""
+    mock_restore_cache(hass, (State("alarm_control_panel.test", "unknown"),))
+
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_time": 0,
+                "trigger_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state
+    assert state.state == AlarmControlPanelState.DISARMED
 
 
 @pytest.mark.parametrize(

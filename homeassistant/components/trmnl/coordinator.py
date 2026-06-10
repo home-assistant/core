@@ -1,7 +1,5 @@
 """Define an object to manage fetching TRMNL data."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from trmnl import TRMNLClient

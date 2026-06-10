@@ -1,7 +1,5 @@
 """Vizio SmartCast Device support."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyvizio.api.apps import AppConfig, find_app_name

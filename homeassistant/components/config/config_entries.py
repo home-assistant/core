@@ -1,7 +1,5 @@
 """Http views to control the config manager."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from http import HTTPStatus
 import logging
@@ -150,7 +148,7 @@ def _prepare_config_flow_result_json(
     prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
 ) -> dict[str, Any]:
     """Convert result to JSON."""
-    if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
         return prepare_result_json(result)
 
     data = {key: val for key, val in result.items() if key not in ("data", "context")}
@@ -177,7 +175,6 @@ class ConfigManagerFlowIndexView(
         vol.Schema(
             {
                 vol.Required("handler"): vol.Any(str, list),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
                 vol.Optional("entry_id"): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
@@ -304,7 +301,6 @@ class SubentryManagerFlowIndexView(
         vol.Schema(
             {
                 vol.Required("handler"): vol.All(vol.Coerce(tuple), (str, str)),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
         )

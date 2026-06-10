@@ -1,7 +1,5 @@
 """Coordinator for Powerfox integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from powerfox import (
@@ -24,7 +22,7 @@ from homeassistant.util import dt as dt_util
 from .const import DOMAIN, LOGGER, SCAN_INTERVAL
 
 type PowerfoxCoordinator = (
-    "PowerfoxDataUpdateCoordinator" | "PowerfoxReportDataUpdateCoordinator"
+    PowerfoxDataUpdateCoordinator | PowerfoxReportDataUpdateCoordinator
 )
 type PowerfoxConfigEntry = ConfigEntry[list[PowerfoxCoordinator]]
 

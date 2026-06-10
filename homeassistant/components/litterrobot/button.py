@@ -1,7 +1,5 @@
 """Support for Litter-Robot button."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic
@@ -20,7 +18,7 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEntityT]):
+class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot button entities."""
 
     press_fn: Callable[[_WhiskerEntityT], Coroutine[Any, Any, bool]]

@@ -1,9 +1,8 @@
 """The Matter integration."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import cache
+from typing import TYPE_CHECKING
 
 from matter_server.client import MatterClient
 from matter_server.client.exceptions import (
@@ -14,6 +13,7 @@ from matter_server.client.exceptions import (
     ServerVersionTooOld,
 )
 from matter_server.common.errors import MatterError, NodeNotExists
+from yarl import URL
 
 from homeassistant.components.hassio import AddonError, AddonManager, AddonState
 from homeassistant.config_entries import ConfigEntryState
@@ -44,8 +44,12 @@ from .helpers import (
 from .models import MatterDeviceInfo
 from .services import async_setup_services
 
+if TYPE_CHECKING:
+    from matter_ble_proxy import MatterBleProxy
+
 CONNECT_TIMEOUT = 10
 LISTEN_READY_TIMEOUT = 30
+BLE_PROXY_CONNECT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -62,7 +66,7 @@ def get_matter_device_info(
         return None
 
     return MatterDeviceInfo(
-        unique_id=node.device_info.uniqueID,
+        unique_id=node.device_info.uniqueID or "",
         vendor_id=hex(node.device_info.vendorID),
         product_id=hex(node.device_info.productID),
     )
@@ -119,8 +123,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     async_delete_issue(hass, DOMAIN, "server_version_version_too_old")
     async_delete_issue(hass, DOMAIN, "server_version_version_too_new")
 
+    ble_proxy: MatterBleProxy | None = None
+
     async def on_hass_stop(event: Event) -> None:
         """Handle incoming stop event from Home Assistant."""
+        if ble_proxy is not None:
+            try:
+                await ble_proxy.disconnect()
+            except Exception:  # noqa: BLE001
+                LOGGER.exception(
+                    "Failed to disconnect BLE proxy during Home Assistant stop"
+                )
         await matter_client.disconnect()
 
     entry.async_on_unload(
@@ -155,20 +168,88 @@ async def async_setup_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> bo
     # create an intermediate layer (adapter) which keeps track of the nodes
     # and discovery of platform entities from the node attributes
     matter = MatterAdapter(hass, matter_client, entry)
-    entry.runtime_data = MatterEntryData(matter, listen_task)
 
-    await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
-    await matter.setup_nodes()
+    # Gate on `ble_proxy_enabled`, not `bluetooth_enabled`: the latter is also true
+    # when the server uses a local BLE adapter, where no `/ble` endpoint exists.
+    # Importing `.ble_proxy` lazily here avoids pulling `matter_ble_proxy` + `bleak`
+    # into every Matter setup when the server has BLE proxy disabled.
+    server_info = matter_client.server_info
+    if server_info and server_info.ble_proxy_enabled:
+        if "bluetooth" not in hass.config.components:
+            LOGGER.warning(
+                "Matter server reports BLE proxy support but Home Assistant's "
+                "bluetooth integration is not loaded; BLE proxy will not be used"
+            )
+        elif (ble_proxy_url := _derive_ble_proxy_url(entry.data[CONF_URL])) is None:
+            LOGGER.warning(
+                "Could not derive BLE proxy endpoint from %s; BLE proxy will not be used",
+                entry.data[CONF_URL],
+            )
+        else:
+            from .ble_proxy import create_matter_ble_proxy  # noqa: PLC0415
 
-    # If the listen task is already failed, we need to raise ConfigEntryNotReady
-    if listen_task.done() and (listen_error := listen_task.exception()) is not None:
-        await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
-        try:
-            await matter_client.disconnect()
-        finally:
-            raise ConfigEntryNotReady(listen_error) from listen_error
+            LOGGER.debug("Matter server reports BLE available, connecting BLE proxy")
+            ble_proxy = create_matter_ble_proxy(hass, ble_proxy_url)
+            try:
+                async with asyncio.timeout(BLE_PROXY_CONNECT_TIMEOUT):
+                    await ble_proxy.connect()
+            except (TimeoutError, ConnectionError, OSError) as err:
+                LOGGER.warning(
+                    "Failed to connect BLE proxy - BLE commissioning may not work: %s",
+                    err,
+                )
+                ble_proxy = None
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected error connecting BLE proxy")
+                ble_proxy = None
 
-    return True
+    entry.runtime_data = MatterEntryData(matter, listen_task, ble_proxy)
+
+    setup_error: BaseException | None = None
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, SUPPORTED_PLATFORMS)
+        await matter.setup_nodes()
+    except Exception as err:  # noqa: BLE001
+        # Platform/node setup raised. Cancel the listen task so the cleanup
+        # block below tears down the matter client and BLE proxy alongside
+        # the partially-loaded platforms, then surfaces this error.
+        listen_task.cancel()
+        setup_error = err
+    else:
+        if listen_task.done() and (listen_err := listen_task.exception()) is not None:
+            setup_error = listen_err
+
+    if setup_error is None:
+        return True
+
+    await hass.config_entries.async_unload_platforms(entry, SUPPORTED_PLATFORMS)
+    try:
+        if ble_proxy is not None:
+            try:
+                await ble_proxy.disconnect()
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Failed to disconnect BLE proxy during setup abort")
+        await matter_client.disconnect()
+    finally:
+        raise ConfigEntryNotReady(setup_error) from setup_error
+
+
+def _derive_ble_proxy_url(matter_ws_url: str) -> str | None:
+    """Derive the `/ble` endpoint URL by swapping the trailing `/ws` path segment.
+
+    Uses real URL parsing so hostnames containing `ws` aren't corrupted. Returns
+    `None` when the path does not match the expected `/ws` shape, so callers can
+    skip BLE proxy setup instead of probing a wrong endpoint.
+    """
+    parsed = URL(matter_ws_url)
+    path = parsed.path.rstrip("/")
+    if path.endswith("/ws"):
+        new_path = f"{path[:-3]}/ble"
+    elif not path:
+        new_path = "/ble"
+    else:
+        return None
+    return str(parsed.with_path(new_path))
 
 
 async def _client_listen(
@@ -181,13 +262,13 @@ async def _client_listen(
     try:
         await matter_client.start_listening(init_ready)
     except MatterError as err:
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
         LOGGER.error("Failed to listen: %s", err)
     except Exception as err:
         # We need to guard against unknown exceptions to not crash this task.
         LOGGER.exception("Unexpected exception: %s", err)
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             raise
 
     if not hass.is_stopping:
@@ -202,6 +283,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: MatterConfigEntry) -> b
     )
 
     if unload_ok:
+        # Disconnect the BLE proxy first so it stops accepting new GATT/BTP
+        # traffic before the matter client (which originates that traffic) is
+        # torn down.
+        if (ble_proxy := entry.runtime_data.ble_proxy) is not None:
+            try:
+                await ble_proxy.disconnect()
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Failed to disconnect BLE proxy during unload")
         entry.runtime_data.listen_task.cancel()
         await entry.runtime_data.adapter.matter_client.disconnect()
 
@@ -295,14 +384,14 @@ async def _async_ensure_addon_running(
 
     addon_state = addon_info.state
 
-    if addon_state == AddonState.NOT_INSTALLED:
+    if addon_state is AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
             addon_info.options,
             catch_error=True,
         )
         raise ConfigEntryNotReady
 
-    if addon_state == AddonState.NOT_RUNNING:
+    if addon_state is AddonState.NOT_RUNNING:
         addon_manager.async_schedule_start_addon(catch_error=True)
         raise ConfigEntryNotReady
 

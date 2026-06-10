@@ -1,7 +1,5 @@
 """YoLink DataUpdateCoordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -74,6 +72,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
                 device_reporttime = device_state_resp.data.get("reportAt")
                 if device_reporttime is not None:
                     rpt_time_delta = (
+                        # pylint: disable-next=home-assistant-enforce-utcnow
                         datetime.now(tz=UTC).replace(tzinfo=None)
                         - datetime.strptime(device_reporttime, "%Y-%m-%dT%H:%M:%S.%fZ")
                     ).total_seconds()

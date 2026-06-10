@@ -1,7 +1,5 @@
 """Support for package tracking sensors from 17track.net."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo

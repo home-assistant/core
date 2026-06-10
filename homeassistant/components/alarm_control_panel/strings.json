@@ -11,6 +11,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::alarm_control_panel::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::alarm_control_panel::common::condition_for_name%]"
         }
       },
       "name": "Alarm is armed"
@@ -158,21 +161,6 @@
   "exceptions": {
     "code_arm_required": {
       "message": "Arming requires a code but none was given for {entity_id}."
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
     }
   },
   "services": {

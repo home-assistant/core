@@ -1,7 +1,5 @@
 """Config flow for Nmap Tracker integration."""
 
-from __future__ import annotations
-
 from ipaddress import ip_address, ip_network, summarize_address_range
 import re
 from typing import Any
@@ -168,7 +166,7 @@ async def _async_build_schema_with_user_input(
         schema.update(
             {
                 # Approved exemption: nmap scan interval is user-configurable
-                # pylint: disable-next=hass-config-flow-polling-field
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),

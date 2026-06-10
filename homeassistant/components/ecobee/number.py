@@ -1,7 +1,5 @@
 """Support for using number with ecobee thermostats."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
@@ -76,11 +74,15 @@ async def async_setup_entry(
         )
     )
 
+    entities.extend(
+        EcobeeFanMinOnTime(data, index) for index in range(len(data.ecobee.thermostats))
+    )
+
     async_add_entities(entities, True)
 
 
 class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
-    """A number class, representing min time for an ecobee thermostat with ventilator attached."""
+    """Represent min time for an ecobee thermostat with ventilator."""
 
     entity_description: EcobeeNumberEntityDescription
 
@@ -88,7 +90,6 @@ class EcobeeVentilatorMinTime(EcobeeBaseEntity, NumberEntity):
     _attr_native_max_value = 60
     _attr_native_step = 5
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -132,7 +133,6 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
     """
 
     _attr_device_class = NumberDeviceClass.TEMPERATURE
-    _attr_has_entity_name = True
     _attr_icon = "mdi:thermometer-off"
     _attr_mode = NumberMode.BOX
     _attr_native_min_value = -25
@@ -166,4 +166,40 @@ class EcobeeCompressorMinTemp(EcobeeBaseEntity, NumberEntity):
     def set_native_value(self, value: float) -> None:
         """Set new compressor minimum temperature."""
         self.data.ecobee.set_aux_cutover_threshold(self.thermostat_index, value)
+        self.update_without_throttle = True
+
+
+class EcobeeFanMinOnTime(EcobeeBaseEntity, NumberEntity):
+    """Minimum minutes per hour that the fan must run on an ecobee thermostat."""
+
+    _attr_native_min_value = 0
+    _attr_native_max_value = 60
+    _attr_native_step = 5
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_translation_key = "fan_min_on_time"
+
+    def __init__(
+        self,
+        data: EcobeeData,
+        thermostat_index: int,
+    ) -> None:
+        """Initialize ecobee fan minimum on time."""
+        super().__init__(data, thermostat_index)
+        self._attr_unique_id = f"{self.base_unique_id}_fan_min_on_time"
+        self.update_without_throttle = False
+
+    async def async_update(self) -> None:
+        """Get the latest state from the thermostat."""
+        if self.update_without_throttle:
+            await self.data.update(no_throttle=True)
+            self.update_without_throttle = False
+        else:
+            await self.data.update()
+        self._attr_native_value = self.thermostat["settings"]["fanMinOnTime"]
+
+    def set_native_value(self, value: float) -> None:
+        """Set new fan minimum on time value."""
+        step = self._attr_native_step
+        aligned_value = int(round(value / step) * step)
+        self.data.ecobee.set_fan_min_on_time(self.thermostat_index, aligned_value)
         self.update_without_throttle = True

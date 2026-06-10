@@ -1,7 +1,5 @@
 """Support for MQTT time platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import datetime
 import logging

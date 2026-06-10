@@ -1,7 +1,5 @@
 """Typing Helpers for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import lru_cache
 from math import floor, log10
@@ -156,7 +154,10 @@ class BaseUnitConverter:
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert one unit of measurement to another which allows None."""
+        """Return a function to convert a unit to another.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             return lambda value: value
         from_ratio, to_ratio = cls._get_from_to_ratio(from_unit, to_unit)
@@ -695,7 +696,10 @@ class SpeedConverter(BaseUnitConverter):
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert a speed from one unit to another which allows None."""
+        """Return a function to convert speed units.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             # Return a function that does nothing. This is not
             # in _converter_factory because we do not want to wrap
@@ -791,7 +795,10 @@ class TemperatureConverter(BaseUnitConverter):
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
-        """Return a function to convert a temperature from one unit to another which allows None."""
+        """Return a function to convert temperature units.
+
+        Allows None values.
+        """
         if from_unit == to_unit:
             # Return a function that does nothing. This is not
             # in _converter_factory because we do not want to wrap

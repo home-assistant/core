@@ -1,7 +1,5 @@
 """Support for System health ."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
 import dataclasses

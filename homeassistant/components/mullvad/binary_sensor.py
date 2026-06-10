@@ -5,14 +5,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import MullvadCoordinator
+from .coordinator import MullvadConfigEntry, MullvadCoordinator
 
 BINARY_SENSORS = (
     BinarySensorEntityDescription(
@@ -25,13 +24,11 @@ BINARY_SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MullvadConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    coordinator = hass.data[DOMAIN]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         MullvadBinarySensor(coordinator, entity_description, config_entry)
@@ -48,7 +45,7 @@ class MullvadBinarySensor(CoordinatorEntity[MullvadCoordinator], BinarySensorEnt
         self,
         coordinator: MullvadCoordinator,
         entity_description: BinarySensorEntityDescription,
-        config_entry: ConfigEntry,
+        config_entry: MullvadConfigEntry,
     ) -> None:
         """Initialize the Mullvad binary sensor."""
         super().__init__(coordinator)

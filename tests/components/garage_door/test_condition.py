@@ -52,8 +52,8 @@ async def test_garage_door_conditions_gated_by_labs_flag(
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("garage_door.is_closed", {}, True, False),
-        ("garage_door.is_open", {}, True, False),
+        ("garage_door.is_closed", {}, True, True),
+        ("garage_door.is_open", {}, True, True),
     ],
 )
 async def test_garage_door_condition_options_validation(
@@ -374,7 +374,7 @@ async def test_garage_door_condition_excludes_non_garage_door_device_class(
     )
 
     # Matching entities in matching state - condition should be True
-    assert condition_any(hass) is True
+    assert condition_any.async_check() is True
 
     # Set matching entities to non-matching state
     hass.states.async_set(
@@ -390,4 +390,4 @@ async def test_garage_door_condition_excludes_non_garage_door_device_class(
     await hass.async_block_till_done()
 
     # Wrong device class entities still in matching state, but should be excluded
-    assert condition_any(hass) is False
+    assert condition_any.async_check() is False

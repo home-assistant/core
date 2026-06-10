@@ -1,7 +1,5 @@
 """Platform allowing several locks to be grouped into one lock."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -144,7 +142,8 @@ class LockGroup(GroupEntity, LockEntity):
             self._attr_is_unlocking = None
             self._attr_is_locked = None
         else:
-            # Set attributes based on member states and let the lock entity sort out the correct state
+            # Set attributes based on member states and let the
+            # lock entity sort out the correct state
             self._attr_is_jammed = LockState.JAMMED in states
             self._attr_is_locking = LockState.LOCKING in states
             self._attr_is_opening = LockState.OPENING in states

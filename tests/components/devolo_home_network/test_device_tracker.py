@@ -70,6 +70,7 @@ async def test_device_tracker(
     assert state.state == STATE_UNAVAILABLE
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_restoring_clients(
     hass: HomeAssistant,
     mock_device: MockDevice,

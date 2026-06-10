@@ -1,9 +1,7 @@
 """Support for Tuya Alarm."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.alarm_control_panel import (
-    TuyaAlarmControlPanelDefinition,
+    AlarmControlPanelDefinition,
     get_default_definition,
 )
 from tuya_device_handlers.helpers.homeassistant import (
@@ -43,7 +41,9 @@ _TUYA_TO_HA_STATE_MAPPINGS = {
     TuyaAlarmControlPanelState.ARMED_AWAY: AlarmControlPanelState.ARMED_AWAY,
     TuyaAlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelState.ARMED_NIGHT,
     TuyaAlarmControlPanelState.ARMED_VACATION: AlarmControlPanelState.ARMED_VACATION,
-    TuyaAlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+    TuyaAlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS
+    ),
     TuyaAlarmControlPanelState.PENDING: AlarmControlPanelState.PENDING,
     TuyaAlarmControlPanelState.ARMING: AlarmControlPanelState.ARMING,
     TuyaAlarmControlPanelState.DISARMING: AlarmControlPanelState.DISARMING,
@@ -91,7 +91,7 @@ class TuyaAlarmEntity(TuyaEntity, AlarmControlPanelEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: AlarmControlPanelEntityDescription,
-        definition: TuyaAlarmControlPanelDefinition,
+        definition: AlarmControlPanelDefinition,
     ) -> None:
         """Init Tuya Alarm."""
         super().__init__(device, device_manager, description)

@@ -1,7 +1,5 @@
 """Tests for the Mikrotik component."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -93,7 +91,12 @@ DEVICE_1_WIRELESS = {
     "signal-to-noise": 52,
     "signal-strength-ch0": -63,
     "signal-strength-ch1": -69,
-    "strength-at-rates": "-62@1Mbps 16s330ms,-64@6Mbps 13s560ms,-65@HT20-3 52m6s30ms,-66@HT20-4 52m4s350ms,-66@HT20-5 51m58s580ms,-65@HT20-6 51m24s780ms,-65@HT20-7 5s680ms",
+    "strength-at-rates": (
+        "-62@1Mbps 16s330ms,-64@6Mbps 13s560ms,"
+        "-65@HT20-3 52m6s30ms,-66@HT20-4 52m4s350ms,"
+        "-66@HT20-5 51m58s580ms,-65@HT20-6 51m24s780ms,"
+        "-65@HT20-7 5s680ms"
+    ),
     "tx-ccq": 93,
     "p-throughput": 54928,
     "last-ip": "0.0.0.1",

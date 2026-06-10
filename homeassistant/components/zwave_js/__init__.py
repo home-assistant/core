@@ -1,7 +1,5 @@
 """The Z-Wave JS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import contextlib
@@ -1209,14 +1207,14 @@ async def async_ensure_addon_running(
     if addon_has_esphome and socket_path is not None:
         addon_config[CONF_ADDON_SOCKET] = socket_path
 
-    if addon_state == AddonState.NOT_INSTALLED:
+    if addon_state is AddonState.NOT_INSTALLED:
         addon_manager.async_schedule_install_setup_addon(
             addon_config,
             catch_error=True,
         )
         raise ConfigEntryNotReady
 
-    if addon_state == AddonState.NOT_RUNNING:
+    if addon_state is AddonState.NOT_RUNNING:
         addon_manager.async_schedule_setup_addon(
             addon_config,
             catch_error=True,

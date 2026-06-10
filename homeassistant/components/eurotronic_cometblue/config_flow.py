@@ -1,7 +1,5 @@
 """Config flow for CometBlue."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -59,7 +57,7 @@ class CometBlueConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
     async def _try_connect(self, user_input: dict[str, Any]) -> dict[str, str]:
-        """Verify connection to the device with the provided PIN and read initial data."""
+        """Verify connection to the device with the provided PIN."""
         device_address = self._discovery_info.address if self._discovery_info else ""
         try:
             ble_device = async_ble_device_from_address(self.hass, device_address)

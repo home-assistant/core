@@ -1,7 +1,5 @@
 """Sensor platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -281,6 +279,10 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfLength.MILES,
         device_class=SensorDeviceClass.DISTANCE,
+    ),
+    TeslaFleetSensorEntityDescription(
+        key="drive_state_active_route_destination",
+        entity_registry_enabled_default=False,
     ),
 )
 

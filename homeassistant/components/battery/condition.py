@@ -1,7 +1,5 @@
 """Provides conditions for batteries."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -30,19 +28,29 @@ BATTERY_PERCENTAGE_DOMAIN_SPECS = {
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_low": make_entity_state_condition(
-        BATTERY_DOMAIN_SPECS, STATE_ON, support_duration=True
+        BATTERY_DOMAIN_SPECS,
+        STATE_ON,
+        primary_entities_only=False,
     ),
     "is_not_low": make_entity_state_condition(
-        BATTERY_DOMAIN_SPECS, STATE_OFF, support_duration=True
+        BATTERY_DOMAIN_SPECS,
+        STATE_OFF,
+        primary_entities_only=False,
     ),
     "is_charging": make_entity_state_condition(
-        BATTERY_CHARGING_DOMAIN_SPECS, STATE_ON, support_duration=True
+        BATTERY_CHARGING_DOMAIN_SPECS,
+        STATE_ON,
+        primary_entities_only=False,
     ),
     "is_not_charging": make_entity_state_condition(
-        BATTERY_CHARGING_DOMAIN_SPECS, STATE_OFF, support_duration=True
+        BATTERY_CHARGING_DOMAIN_SPECS,
+        STATE_OFF,
+        primary_entities_only=False,
     ),
     "is_level": make_entity_numerical_condition(
-        BATTERY_PERCENTAGE_DOMAIN_SPECS, PERCENTAGE
+        BATTERY_PERCENTAGE_DOMAIN_SPECS,
+        PERCENTAGE,
+        primary_entities_only=False,
     ),
 }
 

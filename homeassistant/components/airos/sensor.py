@@ -1,11 +1,8 @@
 """AirOS Sensor component for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Generic, TypeVar
 
 from airos.data import (
     AirOSDataBaseClass,
@@ -43,11 +40,11 @@ WIRELESS_ROLE_OPTIONS = [mode.value for mode in DerivedWirelessRole]
 
 PARALLEL_UPDATES = 0
 
-AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
-
 
 @dataclass(frozen=True, kw_only=True)
-class AirOSSensorEntityDescription(SensorEntityDescription, Generic[AirOSDataModel]):
+class AirOSSensorEntityDescription[AirOSDataModel: AirOSDataBaseClass](
+    SensorEntityDescription
+):
     """Describe an AirOS sensor."""
 
     value_fn: Callable[[AirOSDataModel], StateType]

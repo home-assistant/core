@@ -1,20 +1,19 @@
 """The Brands integration."""
 
-from __future__ import annotations
-
 from collections import deque
+from collections.abc import Container, Mapping
 from http import HTTPStatus
 import logging
 from pathlib import Path
 from random import SystemRandom
 import time
-from typing import Any, Final
+from typing import Any, Final, override
 
-from aiohttp import ClientError, hdrs, web
+from aiohttp import ClientError, web
 import voluptuous as vol
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
+from homeassistant.components.http import HomeAssistantView
 from homeassistant.core import HomeAssistant, callback, valid_domain
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -43,7 +42,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Brands integration."""
-    access_tokens: deque[str] = deque([], 2)
+    access_tokens: deque[str] = deque(maxlen=2)
     access_tokens.append(hex(_RND.getrandbits(256))[2:])
     hass.data[DOMAIN] = access_tokens
 
@@ -110,23 +109,18 @@ def _read_brand_file(brand_dir: Path, image: str) -> bytes | None:
 class _BrandsBaseView(HomeAssistantView):
     """Base view for serving brand images."""
 
-    requires_auth = False
+    use_query_token_for_auth = True
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the view."""
         self._hass = hass
         self._cache_dir = Path(hass.config.cache_path(DOMAIN))
 
-    def _authenticate(self, request: web.Request) -> None:
-        """Authenticate the request using Bearer token or query token."""
-        access_tokens: deque[str] = self._hass.data[DOMAIN]
-        authenticated = (
-            request[KEY_AUTHENTICATED] or request.query.get("token") in access_tokens
-        )
-        if not authenticated:
-            if hdrs.AUTHORIZATION in request.headers:
-                raise web.HTTPUnauthorized
-            raise web.HTTPForbidden
+    @callback
+    @override
+    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
+        """Return valid auth tokens, which can be used for query token authentication."""
+        return self._hass.data[DOMAIN]
 
     async def _serve_from_custom_integration(
         self,
@@ -242,8 +236,6 @@ class BrandsIntegrationView(_BrandsBaseView):
         image: str,
     ) -> web.Response:
         """Handle GET request for an integration brand image."""
-        self._authenticate(request)
-
         if not valid_domain(domain) or image not in ALLOWED_IMAGES:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
@@ -276,8 +268,6 @@ class BrandsHardwareView(_BrandsBaseView):
         image: str,
     ) -> web.Response:
         """Handle GET request for a hardware brand image."""
-        self._authenticate(request)
-
         if not CATEGORY_RE.match(category):
             return web.Response(status=HTTPStatus.NOT_FOUND)
         # Hardware images have dynamic names like "manufacturer_model.png"

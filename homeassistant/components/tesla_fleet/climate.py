@@ -1,7 +1,5 @@
 """Climate platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from itertools import chain
 from typing import Any, cast
 
@@ -104,7 +102,8 @@ class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
         else:
             self._attr_hvac_mode = HVACMode.OFF
 
-        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        # If not scoped, prevent the user from changing the
+        # HVAC mode by making it the only option
         if self._attr_hvac_mode and self.read_only:
             self._attr_hvac_modes = [self._attr_hvac_mode]
 
@@ -245,7 +244,8 @@ class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEn
         else:
             self._attr_hvac_mode = COP_MODES.get(state)
 
-        # If not scoped, prevent the user from changing the HVAC mode by making it the only option
+        # If not scoped, prevent the user from changing the
+        # HVAC mode by making it the only option
         if self._attr_hvac_mode and self.read_only:
             self._attr_hvac_modes = [self._attr_hvac_mode]
 

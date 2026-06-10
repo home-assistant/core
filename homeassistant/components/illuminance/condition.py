@@ -1,7 +1,5 @@
 """Provides conditions for illuminance."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
@@ -25,10 +23,10 @@ ILLUMINANCE_VALUE_DOMAIN_SPECS = {
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_detected": make_entity_state_condition(
-        ILLUMINANCE_DETECTED_DOMAIN_SPECS, STATE_ON, support_duration=True
+        ILLUMINANCE_DETECTED_DOMAIN_SPECS, STATE_ON
     ),
     "is_not_detected": make_entity_state_condition(
-        ILLUMINANCE_DETECTED_DOMAIN_SPECS, STATE_OFF, support_duration=True
+        ILLUMINANCE_DETECTED_DOMAIN_SPECS, STATE_OFF
     ),
     "is_value": make_entity_numerical_condition(
         ILLUMINANCE_VALUE_DOMAIN_SPECS, LIGHT_LUX

@@ -1,7 +1,5 @@
 """Support for MQTT locks."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 import re

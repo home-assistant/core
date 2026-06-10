@@ -5,8 +5,6 @@ we can cache the result of the decode of valid tokens
 to speed up the process.
 """
 
-from __future__ import annotations
-
 from collections.abc import Container, Iterable, Sequence
 from datetime import timedelta
 from functools import lru_cache

@@ -1,6 +1,6 @@
 """Support for SwitchBot event entities."""
 
-from __future__ import annotations
+from dataclasses import dataclass
 
 from homeassistant.components.event import (
     EventDeviceClass,
@@ -15,13 +15,31 @@ from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
 
-EVENT_TYPES = {
-    "doorbell": EventEntityDescription(
+
+@dataclass(frozen=True, kw_only=True)
+class SwitchbotEventEntityDescription(EventEntityDescription):
+    """Describes a Switchbot event entity."""
+
+    counter_key: str
+    fire_event: str
+
+
+EVENT_DESCRIPTIONS: tuple[SwitchbotEventEntityDescription, ...] = (
+    SwitchbotEventEntityDescription(
         key="doorbell",
         device_class=EventDeviceClass.DOORBELL,
         event_types=["ring"],
+        counter_key="doorbell_seq",
+        fire_event="ring",
     ),
-}
+    SwitchbotEventEntityDescription(
+        key="button",
+        device_class=EventDeviceClass.BUTTON,
+        event_types=["press"],
+        counter_key="button_count",
+        fire_event="press",
+    ),
+)
 
 
 async def async_setup_entry(
@@ -32,34 +50,34 @@ async def async_setup_entry(
     """Set up the SwitchBot event platform."""
     coordinator = config_entry.runtime_data
     async_add_entities(
-        SwitchbotEventEntity(coordinator, event, description)
-        for event, description in EVENT_TYPES.items()
-        if event in coordinator.device.parsed_data
+        SwitchbotEventEntity(coordinator, description)
+        for description in EVENT_DESCRIPTIONS
+        if description.counter_key in coordinator.device.parsed_data
     )
 
 
 class SwitchbotEventEntity(SwitchbotEntity, EventEntity):
     """Representation of a SwitchBot event."""
 
+    entity_description: SwitchbotEventEntityDescription
+
     def __init__(
         self,
         coordinator: SwitchbotDataUpdateCoordinator,
-        event: str,
-        description: EventEntityDescription,
+        description: SwitchbotEventEntityDescription,
     ) -> None:
         """Initialize the SwitchBot event."""
         super().__init__(coordinator)
-        self._event = event
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.base_unique_id}-{event}"
-        self._previous_doorbell_seq = int(
-            coordinator.device.parsed_data.get("doorbell_seq", 0)
+        self._attr_unique_id = f"{coordinator.base_unique_id}-{description.key}"
+        self._previous_counter = int(
+            coordinator.device.parsed_data.get(description.counter_key, 0)
         )
 
     @callback
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
-        seq = int(self.parsed_data.get("doorbell_seq", 0))
-        if seq not in (0, self._previous_doorbell_seq):
-            self._trigger_event("ring")
-        self._previous_doorbell_seq = seq
+        counter = int(self.parsed_data.get(self.entity_description.counter_key, 0))
+        if counter not in (0, self._previous_counter):
+            self._trigger_event(self.entity_description.fire_event)
+        self._previous_counter = counter

@@ -287,7 +287,7 @@ async def test_audio_pipeline_with_wake_word_no_timeout(
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test events from a pipeline run with audio input/output + wake word with no timeout."""
+    """Test pipeline run with audio input/output + wake word, no timeout."""
     events = []
     client = await hass_ws_client(hass)
 
@@ -1850,7 +1850,7 @@ async def test_wake_word_cooldown_same_id(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that duplicate wake word detections with the same id are blocked during the cooldown period."""
+    """Test duplicate wake word detections blocked during cooldown."""
     client_1 = await hass_ws_client(hass)
     client_2 = await hass_ws_client(hass)
 
@@ -2009,7 +2009,7 @@ async def test_wake_word_cooldown_different_entities(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that duplicate wake word detections are blocked even with different wake word entities."""
+    """Test duplicate wake word detections blocked across entities."""
     client_pipeline = await hass_ws_client(hass)
     await client_pipeline.send_json_auto_id(
         {
@@ -2543,7 +2543,7 @@ async def test_stt_cooldown_same_id(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that two speech-to-text pipelines cannot run within the cooldown period if they have the same wake word."""
+    """Test two STT pipelines cannot run in cooldown with same wake word."""
     client_1 = await hass_ws_client(hass)
     client_2 = await hass_ws_client(hass)
 
@@ -2614,7 +2614,7 @@ async def test_stt_cooldown_different_ids(
     hass_ws_client: WebSocketGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that two speech-to-text pipelines can run within the cooldown period if they have the different wake words."""
+    """Test two STT pipelines can run in cooldown with different wake words."""
     client_1 = await hass_ws_client(hass)
     client_2 = await hass_ws_client(hass)
 

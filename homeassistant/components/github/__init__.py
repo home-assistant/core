@@ -1,7 +1,5 @@
 """The GitHub integration."""
 
-from __future__ import annotations
-
 from types import MappingProxyType
 
 from aiogithubapi import GitHubAPI
@@ -9,12 +7,13 @@ from aiogithubapi import GitHubAPI
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import (
     SERVER_SOFTWARE,
     async_get_clientsession,
 )
 
-from .const import CONF_REPOSITORIES, CONF_REPOSITORY, SUBENTRY_TYPE_REPOSITORY
+from .const import CONF_REPOSITORIES, CONF_REPOSITORY, DOMAIN, SUBENTRY_TYPE_REPOSITORY
 from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -68,6 +67,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> b
 async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> bool:
     """Migrate old entry."""
     if entry.minor_version == 1:
+        dev_reg = dr.async_get(hass)
         # In minor version 2 we migrated repositories from entry options to
         # subentries, so we need to convert the list from
         # entry.options[CONF_REPOSITORIES] into individual subentries.
@@ -78,8 +78,13 @@ async def async_migrate_entry(hass: HomeAssistant, entry: GithubConfigEntry) -> 
                 title=repository,
                 unique_id=repository,
             )
-
             hass.config_entries.async_add_subentry(entry, subentry)
-
+            if device := dev_reg.async_get_device({(DOMAIN, repository)}):
+                dev_reg.async_update_device(
+                    device.id,
+                    remove_config_entry_id=entry.entry_id,
+                    add_config_subentry_id=subentry.subentry_id,
+                    add_config_entry_id=entry.entry_id,
+                )
         hass.config_entries.async_update_entry(entry, minor_version=2)
     return True

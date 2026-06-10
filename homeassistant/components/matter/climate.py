@@ -1,7 +1,5 @@
 """Matter climate platform."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Any
@@ -220,8 +218,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the climate entity."""
-        # Initialize preset handle mapping as instance attribute before calling super().__init__()
-        # because MatterEntity.__init__() calls _update_from_device() which needs this attribute
+        # Initialize preset handle mapping as instance attribute
+        # before calling super().__init__() because
+        # MatterEntity.__init__() calls _update_from_device()
+        # which needs this attribute
         self._matter_presets = []
         self._preset_handle_by_name: dict[str, bytes | None] = {}
         self._preset_name_by_handle: dict[bytes | None, str] = {}
@@ -250,7 +250,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
                         clusters.Thermostat.Attributes.OccupiedHeatingSetpoint
                     )
                 await self.write_attribute(
-                    value=int(target_temperature * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=matter_attribute,
                 )
             return
@@ -259,7 +259,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # multi setpoint control - low setpoint (heat)
             if self.target_temperature_low != target_temperature_low:
                 await self.write_attribute(
-                    value=int(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature_low * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedHeatingSetpoint,
                 )
 
@@ -267,7 +267,7 @@ class MatterClimate(MatterEntity, ClimateEntity):
             # multi setpoint control - high setpoint (cool)
             if self.target_temperature_high != target_temperature_high:
                 await self.write_attribute(
-                    value=int(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
+                    value=round(target_temperature_high * TEMPERATURE_SCALING_FACTOR),
                     matter_attribute=clusters.Thermostat.Attributes.OccupiedCoolingSetpoint,
                 )
 
@@ -364,7 +364,8 @@ class MatterClimate(MatterEntity, ClimateEntity):
             self.get_matter_attribute_value(clusters.Thermostat.Attributes.Presets)
             or []
         )
-        # Build preset mapping: use device-provided name if available, else generate unique name
+        # Build preset mapping: use device-provided name if
+        # available, else generate unique name
         self._preset_handle_by_name.clear()
         self._preset_name_by_handle.clear()
         if self._matter_presets:
@@ -414,8 +415,10 @@ class MatterClimate(MatterEntity, ClimateEntity):
     def _update_hvac_mode_and_action(self) -> None:
         """Update HVAC mode and action from device."""
         if self.get_matter_attribute_value(clusters.OnOff.Attributes.OnOff) is False:
-            # special case: the appliance has a dedicated Power switch on the OnOff cluster
-            # if the mains power is off - treat it as if the HVAC mode is off
+            # special case: the appliance has a dedicated Power
+            # switch on the OnOff cluster
+            # if the mains power is off - treat it as if the
+            # HVAC mode is off
             self._attr_hvac_mode = HVACMode.OFF
             self._attr_hvac_action = None
         else:

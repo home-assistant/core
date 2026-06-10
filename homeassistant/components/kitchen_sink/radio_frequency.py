@@ -1,7 +1,5 @@
 """Demo platform that offers a fake radio frequency entity."""
 
-from __future__ import annotations
-
 from rf_protocols import RadioFrequencyCommand
 
 from homeassistant.components import persistent_notification

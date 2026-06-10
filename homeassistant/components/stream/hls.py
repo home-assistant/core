@@ -1,7 +1,5 @@
 """Provide functionality to stream HLS."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from typing import TYPE_CHECKING, cast
 
@@ -121,8 +119,10 @@ class HlsMasterPlaylistView(StreamView):
     @staticmethod
     def render(track: StreamOutput) -> str:
         """Render M3U8 file."""
-        # Need to calculate max bandwidth as input_container.bit_rate doesn't seem to work
-        # Calculate file size / duration and use a small multiplier to account for variation
+        # Need to calculate max bandwidth as
+        # input_container.bit_rate doesn't seem to work.
+        # Calculate file size / duration and use a small
+        # multiplier to account for variation
         # hls spec already allows for 25% variation
         if not (segment := track.get_segment(track.sequences[-2])):
             return ""
@@ -186,15 +186,15 @@ class HlsPlaylistView(StreamView):
         ]
 
         if track.stream_settings.ll_hls:
+            part_dur = track.stream_settings.part_target_duration
+            start_offset = EXT_X_START_LL_HLS * part_dur
             playlist.extend(
                 [
                     "#EXT-X-PART-INF:PART-TARGET="
                     f"{track.stream_settings.part_target_duration:.3f}",
                     "#EXT-X-SERVER-CONTROL:CAN-BLOCK-RELOAD=YES,PART-HOLD-BACK="
                     f"{2 * track.stream_settings.part_target_duration:.3f}",
-                    "#EXT-X-START:TIME-OFFSET=-"
-                    f"{EXT_X_START_LL_HLS * track.stream_settings.part_target_duration:.3f}"
-                    ",PRECISE=YES",
+                    f"#EXT-X-START:TIME-OFFSET=-{start_offset:.3f},PRECISE=YES",
                 ]
             )
         else:

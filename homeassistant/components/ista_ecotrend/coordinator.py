@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Ista EcoTrend integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any

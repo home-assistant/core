@@ -1,7 +1,5 @@
 """Litter-Robot entities for common data and methods."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from typing import Any, Concatenate, Generic, TypeVar
 
@@ -61,7 +59,8 @@ def get_device_info(whisker_entity: Robot | Pet) -> DeviceInfo:
 
 
 class LitterRobotEntity(
-    CoordinatorEntity[LitterRobotDataUpdateCoordinator], Generic[_WhiskerEntityT]
+    CoordinatorEntity[LitterRobotDataUpdateCoordinator],
+    Generic[_WhiskerEntityT],  # noqa: UP046
 ):
     """Generic Litter-Robot entity representing common data and methods."""
 

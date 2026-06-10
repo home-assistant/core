@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_bottom_tank_water_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_bottom_tank_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -15,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_bottom_tank_water_temperature',
+    'entity_id': 'sensor.my_home_patio_water_heating_bottom_tank_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_bottom_tank_water_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_bottom_tank_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -50,14 +50,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_bottom_tank_water_temperature',
+    'entity_id': 'sensor.my_home_patio_water_heating_bottom_tank_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_control_water_target_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_control_water_target_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -73,7 +73,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_control_water_target_temperature',
+    'entity_id': 'sensor.my_home_patio_water_heating_control_water_target_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,7 +99,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_control_water_target_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_control_water_target_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -108,14 +108,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_control_water_target_temperature',
+    'entity_id': 'sensor.my_home_patio_water_heating_control_water_target_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '70.0',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -136,7 +136,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.patio_water_heating_discrete_rssi_level',
+    'entity_id': 'sensor.my_home_patio_water_heating_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -159,7 +159,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -173,14 +173,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_discrete_rssi_level',
+    'entity_id': 'sensor.my_home_patio_water_heating_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_electric_booster_operating_time-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_electric_booster_operating_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -194,7 +194,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.patio_water_heating_electric_booster_operating_time',
+    'entity_id': 'sensor.my_home_patio_water_heating_electric_booster_operating_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -220,7 +220,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_electric_booster_operating_time-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_electric_booster_operating_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -228,14 +228,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_electric_booster_operating_time',
+    'entity_id': 'sensor.my_home_patio_water_heating_electric_booster_operating_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1027',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_electric_power_consumption-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_electric_power_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -251,7 +251,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_electric_power_consumption',
+    'entity_id': 'sensor.my_home_patio_water_heating_electric_power_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -277,7 +277,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_electric_power_consumption-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_electric_power_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -286,14 +286,14 @@
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_electric_power_consumption',
+    'entity_id': 'sensor.my_home_patio_water_heating_electric_power_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_expected_number_of_shower-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_expected_number_of_shower-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -309,7 +309,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_expected_number_of_shower',
+    'entity_id': 'sensor.my_home_patio_water_heating_expected_number_of_shower',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -332,7 +332,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_expected_number_of_shower-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_expected_number_of_shower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Patio Water Heating Expected number of shower',
@@ -340,14 +340,14 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_expected_number_of_shower',
+    'entity_id': 'sensor.my_home_patio_water_heating_expected_number_of_shower',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_heat_pump_operating_time-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_heat_pump_operating_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -361,7 +361,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.patio_water_heating_heat_pump_operating_time',
+    'entity_id': 'sensor.my_home_patio_water_heating_heat_pump_operating_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -387,7 +387,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_heat_pump_operating_time-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_heat_pump_operating_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -395,14 +395,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_heat_pump_operating_time',
+    'entity_id': 'sensor.my_home_patio_water_heating_heat_pump_operating_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_heat_pump_power_consumption-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_heat_pump_power_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -418,7 +418,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_heat_pump_power_consumption',
+    'entity_id': 'sensor.my_home_patio_water_heating_heat_pump_power_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -444,7 +444,7 @@
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_heat_pump_power_consumption-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_heat_pump_power_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
@@ -453,14 +453,14 @@
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_heat_pump_power_consumption',
+    'entity_id': 'sensor.my_home_patio_water_heating_heat_pump_power_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_middle_water_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_middle_water_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -476,7 +476,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_middle_water_temperature',
+    'entity_id': 'sensor.my_home_patio_water_heating_middle_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -502,7 +502,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_middle_water_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_middle_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -511,14 +511,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_middle_water_temperature',
+    'entity_id': 'sensor.my_home_patio_water_heating_middle_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '64.4',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_number_of_shower_remaining-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_number_of_shower_remaining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -534,7 +534,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_number_of_shower_remaining',
+    'entity_id': 'sensor.my_home_patio_water_heating_number_of_shower_remaining',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -557,7 +557,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_number_of_shower_remaining-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_number_of_shower_remaining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Patio Water Heating Number of shower remaining',
@@ -565,14 +565,14 @@
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_number_of_shower_remaining',
+    'entity_id': 'sensor.my_home_patio_water_heating_number_of_shower_remaining',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_1-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -588,7 +588,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_1',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -614,7 +614,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_1-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -623,14 +623,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_1',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '38377',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_2-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -646,7 +646,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_2',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -672,7 +672,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_2-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -681,14 +681,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_2',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '239218',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_3-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_3-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -704,7 +704,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_3',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_3',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -730,7 +730,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_3-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -739,14 +739,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_3',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_3',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_4-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -762,7 +762,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_4',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -788,7 +788,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_4-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -797,14 +797,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_4',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_5-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -820,7 +820,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_5',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -846,7 +846,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_5-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -855,14 +855,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_5',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_6-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_6-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -878,7 +878,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_6',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_6',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -904,7 +904,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_6-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_6-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -913,14 +913,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_6',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_6',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_7-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_7-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -936,7 +936,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_7',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_7',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -962,7 +962,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_7-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_7-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -971,14 +971,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_7',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_7',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_8-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_8-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -994,7 +994,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_8',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_8',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1020,7 +1020,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_8-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_8-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1029,14 +1029,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_8',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_8',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_9-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_9-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1052,7 +1052,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_9',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_9',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1078,7 +1078,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_consumption_tariff_9-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_9-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1087,14 +1087,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_consumption_tariff_9',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_consumption_tariff_9',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_electric_energy_consumption-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1110,7 +1110,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_electric_energy_consumption',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1136,7 +1136,7 @@
     'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_office_energy_meter_electric_energy_consumption-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
@@ -1145,14 +1145,14 @@
       'unit_of_measurement': <UnitOfEnergy.WATT_HOUR: 'Wh'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_office_energy_meter_electric_energy_consumption',
+    'entity_id': 'sensor.my_home_patio_water_heating_office_energy_meter_electric_energy_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '3579474',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_priority_lock_originator-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_priority_lock_originator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1166,7 +1166,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_priority_lock_originator',
+    'entity_id': 'sensor.my_home_patio_water_heating_priority_lock_originator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1189,21 +1189,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_priority_lock_originator-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Patio Water Heating Priority lock originator',
       'icon': 'mdi:lock',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_priority_lock_originator',
+    'entity_id': 'sensor.my_home_patio_water_heating_priority_lock_originator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_priority_lock_timer-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_priority_lock_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1217,7 +1217,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_priority_lock_timer',
+    'entity_id': 'sensor.my_home_patio_water_heating_priority_lock_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1240,7 +1240,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_priority_lock_timer-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Patio Water Heating Priority lock timer',
@@ -1248,14 +1248,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_priority_lock_timer',
+    'entity_id': 'sensor.my_home_patio_water_heating_priority_lock_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1271,7 +1271,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.patio_water_heating_rssi_level',
+    'entity_id': 'sensor.my_home_patio_water_heating_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1294,7 +1294,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -1303,14 +1303,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_rssi_level',
+    'entity_id': 'sensor.my_home_patio_water_heating_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1326,7 +1326,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_temperature',
+    'entity_id': 'sensor.my_home_patio_water_heating_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1352,7 +1352,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1361,14 +1361,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_temperature',
+    'entity_id': 'sensor.my_home_patio_water_heating_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.0',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_water_consumption-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_water_consumption-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1384,7 +1384,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_water_consumption',
+    'entity_id': 'sensor.my_home_patio_water_heating_water_consumption',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1410,7 +1410,7 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_water_consumption-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_water_consumption-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'water',
@@ -1420,14 +1420,14 @@
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_water_consumption',
+    'entity_id': 'sensor.my_home_patio_water_heating_water_consumption',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '159',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_water_volume_estimation_at_40_degc-entry]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_water_volume_estimation_at_40_degc-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1443,7 +1443,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.patio_water_heating_water_volume_estimation_at_40_degc',
+    'entity_id': 'sensor.my_home_patio_water_heating_water_volume_estimation_at_40_degc',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1469,7 +1469,7 @@
     'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.patio_water_heating_water_volume_estimation_at_40_degc-state]
+# name: test_sensor_entities_snapshot[cloud_atlantic_cozytouch.json][sensor.my_home_patio_water_heating_water_volume_estimation_at_40_degc-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'volume_storage',
@@ -1479,14 +1479,14 @@
       'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.patio_water_heating_water_volume_estimation_at_40_degc',
+    'entity_id': 'sensor.my_home_patio_water_heating_water_volume_estimation_at_40_degc',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '44962',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garage_ceiling_light_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1507,7 +1507,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garage_ceiling_light_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_garage_ceiling_light_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1530,7 +1530,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garage_ceiling_light_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1544,14 +1544,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garage_ceiling_light_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_garage_ceiling_light_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garage_ceiling_light_priority_lock_originator-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_priority_lock_originator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1565,7 +1565,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.garage_ceiling_light_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_garage_ceiling_light_priority_lock_originator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1588,21 +1588,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garage_ceiling_light_priority_lock_originator-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garage Ceiling Light Priority lock originator',
       'icon': 'mdi:lock',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garage_ceiling_light_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_garage_ceiling_light_priority_lock_originator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garage_ceiling_light_priority_lock_timer-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_priority_lock_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1616,7 +1616,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.garage_ceiling_light_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_garage_ceiling_light_priority_lock_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1639,7 +1639,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garage_ceiling_light_priority_lock_timer-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Garage Ceiling Light Priority lock timer',
@@ -1647,14 +1647,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garage_ceiling_light_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_garage_ceiling_light_priority_lock_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garage_ceiling_light_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1670,7 +1670,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garage_ceiling_light_rssi_level',
+    'entity_id': 'sensor.maple_residence_garage_ceiling_light_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1693,7 +1693,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garage_ceiling_light_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garage_ceiling_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -1702,14 +1702,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garage_ceiling_light_rssi_level',
+    'entity_id': 'sensor.maple_residence_garage_ceiling_light_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_bathroom_temperature_sensor_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1730,7 +1730,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garden_radiator_bathroom_temperature_sensor_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1753,7 +1753,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_bathroom_temperature_sensor_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1767,14 +1767,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garden_radiator_bathroom_temperature_sensor_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_bathroom_temperature_sensor_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1790,7 +1790,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garden_radiator_bathroom_temperature_sensor_rssi_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1810,26 +1810,26 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/15702199#2-core:RSSILevelState',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_bathroom_temperature_sensor_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Garden Radiator Bathroom Temperature Sensor RSSI level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garden_radiator_bathroom_temperature_sensor_rssi_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_bathroom_temperature_sensor_sensor_defect-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_sensor_defect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1850,7 +1850,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garden_radiator_bathroom_temperature_sensor_sensor_defect',
+    'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_sensor_defect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1873,7 +1873,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_bathroom_temperature_sensor_sensor_defect-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1886,14 +1886,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garden_radiator_bathroom_temperature_sensor_sensor_defect',
+    'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_sensor_defect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_bathroom_temperature_sensor_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1909,7 +1909,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.garden_radiator_bathroom_temperature_sensor_temperature',
+    'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1935,7 +1935,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_bathroom_temperature_sensor_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -1944,14 +1944,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garden_radiator_bathroom_temperature_sensor_temperature',
+    'entity_id': 'sensor.maple_residence_garden_radiator_bathroom_temperature_sensor_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '24.4',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_battery_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1967,7 +1967,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garden_radiator_battery_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_battery_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1990,7 +1990,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_battery_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1999,14 +1999,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garden_radiator_battery_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_battery_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '59',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2027,7 +2027,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garden_radiator_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2050,7 +2050,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2064,14 +2064,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garden_radiator_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2087,7 +2087,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garden_radiator_rssi_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2110,7 +2110,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -2119,14 +2119,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garden_radiator_rssi_level',
+    'entity_id': 'sensor.maple_residence_garden_radiator_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_sensor_defect-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_sensor_defect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2147,7 +2147,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.garden_radiator_sensor_defect',
+    'entity_id': 'sensor.maple_residence_garden_radiator_sensor_defect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2170,7 +2170,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.garden_radiator_sensor_defect-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_garden_radiator_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2183,14 +2183,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.garden_radiator_sensor_defect',
+    'entity_id': 'sensor.maple_residence_garden_radiator_sensor_defect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2211,7 +2211,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.hallway_shutter_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2234,7 +2234,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2248,14 +2248,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hallway_shutter_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_priority_lock_originator-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_priority_lock_originator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2269,7 +2269,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hallway_shutter_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_priority_lock_originator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2292,21 +2292,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_priority_lock_originator-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hallway Shutter Priority lock originator',
       'icon': 'mdi:lock',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hallway_shutter_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_priority_lock_originator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_priority_lock_timer-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_priority_lock_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2320,7 +2320,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hallway_shutter_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_priority_lock_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2343,7 +2343,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_priority_lock_timer-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hallway Shutter Priority lock timer',
@@ -2351,14 +2351,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hallway_shutter_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_priority_lock_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2374,7 +2374,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.hallway_shutter_rssi_level',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2397,7 +2397,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -2406,14 +2406,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hallway_shutter_rssi_level',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_target_closure-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_target_closure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2427,7 +2427,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.hallway_shutter_target_closure',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_target_closure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2450,21 +2450,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.hallway_shutter_target_closure-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_hallway_shutter_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hallway Shutter Target closure',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.hallway_shutter_target_closure',
+    'entity_id': 'sensor.maple_residence_hallway_shutter_target_closure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_battery_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2480,7 +2480,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_radiator_battery_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_battery_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2503,7 +2503,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_battery_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -2512,14 +2512,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_radiator_battery_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_battery_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '66',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2540,7 +2540,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_radiator_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2563,7 +2563,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2577,14 +2577,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_radiator_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2600,7 +2600,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_radiator_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2623,7 +2623,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -2632,14 +2632,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_radiator_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_sensor_defect-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_sensor_defect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2660,7 +2660,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_radiator_sensor_defect',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_sensor_defect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2683,7 +2683,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_sensor_defect-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2696,14 +2696,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_radiator_sensor_defect',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_sensor_defect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_study_temp_probe_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2724,7 +2724,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_radiator_study_temp_probe_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2747,7 +2747,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_study_temp_probe_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2761,14 +2761,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_radiator_study_temp_probe_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_study_temp_probe_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2784,7 +2784,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_radiator_study_temp_probe_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2804,26 +2804,26 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/9253412#2-core:RSSILevelState',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_study_temp_probe_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Living Room Radiator Study Temp Probe RSSI level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_radiator_study_temp_probe_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_study_temp_probe_sensor_defect-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_sensor_defect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2844,7 +2844,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_radiator_study_temp_probe_sensor_defect',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_sensor_defect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2867,7 +2867,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_study_temp_probe_sensor_defect-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -2880,14 +2880,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_radiator_study_temp_probe_sensor_defect',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_sensor_defect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_study_temp_probe_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2903,7 +2903,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.living_room_radiator_study_temp_probe_temperature',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2929,7 +2929,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_radiator_study_temp_probe_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_radiator_study_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -2938,14 +2938,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_radiator_study_temp_probe_temperature',
+    'entity_id': 'sensor.maple_residence_living_room_radiator_study_temp_probe_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '21.5',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_smoke_detector_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2966,7 +2966,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_smoke_detector_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2989,7 +2989,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_smoke_detector_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -3003,14 +3003,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_smoke_detector_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_smoke_detector_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3026,7 +3026,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_smoke_detector_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3049,7 +3049,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_smoke_detector_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -3058,14 +3058,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_smoke_detector_rssi_level',
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_smoke_detector_sensor_defect-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_defect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3086,7 +3086,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_smoke_detector_sensor_defect',
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_sensor_defect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3109,7 +3109,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_smoke_detector_sensor_defect-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -3122,14 +3122,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_smoke_detector_sensor_defect',
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_sensor_defect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_smoke_detector_sensor_room-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_room-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3148,7 +3148,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.living_room_smoke_detector_sensor_room',
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_sensor_room',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3171,7 +3171,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.living_room_smoke_detector_sensor_room-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_living_room_smoke_detector_sensor_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -3183,14 +3183,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.living_room_smoke_detector_sensor_room',
+    'entity_id': 'sensor.maple_residence_living_room_smoke_detector_sensor_room',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3211,7 +3211,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nursery_shutter_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3234,7 +3234,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -3248,14 +3248,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nursery_shutter_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_priority_lock_originator-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_priority_lock_originator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3269,7 +3269,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.nursery_shutter_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_priority_lock_originator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3292,21 +3292,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_priority_lock_originator-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nursery Shutter Priority lock originator',
       'icon': 'mdi:lock',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nursery_shutter_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_priority_lock_originator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_priority_lock_timer-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_priority_lock_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3320,7 +3320,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.nursery_shutter_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_priority_lock_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3343,7 +3343,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_priority_lock_timer-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nursery Shutter Priority lock timer',
@@ -3351,14 +3351,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nursery_shutter_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_priority_lock_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3374,7 +3374,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.nursery_shutter_rssi_level',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3397,7 +3397,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -3406,14 +3406,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nursery_shutter_rssi_level',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_target_closure-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_target_closure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3427,7 +3427,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.nursery_shutter_target_closure',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_target_closure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3450,21 +3450,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.nursery_shutter_target_closure-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_nursery_shutter_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nursery Shutter Target closure',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.nursery_shutter_target_closure',
+    'entity_id': 'sensor.maple_residence_nursery_shutter_target_closure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3485,7 +3485,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.office_shutter_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_office_shutter_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3508,7 +3508,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -3522,14 +3522,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_shutter_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_office_shutter_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_priority_lock_originator-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_priority_lock_originator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3543,7 +3543,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_shutter_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_office_shutter_priority_lock_originator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3566,21 +3566,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_priority_lock_originator-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Office Shutter Priority lock originator',
       'icon': 'mdi:lock',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_shutter_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_office_shutter_priority_lock_originator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_priority_lock_timer-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_priority_lock_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3594,7 +3594,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_shutter_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_office_shutter_priority_lock_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3617,7 +3617,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_priority_lock_timer-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Office Shutter Priority lock timer',
@@ -3625,14 +3625,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_shutter_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_office_shutter_priority_lock_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3648,7 +3648,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.office_shutter_rssi_level',
+    'entity_id': 'sensor.maple_residence_office_shutter_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3671,7 +3671,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -3680,14 +3680,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_shutter_rssi_level',
+    'entity_id': 'sensor.maple_residence_office_shutter_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_target_closure-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_target_closure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3701,7 +3701,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.office_shutter_target_closure',
+    'entity_id': 'sensor.maple_residence_office_shutter_target_closure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3724,21 +3724,21 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.office_shutter_target_closure-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_office_shutter_target_closure-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Office Shutter Target closure',
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.office_shutter_target_closure',
+    'entity_id': 'sensor.maple_residence_office_shutter_target_closure',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_ceiling_light_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3759,7 +3759,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.study_ceiling_light_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_ceiling_light_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3782,7 +3782,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_ceiling_light_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -3796,14 +3796,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_ceiling_light_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_ceiling_light_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_ceiling_light_priority_lock_originator-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_priority_lock_originator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3817,7 +3817,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.study_ceiling_light_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_study_ceiling_light_priority_lock_originator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3840,21 +3840,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_ceiling_light_priority_lock_originator-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Study Ceiling Light Priority lock originator',
       'icon': 'mdi:lock',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_ceiling_light_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_study_ceiling_light_priority_lock_originator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_ceiling_light_priority_lock_timer-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_priority_lock_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3868,7 +3868,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.study_ceiling_light_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_study_ceiling_light_priority_lock_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3891,7 +3891,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_ceiling_light_priority_lock_timer-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Study Ceiling Light Priority lock timer',
@@ -3899,14 +3899,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_ceiling_light_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_study_ceiling_light_priority_lock_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_ceiling_light_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3922,7 +3922,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.study_ceiling_light_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_ceiling_light_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -3945,7 +3945,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_ceiling_light_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_ceiling_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -3954,14 +3954,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_ceiling_light_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_ceiling_light_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_battery_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_battery_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -3977,7 +3977,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.study_radiator_battery_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_battery_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4000,7 +4000,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_battery_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_battery_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -4009,14 +4009,14 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_radiator_battery_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_battery_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '66',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4037,7 +4037,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.study_radiator_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4060,7 +4060,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -4074,14 +4074,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_radiator_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_nursery_temp_probe_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4102,7 +4102,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.study_radiator_nursery_temp_probe_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4125,7 +4125,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_nursery_temp_probe_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -4139,14 +4139,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_radiator_nursery_temp_probe_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_nursery_temp_probe_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4162,7 +4162,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.study_radiator_nursery_temp_probe_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4182,26 +4182,26 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'io://1234-5678-1698/9187218#2-core:RSSILevelState',
-    'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+    'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_nursery_temp_probe_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
       'friendly_name': 'Study Radiator Nursery Temp Probe RSSI level',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_radiator_nursery_temp_probe_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_nursery_temp_probe_sensor_defect-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_sensor_defect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4222,7 +4222,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.study_radiator_nursery_temp_probe_sensor_defect',
+    'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_sensor_defect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4245,7 +4245,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_nursery_temp_probe_sensor_defect-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -4258,14 +4258,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_radiator_nursery_temp_probe_sensor_defect',
+    'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_sensor_defect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_nursery_temp_probe_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4281,7 +4281,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.study_radiator_nursery_temp_probe_temperature',
+    'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4307,7 +4307,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_nursery_temp_probe_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_nursery_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4316,14 +4316,14 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_radiator_nursery_temp_probe_temperature',
+    'entity_id': 'sensor.maple_residence_study_radiator_nursery_temp_probe_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20.6',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4339,7 +4339,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.study_radiator_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4362,7 +4362,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -4371,14 +4371,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_radiator_rssi_level',
+    'entity_id': 'sensor.maple_residence_study_radiator_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_sensor_defect-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_sensor_defect-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4399,7 +4399,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.study_radiator_sensor_defect',
+    'entity_id': 'sensor.maple_residence_study_radiator_sensor_defect',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4422,7 +4422,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.study_radiator_sensor_defect-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_study_radiator_sensor_defect-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -4435,14 +4435,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.study_radiator_sensor_defect',
+    'entity_id': 'sensor.maple_residence_study_radiator_sensor_defect',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_ceiling_light_discrete_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_discrete_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4463,7 +4463,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.terrace_ceiling_light_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_terrace_ceiling_light_discrete_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4486,7 +4486,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_ceiling_light_discrete_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_discrete_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -4500,14 +4500,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.terrace_ceiling_light_discrete_rssi_level',
+    'entity_id': 'sensor.maple_residence_terrace_ceiling_light_discrete_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'good',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_ceiling_light_priority_lock_originator-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_priority_lock_originator-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4521,7 +4521,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.terrace_ceiling_light_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_terrace_ceiling_light_priority_lock_originator',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4544,21 +4544,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_ceiling_light_priority_lock_originator-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_priority_lock_originator-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Terrace Ceiling Light Priority lock originator',
       'icon': 'mdi:lock',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.terrace_ceiling_light_priority_lock_originator',
+    'entity_id': 'sensor.maple_residence_terrace_ceiling_light_priority_lock_originator',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_ceiling_light_priority_lock_timer-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_priority_lock_timer-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4572,7 +4572,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.terrace_ceiling_light_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_terrace_ceiling_light_priority_lock_timer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4595,7 +4595,7 @@
     'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_ceiling_light_priority_lock_timer-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_priority_lock_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Terrace Ceiling Light Priority lock timer',
@@ -4603,14 +4603,14 @@
       'unit_of_measurement': <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.terrace_ceiling_light_priority_lock_timer',
+    'entity_id': 'sensor.maple_residence_terrace_ceiling_light_priority_lock_timer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_ceiling_light_rssi_level-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_rssi_level-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4626,7 +4626,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.terrace_ceiling_light_rssi_level',
+    'entity_id': 'sensor.maple_residence_terrace_ceiling_light_rssi_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4649,7 +4649,7 @@
     'unit_of_measurement': 'dB',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_ceiling_light_rssi_level-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_ceiling_light_rssi_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'signal_strength',
@@ -4658,14 +4658,14 @@
       'unit_of_measurement': 'dB',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.terrace_ceiling_light_rssi_level',
+    'entity_id': 'sensor.maple_residence_terrace_ceiling_light_rssi_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_radiator_battery-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_radiator_battery-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4687,7 +4687,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.terrace_radiator_battery',
+    'entity_id': 'sensor.maple_residence_terrace_radiator_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4710,7 +4710,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_radiator_battery-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_radiator_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -4725,14 +4725,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.terrace_radiator_battery',
+    'entity_id': 'sensor.maple_residence_terrace_radiator_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'low',
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_radiator_garage_temp_probe_temperature-entry]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_radiator_garage_temp_probe_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -4748,7 +4748,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.terrace_radiator_garage_temp_probe_temperature',
+    'entity_id': 'sensor.maple_residence_terrace_radiator_garage_temp_probe_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -4774,7 +4774,7 @@
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---
-# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.terrace_radiator_garage_temp_probe_temperature-state]
+# name: test_sensor_entities_snapshot[cloud_nexity_rail_din_europe.json][sensor.maple_residence_terrace_radiator_garage_temp_probe_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'temperature',
@@ -4783,7 +4783,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.terrace_radiator_garage_temp_probe_temperature',
+    'entity_id': 'sensor.maple_residence_terrace_radiator_garage_temp_probe_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

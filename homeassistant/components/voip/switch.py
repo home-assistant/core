@@ -1,33 +1,25 @@
 """VoIP switch entities."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import restore_state
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from . import VoipConfigEntry
 from .devices import VoIPDevice
 from .entity import VoIPEntity
-
-if TYPE_CHECKING:
-    from . import DomainData
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VoipConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up VoIP switch entities."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
-    domain_data: DomainData = hass.data[DOMAIN]
+    domain_data = config_entry.runtime_data.domain_data
 
     @callback
     def async_add_device(device: VoIPDevice) -> None:

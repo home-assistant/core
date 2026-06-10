@@ -67,7 +67,7 @@ rules:
     comment: |
       Only one entity type (device_tracker) is created, making this not applicable.
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow:
     status: todo

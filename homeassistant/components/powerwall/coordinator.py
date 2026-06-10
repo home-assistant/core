@@ -1,7 +1,5 @@
 """Coordinator for the Tesla Powerwall integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -12,6 +10,7 @@ from tesla_powerwall import (
     DeviceType,
     GridStatus,
     MetersAggregatesResponse,
+    OperationMode,
     Powerwall,
     PowerwallStatusResponse,
     SiteInfoResponse,
@@ -55,6 +54,7 @@ class PowerwallData:
     grid_services_active: bool
     grid_status: GridStatus
     backup_reserve: float | None
+    operation_mode: OperationMode | None
     batteries: dict[str, BatteryResponse]
 
 

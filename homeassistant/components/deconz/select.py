@@ -1,7 +1,5 @@
 """Support for deCONZ select entities."""
 
-from __future__ import annotations
-
 from pydeconz.models.event import EventType
 from pydeconz.models.sensor.air_purifier import AirPurifier, AirPurifierFanMode
 from pydeconz.models.sensor.presence import (

@@ -1,7 +1,5 @@
 """Support for DROP binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -83,7 +81,6 @@ BINARY_SENSORS: list[DROPBinarySensorEntityDescription] = [
     ),
     DROPBinarySensorEntityDescription(
         key=POWER,
-        translation_key=None,  # Use name provided by binary sensor device class
         device_class=BinarySensorDeviceClass.POWER,
         value_fn=lambda device: device.drop_api.power(),
     ),

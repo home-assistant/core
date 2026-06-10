@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Nederlandse Spoorwegen."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -54,7 +52,7 @@ class NSRouteResult:
 
 
 class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
-    """Class to manage fetching Nederlandse Spoorwegen data from the API for a single route."""
+    """Class to manage fetching NS data from the API for a single route."""
 
     def __init__(
         self,
@@ -99,7 +97,8 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         # Filter out trips that have already departed (trips are already sorted)
         future_trips = self._remove_trips_in_the_past(trips)
 
-        # If a specific time is configured, filter to only show trips at or after that time
+        # If a specific time is configured, filter to only show
+        # trips at or after that time
         if self.departure_time:
             reference_time = self._get_time_from_route(self.departure_time)
             future_trips = self._filter_trips_at_or_after_time(
@@ -116,7 +115,7 @@ class NSDataUpdateCoordinator(DataUpdateCoordinator[NSRouteResult]):
         )
 
     def _get_time_from_route(self, time_str: str | None) -> datetime:
-        """Convert time string to datetime with automatic rollover to tomorrow if needed."""
+        """Convert time string to datetime with automatic rollover."""
         if not time_str:
             return _current_time_nl()
 

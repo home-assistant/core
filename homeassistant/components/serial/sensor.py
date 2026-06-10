@@ -1,7 +1,5 @@
 """Support for reading data from a serial port."""
 
-from __future__ import annotations
-
 import asyncio
 from asyncio import Task
 import json

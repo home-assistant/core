@@ -329,7 +329,7 @@ async def test_websocket_stream_no_source(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test camera/stream websocket command with camera with no source."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     # Request playlist through WebSocket
     client = await hass_ws_client(hass)
@@ -349,7 +349,7 @@ async def test_websocket_camera_stream(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_create_stream: Mock
 ) -> None:
     """Test camera/stream websocket command."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -375,7 +375,7 @@ async def test_websocket_get_prefs(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get camera preferences websocket command."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     # Request preferences through websocket
     client = await hass_ws_client(hass)
@@ -386,6 +386,27 @@ async def test_websocket_get_prefs(
 
     # Assert WebSocket response
     assert msg["success"]
+
+
+@pytest.mark.usefixtures("mock_camera")
+async def test_websocket_update_prefs_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test updating camera preferences requires admin."""
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json(
+        {
+            "id": 7,
+            "type": "camera/update_prefs",
+            "entity_id": "camera.demo_camera",
+            "preload_stream": True,
+        }
+    )
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
 
 
 @pytest.mark.usefixtures("mock_camera")
@@ -542,7 +563,7 @@ async def test_no_preload_stream(hass: HomeAssistant, mock_create_stream: Mock) 
         ) as mock_stream_source,
     ):
         mock_stream_source.return_value = io.BytesIO()
-        await async_setup_component(hass, "camera", {DOMAIN: {"platform": "demo"}})
+        await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
         assert not mock_create_stream.endpoint_url.called
@@ -562,9 +583,7 @@ async def test_preload_stream(hass: HomeAssistant, mock_create_stream: Mock) -> 
             return_value="http://example.com",
         ),
     ):
-        assert await async_setup_component(
-            hass, "camera", {DOMAIN: {"platform": "demo"}}
-        )
+        assert await async_setup_component(hass, DOMAIN, {DOMAIN: {"platform": "demo"}})
         await hass.async_block_till_done()
         hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
         await hass.async_block_till_done()
@@ -673,6 +692,30 @@ async def test_camera_proxy_stream(hass_client: ClientSessionGenerator) -> None:
 
 
 @pytest.mark.usefixtures("mock_camera")
+async def test_camera_proxy_query_token_auth(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test the camera proxy authenticates via the access token query param."""
+    client = await hass_client_no_auth()
+
+    state = hass.states.get("camera.demo_camera")
+    assert state is not None
+
+    # A valid access token in the query param authenticates the request
+    resp = await client.get(state.attributes["entity_picture"])
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"Test"
+
+    # Without a token the request is unauthorized
+    resp = await client.get("/api/camera_proxy/camera.demo_camera")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # An invalid token is also unauthorized
+    resp = await client.get("/api/camera_proxy/camera.demo_camera?token=invalid")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.usefixtures("mock_camera")
 async def test_state_streaming(hass: HomeAssistant) -> None:
     """Camera state."""
     demo_camera = hass.states.get("camera.demo_camera")
@@ -685,7 +728,7 @@ async def test_stream_unavailable(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, mock_create_stream: Mock
 ) -> None:
     """Camera state."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     with patch(
         "homeassistant.components.demo.camera.DemoCamera.stream_source",
@@ -778,7 +821,7 @@ async def test_use_stream_for_stills(
 @pytest.mark.usefixtures("mock_camera")
 async def test_entity_picture_url_changes_on_token_update(hass: HomeAssistant) -> None:
     """Test the token is rotated and entity entity picture cache is cleared."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     camera_state = hass.states.get("camera.demo_camera")
@@ -815,7 +858,7 @@ async def _register_test_webrtc_provider(hass: HomeAssistant) -> Callable[[], No
             session_id: str,
             send_message: WebRTCSendMessage,
         ) -> None:
-            """Handle the WebRTC offer and return the answer via the provided callback."""
+            """Handle the WebRTC offer and return the answer."""
             send_message(WebRTCAnswer("answer"))
 
         async def async_on_webrtc_candidate(
@@ -837,7 +880,7 @@ async def _test_capabilities(
     expected_stream_types_with_webrtc_provider: set[StreamType],
 ) -> None:
     """Test camera capabilities."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     async def test(expected_types: set[StreamType]) -> None:
@@ -896,7 +939,7 @@ async def test_camera_capabilities_webrtc(
 async def test_webrtc_provider_not_added_for_native_webrtc(
     hass: HomeAssistant,
 ) -> None:
-    """Test that a WebRTC provider is not added to a camera when the camera has native WebRTC support."""
+    """Test that a WebRTC provider is not added for native WebRTC."""
     camera_obj = get_camera_from_entity_id(hass, "camera.async")
     assert camera_obj
     assert camera_obj._webrtc_provider is None
@@ -955,7 +998,7 @@ async def test_snapshot_service_webrtc_provider(
     hass: HomeAssistant,
 ) -> None:
     """Test snapshot service with the webrtc provider."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     unsub = await _register_test_webrtc_provider(hass)
     camera_obj = get_camera_from_entity_id(hass, "camera.demo_camera")

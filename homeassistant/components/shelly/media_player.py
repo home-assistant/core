@@ -1,9 +1,8 @@
 """Media player for Shelly."""
 
-from __future__ import annotations
-
 import base64
 import binascii
+import contextlib
 from dataclasses import dataclass
 import datetime
 import hashlib
@@ -39,6 +38,15 @@ from .utils import get_device_entry_gen
 
 CONTENT_TYPE_AUDIO = "audio"
 CONTENT_TYPE_RADIO = "radio"
+
+ALLOWED_IMAGE_MIME_TYPES: Final = frozenset(
+    {
+        "image/gif",
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+    }
+)
 
 PARALLEL_UPDATES = 0
 
@@ -103,6 +111,9 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     _last_media_position: int | None = None
     _last_media_position_updated_at: datetime.datetime | None = None
+
+    _cached_thumb: str | None = None
+    _cached_thumb_result: tuple[bytes, str] | None = None
 
     def __init__(
         self,
@@ -194,6 +205,14 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
         return self._last_media_position_updated_at
 
     @property
+    def entity_picture(self) -> str | None:
+        """Return image of the media playing."""
+        if not self.available:
+            return None
+
+        return super().entity_picture
+
+    @property
     def media_image_url(self) -> str | None:
         """Return the image URL of current playing media."""
         if (thumb := self._media_meta.get("thumb")) and thumb.startswith("http"):
@@ -209,9 +228,11 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
     @property
     def media_image_hash(self) -> str | None:
         """Hash value for media image."""
-        if (thumb := self._media_meta.get("thumb")) and thumb.startswith("data"):
-            return hashlib.sha256(thumb.encode("utf-8")).hexdigest()[:16]
-        return super().media_image_hash
+        thumb = self._media_meta.get("thumb")
+        if not thumb or self._decode_image_data(thumb) is None:
+            return super().media_image_hash
+
+        return hashlib.sha256(thumb.encode("utf-8")).hexdigest()[:16]
 
     def _get_updated_media_position(self) -> int | None:
         """Return the current playback position and update its timestamp."""
@@ -229,15 +250,11 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
 
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch media image of current playing track."""
-        thumb = self._media_meta["thumb"]
-        try:
-            prefix, image_data = thumb.split(",", 1)
-            image = base64.b64decode(image_data, validate=True)
-            mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
-        except binascii.Error, ValueError:
+        thumb = self._media_meta.get("thumb")
+        if not thumb or (result := self._decode_image_data(thumb)) is None:
             return await super().async_get_media_image()
 
-        return image, mime
+        return result
 
     @rpc_call
     async def async_media_play(self) -> None:
@@ -428,3 +445,25 @@ class ShellyRpcMediaPlayer(ShellyRpcAttributeEntity, MediaPlayerEntity):
             translation_key="unsupported_media_type",
             translation_placeholders={"media_type": str(media_type)},
         )
+
+    def _decode_image_data(self, thumb: str) -> tuple[bytes, str] | None:
+        """Return image_bytes and mime_type for a valid image data or None."""
+        if thumb == self._cached_thumb:
+            return self._cached_thumb_result
+
+        result: tuple[bytes, str] | None = None
+        if thumb.startswith("data"):
+            try:
+                prefix, image_data = thumb.split(",", 1)
+                mime = prefix.split(";", 1)[0].rsplit(":", 1)[-1]
+            except IndexError, ValueError:
+                pass
+            else:
+                if mime in ALLOWED_IMAGE_MIME_TYPES:
+                    with contextlib.suppress(binascii.Error):
+                        result = base64.b64decode(image_data, validate=True), mime
+
+        self._cached_thumb = thumb
+        self._cached_thumb_result = result
+
+        return result

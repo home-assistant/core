@@ -17,7 +17,6 @@ from homeassistant.components.html5.const import (
     ATTR_ACTIONS,
     ATTR_BADGE,
     ATTR_DIR,
-    ATTR_ICON,
     ATTR_IMAGE,
     ATTR_LANG,
     ATTR_RENOTIFY,
@@ -43,6 +42,7 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
@@ -155,7 +155,10 @@ async def test_dismissing_message(mock_wp: AsyncMock, hass: HomeAssistant) -> No
     await service.async_dismiss(target=["device", "non_existing"], data={"tag": "test"})
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"tag": "test", "dismiss": true, "data": {"jwt": "JWT"}, "timestamp": 1234567890000}',
+        data=(
+            '{"tag": "test", "dismiss": true,'
+            ' "data": {"jwt": "JWT"}, "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -181,7 +184,15 @@ async def test_sending_message(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     )
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "beer.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -208,7 +219,15 @@ async def test_fcm_key_include(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     await service.async_send_message("Hello", target=["chrome"])
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -237,7 +256,15 @@ async def test_fcm_send_with_unknown_priority(
     await service.async_send_message("Hello", target=["chrome"], priority="undefined")
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -263,7 +290,15 @@ async def test_fcm_no_targets(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     await service.async_send_message("Hello")
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -289,7 +324,15 @@ async def test_fcm_additional_data(mock_wp: AsyncMock, hass: HomeAssistant) -> N
     await service.async_send_message("Hello", data={"mykey": "myvalue"})
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"mykey": "myvalue", "url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"mykey": "myvalue", "url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -665,7 +708,15 @@ async def test_callback_view_with_jwt(
     )
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "beer.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -709,7 +760,15 @@ async def test_send_fcm_without_targets(
     )
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "beer.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )

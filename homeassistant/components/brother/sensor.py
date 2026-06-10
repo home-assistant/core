@@ -1,7 +1,5 @@
 """Support for the Brother service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -293,9 +291,8 @@ SENSOR_TYPES: tuple[BrotherSensorEntityDescription, ...] = (
     ),
     BrotherSensorEntityDescription(
         key="uptime",
-        translation_key="last_restart",
         entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         entity_category=EntityCategory.DIAGNOSTIC,
         value=lambda data: data.uptime,
     ),

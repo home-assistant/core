@@ -1,7 +1,5 @@
 """Use serial protocol of Acer projector to obtain state of the projector."""
 
-from __future__ import annotations
-
 import logging
 import re
 from typing import Any

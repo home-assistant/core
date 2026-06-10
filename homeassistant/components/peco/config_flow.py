@@ -1,7 +1,5 @@
 """Config flow for PECO Outage Counter integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -103,6 +101,9 @@ class PecoConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=self.meter_error["phone_number"])
 
         return self.async_create_entry(
-            title=f"{self.meter_data[CONF_COUNTY].capitalize()} - {self.meter_data[CONF_PHONE_NUMBER]}",
+            title=(
+                f"{self.meter_data[CONF_COUNTY].capitalize()}"
+                f" - {self.meter_data[CONF_PHONE_NUMBER]}"
+            ),
             data=self.meter_data,
         )

@@ -1,7 +1,5 @@
 """Matter ModeSelect Cluster Support."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, cast
@@ -23,7 +21,9 @@ DOOR_LOCK_OPERATING_MODE_MAP = {
     clusters.DoorLock.Enums.OperatingModeEnum.kNormal: "normal",
     clusters.DoorLock.Enums.OperatingModeEnum.kVacation: "vacation",
     clusters.DoorLock.Enums.OperatingModeEnum.kPrivacy: "privacy",
-    clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock: "no_remote_lock_unlock",
+    clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock: (
+        "no_remote_lock_unlock"
+    ),
     clusters.DoorLock.Enums.OperatingModeEnum.kPassage: "passage",
 }
 DOOR_LOCK_OPERATING_MODE_MAP_REVERSE = {
@@ -85,7 +85,8 @@ class MatterMapSelectEntityDescription(MatterSelectEntityDescription):
     device_to_ha: Callable[[int], str | None]
     ha_to_device: Callable[[str], int | None]
 
-    # list attribute: the attribute descriptor to get the list of values (= list of integers)
+    # list attribute: the attribute descriptor to get the list
+    # of values (= list of integers)
     list_attribute: type[ClusterAttributeDescriptor]
 
 
@@ -93,11 +94,15 @@ class MatterMapSelectEntityDescription(MatterSelectEntityDescription):
 class MatterListSelectEntityDescription(MatterSelectEntityDescription):
     """Describe Matter select entities for MatterListSelectEntity."""
 
-    # list attribute: the attribute descriptor to get the list of values (= list of strings)
+    # list attribute: the attribute descriptor to get the list
+    # of values (= list of strings)
     list_attribute: type[ClusterAttributeDescriptor]
-    # command: a custom callback to create the command to send to the device
-    # the callback's argument will be the index of the selected list value
-    # if omitted the command will just be a write_attribute command to the primary attribute
+    # command: a custom callback to create the command to send
+    # to the device
+    # the callback's argument will be the index of the selected
+    # list value
+    # if omitted the command will just be a write_attribute
+    # command to the primary attribute
     command: Callable[[int], ClusterCommand] | None = None
 
 
@@ -127,7 +132,7 @@ class MatterAttributeSelectEntity(MatterEntity, SelectEntity):
 
 
 class MatterMapSelectEntity(MatterAttributeSelectEntity):
-    """Representation of a Matter select entity where the options are defined in a State map."""
+    """Matter select entity where options are from a State map."""
 
     entity_description: MatterMapSelectEntityDescription
 
@@ -145,7 +150,8 @@ class MatterMapSelectEntity(MatterAttributeSelectEntity):
             for value in available_values
             if (mapped_value := self.entity_description.device_to_ha(value))
         ]
-        # use base implementation from MatterAttributeSelectEntity to set the current option
+        # use base implementation from
+        # MatterAttributeSelectEntity to set the current option
         super()._update_from_device()
 
 
@@ -187,7 +193,7 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
 
     This entity dynamically filters available operating modes based on the device's
     `SupportedOperatingModes` bitmap attribute. In this bitmap, bit=0 indicates a
-    supported mode and bit=1 indicates unsupported (inverted from typical bitmap conventions).
+    supported mode and bit=1 indicates unsupported (inverted from typical conventions).
     If the bitmap is unavailable, only mandatory modes are included. The mapping from
     bitmap bits to operating mode values is defined by the Matter specification.
     """
@@ -225,7 +231,7 @@ class MatterDoorLockOperatingModeSelectEntity(MatterAttributeSelectEntity):
 
 
 class MatterListSelectEntity(MatterEntity, SelectEntity):
-    """Representation of a select entity from Matter list and selected item Cluster attribute(s)."""
+    """Select entity from Matter list and selected item attributes."""
 
     entity_description: MatterListSelectEntityDescription
 
@@ -571,9 +577,12 @@ DISCOVERY_SCHEMAS = [
             translation_key="sensitivity_level",
             options=["10 mm", "20 mm", "30 mm"],
             device_to_ha={
-                0: "10 mm",  # 10 mm => CurrentSensitivityLevel=0 / highest sensitivity level
-                1: "20 mm",  # 20 mm => CurrentSensitivityLevel=1 / medium sensitivity level
-                2: "30 mm",  # 30 mm => CurrentSensitivityLevel=2 / lowest sensitivity level
+                # CurrentSensitivityLevel=0 / highest
+                0: "10 mm",
+                # CurrentSensitivityLevel=1 / medium
+                1: "20 mm",
+                # CurrentSensitivityLevel=2 / lowest
+                2: "30 mm",
             }.get,
             ha_to_device={
                 "10 mm": 0,

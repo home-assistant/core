@@ -1,7 +1,5 @@
 """Support for switches through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any, cast
 
@@ -87,12 +85,14 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         command=Command.SET_SPI_MODE,
         entity_category=EntityCategory.CONFIG,
     ),
-    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: SmartThingsCommandSwitchEntityDescription(
-        key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
-        translation_key="display_lighting",
-        status_attribute=Attribute.LIGHTING,
-        command=Command.SET_LIGHTING_LEVEL,
-        entity_category=EntityCategory.CONFIG,
+    Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING: (
+        SmartThingsCommandSwitchEntityDescription(
+            key=Capability.SAMSUNG_CE_AIR_CONDITIONER_LIGHTING,
+            translation_key="display_lighting",
+            status_attribute=Attribute.LIGHTING,
+            command=Command.SET_LIGHTING_LEVEL,
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     Capability.CUSTOM_DRYER_WRINKLE_PREVENT: SmartThingsCommandSwitchEntityDescription(
         key=Capability.CUSTOM_DRYER_WRINKLE_PREVENT,
@@ -101,21 +101,25 @@ CAPABILITY_TO_COMMAND_SWITCHES: dict[
         command=Command.SET_DRYER_WRINKLE_PREVENT,
         entity_category=EntityCategory.CONFIG,
     ),
-    Capability.SAMSUNG_CE_STEAM_CLOSET_AUTO_CYCLE_LINK: SmartThingsCommandSwitchEntityDescription(
-        key=Capability.SAMSUNG_CE_STEAM_CLOSET_AUTO_CYCLE_LINK,
-        translation_key="auto_cycle_link",
-        status_attribute=Attribute.STEAM_CLOSET_AUTO_CYCLE_LINK,
-        command=Command.SET_STEAM_CLOSET_AUTO_CYCLE_LINK,
-        entity_category=EntityCategory.CONFIG,
+    Capability.SAMSUNG_CE_STEAM_CLOSET_AUTO_CYCLE_LINK: (
+        SmartThingsCommandSwitchEntityDescription(
+            key=Capability.SAMSUNG_CE_STEAM_CLOSET_AUTO_CYCLE_LINK,
+            translation_key="auto_cycle_link",
+            status_attribute=Attribute.STEAM_CLOSET_AUTO_CYCLE_LINK,
+            command=Command.SET_STEAM_CLOSET_AUTO_CYCLE_LINK,
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
-    Capability.SAMSUNG_CE_MICROFIBER_FILTER_SETTINGS: SmartThingsCommandSwitchEntityDescription(
-        key=Capability.SAMSUNG_CE_MICROFIBER_FILTER_SETTINGS,
-        translation_key="bypass_mode",
-        status_attribute=Attribute.BYPASS_MODE,
-        entity_category=EntityCategory.CONFIG,
-        on_key="enabled",
-        off_key="disabled",
-        command=Command.SET_BYPASS_MODE,
+    Capability.SAMSUNG_CE_MICROFIBER_FILTER_SETTINGS: (
+        SmartThingsCommandSwitchEntityDescription(
+            key=Capability.SAMSUNG_CE_MICROFIBER_FILTER_SETTINGS,
+            translation_key="bypass_mode",
+            status_attribute=Attribute.BYPASS_MODE,
+            entity_category=EntityCategory.CONFIG,
+            on_key="enabled",
+            off_key="disabled",
+            command=Command.SET_BYPASS_MODE,
+        )
     ),
 }
 CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescription] = {
@@ -166,17 +170,21 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         off_command=Command.DEACTIVATE,
         entity_category=EntityCategory.CONFIG,
     ),
-    Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE: SmartThingsSwitchEntityDescription(
-        key=Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE,
-        translation_key="sanitize",
-        status_attribute=Attribute.STATUS,
-        entity_category=EntityCategory.CONFIG,
+    Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE: (
+        SmartThingsSwitchEntityDescription(
+            key=Capability.SAMSUNG_CE_STEAM_CLOSET_SANITIZE_MODE,
+            translation_key="sanitize",
+            status_attribute=Attribute.STATUS,
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
-    Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE: SmartThingsSwitchEntityDescription(
-        key=Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE,
-        translation_key="keep_fresh_mode",
-        status_attribute=Attribute.STATUS,
-        entity_category=EntityCategory.CONFIG,
+    Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE: (
+        SmartThingsSwitchEntityDescription(
+            key=Capability.SAMSUNG_CE_STEAM_CLOSET_KEEP_FRESH_MODE,
+            translation_key="keep_fresh_mode",
+            status_attribute=Attribute.STATUS,
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     Capability.CUSTOM_DO_NOT_DISTURB_MODE: SmartThingsSwitchEntityDescription(
         key=Capability.CUSTOM_DO_NOT_DISTURB_MODE,
@@ -195,13 +203,15 @@ CAPABILITY_TO_SWITCHES: dict[Capability | str, SmartThingsSwitchEntityDescriptio
         on_command=Command.ENABLE_SOUND_DETECTION,
         off_command=Command.DISABLE_SOUND_DETECTION,
     ),
-    Capability.SAMSUNG_CE_STICK_CLEANER_DUSTBIN_STATUS: SmartThingsSwitchEntityDescription(
-        key=Capability.SAMSUNG_CE_STICK_CLEANER_DUSTBIN_STATUS,
-        translation_key="empty_dustbin",
-        status_attribute=Attribute.OPERATING_STATE,
-        on_key="emptying",
-        on_command=Command.START_EMPTYING,
-        off_command=Command.STOP_EMPTYING,
+    Capability.SAMSUNG_CE_STICK_CLEANER_DUSTBIN_STATUS: (
+        SmartThingsSwitchEntityDescription(
+            key=Capability.SAMSUNG_CE_STICK_CLEANER_DUSTBIN_STATUS,
+            translation_key="empty_dustbin",
+            status_attribute=Attribute.OPERATING_STATE,
+            on_key="emptying",
+            on_command=Command.START_EMPTYING,
+            off_command=Command.STOP_EMPTYING,
+        )
     ),
 }
 DISHWASHER_WASHING_OPTIONS_TO_SWITCHES: dict[
@@ -263,12 +273,14 @@ DISHWASHER_WASHING_OPTIONS_TO_SWITCHES: dict[
         command=Command.SET_SANITIZE,
         entity_category=EntityCategory.CONFIG,
     ),
-    Attribute.SANITIZING_WASH: SmartThingsDishwasherWashingOptionSwitchEntityDescription(
-        key=Attribute.SANITIZING_WASH,
-        translation_key="sanitizing_wash",
-        status_attribute=Attribute.SANITIZING_WASH,
-        command=Command.SET_SANITIZING_WASH,
-        entity_category=EntityCategory.CONFIG,
+    Attribute.SANITIZING_WASH: (
+        SmartThingsDishwasherWashingOptionSwitchEntityDescription(
+            key=Attribute.SANITIZING_WASH,
+            translation_key="sanitizing_wash",
+            status_attribute=Attribute.SANITIZING_WASH,
+            command=Command.SET_SANITIZING_WASH,
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     Attribute.SPEED_BOOSTER: SmartThingsDishwasherWashingOptionSwitchEntityDescription(
         key=Attribute.SPEED_BOOSTER,
@@ -429,7 +441,12 @@ class SmartThingsSwitch(SmartThingsEntity, SwitchEntity):
         )
         self.entity_description = entity_description
         self.switch_capability = capability
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{capability}_{entity_description.status_attribute}_{entity_description.status_attribute}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{capability}"
+            f"_{entity_description.status_attribute}"
+            f"_{entity_description.status_attribute}"
+        )
         if (
             translation_keys := entity_description.component_translation_key
         ) is not None and (

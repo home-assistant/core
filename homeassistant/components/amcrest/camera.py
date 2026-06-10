@@ -1,7 +1,5 @@
 """Support for Amcrest IP cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
@@ -463,7 +461,8 @@ class AmcrestCam(Camera):
 
     async def _async_set_recording(self, enable: bool) -> None:
         rec_mode = {"Automatic": 0, "Manual": 1}
-        # The property has a str type, but setter has int type, which causes mypy confusion
+        # The property has a str type, but setter has int type,
+        # which causes mypy confusion
         await self._api.async_set_record_mode(
             rec_mode["Manual" if enable else "Automatic"]
         )
@@ -481,7 +480,8 @@ class AmcrestCam(Camera):
         return await self._api.async_is_motion_detector_on()
 
     async def _async_set_motion_detection(self, enable: bool) -> None:
-        # The property has a str type, but setter has bool type, which causes mypy confusion
+        # The property has a str type, but setter has bool type,
+        # which causes mypy confusion
         await self._api.async_set_motion_detection(enable)
 
     async def _async_enable_motion_detection(self, enable: bool) -> None:

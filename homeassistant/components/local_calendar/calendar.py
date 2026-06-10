@@ -1,7 +1,5 @@
 """Calendar platform for a Local Calendar."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import date, datetime, timedelta
 import logging

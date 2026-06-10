@@ -1,5 +1,5 @@
 """Integrates Native Apps to Home Assistant."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from contextlib import suppress
 from functools import partial
@@ -12,7 +12,13 @@ from homeassistant.components.webhook import (
     async_unregister as webhook_unregister,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID, CONF_WEBHOOK_ID, Platform
+from homeassistant.const import (
+    ATTR_DEVICE_ID,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    CONF_WEBHOOK_ID,
+    Platform,
+)
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import (
     config_validation as cv,
@@ -34,8 +40,6 @@ from . import (  # noqa: F401
 )
 from .const import (
     ATTR_DEVICE_NAME,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_OS_VERSION,
     CONF_CLOUDHOOK_URL,
     CONF_USER_ID,
@@ -56,7 +60,12 @@ from .timers import async_handle_timer_event
 from .util import async_create_cloud_hook, supports_push
 from .webhook import handle_webhook
 
-PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.DEVICE_TRACKER,
+    Platform.NOTIFY,
+    Platform.SENSOR,
+]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -169,7 +178,8 @@ async def _async_setup_cloudhook(
         ):
             await async_create_cloud_hook(hass, webhook_id, entry)
     elif CONF_CLOUDHOOK_URL in entry.data:
-        # If we have a cloudhook but no longer logged in to the cloud, remove it from the entry
+        # If we have a cloudhook but no longer logged in
+        # to the cloud, remove it from the entry
         clean_cloudhook()
 
     entry.async_on_unload(cloud.async_listen_connection_change(hass, manage_cloudhook))

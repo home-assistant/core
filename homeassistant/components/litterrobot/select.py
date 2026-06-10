@@ -1,7 +1,5 @@
 """Support for Litter-Robot selects."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, Generic, TypeVar
@@ -24,7 +22,8 @@ _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
 @dataclass(frozen=True, kw_only=True)
 class RobotSelectEntityDescription(
-    SelectEntityDescription, Generic[_WhiskerEntityT, _CastTypeT]
+    SelectEntityDescription,
+    Generic[_WhiskerEntityT, _CastTypeT],  # noqa: UP046
 ):
     """A class that describes robot select entities."""
 
@@ -146,7 +145,7 @@ async def async_setup_entry(
 class LitterRobotSelectEntity(
     LitterRobotEntity[_WhiskerEntityT],
     SelectEntity,
-    Generic[_WhiskerEntityT, _CastTypeT],
+    Generic[_WhiskerEntityT, _CastTypeT],  # noqa: UP046
 ):
     """Litter-Robot Select."""
 

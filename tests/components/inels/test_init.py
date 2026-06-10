@@ -32,12 +32,15 @@ async def test_ha_mqtt_publish(
         mock_discovery.start.return_value = []
         mock_discovery_class.return_value = mock_discovery
 
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         await inels.async_setup_entry(hass, config_entry)
 
         topic, payload, qos, retain = "test/topic", "test_payload", 1, True
 
         await config_entry.runtime_data.mqtt.publish(topic, payload, qos, retain)
-        mqtt_mock.async_publish.assert_called_once_with(topic, payload, qos, retain)
+        mqtt_mock.async_publish.assert_called_once_with(
+            topic, payload, qos, retain, message_expiry_interval=None
+        )
 
 
 async def test_ha_mqtt_subscribe(
@@ -58,6 +61,7 @@ async def test_ha_mqtt_subscribe(
         mock_discovery.start.return_value = []
         mock_discovery_class.return_value = mock_discovery
 
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         await inels.async_setup_entry(hass, config_entry)
 
         topic = "test/topic"
@@ -80,6 +84,7 @@ async def test_ha_mqtt_not_available(
         ),
         pytest.raises(ConfigEntryNotReady, match="MQTT integration not available"),
     ):
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         await inels.async_setup_entry(hass, config_entry)
 
 

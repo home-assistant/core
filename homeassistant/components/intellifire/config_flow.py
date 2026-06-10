@@ -1,7 +1,5 @@
 """Config flow for IntelliFire integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
@@ -15,6 +13,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
+    ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -71,7 +70,8 @@ async def _async_poll_local_fireplace_for_serial(
 
     LOGGER.debug("Found a fireplace: %s", serial)
 
-    # Return the serial number which will be used to calculate a unique ID for the device/sensors
+    # Return the serial number which will be used to
+    # calculate a unique ID for the device/sensors
     return serial
 
 
@@ -114,7 +114,11 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Authenticate against IFTAPI Cloud in order to see configured devices.
 
-        Local control of IntelliFire devices requires that the user download the correct API KEY which is only available on the cloud. Cloud control of the devices requires the user has at least once authenticated against the cloud and a set of cookie variables have been stored locally.
+        Local control of IntelliFire devices requires that the
+        user download the correct API KEY which is only available
+        on the cloud. Cloud control of the devices requires the
+        user has at least once authenticated against the cloud
+        and a set of cookie variables have been stored locally.
 
         """
         errors: dict[str, str] = {}
@@ -149,7 +153,8 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Step to select a device from the cloud.
 
-        We can only get here if we have logged in. If there is only one device available it will be auto-configured,
+        We can only get here if we have logged in. If there is
+        only one device available it will be auto-configured,
         else the user will be given a choice to pick a device.
         """
         errors: dict[str, str] = {}
@@ -209,7 +214,7 @@ class IntelliFireConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_create_config_entry_from_common_data(
         self, fireplace: IntelliFireCommonFireplaceData
     ) -> ConfigFlowResult:
-        """Construct a config entry based on an object of IntelliFireCommonFireplaceData."""
+        """Construct a config entry from IntelliFireCommonFireplaceData."""
 
         data = {
             CONF_IP_ADDRESS: fireplace.ip_address,
@@ -289,10 +294,8 @@ class IntelliFireOptionsFlowHandler(OptionsFlow):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            # Validate connectivity for requested modes if runtime data is available
-            coordinator = self.config_entry.runtime_data
-            if coordinator is not None:
-                fireplace = coordinator.fireplace
+            if self.config_entry.state is ConfigEntryState.LOADED:
+                fireplace = self.config_entry.runtime_data.fireplace
 
                 # Refresh connectivity status before validating
                 await fireplace.async_validate_connectivity()

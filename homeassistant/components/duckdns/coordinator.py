@@ -1,7 +1,5 @@
 """Coordinator for the Duck DNS integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -52,7 +50,7 @@ class DuckDnsUpdateCoordinator(DataUpdateCoordinator[None]):
         """Update Duck DNS."""
 
         retry_after = BACKOFF_INTERVALS[
-            min(self.failed, len(BACKOFF_INTERVALS))
+            min(self.failed, len(BACKOFF_INTERVALS) - 1)
         ].total_seconds()
 
         try:

@@ -1,7 +1,5 @@
 """iNELS switch entity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -109,7 +107,10 @@ class InelsSwitch(InelsBaseEntity, SwitchEntity):
         )
 
     def _check_alerts(self, current_state: Bit | SimpleRelay | Relay) -> None:
-        """Check if there are active alerts and raise ServiceValidationError if found."""
+        """Check for active alerts.
+
+        Raises ServiceValidationError if any are found.
+        """
         if self.entity_description.alerts and any(
             getattr(current_state, alert_key, None)
             for alert_key in self.entity_description.alerts

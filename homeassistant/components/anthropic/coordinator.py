@@ -1,7 +1,5 @@
 """Coordinator for the Anthropic integration."""
 
-from __future__ import annotations
-
 import datetime
 import re
 
@@ -36,7 +34,7 @@ def model_alias(model_id: str) -> str:
 
 
 class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]]):
-    """DataUpdateCoordinator which uses different intervals after successful and unsuccessful updates."""
+    """Coordinator using different intervals after success and failure."""
 
     client: anthropic.AsyncAnthropic
 

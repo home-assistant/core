@@ -793,7 +793,7 @@ async def test_media_image_prefers_current_media(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test that entity_picture uses player.current_media.image_url over static queue image."""
+    """Test entity_picture prefers current_media.image_url over queue."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_group_player_1"
     mass_player_id = "test_group_player_1"
@@ -831,7 +831,7 @@ async def test_media_image_falls_back_to_queue_item(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test that entity_picture falls back to queue item image when current_media has none."""
+    """Test entity_picture falls back to queue image when none."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     entity_id = "media_player.test_group_player_1"
     mass_player_id = "test_group_player_1"

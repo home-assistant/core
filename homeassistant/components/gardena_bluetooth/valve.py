@@ -1,7 +1,5 @@
 """Support for switch entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from gardena_bluetooth.const import Valve

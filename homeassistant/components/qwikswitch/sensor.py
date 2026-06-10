@@ -1,7 +1,5 @@
 """Support for Qwikswitch Sensors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -47,7 +45,8 @@ class QSSensor(QSEntity, SensorEntity):
         self._attr_unique_id = f"qs{self.qsid}:{self.channel}"
 
         decode, unit = SENSORS[sensor_type]
-        # this cannot happen because it only happens in bool and this should be redirected to binary_sensor
+        # this cannot happen because it only happens in bool
+        # and this should be redirected to binary_sensor
         assert not isinstance(unit, type), (
             f"boolean sensor id={sensor['id']} name={sensor['name']}"
         )

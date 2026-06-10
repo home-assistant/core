@@ -1,7 +1,5 @@
 """Rocket.Chat notification service."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 from typing import Any
@@ -54,7 +52,8 @@ def get_service(
         _LOGGER.warning("Unable to connect to Rocket.Chat server at %s", url)
     except RocketAuthenticationException:
         _LOGGER.warning(
-            "Rocket.Chat authentication failed for user %s. Please check your username/password",
+            "Rocket.Chat authentication failed for user %s."
+            " Please check your username/password",
             username,
         )
 

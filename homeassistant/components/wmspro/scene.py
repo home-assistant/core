@@ -1,7 +1,5 @@
 """Support for scenes provided by WMS WebControl pro."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from wmspro.scene import Scene as WMS_Scene

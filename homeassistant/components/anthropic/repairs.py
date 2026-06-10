@@ -1,7 +1,5 @@
 """Issue repair flow for Anthropic."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 from typing import TYPE_CHECKING
 
@@ -9,8 +7,7 @@ import anthropic
 from anthropic.resources.messages.messages import DEPRECATED_MODELS
 import voluptuous as vol
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.config_entries import ConfigEntryState, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -44,10 +41,10 @@ class ModelDeprecatedRepairFlow(RepairsFlow):
         self._model_list_cache = None
 
     async def async_step_init(
-        self, user_input: dict[str, str]
-    ) -> data_entry_flow.FlowResult:
+        self, user_input: dict[str, str] | None
+    ) -> RepairsFlowResult:
         """Handle the steps of a fix flow."""
-        if user_input.get(CONF_CHAT_MODEL):
+        if user_input and user_input.get(CONF_CHAT_MODEL):
             self._async_update_current_subentry(user_input)
 
         target = await self._async_next_target()

@@ -1,7 +1,5 @@
 """Support for Broadlink sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -109,7 +107,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Broadlink sensor."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     sensor_data = device.update_manager.coordinator.data
     sensors = [

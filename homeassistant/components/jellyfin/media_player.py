@@ -1,7 +1,5 @@
 """Support for the Jellyfin media player."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -152,7 +150,8 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
 
         self._attr_state = state
         self._attr_is_volume_muted = volume_muted
-        # Only update volume_level if the API provides it, otherwise preserve current value
+        # Only update volume_level if the API provides it,
+        # otherwise preserve current value
         if volume_level is not None:
             self._attr_volume_level = volume_level
         self._attr_media_content_type = media_content_type
@@ -287,7 +286,8 @@ class JellyfinMediaPlayer(JellyfinClientEntity, MediaPlayerEntity):
     ) -> BrowseMedia:
         """Return a BrowseMedia instance.
 
-        The BrowseMedia instance will be used by the "media_player/browse_media" websocket command.
+        The BrowseMedia instance will be used by the
+        "media_player/browse_media" websocket command.
 
         """
         if media_content_id is None or media_content_id == "media-source://jellyfin":

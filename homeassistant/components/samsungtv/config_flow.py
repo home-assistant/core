@@ -1,7 +1,5 @@
 """Config flow for Samsung TV."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from functools import partial
 import socket
@@ -444,7 +442,7 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
         LOGGER.debug("Updating existing config entry with %s", entry_kw_args)
         self.hass.config_entries.async_update_entry(entry, **entry_kw_args)
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             # If its loaded it already has a reload listener in place
             # and we do not want to trigger multiple reloads
             self.hass.async_create_task(
@@ -539,6 +537,12 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
+        if "Soundbar" in discovery_info.name:
+            LOGGER.debug(
+                "Ignoring Samsung Soundbar found via Zeroconf: %s", discovery_info
+            )
+            return self.async_abort(reason="not_supported")
+
         self._mac = format_mac(discovery_info.properties["deviceid"])
         self._host = discovery_info.host
         self._async_start_discovery_with_mac_address()

@@ -89,7 +89,8 @@ class EnvironmentCanadaConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_LATITUDE] = info[CONF_LATITUDE]
                 user_input[CONF_LONGITUDE] = info[CONF_LONGITUDE]
 
-                # The combination of station and language are unique for all EC weather reporting
+                # The combination of station and language are
+                # unique for all EC weather reporting
                 await self.async_set_unique_id(
                     f"{user_input[CONF_STATION]}-{user_input[CONF_LANGUAGE].lower()}"
                 )

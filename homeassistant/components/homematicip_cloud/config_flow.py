@@ -1,7 +1,5 @@
 """Config flow to configure the HomematicIP Cloud component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -16,7 +14,7 @@ from .hap import HomematicipAuth
 class HomematicipCloudFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow for the HomematicIP Cloud component."""
 
-    VERSION = 1
+    VERSION = 2
 
     auth: HomematicipAuth
 

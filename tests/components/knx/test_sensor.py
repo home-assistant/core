@@ -62,9 +62,6 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.assert_no_telegram()
 
 
-@pytest.mark.xfail(
-    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
-)
 async def test_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
     """Test restoring KNX sensor state."""
     ADDRESS = "2/2/2"
@@ -94,7 +91,8 @@ async def test_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
     knx.assert_state("sensor.test", RESTORED_STATE, **RESTORED_STATE_ATTRIBUTES)
     await knx.assert_telegram_count(0)
 
-    # receiving the restored value from restored source does not trigger state_changed event
+    # receiving the restored value from restored source does not
+    # trigger state_changed event
     events = async_capture_events(hass, "state_changed")
     await knx.receive_write(ADDRESS, RAW_FLOAT_21_0)
     assert not events

@@ -1,7 +1,5 @@
 """The Coordinator for easyEnergy."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import NamedTuple
 
@@ -78,7 +76,10 @@ class EasyEnergyDataUpdateCoordinator(DataUpdateCoordinator[EasyEnergyData]):
                     )
 
         except EasyEnergyConnectionError as err:
-            raise UpdateFailed("Error communicating with easyEnergy API") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="connection_error",
+            ) from err
 
         return EasyEnergyData(
             energy_today=energy_today,

@@ -1,7 +1,5 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
@@ -117,7 +115,9 @@ async def async_setup_entry(
 
 
 # Base class for a cache entity.
-# Sets the device, ID and translation settings to correctly group the entity to the correct cache device and give it the correct name.
+# Sets the device, ID and translation settings to correctly
+# group the entity to the correct cache device and give it
+# the correct name.
 class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
     """Base class for cache entities."""
 
@@ -132,7 +132,8 @@ class GeoEntityBaseCache(GeocachingCacheEntity, SensorEntity):
 
         self._attr_unique_id = f"{cache.reference_code}_{key}"
 
-        # The translation key determines the name of the entity as this is the lookup for the `strings.json` file.
+        # The translation key determines the name of the entity
+        # as this is the lookup for the `strings.json` file.
         self._attr_translation_key = f"cache_{key}"
 
 

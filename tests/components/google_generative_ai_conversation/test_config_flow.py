@@ -13,7 +13,6 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     CONF_HARASSMENT_BLOCK_THRESHOLD,
     CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
@@ -38,7 +37,7 @@ from homeassistant.components.google_generative_ai_conversation.const import (
     RECOMMENDED_TTS_OPTIONS,
     RECOMMENDED_USE_GOOGLE_SEARCH_TOOL,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -52,7 +51,7 @@ def get_models_pager():
     model_25_flash = Mock(
         supported_actions=["generateContent"],
     )
-    model_25_flash.name = "models/gemini-2.5-flash"
+    model_25_flash.name = "models/gemini-3.1-flash-lite"
 
     model_20_flash = Mock(
         supported_actions=["generateContent"],

@@ -1,7 +1,5 @@
 """Support for the Google Cloud STT service."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, AsyncIterable
 import logging
 

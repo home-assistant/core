@@ -1,7 +1,5 @@
 """Config flow for LG webOS TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, Self
 from urllib.parse import urlparse

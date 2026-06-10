@@ -85,7 +85,7 @@ async def test_coordinator_update_failure_keeps_entity_available(
     freezer: FrozenDateTimeFactory,
     exc: type[SimplipyError],
 ) -> None:
-    """Test that a single coordinator failure does not immediately mark entities unavailable."""
+    """Test single coordinator failure doesn't mark entities unavailable."""
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -117,8 +117,9 @@ async def test_websocket_event_updates_entity_state(
 
     assert hass.states.get("lock.front_door_lock").state == "locked"
 
-    # Fire an "unlock" websocket event for the test lock (system_id=12345, serial="987").
-    # CID 9700 maps to EVENT_LOCK_UNLOCKED in the simplipy event mapping.
+    # Fire an "unlock" websocket event for the test lock
+    # (system_id=12345, serial="987").
+    # CID 9700 maps to EVENT_LOCK_UNLOCKED in simplipy event mapping.
     event_callback(
         WebsocketEvent(
             event_cid=9700,

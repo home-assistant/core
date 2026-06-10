@@ -1,7 +1,5 @@
 """Config flow for BSB-LAN integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -15,21 +13,28 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_HEATING_CIRCUITS, CONF_PASSKEY, DEFAULT_PORT, DOMAIN, LOGGER
+from .const import (
+    CONF_HEATING_CIRCUITS,
+    CONF_PASSKEY,
+    DEFAULT_HEATING_CIRCUITS,
+    DEFAULT_PORT,
+    DOMAIN,
+    LOGGER,
+)
 
 
 class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a BSBLAN config flow."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     def __init__(self) -> None:
         """Initialize BSBLan flow."""
         self.host: str = ""
         self.port: int = DEFAULT_PORT
         self.mac: str | None = None
-        self.circuits: list[int] = [1]
+        self.circuits: list[int] = list(DEFAULT_HEATING_CIRCUITS)
         self.passkey: str | None = None
         self.username: str | None = None
         self.password: str | None = None
@@ -96,7 +101,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PORT: self.port,
                     }
                 )
-                # No auth needed, so we can proceed to a confirmation step without fields
+                # No auth needed, so we can proceed to a
+                # confirmation step without fields
                 self._auth_required = False
 
         # Proceed to get credentials
@@ -361,7 +367,8 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 format_mac(self.mac), raise_on_progress=raise_on_progress
             )
 
-        # Skip unique_id configuration check during reauth to prevent "already_configured" abort
+        # Skip unique_id configuration check during reauth
+        # to prevent "already_configured" abort
         if not is_reauth:
             # Always allow updating host/port for both user and discovery flows
             # This ensures connectivity is maintained when devices change IP addresses
@@ -386,6 +393,13 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
         try:
             await bsblan.initialize()
             self.circuits = await bsblan.get_available_circuits()
+            if not self.circuits:
+                LOGGER.debug(
+                    "Circuit discovery returned no heating circuits for %s, "
+                    "defaulting to single circuit",
+                    self.host,
+                )
+                self.circuits = list(DEFAULT_HEATING_CIRCUITS)
         except (
             BSBLANError,
             TimeoutError,
@@ -394,4 +408,4 @@ class BSBLANFlowHandler(ConfigFlow, domain=DOMAIN):
                 "Circuit discovery not available for %s, defaulting to single circuit",
                 self.host,
             )
-            self.circuits = [1]
+            self.circuits = list(DEFAULT_HEATING_CIRCUITS)

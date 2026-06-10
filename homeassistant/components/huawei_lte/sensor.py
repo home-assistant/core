@@ -1,7 +1,5 @@
 """Support for Huawei LTE sensors."""
 
-from __future__ import annotations
-
 from bisect import bisect
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
@@ -157,7 +155,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="WanIPAddress",
                 translation_key="wan_ip_address",
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "WanIPv6Address": HuaweiSensorEntityDescription(
                 key="WanIPv6Address",
@@ -332,7 +329,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "nrrsrq": HuaweiSensorEntityDescription(
                 key="nrrsrq",
@@ -342,7 +338,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "nrsinr": HuaweiSensorEntityDescription(
                 key="nrsinr",
@@ -353,7 +348,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "nrtxpower": HuaweiSensorEntityDescription(
                 key="nrtxpower",
@@ -420,7 +414,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "rsrq": HuaweiSensorEntityDescription(
                 key="rsrq",
@@ -430,7 +423,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "rssi": HuaweiSensorEntityDescription(
                 key="rssi",
@@ -441,7 +433,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "rxlev": HuaweiSensorEntityDescription(
                 key="rxlev",
@@ -463,7 +454,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "tac": HuaweiSensorEntityDescription(
                 key="tac",
@@ -814,11 +804,12 @@ async def async_setup_entry(
                 _LOGGER.debug("Ignoring sensor %s.%s due to None value", key, item)
                 continue
             if not (desc := SENSOR_META[key].descriptions.get(item)):
-                _LOGGER.debug(  # pylint: disable=hass-logger-period # false positive
+                _LOGGER.debug(  # pylint: disable=home-assistant-logger-period # false positive
                     (
                         "Ignoring unknown sensor %s.%s. "
                         "Opening an issue at GitHub against the "
-                        "huawei_lte integration would be appreciated, so we may be able to "
+                        "huawei_lte integration would be appreciated, "
+                        "so we may be able to "
                         "add support for it in a future release. "
                         'Include the sensor name "%s.%s" in the issue, '
                         "as well as any information you may have about it, "

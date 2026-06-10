@@ -1,7 +1,5 @@
 """KNX Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from contextlib import ExitStack
 from functools import wraps
@@ -644,7 +642,7 @@ def ws_get_expose_config(
     {
         vol.Required("type"): "knx/update_expose",
         vol.Required("entity_id"): str,
-        vol.Required("options"): list,  # validation done in handler
+        vol.Required("data"): dict,  # validation done in handler
     }
 )
 @websocket_api.async_response
@@ -663,7 +661,7 @@ async def ws_update_expose(
         return
     try:
         await knx.config_store.update_expose(
-            validated_data["entity_id"], validated_data["options"]
+            validated_data["entity_id"], validated_data["data"]
         )
     except ConfigStoreException as err:
         connection.send_error(
@@ -706,7 +704,7 @@ async def ws_delete_expose(
     {
         vol.Required("type"): "knx/validate_expose",
         vol.Required("entity_id"): str,
-        vol.Required("options"): list,  # validation done in handler
+        vol.Required("data"): dict,  # validation done in handler
     }
 )
 @callback

@@ -26,7 +26,7 @@ class BrightnessCondition(EntityNumericalConditionBase):
     _valid_unit = "%"
 
     def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the brightness value converted from uint8 (0-255) to percentage (0-100)."""
+        """Get brightness converted from uint8 (0-255) to percentage."""
         raw = super()._get_tracked_value(entity_state)
         if raw is None:
             return None
@@ -38,8 +38,8 @@ class BrightnessCondition(EntityNumericalConditionBase):
 
 CONDITIONS: dict[str, type[Condition]] = {
     "is_brightness": BrightnessCondition,
-    "is_off": make_entity_state_condition(DOMAIN, STATE_OFF, support_duration=True),
-    "is_on": make_entity_state_condition(DOMAIN, STATE_ON, support_duration=True),
+    "is_off": make_entity_state_condition(DOMAIN, STATE_OFF),
+    "is_on": make_entity_state_condition(DOMAIN, STATE_ON),
 }
 
 

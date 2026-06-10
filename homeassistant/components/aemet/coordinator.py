@@ -1,7 +1,5 @@
 """Weather data coordinator for the AEMET OpenData service."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from dataclasses import dataclass
 from datetime import timedelta

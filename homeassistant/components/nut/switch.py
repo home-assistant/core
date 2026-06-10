@@ -1,7 +1,5 @@
 """Provides a switch for switchable NUT outlets."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -47,7 +45,6 @@ async def async_setup_entry(
                 or str(outlet_num)
             },
             device_class=SwitchDeviceClass.OUTLET,
-            entity_registry_enabled_default=True,
         )
         for outlet_num in range(1, int(num_outlets) + 1)
         if (

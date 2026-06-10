@@ -102,26 +102,14 @@
   "exceptions": {
     "area_mapping_not_configured": {
       "message": "Area mapping is not configured for `{entity_id}`. Configure the segment-to-area mapping before using this action."
+    },
+    "areas_not_mapped": {
+      "message": "The following areas are not mapped to any segments of targeted vacuums: {areas}"
     }
   },
   "issues": {
     "segments_changed": {
       "title": "Vacuum segments have changed for {entity_id}"
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
     }
   },
   "services": {

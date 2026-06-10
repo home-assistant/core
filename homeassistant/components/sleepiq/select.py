@@ -1,7 +1,5 @@
 """Support for SleepIQ foundation preset selection."""
 
-from __future__ import annotations
-
 from asyncsleepiq import (
     CoreTemps,
     FootWarmingTemps,
@@ -59,7 +57,7 @@ class SleepIQSelectEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Select
 
         self._attr_name = f"SleepNumber {bed.name} Foundation Preset"
         self._attr_unique_id = f"{bed.id}_preset"
-        if preset.side != Side.NONE:
+        if preset.side is not Side.NONE:
             self._attr_name += f" {preset.side_full}"
             self._attr_unique_id += f"_{preset.side.value}"
         self._attr_options = preset.options
@@ -166,7 +164,7 @@ class SleepIQCoreTempSelectEntity(
         temperature = self.HA_TO_SLEEPIQ_CORE_TEMP_MAP[option]
         timer = self.core_climate.timer or 240
 
-        if temperature == CoreTemps.OFF:
+        if temperature is CoreTemps.OFF:
             await self.core_climate.turn_off()
         else:
             await self.core_climate.turn_on(temperature, timer)

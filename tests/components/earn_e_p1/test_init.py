@@ -1,7 +1,5 @@
 """Tests for the EARN-E P1 Meter integration setup."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock
 
 from syrupy.assertion import SnapshotAssertion

@@ -90,7 +90,8 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
         """Get light brightness."""
         if self.device.state.brightness is None:
             _LOGGER.debug(
-                "VeSync - received unexpected 'brightness' value from pyvesync api of None"
+                "VeSync - received unexpected 'brightness'"
+                " value from pyvesync api of None"
             )
             return 0
 
@@ -122,7 +123,8 @@ class VeSyncBaseLightHA(VeSyncBaseEntity[VeSyncSwitch | VeSyncBulb], LightEntity
             color_temp = max(0, min(color_temp, 100))
             # call pyvesync library api method to set color_temp
             await self.device.set_color_temp(color_temp)
-            # flag attribute_adjustment_only, so it doesn't turn_on the device redundantly
+            # flag attribute_adjustment_only, so it doesn't
+            # turn_on the device redundantly
             attribute_adjustment_only = True
         # set brightness level
         if (
@@ -177,10 +179,12 @@ class VeSyncTunableWhiteLightHA(VeSyncBaseLightHA, LightEntity):
         if hasattr(self.device.state, "color_temp") is False:
             return None
 
-        # pyvesync v3 provides BulbState.color_temp_kelvin() - possible to use that instead?
+        # pyvesync v3 provides BulbState.color_temp_kelvin()
+        # - possible to use that instead?
         if self.device.state.color_temp is None:
             _LOGGER.debug(
-                "VeSync - received unexpected 'color_temp' value from pyvesync api of None"
+                "VeSync - received unexpected 'color_temp'"
+                " value from pyvesync api of None"
             )
             return 0
 

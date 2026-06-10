@@ -1,7 +1,5 @@
 """Support for Netatmo Smart thermostats."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any, cast
@@ -56,6 +54,7 @@ from .const import (
 )
 from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -221,7 +220,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if self.device_type is NA_THERM:
             self._attr_hvac_modes.append(HVACMode.OFF)
 
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = (
+            f"{self.device.entity_id}-{device_type_to_str(self.device_type)}"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""

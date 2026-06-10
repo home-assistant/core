@@ -978,6 +978,10 @@
         "ga": {
           "label": "[%key:component::knx::config_panel::common::group_address%]"
         },
+        "notes": {
+          "label": "Notes",
+          "placeholder": "Add your notes here..."
+        },
         "periodic_send": {
           "description": "Time interval to automatically resend the current value to the KNX bus, even if it hasn’t changed.",
           "label": "Periodic send interval"
@@ -1089,6 +1093,9 @@
   "exceptions": {
     "integration_not_loaded": {
       "message": "KNX integration is not loaded."
+    },
+    "service_event_register_ga_not_found": {
+      "message": "Could not find registered event for `{group_addresses}` to remove."
     },
     "service_exposure_remove_not_found": {
       "message": "Could not find exposure for `{group_address}` to remove."
