@@ -56,9 +56,6 @@
       "bc": {
         "name": "Black carbon"
       },
-      "distance_from_home": {
-        "name": "Distance from Home Assistant"
-      },
       "nox": {
         "name": "Nitrogen oxides"
       }

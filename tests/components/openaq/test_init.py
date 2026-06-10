@@ -1,33 +1,26 @@
 """Test OpenAQ initialization."""
 
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 from openaq import ServerError
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.components.openaq.coordinator import OpenAQDataUpdateCoordinator
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentryData
+from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import setup_integration
-from .conftest import (
-    API_KEY,
-    LOCATION_ID,
-    make_latest,
-    make_location,
-    make_response,
-    make_sensor,
-)
+from .conftest import API_KEY, LOCATION_ID, make_latest, make_response
 
 from tests.common import MockConfigEntry
 
 
 async def test_setup_success(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test successful setup."""
@@ -40,7 +33,7 @@ async def test_setup_success(
 
 async def test_setup_retry_on_first_refresh_failure(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup retry when first coordinator refresh fails."""
@@ -49,12 +42,12 @@ async def test_setup_retry_on_first_refresh_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_openaq_client.close.assert_awaited_once()
+    mock_openaq_client.close.assert_called_once()
 
 
 async def test_setup_retry_on_empty_location_response(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setup retry when OpenAQ returns no location."""
@@ -63,12 +56,12 @@ async def test_setup_retry_on_empty_location_response(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    mock_openaq_client.close.assert_awaited_once()
+    mock_openaq_client.close.assert_called_once()
 
 
 async def test_setup_closes_client_after_sibling_refresh_finalizes(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
 ) -> None:
     """Test setup closes the client after sibling refresh tasks finish."""
     running_refresh_started = asyncio.Event()
@@ -81,14 +74,14 @@ async def test_setup_closes_client_after_sibling_refresh_finalizes(
         data={CONF_API_KEY: API_KEY},
         unique_id=DOMAIN,
         subentries_data=[
-            ConfigSubentryData(
+            ConfigSubentryDataWithId(
                 data={CONF_LOCATION_ID: LOCATION_ID},
                 subentry_id="ABCDEF",
                 subentry_type="location",
                 title="Del Norte",
                 unique_id=str(LOCATION_ID),
             ),
-            ConfigSubentryData(
+            ConfigSubentryDataWithId(
                 data={CONF_LOCATION_ID: 9999},
                 subentry_id="GHIJKL",
                 subentry_type="location",
@@ -112,7 +105,7 @@ async def test_setup_closes_client_after_sibling_refresh_finalizes(
         failing_refresh_started.set()
         raise ConfigEntryNotReady("API error")
 
-    async def close_client() -> None:
+    def close_client() -> None:
         """Assert the sibling refresh finalized before closing the client."""
         assert running_refresh_finalized.is_set()
 
@@ -127,70 +120,25 @@ async def test_setup_closes_client_after_sibling_refresh_finalizes(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
     assert failing_refresh_started.is_set()
     assert running_refresh_finalized.is_set()
-    mock_openaq_client.close.assert_awaited_once()
+    mock_openaq_client.close.assert_called_once()
 
 
-async def test_setup_fetches_location_data_concurrently(
+async def test_setup_fetches_location_data(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test coordinator fetches independent OpenAQ location data concurrently."""
-    started: set[str] = set()
-    location_started = asyncio.Event()
-    latest_started = asyncio.Event()
-    sensors_started = asyncio.Event()
-    release = asyncio.Event()
+    """Test coordinator fetches OpenAQ location data."""
+    await setup_integration(hass, mock_config_entry)
 
-    async def wait_for_release(
-        name: str, started_event: asyncio.Event, response: object
-    ) -> object:
-        """Return a response after all location data requests have started."""
-        started.add(name)
-        started_event.set()
-        await release.wait()
-        return response
-
-    async def get_location(_location_id: int) -> object:
-        """Return the location response."""
-        return await wait_for_release(
-            "location", location_started, make_response([make_location()])
-        )
-
-    async def get_latest(_location_id: int) -> object:
-        """Return the latest measurements response."""
-        return await wait_for_release(
-            "latest", latest_started, make_response([make_latest(1, 8.5)])
-        )
-
-    async def get_sensors(_location_id: int) -> object:
-        """Return the sensors response."""
-        return await wait_for_release(
-            "sensors", sensors_started, make_response([make_sensor(1, "pm25")])
-        )
-
-    mock_openaq_client.locations.get.side_effect = get_location
-    mock_openaq_client.locations.latest.side_effect = get_latest
-    mock_openaq_client.locations.sensors.side_effect = get_sensors
-
-    setup_task = asyncio.create_task(setup_integration(hass, mock_config_entry))
-    await asyncio.wait_for(
-        asyncio.gather(
-            location_started.wait(),
-            latest_started.wait(),
-            sensors_started.wait(),
-        ),
-        timeout=1,
-    )
-    assert started == {"location", "latest", "sensors"}
-    release.set()
-
-    await asyncio.wait_for(setup_task, timeout=1)
+    mock_openaq_client.locations.get.assert_called_once_with(LOCATION_ID)
+    mock_openaq_client.locations.latest.assert_called_once_with(LOCATION_ID)
+    mock_openaq_client.locations.sensors.assert_called_once_with(LOCATION_ID)
 
 
 async def test_refresh_uses_cached_location_metadata(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test refresh polls latest measurements without refetching metadata."""
@@ -208,12 +156,12 @@ async def test_refresh_uses_cached_location_metadata(
 
     mock_openaq_client.locations.get.assert_not_called()
     mock_openaq_client.locations.sensors.assert_not_called()
-    mock_openaq_client.locations.latest.assert_awaited_once_with(LOCATION_ID)
+    mock_openaq_client.locations.latest.assert_called_once_with(LOCATION_ID)
 
 
 async def test_unload_closes_client(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test unloading OpenAQ closes the client."""
@@ -222,12 +170,12 @@ async def test_unload_closes_client(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_openaq_client.close.assert_awaited_once()
+    mock_openaq_client.close.assert_called_once()
 
 
 async def test_update_listener_reloads_entry(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry updates reload the entry."""
@@ -244,7 +192,7 @@ async def test_update_listener_reloads_entry(
 
 
 async def test_setup_without_locations(
-    hass: HomeAssistant, mock_openaq_client: AsyncMock
+    hass: HomeAssistant, mock_openaq_client: MagicMock
 ) -> None:
     """Test setup before any location subentries are configured."""
     config_entry = MockConfigEntry(

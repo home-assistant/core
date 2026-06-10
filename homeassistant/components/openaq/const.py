@@ -3,7 +3,6 @@
 import logging
 from typing import Final
 
-import httpx
 from openaq import (
     ApiKeyMissingError,
     ForbiddenError,
@@ -11,7 +10,7 @@ from openaq import (
     NotAuthorizedError,
     RateLimitError,
 )
-from openaq.shared.exceptions import APIError, OpenAQError
+from openaq.core.exceptions import APIError, OpenAQError
 
 DOMAIN = "openaq"
 
@@ -29,5 +28,5 @@ OPENAQ_AUTH_EXCEPTIONS: Final = (
     NotAuthorizedError,
 )
 OPENAQ_RATE_LIMIT_EXCEPTIONS: Final = (HTTPRateLimitError, RateLimitError)
-OPENAQ_API_EXCEPTIONS: Final = (APIError, httpx.HTTPError)
-OPENAQ_UPDATE_EXCEPTIONS: Final = (APIError, OpenAQError, httpx.HTTPError)
+OPENAQ_API_EXCEPTIONS: Final = (APIError, OSError)
+OPENAQ_UPDATE_EXCEPTIONS: Final = (APIError, OpenAQError, OSError)
