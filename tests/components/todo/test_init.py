@@ -35,6 +35,9 @@ from . import create_mock_platform
 
 from tests.typing import WebSocketGenerator
 
+TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
+TEST_OFFSET = "-06:00"
+
 ITEM_1 = {
     "uid": "1",
     "summary": "Item #1",
@@ -44,9 +47,8 @@ ITEM_2 = {
     "uid": "2",
     "summary": "Item #2",
     "status": "completed",
+    "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
 }
-TEST_TIMEZONE = zoneinfo.ZoneInfo("America/Regina")
-TEST_OFFSET = "-06:00"
 
 
 async def test_unload_entry(
@@ -1094,7 +1096,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
         ]
     }
@@ -1122,7 +1124,7 @@ async def test_subscribe(
                 "status": "completed",
                 "due": None,
                 "description": None,
-                "completed": None,
+                "completed": f"2026-03-27T11:00:00{TEST_OFFSET}",
             },
             {
                 "summary": "Item #3",
