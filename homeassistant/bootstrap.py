@@ -478,7 +478,6 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
     frame.async_setup(hass)
     template.async_setup(hass)
     translation.async_setup(hass)
-    update_coordinator.async_setup(hass)
 
     recovery = hass.config.recovery_mode
     device_registry.async_setup(hass)
@@ -495,6 +494,7 @@ async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
             hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
             create_eager_task(template.async_load_custom_templates(hass)),
             create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+            create_eager_task(update_coordinator.async_load(hass, load_empty=recovery)),
             create_eager_task(hass.config_entries.async_initialize()),
             create_eager_task(async_get_system_info(hass)),
             create_eager_task(condition.async_setup(hass)),

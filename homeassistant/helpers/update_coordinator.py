@@ -31,7 +31,6 @@ from homeassistant.util.hass_dict import HassKey
 
 from . import entity, event
 from .debounce import Debouncer
-from .dispatcher import async_dispatcher_connect
 from .singleton import singleton
 from .storage import Store
 from .typing import UNDEFINED, UndefinedType
@@ -41,6 +40,7 @@ REQUEST_REFRESH_DEFAULT_IMMEDIATE = True
 
 _DataT = TypeVar("_DataT", default=dict[str, Any])
 
+RESTORE_SAVE_DELAY = 10
 RESTORE_STORAGE_KEY = "update_coordinator.restore_data"
 RESTORE_STORAGE_VERSION = 1
 
@@ -49,31 +49,24 @@ DATA_RESTORE_STORE: HassKey[_RestoreStoreManager] = HassKey(
 )
 
 
-@callback
-def async_setup(hass: HomeAssistant) -> None:
-    """Set up the update coordinator helpers.
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
+    """Load the store shared by all restore coordinators.
 
-    Removes data persisted by RestoreDataUpdateCoordinator when its config entry is
-    removed. Registered from bootstrap so removal is handled even for entries that
-    were never set up, e.g. disabled ones.
+    Called from bootstrap before config entries are set up, so stored data is
+    available when coordinators restore it and is never overwritten by a save
+    happening before the load.
     """
+    await _async_get_restore_store_manager(hass).async_load(load_empty=load_empty)
 
-    @callback
-    def _handle_entry_changed(
-        change: config_entries.ConfigEntryChange,
-        entry: config_entries.ConfigEntry,
-    ) -> None:
-        if change is not config_entries.ConfigEntryChange.REMOVED:
-            return
-        store_manager = _async_get_restore_store_manager(hass)
-        hass.async_create_task(
-            store_manager.async_remove_entry(entry.entry_id),
-            f"Remove restore coordinator data for {entry.entry_id}",
-        )
 
-    async_dispatcher_connect(
-        hass, config_entries.SIGNAL_CONFIG_ENTRY_CHANGED, _handle_entry_changed
-    )
+@callback
+def async_clear_config_entry(hass: HomeAssistant, entry_id: str) -> None:
+    """Remove all restore coordinator data stored for a config entry.
+
+    Called by the config entry manager when an entry is removed, so stored data is
+    cleaned up even for entries that were never set up, e.g. disabled ones.
+    """
+    _async_get_restore_store_manager(hass).async_clear_config_entry(entry_id)
 
 
 class UpdateFailed(HomeAssistantError):
@@ -692,77 +685,47 @@ class _RestoreStoreManager:
             hass, RESTORE_STORAGE_VERSION, RESTORE_STORAGE_KEY
         )
         self._data: dict[str, dict[str, Any]] = {}
-        self._loaded = False
-        self._load_lock = asyncio.Lock()
-        self._save_pending = False
 
-    async def async_get(self, entry_id: str, storage_key: str) -> Any:
+    async def async_load(self, *, load_empty: bool = False) -> None:
+        """Load the store."""
+        if load_empty:
+            return
+        if (stored := await self._store.async_load()) is not None:
+            self._data = stored
+
+    @callback
+    def async_get(self, entry_id: str, storage_key: str) -> Any:
         """Return the data stored for a coordinator, or None if nothing is stored."""
-        data = await self._async_load()
-        return data.get(entry_id, {}).get(storage_key)
+        return self._data.get(entry_id, {}).get(storage_key)
 
     @callback
     def async_schedule_save(
         self, entry_id: str, storage_key: str, data: Any, delay: float
     ) -> None:
         """Schedule saving the data of a coordinator."""
-        if not self._loaded:
-            # Saving writes the full store, so load it first to not lose data
-            # stored for other coordinators.
-            self._hass.async_create_task(
-                self._async_load_and_schedule_save(entry_id, storage_key, data, delay),
-                f"Save restore coordinator data for {entry_id}",
-            )
-            return
         self._data.setdefault(entry_id, {})[storage_key] = data
-        self._save_pending = True
         self._store.async_delay_save(self._data_to_save, delay)
 
-    async def async_flush(self) -> None:
-        """Write any pending data to the store now."""
-        if self._save_pending:
-            self._save_pending = False
-            await self._store.async_save(self._data)
-
-    async def async_remove_data(self, entry_id: str, storage_key: str) -> None:
+    @callback
+    def async_remove_data(self, entry_id: str, storage_key: str) -> None:
         """Remove the data stored for a coordinator."""
-        data = await self._async_load()
-        if storage_key not in data.get(entry_id, {}):
+        if storage_key not in self._data.get(entry_id, {}):
             return
-        del data[entry_id][storage_key]
-        if not data[entry_id]:
-            del data[entry_id]
-        self._save_pending = True
+        del self._data[entry_id][storage_key]
+        if not self._data[entry_id]:
+            del self._data[entry_id]
         self._store.async_delay_save(self._data_to_save)
 
-    async def async_remove_entry(self, entry_id: str) -> None:
+    @callback
+    def async_clear_config_entry(self, entry_id: str) -> None:
         """Remove all data stored for a config entry."""
-        data = await self._async_load()
-        if data.pop(entry_id, None) is None:
+        if self._data.pop(entry_id, None) is None:
             return
-        self._save_pending = True
         self._store.async_delay_save(self._data_to_save)
-
-    async def _async_load(self) -> dict[str, dict[str, Any]]:
-        """Load the store once."""
-        async with self._load_lock:
-            if not self._loaded:
-                if (stored := await self._store.async_load()) is not None:
-                    self._data = stored
-                self._loaded = True
-        return self._data
-
-    async def _async_load_and_schedule_save(
-        self, entry_id: str, storage_key: str, data: Any, delay: float
-    ) -> None:
-        """Load the store, then schedule saving the data of a coordinator."""
-        await self._async_load()
-        self.async_schedule_save(entry_id, storage_key, data, delay)
 
     @callback
     def _data_to_save(self) -> dict[str, dict[str, Any]]:
         """Return the data to save."""
-        self._save_pending = False
         return self._data
 
 
@@ -791,7 +754,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         setup_method: Callable[[], Awaitable[None]] | None = None,
         request_refresh_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         always_update: bool = True,
-        save_delay: float = 0,
+        save_delay: float = RESTORE_SAVE_DELAY,
     ) -> None:
         """Initialize the restoring data update coordinator."""
         super().__init__(
@@ -813,9 +776,10 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
     async def _async_setup(self) -> None:
         """Set up the coordinator and restore stored data."""
         await super()._async_setup()
-        await self.async_restore_data()
+        self.async_restore_data()
 
-    async def async_restore_data(self) -> None:
+    @callback
+    def async_restore_data(self) -> None:
         """Restore the data from the store.
 
         Called automatically by async_config_entry_first_refresh. Coordinators not
@@ -825,7 +789,7 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         if self.data is not None:
             return
         # Compare against None so falsy but valid payloads like [] or {} are restored.
-        stored = await self._store_manager.async_get(self._entry_id, self._storage_key)
+        stored = self._store_manager.async_get(self._entry_id, self._storage_key)
         if stored is not None:
             self.data = stored
 
@@ -835,11 +799,6 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         self._store_manager.async_schedule_save(
             self._entry_id, self._storage_key, self.data, self._save_delay
         )
-
-    async def async_shutdown(self) -> None:
-        """Cancel any scheduled call, and flush any pending save."""
-        await super().async_shutdown()
-        await self._store_manager.async_flush()
 
     @callback
     def _async_refresh_finished(self) -> None:
@@ -856,12 +815,13 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         super().async_set_updated_data(data)
         self._schedule_save()
 
-    async def async_remove_stored_data(self) -> None:
+    @callback
+    def async_remove_stored_data(self) -> None:
         """Remove the stored data of this coordinator.
 
         Safe to call when nothing is stored.
         """
-        await self._store_manager.async_remove_data(self._entry_id, self._storage_key)
+        self._store_manager.async_remove_data(self._entry_id, self._storage_key)
 
 
 class BaseCoordinatorEntity[
