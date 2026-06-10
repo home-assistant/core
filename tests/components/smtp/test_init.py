@@ -73,6 +73,7 @@ async def test_import(
                     CONF_PASSWORD: "test-password",
                     CONF_VERIFY_SSL: True,
                     CONF_RECIPIENT: "recipient@example.com",
+                    CONF_TIMEOUT: 10,
                 }
             ]
         },
@@ -98,9 +99,9 @@ async def test_import(
         CONF_PASSWORD: "test-password",
         CONF_VERIFY_SSL: True,
         CONF_RECIPIENT: ["recipient@example.com"],
-        CONF_TIMEOUT: 5,
         CONF_DEBUG: False,
     }
+    assert entries[0].options == {CONF_TIMEOUT: 10}
 
     assert list(entries[0].subentries.values())[0].unique_id == "recipient@example.com"
 
@@ -133,7 +134,6 @@ async def test_import_already_configured(
             CONF_VERIFY_SSL: True,
             CONF_RECIPIENT: ["recipient@example.com"],
             CONF_DEBUG: False,
-            CONF_TIMEOUT: 5,
         },
         entry_id="123456789",
     )
