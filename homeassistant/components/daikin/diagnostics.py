@@ -6,9 +6,10 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID
 from homeassistant.core import HomeAssistant
 
+from .const import KEY_MAC
 from .coordinator import DaikinConfigEntry
 
-TO_REDACT_ENTRY = {CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID}
+TO_REDACT_ENTRY = {CONF_API_KEY, CONF_HOST, CONF_PASSWORD, CONF_UUID, KEY_MAC}
 TO_REDACT_DEVICE = {"mac"}
 
 
