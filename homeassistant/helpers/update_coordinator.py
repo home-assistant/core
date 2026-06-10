@@ -783,12 +783,8 @@ class RestoreDataUpdateCoordinator(DataUpdateCoordinator[_DataT]):
         """Restore the data from the store.
 
         Called automatically by async_config_entry_first_refresh. Coordinators not
-        driven by that method must call this once before their first update. Does
-        nothing if data is already loaded.
+        driven by that method must call this once before their first update.
         """
-        if self.data is not None:
-            return
-        # Compare against None so falsy but valid payloads like [] or {} are restored.
         stored = self._store_manager.async_get(self._entry_id, self._storage_key)
         if stored is not None:
             self.data = stored
