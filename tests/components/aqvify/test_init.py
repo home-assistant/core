@@ -73,3 +73,23 @@ async def test_device_registry_integration(
 
     # Snapshot the devices to ensure they have the correct structure
     assert device_entries == snapshot
+
+
+async def test_setup_entry_auth_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_aqvify_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup with auth error triggers reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_aqvify_client.async_get_account_id.side_effect = AqvifyAuthException(
+        "Authentication failed"
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
