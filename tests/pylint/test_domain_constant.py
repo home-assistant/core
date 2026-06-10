@@ -168,49 +168,49 @@ async_setup_component(hass, 5, {})
             """
 async_mock_service(hass, OTHER, "service")
 """,
-            id="async_mock_service",
+            id="async_mock_service_other",
         ),
         pytest.param(
             """
 MockConfigEntry(domain=OTHER)
 """,
-            id="mock_config_entry_kwarg",
+            id="mock_config_entry_kwarg_other_other",
         ),
         pytest.param(
             """
 hass.services.async_call(OTHER, "service")
 """,
-            id="services_async_call",
+            id="services_async_call_other",
         ),
         pytest.param(
             """
 hass.services.call(OTHER, "service")
 """,
-            id="services_call",
+            id="services_call_other",
         ),
         pytest.param(
             """
 hass.config_entries.flow.async_init(OTHER)
 """,
-            id="flow_async_init_positional",
+            id="flow_async_init_positional_other",
         ),
         pytest.param(
             """
 hass.config_entries.flow.async_init(handler=OTHER)
 """,
-            id="flow_async_init_kwarg",
+            id="flow_async_init_kwarg_other",
         ),
         pytest.param(
             """
 hass.states.async_entity_ids(OTHER)
 """,
-            id="async_entity_ids",
+            id="async_entity_ids_other",
         ),
         pytest.param(
             """
 hass.states.async_entity_ids((DOMAIN, OTHER))
 """,
-            id="async_entity_ids_tuple",
+            id="async_entity_ids_tuple_other",
         ),
     ],
 )
