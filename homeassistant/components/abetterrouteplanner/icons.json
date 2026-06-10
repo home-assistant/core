@@ -1,10 +1,5 @@
 {
   "entity": {
-    "device_tracker": {
-      "location": {
-        "default": "mdi:crosshairs-gps"
-      }
-    },
     "sensor": {
       "battery_capacity": {
         "default": "mdi:battery"

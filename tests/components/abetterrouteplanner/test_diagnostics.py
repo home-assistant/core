@@ -376,7 +376,6 @@ async def test_diagnostics_presence_state_reflects_seen_set(
         "battery_temperature",
         "calibrated_ref_cons",
         "charging_state",
-        "location",
         "odometer",
         "power",
         "range",
@@ -632,11 +631,6 @@ async def test_diagnostics_providers_block_reflects_stamped_data(
         {
             "vehicleId": MOCK_VEHICLE_ID,
             "soc": {"frac": 0.42, "provider": "RIVIAN_STREAM"},
-            "location": {
-                "lat": 37.7749,
-                "long": -122.4194,
-                "provider": "APP_LOCATION",
-            },
         }
     )
     await hass.async_block_till_done()
@@ -647,6 +641,5 @@ async def test_diagnostics_providers_block_reflects_stamped_data(
     assert telemetry_block["providers"] == {
         str(MOCK_VEHICLE_ID): {
             "soc": "RIVIAN_STREAM",
-            "location": "APP_LOCATION",
         },
     }

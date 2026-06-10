@@ -15,7 +15,9 @@ Transitively reachable from the two telemetry frame containers we import
   (:mod:`._sensor_value_fns`) — soc, power, voltage, soe, odometer,
   calibratedRefCons, batteryCapacity, soh, estimatedBatteryRange,
   batteryTemperature, chargingState;
-* ``_extract_lat_long`` (:mod:`._sensor_value_fns`) — location.
+* ``location`` — carried on the SSE wire and surfaced (with its coordinates
+  redacted) by :mod:`.diagnostics`, so it is retained in the wire model even
+  though no sensor ``value_fn`` consumes it.
 
 That's 12 surfaced keys → 12 leaf+Output pairs + the mixin chain
 (``WithTime``, ``WithTimeAndProvider``, ``Provider``, ``DateTimeString``)

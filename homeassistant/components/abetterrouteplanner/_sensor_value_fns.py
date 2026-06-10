@@ -247,60 +247,16 @@ ENUM_VALUE_FNS: tuple[
 ] = (("charging_state", "chargingState", _charging_state),)
 
 
-def _extract_lat_long(frame: Mapping[str, Any]) -> tuple[float, float] | None:
-    """Return ``(lat, long)`` from a telemetry frame, or ``None``.
-
-    Tolerates every shape the server might emit while the metric is
-    unavailable: missing key, ``location: null``, ``location: {}``,
-    ``location: {"lat": null}``, partial leaves, and non-numeric values.
-    Explicitly excludes ``bool`` because ``isinstance(True, int)`` is
-    True in Python (``bool ⊂ int``) and a malformed ``"lat": true`` would
-    otherwise sneak past the numeric check and produce a nonsense
-    coordinate at the entity surface.
-
-    Co-located with ``SENSOR_VALUE_FNS`` so the coordinator's stamp loop
-    can iterate a single registry covering both the sensor platform and
-    the device_tracker platform without importing from either platform
-    module. The module name predates this colocation; location is a
-    tracker concern, not a sensor concern.
-    """
-    location = frame.get("location")
-    if not isinstance(location, dict):
-        return None
-    lat = location.get("lat")
-    lng = location.get("long")
-    if not isinstance(lat, (int, float)) or isinstance(lat, bool):
-        return None
-    if not isinstance(lng, (int, float)) or isinstance(lng, bool):
-        return None
-    # Coerce both axes to ``float`` at the live-wire boundary so an int-typed
-    # wire value (``"lat": 51``) doesn't leak through to the tracker's
-    # ``extra_state_attributes`` as ``int`` and contradict the function's
-    # ``tuple[float, float]`` signature. Mirrors the coercion at the restore
-    # boundary, keeping the two surfaces type-symmetric.
-    return float(lat), float(lng)
-
-
-# Device-tracker platform's presence-predicate key + value_fn. Mirrors the
-# (key, callable) tuple shape used by ``SENSOR_VALUE_FNS`` so the
-# coordinator's stamp loop can concatenate without ad-hoc shape adapters.
-LOCATION_KEY = "location"
-LOCATION_VALUE_FN: Callable[[Mapping[str, Any]], tuple[float, float] | None] = (
-    _extract_lat_long
-)
-
-
-# Cross-platform stamped-key registry consumed by the coordinator's stamp
-# loop. Concat-of-module-level-tuples (not runtime ``_presence_predicates``)
-# so frames arriving during the pre-warm window get stamps too — platforms
-# have not yet registered predicates at that point but the stamp registry
-# is populated at import time.
+# Stamped-key registry consumed by the coordinator's stamp loop.
+# Concat-of-module-level-tuples (not runtime ``_presence_predicates``)
+# so frames arriving during the pre-warm window get stamps too — the sensor
+# platform has not yet registered predicates at that point but the stamp
+# registry is populated at import time.
 STAMPED_VALUE_FNS: tuple[
     tuple[str, str, Callable[[Mapping[str, Any]], object | None]], ...
 ] = (
     *SENSOR_VALUE_FNS,
     *ENUM_VALUE_FNS,
-    (LOCATION_KEY, LOCATION_KEY, LOCATION_VALUE_FN),
 )
 
 

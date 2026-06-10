@@ -319,11 +319,11 @@ class AbrpTelemetryCoordinator(
     ) -> None:
         """Register per-metric presence-evaluation callables (merge semantics).
 
-        Multiple platforms (``sensor``, ``device_tracker``) each contribute
-        their own predicate keys; ``.update`` merges them into a shared
-        dict instead of clobbering siblings. Re-registering the same key
-        overwrites — by design, since a platform unload + reload cleanly
-        replaces its own predicates without leaving stale entries behind.
+        The sensor platform contributes its predicate keys; ``.update``
+        merges them into a shared dict instead of clobbering. Re-registering
+        the same key overwrites — by design, since a platform unload + reload
+        cleanly replaces its own predicates without leaving stale entries
+        behind.
 
         From the first call onwards :meth:`apply_frame` consults every
         registered predicate for each known metric and fires the
@@ -495,10 +495,9 @@ class AbrpTelemetryCoordinator(
         # ``merged_frame``; stamping off the merged state would defeat
         # the user-visible contract of ``last_reported_at`` ("when did
         # upstream last surface this field"). Pinned by the trajectory
-        # tests in test_restore.py + test_restore_gps.py.
-        # ``STAMPED_VALUE_FNS`` covers both sensor and device_tracker
-        # surfaces via module-level concat — populated at import time so
-        # frames arriving during the pre-warm window stamp correctly.
+        # tests in test_restore.py.
+        # ``STAMPED_VALUE_FNS`` is module-level concat populated at import
+        # time so frames arriving during the pre-warm window stamp correctly.
         for key, wire_key, value_fn in STAMPED_VALUE_FNS:
             # ``stale_keys`` is WIRE-KEYED (see pre-scan comment above);
             # the four asymmetric metrics (``calibrated_ref_cons``,

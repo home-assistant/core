@@ -586,15 +586,14 @@ async def test_apply_frame_unparsable_time_falls_through_to_adopt(
 async def test_register_presence_predicates_merges_with_prior(
     telemetry_coordinator: AbrpTelemetryCoordinator,
 ) -> None:
-    """Two platforms registering disjoint keys both survive in the predicate dict.
+    """Two registrations of disjoint keys both survive in the predicate dict.
 
     Registration uses merge semantics
     (``self._presence_predicates.update(predicates)``), not overwrite
-    (``self._presence_predicates = dict(predicates)``). With the
-    two-platform forwarding (sensor + device_tracker), each
-    platform independently registers its own predicate keys; an
-    overwrite implementation would silently drop the first platform's
-    predicates and break lazy creation for those metrics.
+    (``self._presence_predicates = dict(predicates)``). When multiple
+    registrations contribute disjoint predicate keys, each set survives;
+    an overwrite implementation would silently drop the first
+    registration's predicates and break lazy creation for those metrics.
 
     Structural assertion on ``_presence_predicates``: the property under
     test is a registration-topology fact (which keys live in the dict
@@ -1118,25 +1117,6 @@ def _voltage_frame(
     return {"vehicleId": vehicle_id, "voltage": block}
 
 
-def _location_frame(
-    *,
-    vehicle_id: int = MOCK_VEHICLE_ID,
-    lat: float = 37.7749,
-    lng: float = -122.4194,
-    provider: object = _NO_PROVIDER_KEY,
-) -> dict[str, Any]:
-    """Construct an unmerged ``location`` frame; optionally embed ``provider``.
-
-    Mirrors :func:`_voltage_frame` for the device_tracker key in
-    ``STAMPED_VALUE_FNS``. Pins the cross-platform contract: the same stamp
-    loop covers sensor metrics AND the location key.
-    """
-    block: dict[str, Any] = {"lat": lat, "long": lng}
-    if provider is not _NO_PROVIDER_KEY:
-        block["provider"] = provider
-    return {"vehicleId": vehicle_id, "location": block}
-
-
 # --- T1 -------------------------------------------------------------------
 
 
@@ -1179,12 +1159,6 @@ def _location_frame(
             {"state": "CHARGING_AC"},
             id="charging_state",
         ),
-        pytest.param(
-            "location",
-            "location",
-            {"lat": 37.7749, "long": -122.4194},
-            id="location",
-        ),
     ],
 )
 async def test_apply_frame_stamps_provider_per_metric(
@@ -1195,9 +1169,8 @@ async def test_apply_frame_stamps_provider_per_metric(
 ) -> None:
     """``apply_frame`` stamps ``last_provider[vid][registry_key]`` for every metric.
 
-    Full-coverage parametrize across the 11 sensor keys plus the
-    device_tracker location key — the union of every metric that
-    appears in ``STAMPED_VALUE_FNS``. Distinguishes the **registry
+    Full-coverage parametrize across the 11 sensor keys — every metric
+    that appears in ``STAMPED_VALUE_FNS``. Distinguishes the **registry
     key** (the internal slot name used by the value_fn registry,
     snake_case for sensors) from the **wire key** (what the SSE
     server emits, sometimes camelCase per the v2 wire spec).
@@ -1213,9 +1186,9 @@ async def test_apply_frame_stamps_provider_per_metric(
     | ``battery_temperature`` | ``batteryTemperature``  |
     | ``charging_state``      | ``chargingState``       |
 
-    The other 7 rows have ``registry_key == wire_key`` (no naming
+    The other 6 rows have ``registry_key == wire_key`` (no naming
     flip — sensor keys that happened to match the v2 wire spec
-    verbatim, plus location).
+    verbatim).
 
     The bug a prior tester-side miss let through: a
     ``_extract_provider(frame, registry_key)`` that uses the snake_case
@@ -1338,27 +1311,23 @@ async def test_apply_frame_provider_per_metric_independent(
 ) -> None:
     """Different metrics on the same frame get their own provider stamps.
 
-    The probe finding: a Tesla vehicle commonly reports GPS from
-    ``APP_LOCATION`` while battery telemetry flows from
-    ``TESLA_FLEET_STREAM``. The coordinator's ``last_provider[vid]``
-    must reflect both independently — not collapse to a single
-    last-seen value.
+    The probe finding: a vehicle commonly reports metrics from more than
+    one upstream on a single frame — e.g. odometer from ``APP_LOCATION``
+    while battery telemetry flows from ``TESLA_FLEET_STREAM``. The
+    coordinator's ``last_provider[vid]`` must reflect both independently
+    — not collapse to a single last-seen value.
     """
     frame = {
         "vehicleId": MOCK_VEHICLE_ID,
         "soc": {"frac": 0.85, "provider": "TESLA_FLEET_STREAM"},
-        "location": {
-            "lat": 37.7749,
-            "long": -122.4194,
-            "provider": "APP_LOCATION",
-        },
+        "odometer": {"m": 100000.0, "provider": "APP_LOCATION"},
     }
 
     telemetry_coordinator.apply_frame(frame)
 
     by_key = _last_provider(telemetry_coordinator)[MOCK_VEHICLE_ID]
     assert by_key["soc"] == "TESLA_FLEET_STREAM"
-    assert by_key["location"] == "APP_LOCATION"
+    assert by_key["odometer"] == "APP_LOCATION"
 
 
 # --- T7 -------------------------------------------------------------------

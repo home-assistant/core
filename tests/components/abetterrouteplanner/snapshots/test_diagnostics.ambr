@@ -82,7 +82,6 @@
         'battery_temperature',
         'calibrated_ref_cons',
         'charging_state',
-        'location',
         'odometer',
         'power',
         'range',

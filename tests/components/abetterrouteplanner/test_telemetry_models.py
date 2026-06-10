@@ -41,8 +41,9 @@ from homeassistant.components.abetterrouteplanner._telemetry_models import (
 )
 
 # Wire-key keep-set: every leaf TypedDict that ``STAMPED_VALUE_FNS``
-# (sensor) or the tracker ``LOCATION_VALUE_FN`` reads. ``Location``
-# carries two axes (``lat`` + ``long``); every other leaf carries one.
+# (sensor) reads, plus ``Location`` (carried on the wire and surfaced —
+# redacted — by diagnostics). ``Location`` carries two axes
+# (``lat`` + ``long``); every other leaf carries one.
 _KEEP_SET_LEAVES: tuple[tuple[type, frozenset[str]], ...] = (
     (Soc, frozenset({"frac"})),
     (Power, frozenset({"w"})),

@@ -33,7 +33,7 @@ from .oauth import AbetterrouteplannerOAuth2Implementation
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS: list[Platform] = [Platform.DEVICE_TRACKER, Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 # Consecutive missing-from-garage polls before treating a vehicle as deleted
 # upstream. Threshold 2 ≈ 20 minutes of patience — covers transient ABRP-side

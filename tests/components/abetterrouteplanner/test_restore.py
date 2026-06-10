@@ -746,7 +746,7 @@ async def test_provider_attribute_absent_when_restored_value_malformed(
 
 
 # ---------------------------------------------------------------------------
-# T6 — vehicle-removed-mid-restore (sensor mirror of tracker T8)
+# T6 — vehicle-removed-mid-restore
 # ---------------------------------------------------------------------------
 
 
@@ -759,8 +759,7 @@ async def test_deselected_vehicle_skips_eager_create_with_restore_cache(
 ) -> None:
     """Registry has voltage entry + recorder has voltage state but CONF_VEHICLE_IDS = [] → skip.
 
-    Sensor mirror of ``test_deselected_vehicle_skips_eager_create`` in
-    ``test_restore_gps.py``. User reconfigured to deselect this vehicle
+    User reconfigured to deselect this vehicle
     between sessions; the entity_registry still holds the row, the
     recorder still holds the last value — but the eager-create probe's
     ``vehicle.vehicle_id not in selected_ids`` filter must reject and
