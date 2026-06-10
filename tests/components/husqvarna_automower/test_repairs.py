@@ -42,6 +42,7 @@ async def test_invalid_mower_creates_issue(
     entry = hass.config_entries.async_entries(DOMAIN)[0]
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.ERROR
     assert issue.is_fixable is False
