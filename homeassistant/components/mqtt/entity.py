@@ -1497,8 +1497,7 @@ class MqttEntity(
         if self._update_registry_entity_id is not None:
             entity_registry = er.async_get(self.hass)
             entity_registry.async_update_entity(
-                self.entity_id,
-                new_entity_id=self._update_registry_entity_id,
+                self.entity_id, new_entity_id=self._update_registry_entity_id
             )
             self._update_registry_entity_id = None
 
