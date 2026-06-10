@@ -712,8 +712,7 @@ async def test_visible_by_default_with_user_override(
     # Assert device is cleaned up
     assert device_registry.async_get(device_id) is None
 
-    # Rediscover the previous deleted entity and allow it to be visible
-    # but not visible by default
+    # Rediscover the previous deleted entity, now visible by default
     async_fire_mqtt_message(hass, discovery_topic, config_visible)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test")
@@ -740,7 +739,7 @@ async def test_visible_by_default_with_user_override(
     assert device_registry.async_get(device_id) is None
 
     # Rediscover again and assert the entity remains hidden
-    # but not visible by default
+    # because it was hidden by the user, even though visible_by_default is True
     async_fire_mqtt_message(hass, discovery_topic, config_visible)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test")
