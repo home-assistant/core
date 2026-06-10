@@ -636,7 +636,7 @@ azure-storage-blob==12.24.0
 b2sdk==2.10.4
 
 # homeassistant.components.holiday
-babel==2.15.0
+babel==2.18.0
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
@@ -940,7 +940,7 @@ enocean-async==0.4.2
 enturclient==0.2.4
 
 # homeassistant.components.environment_canada
-env-canada==0.13.2
+env-canada==0.15.0
 
 # homeassistant.components.season
 ephem==4.1.6
@@ -2639,7 +2639,7 @@ python-dropbox-api==0.1.3
 python-duco-connectivity==0.6.0
 
 # homeassistant.components.ecobee
-python-ecobee-api==0.4.0
+python-ecobee-api==0.4.1
 
 # homeassistant.components.etherscan
 python-etherscan-api==0.0.3
