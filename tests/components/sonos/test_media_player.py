@@ -1,6 +1,7 @@
 """Tests for the Sonos Media Player platform."""
 
 from collections.abc import Generator
+import logging
 from typing import Any
 from unittest.mock import MagicMock, patch
 
@@ -1345,6 +1346,61 @@ async def test_play_media_announce(
     )
     assert sonos_websocket.play_clip.call_count == 1
     soco.play_uri.assert_called_with(content_id, force_radio=False)
+
+
+@pytest.mark.parametrize(
+    ("content_id", "expect_warning"),
+    [
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.mp3",
+            False,
+            id="mp3_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.wav",
+            False,
+            id="wav_no_warning",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123.flac",
+            True,
+            id="flac_warns_and_plays",
+        ),
+        pytest.param(
+            "http://10.0.0.1:8123/api/tts_proxy/abc123",
+            False,
+            id="no_extension_no_warning",
+        ),
+    ],
+)
+async def test_play_media_announce_format_warning(
+    hass: HomeAssistant,
+    soco: MockSoCo,
+    async_autosetup_sonos,
+    sonos_websocket,
+    content_id: str,
+    expect_warning: bool,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that announce logs a warning for unsupported file formats."""
+    caplog.clear()
+    caplog.set_level(
+        logging.WARNING, logger="homeassistant.components.sonos.media_player"
+    )
+    await hass.services.async_call(
+        MP_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: "media_player.zone_a",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+            ATTR_MEDIA_CONTENT_ID: content_id,
+            ATTR_MEDIA_ANNOUNCE: True,
+        },
+        blocking=True,
+    )
+    assert sonos_websocket.play_clip.call_count == 1
+    warning_logged = "only supports MP3 and WAV" in caplog.text
+    assert warning_logged == expect_warning
 
 
 async def test_media_get_queue(
