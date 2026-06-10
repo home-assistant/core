@@ -935,6 +935,8 @@ class ReolinkHost:
     def event_connection(self) -> str:
         """Type of connection to receive events."""
         if self._api.baichuan.events_active:
+            if self._api.baichuan.webhook_subscribed:
+                return "Webhook push"
             return "TCP push"
         if self._webhook_reachable:
             return "ONVIF push"
