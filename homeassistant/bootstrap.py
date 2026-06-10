@@ -647,9 +647,8 @@ async def async_enable_logging(
     logger = logging.getLogger()
     logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
-    disabled_reason = _log_file_disabled_reason()
-
     if log_file is None:
+        disabled_reason = _log_file_disabled_reason()
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
         if disabled_reason:
             # Rename the default log file if it exists, since previous versions created
@@ -666,6 +665,7 @@ async def async_enable_logging(
         else:
             err_log_path = default_log_path
     else:
+        disabled_reason = None
         err_log_path = os.path.abspath(log_file)
 
     if err_log_path:
@@ -688,11 +688,6 @@ async def async_enable_logging(
             hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
 
     async_activate_log_queue_handler(hass)
-
-
-def _is_log_file_disabled() -> bool:
-    """Return whether the managed log file is disabled."""
-    return _log_file_disabled_reason() is not None
 
 
 def _log_file_disabled_reason() -> str | None:

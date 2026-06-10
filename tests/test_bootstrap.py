@@ -181,7 +181,7 @@ async def test_async_enable_logging(
         ),
     ],
 )
-async def test_async_enable_logging_supervisor(
+async def test_async_enable_logging_managed_log_file_disabled(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
     env: dict[str, str],
@@ -255,6 +255,35 @@ async def test_async_enable_logging_supervisor(
         assert len(glob.glob(ARG_LOG_FILE)) > 0
         assert bootstrap.DATA_LOGGING in hass.data
         assert bootstrap.DATA_LOGGING_DISABLED_REASON not in hass.data
+
+    cleanup_log_files()
+
+
+async def test_async_enable_logging_log_file_ignores_disable_env(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test an explicit log file ignores the managed log file disable env."""
+    monkeypatch.setenv("HA_DISABLE_LOG_FILE", "invalid")
+
+    with (
+        patch(
+            "homeassistant.bootstrap.async_activate_log_queue_handler"
+        ) as mock_async_activate_log_queue_handler,
+        patch("logging.getLogger"),
+    ):
+        await bootstrap.async_enable_logging(
+            hass,
+            log_rotate_days=5,
+            log_file="test.log",
+        )
+
+    assert "Ignoring invalid HA_DISABLE_LOG_FILE value" not in caplog.text
+    assert len(glob.glob(ARG_LOG_FILE)) > 0
+    assert bootstrap.DATA_LOGGING in hass.data
+    assert bootstrap.DATA_LOGGING_DISABLED_REASON not in hass.data
+    mock_async_activate_log_queue_handler.assert_called_once()
 
     cleanup_log_files()
 
