@@ -155,7 +155,9 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Tado resets somewhere between 12:00 and 13:00, Berlin time
         # So let's pretend we're in Berlin...
-        reset_time = datetime.now(ZoneInfo("Europe/Berlin"))
+        reset_time = datetime.now(  # pylint: disable=home-assistant-enforce-now
+            ZoneInfo("Europe/Berlin")
+        )
 
         today_reset = datetime.combine(
             reset_time.date(),
