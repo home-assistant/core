@@ -43,6 +43,11 @@ _LOGGER = logging.getLogger(__name__)
 # Hour of the day (local time) at which expired telegrams are evicted nightly.
 EVICT_EXPIRED_HOUR = 3
 
+# Interval at which buffered telegram writes are flushed to the database.
+# Websocket queries flush on demand (``flush_first=True``), so the only telegrams
+# at risk from a longer interval are those buffered during an ungraceful shutdown.
+FLUSH_INTERVAL_SECONDS = 600
+
 # dispatcher signal for KNX interface device triggers
 SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
 SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType(
@@ -104,7 +109,7 @@ class Telegrams:
         self._uninitialized_store = BufferedSqliteStore(
             full_path,
             retention_days=self.retention_days,
-            flush_interval=10.0,
+            flush_interval=FLUSH_INTERVAL_SECONDS,
         )
 
         self._xknx_telegram_cb_handle = (

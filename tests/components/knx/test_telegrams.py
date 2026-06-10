@@ -85,15 +85,7 @@ async def test_store_telegram_history(
     knx: KNXTestKit,
 ) -> None:
     """Test storing telegram history."""
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {
-            CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
-        },
-    )
-    await knx.setup_integration(add_entry_to_hass=False)
+    await knx.setup_integration()
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
 
     await knx.receive_write("1/3/4", True)
@@ -104,11 +96,13 @@ async def test_store_telegram_history(
 
     # Wait for async store task
     await hass.async_block_till_done()
-    assert telegrams_module.store is not None
-    await telegrams_module.store.flush()
 
     # Verify in Memory store
-    result = await telegrams_module.store.query(TelegramQuery(order_descending=False))
+    assert telegrams_module.store is not None
+    result = await telegrams_module.store.query(
+        TelegramQuery(order_descending=False),
+        flush_first=True,
+    )
     assert len(result.telegrams) == 2
     assert result.telegrams[0].destination == "1/3/4"
     assert result.telegrams[1].destination == "2/2/2"
@@ -119,24 +113,18 @@ async def test_store_telegram_history_sqlite(
     knx: KNXTestKit,
 ) -> None:
     """Test storing telegram history in SQLite."""
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {
-            CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
-        },
-    )
-    await knx.setup_integration(add_entry_to_hass=False)
+    await knx.setup_integration()
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
 
     await knx.receive_write("1/3/4", True)
     await hass.async_block_till_done()
-    assert telegrams_module.store is not None
-    await telegrams_module.store.flush()
 
     # Verify in SQLite store
-    result = await telegrams_module.store.query(TelegramQuery())
+    assert telegrams_module.store is not None
+    result = await telegrams_module.store.query(
+        TelegramQuery(),
+        flush_first=True,
+    )
     assert len(result.telegrams) == 1
     assert result.telegrams[0].destination == "1/3/4"
 
@@ -213,9 +201,7 @@ async def test_migrate_telegrams_from_json(
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
-    await telegrams_module.store.flush()
-
-    result = await telegrams_module.store.query(TelegramQuery())
+    result = await telegrams_module.store.query(TelegramQuery(), flush_first=True)
     assert result.total_count == len(json_telegrams)
     # The legacy JSON store is removed after a successful migration
     assert history_key not in knx.hass_storage
@@ -403,8 +389,7 @@ async def test_migrate_telegrams_no_json(
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
-    await telegrams_module.store.flush()
-    result = await telegrams_module.store.query(TelegramQuery())
+    result = await telegrams_module.store.query(TelegramQuery(), flush_first=True)
     assert result.total_count == 0
 
 
@@ -435,8 +420,7 @@ async def test_migrate_telegrams_unexpected_format(
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
-    await telegrams_module.store.flush()
-    result = await telegrams_module.store.query(TelegramQuery())
+    result = await telegrams_module.store.query(TelegramQuery(), flush_first=True)
     assert result.total_count == 0
 
 
@@ -540,16 +524,14 @@ async def test_nightly_eviction_zero_retention_deletes_all(
 
     await knx.receive_write("1/3/4", True)
     await hass.async_block_till_done()
-    await telegrams_module.store.flush()
-    result = await telegrams_module.store.query(TelegramQuery())
+    result = await telegrams_module.store.query(TelegramQuery(), flush_first=True)
     assert len(result.telegrams) == 1
 
     freezer.move_to("2024-01-02 03:00:00+00:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    await telegrams_module.store.flush()
 
-    result = await telegrams_module.store.query(TelegramQuery())
+    result = await telegrams_module.store.query(TelegramQuery(), flush_first=True)
     assert len(result.telegrams) == 0
 
 

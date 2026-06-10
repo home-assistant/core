@@ -328,7 +328,7 @@ async def ws_group_monitor_info(
         )
         return
     try:
-        result = await knx.telegrams.store.query(query)
+        result = await knx.telegrams.store.query(query, flush_first=True)
     except KnxTelegramStoreException as err:
         connection.send_error(
             msg["id"],
@@ -426,7 +426,7 @@ async def ws_query_telegrams(
         )
         return
     try:
-        result = await knx.telegrams.store.query(query)
+        result = await knx.telegrams.store.query(query, flush_first=True)
     except KnxTelegramStoreException as err:
         connection.send_error(
             msg["id"],

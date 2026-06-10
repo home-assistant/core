@@ -55,7 +55,6 @@ from homeassistant.components.knx.const import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, get_fixture_path
 
@@ -92,7 +91,6 @@ async def fixture_knx_setup(hass: HomeAssistant):
             "homeassistant.components.knx.async_setup_entry", return_value=True
         ) as mock_async_setup_entry,
     ):
-        await async_setup_component(hass, "persistent_notification", {})
         yield mock_async_setup_entry
 
 

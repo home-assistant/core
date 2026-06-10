@@ -219,11 +219,9 @@ async def test_knx_query_telegrams_command(
     await knx.receive_write("1/1/1", True)
     await knx.receive_write("2/2/2", (1, 2, 3))
     await knx.receive_write("3/3/3", 0x34)
-    # wait for async store task
+    # wait for async store task; the websocket handler flushes buffered
+    # telegrams before querying, so no explicit flush is needed here
     await hass.async_block_till_done()
-    store = hass.data[KNX_MODULE_KEY].telegrams.store
-    assert store is not None
-    await store.flush()
 
     # Query all
     await client.send_json_auto_id({"type": "knx/query_telegrams"})
@@ -361,11 +359,9 @@ async def test_knx_subscribe_telegrams_command_recent_telegrams(
     )
     await knx.assert_write("1/2/4", 1)
 
-    # wait for async store task
+    # wait for async store task; group_monitor_info flushes buffered telegrams
+    # before querying, so no explicit flush is needed here
     await hass.async_block_till_done()
-    store = hass.data[KNX_MODULE_KEY].telegrams.store
-    assert store is not None
-    await store.flush()
 
     # connect websocket after telegrams have been sent
     client = await hass_ws_client(hass)
