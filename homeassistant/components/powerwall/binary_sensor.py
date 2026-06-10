@@ -126,7 +126,7 @@ class PowerWallChargingStatusSensor(PowerWallEntity, BinarySensorEntity):
     @property
     def unique_id(self) -> str:
         """Device Uniqueid."""
-        return f"{self.base_unique_id}_powerwall_charging"
+        return f"{self.base_unique_id}_powerwall_charging"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
     def is_on(self) -> bool:

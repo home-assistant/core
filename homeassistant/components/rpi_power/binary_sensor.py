@@ -42,7 +42,7 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_icon = "mdi:raspberry-pi"
     _attr_name = "RPi Power status"
-    _attr_unique_id = "rpi_power"  # only one sensor possible
+    _attr_unique_id = "rpi_power"  # only one sensor possible  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     def __init__(self, under_voltage: UnderVoltage) -> None:
         """Initialize the binary sensor."""
