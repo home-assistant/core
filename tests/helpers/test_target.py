@@ -1,5 +1,7 @@
 """Test service helpers."""
 
+import asyncio
+
 import pytest
 
 from homeassistant.components.group import Group
@@ -544,7 +546,7 @@ async def test_async_track_target_selector_state_change_event_empty_selector(
         """Handle state change events."""
 
     with pytest.raises(HomeAssistantError) as excinfo:
-        target.async_track_target_selector_state_change_event(
+        await target.async_track_target_selector_state_change_event(
             hass, {}, state_change_callback
         )
     assert str(excinfo.value) == (
@@ -626,7 +628,7 @@ async def test_async_track_target_selector_state_change_event(
         ATTR_FLOOR_ID: floor,
         ATTR_LABEL_ID: label,
     }
-    unsub = target.async_track_target_selector_state_change_event(
+    unsub = await target.async_track_target_selector_state_change_event(
         hass, selector_config, state_change_callback
     )
 
@@ -762,7 +764,7 @@ async def test_async_track_target_selector_state_change_event_filter(
         ATTR_ENTITY_ID: targeted_entity,
         ATTR_LABEL_ID: label,
     }
-    unsub = target.async_track_target_selector_state_change_event(
+    unsub = await target.async_track_target_selector_state_change_event(
         hass, selector_config, state_change_callback, entity_filter
     )
 
@@ -835,7 +837,7 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     hass.states.async_set(entity_b.entity_id, STATE_ON)
     await hass.async_block_till_done()
 
-    unsub = target.async_track_target_selector_state_change_event(
+    unsub = await target.async_track_target_selector_state_change_event(
         hass,
         {ATTR_LABEL_ID: label.label_id},
         state_change_callback,
@@ -889,6 +891,108 @@ async def test_async_track_target_selector_state_change_event_on_entities_update
     assert len(entity_updates) == 0
 
 
+async def test_async_track_target_selector_update_task_error_is_logged(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """An error in a registry-driven async on_entities_update is logged.
+
+    Such updates run as background tasks; an unexpected exception must be
+    retrieved and logged rather than left for asyncio to surface at GC time.
+    """
+
+    @callback
+    def state_change_callback(event: target.TargetStateChangedData) -> None:
+        """Handle state change events."""
+
+    async def on_entities_update(added: set[str], removed: set[str]) -> None:
+        raise ValueError("boom")
+
+    entity_reg = er.async_get(hass)
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Error Test")
+    entity = entity_reg.async_get_or_create(
+        domain="light", platform="test", unique_id="err_a"
+    )
+    hass.states.async_set(entity.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # No entity has the label yet, so the awaited initial update does not fire
+    # and setup succeeds.
+    unsub = await target.async_track_target_selector_state_change_event(
+        hass,
+        {ATTR_LABEL_ID: label.label_id},
+        state_change_callback,
+        on_entities_update=on_entities_update,
+    )
+
+    # A registry change adds the entity, so the async callback runs as a task
+    # and raises; the error is logged, not swallowed.
+    entity_reg.async_update_entity(entity.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+
+    assert "Error handling tracked entities update" in caplog.text
+    assert "boom" in caplog.text
+
+    unsub()
+
+
+async def test_async_track_target_selector_cancels_update_task_on_unsubscribe(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Unsubscribing cancels an in-flight registry-driven update task."""
+    started = asyncio.Event()
+    release = asyncio.Event()  # intentionally never set
+    cancelled = False
+
+    @callback
+    def state_change_callback(event: target.TargetStateChangedData) -> None:
+        """Handle state change events."""
+
+    async def on_entities_update(added: set[str], removed: set[str]) -> None:
+        nonlocal cancelled
+        started.set()
+        try:
+            await release.wait()
+        except asyncio.CancelledError:
+            cancelled = True
+            raise
+
+    entity_reg = er.async_get(hass)
+    label_reg = lr.async_get(hass)
+    label = label_reg.async_create("Cancel Test")
+    entity = entity_reg.async_get_or_create(
+        domain="light", platform="test", unique_id="cancel_a"
+    )
+    hass.states.async_set(entity.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # No entity has the label yet, so the awaited initial update does not fire.
+    unsub = await target.async_track_target_selector_state_change_event(
+        hass,
+        {ATTR_LABEL_ID: label.label_id},
+        state_change_callback,
+        on_entities_update=on_entities_update,
+    )
+
+    # Registry change starts the update task, which blocks indefinitely.
+    entity_reg.async_update_entity(entity.entity_id, labels={label.label_id})
+    await started.wait()
+
+    # Unsubscribing cancels the in-flight task.
+    unsub()
+    await asyncio.sleep(0)
+
+    assert cancelled is True
+    # A cancellation is not an error.
+    assert "Error handling tracked entities update" not in caplog.text
+
+    # Drain (a no-op once cancelled; releases the task if cancellation regressed).
+    release.set()
+    await hass.async_block_till_done()
+
+
 async def test_async_track_target_selector_no_on_entities_update(
     hass: HomeAssistant,
 ) -> None:
@@ -904,7 +1008,7 @@ async def test_async_track_target_selector_no_on_entities_update(
     await hass.async_block_till_done()
 
     # No on_entities_update — should work without errors
-    unsub = target.async_track_target_selector_state_change_event(
+    unsub = await target.async_track_target_selector_state_change_event(
         hass,
         {ATTR_ENTITY_ID: entity_id},
         state_change_callback,

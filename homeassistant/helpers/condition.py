@@ -1,6 +1,7 @@
 """Offer reusable conditions."""
 
 import abc
+import asyncio
 from collections import deque
 from collections.abc import Callable, Container, Coroutine, Generator, Iterable, Mapping
 from contextlib import contextmanager
@@ -56,7 +57,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     WEEKDAYS,
 )
-from homeassistant.core import HomeAssistant, State, callback
+from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import (
     ConditionError,
     ConditionErrorContainer,
@@ -87,6 +88,7 @@ from .automation import (
     move_options_fields_to_top_level,
 )
 from .integration_platform import async_process_integration_platforms
+from .recorder import get_instance
 from .selector import (
     NumericThresholdMode,
     NumericThresholdSelector,
@@ -118,6 +120,16 @@ FROM_CONFIG_FORMAT = "{}_from_config"
 VALIDATE_CONFIG_FORMAT = "{}_validate_config"
 
 _LOGGER = logging.getLogger(__name__)
+
+# Upper bound on the best-effort recorder query used to prime `for:` durations
+# at setup. If history can't be read within this window we fall back to the
+# conservative live-state anchor rather than blocking condition setup.
+HISTORY_PRIME_TIMEOUT = 10
+
+# How far back the `for:` priming query reaches. Caps the cost of the query for
+# very long `for:` durations; beyond this we rely on the live-state anchor, so
+# such conditions may only become true once enough time has elapsed since setup.
+MAX_HISTORY_PRIME_LOOKBACK = timedelta(hours=6)
 
 _PLATFORM_ALIASES: dict[str | None, str | None] = {
     "and": None,
@@ -493,6 +505,11 @@ class EntityConditionBase(Condition):
             self._matcher = self._check_all_match_state
         self._on_unload: list[Callable[[], None]] = []
         self._valid_since: dict[str, datetime] = {}
+        # Entities whose `for:` anchor is currently being resolved from recorder
+        # history. While an entity is here the live listener leaves its anchor to
+        # the prime, except that an invalidation removes it (the run broke, so the
+        # in-flight history is stale and live tracking takes over).
+        self._priming: set[str] = set()
 
     def entity_filter(self, entities: set[str]) -> set[str]:
         """Filter entities matching any of the domain specs."""
@@ -533,11 +550,19 @@ class EntityConditionBase(Condition):
             and self._should_include(_state)
             and self.is_valid_state(_state)
         ):
+            # While an entity is being primed from history, leave its anchor to
+            # the prime: the entity stayed valid, so the run is unbroken and the
+            # history start (which can be earlier than this update) is accurate.
+            if entity_id in self._priming:
+                return
             # Only record the time if not already tracked, to avoid
             # resetting the duration on unrelated state/attribute updates.
             if entity_id not in self._valid_since:
                 self._valid_since[entity_id] = self._state_valid_since(_state)
         else:
+            # An invalidation breaks the run, so any history being loaded for the
+            # entity is now stale; stop priming it and let live tracking own it.
+            self._priming.discard(entity_id)
             self._valid_since.pop(entity_id, None)
 
     @override
@@ -557,23 +582,146 @@ class EntityConditionBase(Condition):
 
             self._update_valid_since(entity_id, to_state)
 
-        @callback
-        def _on_entities_update(added: set[str], removed: set[str]) -> None:
-            """Handle changes to the tracked entity set."""
-            for entity_id in added:
-                self._update_valid_since(entity_id, self._hass.states.get(entity_id))
-            for entity_id in removed:
-                self._valid_since.pop(entity_id, None)
-
-        unsub = async_track_target_selector_state_change_event(
+        unsub = await async_track_target_selector_state_change_event(
             self._hass,
             self._target,
             _state_change_listener,
             self.entity_filter,
-            _on_entities_update,
+            self._async_on_entities_update,
             primary_entities_only=self._primary_entities_only,
         )
         self._on_unload.append(unsub)
+
+    async def _async_on_entities_update(
+        self, added: set[str], removed: set[str]
+    ) -> None:
+        """Handle changes to the tracked entity set.
+
+        Removed entities stop being tracked immediately. Added entities are only
+        considered by the condition once their `for:` anchor has been resolved
+        (see `_async_prime_valid_since`); until then they are absent from
+        `_valid_since`. The target tracker awaits this for the initial entity set
+        at setup and runs it as a background task for later registry-driven
+        changes.
+        """
+        for entity_id in removed:
+            self._priming.discard(entity_id)
+            self._valid_since.pop(entity_id, None)
+        await self._async_prime_valid_since(added)
+
+    async def _async_prime_valid_since(self, entity_ids: set[str]) -> None:
+        """Resolve and store the `for:` anchor for newly tracked entities.
+
+        For each currently-valid entity the anchor is the start of its current
+        continuous run of validity, read from recorder history (bounded by
+        `MAX_HISTORY_PRIME_LOOKBACK`) and combined with the current state's
+        anchor, or the current state's anchor alone when the recorder is
+        unavailable or the read fails. An entity is added to `_valid_since` only
+        once this resolves, so a newly tracked entity does not participate in the
+        condition until its anchor is known — rather than briefly using a
+        conservative anchor that then changes.
+
+        While loading, an entity is held in `_priming`. A live change that keeps
+        it valid is ignored (the run is unbroken, history is accurate), but an
+        invalidation removes it from `_priming` so that we do not apply now-stale
+        history over the live tracking that observed the break.
+        """
+        # Conservative anchor from the live state for each currently-valid entity.
+        anchors = {
+            entity_id: self._state_valid_since(_state)
+            for entity_id in entity_ids
+            if (_state := self._hass.states.get(entity_id)) is not None
+            and self._should_include(_state)
+            and self.is_valid_state(_state)
+        }
+        if not anchors:
+            return
+
+        self._priming.update(anchors)
+        try:
+            if "recorder" in self._hass.config.components:
+                await self._async_refine_anchors_from_history(anchors)
+            for entity_id, anchor in anchors.items():
+                # Skip entities a live change invalidated mid-load: they were
+                # removed from `_priming`, the run broke, and live tracking (which
+                # saw the break) owns them — applying this history would be stale.
+                if entity_id in self._priming:
+                    self._valid_since[entity_id] = anchor
+        finally:
+            self._priming.difference_update(anchors)
+
+    async def _async_refine_anchors_from_history(
+        self, anchors: dict[str, datetime]
+    ) -> None:
+        """Move each anchor in `anchors` back to the true start of its run.
+
+        Mutates `anchors` in place.
+        """
+        from sqlalchemy.exc import SQLAlchemyError  # noqa: PLC0415
+
+        from homeassistant.components.recorder import history  # noqa: PLC0415
+
+        if TYPE_CHECKING:
+            assert self._duration is not None
+        lookback = min(self._duration, MAX_HISTORY_PRIME_LOOKBACK)
+        start_time = dt_util.utcnow() - lookback
+        instance = get_instance(self._hass)
+        try:
+            async with asyncio.timeout(HISTORY_PRIME_TIMEOUT):
+                # The history query only sees committed rows. Wait for the
+                # recorder to flush its queue first.
+                if (commit_future := instance.async_get_commit_future()) is not None:
+                    await commit_future
+                historical_states = await instance.async_add_executor_job(
+                    ft.partial(
+                        history.get_significant_states,
+                        self._hass,
+                        start_time,
+                        entity_ids=list(anchors),
+                        include_start_time_state=True,
+                        # Mandatory: the default (True) drops attribute-only
+                        # changes for entities outside SIGNIFICANT_DOMAINS, which
+                        # are exactly the transitions attribute-based conditions
+                        # depend on.
+                        significant_changes_only=False,
+                        minimal_response=False,
+                    )
+                )
+        except (SQLAlchemyError, TimeoutError) as err:
+            # Best effort: keep the conservative anchors rather than failing.
+            _LOGGER.debug("Error priming condition durations from history: %s", err)
+            return
+
+        for entity_id, rows in historical_states.items():
+            valid_since = self._valid_since_from_history(
+                entity_id, cast(list[State], rows)
+            )
+            if valid_since is not None:
+                anchors[entity_id] = min(valid_since, anchors[entity_id])
+
+    def _valid_since_from_history(
+        self, entity_id: str, rows: Iterable[State]
+    ) -> datetime | None:
+        """Return when the current continuous run of valid states began.
+
+        Walks historical states oldest-first and returns the anchor time of the
+        first state in the most recent unbroken run of valid states, or None if
+        the most recently recorded state is not valid (e.g. the recorder lags
+        behind the live state machine).
+        """
+        # Recorder rows are LazyState objects, which skip State.__init__ and so
+        # never populate the domain/object_id that the validity checks rely on.
+        domain, object_id = split_entity_id(entity_id)
+        valid_since: datetime | None = None
+        for _state in rows:
+            _state.domain = domain
+            _state.object_id = object_id
+            if self._should_include(_state) and self.is_valid_state(_state):
+                if valid_since is None:
+                    valid_since = self._state_valid_since(_state)
+            else:
+                valid_since = None
+        return valid_since
 
     @override
     def _async_unload(self) -> None:
