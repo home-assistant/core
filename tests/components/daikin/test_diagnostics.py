@@ -29,6 +29,4 @@ async def test_diagnostics(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert (
-        await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
-    )
+    assert await get_diagnostics_for_config_entry(hass, hass_client, entry) == snapshot
