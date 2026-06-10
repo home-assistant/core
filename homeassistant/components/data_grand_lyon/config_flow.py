@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from aiohttp import ClientError, ClientResponseError
-from data_grand_lyon_ha import DataGrandLyonClient
+from data_grand_lyon_ha import DataGrandLyonClient, TclStop, find_tcl_stop_by_id
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -18,6 +18,12 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 from .const import (
     CONF_LINE,
@@ -40,13 +46,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 STEP_RECONFIGURE_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PASSWORD): str,
-    }
-)
-
-STEP_STOP_DATA_SCHEMA = vol.Schema(
-    {
-        vol.Required(CONF_LINE): str,
-        vol.Required(CONF_STOP_ID): vol.Coerce(int),
     }
 )
 
@@ -179,32 +178,125 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
 class StopSubentryFlowHandler(ConfigSubentryFlow):
     """Handle a subentry flow for adding a Data Grand Lyon stop."""
 
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        self._stops: list[TclStop] = []
+        self._selected_stop: TclStop | None = None
+        self._selected_stop_id: int | None = None
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Handle the user step to add a new stop."""
-        entry = self._get_entry()
+        """Pick a stop from the list fetched from the API, or enter one manually."""
+        if not self._stops:
+            if error := await self._async_load_stops():
+                return self.async_abort(reason=error)
 
+        errors: dict[str, str] = {}
         if user_input is not None:
-            line = user_input[CONF_LINE]
-            stop_id = user_input[CONF_STOP_ID]
-            unique_id = f"{line}_{stop_id}"
+            try:
+                stop_id = int(user_input[CONF_STOP_ID])
+            except ValueError:
+                errors[CONF_STOP_ID] = "invalid_stop_id"
+            else:
+                self._selected_stop_id = stop_id
+                self._selected_stop = find_tcl_stop_by_id(self._stops, stop_id)
+                return await self.async_step_pick_line()
 
-            for subentry in entry.subentries.values():
-                if subentry.unique_id == unique_id:
-                    return self.async_abort(reason="already_configured")
-
-            name = f"{line} - Stop {stop_id}"
-            return self.async_create_entry(
-                title=name,
-                data={CONF_LINE: line, CONF_STOP_ID: stop_id},
-                unique_id=unique_id,
+        options = [
+            SelectOptionDict(value=str(stop.id), label=_stop_label(stop))
+            for stop in sorted(
+                self._stops, key=lambda s: (s.nom, s.commune or "", s.id or 0)
             )
-
+        ]
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_STOP_ID): SelectSelector(
+                    SelectSelectorConfig(
+                        options=options,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        sort=False,
+                        custom_value=True,
+                    )
+                )
+            }
+        )
         return self.async_show_form(
             step_id="user",
-            data_schema=STEP_STOP_DATA_SCHEMA,
+            data_schema=schema,
+            errors=errors,
         )
+
+    async def async_step_pick_line(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Pick a line from the selected stop's desserte, or enter one manually."""
+        assert self._selected_stop_id is not None
+        if user_input is not None:
+            return self._create_stop(
+                line=user_input[CONF_LINE], stop_id=self._selected_stop_id
+            )
+
+        options = self._selected_stop.desserte if self._selected_stop else []
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_LINE): SelectSelector(
+                    SelectSelectorConfig(
+                        options=options,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        custom_value=True,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(step_id="pick_line", data_schema=schema)
+
+    async def _async_load_stops(self) -> str | None:
+        """Fetch TCL stops from the API, returning an error key on failure."""
+        entry = self._get_entry()
+        session = async_get_clientsession(self.hass)
+        client = DataGrandLyonClient(
+            session=session,
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+        )
+        try:
+            self._stops = await client.get_tcl_stops()
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                return "invalid_auth"
+            return "cannot_connect"
+        except ClientError, TimeoutError:
+            return "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected error fetching Data Grand Lyon TCL stops")
+            return "unknown"
+        return None
+
+    def _create_stop(self, line: str, stop_id: int) -> SubentryFlowResult:
+        """Create the stop subentry, aborting on duplicate."""
+        entry = self._get_entry()
+        unique_id = f"{line}_{stop_id}"
+        for subentry in entry.subentries.values():
+            if subentry.unique_id == unique_id:
+                return self.async_abort(reason="already_configured")
+
+        return self.async_create_entry(
+            title=f"{line} - Stop {stop_id}",
+            data={CONF_LINE: line, CONF_STOP_ID: stop_id},
+            unique_id=unique_id,
+        )
+
+
+def _stop_label(stop: TclStop) -> str:
+    label = stop.nom
+    # variable extracted to please codespell.
+    address = stop.adresse  # codespell:ignore adresse
+    if address or stop.commune:
+        label += " (" + ", ".join(filter(None, [address, stop.commune])) + ")"
+    label += f" - {stop.id}"
+
+    return label
 
 
 class VelovStationSubentryFlowHandler(ConfigSubentryFlow):
