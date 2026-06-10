@@ -103,7 +103,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.address = user_input[CONF_ADDRESS]
             self.context["title_placeholders"] = {
-                "name": PRODUCT_NAMES[self.devices[user_input[CONF_ADDRESS]].product_type]
+                "name": PRODUCT_NAMES[self.devices[user_input[CONF_ADDRESS]].product_type],
                 "address": user_input[CONF_ADDRESS],
             }
             await self.async_set_unique_id(self.address, raise_on_progress=False)
