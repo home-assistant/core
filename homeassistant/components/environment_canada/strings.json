@@ -23,33 +23,6 @@
       }
     }
   },
-  "options": {
-    "step": {
-      "init": {
-        "title": "Radar camera options",
-        "data": {
-          "radar_layer": "Radar type",
-          "radar_legend": "Show legend",
-          "radar_timestamp": "Show timestamp",
-          "radar_opacity": "Radar opacity",
-          "radar_radius": "Map radius"
-        },
-        "data_description": {
-          "radar_opacity": "Opacity of the radar layer overlay (0-100)",
-          "radar_radius": "Radius of the radar map in kilometres"
-        }
-      }
-    }
-  },
-  "selector": {
-    "radar_layer": {
-      "options": {
-        "rain": "Rain",
-        "snow": "Snow",
-        "precip_type": "Precipitation type"
-      }
-    }
-  },
   "entity": {
     "camera": {
       "radar": {
@@ -142,6 +115,33 @@
   "exceptions": {
     "not_connected": {
       "message": "Environment Canada is not connected"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "radar_layer": "Radar type",
+          "radar_legend": "Show legend",
+          "radar_opacity": "Radar opacity",
+          "radar_radius": "Map radius",
+          "radar_timestamp": "Show timestamp"
+        },
+        "data_description": {
+          "radar_opacity": "Opacity of the radar layer overlay (0-100)",
+          "radar_radius": "Radius of the radar map in kilometres"
+        },
+        "title": "Radar camera options"
+      }
+    }
+  },
+  "selector": {
+    "radar_layer": {
+      "options": {
+        "precip_type": "Precipitation type",
+        "rain": "Rain",
+        "snow": "Snow"
+      }
     }
   },
   "services": {
