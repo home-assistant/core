@@ -37,7 +37,9 @@ class RefossSensorEntityDescription(SensorEntityDescription):
 
 DEVICETYPE_SENSOR: dict[str, str] = {
     "em06": SENSOR_EM,
+    "em06p": SENSOR_EM,
     "em16": SENSOR_EM,
+    "em16p": SENSOR_EM,
 }
 
 SENSORS: dict[str, tuple[RefossSensorEntityDescription, ...]] = {
@@ -120,10 +122,14 @@ async def async_setup_entry(
             return
 
         sensor_type = DEVICETYPE_SENSOR.get(device.device_type, "")
+        if sensor_type == "":
+            _LOGGER.error("Unknown device type for device %s", device.dev_name)
 
         descriptions: tuple[RefossSensorEntityDescription, ...] = SENSORS.get(
             sensor_type, ()
         )
+        if len(descriptions) <= 0:
+            _LOGGER.error("Unknown sensor for device %s", device.dev_name)
 
         async_add_entities(
             RefossSensor(
