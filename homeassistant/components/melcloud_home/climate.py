@@ -127,6 +127,8 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
 
     _attr_translation_key = "ata_unit"
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
+    _attr_swing_modes = list(ATA_VANE_VERTICAL_TO_HA.values())
+    _attr_swing_horizontal_modes = list(ATA_VANE_HORIZONTAL_TO_HA.values())
 
     def __init__(self, coordinator: MelCloudHomeCoordinator, unit: ATAUnit) -> None:
         """Initialize the entity."""
@@ -229,19 +231,9 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
         await self.coordinator.async_request_refresh()
 
     @property
-    def swing_modes(self) -> list[str]:
-        """Return vertical vane positions as swing modes."""
-        return list(ATA_VANE_VERTICAL_TO_HA.values())
-
-    @property
     def swing_mode(self) -> str:
         """Return the current vertical vane direction."""
         return ATA_VANE_VERTICAL_TO_HA[self.unit.settings["VaneVerticalDirection"]]
-
-    @property
-    def swing_horizontal_modes(self) -> list[str]:
-        """Return horizontal vane positions as swing modes."""
-        return list(ATA_VANE_HORIZONTAL_TO_HA.values())
 
     @property
     def swing_horizontal_mode(self) -> str:
