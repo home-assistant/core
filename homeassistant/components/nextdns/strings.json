@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "This NextDNS profile is already configured.",
+      "all_profiles_configured": "All NextDNS profiles are already configured.",
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "profile_not_available": "The configured NextDNS profile is no longer available in your account. Remove the configuration and configure the integration again.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
@@ -42,6 +43,36 @@
         },
         "data_description": {
           "api_key": "The API key for your NextDNS account"
+        }
+      }
+    }
+  },
+  "config_subentries": {
+    "profile": {
+      "abort": {
+        "all_profiles_configured": "[%key:component::nextdns::config::abort::all_profiles_configured%]",
+        "already_configured": "This NextDNS profile is already configured.",
+        "entry_not_loaded": "The NextDNS configuration entry is not loaded. Please ensure it is set up correctly before adding a profile."
+      },
+      "entry_type": "NextDNS profile",
+      "error": {
+        "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+        "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+        "unknown": "[%key:common::config_flow::error::unknown%]"
+      },
+      "initiate_flow": {
+        "user": "Add profile"
+      },
+      "step": {
+        "user": {
+          "data": {
+            "profile_name": "[%key:component::nextdns::config::step::profiles::data::profile_name%]"
+          },
+          "data_description": {
+            "profile_name": "[%key:component::nextdns::config::step::profiles::data_description::profile_name%]"
+          },
+          "description": "Select the NextDNS profile you want to add.",
+          "title": "Add NextDNS profile"
         }
       }
     }

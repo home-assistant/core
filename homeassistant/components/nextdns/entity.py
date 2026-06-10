@@ -24,12 +24,18 @@ class NextDnsEntity[CoordinatorDataT: NextDnsData](
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        subentry = coordinator.config_entry.subentries[coordinator.subentry_id]
         self._attr_device_info = DeviceInfo(
             configuration_url=f"https://my.nextdns.io/{coordinator.profile_id}/setup",
             entry_type=DeviceEntryType.SERVICE,
-            identifiers={(DOMAIN, str(coordinator.profile_id))},
+            identifiers={
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_{subentry.subentry_id}",
+                )
+            },
             manufacturer="NextDNS Inc.",
-            name=coordinator.nextdns.get_profile_name(coordinator.profile_id),
+            name=subentry.title,
         )
         self._attr_unique_id = f"{coordinator.profile_id}_{description.key}"
         self.entity_description = description
