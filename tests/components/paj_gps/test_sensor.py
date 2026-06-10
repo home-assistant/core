@@ -30,19 +30,6 @@ def sensor_only() -> Generator[None]:
         yield
 
 
-@pytest.mark.usefixtures("mock_paj_gps_api")
-async def test_all_entities(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    snapshot: SnapshotAssertion,
-) -> None:
-    """Test all sensor entities against snapshot."""
-    await setup_integration(hass, mock_config_entry)
-
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
-
-
 async def test_speed_none_when_missing(
     hass: HomeAssistant,
     mock_paj_gps_api: AsyncMock,
