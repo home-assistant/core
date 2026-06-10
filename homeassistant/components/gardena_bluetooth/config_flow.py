@@ -84,9 +84,11 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self.address
+        title = self.context["title_placeholders"].title
+
         if user_input is not None:
             data = await self.async_read_data()
-            return self.async_create_entry(title=self.context["title_placeholders"].title, data=data)
+            return self.async_create_entry(title=title, data=data)
 
         self._set_confirm_only()
         return self.async_show_form(
