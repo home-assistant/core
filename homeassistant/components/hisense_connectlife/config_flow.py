@@ -38,7 +38,7 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                 else:
                     try:
                         # Re-fetch device list
-                        devices = await coordinator.api_client.async_get_devices
+                        devices = await coordinator.api_client.async_get_devices()
                         coordinator._devices = devices  # noqa: SLF001
                         # Force update state once
                         await coordinator.async_refresh()
