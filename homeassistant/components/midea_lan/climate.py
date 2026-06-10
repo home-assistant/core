@@ -162,11 +162,11 @@ class MideaClimate(MideaEntity, ClimateEntity):
         | ClimateEntityFeature.TURN_OFF
         | ClimateEntityFeature.TURN_ON
     )
-    _attr_max_temp: float = TEMPERATURE_MAX
-    _attr_min_temp: float = TEMPERATURE_MIN
-    _attr_target_temperature_high: float | None = TEMPERATURE_MAX
-    _attr_target_temperature_low: float | None = TEMPERATURE_MIN
-    _attr_temperature_unit: str = UnitOfTemperature.CELSIUS
+    _attr_max_temp = TEMPERATURE_MAX
+    _attr_min_temp = TEMPERATURE_MIN
+    _attr_target_temperature_high = TEMPERATURE_MAX
+    _attr_target_temperature_low = TEMPERATURE_MIN
+    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _zone: int | None = None
 
     def __init__(
@@ -623,11 +623,11 @@ class MideaFBClimate(MideaClimate):
     _device: MideaFBDevice
 
     _attr_hvac_modes = [HVACMode.OFF, HVACMode.HEAT]
-    _attr_max_temp: float = 35
-    _attr_min_temp: float = 5
-    _attr_target_temperature_high: float | None = 35
-    _attr_target_temperature_low: float | None = 5
-    _attr_target_temperature_step: float | None = PRECISION_WHOLE
+    _attr_max_temp = 35
+    _attr_min_temp = 5
+    _attr_target_temperature_high = 35
+    _attr_target_temperature_low = 5
+    _attr_target_temperature_step = PRECISION_WHOLE
 
     def __init__(
         self,
