@@ -1,11 +1,11 @@
 """Green Planet Energy integration for Home Assistant."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
-from homeassistant.const import ATTR_MODE, Platform
+from homeassistant.const import Platform
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
@@ -36,10 +36,6 @@ TIME_RANGE_DAY = "day"
 TIME_RANGE_NIGHT = "night"
 TIME_RANGE_FULL_DAY = "full_day"
 
-# Mode options
-MODE_CHEAPEST_WINDOW = "cheapest_window"
-MODE_PRICE_SCHEDULE = "price_schedule"
-
 SERVICE_GET_CHEAPEST_DURATION_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_DURATION): vol.All(
@@ -47,9 +43,6 @@ SERVICE_GET_CHEAPEST_DURATION_SCHEMA = vol.Schema(
         ),
         vol.Optional(ATTR_TIME_RANGE, default=TIME_RANGE_FULL_DAY): vol.In(
             [TIME_RANGE_DAY, TIME_RANGE_NIGHT, TIME_RANGE_FULL_DAY]
-        ),
-        vol.Optional(ATTR_MODE, default=MODE_CHEAPEST_WINDOW): vol.In(
-            [MODE_CHEAPEST_WINDOW, MODE_PRICE_SCHEDULE]
         ),
     }
 )
@@ -81,7 +74,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         duration = call.data[ATTR_DURATION]
         time_range = call.data[ATTR_TIME_RANGE]
-        mode = call.data[ATTR_MODE]
         data = coordinator.data
         api = coordinator.api
         now = dt_util.now()
@@ -114,12 +106,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         end_time = start_time + timedelta(hours=duration)
 
-        if mode == MODE_PRICE_SCHEDULE:
-            return _build_window_price_schedule(
-                data, time_range, start_hour_result, duration, start_time, end_time, now
-            )
-
-        # MODE_CHEAPEST_WINDOW: return summary with average price and timing
         hours_until_start = (start_time - now).total_seconds() / 3600
 
         return {
@@ -140,84 +126,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     )
 
     return True
-
-
-def _build_window_price_schedule(
-    data: dict[str, float],
-    time_range: str,
-    start_hour: int,
-    duration: float,
-    start_time: datetime,
-    end_time: datetime,
-    now: datetime,
-) -> dict:
-    """Build per-15-minute-slot prices for the cheapest window found by the API.
-
-    Iterates every 15-minute slot within [start_time, start_time + duration]
-    and looks up keys of the form ``gpe_price_HH_MM[_tomorrow]``.  15-minute
-    resolution is required by law, so every slot is expected to be present.
-    """
-    today_start = dt_util.start_of_local_day(now)
-    tomorrow_start = today_start + timedelta(days=1)
-    current_hour = now.hour
-
-    # Mirror the use_tomorrow logic from the API client.
-    use_tomorrow = time_range == TIME_RANGE_NIGHT or (
-        time_range == TIME_RANGE_DAY and (current_hour < 6 or current_hour >= 18)
-    )
-
-    # Walk in 15-minute steps for the full requested duration.
-    total_minutes = int(duration * 60)
-    step_minutes = 15
-    prices = []
-
-    for offset_minutes in range(0, total_minutes, step_minutes):
-        slot_start = start_time + timedelta(minutes=offset_minutes)
-        slot_end = slot_start + timedelta(minutes=step_minutes)
-        hour = slot_start.hour
-        minute = slot_start.minute
-
-        # Determine whether this slot's data lives in today's or tomorrow's keys.
-        if use_tomorrow:
-            if hour < 6:
-                suffix = "_tomorrow"
-                day_start = tomorrow_start
-            elif hour >= 18:
-                suffix = ""
-                day_start = today_start
-            else:
-                suffix = "_tomorrow"
-                day_start = tomorrow_start
-        else:
-            suffix = ""
-            day_start = today_start
-
-        quarter_key = f"gpe_price_{hour:02d}_{minute:02d}{suffix}"
-        price_value = data.get(quarter_key)
-
-        if price_value is None:
-            continue
-
-        # Reconstruct slot_start from day_start to guarantee correct date.
-        slot_start = day_start.replace(
-            hour=hour, minute=minute, second=0, microsecond=0
-        )
-        slot_end = slot_start + timedelta(minutes=step_minutes)
-
-        prices.append(
-            {
-                "start_time": slot_start.isoformat(),
-                "end_time": slot_end.isoformat(),
-                "price": round(price_value / 100, 4),
-            }
-        )
-
-    return {
-        "start_time": start_time.isoformat(),
-        "end_time": end_time.isoformat(),
-        "time_range": time_range,
-        "prices": prices,
-    }
 
 
 async def async_setup_entry(
