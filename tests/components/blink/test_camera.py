@@ -47,3 +47,4 @@ async def test_cant_write_raises_service_validation_error(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "cant_write"
+    assert exc_info.value.__cause__.args[0] == "disk full"
