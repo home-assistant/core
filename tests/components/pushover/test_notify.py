@@ -2,9 +2,11 @@
 
 from unittest.mock import MagicMock, patch
 
+from pushover_complete import BadAPIRequestError
 import pytest
 
 from homeassistant.components.pushover import DOMAIN
+from homeassistant.components.pushover.notify import async_get_service
 from homeassistant.core import HomeAssistant
 
 from . import MOCK_CONFIG
@@ -218,8 +220,6 @@ async def test_async_get_service_no_discovery_info(
     mock_pushover: MagicMock,
 ) -> None:
     """Test that async_get_service returns None when discovery_info is None."""
-    from homeassistant.components.pushover.notify import async_get_service
-
     result = await async_get_service(hass, {}, discovery_info=None)
     assert result is None
 
@@ -278,7 +278,9 @@ async def test_cancel_tag_not_found(
         blocking=True,
     )
 
-    await hass.services.async_call(DOMAIN, "cancel", {"tag": "nonexistent"}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, "cancel", {"tag": "nonexistent"}, blocking=True
+    )
 
     mock_cancel_receipt.assert_not_called()
 
@@ -290,8 +292,6 @@ async def test_cancel_receipt_api_error(
     mock_cancel_receipt: MagicMock,
 ) -> None:
     """Test that a BadAPIRequestError during cancel is logged and does not raise."""
-    from pushover_complete import BadAPIRequestError
-
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
