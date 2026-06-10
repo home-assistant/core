@@ -109,6 +109,9 @@ def mock_api() -> Generator[MagicMock]:
         mock_api_instance.get_current_price.side_effect = get_current_price_mock
 
         # Mock cheapest duration methods
+        # For full day (0-24), provide a default mocked return value.
+        mock_api_instance.get_cheapest_duration.return_value = (25.0, 12)
+
         # For day period (6-18), cheapest 2.5h window would be starting at hour 6
         # Use a representative mocked average value in Cent/kWh.
         mock_api_instance.get_cheapest_duration_day.return_value = (26.6, 6)
