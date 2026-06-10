@@ -19,7 +19,7 @@ async def test_mqtt_abort_if_existing_entry(
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "tasmota", context={"source": config_entries.SOURCE_MQTT}
+        DOMAIN, context={"source": config_entries.SOURCE_MQTT}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -50,7 +50,7 @@ async def test_mqtt_abort_invalid_topic(
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
@@ -64,7 +64,7 @@ async def test_mqtt_abort_invalid_topic(
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_discovery_info"
@@ -89,7 +89,7 @@ async def test_mqtt_abort_invalid_topic(
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -116,7 +116,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "tasmota", context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_MQTT}, data=discovery_info
     )
     assert result["type"] is FlowResultType.FORM
 
@@ -150,7 +150,7 @@ async def test_user_setup(
 ) -> None:
     """Test we can finish a config flow."""
     result = await hass.config_entries.flow.async_init(
-        "tasmota", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "config"
@@ -168,7 +168,7 @@ async def test_user_setup_invalid_topic_prefix(
 ) -> None:
     """Test abort on invalid discovery topic."""
     result = await hass.config_entries.flow.async_init(
-        "tasmota", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "config"
@@ -188,7 +188,7 @@ async def test_user_single_instance(
     MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        "tasmota", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"

@@ -70,13 +70,6 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
     CONF_BRIGHTNESS,
     CONF_CLIENT_ID,
     CONF_CODE,
@@ -87,6 +80,8 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_HOST,
     CONF_MODE,
+    CONF_MODEL,
+    CONF_MODEL_ID,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_OPTIONS,
@@ -181,6 +176,7 @@ from .const import (
     CONF_COMMAND_ON_TEMPLATE,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_CONFIGURATION_URL,
     CONF_CONTENT_TYPE,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TOPIC,
@@ -221,10 +217,12 @@ from .const import (
     CONF_HUMIDITY_MIN,
     CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_HUMIDITY_STATE_TOPIC,
+    CONF_HW_VERSION,
     CONF_IMAGE_ENCODING,
     CONF_IMAGE_TOPIC,
     CONF_KEEPALIVE,
     CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_MANUFACTURER,
     CONF_MAX,
     CONF_MAX_KELVIN,
     CONF_MESSAGE_EXPIRY_INTERVAL,
@@ -317,6 +315,7 @@ from .const import (
     CONF_SUPPORT_VOLUME_SET,
     CONF_SUPPORTED_COLOR_MODES,
     CONF_SUPPORTED_FEATURES,
+    CONF_SW_VERSION,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC,
     CONF_SWING_HORIZONTAL_MODE_LIST,
@@ -2451,7 +2450,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=valid_subscribe_topic,
             error="invalid_subscribe_topic",
         ),
-        CONF_VALUE_TEMPLATE: PlatformField(
+        CONF_STATE_VALUE_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
             validator=validate(cv.template),
@@ -3395,7 +3394,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=valid_subscribe_topic,
             error="invalid_subscribe_topic",
         ),
-        CONF_VALUE_TEMPLATE: PlatformField(
+        CONF_STATE_VALUE_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
             validator=validate(cv.template),
@@ -3797,17 +3796,17 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
     },
 }
 MQTT_DEVICE_PLATFORM_FIELDS = {
-    ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
-    ATTR_SW_VERSION: PlatformField(
+    CONF_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
+    CONF_SW_VERSION: PlatformField(
         selector=TEXT_SELECTOR, required=False, section="advanced_settings"
     ),
-    ATTR_HW_VERSION: PlatformField(
+    CONF_HW_VERSION: PlatformField(
         selector=TEXT_SELECTOR, required=False, section="advanced_settings"
     ),
-    ATTR_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_MANUFACTURER: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_CONFIGURATION_URL: PlatformField(
+    CONF_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
+    CONF_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
+    CONF_MANUFACTURER: PlatformField(selector=TEXT_SELECTOR, required=False),
+    CONF_CONFIGURATION_URL: PlatformField(
         selector=TEXT_SELECTOR, required=False, validator=cv.url, error="invalid_url"
     ),
     CONF_QOS: PlatformField(

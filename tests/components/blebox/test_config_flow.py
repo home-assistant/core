@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.blebox import config_flow
+from homeassistant.components.blebox.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -70,14 +71,14 @@ async def test_flow_works(
     """Test that config flow works."""
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
+        DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
@@ -107,7 +108,7 @@ async def test_flow_with_connection_failure(
         )
 
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
@@ -122,7 +123,7 @@ async def test_flow_with_api_failure(hass: HomeAssistant, product_class_mock) ->
         )
 
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
@@ -136,7 +137,7 @@ async def test_flow_with_unknown_failure(
     with product_class_mock as products_class:
         products_class.async_from_host = AsyncMock(side_effect=RuntimeError)
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
@@ -153,7 +154,7 @@ async def test_flow_with_unsupported_version(
         )
 
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
@@ -168,7 +169,7 @@ async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -
         )
 
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
         )
@@ -177,7 +178,7 @@ async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -
 
 async def test_async_setup(hass: HomeAssistant) -> None:
     """Test async_setup (for coverage)."""
-    assert await async_setup_component(hass, "blebox", {"host": "172.2.3.4"})
+    assert await async_setup_component(hass, DOMAIN, {"host": "172.2.3.4"})
     await hass.async_block_till_done()
 
 
@@ -191,7 +192,7 @@ async def test_already_configured(hass: HomeAssistant, valid_feature_mock) -> No
     await hass.async_block_till_done()
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
+        DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={config_flow.CONF_HOST: "172.2.3.4", config_flow.CONF_PORT: 80},
     )
@@ -227,7 +228,7 @@ async def test_async_remove_entry(
 async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
     """Test setup from zeroconf discovery."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
+        DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=ZeroconfServiceInfo(
             ip_address=ip_address("172.100.123.4"),
@@ -264,7 +265,7 @@ async def test_flow_with_zeroconf_when_already_configured(
         return_value=feature.product,
     ):
         result2 = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=ZeroconfServiceInfo(
                 ip_address=ip_address("172.100.123.4"),
@@ -288,7 +289,7 @@ async def test_flow_with_zeroconf_when_device_unsupported(hass: HomeAssistant) -
         side_effect=blebox_uniapi.error.UnsupportedBoxVersion,
     ):
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=ZeroconfServiceInfo(
                 ip_address=ip_address("172.100.123.4"),
@@ -314,7 +315,7 @@ async def test_flow_with_zeroconf_when_device_response_unsupported(
         side_effect=blebox_uniapi.error.UnsupportedBoxResponse,
     ):
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=ZeroconfServiceInfo(
                 ip_address=ip_address("172.100.123.4"),

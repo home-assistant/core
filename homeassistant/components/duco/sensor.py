@@ -24,7 +24,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -158,7 +158,13 @@ async def async_setup_entry(
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are
         # not deregistered by the firmware and will never appear here as stale.
-        stale_node_ids = known_nodes - coordinator.data.nodes.keys()
+        # The BOX node can transiently disappear from the API response, so keep
+        # node 1 to avoid removing the main controller device.
+        stale_node_ids = {
+            node_id
+            for node_id in known_nodes - coordinator.data.nodes.keys()
+            if node_id != BOX_NODE_ID
+        }
         if stale_node_ids:
             device_reg = dr.async_get(hass)
             mac = entry.unique_id
