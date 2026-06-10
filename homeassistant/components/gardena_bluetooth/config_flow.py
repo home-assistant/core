@@ -84,7 +84,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Confirm discovery."""
         assert self.address
-        title = self.context["title_placeholders"].title
+        title = self.context["title_placeholders"]["title"]
 
         if user_input is not None:
             data = await self.async_read_data()
