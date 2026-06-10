@@ -178,7 +178,7 @@ async def test_flow_with_auth_failure(hass: HomeAssistant, product_class_mock) -
 
 async def test_async_setup(hass: HomeAssistant) -> None:
     """Test async_setup (for coverage)."""
-    assert await async_setup_component(hass, "blebox", {"host": "172.2.3.4"})
+    assert await async_setup_component(hass, DOMAIN, {"host": "172.2.3.4"})
     await hass.async_block_till_done()
 
 

@@ -19,6 +19,7 @@ from roborock.data import (
 )
 from roborock.data.b01_q10.b01_q10_code_mappings import YXDeviceState
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
+from roborock.devices.traits.v1 import PropertiesApi
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 
 from homeassistant.components.sensor import (
@@ -63,6 +64,9 @@ class RoborockSensorDescription(SensorEntityDescription):
 
     # If it is a dock entity
     is_dock_entity: bool = False
+
+    support_fn: Callable[[PropertiesApi], bool] = lambda _: True
+    """Function to determine if sensor is supported by the device."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -131,6 +135,7 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.consumable.cleaning_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_dock_entity=True,
+        support_fn=lambda api: api.wash_towel_mode is not None,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -140,6 +145,7 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.consumable.strainer_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_dock_entity=True,
+        support_fn=lambda api: api.wash_towel_mode is not None,
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.SECONDS,
@@ -234,15 +240,14 @@ SENSOR_DESCRIPTIONS = [
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=SensorDeviceClass.TIMESTAMP,
     ),
-    # Only available on some newer models
     RoborockSensorDescription(
         key="clean_percent",
         translation_key="clean_percent",
         value_fn=lambda data: data.status.clean_percent,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=PERCENTAGE,
+        support_fn=lambda api: api.device_features.is_support_clean_estimate,
     ),
-    # Only available with more than just the basic dock
     RoborockSensorDescription(
         key="dock_error",
         translation_key="dock_error",
@@ -251,6 +256,9 @@ SENSOR_DESCRIPTIONS = [
         device_class=SensorDeviceClass.ENUM,
         options=RoborockDockErrorCode.keys(),
         is_dock_entity=True,
+        # Only available with more than just the basic dock. Dust collection
+        # mode is a proxy for any more complex dock type (e.g. Auto-empty).
+        support_fn=lambda api: api.dust_collection_mode is not None,
     ),
     RoborockSensorDescription(
         key="mop_clean_remaining",
@@ -261,6 +269,7 @@ SENSOR_DESCRIPTIONS = [
         translation_key="mop_drying_remaining_time",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_dock_entity=True,
+        support_fn=lambda api: api.device_features.is_supported_drying,
     ),
 ]
 
@@ -536,12 +545,7 @@ async def async_setup_entry(
         )
         for coordinator in coordinators.v1
         for description in SENSOR_DESCRIPTIONS
-        # Note: Currently coordinator.data is always available
-        # on startup but won't be in the future
-        if (
-            coordinator.data is not None
-            and description.value_fn(coordinator.data) is not None
-        )
+        if description.support_fn(coordinator.properties_api)
     ]
     entities.extend(RoborockCurrentRoom(coordinator) for coordinator in coordinators.v1)
     entities.extend(
