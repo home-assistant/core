@@ -1,6 +1,6 @@
 """Test Green Planet Energy setup."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 from greenplanet_energy_api import (
     GreenPlanetEnergyAPIError,
@@ -45,7 +45,7 @@ async def test_unload_entry(
 async def test_coordinator_update_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_api,
+    mock_api: MagicMock,
     side_effect: Exception,
 ) -> None:
     """Test that API errors are wrapped in UpdateFailed during data refresh."""

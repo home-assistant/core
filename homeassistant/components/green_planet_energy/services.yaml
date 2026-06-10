@@ -1,6 +1,7 @@
 # Describes the format for available Green Planet Energy services
 
 get_cheapest_duration:
+  target:
   fields:
     duration:
       required: true

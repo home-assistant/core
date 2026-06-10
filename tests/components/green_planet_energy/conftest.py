@@ -61,7 +61,7 @@ def mock_api() -> Generator[MagicMock]:
         # 15-minute resolution data for today and tomorrow.
         # Each quarter-hour slot within an hour carries a slight offset so tests
         # can distinguish individual slots:
-        #   HH:00 → base + 0.0, HH:15 → base + 0.1, HH:30 → base + 0.2, HH:45 → base + 0.3
+        #   HH:00 → base + 0.00, HH:15 → base + 0.15, HH:30 → base + 0.30, HH:45 → base + 0.45
         today_quarter_prices = {
             f"gpe_price_{hour:02d}_{minute:02d}": round(20.0 + hour + minute / 100, 2)
             for hour in range(24)
@@ -110,8 +110,7 @@ def mock_api() -> Generator[MagicMock]:
 
         # Mock cheapest duration methods
         # For day period (6-18), cheapest 2.5h window would be starting at hour 6
-        # Average of hours 6, 7, and half of 8 in Cent/kWh:
-        # (26.0 + 27.0 + 28.0 * 0.5) / 2.5 = 26.6 Cent/kWh
+        # Use a representative mocked average value in Cent/kWh.
         mock_api_instance.get_cheapest_duration_day.return_value = (26.6, 6)
 
         # For night period (18-6), cheapest 2.5h window would be early morning
