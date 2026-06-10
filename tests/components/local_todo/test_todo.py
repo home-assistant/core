@@ -811,3 +811,89 @@ async def test_susbcribe(
     assert items[0]["summary"] == "milk"
     assert items[0]["status"] == "needs_action"
     assert "uid" in items[0]
+
+
+async def test_reset_item_via_update(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test resetting a todo item via update action."""
+
+    # Create new item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Fetch item
+    items = await ws_get_items()
+    assert len(items) == 1
+
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item["status"] == "needs_action"
+    item_uid = item.pop("uid")
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+    # Complete item
+    update_time = datetime(2023, 11, 18, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item_uid, ATTR_STATUS: "completed"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    # Verify item is completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert "uid" in item
+    del item["uid"]
+    assert item == {
+        **EXPECTED_UPDATE_ITEM,
+        "status": "completed",
+        "completed": "2023-11-18T08:00:00+00:00",
+    }
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "0"
+
+    # Reset item
+    update_time = datetime(2023, 11, 18, 8, 1, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item_uid, ATTR_STATUS: "needs_action"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    # Verify item is not completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item.get("completed") is None  # automatically unset
+    assert "uid" in item
+    del item["uid"]
+    assert item == {
+        **EXPECTED_UPDATE_ITEM,
+        "status": "needs_action",
+    }
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
