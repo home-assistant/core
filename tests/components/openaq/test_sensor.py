@@ -1,6 +1,6 @@
 """Test OpenAQ sensors."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 from openaq import NotAuthorizedError, TimeoutError as OpenAQTimeoutError
 from syrupy.assertion import SnapshotAssertion
@@ -13,8 +13,6 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    EntityCategory,
-    UnitOfLength,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -36,18 +34,11 @@ async def test_sensor_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test OpenAQ sensor snapshots."""
     await async_load_entity_translations(hass)
-    entity_registry.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance_from_home_assistant",
-        disabled_by=None,
-    )
     await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
@@ -57,7 +48,7 @@ async def test_sensor_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test OpenAQ sensor entities."""
@@ -92,17 +83,6 @@ async def test_sensor_entities(
     assert state.attributes["unit_of_measurement"] == CONCENTRATION_PARTS_PER_BILLION
 
     assert entity_registry.async_get("sensor.del_norte_unsupported") is None
-    distance_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{LOCATION_ID}_distance_from_home"
-    )
-    assert distance_entity_id is not None
-    distance = entity_registry.async_get(distance_entity_id)
-    assert distance is not None
-    assert distance.capabilities is None
-    assert distance.disabled_by is er.RegistryEntryDisabler.INTEGRATION
-    assert distance.entity_category is EntityCategory.DIAGNOSTIC
-    assert distance.original_device_class is SensorDeviceClass.DISTANCE
-    assert distance.unit_of_measurement == UnitOfLength.KILOMETERS
 
     device = device_registry.async_get_device(
         identifiers={("openaq", str(LOCATION_ID))}
@@ -111,73 +91,13 @@ async def test_sensor_entities(
     assert device.name == "Del Norte"
 
 
-async def test_distance_from_home_sensor(
+async def test_missing_latest_values_create_unknown_entity(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test distance from Home Assistant sensor."""
-    hass.config.latitude = 35.1
-    hass.config.longitude = -106.6
-    await async_load_entity_translations(hass)
-    entity_registry.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance_from_home_assistant",
-        disabled_by=None,
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    distance = entity_registry.async_get(
-        "sensor.del_norte_distance_from_home_assistant"
-    )
-    assert distance is not None
-    assert distance.disabled_by is None
-    assert distance.options == {"sensor": {"suggested_display_precision": 1}}
-    assert (state := hass.states.get("sensor.del_norte_distance_from_home_assistant"))
-    assert state.state == "0.0"
-    assert state.attributes["device_class"] == SensorDeviceClass.DISTANCE
-    assert state.attributes["unit_of_measurement"] == UnitOfLength.KILOMETERS
-
-
-async def test_distance_from_home_sensor_updates(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_openaq_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test distance from Home Assistant sensor updates with coordinator data."""
-    hass.config.latitude = 35.1
-    hass.config.longitude = -106.6
-    await async_load_entity_translations(hass)
-    entity_registry.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        f"{LOCATION_ID}_distance_from_home",
-        suggested_object_id="del_norte_distance_from_home_assistant",
-        disabled_by=None,
-    )
-    await setup_integration(hass, mock_config_entry)
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    hass.config.latitude = 35.2
-
-    await coordinator.async_refresh()
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get("sensor.del_norte_distance_from_home_assistant"))
-    assert float(state.state) > 0
-
-
-async def test_missing_latest_values_are_not_created(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_openaq_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test sensors without latest values are not created."""
+    """Test sensors without latest values are created with unknown state."""
     mock_openaq_client.locations.latest.return_value = make_response(
         [make_latest(1, 8.5), make_latest(2, None)]
     )
@@ -188,12 +108,14 @@ async def test_missing_latest_values_are_not_created(
     await setup_integration(hass, mock_config_entry)
 
     assert entity_registry.async_get("sensor.del_norte_pm1") is not None
-    assert entity_registry.async_get("sensor.del_norte_pm2_5") is None
+    assert entity_registry.async_get("sensor.del_norte_pm2_5") is not None
+    assert (state := hass.states.get("sensor.del_norte_pm2_5")) is not None
+    assert state.state == STATE_UNKNOWN
 
 
 async def test_entity_unavailable_on_update_failure(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors become unavailable when refresh fails."""
@@ -210,7 +132,7 @@ async def test_entity_unavailable_on_update_failure(
 
 async def test_entity_unavailable_on_auth_failure(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors become unavailable when runtime authentication fails."""
@@ -230,7 +152,7 @@ async def test_entity_unavailable_on_auth_failure(
 
 async def test_entity_unknown_when_measurement_disappears(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensors handle measurements disappearing after setup."""

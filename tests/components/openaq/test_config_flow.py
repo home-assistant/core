@@ -2,9 +2,8 @@
 
 from collections.abc import Sequence
 from typing import cast
-from unittest.mock import AsyncMock, call
+from unittest.mock import AsyncMock, MagicMock, call
 
-import httpx
 from openaq import (
     ApiKeyMissingError,
     ForbiddenError,
@@ -12,7 +11,7 @@ from openaq import (
     NotAuthorizedError,
     RateLimitError,
 )
-from openaq.shared.exceptions import APIError
+from openaq.core.exceptions import APIError
 import pytest
 
 from homeassistant import config_entries
@@ -21,7 +20,7 @@ from homeassistant.components.openaq.config_flow import (
     OpenAQLocationFlowData,
 )
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN, MAX_RADIUS
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import (
     ATTR_LATITUDE,
     ATTR_LOCATION,
@@ -30,7 +29,7 @@ from homeassistant.const import (
     CONF_RADIUS,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult, FlowResultType
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectOptionDict, SelectSelector
 
 from .conftest import API_KEY, make_location, make_response
@@ -38,7 +37,9 @@ from .conftest import API_KEY, make_location, make_response
 from tests.common import MockConfigEntry
 
 
-def _get_select_options(result: FlowResult) -> Sequence[SelectOptionDict]:
+def _get_select_options(
+    result: config_entries.SubentryFlowResult,
+) -> Sequence[SelectOptionDict]:
     """Return select options from a flow result."""
     data_schema = result["data_schema"]
     assert data_schema is not None
@@ -47,7 +48,9 @@ def _get_select_options(result: FlowResult) -> Sequence[SelectOptionDict]:
     return cast(Sequence[SelectOptionDict], selector.config["options"])
 
 
-def _get_suggested_values(result: FlowResult) -> dict[str, object]:
+def _get_suggested_values(
+    result: config_entries.SubentryFlowResult,
+) -> dict[str, object]:
     """Return suggested values from a flow result."""
     data_schema = result["data_schema"]
     assert data_schema is not None
@@ -57,7 +60,7 @@ def _get_suggested_values(result: FlowResult) -> dict[str, object]:
 
 
 async def test_user_flow_success(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_openaq_client: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_openaq_client: MagicMock
 ) -> None:
     """Test successful API key setup."""
     result = await hass.config_entries.flow.async_init(
@@ -83,14 +86,14 @@ async def test_user_flow_success(
         (NotAuthorizedError("Invalid API key"), "invalid_auth"),
         (HTTPRateLimitError("Rate limited"), "rate_limited"),
         (APIError("API error"), "cannot_connect"),
-        (httpx.ConnectError("Connection error"), "cannot_connect"),
+        (OSError("Connection error"), "cannot_connect"),
         (Exception("Unexpected"), "unknown"),
     ],
 )
 async def test_user_flow_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -119,7 +122,7 @@ async def test_user_flow_errors(
 
 async def test_duplicate_parent_entry(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate parent setup aborts for the same API key."""
@@ -132,13 +135,13 @@ async def test_duplicate_parent_entry(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    mock_openaq_client.parameters.list.assert_not_awaited()
+    mock_openaq_client.parameters.list.assert_not_called()
 
 
 async def test_different_api_key_parent_entry(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a parent entry can be added for a different API key."""
@@ -158,7 +161,7 @@ async def test_different_api_key_parent_entry(
 
 async def test_location_subentry_map_flow(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test adding an OpenAQ location via map search."""
@@ -199,7 +202,7 @@ async def test_location_subentry_map_flow(
     assert result["title"] == "South Valley, Albuquerque"
     assert result["data"] == {CONF_LOCATION_ID: 9999}
     assert list(mock_config_entry.subentries.values())[1].unique_id == "9999"
-    mock_openaq_client.locations.list.assert_awaited_once_with(
+    mock_openaq_client.locations.list.assert_called_once_with(
         coordinates=(35.1, -106.6),
         radius=5000,
         limit=LOCATION_FETCH_LIMIT,
@@ -208,7 +211,7 @@ async def test_location_subentry_map_flow(
 
 async def test_location_subentry_map_flow_without_locality(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test adding an OpenAQ location without a separate locality."""
@@ -241,7 +244,7 @@ async def test_location_subentry_map_flow_without_locality(
 
 async def test_location_subentry_select_aborts_when_location_was_just_configured(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test select aborts if the chosen location was configured during the flow."""
@@ -268,7 +271,7 @@ async def test_location_subentry_select_aborts_when_location_was_just_configured
         title="OpenAQ",
         data={CONF_API_KEY: "other-api-key"},
         subentries_data=[
-            ConfigSubentryData(
+            ConfigSubentryDataWithId(
                 data={CONF_LOCATION_ID: 9999},
                 subentry_id="GHIJKL",
                 subentry_type="location",
@@ -289,7 +292,7 @@ async def test_location_subentry_select_aborts_when_location_was_just_configured
 
 async def test_location_subentry_map_flow_sorts_by_distance_before_sensor_count(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test map search ranks useful locations by distance before sensor count."""
@@ -342,7 +345,7 @@ async def test_location_subentry_map_flow_sorts_by_distance_before_sensor_count(
             label="Pinecliff (PM1, PM10, PM2.5) - 6.0 km",
         ),
     ]
-    assert mock_openaq_client.locations.list.await_args_list == [
+    assert mock_openaq_client.locations.list.call_args_list == [
         call(coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT),
         call(coordinates=(35.1, -106.6), radius=10000, limit=LOCATION_FETCH_LIMIT),
     ]
@@ -350,7 +353,7 @@ async def test_location_subentry_map_flow_sorts_by_distance_before_sensor_count(
 
 async def test_location_subentry_map_flow_omits_unknown_distance(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test map search omits unknown distances from location labels."""
@@ -384,7 +387,7 @@ async def test_location_subentry_map_flow_omits_unknown_distance(
 
 async def test_location_subentry_map_flow_sorts_locations_by_distance(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test map search presents locations ordered by distance."""
@@ -420,7 +423,7 @@ async def test_location_subentry_map_flow_sorts_locations_by_distance(
 
 async def test_location_subentry_map_flow_limits_to_top_ten_locations(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test map search only shows the top ten useful locations."""
@@ -471,7 +474,7 @@ async def test_location_subentry_map_flow_limits_to_top_ten_locations(
 
 async def test_location_subentry_map_flow_omits_locations_without_supported_sensors(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test map search omits locations with only unsupported sensors."""
@@ -506,7 +509,7 @@ async def test_location_subentry_map_flow_omits_locations_without_supported_sens
 
 async def test_location_subentry_map_flow_deduplicates_locations_across_radius_searches(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test map search deduplicates location IDs across radius searches."""
@@ -543,7 +546,7 @@ async def test_location_subentry_map_flow_deduplicates_locations_across_radius_s
 
 async def test_location_subentry_map_flow_expands_radius_for_useful_locations(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test map search expands the radius when nearby results are not useful."""
@@ -576,7 +579,7 @@ async def test_location_subentry_map_flow_expands_radius_for_useful_locations(
     )
 
     assert [option["value"] for option in _get_select_options(result)] == ["9999"]
-    assert mock_openaq_client.locations.list.await_args_list == [
+    assert mock_openaq_client.locations.list.call_args_list == [
         call(coordinates=(35.1, -106.6), radius=5000, limit=LOCATION_FETCH_LIMIT),
         call(coordinates=(35.1, -106.6), radius=10000, limit=LOCATION_FETCH_LIMIT),
     ]
@@ -584,7 +587,7 @@ async def test_location_subentry_map_flow_expands_radius_for_useful_locations(
 
 async def test_location_subentry_no_locations_found(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test map search with no matching OpenAQ locations."""
@@ -626,13 +629,13 @@ def test_location_select_label_without_supported_parameters() -> None:
         (HTTPRateLimitError("Rate limited"), "rate_limited"),
         (RateLimitError("Rate limited"), "rate_limited"),
         (APIError("API error"), "cannot_connect"),
-        (httpx.ConnectError("Connection error"), "cannot_connect"),
+        (OSError("Connection error"), "cannot_connect"),
         (Exception("Unexpected"), "unknown"),
     ],
 )
 async def test_location_subentry_map_flow_errors(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
     error: str,
@@ -662,7 +665,7 @@ async def test_location_subentry_map_flow_errors(
 
 async def test_location_subentry_map_flow_omits_configured_locations(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test map search omits already configured OpenAQ locations."""
@@ -695,7 +698,7 @@ async def test_location_subentry_map_flow_omits_configured_locations(
 
 async def test_duplicate_location_subentry_across_entries(
     hass: HomeAssistant,
-    mock_openaq_client: AsyncMock,
+    mock_openaq_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate OpenAQ location subentries are omitted across entries."""

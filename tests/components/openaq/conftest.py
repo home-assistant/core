@@ -3,9 +3,9 @@
 from collections.abc import Generator
 from types import SimpleNamespace
 from typing import cast
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from openaq.shared.responses import (
+from openaq.core.responses import (
     Coordinates,
     CountryBase,
     Datetime,
@@ -23,7 +23,7 @@ from openaq.shared.responses import (
 import pytest
 
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
-from homeassistant.config_entries import ConfigSubentryData
+from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, CONF_API_KEY
 
 from tests.common import MockConfigEntry
@@ -152,7 +152,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={CONF_API_KEY: API_KEY},
         unique_id=DOMAIN,
         subentries_data=[
-            ConfigSubentryData(
+            ConfigSubentryDataWithId(
                 data={CONF_LOCATION_ID: LOCATION_ID},
                 subentry_id=SUBENTRY_ID,
                 subentry_type="location",
@@ -164,7 +164,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_openaq_client() -> Generator[AsyncMock]:
+def mock_openaq_client() -> Generator[MagicMock]:
     """Mock the OpenAQ client."""
     with (
         patch(
@@ -177,14 +177,14 @@ def mock_openaq_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_init.return_value
-        client.close = AsyncMock()
+        client.close = MagicMock()
         client.parameters = SimpleNamespace()
         client.locations = SimpleNamespace()
-        client.parameters.list = AsyncMock()
-        client.locations.get = AsyncMock()
-        client.locations.list = AsyncMock()
-        client.locations.latest = AsyncMock()
-        client.locations.sensors = AsyncMock()
+        client.parameters.list = MagicMock()
+        client.locations.get = MagicMock()
+        client.locations.list = MagicMock()
+        client.locations.latest = MagicMock()
+        client.locations.sensors = MagicMock()
         client.parameters.list.return_value = make_response([])
         client.locations.get.return_value = make_response([make_location()])
         client.locations.list.return_value = make_response([make_location()])

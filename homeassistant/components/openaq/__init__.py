@@ -20,11 +20,12 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bool:
     """Set up OpenAQ from a config entry."""
     client = await async_create_openaq_client(hass, entry.data[CONF_API_KEY])
+    client_lock = asyncio.Lock()
     coordinators: dict[str, OpenAQDataUpdateCoordinator] = {}
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LOCATION):
         coordinators[subentry.subentry_id] = OpenAQDataUpdateCoordinator(
-            hass, entry, subentry, client
+            hass, entry, subentry, client, client_lock
         )
 
     try:
@@ -32,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> bo
             for coordinator in coordinators.values():
                 tg.create_task(coordinator.async_config_entry_first_refresh())
     except ExceptionGroup as err:
-        await client.close()
+        await hass.async_add_executor_job(client.close)
         if (subgroup := err.subgroup(ConfigEntryNotReady)) is not None:
             raise subgroup.exceptions[0] from err
         raise
@@ -52,5 +53,5 @@ async def async_unload_entry(hass: HomeAssistant, entry: OpenAQConfigEntry) -> b
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
     if unload_ok:
-        await entry.runtime_data.client.close()
+        await hass.async_add_executor_job(entry.runtime_data.client.close)
     return unload_ok

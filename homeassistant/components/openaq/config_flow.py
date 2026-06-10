@@ -1,12 +1,12 @@
 """Config flow for the OpenAQ integration."""
 
 from dataclasses import dataclass
+from functools import partial
 import logging
 from math import inf
 from typing import Any
 
-from openaq import AsyncOpenAQ
-from openaq.shared.responses import Location
+from openaq.core.responses import Location
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -84,11 +84,6 @@ class OpenAQLocationFlowData:
         return label
 
 
-async def _get_client(hass: HomeAssistant, api_key: str) -> AsyncOpenAQ:
-    """Return an OpenAQ client."""
-    return await async_create_openaq_client(hass, api_key)
-
-
 def _location_title(location: Location) -> str:
     """Return a display title for an OpenAQ location."""
     if location.locality and location.locality != location.name:
@@ -118,11 +113,6 @@ def _supported_parameters(location: Location) -> tuple[str, ...]:
     return tuple(sorted(parameters))
 
 
-def _location_distance(location: Location) -> float | None:
-    """Return the location distance in meters."""
-    return location.distance
-
-
 def _location_sort_key(
     location: OpenAQLocationFlowData,
 ) -> tuple[float, int, str, int]:
@@ -145,7 +135,7 @@ def _location_from_result(location: Location) -> OpenAQLocationFlowData | None:
         location_id=location.id,
         title=_location_title(location),
         supported_parameters=supported_parameters,
-        distance=_location_distance(location),
+        distance=location.distance,
     )
 
 
@@ -180,11 +170,15 @@ class OpenAQConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self._async_abort_entries_match({CONF_API_KEY: user_input[CONF_API_KEY]})
             try:
-                client = await _get_client(self.hass, user_input[CONF_API_KEY])
+                client = await async_create_openaq_client(
+                    self.hass, user_input[CONF_API_KEY]
+                )
                 try:
-                    await client.parameters.list(limit=1)
+                    await self.hass.async_add_executor_job(
+                        partial(client.parameters.list, limit=1)
+                    )
                 finally:
-                    await client.close()
+                    await self.hass.async_add_executor_job(client.close)
             except OPENAQ_AUTH_EXCEPTIONS:
                 errors["base"] = "invalid_auth"
             except OPENAQ_RATE_LIMIT_EXCEPTIONS:
@@ -230,14 +224,19 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                     MAX_RADIUS,
                 ),
             )
-            client = await _get_client(self.hass, self._get_entry().data[CONF_API_KEY])
+            client = await async_create_openaq_client(
+                self.hass, self._get_entry().data[CONF_API_KEY]
+            )
             try:
                 locations: dict[int, OpenAQLocationFlowData] = {}
                 for radius in _search_radii(max_radius):
-                    response = await client.locations.list(
-                        coordinates=coordinates,
-                        radius=radius,
-                        limit=LOCATION_FETCH_LIMIT,
+                    response = await self.hass.async_add_executor_job(
+                        partial(
+                            client.locations.list,
+                            coordinates=coordinates,
+                            radius=radius,
+                            limit=LOCATION_FETCH_LIMIT,
+                        )
                     )
                     for result_location in response.results:
                         location_data = _location_from_result(result_location)
@@ -267,7 +266,7 @@ class OpenAQLocationSubentryFlow(ConfigSubentryFlow):
                 else:
                     return await self.async_step_select()
             finally:
-                await client.close()
+                await self.hass.async_add_executor_job(client.close)
 
         return self.async_show_form(
             step_id="user",
