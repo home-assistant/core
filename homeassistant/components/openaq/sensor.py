@@ -6,7 +6,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import EntityCategory, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -15,9 +14,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, DOMAIN
 from .coordinator import OpenAQConfigEntry, OpenAQDataUpdateCoordinator
-
-DISTANCE_FROM_HOME = "distance_from_home"
-
 
 SENSOR_DESCRIPTIONS: dict[str, SensorEntityDescription] = {
     "pm1": SensorEntityDescription(
@@ -99,10 +95,9 @@ async def async_setup_entry(
         async_add_entities(
             [
                 OpenAQSensor(coordinator, SENSOR_DESCRIPTIONS[parameter])
-                for parameter in coordinator.data.measurements
+                for parameter in coordinator.data.sensor_metadata
                 if parameter in SENSOR_DESCRIPTIONS
-            ]
-            + [OpenAQDistanceSensor(coordinator)],
+            ],
             config_subentry_id=subentry_id,
         )
 
@@ -145,36 +140,9 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
     @property
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of measurement."""
-        measurement = self.coordinator.data.measurements.get(
+        metadata = self.coordinator.data.sensor_metadata.get(
             self.entity_description.key
         )
-        if measurement is None:
+        if metadata is None:
             return None
-        return measurement.unit
-
-
-class OpenAQDistanceSensor(
-    CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity
-):
-    """Representation of an OpenAQ distance sensor."""
-
-    _attr_attribution = ATTRIBUTION
-    _attr_device_class = SensorDeviceClass.DISTANCE
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_entity_registry_enabled_default = False
-    _attr_has_entity_name = True
-    _attr_native_unit_of_measurement = UnitOfLength.KILOMETERS
-    _attr_suggested_display_precision = 1
-    _attr_translation_key = DISTANCE_FROM_HOME
-
-    def __init__(self, coordinator: OpenAQDataUpdateCoordinator) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._attr_unique_id = f"{coordinator.location_id}_{DISTANCE_FROM_HOME}"
-        self._attr_device_info = _device_info(coordinator)
-
-    @property
-    def native_value(self) -> StateType:
-        """Return the distance to Home Assistant."""
-        distance_to_home = self.coordinator.data.distance_to_home
-        return None if distance_to_home is None else distance_to_home / 1000
+        return metadata.unit
