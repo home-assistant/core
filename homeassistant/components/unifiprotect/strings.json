@@ -572,7 +572,7 @@
       "detections_baby_cry": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_baby_cry::name%]"
       },
-      "detections_barking": {
+      "detections_bark": {
         "name": "[%key:component::unifiprotect::entity::binary_sensor::detections_barking::name%]"
       },
       "detections_car_alarm": {

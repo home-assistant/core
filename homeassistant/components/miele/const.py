@@ -175,6 +175,8 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     disinfecting = 285
     flex_load_active = 11047
     automatic_start = 11044
+    paused = 11052
+    cancelled = 11053
 
 
 class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):

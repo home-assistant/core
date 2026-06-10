@@ -1480,3 +1480,55 @@ KEYPAD_VISION_PRO_INFO = BluetoothServiceInfoBleak(
     connectable=True,
     tx_power=-127,
 )
+
+
+WEATHER_STATION_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="Weather Station",
+    manufacturer_data={
+        2409: b"\xaa\xbb\xcc\xdd\xee\xff\x01\x50\x06\x9a\x23\x00\x00\x00\x00\x00",
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x50\x00\x10\x53\xb0"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="Weather Station",
+        manufacturer_data={
+            2409: b"\xaa\xbb\xcc\xdd\xee\xff\x01\x50\x06\x9a\x23\x00\x00\x00\x00\x00",
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x50\x00\x10\x53\xb0"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "Weather Station"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
+CONTACT_SENSOR_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="WoContact",
+    manufacturer_data={2409: b"\xaa\xbb\xcc\xdd\xee\xff\x00\x00\x00\x00\x00\x00\x00"},
+    service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"d\x00\x64"},
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="WoContact",
+        manufacturer_data={
+            2409: b"\xaa\xbb\xcc\xdd\xee\xff\x00\x00\x00\x00\x00\x00\x00"
+        },
+        service_data={"0000fd3d-0000-1000-8000-00805f9b34fb": b"d\x00\x64"},
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "WoContact"),
+    time=0,
+    connectable=False,
+    tx_power=-127,
+)

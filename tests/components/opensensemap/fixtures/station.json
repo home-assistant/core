@@ -1,0 +1,34 @@
+{
+  "_id": "test-station-id",
+  "name": "Test Station",
+  "exposure": "outdoor",
+  "model": "homeV2EthernetFeinstaub",
+  "description": "Test fixture station",
+  "currentLocation": {
+    "coordinates": [13.0, 52.0],
+    "type": "Point",
+    "timestamp": "2024-01-01T00:00:00.000Z"
+  },
+  "sensors": [
+    {
+      "_id": "sensor-pm25",
+      "title": "PM2.5",
+      "unit": "µg/m³",
+      "sensorType": "SDS 011",
+      "lastMeasurement": {
+        "value": "5.42",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    },
+    {
+      "_id": "sensor-pm10",
+      "title": "PM10",
+      "unit": "µg/m³",
+      "sensorType": "SDS 011",
+      "lastMeasurement": {
+        "value": "9.17",
+        "createdAt": "2024-01-01T00:00:00.000Z"
+      }
+    }
+  ]
+}

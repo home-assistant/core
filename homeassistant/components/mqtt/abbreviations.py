@@ -108,6 +108,7 @@ ABBREVIATIONS = {
     "mode_stat_t": "mode_state_topic",
     "mode_stat_tpl": "mode_state_template",
     "modes": "modes",
+    "msg_exp_int": "message_expiry_interval",
     "name": "name",
     "o": "origin",
     "off_dly": "off_delay",

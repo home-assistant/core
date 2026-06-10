@@ -7,16 +7,11 @@ from google.genai.types import Part
 
 from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_CHAT_MODEL,
-    CONF_PROMPT,
-    DEFAULT_STT_PROMPT,
-    LOGGER,
-    RECOMMENDED_STT_MODEL,
-)
+from .const import CONF_CHAT_MODEL, DEFAULT_STT_PROMPT, LOGGER, RECOMMENDED_STT_MODEL
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
 

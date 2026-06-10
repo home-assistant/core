@@ -303,7 +303,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                             "wrong_username": account.username,
                         },
                     )
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     entry,
                     data_updates={CONF_TOKEN: token},
                 )
@@ -366,7 +366,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                             },
                         )
 
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         entry,
                         data_updates={CONF_TOKEN: token},
                     )
@@ -376,7 +376,7 @@ class NtfyConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_USERNAME: account.username,
                     }
                 )
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     entry,
                     data_updates={
                         CONF_USERNAME: account.username,

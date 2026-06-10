@@ -284,7 +284,7 @@ async def test_setup_entry_failure(
 
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
     assert result is False
-    assert mock_config_entry.state == state
+    assert mock_config_entry.state is state
 
 
 async def test_fetch_airos_data_auth_error(mock_airos_client: MagicMock) -> None:

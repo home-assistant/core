@@ -45,7 +45,7 @@ async def webhook_id(hass: HomeAssistant, locative_client: TestClient) -> str:
         {"internal_url": "http://example.local:8123"},
     )
     result = await hass.config_entries.flow.async_init(
-        "locative", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM, result
 

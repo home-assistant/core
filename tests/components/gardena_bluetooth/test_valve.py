@@ -26,6 +26,8 @@ from . import (
 
 from tests.common import MockConfigEntry
 
+pytestmark = pytest.mark.usefixtures("constant_advertisements")
+
 
 @pytest.fixture
 def mock_switch_chars(mock_read_char_raw):

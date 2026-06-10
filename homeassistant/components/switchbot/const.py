@@ -70,6 +70,7 @@ class SupportedModels(StrEnum):
     LOCK_VISION_PRO = "lock_vision_pro"
     LOCK_VISION = "lock_vision"
     LOCK_PRO_WIFI = "lock_pro_wifi"
+    WEATHER_STATION = "weather_station"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -134,6 +135,7 @@ NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.HUBMINI_MATTER: SupportedModels.HUBMINI_MATTER,
     SwitchbotModel.HUB3: SupportedModels.HUB3,
     SwitchbotModel.CLIMATE_PANEL: SupportedModels.CLIMATE_PANEL,
+    SwitchbotModel.WEATHER_STATION: SupportedModels.WEATHER_STATION,
 }
 
 SUPPORTED_MODEL_TYPES = (
