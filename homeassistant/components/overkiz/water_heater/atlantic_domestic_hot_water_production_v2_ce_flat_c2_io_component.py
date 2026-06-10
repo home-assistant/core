@@ -15,6 +15,7 @@ from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 from pyoverkiz.models import Command
+from pyoverkiz.types import CommandParameterValue
 
 from homeassistant.components.water_heater import (
     STATE_PERFORMANCE,
@@ -54,25 +55,19 @@ OPERATION_MODE_TO_OVERKIZ: dict[str, str] = {
 }
 
 
-def _absence_date_parameter(value: datetime) -> list[str | int | float]:
-    """Build the date parameter for the setAbsence(Start|End)Date commands.
-
-    The cast can be removed once pyOverkiz fixes the parameter type to allow dicts.
-    """
-    return cast(
-        list[str | int | float],
-        [
-            {
-                "year": value.year,
-                "month": value.month,
-                "day": value.day,
-                "hour": value.hour,
-                "minute": value.minute,
-                "second": value.second,
-                "weekday": value.weekday(),
-            }
-        ],
-    )
+def _absence_date_parameter(value: datetime) -> list[CommandParameterValue]:
+    """Build the date parameter for the setAbsence(Start|End)Date commands."""
+    return [
+        {
+            "year": value.year,
+            "month": value.month,
+            "day": value.day,
+            "hour": value.hour,
+            "minute": value.minute,
+            "second": value.second,
+            "weekday": value.weekday(),
+        }
+    ]
 
 
 class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
@@ -92,34 +87,36 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
     @property
     def min_temp(self) -> float:
         """Return the minimum temperature."""
-        if min_temp := self.device.states[
+        if min_temp := self.device.states.get(
             OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
-        ]:
+        ):
             return cast(float, min_temp.value_as_float)
         return DEFAULT_MIN_TEMP
 
     @property
     def max_temp(self) -> float:
         """Return the maximum temperature."""
-        if max_temp := self.device.states[
+        if max_temp := self.device.states.get(
             OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
-        ]:
+        ):
             return cast(float, max_temp.value_as_float)
         return DEFAULT_MAX_TEMP
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        if current_temp := self.device.states[OverkizState.IO_MIDDLE_WATER_TEMPERATURE]:
+        if current_temp := self.device.states.get(
+            OverkizState.IO_MIDDLE_WATER_TEMPERATURE
+        ):
             return current_temp.value_as_float
         return None
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        if target_temp := self.device.states[
+        if target_temp := self.device.states.get(
             OverkizState.CORE_WATER_TARGET_TEMPERATURE
-        ]:
+        ):
             return target_temp.value_as_float
         return None
 
@@ -149,12 +146,13 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on.
 
-        io:DHWAbsenceModeState is 'off', 'on', or 'prog'.
+        io:DHWAbsenceModeState is 'off', 'on', or 'prog'. A missing state is
+        treated as away mode off.
         """
-        return (
-            self.executor.select_state(OverkizState.IO_DHW_ABSENCE_MODE)
-            != OverkizCommandParam.OFF
-        )
+        absence_mode = self.executor.select_state(OverkizState.IO_DHW_ABSENCE_MODE)
+        if absence_mode is None:
+            return False
+        return absence_mode != OverkizCommandParam.OFF
 
     @property
     def current_operation(self) -> str | None:
@@ -162,7 +160,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         if self.is_boost_mode_on:
             return STATE_PERFORMANCE
 
-        if dhw_mode := self.device.states[OverkizState.IO_DHW_MODE]:
+        if dhw_mode := self.device.states.get(OverkizState.IO_DHW_MODE):
             return OVERKIZ_TO_OPERATION_MODE.get(cast(str, dhw_mode.value_as_str))
 
         return None
@@ -214,16 +212,16 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         await self.executor.async_execute_commands(
             [
                 Command(
-                    OverkizCommand.SET_ABSENCE_START_DATE,
-                    _absence_date_parameter(now),
+                    name=OverkizCommand.SET_ABSENCE_START_DATE,
+                    parameters=_absence_date_parameter(now),
                 ),
                 Command(
-                    OverkizCommand.SET_ABSENCE_END_DATE,
-                    _absence_date_parameter(end),
+                    name=OverkizCommand.SET_ABSENCE_END_DATE,
+                    parameters=_absence_date_parameter(end),
                 ),
                 Command(
-                    OverkizCommand.SET_ABSENCE_MODE,
-                    [OverkizCommandParam.PROG],
+                    name=OverkizCommand.SET_ABSENCE_MODE,
+                    parameters=[OverkizCommandParam.PROG],
                 ),
             ],
             refresh_afterwards=refresh_afterwards,
@@ -245,9 +243,12 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         """
         await self.executor.async_execute_commands(
             [
-                Command(OverkizCommand.REFRESH_BOOST_START_DATE),
-                Command(OverkizCommand.REFRESH_BOOST_END_DATE),
-                Command(OverkizCommand.SET_BOOST_MODE, [OverkizCommandParam.ON]),
+                Command(name=OverkizCommand.REFRESH_BOOST_START_DATE),
+                Command(name=OverkizCommand.REFRESH_BOOST_END_DATE),
+                Command(
+                    name=OverkizCommand.SET_BOOST_MODE,
+                    parameters=[OverkizCommandParam.ON],
+                ),
             ],
             refresh_afterwards=False,
         )

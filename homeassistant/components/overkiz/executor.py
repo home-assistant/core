@@ -128,7 +128,7 @@ class OverkizExecutor:
         """Execute multiple device commands as a single batch execution.
 
         The Overkiz API processes all commands in order within a single action group,
-        execution which is required when commands depend on each other.
+        which is required when commands depend on each other.
 
         :param refresh_afterwards: Whether to refresh the device state
             after the batch is executed. Disable it to refresh only once
@@ -138,12 +138,12 @@ class OverkizExecutor:
             return
 
         try:
-            exec_id = await self.coordinator.client.execute_commands(
-                self.device.device_url,
-                commands,
-                "Home Assistant",
+            exec_id = await self.coordinator.client.execute_action_group(
+                label="Home Assistant",
+                actions=[Action(device_url=self.device.device_url, commands=commands)],
             )
-        except BaseOverkizException as exception:
+        # Catch Overkiz exceptions to support `continue_on_error` functionality
+        except BaseOverkizError as exception:
             raise HomeAssistantError(exception) from exception
 
         self.coordinator.executions[exec_id] = {

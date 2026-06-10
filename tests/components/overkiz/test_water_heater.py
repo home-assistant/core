@@ -5,7 +5,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName, OverkizState
+from pyoverkiz.enums import OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,7 +19,7 @@ from .helpers import (
     assert_command_call,
     assert_commands_call,
     async_deliver_events,
-    build_event,
+    device_state_changed_event,
 )
 
 from tests.common import snapshot_platform
@@ -169,13 +169,13 @@ async def test_set_temperature(
         blocking=True,
     )
 
-    assert mock_client.execute_command.await_count == 2
-    first = mock_client.execute_command.await_args_list[0].args
-    second = mock_client.execute_command.await_args_list[1].args
-    assert first[0] == DHW_CE_FLAT_C2.device_url
-    assert first[1].name == "setTargetTemperature"
-    assert first[1].parameters == [55.0]
-    assert second[1].name == "refreshWaterTargetTemperature"
+    assert mock_client.execute_action_group.await_count == 2
+    first = mock_client.execute_action_group.await_args_list[0].kwargs["actions"]
+    second = mock_client.execute_action_group.await_args_list[1].kwargs["actions"]
+    assert first[0].device_url == DHW_CE_FLAT_C2.device_url
+    assert first[0].commands[0].name == "setTargetTemperature"
+    assert first[0].commands[0].parameters == [55.0]
+    assert second[0].commands[0].name == "refreshWaterTargetTemperature"
 
 
 async def test_set_operation_mode_auto(
@@ -241,8 +241,7 @@ async def test_current_operation_reports_performance_when_boost_on(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED,
+            device_state_changed_event(
                 device_url=DHW_CE_FLAT_C2.device_url,
                 device_states=[
                     {
