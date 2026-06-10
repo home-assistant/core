@@ -666,7 +666,7 @@ async def test_visible_by_default_with_user_override(
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test enabling an entity that was not enabled or not visible by default."""
+    """Test visible_by_default is respected but user hidden_by override is preserved."""
     await mqtt_mock_entry()
 
     discovery_topic = "homeassistant/sensor/bla/config"
