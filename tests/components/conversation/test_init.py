@@ -9,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import (
+    DOMAIN,
     ConversationInput,
     async_get_agent,
     async_get_chat_log,
@@ -269,7 +270,7 @@ async def test_async_handle_sentence_triggers(
 ) -> None:
     """Test handling sentence triggers with async_handle_sentence_triggers."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     assert await async_setup_component(
         hass,
@@ -311,7 +312,7 @@ async def test_async_handle_sentence_triggers(
 async def test_async_handle_intents(hass: HomeAssistant) -> None:
     """Test handling registered intents with async_handle_intents."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "conversation", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Reuse custom sentences in test config to trigger default agent.
     class OrderBeerIntentHandler(intent.IntentHandler):

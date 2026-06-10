@@ -284,6 +284,19 @@ class ESPHomeUpdateEntity(EsphomeEntity[UpdateInfo, UpdateState], UpdateEntity):
             UpdateDeviceClass, static_info.device_class
         )
 
+    def version_is_newer(self, latest_version: str, installed_version: str) -> bool:
+        """Return True if latest_version is newer than installed_version.
+
+        ESPHome project versions can carry a build suffix (e.g.
+        2025.11.5_c51f7548) that AwesomeVersion cannot parse. Without stripping
+        it the base comparison raises and the entity is forced on for every
+        build mismatch. Drop the suffix so the versions compare cleanly and we
+        only report genuinely newer firmware.
+        """
+        return super().version_is_newer(
+            latest_version.partition("_")[0], installed_version.partition("_")[0]
+        )
+
     @property
     @esphome_state_property
     def installed_version(self) -> str:
