@@ -1445,6 +1445,7 @@ class MqttEntity(
                     "but was hidden by the user before, and will remain hidden",
                     self.entity_id,
                 )
+            if hidden_by_user:
                 hidden_by: er.RegistryEntryHider | None = er.RegistryEntryHider.USER
             else:
                 hidden_by = (
