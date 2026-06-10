@@ -7,6 +7,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
+from homeassistant.components.wiz.const import DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -20,8 +21,6 @@ from . import (
     async_setup_integration,
 )
 
-DUAL_HEAD_RATIO_ENTITY_ID = "number.mock_title_dual_head_ratio"
-
 
 async def test_ratio_not_created_without_ratio(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
@@ -29,9 +28,12 @@ async def test_ratio_not_created_without_ratio(
     """Test the ratio entity is not created for lights that report no ratio."""
     await async_setup_integration(hass, bulb_type=FAKE_TURNABLE_BULB)
 
-    entity_id = DUAL_HEAD_RATIO_ENTITY_ID
-    assert entity_registry.async_get(entity_id) is None
-    assert hass.states.get(entity_id) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            NUMBER_DOMAIN, DOMAIN, f"{FAKE_MAC}_dual_head_ratio"
+        )
+        is None
+    )
 
 
 async def test_speed_operation(
@@ -64,10 +66,10 @@ async def test_ratio_operation(
     """Test changing a dual head ratio."""
     bulb, _ = await async_setup_integration(hass, bulb_type=FAKE_DUAL_HEAD_RGBWW_BULB)
     await async_push_update(hass, bulb, {"mac": FAKE_MAC})
-    entity_id = DUAL_HEAD_RATIO_ENTITY_ID
-    assert (
-        entity_registry.async_get(entity_id).unique_id == f"{FAKE_MAC}_dual_head_ratio"
+    entity_id = entity_registry.async_get_entity_id(
+        NUMBER_DOMAIN, DOMAIN, f"{FAKE_MAC}_dual_head_ratio"
     )
+    assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     await async_push_update(hass, bulb, {"mac": FAKE_MAC, "ratio": 50})
@@ -100,10 +102,10 @@ async def test_ratio_operation_without_dual_head_feature(
     await async_setup_integration(hass, wizlight=bulb)
 
     bulb.updateState.assert_called_once()
-    entity_id = DUAL_HEAD_RATIO_ENTITY_ID
-    assert (
-        entity_registry.async_get(entity_id).unique_id == f"{FAKE_MAC}_dual_head_ratio"
+    entity_id = entity_registry.async_get_entity_id(
+        NUMBER_DOMAIN, DOMAIN, f"{FAKE_MAC}_dual_head_ratio"
     )
+    assert entity_id is not None
     assert hass.states.get(entity_id).state == "50.0"
 
     await hass.services.async_call(
