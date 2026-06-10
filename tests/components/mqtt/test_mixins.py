@@ -636,11 +636,9 @@ async def test_registry_enable_not_enabled_or_visible_by_default_entity(
     assert not entry.disabled
     assert device_registry.async_get(device_id) is not None
 
-    # Mock the entry is hidden and disabled by the user
+    # Mock the entry is disabled by the user
     entity_registry.async_update_entity(
-        "sensor.test_new",
-        disabled_by=er.RegistryEntryDisabler.USER,
-        hidden_by=er.RegistryEntryHider.USER,
+        "sensor.test_new", disabled_by=er.RegistryEntryDisabler.USER
     )
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.test_new")
@@ -651,12 +649,104 @@ async def test_registry_enable_not_enabled_or_visible_by_default_entity(
     entry = entity_registry.async_get("sensor.test_new")
     assert entry is None
 
-    # Repeat the re-discovery, and assert the entity remains hidden and disabled
+    # Repeat the re-discovery, and assert the entity remains disabled
     async_fire_mqtt_message(hass, discovery_topic, config_enabled_new_entity_name)
     await hass.async_block_till_done()
     entry = entity_registry.async_get("sensor.test_new")
     assert entry is not None
     assert entry.disabled
+    assert entry.hidden is False
+    assert device_registry.async_get(device_id) is not None
+
+
+async def test_visible_by_default_with_user_override(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test enabling an entity that was not enabled or not visible by default."""
+    await mqtt_mock_entry()
+
+    discovery_topic = "homeassistant/sensor/bla/config"
+    config_visible = json.json_dumps(
+        {
+            "name": None,
+            "state_topic": "state-topic",
+            "visible_by_default": True,
+            "unique_id": "very_unique",
+            "default_entity_id": "sensor.test",
+            "device": {"identifiers": "very_unique_device", "name": "test"},
+        }
+    )
+    config_hidden = json.json_dumps(
+        {
+            "name": None,
+            "state_topic": "state-topic",
+            "visible_by_default": False,
+            "unique_id": "very_unique",
+            "default_entity_id": "sensor.test",
+            "device": {"identifiers": "very_unique_device", "name": "test"},
+        }
+    )
+
+    async_fire_mqtt_message(hass, discovery_topic, config_hidden)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is not None
+    assert not entry.disabled
+    assert entry.hidden
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
+    assert (device_id := entry.device_id)
+    assert device_registry.async_get(device_id) is not None
+
+    # Remove the entity and device
+    # At this stage no entry existed during the initialization
+    async_fire_mqtt_message(hass, discovery_topic, "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is None
+    # Assert device is cleaned up
+    assert device_registry.async_get(device_id) is None
+
+    # Rediscover the previous deleted entity and allow it to be visible
+    # but not visible by default
+    async_fire_mqtt_message(hass, discovery_topic, config_visible)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is not None
+    assert not entry.hidden
+    assert entry.hidden_by is None
+    assert device_registry.async_get(device_id) is not None
+
+    # Mock the user hides the entity
+    entity_registry.async_update_entity(
+        "sensor.test", hidden_by=er.RegistryEntryHider.USER
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Remove the entity and device,
+    # the hidden by user flag should be preserved in the deleted entities registry
+    async_fire_mqtt_message(hass, discovery_topic, "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is None
+    # Assert device is cleaned up
+    assert device_registry.async_get(device_id) is None
+
+    # Rediscover again and assert the entity remains hidden
+    # but not visible by default
+    async_fire_mqtt_message(hass, discovery_topic, config_visible)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is not None
+    assert entry.hidden
     assert entry.hidden_by is er.RegistryEntryHider.USER
     assert device_registry.async_get(device_id) is not None
 

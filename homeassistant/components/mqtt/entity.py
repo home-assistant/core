@@ -1429,11 +1429,14 @@ class MqttEntity(
             # Plan to update the entity_id based on `default_entity_id`
             # if a deleted entity was found
             self._update_registry_entity_id = self.entity_id
-
         if (
-            self._config[CONF_ENABLED_BY_DEFAULT]
-            and deleted_entry
+            deleted_entry
+            and self._config[CONF_ENABLED_BY_DEFAULT]
             and deleted_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        ) or (
+            deleted_entry
+            and self._config[CONF_VISIBLE_BY_DEFAULT]
+            and deleted_entry.hidden_by is er.RegistryEntryHider.INTEGRATION
         ):
             # Enable previous deleted entity,
             # if it was not disabled by the user.
