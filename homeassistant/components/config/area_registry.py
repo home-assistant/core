@@ -6,7 +6,7 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import area_registry as ar
+from homeassistant.helpers import area_registry as ar, label_registry as lr
 
 
 @callback
@@ -69,8 +69,14 @@ def websocket_create_area(
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
-        # Convert labels to a set
-        data["labels"] = set(data["labels"])
+        data["labels"] = labels = set(data["labels"])
+        if missing_labels := lr.async_get_missing_label_ids(hass, labels):
+            connection.send_error(
+                msg["id"],
+                "invalid_info",
+                f"Label(s) {', '.join(sorted(missing_labels))} do not exist",
+            )
+            return
 
     try:
         entry = registry.async_create(**data)
@@ -139,8 +145,18 @@ def websocket_update_area(
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
-        # Convert labels to a set
-        data["labels"] = set(data["labels"])
+        data["labels"] = labels = set(data["labels"])
+        # Only validate labels added to the area, so labels which are no
+        # longer in the label registry can still be kept or removed
+        if (area := registry.async_get_area(msg["area_id"])) and (
+            missing_labels := lr.async_get_missing_label_ids(hass, labels - area.labels)
+        ):
+            connection.send_error(
+                msg["id"],
+                "invalid_info",
+                f"Label(s) {', '.join(sorted(missing_labels))} do not exist",
+            )
+            return
 
     try:
         entry = registry.async_update(**data)

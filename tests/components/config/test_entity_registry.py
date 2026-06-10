@@ -10,7 +10,11 @@ from pytest_unordered import unordered
 from homeassistant.components.config import entity_registry
 from homeassistant.const import ATTR_ICON, EntityCategory
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    label_registry as lr,
+)
 from homeassistant.helpers.device_registry import DeviceEntryDisabler
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.entity_registry import (
@@ -607,9 +611,14 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
 
 
 async def test_update_entity(
-    hass: HomeAssistant, client: MockHAClientWebSocket, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+    label_registry: lr.LabelRegistry,
 ) -> None:
     """Test updating entity."""
+    label_registry.async_create("label1")
+    label_registry.async_create("label2")
     created = datetime.fromisoformat("2024-02-14T12:00:00.900075+00:00")
     freezer.move_to(created)
     registry = mock_registry(
@@ -997,6 +1006,86 @@ async def test_update_entity(
             "unique_id": "1234",
         },
     }
+
+
+async def test_update_entity_unknown_labels(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    label_registry: lr.LabelRegistry,
+) -> None:
+    """Test updating an entity with labels not in the label registry fails."""
+    registry = mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntryWithDefaults(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                platform="test_platform",
+            )
+        },
+    )
+    label_registry.async_create("label1")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "labels": ["label1", "missing_2", "missing_1"],
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "invalid_info"
+    assert msg["error"]["message"] == "Label(s) missing_1, missing_2 do not exist"
+    assert registry.entities["test_domain.world"].labels == set()
+
+
+@pytest.mark.parametrize(
+    ("labels", "expected_labels"),
+    [
+        pytest.param(
+            ["stale_label", "label1"],
+            {"stale_label", "label1"},
+            id="keep_stale_label",
+        ),
+        pytest.param([], set(), id="remove_stale_label"),
+    ],
+)
+async def test_update_entity_stale_labels(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    label_registry: lr.LabelRegistry,
+    labels: list[str],
+    expected_labels: set[str],
+) -> None:
+    """Test a stale label already on an entity can be kept or removed."""
+    registry = mock_registry(
+        hass,
+        {
+            "test_domain.world": RegistryEntryWithDefaults(
+                entity_id="test_domain.world",
+                unique_id="1234",
+                platform="test_platform",
+                labels={"stale_label"},  # not in the label registry
+            )
+        },
+    )
+    label_registry.async_create("label1")
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "labels": labels,
+        }
+    )
+
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    assert registry.entities["test_domain.world"].labels == expected_labels
 
 
 async def test_update_entity_require_restart(

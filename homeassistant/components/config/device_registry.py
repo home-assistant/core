@@ -9,7 +9,7 @@ from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import require_admin
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, label_registry as lr
 from homeassistant.helpers.device_registry import DeviceEntry, DeviceEntryDisabler
 
 
@@ -84,8 +84,22 @@ def websocket_update_device(
         msg["disabled_by"] = DeviceEntryDisabler(msg["disabled_by"])
 
     if "labels" in msg:
-        # Convert labels to a set
-        msg["labels"] = set(msg["labels"])
+        msg["labels"] = labels = set(msg["labels"])
+        # Only validate labels added to the device, so labels which are no
+        # longer in the label registry can still be kept or removed
+        if (device := registry.async_get(msg["device_id"])) and (
+            missing_labels := lr.async_get_missing_label_ids(
+                hass, labels - device.labels
+            )
+        ):
+            connection.send_message(
+                websocket_api.error_message(
+                    msg_id,
+                    "invalid_info",
+                    f"Label(s) {', '.join(sorted(missing_labels))} do not exist",
+                )
+            )
+            return
 
     entry = cast(DeviceEntry, registry.async_update_device(**msg))
 
