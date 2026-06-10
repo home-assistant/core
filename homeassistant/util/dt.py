@@ -128,7 +128,7 @@ def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
 
 
 def naive_now() -> dt.datetime:
-    """Get now as a naive datetime in local time.
+    """Get now as a naive datetime in system local time.
 
     The returned datetime has no tzinfo.
     Prefer the time zone aware `now` helper unless
