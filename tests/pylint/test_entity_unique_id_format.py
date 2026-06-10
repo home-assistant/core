@@ -405,7 +405,7 @@ def test_redundant_domain_literal_does_not_fire_on_word_substrings(
 
 
 @pytest.mark.parametrize(
-    ("code", "decorator"),
+    "code",
     [
         pytest.param(
             """
@@ -417,7 +417,6 @@ class MySensor(Entity):
     def unique_id(self) -> str:
         return f"{DOMAIN}_{self._key}"
 """,
-            "property",
             id="property",
         ),
         pytest.param(
@@ -431,7 +430,6 @@ class MySensor(Entity):
     def unique_id(self) -> str:
         return f"{DOMAIN}_{self._key}"
 """,
-            "cached_property",
             id="cached_property",
         ),
     ],
@@ -441,7 +439,6 @@ def test_redundant_domain_fires_in_unique_id_property(
     checker: EntityUniqueIdFormatChecker,
     tmp_path: Path,
     code: str,
-    decorator: str,
 ) -> None:
     """W7425 fires when DOMAIN is referenced in a ``unique_id`` property body."""
     integration_dir = _make_integration(tmp_path)
