@@ -1,7 +1,6 @@
 """Test the Data Grand Lyon config flow."""
 
-from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from aiohttp import ClientConnectionError, ClientResponseError
 import pytest
@@ -19,40 +18,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from .conftest import MOCK_TCL_STOPS, MOCK_VELOV_STATIONS
-
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_get_tcl_passages() -> Generator[AsyncMock]:
-    """Mock get_tcl_passages in config flow validation."""
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_passages",
-        return_value=[],
-    ) as mock:
-        yield mock
-
-
-@pytest.fixture
-def mock_get_tcl_stops() -> Generator[AsyncMock]:
-    """Mock get_tcl_stops in the stop subentry picker flow."""
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_tcl_stops",
-        return_value=MOCK_TCL_STOPS,
-    ) as mock:
-        yield mock
-
-
-@pytest.fixture
-def mock_get_velov_stations() -> Generator[AsyncMock]:
-    """Mock get_velov_stations in the Vélo'v station subentry picker flow."""
-    with patch(
-        "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient.get_velov_stations",
-        return_value=MOCK_VELOV_STATIONS,
-    ) as mock:
-        yield mock
-
 
 # Main config flow tests
 
@@ -60,7 +26,7 @@ def mock_get_velov_stations() -> Generator[AsyncMock]:
 async def test_full_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    mock_get_tcl_passages: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test we get the form and can create an entry with credentials."""
     result = await hass.config_entries.flow.async_init(
@@ -97,7 +63,7 @@ async def test_full_user_flow(
 )
 async def test_form_error_recovers(
     hass: HomeAssistant,
-    mock_get_tcl_passages: AsyncMock,
+    mock_tcl_client: AsyncMock,
     side_effect: Exception,
     error: str,
 ) -> None:
@@ -106,7 +72,7 @@ async def test_form_error_recovers(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_get_tcl_passages.side_effect = side_effect
+    mock_tcl_client.get_tcl_passages.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
@@ -116,7 +82,7 @@ async def test_form_error_recovers(
     assert result["errors"] == {"base": error}
 
     # Recover
-    mock_get_tcl_passages.side_effect = None
+    mock_tcl_client.get_tcl_passages.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
@@ -128,7 +94,7 @@ async def test_form_error_recovers(
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_passages: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test the reauth flow updates credentials on success."""
     mock_config_entry.add_to_hass(hass)
@@ -163,7 +129,7 @@ async def test_reauth_flow(
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_passages: AsyncMock,
+    mock_tcl_client: AsyncMock,
     side_effect: Exception,
     error: str,
 ) -> None:
@@ -172,7 +138,7 @@ async def test_reauth_flow_errors(
 
     result = await mock_config_entry.start_reauth_flow(hass)
 
-    mock_get_tcl_passages.side_effect = side_effect
+    mock_tcl_client.get_tcl_passages.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
@@ -182,7 +148,7 @@ async def test_reauth_flow_errors(
     assert result["step_id"] == "reauth_confirm"
     assert result["errors"] == {"base": error}
 
-    mock_get_tcl_passages.side_effect = None
+    mock_tcl_client.get_tcl_passages.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {CONF_USERNAME: "new-user", CONF_PASSWORD: "new-pass"},
@@ -199,7 +165,7 @@ async def test_reauth_flow_errors(
 async def test_form_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_passages: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test we abort if already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -220,7 +186,7 @@ async def test_form_already_configured(
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_passages: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test the reconfigure flow updates credentials and preserves subentries."""
     mock_config_entry.add_to_hass(hass)
@@ -257,7 +223,7 @@ async def test_reconfigure_flow(
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_passages: AsyncMock,
+    mock_tcl_client: AsyncMock,
     side_effect: Exception,
     error: str,
 ) -> None:
@@ -266,7 +232,7 @@ async def test_reconfigure_flow_errors(
 
     result = await mock_config_entry.start_reconfigure_flow(hass)
 
-    mock_get_tcl_passages.side_effect = side_effect
+    mock_tcl_client.get_tcl_passages.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -277,7 +243,7 @@ async def test_reconfigure_flow_errors(
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": error}
 
-    mock_get_tcl_passages.side_effect = None
+    mock_tcl_client.get_tcl_passages.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -299,7 +265,7 @@ async def test_reconfigure_flow_errors(
 async def test_stop_subentry_picker_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_stops: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test adding a stop subentry by picking a stop and a line from the lists."""
     mock_config_entry.add_to_hass(hass)
@@ -312,7 +278,7 @@ async def test_stop_subentry_picker_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert mock_get_tcl_stops.await_count == 1
+    assert mock_tcl_client.get_tcl_stops.await_count == 1
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -336,7 +302,7 @@ async def test_stop_subentry_picker_flow(
 async def test_stop_subentry_custom_value_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_stops: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test adding a stop subentry by typing a stop ID not present in the list."""
     mock_config_entry.add_to_hass(hass)
@@ -369,7 +335,7 @@ async def test_stop_subentry_custom_value_flow(
 async def test_stop_subentry_invalid_stop_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_stops: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test typing a non-numeric stop ID re-renders the form with an error."""
     mock_config_entry.add_to_hass(hass)
@@ -393,7 +359,7 @@ async def test_stop_subentry_invalid_stop_id(
 async def test_stop_subentry_picker_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_stops: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test picker stop subentry aborts if same line+stop already exists."""
     mock_config_entry.add_to_hass(hass)
@@ -437,7 +403,7 @@ async def test_stop_subentry_picker_already_configured(
 async def test_stop_subentry_picker_load_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_tcl_stops: AsyncMock,
+    mock_tcl_client: AsyncMock,
     side_effect: Exception,
     reason: str,
 ) -> None:
@@ -446,7 +412,7 @@ async def test_stop_subentry_picker_load_errors(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_get_tcl_stops.side_effect = side_effect
+    mock_tcl_client.get_tcl_stops.side_effect = side_effect
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_STOP),
@@ -464,7 +430,7 @@ async def test_stop_subentry_picker_load_errors(
 async def test_velov_station_subentry_picker_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_velov_stations: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test adding a Vélo'v station subentry by picking a station from the list."""
     mock_config_entry.add_to_hass(hass)
@@ -477,7 +443,7 @@ async def test_velov_station_subentry_picker_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
-    assert mock_get_velov_stations.await_count == 1
+    assert mock_tcl_client.get_velov_stations.await_count == 1
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
@@ -494,7 +460,7 @@ async def test_velov_station_subentry_picker_flow(
 async def test_velov_station_subentry_custom_value_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_velov_stations: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test adding a Vélo'v station subentry by typing an ID not present in the list."""
     mock_config_entry.add_to_hass(hass)
@@ -520,7 +486,7 @@ async def test_velov_station_subentry_custom_value_flow(
 async def test_velov_station_subentry_invalid_station_id(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_velov_stations: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test typing a non-numeric station ID re-renders the form with an error."""
     mock_config_entry.add_to_hass(hass)
@@ -544,7 +510,7 @@ async def test_velov_station_subentry_invalid_station_id(
 async def test_velov_station_subentry_already_configured(
     hass: HomeAssistant,
     mock_velov_config_entry: MockConfigEntry,
-    mock_get_velov_stations: AsyncMock,
+    mock_tcl_client: AsyncMock,
 ) -> None:
     """Test Vélo'v station subentry aborts if same station already exists."""
     mock_velov_config_entry.add_to_hass(hass)
@@ -585,7 +551,7 @@ async def test_velov_station_subentry_already_configured(
 async def test_velov_station_subentry_picker_load_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_get_velov_stations: AsyncMock,
+    mock_tcl_client: AsyncMock,
     side_effect: Exception,
     reason: str,
 ) -> None:
@@ -594,7 +560,7 @@ async def test_velov_station_subentry_picker_load_errors(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_get_velov_stations.side_effect = side_effect
+    mock_tcl_client.get_velov_stations.side_effect = side_effect
 
     result = await hass.config_entries.subentries.async_init(
         (mock_config_entry.entry_id, SUBENTRY_TYPE_VELOV_STATION),

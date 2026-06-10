@@ -203,10 +203,17 @@ def mock_velov_config_entry(
 
 @pytest.fixture
 def mock_tcl_client() -> Generator[AsyncMock]:
-    """Mock DataGrandLyonClient for coordinator."""
-    with patch(
-        "homeassistant.components.data_grand_lyon.DataGrandLyonClient", autospec=True
-    ) as mock_cls:
+    """Mock DataGrandLyonClient for coordinator and config flow."""
+    with (
+        patch(
+            "homeassistant.components.data_grand_lyon.DataGrandLyonClient",
+            autospec=True,
+        ) as mock_cls,
+        patch(
+            "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient",
+            new=mock_cls,
+        ),
+    ):
         client = mock_cls.return_value
         client.get_tcl_passages.return_value = MOCK_DEPARTURES
         client.get_tcl_stops.return_value = MOCK_TCL_STOPS
