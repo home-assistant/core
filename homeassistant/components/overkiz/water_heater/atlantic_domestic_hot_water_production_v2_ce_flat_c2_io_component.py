@@ -138,7 +138,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
     def is_boost_mode_on(self) -> bool:
         """Return true if boost mode is on."""
         return (
-            self.executor.select_state(OverkizState.IO_DHW_BOOST_MODE)
+            self.device.states.get_value(OverkizState.IO_DHW_BOOST_MODE)
             == OverkizCommandParam.ON
         )
 
@@ -149,7 +149,7 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         io:DHWAbsenceModeState is 'off', 'on', or 'prog'. A missing state is
         treated as away mode off.
         """
-        absence_mode = self.executor.select_state(OverkizState.IO_DHW_ABSENCE_MODE)
+        absence_mode = self.device.states.get_value(OverkizState.IO_DHW_ABSENCE_MODE)
         if absence_mode is None:
             return False
         return absence_mode != OverkizCommandParam.OFF
@@ -160,8 +160,8 @@ class AtlanticDomesticHotWaterProductionV2CEFLATC2IOComponent(
         if self.is_boost_mode_on:
             return STATE_PERFORMANCE
 
-        if dhw_mode := self.device.states.get(OverkizState.IO_DHW_MODE):
-            return OVERKIZ_TO_OPERATION_MODE.get(cast(str, dhw_mode.value_as_str))
+        if dhw_mode := self.device.states.get_value(OverkizState.IO_DHW_MODE):
+            return OVERKIZ_TO_OPERATION_MODE.get(cast(str, dhw_mode))
 
         return None
 
