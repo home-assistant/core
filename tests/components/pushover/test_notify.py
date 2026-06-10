@@ -211,3 +211,105 @@ async def test_cancel_multiple_receipts_same_tag(
     assert mock_cancel_receipt.call_count == 2
     called_receipts = {c.args[0] for c in mock_cancel_receipt.call_args_list}
     assert called_receipts == {RECEIPT_A, RECEIPT_B}
+
+
+async def test_async_get_service_no_discovery_info(
+    hass: HomeAssistant,
+    mock_pushover: MagicMock,
+) -> None:
+    """Test that async_get_service returns None when discovery_info is None."""
+    from homeassistant.components.pushover.notify import async_get_service
+
+    result = await async_get_service(hass, {}, discovery_info=None)
+    assert result is None
+
+
+async def test_cancel_no_instances(
+    hass: HomeAssistant,
+    mock_pushover: MagicMock,
+) -> None:
+    """Test cancel service when no instances are registered."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.data[DOMAIN]["services"].clear()
+
+    await hass.services.async_call(DOMAIN, "cancel", {}, blocking=True)
+
+
+async def test_cancel_empty_receipt_tags(
+    hass: HomeAssistant,
+    mock_pushover: MagicMock,
+    mock_send_message: MagicMock,
+    mock_cancel_receipt: MagicMock,
+) -> None:
+    """Test cancel when no receipts have been stored."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(DOMAIN, "cancel", {"tag": TAG_ALARM}, blocking=True)
+
+    mock_cancel_receipt.assert_not_called()
+
+
+async def test_cancel_tag_not_found(
+    hass: HomeAssistant,
+    mock_pushover: MagicMock,
+    mock_send_message_prio2: MagicMock,
+    mock_cancel_receipt: MagicMock,
+) -> None:
+    """Test cancel when no receipts match the given tag."""
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "notify",
+        "pushover",
+        {
+            "message": "Emergency!",
+            "data": {"priority": 2, "retry": 30, "expire": 3600, "tags": TAG_ALARM},
+        },
+        blocking=True,
+    )
+
+    await hass.services.async_call(DOMAIN, "cancel", {"tag": "nonexistent"}, blocking=True)
+
+    mock_cancel_receipt.assert_not_called()
+
+
+async def test_cancel_receipt_api_error(
+    hass: HomeAssistant,
+    mock_pushover: MagicMock,
+    mock_send_message_prio2: MagicMock,
+    mock_cancel_receipt: MagicMock,
+) -> None:
+    """Test that a BadAPIRequestError during cancel is logged and does not raise."""
+    from pushover_complete import BadAPIRequestError
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "notify",
+        "pushover",
+        {
+            "message": "Emergency!",
+            "data": {"priority": 2, "retry": 30, "expire": 3600, "tags": TAG_ALARM},
+        },
+        blocking=True,
+    )
+
+    mock_cancel_receipt.side_effect = BadAPIRequestError("cancel failed")
+
+    await hass.services.async_call(DOMAIN, "cancel", {"tag": TAG_ALARM}, blocking=True)
+
+    mock_cancel_receipt.assert_called_once_with(RECEIPT_A)
+    assert hass.data[DOMAIN]["services"][entry.entry_id]._receipt_tags == {}
