@@ -801,5 +801,5 @@ async def test_live_activity_cleanup_task_removes_expired_tokens(
     with patch.object(hass.data[DOMAIN][DATA_STORE], "async_save") as mock_save:
         await async_cleanup_expired_live_activity_tokens(hass)
 
-    assert "wh-test" not in hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
+    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
     mock_save.assert_called_once()
