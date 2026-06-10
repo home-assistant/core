@@ -233,7 +233,7 @@ async def async_setup_entry(
 
         for unique_id in coordinator.data.entities:
             if unique_id in coordinator.sensor_entity_list:
-                # Skipping knownTFA.me unique ID
+                # Skipping known TFA.me unique ID
                 continue
 
             try:
@@ -285,6 +285,9 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             self.uid: str = unique_id
 
             # Do not set self.entity_id: HA will do and user can edit this entity ID later
+            # Name schema created by HA with x... = Sensor ID, y... = Gateway/station ID:
+            # sensor.tfa_me_xxx_xxx_xxx_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_humidity" or
+            # sensor.tfa_me_xxx_xxx_xxx_yyyyyyyyy_MeasurementName, e.g. "sensor.tfa_me_a0f_fff_f81_05b3e4e44_humidity"
             self.host = coordinator.host
             self.name_with_station_id = coordinator.name_with_station_id
             self.gateway_id = self.coordinator.data.gateway_id
