@@ -469,14 +469,25 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate the config entry to the latest version."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
-    if entry.version == 1 and entry.minor_version == 1:
-        # This means the user has upgraded from an old unsupported version
-        return False
+    data: dict[str, Any] = dict(entry.data)
+    options: dict[str, Any] = dict(entry.options)
+
+    if entry.version == 1 and entry.minor_version < 2:
+        for key in (
+            CONF_DISCOVERY,
+            CONF_DISCOVERY_PREFIX,
+            "birth_message",
+            "will_message",
+        ):
+            if key not in data:
+                continue
+            options[key] = data.pop(key)
 
     # Bump config entry to version 2.1 from version 1.2
-    # Can be removed with HA Core 2027.1
     hass.config_entries.async_update_entry(
         entry,
+        data=data,
+        options=options,
         version=2,
         minor_version=1,
     )
