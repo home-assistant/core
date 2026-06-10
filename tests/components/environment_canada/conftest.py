@@ -9,9 +9,9 @@ import pytest
 
 from homeassistant.components.environment_canada.const import DOMAIN
 
-from tests.common import MockConfigEntry, load_fixture
-
 from . import FIXTURE_USER_INPUT
+
+from tests.common import MockConfigEntry, load_fixture
 
 
 @pytest.fixture

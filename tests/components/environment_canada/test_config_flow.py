@@ -26,9 +26,9 @@ from homeassistant.const import CONF_LANGUAGE, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from . import build_mocks, init_integration
 
-from . import FIXTURE_USER_INPUT, build_mocks, init_integration
+from tests.common import MockConfigEntry
 
 FAKE_CONFIG = {
     CONF_STATION: "123",
