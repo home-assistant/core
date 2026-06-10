@@ -1499,9 +1499,6 @@ class MqttEntity(
             entity_registry.async_update_entity(
                 self.entity_id,
                 new_entity_id=self._update_registry_entity_id,
-                hidden_by=None
-                if self._config[CONF_VISIBLE_BY_DEFAULT]
-                else er.RegistryEntryHider.INTEGRATION,
             )
             self._update_registry_entity_id = None
 
