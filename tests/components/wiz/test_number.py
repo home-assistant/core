@@ -115,3 +115,5 @@ async def test_ratio_operation_without_dual_head_feature(
         blocking=True,
     )
     bulb.set_ratio.assert_called_with(30)
+    await async_push_update(hass, bulb, {"mac": FAKE_MAC, "ratio": 30})
+    assert hass.states.get(entity_id).state == "30.0"
