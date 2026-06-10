@@ -66,6 +66,7 @@ from .const import (
     BASE_PLATFORMS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
+    KEY_DATA_LOGGING_DISABLED_REASON as DATA_LOGGING_DISABLED_REASON,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
@@ -132,6 +133,8 @@ ERROR_LOG_FILENAME = "home-assistant.log"
 ENV_DISABLE_LOG_FILE = "HA_DISABLE_LOG_FILE"
 ENV_DUPLICATE_LOG_FILE = "HA_DUPLICATE_LOG_FILE"
 ENV_SUPERVISOR = "SUPERVISOR"
+LOG_FILE_DISABLED_REASON_ENVIRONMENT = "environment"
+LOG_FILE_DISABLED_REASON_SUPERVISOR = "supervisor"
 
 # hass.data key for logging information.
 DATA_REGISTRIES_LOADED: HassKey[None] = HassKey("bootstrap_registries_loaded")
@@ -644,9 +647,11 @@ async def async_enable_logging(
     logger = logging.getLogger()
     logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
+    disabled_reason = _log_file_disabled_reason()
+
     if log_file is None:
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
-        if _is_log_file_disabled():
+        if disabled_reason:
             # Rename the default log file if it exists, since previous versions created
             # it before Supervisor disabled duplicate file logging or
             # HA_DISABLE_LOG_FILE disabled the managed log file.
@@ -673,24 +678,35 @@ async def async_enable_logging(
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
+        hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
     else:
         # Avoid exposing a stale API error-log path when this run has no managed log file.
         hass.data.pop(DATA_LOGGING, None)
+        if disabled_reason is not None:
+            hass.data[DATA_LOGGING_DISABLED_REASON] = disabled_reason
+        else:
+            hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
 
     async_activate_log_queue_handler(hass)
 
 
 def _is_log_file_disabled() -> bool:
     """Return whether the managed log file is disabled."""
+    return _log_file_disabled_reason() is not None
+
+
+def _log_file_disabled_reason() -> str | None:
+    """Return why the managed log file is disabled."""
     if ENV_SUPERVISOR in os.environ and ENV_DUPLICATE_LOG_FILE not in os.environ:
-        return True
+        return LOG_FILE_DISABLED_REASON_SUPERVISOR
 
     disable_log_file = os.environ.get(ENV_DISABLE_LOG_FILE)
     if disable_log_file is None:
-        return False
+        return None
 
     try:
-        return cv.boolean(disable_log_file)
+        if cv.boolean(disable_log_file):
+            return LOG_FILE_DISABLED_REASON_ENVIRONMENT
     except vol.Invalid:
         _LOGGER.warning(
             "Ignoring invalid %s value: %s. Expected a boolean value: "
@@ -698,7 +714,7 @@ def _is_log_file_disabled() -> bool:
             ENV_DISABLE_LOG_FILE,
             disable_log_file,
         )
-        return False
+    return None
 
 
 def _create_log_handler(

@@ -131,14 +131,28 @@ async def test_async_enable_logging(
 
 
 @pytest.mark.parametrize(
-    ("env", "log_file_count", "old_log_file_count", "data_logging"),
+    (
+        "env",
+        "log_file_count",
+        "old_log_file_count",
+        "data_logging",
+        "data_logging_disabled_reason",
+    ),
     [
-        pytest.param({"SUPERVISOR": "1"}, 0, 1, None, id="supervisor"),
+        pytest.param(
+            {"SUPERVISOR": "1"},
+            0,
+            1,
+            None,
+            "supervisor",
+            id="supervisor",
+        ),
         pytest.param(
             {"SUPERVISOR": "1", "HA_DUPLICATE_LOG_FILE": "1"},
             1,
             0,
             CONFIG_LOG_FILE,
+            None,
             id="supervisor-duplicate-log-file",
         ),
         pytest.param(
@@ -146,6 +160,7 @@ async def test_async_enable_logging(
             0,
             1,
             None,
+            "environment",
             id="disable-log-file",
         ),
         pytest.param(
@@ -153,6 +168,7 @@ async def test_async_enable_logging(
             1,
             0,
             CONFIG_LOG_FILE,
+            None,
             id="disable-log-file-false",
         ),
         pytest.param(
@@ -160,6 +176,7 @@ async def test_async_enable_logging(
             1,
             0,
             CONFIG_LOG_FILE,
+            None,
             id="disable-log-file-invalid",
         ),
     ],
@@ -171,6 +188,7 @@ async def test_async_enable_logging_supervisor(
     log_file_count: int,
     old_log_file_count: int,
     data_logging: str | None,
+    data_logging_disabled_reason: str | None,
 ) -> None:
     """Test to ensure the default managed log file can be disabled."""
 
@@ -194,6 +212,14 @@ async def test_async_enable_logging_supervisor(
         await bootstrap.async_enable_logging(hass)
         assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
         assert hass.data.get(bootstrap.DATA_LOGGING) == data_logging
+        assert (
+            hass.data.get(bootstrap.DATA_LOGGING_DISABLED_REASON)
+            == data_logging_disabled_reason
+        )
+        assert hass.config.as_dict()["logging"] == {
+            "managed_log_file": data_logging is not None,
+            "managed_log_file_disabled_reason": data_logging_disabled_reason,
+        }
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
@@ -212,6 +238,10 @@ async def test_async_enable_logging_supervisor(
         assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
         assert len(glob.glob(f"{CONFIG_LOG_FILE}.old")) == old_log_file_count
         assert hass.data.get(bootstrap.DATA_LOGGING) == data_logging
+        assert (
+            hass.data.get(bootstrap.DATA_LOGGING_DISABLED_REASON)
+            == data_logging_disabled_reason
+        )
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
 
@@ -223,6 +253,8 @@ async def test_async_enable_logging_supervisor(
         mock_async_activate_log_queue_handler.assert_called_once()
         # The log file should be created if it is explicitly specified.
         assert len(glob.glob(ARG_LOG_FILE)) > 0
+        assert bootstrap.DATA_LOGGING in hass.data
+        assert bootstrap.DATA_LOGGING_DISABLED_REASON not in hass.data
 
     cleanup_log_files()
 
