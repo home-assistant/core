@@ -404,7 +404,7 @@ jobs:
           echo "version=$(grep '^uv==' requirements.txt | cut -d'=' -f3)" >> "$GITHUB_OUTPUT"
       - name: Set up uv
         if: steps.cache-venv.outputs.cache-hit != 'true'
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
         with:
           version: ${{ steps.read-uv-version.outputs.version }}
       - name: Create Python virtual environment
