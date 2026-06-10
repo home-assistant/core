@@ -517,13 +517,19 @@ async def test_sync_time_service_error_handling(
     mock_bsblan.time.side_effect = BSBLANError("Connection failed")
 
     # Call the service - should raise HomeAssistantError
-    with pytest.raises(HomeAssistantError, match="Failed to sync time"):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "sync_time",
             {"device_id": device.id},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "sync_time_failed"
+    assert exc.value.translation_placeholders == {
+        "device_name": "BSB-LAN",
+        "error": "Connection failed",
+    }
 
 
 async def test_sync_time_service_set_time_error(
@@ -553,13 +559,19 @@ async def test_sync_time_service_set_time_error(
     mock_bsblan.set_time.side_effect = BSBLANError("Write failed")
 
     # Call the service - should raise HomeAssistantError
-    with pytest.raises(HomeAssistantError, match="Failed to sync time"):
+    with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
             "sync_time",
             {"device_id": device.id},
             blocking=True,
         )
+    assert exc.value.translation_domain == DOMAIN
+    assert exc.value.translation_key == "sync_time_failed"
+    assert exc.value.translation_placeholders == {
+        "device_name": "BSB-LAN",
+        "error": "Write failed",
+    }
 
 
 async def test_sync_time_service_entry_not_found(

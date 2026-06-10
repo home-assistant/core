@@ -744,7 +744,7 @@
           'history': 1,
           'id': 3,
           'image': 'default',
-          'name': 'Test Cover',
+          'name': 'Shutter with position and slats',
           'note': 'TestCoverDevice',
           'order': 4,
           'owner': 2,

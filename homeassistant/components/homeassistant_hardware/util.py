@@ -37,12 +37,58 @@ from .const import (
     ZIGBEE_FLASHER_ADDON_SLUG,
 )
 from .helpers import async_firmware_update_context
-from .silabs_multiprotocol_addon import (
-    WaitingAddonManager,
-    get_multiprotocol_addon_manager,
-)
 
 _LOGGER = logging.getLogger(__name__)
+
+ADDON_STATE_POLL_INTERVAL = 3
+ADDON_INFO_POLL_TIMEOUT = 15 * 60
+
+
+class WaitingAddonManager(AddonManager):
+    """Addon manager which supports waiting operations for managing an addon."""
+
+    async def async_wait_until_addon_state(self, *states: AddonState) -> None:
+        """Poll an addon's info until it is in a specific state."""
+        async with asyncio.timeout(ADDON_INFO_POLL_TIMEOUT):
+            while True:
+                try:
+                    info = await self.async_get_addon_info()
+                except AddonError:
+                    info = None
+
+                _LOGGER.debug("Waiting for addon to be in state %s: %s", states, info)
+
+                if info is not None and info.state in states:
+                    break
+
+                await asyncio.sleep(ADDON_STATE_POLL_INTERVAL)
+
+    async def async_start_addon_waiting(self) -> None:
+        """Start an add-on."""
+        await self.async_schedule_start_addon()
+        await self.async_wait_until_addon_state(AddonState.RUNNING)
+
+    async def async_install_addon_waiting(self) -> None:
+        """Install an add-on."""
+        await self.async_schedule_install_addon()
+        await self.async_wait_until_addon_state(
+            AddonState.RUNNING,
+            AddonState.NOT_RUNNING,
+        )
+
+    async def async_uninstall_addon_waiting(self) -> None:
+        """Uninstall an add-on."""
+        try:
+            info = await self.async_get_addon_info()
+        except AddonError:
+            info = None
+
+        # Do not try to uninstall an addon if it is already uninstalled
+        if info is not None and info.state == AddonState.NOT_INSTALLED:
+            return
+
+        await self.async_uninstall_addon()
+        await self.async_wait_until_addon_state(AddonState.NOT_INSTALLED)
 
 
 class ApplicationType(StrEnum):
@@ -124,7 +170,7 @@ class OwningAddon:
         except AddonError:
             return False
         else:
-            return addon_info.state == AddonState.RUNNING
+            return addon_info.state is AddonState.RUNNING
 
     @asynccontextmanager
     async def temporarily_stop(self, hass: HomeAssistant) -> AsyncGenerator[None]:
@@ -137,7 +183,7 @@ class OwningAddon:
             yield
             return
 
-        if addon_info.state != AddonState.RUNNING:
+        if addon_info.state is not AddonState.RUNNING:
             yield
             return
 
@@ -173,7 +219,7 @@ class OwningIntegration:
             yield
             return
 
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             yield
             return
 
@@ -213,7 +259,7 @@ async def get_otbr_addon_firmware_info(
     except AddonError:
         return None
 
-    if otbr_addon_info.state == AddonState.NOT_INSTALLED:
+    if otbr_addon_info.state is AddonState.NOT_INSTALLED:
         return None
 
     if (otbr_path := otbr_addon_info.options.get("device")) is None:
@@ -238,7 +284,7 @@ async def get_z2m_addon_firmware_info(
     except AddonError:
         return None
 
-    if z2m_addon_info.state == AddonState.NOT_INSTALLED:
+    if z2m_addon_info.state is AddonState.NOT_INSTALLED:
         return None
 
     serial = z2m_addon_info.options.get("serial")
@@ -279,6 +325,11 @@ async def guess_hardware_owners(
         assert otbr_addon_fw_info is not None
         device_guesses[otbr_path].append(otbr_addon_fw_info)
 
+    # Lazy import to avoid circular dependency
+    from .silabs_multiprotocol_addon import (  # noqa: PLC0415
+        get_multiprotocol_addon_manager,
+    )
+
     multipan_addon_manager = await get_multiprotocol_addon_manager(hass)
 
     try:
@@ -286,7 +337,7 @@ async def guess_hardware_owners(
     except AddonError:
         pass
     else:
-        if multipan_addon_info.state != AddonState.NOT_INSTALLED:
+        if multipan_addon_info.state is not AddonState.NOT_INSTALLED:
             multipan_path = multipan_addon_info.options.get("device")
 
             if multipan_path is not None:

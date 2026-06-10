@@ -9,7 +9,12 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfDataRate, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfDataRate,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -45,6 +50,7 @@ CALL_SENSORS: tuple[SensorEntityDescription, ...] = (
         translation_key="missed",
         native_unit_of_measurement="calls",
         state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -53,6 +59,7 @@ DISK_PARTITION_SENSORS: tuple[SensorEntityDescription, ...] = (
         key="partition_free_space",
         translation_key="partition_free_space",
         native_unit_of_measurement=PERCENTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -80,6 +87,7 @@ async def async_setup_entry(
                 native_unit_of_measurement=UnitOfTemperature.CELSIUS,
                 device_class=SensorDeviceClass.TEMPERATURE,
                 state_class=SensorStateClass.MEASUREMENT,
+                entity_category=EntityCategory.DIAGNOSTIC,
             ),
         )
         for sensor_id, sensor_name in router.sensors_temperature_names.items()

@@ -40,7 +40,7 @@ async def async_setup_entry(
     async_add_entities(
         SwitchBeeLightEntity(cast(SwitchBeeDimmer, switchbee_device), coordinator)
         for switchbee_device in coordinator.data.values()
-        if switchbee_device.type == DeviceType.Dimmer
+        if switchbee_device.type is DeviceType.Dimmer
     )
 
 

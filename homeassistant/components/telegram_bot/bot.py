@@ -39,6 +39,7 @@ from telegram.request import HTTPXRequest
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_COMMAND,
+    ATTR_DATE,
     CONF_API_KEY,
     HTTP_BASIC_AUTHENTICATION,
     HTTP_BEARER_AUTHENTICATION,
@@ -58,7 +59,6 @@ from .const import (
     ATTR_CHAT_ID,
     ATTR_CHAT_INSTANCE,
     ATTR_DATA,
-    ATTR_DATE,
     ATTR_DISABLE_NOTIF,
     ATTR_DISABLE_WEB_PREV,
     ATTR_FILE,

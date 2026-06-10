@@ -22,7 +22,6 @@ from homeassistant.components.music_assistant.config_flow import (
 )
 from homeassistant.components.music_assistant.const import (
     AUTH_SCHEMA_VERSION,
-    CONF_TOKEN,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -34,6 +33,7 @@ from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
     ConfigEntryState,
 )
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo

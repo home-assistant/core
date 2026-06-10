@@ -220,16 +220,13 @@ async def test_routing_setup(
     "homeassistant.components.knx.config_flow.GatewayScanner",
     return_value=GatewayScannerMock(),
 )
-async def test_routing_setup_advanced(
+async def test_routing_setup_with_local_ip(
     gateway_scanner_mock, hass: HomeAssistant, knx_setup
 ) -> None:
-    """Test routing setup with advanced options."""
+    """Test routing setup where user specifies a local IP."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -728,10 +725,7 @@ async def test_tunneling_setup_for_local_ip(
     """Test tunneling if only one gateway is found."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={
-            "source": config_entries.SOURCE_USER,
-            "show_advanced_options": True,
-        },
+        context={"source": config_entries.SOURCE_USER},
     )
     assert result["type"] is FlowResultType.FORM
     assert not result["errors"]
@@ -1350,7 +1344,7 @@ async def test_reconfigure_flow_secure_manual_to_keyfile(
     """Test reconfigure flow changing secure credential source."""
     mock_config_entry = MockConfigEntry(
         title="KNX",
-        domain="knx",
+        domain=DOMAIN,
         data={
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_TUNNELING_TCP_SECURE,
@@ -1455,7 +1449,7 @@ async def test_reconfigure_flow_routing(hass: HomeAssistant, knx_setup) -> None:
     """Test reconfigure flow changing routing settings."""
     mock_config_entry = MockConfigEntry(
         title="KNX",
-        domain="knx",
+        domain=DOMAIN,
         data={
             **DEFAULT_ENTRY_DATA,
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_ROUTING,
@@ -1529,7 +1523,7 @@ async def test_reconfigure_update_keyfile(hass: HomeAssistant, knx_setup) -> Non
     }
     mock_config_entry = MockConfigEntry(
         title="KNX",
-        domain="knx",
+        domain=DOMAIN,
         data=start_data,
     )
     mock_config_entry.add_to_hass(hass)
@@ -1577,7 +1571,7 @@ async def test_reconfigure_keyfile_upload(hass: HomeAssistant, knx_setup) -> Non
     }
     mock_config_entry = MockConfigEntry(
         title="KNX",
-        domain="knx",
+        domain=DOMAIN,
         data=start_data,
     )
     mock_config_entry.add_to_hass(hass)

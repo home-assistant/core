@@ -20,6 +20,8 @@ from denonavr.const import (
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
+    AvrIncompleteResponseError,
+    AvrInvalidResponseError,
     AvrNetworkError,
     AvrProcessingError,
     AvrTimoutError,
@@ -187,6 +189,17 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
                         "Denon AVR receiver at host %s responded with HTTP 403 error. "
                         "Device is unavailable. Please consider power cycling your "
                         "receiver"
+                    ),
+                    self._receiver.host,
+                )
+                self._attr_available = False
+        except AvrInvalidResponseError, AvrIncompleteResponseError:
+            available = False
+            if self.available:
+                _LOGGER.warning(
+                    (
+                        "Denon AVR receiver at host %s returned malformed response. "
+                        "Device is unavailable"
                     ),
                     self._receiver.host,
                 )

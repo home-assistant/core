@@ -2135,9 +2135,9 @@ async def test_pick_device_errors(
             {CONF_DEVICE: MAC_ADDRESS},
         )
         await hass.async_block_till_done()
-    assert result3["type"] == expected_flow
+    assert result3["type"] is expected_flow
 
-    if expected_flow != FlowResultType.ABORT:
+    if expected_flow is not FlowResultType.ABORT:
         result4 = await hass.config_entries.flow.async_configure(
             result3["flow_id"],
             user_input={

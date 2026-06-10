@@ -192,11 +192,11 @@ async def async_update_options(
     current_control_mode = fireplace.control_mode
 
     # Only update modes that actually changed
-    if new_read_mode != current_read_mode:
+    if new_read_mode is not current_read_mode:
         LOGGER.debug("Updating read mode: %s -> %s", current_read_mode, new_read_mode)
         await fireplace.set_read_mode(new_read_mode)
 
-    if new_control_mode != current_control_mode:
+    if new_control_mode is not current_control_mode:
         LOGGER.debug(
             "Updating control mode: %s -> %s", current_control_mode, new_control_mode
         )
