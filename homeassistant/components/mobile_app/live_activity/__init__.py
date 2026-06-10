@@ -111,9 +111,9 @@ def resolve_live_activity_push(
     if stored_token_valid:
         return LiveActivityPush(stored[ATTR_TOKEN], LiveActivityEvent.UPDATE, tag)
 
-    if push_to_start := registration[ATTR_APP_DATA].get(
+    if token := registration[ATTR_APP_DATA].get(
         ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN
     ):
-        return LiveActivityPush(push_to_start, LiveActivityEvent.START, tag)
+        return LiveActivityPush(token, LiveActivityEvent.START, tag)
 
     return None
