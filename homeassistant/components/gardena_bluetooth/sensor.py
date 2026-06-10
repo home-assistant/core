@@ -82,9 +82,7 @@ DESCRIPTIONS = (
         device_class=SensorDeviceClass.ENUM,
         char=Valve.activation_reason,
         get=lambda x: (
-            x.name.lower()
-            if x and isinstance(x, Valve.activation_reason.enum)
-            else None
+            x.name.lower() if isinstance(x, Valve.activation_reason.enum) else None
         ),
         options=[member.name.lower() for member in Valve.activation_reason.enum],
     ),
