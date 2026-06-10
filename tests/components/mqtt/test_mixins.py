@@ -626,7 +626,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
     assert not entry.disabled
     assert device_registry.async_get(device_id) is not None
 
-    # Mock the the entry is disabled by the user
+    # Mock the entry is disabled by the user
     entity_registry.async_update_entity(
         "sensor.test_new", disabled_by=er.RegistryEntryDisabler.USER
     )
@@ -634,10 +634,10 @@ async def test_registry_enable_not_enabled_by_default_entity(
     state = hass.states.get("sensor.test_new")
     assert state is None
     # Remove the disabled entry
-    entity_registry.async_remove(entry.id)
+    entity_registry.async_remove("sensor.test_new")
     await hass.async_block_till_done(wait_background_tasks=True)
     entry = entity_registry.async_get("sensor.test_new")
-    assert entry is not None
+    assert entry is None
 
     # Repeat the re-discovery, and assert the entity remains disabled
     async_fire_mqtt_message(hass, discovery_topic, config_enabled_new_entity_name)
