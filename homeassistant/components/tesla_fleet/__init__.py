@@ -39,6 +39,7 @@ from .coordinator import (
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
+    _stale_site_info_error,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
 
@@ -209,18 +210,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
                 continue
 
             api_energy = tesla.energySites.create(site_id)
-
-            # Tesla may keep deactivated energy sites in the products API after an
-            # old solar system is removed or replaced. Those stale sites can
-            # still return live status while the info endpoint returns an error.
-            # Probe site info before creating the live/history coordinators so a
-            # skipped site does not leave unused unload callbacks attached.
-            if (
-                setup_data
-                := await TeslaFleetEnergySiteInfoCoordinator.async_setup_data_or_skip(
-                    hass, entry, api_energy, site_id
+            info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
+                hass, entry, api_energy, product
+            )
+            try:
+                await info_coordinator.async_config_entry_first_refresh()
+            except ConfigEntryNotReady as err:
+                if (stale_err := _stale_site_info_error(err)) is None:
+                    raise
+                LOGGER.warning(
+                    "Skipping stale Tesla energy site %s because site info failed: %s",
+                    site_id,
+                    stale_err,
                 )
-            ) is None:
                 continue
 
             live_coordinator = TeslaFleetEnergySiteLiveCoordinator(
@@ -228,9 +230,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
             )
             history_coordinator = TeslaFleetEnergySiteHistoryCoordinator(
                 hass, entry, api_energy
-            )
-            info_coordinator = TeslaFleetEnergySiteInfoCoordinator(
-                hass, entry, api_energy, product, setup_data
             )
 
             await live_coordinator.async_config_entry_first_refresh()

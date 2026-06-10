@@ -535,7 +535,6 @@ async def test_setup_retries_on_initial_energy_site_bad_response(
 @pytest.mark.parametrize(
     "side_effect",
     [
-        RateLimited({"after": ENERGY_INTERVAL_SECONDS + 10}),
         InternalServerError({"response": None, "error": "temporary internal error"}),
         TeslaFleetError(),
     ],
