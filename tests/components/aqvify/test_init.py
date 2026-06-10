@@ -1,7 +1,8 @@
 """Test the Aqvify init."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
+from aiohttp import ClientResponseError
 from pyaqvify import AqvifyAuthException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -38,8 +39,9 @@ async def test_load_unload_entry(
         (None, ConfigEntryState.LOADED),
         (AqvifyAuthException, ConfigEntryState.SETUP_ERROR),
         (TimeoutError, ConfigEntryState.SETUP_RETRY),
+        (ClientResponseError(Mock(), Mock(), status=500), ConfigEntryState.SETUP_RETRY),
     ],
-    ids=["no_error", "auth_error", "timeout_error"],
+    ids=["no_error", "auth_error", "timeout_error", "communications_error"],
 )
 async def test_setup_entry_with_error(
     hass: HomeAssistant,
