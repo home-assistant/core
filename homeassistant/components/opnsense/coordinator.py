@@ -36,10 +36,10 @@ class OPNsenseRuntimeData:
 
     client: OPNsenseClient
     tracker_interfaces: list[str]
-    coordinator: OPNsenseDeviceTrackerCoordinator
+    coordinator: OPNsenseCoordinator
 
 
-class OPNsenseDeviceTrackerCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]):
+class OPNsenseCoordinator(DataUpdateCoordinator[DeviceDetailsByMAC]):
     """Coordinator for OPNsense device tracker updates."""
 
     def __init__(

@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
-from .coordinator import OPNsenseConfigEntry, OPNsenseDeviceTrackerCoordinator
+from .coordinator import OPNsenseConfigEntry, OPNsenseCoordinator
 from .types import DeviceDetails
 
 
@@ -84,9 +84,7 @@ async def async_setup_entry(
     _async_add_new_entities()
 
 
-class OPNsenseSensorEntity(
-    CoordinatorEntity[OPNsenseDeviceTrackerCoordinator], SensorEntity
-):
+class OPNsenseSensorEntity(CoordinatorEntity[OPNsenseCoordinator], SensorEntity):
     """Representation of an OPNsense sensor for one tracked device."""
 
     _attr_has_entity_name = True
@@ -94,7 +92,7 @@ class OPNsenseSensorEntity(
 
     def __init__(
         self,
-        coordinator: OPNsenseDeviceTrackerCoordinator,
+        coordinator: OPNsenseCoordinator,
         mac_address: str,
         description: OPNsenseSensorDescription,
     ) -> None:
