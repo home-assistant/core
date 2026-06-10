@@ -328,31 +328,31 @@ async def test_setup_config_ssl(
 
 
 @pytest.mark.parametrize(
-    ("mock_client", "config_ext", "path_in_kwargs"),
+    ("mock_client", "config_ext", "expected_path"),
     [
         pytest.param(
             influxdb.DEFAULT_API_VERSION,
             {CONF_PATH: "/"},
-            False,
+            None,
             id="root_path_excluded",
         ),
         pytest.param(
             influxdb.DEFAULT_API_VERSION,
             {CONF_PATH: "/custom_path"},
-            True,
+            "/custom_path",
             id="custom_path_included",
         ),
         pytest.param(
             influxdb.DEFAULT_API_VERSION,
             {},
-            False,
+            None,
             id="no_path_excluded",
         ),
     ],
     indirect=["mock_client"],
 )
 async def test_setup_config_path(
-    hass: HomeAssistant, mock_client, config_ext: dict, path_in_kwargs: bool
+    hass: HomeAssistant, mock_client, config_ext: dict, expected_path: bool
 ) -> None:
     """Test that path='/' is not passed to InfluxDBClient, but other paths are."""
     config = BASE_V1_CONFIG.copy()
@@ -364,11 +364,7 @@ async def test_setup_config_path(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    if path_in_kwargs:
-        assert CONF_PATH in mock_client.call_args.kwargs
-        assert mock_client.call_args.kwargs[CONF_PATH] == config_ext[CONF_PATH]
-    else:
-        assert CONF_PATH not in mock_client.call_args.kwargs
+    assert mock_client.call_args.kwargs.get(CONF_PATH) == expected_path
 
 
 @pytest.mark.parametrize(
