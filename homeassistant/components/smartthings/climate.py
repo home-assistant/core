@@ -458,14 +458,8 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         if operation_mode := kwargs.get(ATTR_HVAC_MODE):
             if operation_mode == HVACMode.OFF:
                 await self.async_turn_off()
-                # temperature
-                await self.execute_device_command(
-                    Capability.THERMOSTAT_COOLING_SETPOINT,
-                    Command.SET_COOLING_SETPOINT,
-                    argument=kwargs[ATTR_TEMPERATURE],
-                )
-                return
-            await self.async_set_hvac_mode(operation_mode)
+            else:
+                await self.async_set_hvac_mode(operation_mode)
         # temperature
         await self.execute_device_command(
             Capability.THERMOSTAT_COOLING_SETPOINT,
