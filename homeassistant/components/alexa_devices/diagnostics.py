@@ -12,7 +12,18 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .coordinator import AmazonConfigEntry
 
-TO_REDACT = {CONF_PASSWORD, CONF_USERNAME, CONF_NAME, "title"}
+TO_REDACT = {
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    "access_token",
+    "adp_token",
+    "device_private_key",
+    "refresh_token",
+    "store_authentication_cookie",
+    "title",
+    "website_cookies",
+}
 
 
 async def async_get_config_entry_diagnostics(
