@@ -4,7 +4,7 @@ rules:
     status: exempt
     comment: This integration does not have custom service actions.
   appropriate-polling: done
-  brands: todo
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -12,9 +12,9 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not have custom service actions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: Entities do not subscribe to external events.
@@ -38,7 +38,7 @@ rules:
   integration-owner: done
   log-when-unavailable: todo
   parallel-updates: todo
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: todo
 
   # Gold

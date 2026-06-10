@@ -388,6 +388,7 @@ FLOWS = {
         "justnimbus",
         "jvc_projector",
         "kaleidescape",
+        "karakeep",
         "keenetic_ndms2",
         "kegtron",
         "keymitt_ble",
