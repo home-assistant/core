@@ -527,13 +527,13 @@ async def test_registry_not_enabled_by_default(
     assert entry.disabled
 
 
-async def test_registry_enable_not_enabled_by_default_entity(
+async def test_registry_enable_not_enabled_or_visible_by_default_entity(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test enabling an entity that was not enabled by default."""
+    """Test enabling an entity that was not enabled or not visible by default."""
     await mqtt_mock_entry()
 
     discovery_topic = "homeassistant/sensor/bla/config"
@@ -625,7 +625,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
     assert device_registry.async_get(device_id) is None
 
     # Repeat the re-discovery, with a new entity name
-    # The entity should be visible by default now
+    # The entity should be enabled and visible by default now
     async_fire_mqtt_message(hass, discovery_topic, config_enabled_new_entity_name)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_new")
@@ -636,9 +636,11 @@ async def test_registry_enable_not_enabled_by_default_entity(
     assert not entry.disabled
     assert device_registry.async_get(device_id) is not None
 
-    # Mock the entry is disabled by the user
+    # Mock the entry is hidden and disabled by the user
     entity_registry.async_update_entity(
-        "sensor.test_new", disabled_by=er.RegistryEntryDisabler.USER
+        "sensor.test_new",
+        disabled_by=er.RegistryEntryDisabler.USER,
+        hidden_by=er.RegistryEntryHider.USER,
     )
     await hass.async_block_till_done(wait_background_tasks=True)
     state = hass.states.get("sensor.test_new")
@@ -649,12 +651,13 @@ async def test_registry_enable_not_enabled_by_default_entity(
     entry = entity_registry.async_get("sensor.test_new")
     assert entry is None
 
-    # Repeat the re-discovery, and assert the entity remains disabled
+    # Repeat the re-discovery, and assert the entity remains hidden and disabled
     async_fire_mqtt_message(hass, discovery_topic, config_enabled_new_entity_name)
     await hass.async_block_till_done()
     entry = entity_registry.async_get("sensor.test_new")
     assert entry is not None
     assert entry.disabled
+    assert entry.hidden_by is er.RegistryEntryHider.USER
     assert device_registry.async_get(device_id) is not None
 
 
@@ -687,7 +690,7 @@ async def test_registry_visible_by_default(
     mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test an entity that is visible by default or not."""
+    """Test an entity is visible with visible_by_default set or without."""
     await mqtt_mock_entry()
     state = hass.states.get("sensor.test")
     assert state is not None
