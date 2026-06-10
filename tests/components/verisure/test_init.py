@@ -24,10 +24,9 @@ from homeassistant.components.verisure.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import update_coordinator
 
 from tests.common import MockConfigEntry, async_fire_time_changed
-
-from homeassistant.helpers import update_coordinator
 
 ALARM_ENTITY_ID = "alarm_control_panel.verisure_alarm"
 

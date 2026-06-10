@@ -125,9 +125,7 @@ class VerisureDataUpdateCoordinator(DataUpdateCoordinator):
             self._rate_limit_backoff_level += 1
         return retry_after
 
-    def _raise_rate_limited(
-        self, exc: VerisureRateLimitError, context: str
-    ) -> None:
+    def _raise_rate_limited(self, exc: VerisureRateLimitError, context: str) -> None:
         """Log rate limiting and defer the next poll."""
         retry_after = self._rate_limit_retry_seconds()
         LOGGER.warning(
