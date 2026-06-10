@@ -95,7 +95,12 @@ async def _async_cancel_service_handler(service: ServiceCall) -> None:
 
     for entry_id, instance in list(instances.items()):
         _LOGGER.debug("Running cancel on entry %s (tag=%r)", entry_id, tag)
-        await service.hass.async_add_executor_job(instance.cancel_by_tag, tag)
+        try:
+            await service.hass.async_add_executor_job(instance.cancel_by_tag, tag)
+        except Exception:
+            _LOGGER.exception(
+                "Entry %s: cancel_by_tag raised an unexpected exception", entry_id
+            )
 
 
 class PushoverNotificationService(BaseNotificationService):
