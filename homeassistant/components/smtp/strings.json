@@ -70,6 +70,18 @@
       "title": "Failed to import SMTP YAML configuration"
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "timeout": "Connection timeout"
+        },
+        "data_description": {
+          "timeout": "Maximum time to wait for a response from the SMTP server before the connection attempt is aborted."
+        }
+      }
+    }
+  },
   "selector": {
     "encryption": {
       "options": {
