@@ -66,6 +66,7 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
             identifiers={(DOMAIN, address)},
             connections={(dr.CONNECTION_BLUETOOTH, address)},
             name=config_entry.title,
+            suggested_area="Garden",
         )
 
     async def async_shutdown(self) -> None:
