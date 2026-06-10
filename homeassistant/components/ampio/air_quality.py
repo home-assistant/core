@@ -71,7 +71,8 @@ class AmpioSmogQuality(AirQualityEntity):
     @property
     def unique_id(self) -> str:
         """Return unique_name."""
-        return f"ampio_smog_{self._station_id}"
+        # Legacy unique_id; migration risks disrupting existing users.
+        return f"ampio_smog_{self._station_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
     def particulate_matter_2_5(self) -> str | None:

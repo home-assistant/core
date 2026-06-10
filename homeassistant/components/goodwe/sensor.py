@@ -206,7 +206,8 @@ class InverterSensor(CoordinatorEntity[GoodweUpdateCoordinator], SensorEntity):
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
         self._attr_name = sensor.name.strip()
-        self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"
+        # Legacy unique_id; migration risks disrupting existing users.
+        self._attr_unique_id = f"{DOMAIN}-{sensor.id_}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._attr_entity_category = (
             EntityCategory.DIAGNOSTIC if sensor.id_ not in _MAIN_SENSORS else None

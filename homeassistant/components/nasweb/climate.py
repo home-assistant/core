@@ -75,7 +75,8 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         self._thermostat = nasweb_thermostat
         self._attr_available = False
         self._attr_name = nasweb_thermostat.name
-        self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"
+        # Legacy unique_id; migration risks disrupting existing users.
+        self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._thermostat.webio_serial)}
         )

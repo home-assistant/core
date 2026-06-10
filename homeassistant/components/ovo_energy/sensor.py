@@ -163,8 +163,9 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)
+        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = (
-            f"{DOMAIN}_{coordinator.client.account_id}_{description.key}"
+            f"{DOMAIN}_{coordinator.client.account_id}_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self.entity_description = description
 

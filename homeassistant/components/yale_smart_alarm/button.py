@@ -47,7 +47,8 @@ class YalePanicButton(YaleAlarmEntity, ButtonEntity):
         """Initialize the plug switch."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"yale_smart_alarm-{description.key}"
+        # Legacy unique_id; migration risks disrupting existing users.
+        self._attr_unique_id = f"yale_smart_alarm-{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     async def async_press(self) -> None:
         """Press the button."""

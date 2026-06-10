@@ -126,7 +126,8 @@ class NMBSLiveBoard(SensorEntity):
 
         unique_id = f"{self._station.id}_{self._station_from.id}_{self._station_to.id}"
         vias = "_excl_vias" if self._excl_vias else ""
-        return f"nmbs_live_{unique_id}{vias}"
+        # Legacy unique_id; migration risks disrupting existing users.
+        return f"nmbs_live_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
     def icon(self) -> str:
@@ -218,7 +219,8 @@ class NMBSSensor(SensorEntity):
         unique_id = f"{self._station_from.id}_{self._station_to.id}"
 
         vias = "_excl_vias" if self._excl_vias else ""
-        return f"nmbs_connection_{unique_id}{vias}"
+        # Legacy unique_id; migration risks disrupting existing users.
+        return f"nmbs_connection_{unique_id}{vias}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
     def name(self) -> str:

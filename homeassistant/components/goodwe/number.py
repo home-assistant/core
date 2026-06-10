@@ -124,7 +124,8 @@ class InverterNumberEntity(NumberEntity):
     ) -> None:
         """Initialize the number inverter setting entity."""
         self.entity_description = description
-        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"
+        # Legacy unique_id; migration risks disrupting existing users.
+        self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._attr_native_value = float(current_value)
         self._inverter: Inverter = inverter
