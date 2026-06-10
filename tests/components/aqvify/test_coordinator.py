@@ -17,14 +17,22 @@ from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
+EXPECTED_WATER_LEVEL = "-0.136786005"
+
 
 @pytest.mark.parametrize(
     ("exception", "last_exception", "expected_state"),
     [
-        (TimeoutError, UpdateFailed, "-0.136786005"),
-        (ClientResponseError(Mock(), Mock(), status=500), UpdateFailed, "-0.136786005"),
+        (TimeoutError, UpdateFailed, EXPECTED_WATER_LEVEL),
+        (
+            ClientResponseError(Mock(), Mock(), status=500),
+            UpdateFailed,
+            EXPECTED_WATER_LEVEL,
+        ),
         (AqvifyAuthException, ConfigEntryAuthFailed, "unavailable"),
     ],
+    ids=["timeout_error", "communications_error", "auth_error"],
 )
 async def test_coordinator_get_devices_error(
     hass: HomeAssistant,
@@ -47,7 +55,7 @@ async def test_coordinator_get_devices_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.device_1_water_level").state == STATE_UNAVAILABLE
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == STATE_UNAVAILABLE
     assert isinstance(coordinator.last_exception, last_exception)
 
     mock_aqvify_client.async_get_devices.side_effect = None
@@ -55,14 +63,18 @@ async def test_coordinator_get_devices_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.device_1_water_level").state == expected_state
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == expected_state
 
 
 @pytest.mark.parametrize(
     ("exception", "last_exception", "expected_state"),
     [
-        (TimeoutError, UpdateFailed, "-0.136786005"),
-        (ClientResponseError(Mock(), Mock(), status=500), UpdateFailed, "-0.136786005"),
+        (TimeoutError, UpdateFailed, EXPECTED_WATER_LEVEL),
+        (
+            ClientResponseError(Mock(), Mock(), status=500),
+            UpdateFailed,
+            EXPECTED_WATER_LEVEL,
+        ),
         (AqvifyAuthException, ConfigEntryAuthFailed, "unavailable"),
     ],
 )
@@ -87,7 +99,7 @@ async def test_coordinator_get_device_data_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.device_1_water_level").state == STATE_UNAVAILABLE
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == STATE_UNAVAILABLE
     assert isinstance(coordinator.last_exception, last_exception)
 
     mock_aqvify_client.async_get_device_latest_data.side_effect = None
@@ -95,4 +107,4 @@ async def test_coordinator_get_device_data_error(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("sensor.device_1_water_level").state == expected_state
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == expected_state
