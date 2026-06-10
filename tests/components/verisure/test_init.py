@@ -15,12 +15,19 @@ from verisure import (
     ResponseError,
 )
 
-from homeassistant.components.verisure.const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from homeassistant.components.verisure.const import (
+    COOKIE_REFRESH_INTERVAL,
+    DEFAULT_SCAN_INTERVAL,
+    DOMAIN,
+    RATE_LIMIT_BACKOFF,
+)
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+from homeassistant.helpers import update_coordinator
 
 ALARM_ENTITY_ID = "alarm_control_panel.verisure_alarm"
 
@@ -38,8 +45,12 @@ async def _async_setup(hass: HomeAssistant, mock_config_entry: MockConfigEntry) 
 async def _async_trigger_coordinator_update(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    *,
+    expire_cookie: bool = True,
 ) -> None:
     """Advance time to trigger a scheduled coordinator refresh."""
+    if expire_cookie:
+        freezer.tick(COOKIE_REFRESH_INTERVAL)
     freezer.tick(DEFAULT_SCAN_INTERVAL + timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -385,6 +396,90 @@ async def test_update_transient_update_cookie(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get(ALARM_ENTITY_ID).state == STATE_UNAVAILABLE
+
+
+async def test_update_rate_limit_cookie_refresh_backoff(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Rate limits during cookie refresh defer the next poll."""
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    mock_verisure.update_cookie.side_effect = RateLimitError("AUT_00021")
+
+    await _async_trigger_coordinator_update(hass, freezer)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert coordinator.last_update_success is False
+    assert hass.states.get(ALARM_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert isinstance(coordinator.last_exception, update_coordinator.UpdateFailed)
+    assert coordinator.last_exception.retry_after == RATE_LIMIT_BACKOFF[0].total_seconds()
+
+
+async def test_update_rate_limit_backoff_escalates(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Repeated rate limits increase the backoff delay."""
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    mock_verisure.update_cookie.side_effect = RateLimitError("AUT_00021")
+
+    await _async_trigger_coordinator_update(hass, freezer)
+    assert coordinator.last_exception.retry_after == RATE_LIMIT_BACKOFF[0].total_seconds()
+
+    freezer.tick(RATE_LIMIT_BACKOFF[0] + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator.last_exception.retry_after == RATE_LIMIT_BACKOFF[1].total_seconds()
+
+
+async def test_update_rate_limit_backoff_resets_on_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Successful updates reset rate-limit backoff."""
+    await _async_setup(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    mock_verisure.update_cookie.side_effect = RateLimitError("AUT_00021")
+
+    await _async_trigger_coordinator_update(hass, freezer)
+    assert coordinator._rate_limit_backoff_level == 1
+
+    mock_verisure.update_cookie.side_effect = None
+    freezer.tick(RATE_LIMIT_BACKOFF[0] + timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert coordinator._rate_limit_backoff_level == 0
+    assert hass.states.get(ALARM_ENTITY_ID).state == "disarmed"
+
+
+async def test_update_skips_cookie_refresh_when_recent(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_verisure: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Cookie refresh is skipped when the session cookie is still fresh."""
+    await _async_setup(hass, mock_config_entry)
+    mock_verisure.update_cookie.reset_mock()
+
+    await _async_trigger_coordinator_update(hass, freezer, expire_cookie=False)
+
+    mock_verisure.update_cookie.assert_not_called()
+    assert hass.states.get(ALARM_ENTITY_ID).state == "disarmed"
+
+    await _async_trigger_coordinator_update(hass, freezer)
+
+    mock_verisure.update_cookie.assert_called_once()
 
 
 async def test_update_session_refresh_cookie_read_success(
