@@ -48,25 +48,6 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_async_setup_entry_v3_requires_token_and_key(
-    hass: HomeAssistant,
-) -> None:
-    """Test V3 setup fails when token/key are missing."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_DEVICE_ID: 123,
-            CONF_IP_ADDRESS: "1.1.1.1",
-            CONF_PORT: 6444,
-            CONF_MODEL: "m",
-            CONF_PROTOCOL: ProtocolVersion.V3,
-        },
-    )
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    assert entry.state is ConfigEntryState.SETUP_ERROR
-
-
 async def test_async_setup_entry_paths(hass: HomeAssistant) -> None:
     """Test async_setup_entry for success and no-device return."""
     entry = MockConfigEntry(domain=DOMAIN, data=_ENTRY_DATA)

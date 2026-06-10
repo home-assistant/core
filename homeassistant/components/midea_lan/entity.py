@@ -68,15 +68,6 @@ class MideaEntity(Entity):
 
     def update_state(self, status: Any) -> None:
         """Update entity state."""
-        if not self.hass:
-            _LOGGER.debug(
-                "MideaEntity update_state for %s [%s] with status %s: HASS is None",
-                self.name,
-                type(self),
-                status,
-            )
-            return
-
         if self.hass.is_stopping:
             _LOGGER.debug(
                 "MideaEntity update_state for %s [%s] with status %s: HASS is stopping",

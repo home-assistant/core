@@ -20,9 +20,10 @@ def test_midea_entity_basics_and_update_state() -> None:
     assert ent.device_info["manufacturer"] == "Midea"
 
     ent.schedule_update_ha_state = MagicMock()
-    ent.hass = None
+    ent.hass = MagicMock(is_stopping=False)
     ent.update_state({"legacy": 1})
-    ent.schedule_update_ha_state.assert_not_called()
+    ent.schedule_update_ha_state.assert_called_once()
+    ent.schedule_update_ha_state.reset_mock()
 
     ent.hass = MagicMock(is_stopping=True)
     ent.update_state({"legacy": 1})

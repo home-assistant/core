@@ -73,7 +73,7 @@ type MideaClimateDevice = (
 class MideaClimateEntityDescription(ClimateEntityDescription):
     """Description for a Midea climate entity."""
 
-    model: list[int]
+    model: list[DeviceType]
     zone: int | None = None
 
 
@@ -256,7 +256,6 @@ class MideaClimate(MideaEntity, ClimateEntity):
     def set_preset_mode(self, preset_mode: str) -> None:
         """Midea Climate set preset mode."""
         old_mode = self.preset_mode
-        preset_mode = preset_mode.lower()
         old_attr = _PRESET_TO_ATTR.get(old_mode) if isinstance(old_mode, str) else None
         if new_attr := _PRESET_TO_ATTR.get(preset_mode):
             self._device.set_attribute(attr=new_attr, value=True)
@@ -331,6 +330,9 @@ class MideaACClimate(MideaClimate):
             CONF_SENSORS in config_entry.options
             and "indoor_humidity" in config_entry.options[CONF_SENSORS]
         )
+        self._attr_target_temperature_step = float(
+            PRECISION_WHOLE if self._device.temperature_step == 1 else PRECISION_HALVES,
+        )
 
     @property
     def fan_mode(self) -> str:
@@ -342,13 +344,6 @@ class MideaACClimate(MideaClimate):
             if fan_speed > threshold:
                 return str(mode)
         return str(FAN_SILENT)
-
-    @property
-    def target_temperature_step(self) -> float:
-        """Midea AC Climate target temperature step."""
-        return float(
-            PRECISION_WHOLE if self._device.temperature_step == 1 else PRECISION_HALVES,
-        )
 
     @property
     def swing_mode(self) -> str:
@@ -374,9 +369,8 @@ class MideaACClimate(MideaClimate):
 
     def set_fan_mode(self, fan_mode: str) -> None:
         """Midea AC Climate set fan mode."""
-        fan_speed = self._fan_speeds.get(fan_mode)
-        if fan_speed:
-            self._device.set_attribute(attr=ACAttributes.fan_speed, value=fan_speed)
+        fan_speed = self._fan_speeds[fan_mode]
+        self._device.set_attribute(attr=ACAttributes.fan_speed, value=fan_speed)
 
     def set_swing_mode(self, swing_mode: str) -> None:
         """Midea AC Climate set swing mode."""

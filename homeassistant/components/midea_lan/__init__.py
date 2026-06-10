@@ -16,20 +16,14 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_KEY, CONF_SUBTYPE, DOMAIN
 
 _PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Midea LAN component."""
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -40,9 +34,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     token = data.get(CONF_TOKEN, "")
     key = data.get(CONF_KEY, "")
     protocol = ProtocolVersion(data[CONF_PROTOCOL])
-
-    if protocol == ProtocolVersion.V3 and (not key or not token):
-        raise ConfigEntryError("For V3 devices, the key and token are required")
 
     device = await hass.async_add_executor_job(
         device_selector,

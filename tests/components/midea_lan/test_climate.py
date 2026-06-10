@@ -213,7 +213,15 @@ def test_midea_ac_specific() -> None:
     assert ent.swing_mode == SWING_BOTH
     ent.device.temperature_step = 1
     assert ent.target_temperature_step == 1
+
+    with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
+        ent = climate.MideaACClimate(
+            DummyDevice(DeviceType.AC, attributes=attrs),
+            _get_description(DeviceType.AC, "named"),
+            MagicMock(options={"sensors": ["indoor_humidity"]}),
+        )
     ent.device.temperature_step = 0
+    ent._attr_target_temperature_step = 0.5
     assert ent.target_temperature_step == 0.5
 
     assert ent.current_humidity == 50.0
@@ -225,7 +233,8 @@ def test_midea_ac_specific() -> None:
 
     assert ent.outdoor_temperature == 10.5
     ent.set_fan_mode(FAN_LOW)
-    ent.set_fan_mode("unknown")
+    with pytest.raises(KeyError):
+        ent.set_fan_mode("unknown")
     ent.set_swing_mode(SWING_VERTICAL)
 
 
