@@ -633,7 +633,7 @@ azure-storage-blob==12.24.0
 b2sdk==2.10.4
 
 # homeassistant.components.holiday
-babel==2.15.0
+babel==2.18.0
 
 # homeassistant.components.baidu
 baidu-aip==1.6.6
