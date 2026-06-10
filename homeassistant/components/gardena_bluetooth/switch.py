@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from gardena_bluetooth.const import Valve, Valve1, Valve2, ValveX
+from gardena_bluetooth.const import Valve, Valve1, Valve2
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -30,9 +30,11 @@ async def async_setup_entry(
     ):
         entities.append(GardenaBluetoothValveSwitch(coordinator))
 
-    for entity_cls in (GardenaBluetoothValve1Switch, GardenaBluetoothValve2Switch):
-        if entity_cls.characteristics.issubset(coordinator.characteristics):
-            entities.append(entity_cls(coordinator))
+    entities.extend(
+        entity_cls(coordinator)
+        for entity_cls in (GardenaBluetoothValve1Switch, GardenaBluetoothValve2Switch)
+        if entity_cls.characteristics.issubset(coordinator.characteristics)
+    )
 
     async_add_entities(entities)
 
@@ -83,7 +85,10 @@ class GardenaBluetoothValveSwitch(GardenaBluetoothEntity, SwitchEntity):
 class GardenaBluetoothValveXSwitch(GardenaBluetoothEntity, SwitchEntity):
     """Base switch alias for the Smart Water Control family (Valve1/Valve2)."""
 
-    _service: type[ValveX]
+    # Annotated as the concrete classes: the released library (2.8.1) declares
+    # the ValveX base attributes with `=` instead of `:`, which mypy resolves
+    # to typing special forms when accessed through type[ValveX].
+    _service: type[Valve1 | Valve2]
     characteristics: set[str]
 
     _attr_is_on: bool | None = None
