@@ -88,10 +88,10 @@
   relayer_region | xx-earth-616
   remote_enabled | True
   remote_connected | False
+  remote_server | us-west-1
   alexa_enabled | True
   google_enabled | False
   cloud_ice_servers_enabled | True
-  remote_server | us-west-1
   certificate_status | ready
   instance_id | 12345678901234567890
   iot_state | connected
@@ -206,10 +206,10 @@
   relayer_region | xx-earth-616
   remote_enabled | True
   remote_connected | False
+  remote_server | us-west-1
   alexa_enabled | True
   google_enabled | False
   cloud_ice_servers_enabled | True
-  remote_server | us-west-1
   certificate_status | ready
   instance_id | 12345678901234567890
   iot_state | connected
@@ -288,10 +288,10 @@
   relayer_region | xx-earth-616
   remote_enabled | True
   remote_connected | False
+  remote_server | us-west-1
   alexa_enabled | True
   google_enabled | False
   cloud_ice_servers_enabled | True
-  remote_server | us-west-1
   certificate_status | ready
   instance_id | 12345678901234567890
   iot_state | connected
