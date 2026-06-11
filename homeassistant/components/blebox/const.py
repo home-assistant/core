@@ -24,3 +24,13 @@ OPEN_STATUS: dict[int, str] = {
 
 LIGHT_MAX_KELVINS = 6500  # 154 Mireds
 LIGHT_MIN_KELVINS = 2700  # 370 Mireds
+
+CO2_LEVEL: dict[int, str] = {
+    0: "excellent",
+    1: "good",
+    2: "acceptable",
+    3: "medium",
+    4: "poor",
+    5: "unhealthy",
+    6: "hazardous",
+}
