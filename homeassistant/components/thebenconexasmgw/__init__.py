@@ -4,17 +4,12 @@ import logging
 
 import aiohttp
 
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
-from .coordinator import SmgwSensorCoordinator, ThebenConfigEntry, ThebenRuntimeData
-from .smgw import ConexaSMGW, ConexaSmgwErr, checkNetworkConnection
+from .coordinator import SmgwSensorCoordinator, ThebenConfigEntry
+from .smgw import checkNetworkConnection
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,34 +25,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ThebenConfigEntry) -> bo
     except (OSError, aiohttp.ClientError) as e:
         raise ConfigEntryNotReady("Device is not reachable") from e
 
-    coordinator = SmgwSensorCoordinator(hass, entry)
-
     try:
         # Unfortunately the Conexa 3.0 doesn't provide separate authentication feedback it just ignores all requests with invalid username/password,
         # That's why here we need to assume it failed because of wrong credentials, as we checked for connectivity just before and the device was reachable.
-        entry.runtime_data = ThebenRuntimeData(
-            api=await ConexaSMGW.create(
-                async_get_clientsession(hass),
-                entry.data[CONF_HOST],
-                entry.data[CONF_USERNAME],
-                entry.data[CONF_PASSWORD],
-            ),
-            coordinator=coordinator,
-        )
+        coordinator = SmgwSensorCoordinator(hass, entry)
+        await coordinator.async_init()
+        entry.runtime_data = coordinator
+
     except (OSError, aiohttp.ClientError) as e:
         raise ConfigEntryAuthFailed("Authentication failed") from e
 
-    # Check if we got a different URL back -> Something is seriously wrong
-    if entry.runtime_data.api.m2mUrl != entry.data["m2mUrl"]:
-        raise ConfigEntryError(
-            f"SMGW returned {entry.runtime_data.api.m2mUrl} but it was originally configured with {entry.data['m2mUrl']}!"
-        )
-
     # Get initial data
-    try:
-        await coordinator.async_config_entry_first_refresh()
-    except ConexaSmgwErr as e:
-        raise ConfigEntryError("Failed to fetch initial data") from e
+    await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

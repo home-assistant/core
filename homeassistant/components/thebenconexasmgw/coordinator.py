@@ -1,11 +1,13 @@
 """Coordinator for the Theben Conexa Smartmeter gateway integration."""
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
     async_track_utc_time_change,
@@ -18,20 +20,15 @@ from .smgw import ConexaSMGW
 
 _LOGGER = logging.getLogger(__name__)
 
-
-@dataclass
-class ThebenRuntimeData:
-    """Data for the Theben Conexa Smartmeter gateway integration."""
-
-    api: ConexaSMGW
-    coordinator: "SmgwSensorCoordinator"
-
-
-type ThebenConfigEntry = ConfigEntry[ThebenRuntimeData]
+type ThebenConfigEntry = ConfigEntry[SmgwSensorCoordinator]
 
 
 class SmgwSensorCoordinator(DataUpdateCoordinator):
     """The data update coordinator for the Theben Conexa Smartmeter gateway integration."""
+
+    _scheduled_updates: CALLBACK_TYPE
+    __api: ConexaSMGW
+    gateway_info: ConexaSMGW.GatewayInfo
 
     def __init__(self, hass: HomeAssistant, entry: ThebenConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -44,28 +41,43 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
             update_interval=None,
             always_update=False,
         )
+        self._unscheduled_updates: CALLBACK_TYPE | None = None
+        self.retries = 0
+
+    async def async_init(self):
+        """Asynchronous Initialization and registering the update schedule."""
+        self.__api = await ConexaSMGW.create(
+            async_get_clientsession(self.hass),
+            self.config_entry.data[CONF_HOST],
+            self.config_entry.data[CONF_USERNAME],
+            self.config_entry.data[CONF_PASSWORD],
+        )
+
+        self.gateway_info = self.__api.gatewayInfo
+
+        # Check if we got a different URL back -> Something is seriously wrong
+        if self.__api.m2mUrl != self.config_entry.data["m2mUrl"]:
+            raise ConfigEntryError(
+                f"SMGW returned {self.__api.m2mUrl} but it was originally configured with {self.config_entry.data['m2mUrl']}!"
+            )
+
         # Currently the SMGW provides new data only every 15 minutes at the starting of the hour (in UTC).
         # So we leverage this information to set up a scheduled poll at
         # exactly these times + some seconds to allow for processing.
         self._scheduled_updates = async_track_utc_time_change(
-            hass,
+            self.hass,
             self._scheduled_update,
             minute=[0, 15, 30, 45],
             second=40,
         )
-        self._unscheduled_updates: CALLBACK_TYPE | None = None
-        self.retries = 0
 
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         # If data is None, this is the first refresh cycle
         is_first_update = self.data is None
 
-        if self.config_entry is None or self.config_entry.runtime_data is None:
-            raise ValueError("Runtime data is not set")
-
         _LOGGER.debug("Fetching data from API")
-        vals = await self.config_entry.runtime_data.api.getLatestValues()
+        vals = await self.__api.getLatestValues()
 
         now_utc = dt_util.utcnow()
         _LOGGER.debug("Data fetched at %s: %s", now_utc, vals)
@@ -93,7 +105,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
                     dt_util.utcnow() + timedelta(seconds=60),
                 )
                 self.retries += 1
-            else:
+            elif self.retries >= MAX_RETRIES:
                 _LOGGER.debug(
                     "Giving up on retrying, next update will be according to schedule"
                 )
