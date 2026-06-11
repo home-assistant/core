@@ -13,7 +13,11 @@ from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -35,12 +39,7 @@ from .const import (
     DOMAIN,
 )
 from .coordinator import ReolinkDeviceCoordinator, ReolinkFirmwareCoordinator
-from .exceptions import (
-    PasswordIncompatible,
-    ReolinkException,
-    ReolinkSetupException,
-    UserNotAdmin,
-)
+from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
 from .host import ReolinkHost
 from .services import async_setup_services
 from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch, get_store
@@ -108,7 +107,7 @@ async def async_setup_entry(
         and config_entry.data.get(CONF_UID) != UNKNOWN
     ):
         await host.stop()
-        raise ReolinkSetupException(
+        raise ConfigEntryError(
             translation_domain=DOMAIN,
             translation_key="uid_mismatch",
             translation_placeholders={
