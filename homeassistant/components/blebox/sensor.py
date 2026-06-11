@@ -14,6 +14,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
     UnitOfApparentPower,
@@ -31,7 +32,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import BleBoxConfigEntry
-from .const import OPEN_STATUS
+from .const import CO2_LEVEL, OPEN_STATUS
 from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
 
@@ -148,6 +149,19 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=list(OPEN_STATUS.values()),
         value_fn=lambda v: OPEN_STATUS.get(int(v)) if v is not None else None,
+    ),
+    BleBoxSensorEntityDescription(
+        key="co2",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    BleBoxSensorEntityDescription(
+        key="co2Definition",
+        translation_key="co2_level",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(CO2_LEVEL.values()),
+        value_fn=lambda v: CO2_LEVEL.get(int(v)) if v is not None else None,
     ),
 )
 
