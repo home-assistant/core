@@ -1333,6 +1333,60 @@ async def test_eventbus_listen_once_run_immediately_coro(hass: HomeAssistant) ->
     assert len(calls) == 1
 
 
+async def test_eventbus_nested_fire_dispatch_order(hass: HomeAssistant) -> None:
+    """Test dispatch order when a listener fires an event synchronously.
+
+    Event dispatch is reentrant: an event fired from within a synchronous
+    listener is dispatched immediately, nested inside the dispatch of the
+    outer event.
+
+    The implementation of event listeners is such that listeners are called
+    in the order they were registered
+
+    As a result, the order in which a listener observes the two
+    events depends on its registration position relative to the listener
+    which fires the nested event: listeners registered before it observe
+    fire order, listeners registered after it observe the nested event
+    first.
+
+    This test documents the current behavior rather than guarantees it: a
+    non-reentrant (queued) dispatch would make all listeners observe fire
+    order.
+    """
+    observed_before: list[str] = []
+    observed_after: list[str] = []
+
+    @ha.callback
+    def observer_before(event: ha.Event) -> None:
+        observed_before.append(event.event_type)
+
+    @ha.callback
+    def fire_nested(event: ha.Event) -> None:
+        hass.bus.async_fire("test_nested")
+
+    @ha.callback
+    def observer_after(event: ha.Event) -> None:
+        observed_after.append(event.event_type)
+
+    unsubs = [
+        hass.bus.async_listen("test_outer", observer_before),
+        hass.bus.async_listen("test_nested", observer_before),
+        hass.bus.async_listen("test_outer", fire_nested),
+        hass.bus.async_listen("test_outer", observer_after),
+        hass.bus.async_listen("test_nested", observer_after),
+    ]
+
+    hass.bus.async_fire("test_outer")
+
+    # Registered before the nesting listener: observes fire order.
+    assert observed_before == ["test_outer", "test_nested"]
+    # Registered after the nesting listener: observes inverted order.
+    assert observed_after == ["test_nested", "test_outer"]
+
+    for unsub in unsubs:
+        unsub()
+
+
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:
     """Test unsubscribe listener from returned function."""
     calls = []
