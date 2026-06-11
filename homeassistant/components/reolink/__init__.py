@@ -8,6 +8,7 @@ from time import time
 from typing import Any
 
 from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, RETRY_ATTEMPTS
+from reolink_aio.const import UNKNOWN
 from reolink_aio.exceptions import CredentialsInvalidError, ReolinkError
 
 from homeassistant.const import CONF_PORT, EVENT_HOMEASSISTANT_STOP, Platform
@@ -29,11 +30,17 @@ from .const import (
     CONF_BC_PORT,
     CONF_FIRMWARE_CHECK_TIME,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DOMAIN,
 )
 from .coordinator import ReolinkDeviceCoordinator, ReolinkFirmwareCoordinator
-from .exceptions import PasswordIncompatible, ReolinkException, UserNotAdmin
+from .exceptions import (
+    PasswordIncompatible,
+    ReolinkException,
+    ReolinkSetupException,
+    UserNotAdmin,
+)
 from .host import ReolinkHost
 from .services import async_setup_services
 from .util import ReolinkConfigEntry, ReolinkData, get_device_uid_and_ch, get_store
@@ -95,6 +102,22 @@ async def async_setup_entry(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, host.stop)
     )
 
+    # do not allow changes to the UID
+    if (
+        config_entry.data.get(CONF_UID, host.api.uid) != host.api.uid
+        and config_entry.data.get(CONF_UID) != UNKNOWN
+    ):
+        await host.stop()
+        raise ReolinkSetupException(
+            translation_domain=DOMAIN,
+            translation_key="uid_mismatch",
+            translation_placeholders={
+                "name": host.api.nvr_name,
+                "conf_uid": config_entry.data.get(CONF_UID, ""),
+                "uid": host.api.uid,
+            },
+        )
+
     # update the config info if needed for the next time
     if (
         host.api.port != config_entry.data[CONF_PORT]
@@ -105,6 +128,7 @@ async def async_setup_entry(
         or host.api.baichuan_only != config_entry.data.get(CONF_BC_ONLY)
         or host.api.baichuan.connection_type.value
         != config_entry.data.get(CONF_BC_CONNECT)
+        or host.api.uid != config_entry.data.get(CONF_UID)
     ):
         if host.api.port != config_entry.data[CONF_PORT]:
             _LOGGER.warning(
@@ -130,6 +154,7 @@ async def async_setup_entry(
             CONF_BC_PORT: host.api.baichuan.port,
             CONF_BC_ONLY: host.api.baichuan_only,
             CONF_BC_CONNECT: host.api.baichuan.connection_type.value,
+            CONF_UID: host.api.uid,
             CONF_SUPPORTS_PRIVACY_MODE: host.api.supported(None, "privacy_mode"),
         }
         hass.config_entries.async_update_entry(config_entry, data=data)
