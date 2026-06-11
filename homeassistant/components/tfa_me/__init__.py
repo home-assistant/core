@@ -1,4 +1,4 @@
-"""TFA.me station integration: ___init___.py."""
+"""TFA.me station integration: __init__.py."""
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform

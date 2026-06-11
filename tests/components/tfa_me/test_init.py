@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-def mock_config_entryX() -> MockConfigEntry:
+def mock_config_entry_tfa_me() -> MockConfigEntry:
     """Fixture for a MockConfigEntry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -30,7 +30,7 @@ def mock_config_entryX() -> MockConfigEntry:
 @pytest.mark.asyncio
 async def test_full_entry_setup(hass: HomeAssistant) -> None:
     """Test full setup of the integration."""
-    mock_config_entry = mock_config_entryX()
+    mock_config_entry = mock_config_entry_tfa_me()
     mock_config_entry.add_to_hass(hass)
 
     with patch(
@@ -52,7 +52,7 @@ async def test_full_entry_setup(hass: HomeAssistant) -> None:
 @pytest.mark.asyncio
 async def test_async_unload_entry(hass: HomeAssistant) -> None:
     """Test unload of the integration."""
-    mock_config_entry = mock_config_entryX()
+    mock_config_entry = mock_config_entry_tfa_me()
     mock_config_entry.add_to_hass(hass)
 
     with patch(

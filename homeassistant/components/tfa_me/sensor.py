@@ -117,7 +117,7 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
         value_fn=lambda entity, data: int(data["value"]),
     ),
     # Low battery warning states: 0 = OK, 1 = low (warning), 2 = critical low (urgent warning)
-    # 3 = battery missing/removed (Remark: some sensor have more then one power supply)
+    # 3 = battery missing/removed (Remark: some sensor have more than one power supply)
     "lowbatt": TFAmeSensorEntityDescription(
         key="lowbatt",
         translation_key="lowbatt",
@@ -310,8 +310,8 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
                     sensor_id
                 ),  # 'Sensor/Station type XX'
             }
+            self.measure_name = self.uid.removeprefix("sensor.").split("_", 2)[2]
 
-            self.measure_name = self.uid[27:]
             # Some rain specials
             if self.measure_name == "rain_1_hour":
                 self.rain_history = SensorHistory(max_age_minutes=60)

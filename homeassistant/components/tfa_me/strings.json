@@ -7,7 +7,7 @@
       "invalid_name_with_station_id": "Invalid value for name_with_station_id",
       "invalid_response": "Response invalid from station.",
       "missing_identifier": "The station ID is missing in JSON.",
-      "timeout_connect": "Timeout while connection to the station.",
+      "timeout_connect": "Timeout while connecting to the station.",
       "unknown": "Unexpected error."
     },
     "step": {
@@ -56,6 +56,9 @@
       },
       "temperature": {
         "name": "Temperature"
+      },
+      "temperature_probe": {
+        "name": "Temperature probe"
       },
       "wind_direction": {
         "name": "Wind direction"

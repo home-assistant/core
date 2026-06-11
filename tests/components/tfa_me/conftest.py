@@ -2,7 +2,7 @@
 
 # For test run: "pytest ./tests/components/tfa_me/ --cov=homeassistant.components.tfa_me --cov-report term-missing -vv"
 
-from datetime import datetime, timedelta
+from datetime import datetime
 from unittest.mock import MagicMock
 
 import pytest
@@ -26,13 +26,7 @@ def mock_config_entry(hass: HomeAssistant, tfa_me_mock_entry) -> ConfigEntry:
     entry = MagicMock(spec=TFAmeConfigEntry)
     entry.entry_id = "test-1234"
     entry.domain = DOMAIN
-    coordy = TFAmeUpdateCoordinator(
-        hass=hass,
-        config_entry=tfa_me_mock_entry,
-        host="192.168.1.46",
-        interval=timedelta(30),
-        name_with_station_id=False,
-    )
+    coordy = TFAmeUpdateCoordinator(hass=hass, config_entry=tfa_me_mock_entry)
     coordy.sensor_entity_list = []
     entry.runtime_data = coordy
     return entry
@@ -163,7 +157,7 @@ def tfa_me_mock_coordinator():
     return coordinator
 
 
-# Original JSON data from a TFA.me station for snapahot testing
+# Original JSON data from a TFA.me station for snapshot testing
 FAKE_JSON = {
     "gateway_id": "05B3E4E44",
     "sensors": [
