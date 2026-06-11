@@ -6,7 +6,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.alarm_control_panel import (
-    DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
     PLATFORM_SCHEMA as ALARM_CONTROL_PANEL_PLATFORM_SCHEMA,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -424,7 +423,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         )
 
         raise ServiceValidationError(
-            translation_domain=ALARM_CONTROL_PANEL_DOMAIN,
+            translation_domain=DOMAIN,
             translation_key="invalid_code",
         )
 
