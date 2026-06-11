@@ -174,7 +174,7 @@ async_mock_service(hass, OTHER, "service")
             """
 MockConfigEntry(domain=OTHER)
 """,
-            id="mock_config_entry_kwarg_other_other",
+            id="mock_config_entry_kwarg_other",
         ),
         pytest.param(
             """
