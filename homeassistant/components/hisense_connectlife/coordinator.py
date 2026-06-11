@@ -265,10 +265,14 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
         """Update wifi online status."""
         online_status = content_data.get("onlinestats")
         if online_status is not None:
-            device_data["offlineState"] = 0 if int(online_status) == 1 else 1
+            try:
+                online = int(online_status) == 1
+            except TypeError, ValueError:
+                _LOGGER.warning("Invalid onlinestats value: %s", online_status)
+                return
+            device_data["offlineState"] = 0 if online else 1
             _LOGGER.debug(
-                "Updated device online status: %s",
-                "online" if online_status == 1 else "offline",
+                "Updated device online status: %s", "online" if online else "offline"
             )
 
     def _update_device_status(self, device_data: dict, content_data: dict) -> None:
@@ -284,7 +288,7 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
                 _LOGGER.debug("Decoded status: %s", status_json)
                 if isinstance(status_json, dict):
                     device_data["statusList"].update(status_json)
-            except json.JSONDecodeError as e:
+            except (json.JSONDecodeError, TypeError) as e:
                 _LOGGER.warning("Failed to decode base64 status: %s", e)
 
         # Process properties

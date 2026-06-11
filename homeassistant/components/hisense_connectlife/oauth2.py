@@ -11,9 +11,8 @@ from connectlife_cloud import CLIENT_ID, CLIENT_SECRET, OAUTH2_AUTHORIZE, OAUTH2
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 
-from .const import DOMAIN, HA_HOST
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -48,7 +47,7 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
     @property
     def redirect_uri(self) -> str:
         """Return the redirect uri."""
-        return f"{HA_HOST}{AUTH_CALLBACK_PATH}"
+        return config_entry_oauth2_flow.async_get_redirect_uri(self.hass)
 
     async def async_resolve_external_data(self, external_data: Any) -> dict:
         """Resolve the authorization code to tokens."""
@@ -86,7 +85,8 @@ class HisenseOAuth2Implementation(config_entry_oauth2_flow.LocalOAuth2Implementa
         session = async_get_clientsession(self.hass)
         data["client_id"] = self.client_id
         data["client_secret"] = self.client_secret
-        data["redirect_uri"] = f"{HA_HOST}{AUTH_CALLBACK_PATH}"
+        if "redirect_uri" not in data:
+            data["redirect_uri"] = self.redirect_uri
 
         resp = await session.post(self.token_url, data=data)
         resp.raise_for_status()

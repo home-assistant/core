@@ -125,6 +125,20 @@ async def test_climate_initialization(entity) -> None:
     assert entity.max_temp == 30
 
 
+async def test_climate_initialization_falls_back_to_puid_for_parser(
+    mock_coordinator, mock_device
+) -> None:
+    """Test parser lookup falls back to the device puid when device_id is missing."""
+    mock_device.device_id = None
+    mock_coordinator.api_client.parsers = {
+        PUID: mock_coordinator.api_client.parsers[DEVICE_ID]
+    }
+
+    entity = HisenseClimate(mock_coordinator, mock_device)
+
+    assert entity._parser is mock_coordinator.api_client.parsers[PUID]
+
+
 async def test_current_temperature(entity) -> None:
     """Test current temperature."""
     assert entity.current_temperature == 25.0

@@ -25,6 +25,8 @@ def mock_hass():
     hass.config_entries.options = MagicMock()
     hass.config_entries.options.async_init = AsyncMock()
     hass.config_entries.options.async_configure = AsyncMock()
+    hass.config = MagicMock()
+    hass.config.components = []
     hass.loop = MagicMock()
     hass.loop.call_soon_threadsafe = MagicMock()
     return hass

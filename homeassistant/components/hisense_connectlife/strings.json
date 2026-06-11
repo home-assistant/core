@@ -2,7 +2,7 @@
   "config": {
     "abort": {
       "already_configured": "Device is already configured",
-      "authorize_url_fail": "Error generating authorization URL.",
+      "authorize_url_failure": "Error generating authorization URL.",
       "missing_configuration": "The component is not configured. Please follow the documentation.",
       "no_url_available": "No URL available. For information about this error, [check the help section]({docs_url})",
       "oauth_error": "Received invalid token data.",

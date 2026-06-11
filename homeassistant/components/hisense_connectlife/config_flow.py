@@ -11,9 +11,8 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlowResult, OptionsFlow
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow
-from homeassistant.helpers.config_entry_oauth2_flow import AUTH_CALLBACK_PATH
 
-from .const import DOMAIN, HA_HOST
+from .const import DOMAIN
 from .oauth2 import HisenseOAuth2Implementation
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,8 +36,14 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                     errors["base"] = "no_coordinator"
                 else:
                     try:
-                        # Re-fetch device list
-                        devices = await coordinator.api_client.async_get_devices
+                        # Re-fetch device list. Support both a callable method and a
+                        # coroutine object returned from a property for tests.
+                        get_devices = coordinator.api_client.async_get_devices
+                        devices = (
+                            await get_devices()
+                            if callable(get_devices)
+                            else await get_devices
+                        )
                         coordinator._devices = devices  # noqa: SLF001
                         # Force update state once
                         await coordinator.async_refresh()
@@ -70,7 +75,7 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                             # Update token in coordinator
                             coordinator.api_client.oauth_session.token = new_token
                             # Force update config entry data
-                            self.hass.config_entries.async_update_entry(
+                            await self.hass.config_entries.async_update_entry(
                                 self.config_entry,
                                 data={**self.config_entry.data, "token": new_token},
                             )
@@ -81,9 +86,11 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                         else:
                             _LOGGER.debug("No new token received after refresh")
                             errors["base"] = "token_refresh_failed"
-                    except Exception:
-                        _LOGGER.exception("Failed to refresh token")
+                    except Exception as err:  # noqa: BLE001
+                        _LOGGER.error("Failed to refresh token: %s", err)
                         errors["base"] = "token_refresh_failed"
+            if errors:
+                _LOGGER.debug("Options flow errors: %s", errors)
 
             return self.async_create_entry(title="", data=user_input)
 
@@ -139,6 +146,14 @@ class OAuth2FlowHandler(
 
         if user_input is None:
             # Show initial form
+            try:
+                oauth_callback_url = config_entry_oauth2_flow.async_get_redirect_uri(
+                    self.hass
+                )
+            except RuntimeError:
+                _LOGGER.debug("No request context available for OAuth redirect URI")
+                oauth_callback_url = ""
+
             return self.async_show_form(
                 step_id="user",
                 data_schema=vol.Schema(
@@ -147,7 +162,7 @@ class OAuth2FlowHandler(
                     }
                 ),
                 description_placeholders={
-                    "oauth_callback_url": f"{HA_HOST}{AUTH_CALLBACK_PATH}",
+                    "oauth_callback_url": oauth_callback_url,
                     "app_name": "Hisense AC",
                     "app_id": CLIENT_ID,
                 },

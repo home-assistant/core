@@ -30,13 +30,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     DOMAIN,
-    FAN_ULTRA_HIGH,
-    FAN_ULTRA_LOW,
     MAX_TEMP,
     MIN_TEMP,
     SFAN_ULTRA_HIGH,
@@ -63,44 +61,45 @@ HA_FAN_STR_TO_CONST = {
 }
 
 # Reverse mapping: HA constant to string format
-HA_FAN_CONST_TO_STR = {
-    FAN_AUTO: "auto",
-    FAN_LOW: "low",
-    FAN_MEDIUM: "medium",
-    FAN_HIGH: "high",
-    FAN_ULTRA_LOW: "ultra_low",
-    SFAN_ULTRA_LOW: "ultra_low",
-    FAN_ULTRA_HIGH: "ultra_high",
-    SFAN_ULTRA_HIGH: "ultra_high",
-}
+HA_FAN_CONST_TO_STR = {v: k for k, v in HA_FAN_STR_TO_CONST.items()}
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the Hisense AC climate platform."""
-    coordinator: HisenseACPluginDataUpdateCoordinator = config_entry.runtime_data
+    coordinator: HisenseACPluginDataUpdateCoordinator | None = getattr(
+        config_entry, "runtime_data", None
+    )
+    if coordinator is None:
+        coordinator = hass.data[DOMAIN][config_entry.entry_id]
 
-    # Get devices from coordinator (already refreshed in __init__.py)
-    devices = coordinator.data
+    try:
+        # The coordinator has already been refreshed during entry setup.
+        # Use the current cached data directly for entity initialization.
+        devices = coordinator.data
+        _LOGGER.debug("Coordinator data after refresh: %s", devices)
 
-    if not devices:
-        _LOGGER.debug("No devices found in coordinator data")
-        return
+        if not devices:
+            _LOGGER.debug("No devices found in coordinator data")
+            return
 
-    entities = [
-        HisenseClimate(coordinator, device)
-        for device in devices.values()
-        if isinstance(device, HisenseDeviceInfo) and device.is_supported()
-    ]
-
-    if entities:
-        _LOGGER.debug("Setting up %d climate entities", len(entities))
+        entities = []
+        for device in devices.values():
+            _LOGGER.debug("Processing device: %s", device.to_dict())
+            if isinstance(device, HisenseDeviceInfo) and device.is_supported():
+                entity = HisenseClimate(coordinator, device)
+                entities.append(entity)
+        if not entities:
+            _LOGGER.debug("No supported devices found")
+            return
         async_add_entities(entities)
-    else:
-        _LOGGER.debug("No supported climate devices found")
+
+    except Exception as err:
+        _LOGGER.error("Failed to set up climate platform: %s", err)
+        raise
 
 
 class HisenseClimate(CoordinatorEntity, ClimateEntity):
@@ -160,27 +159,28 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._current_type_code = device.type_code
         self._current_feature_code = device.feature_code
 
-        # Get device parser to determine available modes and options
+        # Get device parser to determine available modes and options.
+        # Parser availability is optional; missing parsers should fall back to
+        # the default OFF-only HVAC mode list instead of blocking entity setup.
         device_type = device.get_device_type()
-        if device_type and device.device_id:
-            self._parser = coordinator.api_client.parsers.get(device.device_id)
-            self.static_data = coordinator.api_client.static_data.get(device.device_id)
+        device_id = device.device_id or self._device_id
+        if device_id:
+            self._parser = coordinator.api_client.parsers.get(device_id)
+            self.static_data = coordinator.api_client.static_data.get(device_id)
+
+        if device_type:
             self._current_type_code = device_type.type_code
             self._current_feature_code = device_type.feature_code
 
-            if self._parser:
-                _LOGGER.debug(
-                    "Using parser for device type %s-%s",
-                    device_type.type_code,
-                    device_type.feature_code,
-                )
-                self._setup_hvac_modes()
-                self._setup_fan_modes()
-                self._setup_swing_modes()
-
-        # Only OFF mode if parser not available (don't assume device supports all modes)
-        if not hasattr(self, "_attr_hvac_modes"):
-            self._attr_hvac_modes = [HVACMode.OFF]
+        if self._parser:
+            _LOGGER.debug(
+                "Using parser for device type %s-%s",
+                self._current_type_code,
+                self._current_feature_code,
+            )
+            self._setup_hvac_modes()
+            self._setup_fan_modes()
+            self._setup_swing_modes()
 
         # Configure temperature range based on device capabilities
         if self._parser:
@@ -229,9 +229,6 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
     def _setup_hvac_modes(self):
         """Set up available HVAC modes based on device capabilities."""
-        if not self._parser:
-            self._attr_hvac_modes = [HVACMode.OFF]
-            return
 
         # Always include OFF mode
         modes = [HVACMode.OFF]
@@ -629,9 +626,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
 
         try:
             # Map HA fan mode constant to standard string using the global mapping
-            ha_fan_mode_str = HA_FAN_CONST_TO_STR.get(
-                fan_mode, fan_mode.lower().replace("_", "")
-            )
+            ha_fan_mode_str = HA_FAN_CONST_TO_STR.get(fan_mode, fan_mode.lower())
 
             # Find the Hisense fan mode value using library function
             hisense_fan_mode: str | None = None

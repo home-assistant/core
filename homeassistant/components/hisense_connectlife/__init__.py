@@ -54,11 +54,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             "OAuth2 implementation temporarily unavailable"
         ) from err
 
-    ha_session = OAuth2Session(hass, entry, implementation)
-    await ha_session.async_ensure_token_valid()
-
     session = OAuth2Session(hass, entry, implementation)
     try:
+        await session.async_ensure_token_valid()
         await session.async_ensure_token_valid()
     except ClientResponseError as err:
         if 400 <= err.status < 500:
@@ -74,7 +72,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = HisenseACPluginDataUpdateCoordinator(hass, api_client, entry)
 
-    await coordinator.async_setup()
+    if not await coordinator.async_setup():
+        raise ConfigEntryNotReady("Failed to set up Hisense ConnectLife coordinator")
 
     _LOGGER.debug("Initial data refresh successful during setup")
 
@@ -86,8 +85,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator = entry.runtime_data
-        await coordinator.api_client.oauth_session.close()
+        coordinator: HisenseACPluginDataUpdateCoordinator = entry.runtime_data
+        if coordinator is not None:
+            await coordinator.async_unload()
+            oauth_session = getattr(coordinator.api_client, "oauth_session", None)
+            if oauth_session is not None:
+                await oauth_session.close()
         entry.runtime_data = None
 
     return unload_ok
