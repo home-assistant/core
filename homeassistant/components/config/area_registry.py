@@ -69,14 +69,9 @@ def websocket_create_area(
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
-        data["labels"] = labels = set(data["labels"])
-        if missing_labels := lr.async_get_missing_label_ids(hass, labels):
-            connection.send_error(
-                msg["id"],
-                "invalid_info",
-                f"Label(s) {', '.join(sorted(missing_labels))} do not exist",
-            )
-            return
+        # Strip labels which are not in the label registry
+        labels = set(data["labels"])
+        data["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
     try:
         entry = registry.async_create(**data)
@@ -145,18 +140,11 @@ def websocket_update_area(
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
-        data["labels"] = labels = set(data["labels"])
-        # Only validate labels added to the area, so labels which are no
-        # longer in the label registry can still be kept or removed
-        if (area := registry.async_get_area(msg["area_id"])) and (
-            missing_labels := lr.async_get_missing_label_ids(hass, labels - area.labels)
-        ):
-            connection.send_error(
-                msg["id"],
-                "invalid_info",
-                f"Label(s) {', '.join(sorted(missing_labels))} do not exist",
-            )
-            return
+        # Strip labels which are not in the label registry. This also cleans up
+        # any stale labels already stored on the area (e.g. left behind by a
+        # deleted label) the next time it is saved.
+        labels = set(data["labels"])
+        data["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
     try:
         entry = registry.async_update(**data)

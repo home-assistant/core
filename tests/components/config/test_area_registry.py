@@ -378,73 +378,51 @@ async def test_update_area(
     assert len(area_registry.areas) == 1
 
 
-async def test_create_area_with_unknown_labels(
+async def test_create_area_strips_unknown_labels(
     client: MockHAClientWebSocket,
     area_registry: ar.AreaRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Test creating an area with labels not in the label registry fails."""
-    await client.send_json_auto_id(
-        {
-            "type": "config/area_registry/create",
-            "name": "mock",
-            "labels": ["missing_2", "missing_1"],
-        }
-    )
-
-    msg = await client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_info"
-    assert msg["error"]["message"] == "Label(s) missing_1, missing_2 do not exist"
-    assert len(area_registry.areas) == 0
-
-
-async def test_update_area_with_unknown_labels(
-    client: MockHAClientWebSocket,
-    area_registry: ar.AreaRegistry,
-    label_registry: lr.LabelRegistry,
-) -> None:
-    """Test updating an area with labels not in the label registry fails."""
-    area = area_registry.async_create("mock")
+    """Test labels not in the label registry are stripped when creating an area."""
     label_registry.async_create("label_1")
 
     await client.send_json_auto_id(
         {
-            "type": "config/area_registry/update",
-            "area_id": area.id,
-            "labels": ["label_1", "missing_label"],
+            "type": "config/area_registry/create",
+            "name": "mock",
+            "labels": ["label_1", "missing"],
         }
     )
 
     msg = await client.receive_json()
 
-    assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_info"
-    assert msg["error"]["message"] == "Label(s) missing_label do not exist"
-    assert area_registry.async_get_area(area.id).labels == set()
+    assert msg["success"]
+    assert msg["result"]["labels"] == ["label_1"]
+    assert area_registry.async_get_area(msg["result"]["area_id"]).labels == {"label_1"}
 
 
 @pytest.mark.parametrize(
     ("labels", "expected_labels"),
     [
-        pytest.param(
-            ["stale_label", "label_1"],
-            {"stale_label", "label_1"},
-            id="keep_stale_label",
-        ),
-        pytest.param([], set(), id="remove_stale_label"),
+        pytest.param(["label_1", "missing"], {"label_1"}, id="strip_unknown"),
+        pytest.param(["label_1", "stale_label"], {"label_1"}, id="strip_stale_resent"),
+        pytest.param(["stale_label", "missing"], set(), id="strip_all_unknown"),
+        pytest.param([], set(), id="remove_all"),
     ],
 )
-async def test_update_area_stale_labels(
+async def test_update_area_strips_unknown_labels(
     client: MockHAClientWebSocket,
     area_registry: ar.AreaRegistry,
     label_registry: lr.LabelRegistry,
     labels: list[str],
     expected_labels: set[str],
 ) -> None:
-    """Test a stale label already on an area can be kept or removed."""
-    # Seed a stale label via the helper layer, bypassing WS validation
+    """Test labels not in the label registry are stripped on update.
+
+    A stale label already stored on the area is cleaned up when the area is
+    next saved, even if the client sends it back.
+    """
+    # Seed a stale label via the helper layer, bypassing WS stripping
     area = area_registry.async_create("mock", labels={"stale_label"})
     label_registry.async_create("label_1")
 
@@ -459,6 +437,7 @@ async def test_update_area_stale_labels(
     msg = await client.receive_json()
 
     assert msg["success"]
+    assert set(msg["result"]["labels"]) == expected_labels
     assert area_registry.async_get_area(area.id).labels == expected_labels
 
 

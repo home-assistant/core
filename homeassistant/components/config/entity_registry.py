@@ -235,21 +235,11 @@ def websocket_update_entity(
                 aliases.append(alias)
 
     if "labels" in msg:
+        # Strip labels which are not in the label registry. This also cleans up
+        # any stale labels already stored on the entity (e.g. left behind by a
+        # deleted label) the next time it is saved.
         labels = set(msg["labels"])
-        # Only validate labels added to the entity, so labels which are no
-        # longer in the label registry can still be kept or removed
-        if missing_labels := lr.async_get_missing_label_ids(
-            hass, labels - entity_entry.labels
-        ):
-            connection.send_message(
-                websocket_api.error_message(
-                    msg["id"],
-                    "invalid_info",
-                    f"Label(s) {', '.join(sorted(missing_labels))} do not exist",
-                )
-            )
-            return
-        changes["labels"] = labels
+        changes["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device

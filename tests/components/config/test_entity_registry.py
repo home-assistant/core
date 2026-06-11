@@ -1008,59 +1008,27 @@ async def test_update_entity(
     }
 
 
-async def test_update_entity_unknown_labels(
-    hass: HomeAssistant,
-    client: MockHAClientWebSocket,
-    label_registry: lr.LabelRegistry,
-) -> None:
-    """Test updating an entity with labels not in the label registry fails."""
-    registry = mock_registry(
-        hass,
-        {
-            "test_domain.world": RegistryEntryWithDefaults(
-                entity_id="test_domain.world",
-                unique_id="1234",
-                platform="test_platform",
-            )
-        },
-    )
-    label_registry.async_create("label1")
-
-    await client.send_json_auto_id(
-        {
-            "type": "config/entity_registry/update",
-            "entity_id": "test_domain.world",
-            "labels": ["label1", "missing_2", "missing_1"],
-        }
-    )
-
-    msg = await client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_info"
-    assert msg["error"]["message"] == "Label(s) missing_1, missing_2 do not exist"
-    assert registry.entities["test_domain.world"].labels == set()
-
-
 @pytest.mark.parametrize(
     ("labels", "expected_labels"),
     [
-        pytest.param(
-            ["stale_label", "label1"],
-            {"stale_label", "label1"},
-            id="keep_stale_label",
-        ),
-        pytest.param([], set(), id="remove_stale_label"),
+        pytest.param(["label1", "missing"], {"label1"}, id="strip_unknown"),
+        pytest.param(["label1", "stale_label"], {"label1"}, id="strip_stale_resent"),
+        pytest.param(["stale_label", "missing"], set(), id="strip_all_unknown"),
+        pytest.param([], set(), id="remove_all"),
     ],
 )
-async def test_update_entity_stale_labels(
+async def test_update_entity_strips_unknown_labels(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     label_registry: lr.LabelRegistry,
     labels: list[str],
     expected_labels: set[str],
 ) -> None:
-    """Test a stale label already on an entity can be kept or removed."""
+    """Test labels not in the label registry are stripped on update.
+
+    A stale label already stored on the entity is cleaned up when the entity
+    is next saved, even if the client sends it back.
+    """
     registry = mock_registry(
         hass,
         {
@@ -1085,6 +1053,7 @@ async def test_update_entity_stale_labels(
     msg = await client.receive_json()
 
     assert msg["success"]
+    assert set(msg["result"]["entity_entry"]["labels"]) == expected_labels
     assert registry.entities["test_domain.world"].labels == expected_labels
 
 

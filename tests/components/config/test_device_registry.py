@@ -265,49 +265,16 @@ async def test_update_device_labels(
         assert getattr(device, key) == value
 
 
-async def test_update_device_unknown_labels(
-    hass: HomeAssistant,
-    client: MockHAClientWebSocket,
-    device_registry: dr.DeviceRegistry,
-    label_registry: lr.LabelRegistry,
-) -> None:
-    """Test updating a device with labels not in the label registry fails."""
-    entry = MockConfigEntry(title=None)
-    entry.add_to_hass(hass)
-    device = device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id,
-        identifiers={("bridgeid", "0123")},
-    )
-    label_registry.async_create("label1")
-
-    await client.send_json_auto_id(
-        {
-            "type": "config/device_registry/update",
-            "device_id": device.id,
-            "labels": ["label1", "missing_2", "missing_1"],
-        }
-    )
-
-    msg = await client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == "invalid_info"
-    assert msg["error"]["message"] == "Label(s) missing_1, missing_2 do not exist"
-    assert device_registry.async_get(device.id).labels == set()
-
-
 @pytest.mark.parametrize(
     ("labels", "expected_labels"),
     [
-        pytest.param(
-            ["stale_label", "label1"],
-            {"stale_label", "label1"},
-            id="keep_stale_label",
-        ),
-        pytest.param([], set(), id="remove_stale_label"),
+        pytest.param(["label1", "missing"], {"label1"}, id="strip_unknown"),
+        pytest.param(["label1", "stale_label"], {"label1"}, id="strip_stale_resent"),
+        pytest.param(["stale_label", "missing"], set(), id="strip_all_unknown"),
+        pytest.param([], set(), id="remove_all"),
     ],
 )
-async def test_update_device_stale_labels(
+async def test_update_device_strips_unknown_labels(
     hass: HomeAssistant,
     client: MockHAClientWebSocket,
     device_registry: dr.DeviceRegistry,
@@ -315,14 +282,18 @@ async def test_update_device_stale_labels(
     labels: list[str],
     expected_labels: set[str],
 ) -> None:
-    """Test a stale label already on a device can be kept or removed."""
+    """Test labels not in the label registry are stripped on update.
+
+    A stale label already stored on the device is cleaned up when the device
+    is next saved, even if the client sends it back.
+    """
     entry = MockConfigEntry(title=None)
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={("bridgeid", "0123")},
     )
-    # Seed a stale label via the helper layer, bypassing WS validation
+    # Seed a stale label via the helper layer, bypassing WS stripping
     device_registry.async_update_device(device.id, labels={"stale_label"})
     label_registry.async_create("label1")
 
@@ -337,6 +308,7 @@ async def test_update_device_stale_labels(
     msg = await client.receive_json()
 
     assert msg["success"]
+    assert set(msg["result"]["labels"]) == expected_labels
     assert device_registry.async_get(device.id).labels == expected_labels
 
 
