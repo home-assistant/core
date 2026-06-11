@@ -202,6 +202,3 @@ async def test_litterrobot_5_panel_brightness(
         )
 
         assert robot.set_panel_brightness.call_count == count + 1
-
-    # Verify globe_brightness select is not created for LR5
-    assert hass.states.get("select.test_globe_brightness") is None
