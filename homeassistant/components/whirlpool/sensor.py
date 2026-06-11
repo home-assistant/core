@@ -8,7 +8,12 @@ from typing import override
 
 from whirlpool.appliance import Appliance
 from whirlpool.dryer import Dryer, MachineState as DryerMachineState
-from whirlpool.oven import Cavity as OvenCavity, CavityState as OvenCavityState, Oven
+from whirlpool.oven import (
+    Cavity as OvenCavity,
+    CavityState as OvenCavityState,
+    CookMode,
+    Oven,
+)
 from whirlpool.washer import MachineState as WasherMachineState, Washer
 
 from homeassistant.components.sensor import (
@@ -95,6 +100,17 @@ OVEN_CAVITY_STATE = {
     OvenCavityState.Standby: "standby",
     OvenCavityState.Preheating: "preheating",
     OvenCavityState.Cooking: "cooking",
+}
+
+OVEN_COOK_MODE = {
+    CookMode.Standby: "standby",
+    CookMode.Bake: "bake",
+    CookMode.ConvectBake: "convection_bake",
+    CookMode.Broil: "broil",
+    CookMode.ConvectBroil: "convection_broil",
+    CookMode.ConvectRoast: "convection_roast",
+    CookMode.KeepWarm: "keep_warm",
+    CookMode.AirFry: "air_fry",
 }
 
 
@@ -210,6 +226,18 @@ OVEN_CAVITY_SENSORS: tuple[WhirlpoolOvenCavitySensorEntityDescription, ...] = (
             if (state := oven.get_cavity_state(cavity)) is not None
             else None
         ),
+    ),
+    WhirlpoolOvenCavitySensorEntityDescription(
+        key="oven_cook_mode",
+        translation_key="oven_cook_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=list(OVEN_COOK_MODE.values()),
+        value_fn=lambda oven, cavity: (
+            OVEN_COOK_MODE.get(cook_mode)
+            if (cook_mode := oven.get_cook_mode(cavity)) is not None
+            else None
+        ),
+        entity_registry_enabled_default=False,
     ),
     WhirlpoolOvenCavitySensorEntityDescription(
         key="oven_current_temperature",
