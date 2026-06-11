@@ -1,7 +1,7 @@
 """Fixtures for the Yoto integration tests."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time as dt_time
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -9,12 +9,16 @@ import jwt
 import pytest
 from yoto_api import (
     Card,
+    CardInsertionState,
     Chapter,
+    DayMode,
     Device,
     Group,
     PlaybackEvent,
     PlaybackStatus,
+    PlayerConfig,
     PlayerInfo,
+    PlayerStatus,
     Track,
     YotoPlayer,
 )
@@ -87,6 +91,37 @@ def _build_player() -> YotoPlayer:
     player.info = PlayerInfo(
         firmware_version="v2.17.5",
         mac="aa:bb:cc:dd:ee:ff",
+        config=PlayerConfig(
+            day_time=dt_time(7, 0),
+            day_display_brightness_auto=True,
+            day_max_volume_limit=80,
+            day_sounds_off=False,
+            night_time=dt_time(19, 0),
+            night_display_brightness_auto=False,
+            night_display_brightness=40,
+            night_max_volume_limit=50,
+            night_sounds_off=True,
+            hour_format=12,
+            bluetooth_enabled=True,
+            bt_headphones_enabled=False,
+            headphones_volume_limited=True,
+            repeat_all=False,
+            shutdown_timeout=3600,
+            display_dim_timeout=30,
+            display_dim_brightness=10,
+            pause_volume_down=True,
+            pause_power_button=False,
+        ),
+    )
+    player.status = PlayerStatus(
+        battery_level_percentage=75,
+        is_charging=True,
+        free_disk_space_bytes=14_500_000_000,
+        card_insertion_state=CardInsertionState.PHYSICAL,
+        day_mode=DayMode.DAY,
+        is_audio_device_connected=False,
+        is_bluetooth_audio_connected=True,
+        current_display_brightness=85,
     )
     player.last_event = PlaybackEvent(
         player_id=PLAYER_ID,

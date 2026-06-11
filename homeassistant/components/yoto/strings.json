@@ -36,6 +36,109 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "audio_device": {
+        "name": "Audio device"
+      },
+      "bluetooth_audio": {
+        "name": "Bluetooth audio"
+      }
+    },
+    "number": {
+      "day_display_brightness": {
+        "name": "Day display brightness"
+      },
+      "day_max_volume_limit": {
+        "name": "Day maximum volume"
+      },
+      "display_dim_brightness": {
+        "name": "Dimmed display brightness"
+      },
+      "display_dim_timeout": {
+        "name": "Display dim delay"
+      },
+      "night_display_brightness": {
+        "name": "Night display brightness"
+      },
+      "night_max_volume_limit": {
+        "name": "Night maximum volume"
+      },
+      "shutdown_timeout": {
+        "name": "Auto-shutdown delay"
+      }
+    },
+    "select": {
+      "hour_format": {
+        "name": "Hour format",
+        "state": {
+          "12": "12-hour",
+          "24": "24-hour"
+        }
+      }
+    },
+    "sensor": {
+      "card_insertion_state": {
+        "name": "Card slot",
+        "state": {
+          "none": "Empty",
+          "physical": "Physical card",
+          "remote": "Remote",
+          "streaming": "Streaming"
+        }
+      },
+      "day_mode": {
+        "name": "Day mode",
+        "state": {
+          "day": "Day",
+          "night": "Night"
+        }
+      },
+      "display_brightness": {
+        "name": "Display brightness"
+      },
+      "free_disk_space": {
+        "name": "Free disk space"
+      }
+    },
+    "switch": {
+      "bluetooth": {
+        "name": "Bluetooth"
+      },
+      "bluetooth_headphones": {
+        "name": "Bluetooth headphones"
+      },
+      "day_auto_brightness": {
+        "name": "Day automatic brightness"
+      },
+      "day_sounds": {
+        "name": "Day system sounds"
+      },
+      "headphones_volume_limit": {
+        "name": "Limit headphone volume"
+      },
+      "night_auto_brightness": {
+        "name": "Night automatic brightness"
+      },
+      "night_sounds": {
+        "name": "Night system sounds"
+      },
+      "pause_power_button": {
+        "name": "Pause with power button"
+      },
+      "pause_volume_down": {
+        "name": "Pause with volume down"
+      }
+    },
+    "time": {
+      "day_mode_start": {
+        "name": "Day mode start"
+      },
+      "night_mode_start": {
+        "name": "Night mode start"
+      }
+    }
+  },
   "exceptions": {
     "authentication_failed": {
       "message": "Yoto credentials are no longer valid. Please reauthenticate your account."
@@ -45,6 +148,9 @@
     },
     "command_failed": {
       "message": "Yoto command failed: {error}"
+    },
+    "config_update_failed": {
+      "message": "Failed to update Yoto player settings: {error}"
     },
     "invalid_media_id": {
       "message": "Not a Yoto media identifier: {media_id}"

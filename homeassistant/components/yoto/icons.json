@@ -1,0 +1,101 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "audio_device": {
+        "default": "mdi:audio-input-stereo-minijack"
+      },
+      "bluetooth_audio": {
+        "default": "mdi:bluetooth-audio"
+      }
+    },
+    "number": {
+      "day_display_brightness": {
+        "default": "mdi:brightness-7"
+      },
+      "day_max_volume_limit": {
+        "default": "mdi:volume-high"
+      },
+      "display_dim_brightness": {
+        "default": "mdi:brightness-2"
+      },
+      "display_dim_timeout": {
+        "default": "mdi:timer-outline"
+      },
+      "night_display_brightness": {
+        "default": "mdi:brightness-4"
+      },
+      "night_max_volume_limit": {
+        "default": "mdi:volume-high"
+      },
+      "shutdown_timeout": {
+        "default": "mdi:power-sleep"
+      }
+    },
+    "select": {
+      "hour_format": {
+        "default": "mdi:clock-digital"
+      }
+    },
+    "sensor": {
+      "card_insertion_state": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "none": "mdi:card-bulleted-off-outline",
+          "physical": "mdi:card-bulleted",
+          "remote": "mdi:cast-audio",
+          "streaming": "mdi:radio-tower"
+        }
+      },
+      "day_mode": {
+        "default": "mdi:theme-light-dark",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "night": "mdi:weather-night"
+        }
+      },
+      "display_brightness": {
+        "default": "mdi:brightness-6"
+      },
+      "free_disk_space": {
+        "default": "mdi:harddisk"
+      }
+    },
+    "switch": {
+      "bluetooth": {
+        "default": "mdi:bluetooth"
+      },
+      "bluetooth_headphones": {
+        "default": "mdi:headphones-bluetooth"
+      },
+      "day_auto_brightness": {
+        "default": "mdi:brightness-auto"
+      },
+      "day_sounds": {
+        "default": "mdi:volume-high"
+      },
+      "headphones_volume_limit": {
+        "default": "mdi:headphones-settings"
+      },
+      "night_auto_brightness": {
+        "default": "mdi:brightness-auto"
+      },
+      "night_sounds": {
+        "default": "mdi:volume-high"
+      },
+      "pause_power_button": {
+        "default": "mdi:power"
+      },
+      "pause_volume_down": {
+        "default": "mdi:volume-minus"
+      }
+    },
+    "time": {
+      "day_mode_start": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_mode_start": {
+        "default": "mdi:weather-night"
+      }
+    }
+  }
+}
