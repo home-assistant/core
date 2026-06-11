@@ -92,7 +92,9 @@ class WebSocketHandler:
         self._hass = hass
         self._loop = hass.loop
         self._request: web.Request = request
-        self._wsock = web.WebSocketResponse(heartbeat=55)
+        # decode_text=False so orjson decodes the raw TEXT bytes directly
+        # instead of decoding to str first and re-scanning.
+        self._wsock = web.WebSocketResponse(heartbeat=55, decode_text=False)
         self._handle_task: asyncio.Task | None = None
         self._writer_task: asyncio.Task | None = None
         self._closing: bool = False
