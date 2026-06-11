@@ -542,9 +542,7 @@ async def test_move_item(
     assert summaries == ["item 1", "item 2", "item 3", "item 4"]
 
     # Prepare items for moving
-    previous_uid = None
-    if dst_idx is not None:
-        previous_uid = uids[dst_idx]
+    previous_uid = None if dst_idx is None else uids[dst_idx]
     resp = await ws_move_item(uids[src_idx], previous_uid)
     assert resp.get("success")
 
@@ -557,22 +555,11 @@ async def test_move_item(
 async def test_move_item_unknown(
     hass: HomeAssistant,
     setup_integration: None,
-    hass_ws_client: WebSocketGenerator,
+    ws_move_item: WsMoveItemType,
 ) -> None:
     """Test moving a todo item that does not exist."""
 
-    # Prepare items for moving
-    client = await hass_ws_client()
-    data = {
-        "id": 1,
-        "type": "todo/item/move",
-        "entity_id": TEST_ENTITY,
-        "uid": "unknown",
-        "previous_uid": "item-2",
-    }
-    await client.send_json(data)
-    resp = await client.receive_json()
-    assert resp.get("id") == 1
+    resp = await ws_move_item("unknown", "item-2")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
     assert "not found in todo list" in resp["error"]["message"]
@@ -581,8 +568,8 @@ async def test_move_item_unknown(
 async def test_move_item_previous_unknown(
     hass: HomeAssistant,
     setup_integration: None,
-    hass_ws_client: WebSocketGenerator,
     ws_get_items: WsGetItemsType,
+    ws_move_item: WsMoveItemType,
 ) -> None:
     """Test moving a todo item that does not exist."""
 
@@ -596,18 +583,7 @@ async def test_move_item_previous_unknown(
     items = await ws_get_items()
     assert len(items) == 1
 
-    # Prepare items for moving
-    client = await hass_ws_client()
-    data = {
-        "id": 1,
-        "type": "todo/item/move",
-        "entity_id": TEST_ENTITY,
-        "uid": items[0]["uid"],
-        "previous_uid": "unknown",
-    }
-    await client.send_json(data)
-    resp = await client.receive_json()
-    assert resp.get("id") == 1
+    resp = await ws_move_item(items[0]["uid"], "unknown")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
     assert "not found in todo list" in resp["error"]["message"]
