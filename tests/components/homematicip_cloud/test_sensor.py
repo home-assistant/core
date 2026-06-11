@@ -347,10 +347,6 @@ async def test_hmip_motion_detector_push_button_single_illuminance(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test MotionDetectorPushButton produces exactly one illuminance sensor."""
-    # MotionDetectorPushButton subclasses MotionDetectorOutdoor; an isinstance
-    # dispatch loop would otherwise register HomematicipIlluminanceSensor twice.
-    # HA's entity platform silently drops the second one with an error log, so
-    # the bug is observable only via the duplicate-unique-id error message.
     await default_mock_hap_factory.async_get_mock_hap(
         test_devices=["Bewegungsmelder für 55er Rahmen – innen"]
     )
