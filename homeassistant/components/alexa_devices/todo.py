@@ -18,7 +18,7 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import EntityDescription
 
 from .const import _LOGGER, DOMAIN
-from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonServiceEntity
 from .utils import async_remove_stale_todo_list_entities
 
@@ -120,7 +120,8 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 translation_key="todo_item_summary_empty",
             )
 
-        await self.coordinator.api.add_todo_list_item(self._list.id, item.summary)
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.add_todo_list_item(self._list.id, item.summary)
 
         _LOGGER.debug(
             "Successfully created todo item: %s for list: %s",
@@ -159,9 +160,10 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 uid,
                 existing_item.version,
             )
-            await self.coordinator.api.delete_todo_list_item(
-                self._list.id, uid, existing_item.version
-            )
+            async with alexa_api_call(self.coordinator):
+                await self.coordinator.api.delete_todo_list_item(
+                    self._list.id, uid, existing_item.version
+                )
             _LOGGER.debug(
                 "Successfully deleted item %s (ID: %s) with version %s",
                 existing_item.name,
@@ -209,12 +211,13 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 "Updating item %s with checked status %s", item.uid, item.status
             )
 
-            await self.coordinator.api.set_todo_list_item_checked_status(
-                self._list.id,
-                item.uid,
-                item.status == TodoItemStatus.COMPLETED,
-                existing_item.version,
-            )
+            async with alexa_api_call(self.coordinator):
+                await self.coordinator.api.set_todo_list_item_checked_status(
+                    self._list.id,
+                    item.uid,
+                    item.status == TodoItemStatus.COMPLETED,
+                    existing_item.version,
+                )
 
             _LOGGER.debug(
                 "Successfully updated item %s with checked status %s",
@@ -232,9 +235,10 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             else:
                 version = existing_item.version
 
-            await self.coordinator.api.rename_todo_list_item(
-                self._list.id, item.uid, item.summary, version
-            )
+            async with alexa_api_call(self.coordinator):
+                await self.coordinator.api.rename_todo_list_item(
+                    self._list.id, item.uid, item.summary, version
+                )
             _LOGGER.debug(
                 "Successfully updated item %s with new name %s", item.uid, item.summary
             )
