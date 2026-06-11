@@ -73,6 +73,34 @@
         "name": "Auto-shutdown delay"
       }
     },
+    "select": {
+      "day_ambient_color": {
+        "name": "Day ambient light color",
+        "state": {
+          "apple_green": "Apple green",
+          "bumblebee_yellow": "Bumblebee yellow",
+          "lilac": "Lilac",
+          "off": "[%key:common::state::off%]",
+          "orange_peel": "Orange peel",
+          "sky_blue": "Sky blue",
+          "tambourine_red": "Tambourine red",
+          "white": "White"
+        }
+      },
+      "night_ambient_color": {
+        "name": "Night ambient light color",
+        "state": {
+          "apple_green": "[%key:component::yoto::entity::select::day_ambient_color::state::apple_green%]",
+          "bumblebee_yellow": "[%key:component::yoto::entity::select::day_ambient_color::state::bumblebee_yellow%]",
+          "lilac": "[%key:component::yoto::entity::select::day_ambient_color::state::lilac%]",
+          "off": "[%key:common::state::off%]",
+          "orange_peel": "[%key:component::yoto::entity::select::day_ambient_color::state::orange_peel%]",
+          "sky_blue": "[%key:component::yoto::entity::select::day_ambient_color::state::sky_blue%]",
+          "tambourine_red": "[%key:component::yoto::entity::select::day_ambient_color::state::tambourine_red%]",
+          "white": "[%key:component::yoto::entity::select::day_ambient_color::state::white%]"
+        }
+      }
+    },
     "sensor": {
       "card_insertion_state": {
         "name": "Card slot",

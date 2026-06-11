@@ -36,6 +36,14 @@
         "default": "mdi:power-sleep"
       }
     },
+    "select": {
+      "day_ambient_color": {
+        "default": "mdi:palette"
+      },
+      "night_ambient_color": {
+        "default": "mdi:palette"
+      }
+    },
     "sensor": {
       "card_insertion_state": {
         "default": "mdi:card-bulleted-outline",
