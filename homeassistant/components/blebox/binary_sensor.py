@@ -25,6 +25,9 @@ BINARY_SENSOR_TYPES = (
         key="open",
         device_class=BinarySensorDeviceClass.WINDOW,
     ),
+    BinarySensorEntityDescription(
+        key="input",
+    ),
 )
 
 
