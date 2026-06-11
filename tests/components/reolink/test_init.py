@@ -972,11 +972,11 @@ async def test_baichuan_port_changed(
     assert config_entry.data[CONF_BC_PORT] == 8901
 
 
-async def test_UID_changed(
+async def test_uid_changed(
     hass: HomeAssistant,
     reolink_host: MagicMock,
 ) -> None:
-    """Test a the addition of the UID to the config entry when not initial preset."""
+    """Test the addition of the UID to the config entry when not initially present."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(TEST_MAC),
@@ -1005,12 +1005,12 @@ async def test_UID_changed(
     assert config_entry.data[CONF_UID] == TEST_UID
 
 
-async def test_UID_changed_error(
+async def test_uid_changed_error(
     hass: HomeAssistant,
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test a change of the UID is not accepted and results in a error during init."""
+    """Test a change of the UID is not accepted and results in an error during init."""
     assert config_entry.data[CONF_UID] == TEST_UID
     reolink_host.uid = "SOME2OTHER89UID4"
 
