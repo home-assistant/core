@@ -55,6 +55,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bo
         del new_data[CONF_NAME]
         hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
+    if entry.version == 2 and entry.minor_version == 2:
+        entity_reg = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
+        for entity in entries:
+            if entity.unique_id == "yale_smart_alarm-panic":
+                entity_reg.async_update_entity(
+                    entity.entity_id,
+                    new_unique_id=f"{entry.entry_id}-panic",
+                )
+        hass.config_entries.async_update_entry(entry, minor_version=3)
+
     LOGGER.debug("Migration to version %s successful", entry.version)
 
     return True
