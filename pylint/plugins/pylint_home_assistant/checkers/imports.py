@@ -8,6 +8,7 @@ from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
 from pylint_home_assistant.const import Module
+from pylint_home_assistant.helpers.module_info import parse_module
 
 
 @dataclass
@@ -230,17 +231,16 @@ class HassImportsFormatChecker(BaseChecker):
         """Check for improper `import _` invocations."""
         if self.current_package is None:
             return
-        for module, _alias in node.names:
-            if module.startswith(f"{self.current_package}."):
+        for other_module, _alias in node.names:
+            if other_module.startswith(f"{self.current_package}."):
                 self.add_message("home-assistant-relative-import", node=node)
                 continue
             if (
-                module.startswith("homeassistant.components.")
-                and len(module.split(".")) > 3
-            ):
+                other_parsed := parse_module(other_module)
+            ) and other_parsed.module is not None:
                 if (
                     self.current_package.startswith("tests.components.")
-                    and self.current_package.split(".")[2] == module.split(".")[2]
+                    and self.current_package.split(".")[2] == other_parsed.domain
                 ):
                     # Ignore check if the component being tested matches
                     # the component being imported from
