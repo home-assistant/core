@@ -45,8 +45,8 @@ ROBOT_BUTTON_MAP: dict[
     ],
     LitterRobot5: [
         RobotButtonEntityDescription[LitterRobot5](
-            key="recalibrate",
-            translation_key="recalibrate",
+            key="reset",
+            translation_key="reset",
             entity_category=EntityCategory.CONFIG,
             press_fn=lambda robot: robot.reset(),
         ),

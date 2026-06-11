@@ -43,15 +43,9 @@ def create_mock_robot(
     if not robot_data:
         robot_data = {}
 
-    if v5_pro:
-        robot = LitterRobot5(data={**ROBOT_5_PRO_DATA, **robot_data}, account=account)
-        robot.reset = AsyncMock(side_effect=side_effect)
-        robot.change_filter = AsyncMock(side_effect=side_effect)
-        robot.set_night_light_brightness = AsyncMock(side_effect=side_effect)
-        robot.set_night_light_mode = AsyncMock(side_effect=side_effect)
-        robot.set_panel_brightness = AsyncMock(side_effect=side_effect)
-    elif v5:
-        robot = LitterRobot5(data={**ROBOT_5_DATA, **robot_data}, account=account)
+    if v5 or v5_pro:
+        data = ROBOT_5_PRO_DATA if v5_pro else ROBOT_5_DATA
+        robot = LitterRobot5(data={**data, **robot_data}, account=account)
         robot.reset = AsyncMock(side_effect=side_effect)
         robot.change_filter = AsyncMock(side_effect=side_effect)
         robot.set_night_light_brightness = AsyncMock(side_effect=side_effect)

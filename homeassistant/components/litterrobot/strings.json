@@ -77,9 +77,6 @@
       "give_snack": {
         "name": "Give snack"
       },
-      "recalibrate": {
-        "name": "Recalibrate"
-      },
       "reset": {
         "name": "Reset"
       },

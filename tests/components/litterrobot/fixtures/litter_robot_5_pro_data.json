@@ -1,5 +1,5 @@
 {
-  "name": "Test",
+  "name": "Test Pro",
   "serial": "LR5P010001",
   "type": "LR5_PRO",
   "timezone": "America/New_York",
@@ -112,6 +112,6 @@
   "cameraMetadata": {
     "deviceId": "68f5f44bba1544a7cc8697c2",
     "serialNumber": "E0510076020EBFV",
-    "spaceId": "69261e737e1f43011f75b804"
+    "spaceId": "0123456789abcdef01234567"
   }
 }
