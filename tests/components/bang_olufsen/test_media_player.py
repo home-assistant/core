@@ -582,7 +582,7 @@ async def test_async_update_beolink_listener(
     playback_metadata_callback(
         PlaybackContentMetadata(
             remote_leader=BeolinkLeader(
-                friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2
+                friendly_name=TEST_FRIENDLY_NAME_2, jid=TEST_JID_2, audio_transport="v2"
             )
         )
     )
