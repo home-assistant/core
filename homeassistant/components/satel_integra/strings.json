@@ -113,7 +113,7 @@
             "partition_number": "Partition number"
           },
           "data_description": {
-            "arm_home_mode": "The arming mode to use for 'arm home':\nMode 1 fully arms and bypasses zones configured as bypassed if no exit.\nMode 2 disarms interior zones; exterior zones trigger silent alarms and other alarm zones trigger loud alarms.\nMode 3 is like mode 2, but delayed zones are instant.",
+            "arm_home_mode": "The arming mode to use for 'arm home':\nMode 1 fully arms and bypasses zones that have the 'Bypassed if no exit' option enabled.\nMode 2 disarms interior zones; exterior zones trigger silent alarms and other alarm zones trigger loud alarms.\nMode 3 is like mode 2, but delayed zones are instant.",
             "name": "The name to give to the alarm panel",
             "partition_number": "Enter partition number to configure"
           },
