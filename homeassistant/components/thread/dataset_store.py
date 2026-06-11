@@ -287,13 +287,9 @@ class DatasetStore:
         entry: DatasetEntry | None
         for entry in self.datasets.values():
             if entry.dataset == dataset:
-                if (
-                    preferred_extended_address
-                    and entry.preferred_extended_address is None
-                ):
-                    self.async_set_preferred_border_agent(
-                        entry.id, preferred_border_agent_id, preferred_extended_address
-                    )
+                self._async_maybe_update_preferred_border_agent(
+                    entry, preferred_border_agent_id, preferred_extended_address
+                )
                 return
 
         # Update if dataset with same extended pan id exists and the timestamp
@@ -341,10 +337,9 @@ class DatasetStore:
                 self.datasets[entry.id], tlv=tlv
             )
             self.async_schedule_save()
-            if preferred_extended_address and entry.preferred_extended_address is None:
-                self.async_set_preferred_border_agent(
-                    entry.id, preferred_border_agent_id, preferred_extended_address
-                )
+            self._async_maybe_update_preferred_border_agent(
+                entry, preferred_border_agent_id, preferred_extended_address
+            )
             return
 
         entry = DatasetEntry(
@@ -381,6 +376,42 @@ class DatasetStore:
     def async_get(self, dataset_id: str) -> DatasetEntry | None:
         """Get dataset by id."""
         return self.datasets.get(dataset_id)
+
+    @callback
+    def _async_maybe_update_preferred_border_agent(
+        self,
+        entry: DatasetEntry,
+        preferred_border_agent_id: str | None,
+        preferred_extended_address: str | None,
+    ) -> None:
+        """Update the preferred border agent of an existing dataset if appropriate.
+
+        Sets the preferred border agent if it was not set yet, or refreshes the
+        stored extended address when the border agent ID still matches but the
+        extended address changed. The latter happens e.g. after an OTBR upgrade
+        regenerates the extended address while keeping the same border agent ID.
+        """
+        if not preferred_extended_address:
+            return
+        if entry.preferred_extended_address is None:
+            self.async_set_preferred_border_agent(
+                entry.id, preferred_border_agent_id, preferred_extended_address
+            )
+            return
+        if (
+            preferred_border_agent_id is not None
+            and preferred_border_agent_id == entry.preferred_border_agent_id
+            and preferred_extended_address != entry.preferred_extended_address
+        ):
+            _LOGGER.info(
+                "Updating extended address of preferred border agent %s from %s to %s",
+                preferred_border_agent_id,
+                entry.preferred_extended_address,
+                preferred_extended_address,
+            )
+            self.async_set_preferred_border_agent(
+                entry.id, preferred_border_agent_id, preferred_extended_address
+            )
 
     @callback
     def async_set_preferred_border_agent(
