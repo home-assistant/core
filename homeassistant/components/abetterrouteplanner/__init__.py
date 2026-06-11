@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from http import HTTPStatus
 
+from aioabrp import AbrpClient, TelemetryStream
 from aiohttp import ClientError, ClientResponseError
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,19 +17,18 @@ from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
+from .auth import AbetterrouteplannerAuth
 from .const import (
+    ABRP_APP_KEY,
     CONF_KNOWN_VEHICLE_IDS,
     CONF_VEHICLE_IDS,
     DOMAIN,
     PREWARM_WINDOW_SECONDS,
 )
-from .coordinator import (
-    AbrpTelemetryCoordinator,
-    AbrpVehiclesCoordinator,
-    _run_sse_loop,
-)
+from .coordinator import AbrpTelemetryCoordinator, AbrpVehiclesCoordinator
 from .oauth import AbetterrouteplannerOAuth2Implementation
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -205,11 +205,16 @@ class AbrpData:
     drives device-registry entries), while the telemetry coordinator
     receives push updates from the ``/2/tlm`` SSE stream. Separating them
     isolates failure modes — SSE flakes never threaten device identity.
+
+    ``stream`` is the push-telemetry SSE consumer owned by the entry. It is
+    only created when the entry has live vehicle ids to stream; an entry with
+    no streamable vehicles leaves it ``None``.
     """
 
     session: config_entry_oauth2_flow.OAuth2Session
     garage_coordinator: AbrpVehiclesCoordinator
     telemetry_coordinator: AbrpTelemetryCoordinator
+    stream: TelemetryStream | None
 
 
 type AbetterrouteplannerConfigEntry = ConfigEntry[AbrpData]
@@ -393,44 +398,55 @@ async def async_setup_entry(
         )
     )
 
-    entry.runtime_data = AbrpData(
-        session=session,
-        garage_coordinator=garage_coordinator,
-        telemetry_coordinator=telemetry_coordinator,
-    )
+    # Build the auth wrapper + client + websession once; they back both the
+    # seed poll and the SSE consumer below. The stream is owned by the config
+    # entry and stopped on unload.
+    websession = async_get_clientsession(hass)
+    auth = AbetterrouteplannerAuth(session)
+    client = AbrpClient(websession, ABRP_APP_KEY, auth)
 
-    # Spawn the SSE consumer scoped to the entry's selected vehicles. The
-    # task is owned by the config entry — HA cancels it on unload. Filter
-    # the selection against the live garage so we only stream for vehicles
-    # the API actually knows about; the v2 endpoint rejects unknown IDs,
-    # and an entry with no live selections (e.g. user removed every vehicle
-    # in ABRP) should idle until the next garage refresh re-discovers them.
+    # Filter the selection against the live garage so we only stream for
+    # vehicles the API actually knows about; the v2 endpoint rejects unknown
+    # IDs, and an entry with no live selections (e.g. user removed every
+    # vehicle in ABRP) should idle until the next garage refresh re-discovers
+    # them.
     present_ids = {vehicle.vehicle_id for vehicle in garage_coordinator.data}
     vehicle_ids = [
         int(vehicle_id)
         for vehicle_id in entry.data[CONF_VEHICLE_IDS]
         if int(vehicle_id) in present_ids
     ]
-    # Seed the telemetry coordinator BEFORE spawning the SSE consumer so the
-    # cached JSON snapshot is the baseline the stream merges into; then give
-    # the consumer a brief pre-warm window before forwarding to the sensor
-    # platform. The JSON snapshot can lag the live stream (e.g. a vehicle is
-    # charging right now → ``power`` is non-null on SSE but null in the
-    # cached JSON), so the window lets in-flight frames merge into
-    # ``coordinator.data`` before the platform inspects it to decide which
-    # metric entities to create. The wait is capped: a slow / empty stream
-    # falls through to the dispatcher path, which covers any post-setup
-    # first-arrival.
+
+    # Seed the telemetry coordinator BEFORE starting the stream so the cached
+    # snapshot is the baseline the stream merges into; then give the consumer
+    # a brief pre-warm window before forwarding to the sensor platform. The
+    # seeded snapshot can lag the live stream (e.g. a vehicle is charging right
+    # now → ``power`` is non-null on SSE but null in the seed), so the window
+    # lets in-flight frames merge into ``coordinator.data`` before the platform
+    # inspects it to decide which metric entities to create. The wait is
+    # capped: a slow / empty stream falls through to the dispatcher path, which
+    # covers any post-setup first-arrival.
+    stream: TelemetryStream | None = None
     if vehicle_ids:
-        await telemetry_coordinator.async_seed_from_json_poll(
-            vehicle_ids, session.token["access_token"]
+        await telemetry_coordinator.async_seed(client, vehicle_ids)
+        stream = TelemetryStream(
+            websession,
+            ABRP_APP_KEY,
+            auth,
+            vehicle_ids,
+            on_update=telemetry_coordinator.on_update,
+            on_connection_change=telemetry_coordinator.on_connection_change,
+            name=entry.title,
         )
-        entry.async_create_background_task(
-            hass,
-            _run_sse_loop(hass, entry, telemetry_coordinator, session, vehicle_ids),
-            name="abrp-sse",
-        )
+        await stream.start()
         await asyncio.sleep(PREWARM_WINDOW_SECONDS)
+
+    entry.runtime_data = AbrpData(
+        session=session,
+        garage_coordinator=garage_coordinator,
+        telemetry_coordinator=telemetry_coordinator,
+        stream=stream,
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -440,6 +456,8 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: AbetterrouteplannerConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    if (stream := entry.runtime_data.stream) is not None:
+        await stream.stop()
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
