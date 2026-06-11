@@ -1,34 +1,33 @@
 """Fixtures for the A Better Routeplanner integration tests."""
 
-import asyncio
 import base64
-from collections.abc import AsyncIterator, Generator
+from collections.abc import Generator
+from datetime import datetime
 from http import HTTPStatus
 import json
 import time
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
+from aioabrp import (
+    AbrpVehicle,
+    CatalogEntry,
+    ChargingState,
+    ConnectionEvent,
+    Metric,
+    MetricValue,
+)
 import pytest
 
-from homeassistant.components.abetterrouteplanner.api import AbrpVehicle
 from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from tests.common import MockConfigEntry
-from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 USER_SUB = "user-sub-12345"
 REDIRECT_URI = "https://example.com/auth/external/callback"
-
-# v1 API surface — these values pin the wire contract that api.py +
-# config_flow picker depend on.
-ABRP_API_BASE = "https://api.iternio.com/1"
-ABRP_API_V2_BASE = "https://api.iternio.com/2"
-ABRP_GET_TLM_URL = f"{ABRP_API_BASE}/session/get_tlm"
-ABRP_VEHICLE_LIST_URL = f"{ABRP_API_V2_BASE}/vehicle/_list"
 
 # Sample identity drawn from /tmp/abrp_garage_fixture.json (live probe).
 MOCK_VEHICLE_ID = 941349991303
@@ -49,99 +48,36 @@ MOCK_PAINT_2 = "BLACK"
 SENSOR_TEST_SUB = "abrp-test-sub"
 
 
-def build_vehicle_record(
-    vehicle_id: int = MOCK_VEHICLE_ID,
-    name: str = MOCK_VEHICLE_NAME,
-    vehicle_model: str = MOCK_VEHICLE_MODEL,
-    paint: str | None = MOCK_PAINT,
-) -> dict[str, Any]:
-    """Build one entry of the ``result`` array as returned by /1/session/get_tlm.
-
-    Shape mirrors the live probe at ``/tmp/abrp_garage_fixture.json``. Many
-    fields are irrelevant to vehicle enumeration (telemetry / OBD / streaming)
-    but are included so the fixture matches what the real endpoint emits.
-    """
-    return {
-        "vehicle_id": vehicle_id,
-        "tlm_type": None,
-        "ota_tlm_type": None,
-        "tlm_authorized": None,
-        "car_model": vehicle_model,
-        "always_log": False,
-        "has_settings": True,
-        "vin_hash": None,
-        "vin_hashes": None,
-        "tlm_is_streaming": False,
-        "tlm_can_stream": None,
-        "tlm_streaming_type": None,
-        "tlm_region_error": None,
-        "obd_ble_device_ids": None,
-        "obd_ble_device_id": None,
-        "is_connected": False,
-        "ota_is_connected": False,
-        "local_is_connected": False,
-        "tlm_time": 0,
-        "name": name,
-        "paint": paint,
-        "active_config": None,
-        "tlm": None,
-        "tlm_intervention_ids": None,
-        "owner_id": 2755291,
-        "owner_name": "TempAccount",
-        "owner_email": "tester@example.invalid",
-    }
+def build_catalog_entry(
+    typecode: str = MOCK_VEHICLE_MODEL,
+    *,
+    manufacturer: str | None = "Rivian",
+    model: str | None = "R2",
+    title: str | None = "Rivian R2 2027 Standard Long Range RWD",
+    start_year: int | None = 2026,
+    end_year: int | None = None,
+    battery_capacity_wh: int | None = 92_000,
+) -> CatalogEntry:
+    """Build a typed CatalogEntry for catalog-enrichment tests."""
+    return CatalogEntry(
+        typecode=typecode,
+        manufacturer=manufacturer,
+        model=model,
+        title=title,
+        start_year=start_year,
+        end_year=end_year,
+        battery_capacity_wh=battery_capacity_wh,
+    )
 
 
-def build_garage_response(
-    records: list[dict[str, Any]] | None = None,
-) -> dict[str, Any]:
-    """Wrap ``records`` in the v1 envelope returned by /1/session/get_tlm.
-
-    Pass ``records=None`` (the default) for the canonical single-vehicle
-    garage; pass ``[]`` for an empty account; pass a list of multiple records
-    built via :func:`build_vehicle_record` for N>1 cases.
-    """
-    if records is None:
-        records = [build_vehicle_record()]
-    return {
-        "status": "ok",
-        "result": records,
-        "extra": {"settings_update_time": 0, "settings_version": 0},
-    }
-
-
-def build_catalog_response(
-    vehicles: list[dict[str, Any]] | None = None,
-) -> dict[str, Any]:
-    """Wrap ``vehicles`` in the v2 envelope returned by /2/vehicle/_list.
-
-    Pass ``vehicles=None`` (the default) for an empty catalog response — the
-    common shape for tests that need the endpoint to succeed but don't care
-    about catalog enrichment. The full live catalog is ~1100 entries; tests
-    that need specific entries should pass concrete records.
-    """
-    if vehicles is None:
-        vehicles = []
-    return {"display": [], "options": [], "vehicles": vehicles}
-
-
-@pytest.fixture(name="mock_abrp_vehicles_response")
-def mock_abrp_vehicles_response() -> dict[str, Any]:
-    """Canonical single-vehicle garage response.
-
-    Override per-test by calling :func:`build_garage_response` with custom
-    ``records`` and assigning the result to ``aioclient_mock.post(...)``.
-    """
-    return build_garage_response()
-
-
-@pytest.fixture(name="mock_get_tlm")
-def mock_get_tlm(
-    aioclient_mock: AiohttpClientMocker,
-    mock_abrp_vehicles_response: dict[str, Any],
-) -> None:
-    """Register ``POST /1/session/get_tlm`` to return the default garage."""
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=mock_abrp_vehicles_response)
+def build_metric_value(
+    value: float | ChargingState,
+    *,
+    time: datetime | None = None,
+    provider: str | None = None,
+) -> MetricValue:
+    """Build a typed MetricValue (the unit of coordinator telemetry state)."""
+    return MetricValue(value=value, time=time, provider=provider)
 
 
 async def complete_oauth_callback(
@@ -211,8 +147,8 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
     ``CONF_VEHICLE_IDS`` is set to an empty list: ``__init__.py`` reads it via
     direct ``entry.data[CONF_VEHICLE_IDS]`` access, so the key must be present
     or setup raises ``KeyError``. An empty list keeps these legacy fixtures
-    minimal — no vehicles selected means no SSE task spawns, so tests
-    using this fixture don't need ``mock_sse_client``.
+    minimal — no vehicles selected means no telemetry stream is spawned, so
+    tests using this fixture don't need ``fake_stream``.
     """
     return MockConfigEntry(
         domain=DOMAIN,
@@ -262,34 +198,67 @@ def mock_abrp_vehicles() -> list[AbrpVehicle]:
 def mock_abrp_client(
     mock_abrp_vehicles: list[AbrpVehicle],
 ) -> Generator[AsyncMock]:
-    """Patch ``AbrpClient.async_get_vehicles`` with a configurable mock.
+    """Patch the ``aioabrp.AbrpClient`` boundary with configurable mocks.
 
-    The mock's ``return_value`` is set to the 2-vehicle
-    ``mock_abrp_vehicles`` list (the same list object on every call — no
-    current test mutates it in place; tests that need to alter per-refresh
-    behaviour reassign ``return_value`` / ``side_effect`` directly on the
-    yielded mock). The patch targets the source module (not a downstream
-    import) so it covers both the coordinator's instantiation path and any
-    direct ``AbrpClient(...)`` usage in config-flow code.
+    Patches the three client methods on the library class object itself, so a
+    single fixture covers every ``AbrpClient`` instance the integration builds:
+    the garage coordinator's client, the seed-path client, and the config-flow
+    client all share the same class object, so patching the class methods
+    patches all instances.
 
-    Also patches ``async_get_catalog`` with an empty-dict default so the
-    garage coordinator's lazy-once catalog fetch doesn't reach the real
-    network. Tests that exercise catalog enrichment behaviour can
-    nest their own ``with patch(...)`` to override the return value or
-    inject a side_effect for the catalog endpoint specifically.
+    - ``async_get_vehicles`` (autospec): returns the 2-vehicle
+      ``mock_abrp_vehicles`` list.
+    - ``async_get_catalog`` (autospec): returns an empty
+      ``dict[str, CatalogEntry]`` by default; tests exercising catalog
+      enrichment reassign ``return_value`` / ``side_effect`` on the underlying
+      class mock, or nest their own ``with patch(...)``.
+    - ``async_get_current_telemetry`` (the coordinator seed path, autospec):
+      per-vehicle configurable typed returns. Tests populate
+      ``mock_abrp_client.seed_responses`` keyed by vehicle id with either a
+      ``dict[Metric, MetricValue]`` (returned) or a ``BaseException`` (raised),
+      e.g.::
+
+          mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {
+              Metric.SOC: build_metric_value(42.0)
+          }
+
+      Any vehicle id absent from the table seeds an empty dict.
+
+    Autospec/self decision: all three patches use ``autospec=True``. Because
+    autospec preserves the bound-method signature, the ``async_get_current_telemetry``
+    side_effect receives ``self`` as its first positional arg (the real
+    signature is ``(self, vehicle_id)``), so ``_seed`` is defined as
+    ``_seed(self, vehicle_id)``.
+
+    The ``async_get_vehicles`` mock is yielded as the primary handle, with
+    ``.seed_responses`` attached to it for ergonomic per-vehicle seeding.
     """
+    seed_responses: dict[int, dict[Metric, MetricValue] | BaseException] = {}
+
+    async def _seed(self: Any, vehicle_id: int) -> dict[Metric, MetricValue]:
+        outcome = seed_responses.get(vehicle_id, {})
+        if isinstance(outcome, BaseException):
+            raise outcome
+        return outcome
+
     with (
         patch(
-            "homeassistant.components.abetterrouteplanner.api.AbrpClient.async_get_vehicles",
+            "aioabrp.AbrpClient.async_get_vehicles",
             autospec=True,
             return_value=mock_abrp_vehicles,
         ) as mock_client,
         patch(
-            "homeassistant.components.abetterrouteplanner.api.AbrpClient.async_get_catalog",
+            "aioabrp.AbrpClient.async_get_catalog",
             autospec=True,
             return_value={},
         ),
+        patch(
+            "aioabrp.AbrpClient.async_get_current_telemetry",
+            autospec=True,
+            side_effect=_seed,
+        ),
     ):
+        mock_client.seed_responses = seed_responses
         yield mock_client
 
 
@@ -324,147 +293,95 @@ def mock_config_entry_with_vehicles(
 # Telemetry fixtures -----------------------------------------------------------
 
 
-def build_telemetry_frame(
-    vehicle_id: int,
-    *,
-    soc: float | None = None,
-    power: float | None = None,
-    voltage: float | None = None,
-    range_m: float | None = None,
-    battery_temp_c: float | None = None,
-    charging_state: str | None = None,
-) -> dict[str, Any]:
-    """Build a partial ``OutputPointWithVehicleId`` frame.
+class _StreamDriver:
+    """Test handle for driving a faked ``TelemetryStream`` synchronously."""
 
-    Mirrors the v2 SSE wire shape (probe-confirmed): ``vehicleId`` plus zero
-    or more nested per-metric records (``soc.frac``, ``power.w``,
-    ``voltage.v``, ``estimatedBatteryRange.m``, ``batteryTemperature.c``,
-    ``chargingState.state``). Outer-camel / inner-snake follows ABRP's v2
-    telemetry wire-key naming. The frame is a *delta* — the coordinator
-    merges into its per-vehicle state, so tests typically construct
-    one-metric frames to verify partial-update semantics.
+    def __init__(self, cls: Any) -> None:
+        """Wrap the per-test fake stream class so the driver can find it."""
+        self._cls = cls
 
-    Values default to ``None`` (omitted from the frame), not ``0`` — a
-    ``None`` placeholder would never appear on the wire and would break
-    the "missing key" branch tests for ``available``.
+    @property
+    def stream(self) -> Any:
+        """The most recently constructed fake stream (None before setup)."""
+        return self._cls.instances[-1] if self._cls.instances else None
 
-    ``charging_state`` carries the categorical ENUM leaf: the value is the
-    raw upstream wire member (``"CHARGING_AC"`` etc.), emitted as
-    ``{"chargingState": {"state": <value>}}`` only when set — same
-    omit-when-None pattern as the numeric metrics. Malformed shapes the
-    helper can't express (non-dict block, missing ``state``) are built as
-    raw dicts directly in the value_fn tests.
-    """
-    frame: dict[str, Any] = {"vehicleId": vehicle_id}
-    if soc is not None:
-        frame["soc"] = {"frac": soc}
-    if power is not None:
-        frame["power"] = {"w": power}
-    if voltage is not None:
-        frame["voltage"] = {"v": voltage}
-    if range_m is not None:
-        frame["estimatedBatteryRange"] = {"m": range_m}
-    if battery_temp_c is not None:
-        frame["batteryTemperature"] = {"c": battery_temp_c}
-    if charging_state is not None:
-        frame["chargingState"] = {"state": charging_state}
-    return frame
+    def fire_frame(self, vehicle_id: int, metrics: dict[Metric, MetricValue]) -> None:
+        """Invoke the coordinator's on_update with a typed metric batch."""
+        assert self.stream is not None, (
+            "fire_frame called before TelemetryStream construction"
+        )
+        self.stream.on_update(vehicle_id, metrics)
+
+    def fire_connection(self, event: ConnectionEvent) -> None:
+        """Invoke the coordinator's on_connection_change with a transition."""
+        assert self.stream is not None, (
+            "fire_connection called before TelemetryStream construction"
+        )
+        self.stream.on_connection_change(event)
 
 
-class _FrameStream:
-    """Async iterator backing ``mock_sse_client``.
+@pytest.fixture(name="fake_stream")
+def fake_stream() -> Generator[_StreamDriver]:
+    """Patch the integration's TelemetryStream with a synchronous test driver.
 
-    Yields any queued frames in order, then blocks indefinitely so the
-    long-lived SSE consumer task stays alive until the test unloads the
-    entry (which cancels the task). ``asyncio.CancelledError`` exits the
-    iterator cleanly.
+    Captures the constructor-injected on_update / on_connection_change
+    callbacks and exposes fire_frame / fire_connection so tests drive
+    push telemetry deterministically without a real SSE consumer. Also
+    collapses the setup pre-warm sleep to 0 so setup doesn't block 0.5s.
+
+    The fake stream class is defined inside the fixture so each test gets a
+    fresh class with its own ``instances`` list — no cross-test leakage.
     """
 
-    def __init__(self, frames: list[dict[str, Any]]) -> None:
-        self._frames = list(frames)
+    class _FakeTelemetryStream:
+        """Test double for aioabrp.TelemetryStream.
 
-    def __aiter__(self) -> _FrameStream:
-        return self
-
-    async def __anext__(self) -> dict[str, Any]:
-        if self._frames:
-            return self._frames.pop(0)
-        try:
-            await asyncio.sleep(86400)
-        except asyncio.CancelledError:
-            raise StopAsyncIteration from None
-        raise StopAsyncIteration
-
-    async def aclose(self) -> None:
-        """No-op cleanup to match the real async-generator shape.
-
-        ``AbrpTelemetryClient.stream`` is a real ``async def`` with ``yield``,
-        so calling it returns an async-generator object that carries an
-        ``aclose()``. The SSE consumer's ``finally`` block awaits that
-        cleanup. This class-based test iterator doesn't have native
-        ``aclose``, so we provide a no-op so tests don't blow up at unload.
+        Captures the constructor-injected coordinator callbacks so a test can
+        drive frames / connection transitions synchronously via the fixture's
+        driver, instead of running a real SSE consumer. start()/stop() are
+        awaitable no-ops that record their call for lifecycle assertions.
         """
 
+        instances: list[Any] = []
 
-@pytest.fixture(name="mock_seed_responses")
-def mock_seed_responses() -> Generator[AsyncMock]:
-    """Patch ``AbrpTelemetryClient.async_get_one_shot`` with per-vehicle returns.
+        def __init__(
+            self,
+            websession: Any,
+            api_key: str,
+            auth: Any,
+            vehicle_ids: list[int],
+            on_update: Any,
+            on_connection_change: Any,
+            *,
+            name: str | None = None,
+            backoff: Any = (5.0, 10.0, 30.0, 60.0),
+            watchdog_seconds: float = 300.0,
+        ) -> None:
+            """Record the injected callbacks and register this instance."""
+            self.vehicle_ids = list(vehicle_ids)
+            self.on_update = on_update
+            self.on_connection_change = on_connection_change
+            self.name = name
+            self.started = False
+            self.stopped = False
+            _FakeTelemetryStream.instances.append(self)
 
-    Default behaviour: an empty dict is returned for any vehicle id not in the
-    table — equivalent to the wire returning ``{}`` (no metric data yet,
-    vehicle has been parked offline since boot).
+        async def start(self) -> None:
+            """Awaitable no-op that records the start call."""
+            self.started = True
 
-    Tests assign to the mock's ``.responses`` dict to customize per-vehicle
-    payloads or push exceptions:
+        async def stop(self) -> None:
+            """Awaitable no-op that records the stop call."""
+            self.stopped = True
 
-    .. code-block:: python
-
-        mock_seed_responses.responses[MOCK_VEHICLE_ID] = {"soc": {"frac": 0.42}}
-        mock_seed_responses.responses[OTHER_ID] = AbrpApiError("boom")
-
-    ``create=True`` so the patch applies cleanly even if
-    :meth:`AbrpTelemetryClient.async_get_one_shot` is later renamed —
-    the fallback fixture setup keeps the imports working.
-    """
-    responses: dict[int, Any] = {}
-
-    async def _per_vehicle(vehicle_id: int) -> dict[str, Any]:
-        outcome = responses.get(vehicle_id, {})
-        if isinstance(outcome, BaseException):
-            raise outcome
-        return outcome
-
-    with patch(
-        "homeassistant.components.abetterrouteplanner.api.AbrpTelemetryClient.async_get_one_shot",
-        create=True,
-        side_effect=_per_vehicle,
-    ) as mock:
-        mock.responses = responses
-        yield mock
-
-
-@pytest.fixture(name="mock_sse_client")
-def mock_sse_client() -> Generator[MagicMock]:
-    """Patch ``AbrpTelemetryClient.stream`` with a configurable async iterator.
-
-    Default behaviour: stream yields nothing and blocks indefinitely so the
-    background SSE task stays alive after ``async_setup_entry``. Tests that
-    want to push frames assign to ``mock_sse_client.frames``; tests that
-    want to simulate disconnect/auth-failure assign ``side_effect`` on the
-    underlying mock just like any other ``MagicMock``.
-
-    Reset between calls: the *mock* records calls but a fresh ``_FrameStream``
-    is returned each invocation, mirroring real SSE reconnect behaviour
-    where each ``stream(...)`` call opens a new connection.
-    """
-    frames: list[list[dict[str, Any]]] = [[]]
-
-    def _factory(*_args: Any, **_kwargs: Any) -> AsyncIterator[dict[str, Any]]:
-        return _FrameStream(frames[0])
-
-    with patch(
-        "homeassistant.components.abetterrouteplanner.api.AbrpTelemetryClient.stream",
-        side_effect=_factory,
-    ) as mock:
-        mock.set_frames = lambda new_frames: frames.__setitem__(0, list(new_frames))
-        yield mock
+    with (
+        patch(
+            "homeassistant.components.abetterrouteplanner.TelemetryStream",
+            _FakeTelemetryStream,
+        ),
+        patch(
+            "homeassistant.components.abetterrouteplanner.PREWARM_WINDOW_SECONDS",
+            0,
+        ),
+    ):
+        yield _StreamDriver(_FakeTelemetryStream)
