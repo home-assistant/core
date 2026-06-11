@@ -659,7 +659,7 @@ async def test_three_sibling_listeners_registered(
         )
     }
     assert closure_qualnames == {
-        "async_setup_entry.<locals>._propagate_renames",
+        "async_setup_entry.<locals>._propagate_device_metadata",
         "async_setup_entry.<locals>._remove_stale_devices",
         "_make_auto_add_listener.<locals>._auto_add_new_vehicles",
     }

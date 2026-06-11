@@ -4,13 +4,15 @@ The telemetry coordinator is a thin push coordinator whose HA-side policy is
 covered in ``test_telemetry_state.py``; all wire parsing / merge / monotonicity
 / reconnect machinery now lives in :mod:`aioabrp` and is tested there. What
 remains here is the garage coordinator: it polls the authenticated user's
-vehicles, lazily fetches the v2 catalog once, and joins each raw vehicle into a
-:class:`GarageVehicle` carrying composed device-card fields.
+vehicles, fetches the v2 catalog (self-healing: retried every poll until the
+first success, and re-fetched once when a new/unmatched vehicle model appears),
+and joins each raw vehicle into a :class:`GarageVehicle` carrying composed
+device-card fields.
 """
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioabrp import AbrpApiError, AbrpAuthError
+from aioabrp import AbrpApiError, AbrpAuthError, AbrpVehicle
 import pytest
 
 from homeassistant.components.abetterrouteplanner.coordinator import (
@@ -22,7 +24,13 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from .conftest import MOCK_VEHICLE_ID, MOCK_VEHICLE_MODEL, build_catalog_entry
+from .conftest import (
+    MOCK_VEHICLE_ID,
+    MOCK_VEHICLE_ID_2,
+    MOCK_VEHICLE_MODEL,
+    MOCK_VEHICLE_MODEL_2,
+    build_catalog_entry,
+)
 
 from tests.common import MockConfigEntry
 
@@ -115,18 +123,19 @@ async def test_refresh_enriches_device_fields_from_catalog(
     )
 
 
-# ---------- catalog lazy-once cache ----------------------------------------
+# ---------- catalog self-healing (retry-until-loaded + refetch on new model) -
 
 
-async def test_catalog_fetched_once_then_reused(
+async def test_catalog_not_refetched_once_loaded(
     garage_coordinator: AbrpVehiclesCoordinator,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """The catalog is fetched on the first refresh and never re-fetched.
+    """Once loaded, a poll with no new typecode does not re-fetch the catalog.
 
-    Lazy-once invariant: reload is the only refresh path; mid-session ABRP
-    catalog changes don't materialise until reload. A regression that
-    refetched every poll would surface as ``call_count == 2``.
+    The ~850 KB catalog must not be re-hit on every 10-min poll. After the
+    first success, every typecode in the garage is recorded as evaluated, so a
+    steady-state poll (even one whose vehicle the catalog can't match) does not
+    re-fetch. A regression would surface as ``call_count == 2``.
     """
     with patch(
         "aioabrp.AbrpClient.async_get_catalog",
@@ -148,20 +157,21 @@ async def test_catalog_fetched_once_then_reused(
         pytest.param(TimeoutError("budget exceeded"), id="timeout_error"),
     ],
 )
-async def test_catalog_fetch_failure_degrades_to_empty(
+async def test_catalog_fetch_failure_degrades_this_poll(
     garage_coordinator: AbrpVehiclesCoordinator,
     mock_abrp_client: AsyncMock,
     caplog: pytest.LogCaptureFixture,
     catalog_error: Exception,
 ) -> None:
-    """Catalog-fetch failure is non-fatal — the garage still ships.
+    """Catalog-fetch failure is non-fatal for the poll and NOT marked loaded.
 
-    Auth / api / timeout on the catalog endpoint degrade to an empty catalog:
-    the refresh returns the garage (device_model falls back to the raw
-    typecode), the cache is set to ``{}`` so the lazy-once gate doesn't retry
-    until reload, and a warning is logged. The garage 401 path (separate) still
-    triggers reauth; the catalog 401 is fail-soft because the catalog endpoint
-    may rate-limit independently of the per-user garage endpoint.
+    Auth / api / timeout on the catalog endpoint degrade to the (empty) catalog
+    for THIS poll — the refresh still ships the garage with device models
+    falling back to the raw typecode — and a warning is logged. Crucially the
+    catalog is not marked loaded, so the next poll retries (see
+    :func:`test_catalog_retried_until_first_success`). The garage 401 path
+    (separate) still triggers reauth; the catalog 401 is fail-soft because the
+    catalog endpoint can fail independently of the per-user garage endpoint.
     """
     with patch(
         "aioabrp.AbrpClient.async_get_catalog",
@@ -172,9 +182,103 @@ async def test_catalog_fetch_failure_degrades_to_empty(
 
     assert garage_coordinator.last_update_success
     assert len(garage_coordinator.data) == 2
-    # Cache is initialised to {} so subsequent polls don't retry until reload.
+    assert garage_coordinator.data[0].device_model is None
+    # Not marked loaded → the next poll retries (self-healing, not give-up).
     assert garage_coordinator._catalog == {}
+    assert garage_coordinator._catalog_loaded is False
     assert any("catalog" in record.message.lower() for record in caplog.records)
+
+
+async def test_catalog_retried_until_first_success(
+    garage_coordinator: AbrpVehiclesCoordinator,
+    mock_abrp_client: AsyncMock,
+) -> None:
+    """A failing catalog fetch is retried every poll until it succeeds.
+
+    Replaces the old give-up-for-the-session behaviour: a transient catalog
+    failure (or an ABRP feature-plan entitlement that lags first setup) must
+    not strand device models on the raw typecode until a manual reload. After
+    the success the catalog is reused (no further re-fetch).
+    """
+    catalog = {MOCK_VEHICLE_MODEL: build_catalog_entry()}
+    with patch(
+        "aioabrp.AbrpClient.async_get_catalog",
+        new_callable=AsyncMock,
+        side_effect=[AbrpApiError("HTTP 403"), AbrpApiError("HTTP 403"), catalog],
+    ) as mock_catalog:
+        await garage_coordinator.async_refresh()  # fail 1
+        assert garage_coordinator.data[0].device_model is None
+        assert garage_coordinator._catalog_loaded is False
+
+        await garage_coordinator.async_refresh()  # fail 2
+        assert mock_catalog.call_count == 2
+        assert garage_coordinator.data[0].device_model is None
+
+        await garage_coordinator.async_refresh()  # success
+        assert mock_catalog.call_count == 3
+        assert garage_coordinator._catalog_loaded is True
+        assert garage_coordinator.data[0].device_model is not None
+
+        # No further re-fetch once loaded (a 4th call would raise StopIteration
+        # against the 3-item side_effect, so this also pins "no refetch").
+        await garage_coordinator.async_refresh()
+        assert mock_catalog.call_count == 3
+
+
+async def test_new_unmatched_typecode_triggers_one_refetch(
+    garage_coordinator: AbrpVehiclesCoordinator,
+    mock_abrp_client: AsyncMock,
+) -> None:
+    """A newly-appearing vehicle model re-fetches the catalog exactly once.
+
+    A model added to ABRP's catalog after the initial load is picked up
+    without a config-entry reload; but once a fresh catalog has been evaluated
+    against a typecode, that typecode never re-fetches again (so a genuinely-
+    absent model can't trigger an ~850 KB fetch on every poll).
+    """
+    veh_a = AbrpVehicle(
+        vehicle_id=MOCK_VEHICLE_ID,
+        name="A",
+        vehicle_model=MOCK_VEHICLE_MODEL,
+        paint=None,
+    )
+    veh_b = AbrpVehicle(
+        vehicle_id=MOCK_VEHICLE_ID_2,
+        name="B",
+        vehicle_model=MOCK_VEHICLE_MODEL_2,
+        paint=None,
+    )
+    cat_a = {MOCK_VEHICLE_MODEL: build_catalog_entry()}
+    cat_ab = {
+        MOCK_VEHICLE_MODEL: build_catalog_entry(),
+        MOCK_VEHICLE_MODEL_2: build_catalog_entry(
+            typecode=MOCK_VEHICLE_MODEL_2, manufacturer="Rivian", model="R1S"
+        ),
+    }
+    with patch(
+        "aioabrp.AbrpClient.async_get_catalog",
+        new_callable=AsyncMock,
+        side_effect=[cat_a, cat_ab],
+    ) as mock_catalog:
+        # Poll 1: only A present → first load (call 1); A resolves.
+        mock_abrp_client.return_value = [veh_a]
+        await garage_coordinator.async_refresh()
+        assert mock_catalog.call_count == 1
+        assert garage_coordinator.data[0].device_model is not None
+
+        # Poll 2: new B appears, unmatched by cat_a → one refetch (call 2);
+        # cat_ab now resolves B.
+        mock_abrp_client.return_value = [veh_a, veh_b]
+        await garage_coordinator.async_refresh()
+        assert mock_catalog.call_count == 2
+        veh_b_carrier = next(
+            v for v in garage_coordinator.data if v.vehicle_id == MOCK_VEHICLE_ID_2
+        )
+        assert veh_b_carrier.device_model is not None
+
+        # Poll 3: same A + B, both already evaluated → no further refetch.
+        await garage_coordinator.async_refresh()
+        assert mock_catalog.call_count == 2
 
 
 # ---------- garage error mapping -------------------------------------------

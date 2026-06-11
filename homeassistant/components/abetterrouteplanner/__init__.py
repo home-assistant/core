@@ -18,7 +18,7 @@ from homeassistant.helpers import (
     device_registry as dr,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.typing import ConfigType
+from homeassistant.helpers.typing import UNDEFINED, ConfigType, UndefinedType
 
 from .auth import AbetterrouteplannerAuth
 from .const import (
@@ -34,6 +34,11 @@ from .oauth import AbetterrouteplannerOAuth2Implementation
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
+
+# Device-card manufacturer fallback when the catalog can't resolve a make.
+# Used by BOTH the setup-time anchor and the on-refresh metadata propagation;
+# they must agree or the propagation would rewrite the field on every poll.
+_DEFAULT_MANUFACTURER = "A Better Routeplanner"
 
 # Consecutive missing-from-garage polls before treating a vehicle as deleted
 # upstream. Threshold 2 ≈ 20 minutes of patience — covers transient ABRP-side
@@ -294,7 +299,7 @@ async def async_setup_entry(
     # Anchor a device per selected vehicle BEFORE forwarding the platforms and
     # registering the garage-listener callbacks. The device card is then
     # present immediately after setup — even for a vehicle that's silent on
-    # SSE — and downstream listeners (``_propagate_renames``,
+    # SSE — and downstream listeners (``_propagate_device_metadata``,
     # ``_remove_stale_devices``) operate against a populated device registry
     # on their first fire. Formulas mirror those used by the telemetry
     # entities so the device fields match what an entity-driven registration
@@ -308,7 +313,7 @@ async def async_setup_entry(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, scope)},
-            manufacturer=vehicle.device_manufacturer or "A Better Routeplanner",
+            manufacturer=vehicle.device_manufacturer or _DEFAULT_MANUFACTURER,
             model=vehicle.device_model or vehicle.vehicle_model,
             name=vehicle.name or vehicle.vehicle_model,
             configuration_url=(
@@ -317,15 +322,24 @@ async def async_setup_entry(
         )
 
     @callback
-    def _propagate_renames() -> None:
-        """Push ABRP vehicle-name changes into the HA device registry.
+    def _propagate_device_metadata() -> None:
+        """Reconcile each device's name, model, and manufacturer on refresh.
 
-        Fires on every successful garage refresh. The same expression as
-        ``DeviceInfo.name`` in :mod:`.sensor` (``vehicle.name`` with a
-        ``vehicle_model`` fallback) is recomputed each call so the registry
-        entry stays in lockstep with what the initial registration would
-        have produced. ``name_by_user`` wins — once the user has overridden
-        the device name in HA, ABRP renames are silently skipped.
+        Fires on every successful garage refresh and recomputes the same
+        expressions the setup-time anchor used, so any value that changes
+        upstream is pushed into the registry WITHOUT a config-entry reload:
+
+        * ``name`` — an ABRP vehicle rename. ``name_by_user`` wins: once the
+          user has overridden the device name in HA, ABRP renames are skipped.
+        * ``model`` / ``manufacturer`` — these only resolve once the garage
+          coordinator's self-healing catalog fetch finally succeeds (a delayed
+          catalog or a newly-added model). They are integration-owned (no
+          user-override concept), so they always track the anchor formula;
+          before the catalog loads they read the raw typecode / the default
+          manufacturer, and flip to the catalog values on the poll after the
+          fetch succeeds.
+
+        Each field is compared before writing so an unchanged poll is a no-op.
         """
         device_registry = dr.async_get(hass)
         for vehicle in garage_coordinator.data:
@@ -333,14 +347,35 @@ async def async_setup_entry(
             device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
             if device is None:
                 continue
-            if device.name_by_user is not None:
-                continue
-            new_name = vehicle.name or vehicle.vehicle_model
-            if device.name == new_name:
-                continue
-            device_registry.async_update_device(device.id, name=new_name)
+            # ``UNDEFINED`` per field = "leave unchanged"; only the fields that
+            # actually differ are passed, so an unchanged poll is a no-op.
+            name: str | UndefinedType = UNDEFINED
+            if device.name_by_user is None:
+                candidate = vehicle.name or vehicle.vehicle_model
+                if device.name != candidate:
+                    name = candidate
+            model: str | UndefinedType = UNDEFINED
+            candidate_model = vehicle.device_model or vehicle.vehicle_model
+            if device.model != candidate_model:
+                model = candidate_model
+            manufacturer: str | UndefinedType = UNDEFINED
+            candidate_manufacturer = (
+                vehicle.device_manufacturer or _DEFAULT_MANUFACTURER
+            )
+            if device.manufacturer != candidate_manufacturer:
+                manufacturer = candidate_manufacturer
+            if (
+                name is not UNDEFINED
+                or model is not UNDEFINED
+                or manufacturer is not UNDEFINED
+            ):
+                device_registry.async_update_device(
+                    device.id, name=name, model=model, manufacturer=manufacturer
+                )
 
-    entry.async_on_unload(garage_coordinator.async_add_listener(_propagate_renames))
+    entry.async_on_unload(
+        garage_coordinator.async_add_listener(_propagate_device_metadata)
+    )
 
     # Construct the telemetry coordinator BEFORE the stale-devices listener
     # closure captures it — the listener fires both eagerly at setup time

@@ -1,28 +1,29 @@
-"""Tests for vehicle rename propagation to the HA device registry.
+"""Tests for device-metadata propagation to the HA device registry.
 
 The listener is registered via ``entry.async_on_unload(
-garage_coordinator.async_add_listener(_propagate_renames))`` after the
+garage_coordinator.async_add_listener(_propagate_device_metadata))`` after the
 first garage refresh. It iterates ``coordinator.data``, looks up each
 vehicle's device via ``dr.async_get_device(identifiers={(DOMAIN, scope)})``,
-guards on ``device.name_by_user is not None``, and calls
-``dr.async_update_device(device.id, name=new_name)`` when
-``vehicle.name or vehicle.vehicle_model`` differs from the current
-``device.name``.
+and reconciles three fields against the anchor formula: ``name``
+(``vehicle.name or vehicle.vehicle_model``, skipped when the user owns the
+label via ``name_by_user``), plus the integration-owned ``model``
+(``vehicle.device_model or vehicle.vehicle_model``) and ``manufacturer``
+(``vehicle.device_manufacturer or "A Better Routeplanner"``). Each field is
+written only when it differs, so an unchanged poll is a no-op.
 
-Rename changes are driven entirely through the garage coordinator: each test
+Changes are driven entirely through the garage coordinator: each test
 reassigns ``mock_abrp_client.return_value`` (the patched
-``AbrpClient.async_get_vehicles``) to a fresh ``list[AbrpVehicle]`` carrying
-the same ``vehicle_id`` but a new ``name`` / ``vehicle_model``, then triggers
-``garage_coordinator.async_refresh()`` to fire the listener. The ``fake_stream``
-fixture collapses the setup pre-warm sleep to 0, so setup returns immediately
-without a real SSE consumer and these tests need neither ``freezer`` nor any
-``asyncio.sleep`` patching.
+``AbrpClient.async_get_vehicles``) to a fresh ``list[AbrpVehicle]``, then
+triggers ``garage_coordinator.async_refresh()`` to fire the listener. The
+``fake_stream`` fixture collapses the setup pre-warm sleep to 0, so setup
+returns immediately without a real SSE consumer and these tests need neither
+``freezer`` nor any ``asyncio.sleep`` patching.
 """
 
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
-from aioabrp import AbrpVehicle
+from aioabrp import AbrpApiError, AbrpVehicle
 import pytest
 
 from homeassistant.components.abetterrouteplanner import AbrpData
@@ -41,6 +42,7 @@ from .conftest import (
     MOCK_VEHICLE_ID_2,
     MOCK_VEHICLE_MODEL,
     SENSOR_TEST_SUB,
+    build_catalog_entry,
 )
 
 from tests.common import MockConfigEntry
@@ -71,7 +73,7 @@ async def _poll(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Trigger one garage-coordinator refresh and drain the event bus.
 
     Directly calls ``async_refresh()`` on the coordinator so the
-    ``_propagate_renames`` listener fires against whatever
+    ``_propagate_device_metadata`` listener fires against whatever
     ``mock_abrp_client.return_value`` is currently set to.
     """
     runtime_data: AbrpData = entry.runtime_data
@@ -366,3 +368,54 @@ async def test_vehicle_disappears_mid_life_does_not_crash(
     device_b = device_registry.async_get_device(identifiers={(DOMAIN, scope_b)})
     assert device_b is not None
     assert device_b.name == "Vehicle B"
+
+
+# ---------------------------------------------------------------------------
+# device model / manufacturer propagation (late catalog recovery)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("fake_stream")
+async def test_catalog_recovery_updates_device_model_without_reload(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Late catalog recovery updates device model + manufacturer in place.
+
+    No config-entry reload is required. Mirrors the real ABRP
+    feature-plan-entitlement-lag case: the catalog
+    endpoint 403s during setup so the device card falls back to the raw
+    typecode (and the default manufacturer), then the endpoint recovers on the
+    next poll. The garage coordinator's self-healing retry reloads the catalog
+    and ``_propagate_device_metadata`` pushes the composed model/manufacturer
+    into the registry on that same poll. The user-facing name is unaffected.
+    """
+    mock_abrp_client.return_value = [
+        _make_vehicle(MOCK_VEHICLE_ID, "My R2", MOCK_VEHICLE_MODEL)
+    ]
+    catalog = {MOCK_VEHICLE_MODEL: build_catalog_entry()}
+    with patch(
+        "aioabrp.AbrpClient.async_get_catalog",
+        new_callable=AsyncMock,
+        side_effect=[AbrpApiError("HTTP 403"), catalog],
+    ):
+        await _setup_integration(hass, config_entry_with_vehicles)
+
+        scope = _device_scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)
+        device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+        assert device is not None
+        # Setup hit the 403 → raw-typecode + default-manufacturer fallback.
+        assert device.model == MOCK_VEHICLE_MODEL
+        assert device.manufacturer == "A Better Routeplanner"
+
+        # Next poll: catalog recovers → model/manufacturer propagate in place.
+        await _poll(hass, config_entry_with_vehicles)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    assert device is not None
+    assert device.manufacturer == "Rivian"
+    assert device.model == "Rivian R2 2026 Rivian R2 2027 Standard Long Range RWD"
+    # The user-facing name is unaffected by the model recovery.
+    assert device.name == "My R2"

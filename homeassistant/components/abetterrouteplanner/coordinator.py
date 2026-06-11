@@ -146,22 +146,34 @@ class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]
             ABRP_APP_KEY,
             AbetterrouteplannerAuth(session),
         )
-        # Lazy-loaded v2 vehicle catalog (typecode → CatalogEntry). Fetched
-        # once on the first refresh that successfully reaches the client;
-        # ``None`` means "not yet attempted", ``{}`` means "fetch failed —
-        # degrade to empty catalog for the rest of this session". Config
-        # entry reload is the only refresh path; mid-session ABRP catalog
-        # changes are picked up next reload.
-        self._catalog: dict[str, CatalogEntry] | None = None
+        # Self-healing v2 vehicle catalog (typecode → CatalogEntry).
+        # ``_catalog`` holds the last successful fetch (empty until the first
+        # one); ``_catalog_loaded`` distinguishes "never fetched successfully"
+        # (keep retrying every poll — covers a transient catalog outage or an
+        # ABRP feature-plan entitlement that lags the first setup) from
+        # "loaded, possibly empty". ``_catalog_refetch_attempted`` records the
+        # typecodes already evaluated against a good catalog so a brand-new
+        # vehicle model triggers exactly one refetch (a model added to ABRP's
+        # catalog is picked up without a reload) while a genuinely-absent
+        # typecode never re-fetches the ~850 KB catalog on every poll.
+        self._catalog: dict[str, CatalogEntry] = {}
+        self._catalog_loaded = False
+        self._catalog_refetch_attempted: set[str] = set()
 
     async def _async_update_data(self) -> list[GarageVehicle]:
-        """Fetch the garage, lazy-load the catalog, and compose device fields.
+        """Fetch the garage, (re)load the catalog, and compose device fields.
 
         The :class:`.auth.AbetterrouteplannerAuth` wrapper handles the OAuth
         token refresh and maps a revoked/rotated refresh token to
         :class:`aioabrp.AbrpAuthError`; here that surfaces as
         :class:`ConfigEntryAuthFailed`. Other API failures map to
         :class:`UpdateFailed`.
+
+        The catalog fetch is self-healing (see ``__init__``): it is attempted
+        on every poll until the first success, and re-attempted once whenever
+        a vehicle carries a typecode not yet matched against a good catalog —
+        so a delayed catalog (transient failure / entitlement lag) or a
+        brand-new vehicle model resolves without a config-entry reload.
         """
         try:
             raw_vehicles = await self._client.async_get_vehicles()
@@ -176,33 +188,44 @@ class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]
                 translation_key="abrp_update_failed",
             ) from err
 
-        if self._catalog is None:
+        # Typecodes the *current* (possibly stale/empty) catalog cannot match.
+        unmatched = {
+            raw.vehicle_model
+            for raw in raw_vehicles
+            if compose_device_info(raw, self._catalog).device_model is None
+        }
+        # Fetch when we have never succeeded (retry-until-loaded) OR a new
+        # unmatched typecode appeared that we have not already refetched for.
+        if not self._catalog_loaded or (unmatched - self._catalog_refetch_attempted):
             try:
                 self._catalog = await self._client.async_get_catalog()
             except (AbrpAuthError, AbrpApiError, TimeoutError) as err:
-                # Non-fatal: catalog endpoint may rate-limit independently of
-                # the garage endpoint. Degrade to an empty catalog so every
-                # typecode misses and ``DeviceInfo.model`` falls back to the
-                # raw ``vehicle_model`` typecode on the device card. Garage
-                # data is unaffected so the telemetry path keeps working.
-                # Retry happens on the next config-entry reload, not on the
-                # next coordinator poll (cache is now ``{}``, not ``None``).
+                # Non-fatal and self-healing: the catalog endpoint can fail or
+                # rate-limit independently of the garage endpoint, and the ABRP
+                # feature-plan entitlement can lag the first setup. Leave
+                # ``_catalog_loaded`` unset so the next poll retries; this
+                # poll composes against the current ``_catalog`` (empty until
+                # the first success, else the last-good one) so device cards
+                # fall back to the raw typecode meanwhile.
                 #
-                # ``TimeoutError`` is named explicitly as defense-in-depth:
-                # the client already wraps a naked ``asyncio.TimeoutError`` as
-                # ``AbrpApiError`` at its boundary, so under normal flow no
-                # TimeoutError reaches this band. The explicit name guards
-                # against any future code path that bypasses the wrapper — a
-                # regression there would otherwise crash the entire refresh
-                # and freeze ``self._catalog`` at ``None`` (force unbounded
-                # retry).
+                # ``TimeoutError`` is named explicitly as defense-in-depth: the
+                # client already wraps a naked ``asyncio.TimeoutError`` as
+                # ``AbrpApiError`` at its boundary, so under normal flow none
+                # reaches this band; the explicit name guards a future path
+                # that bypasses the wrapper from crashing the whole refresh.
                 _LOGGER.warning(
-                    "ABRP catalog fetch failed; DeviceInfo.model will fall "
-                    "back to the raw type code until the next integration "
-                    "reload: %s",
+                    "ABRP catalog fetch failed; DeviceInfo.model falls back to "
+                    "the raw type code, will retry on the next poll: %s",
                     err,
                 )
-                self._catalog = {}
+            else:
+                self._catalog_loaded = True
+                # Every typecode now in the garage has been evaluated against
+                # this fresh catalog, so only a later brand-new typecode
+                # re-triggers a fetch (a genuinely-absent typecode does not).
+                self._catalog_refetch_attempted.update(
+                    raw.vehicle_model for raw in raw_vehicles
+                )
 
         return [
             GarageVehicle(raw, compose_device_info(raw, self._catalog))
