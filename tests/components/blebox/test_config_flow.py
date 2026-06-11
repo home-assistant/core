@@ -91,6 +91,7 @@ async def test_flow_works(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "abcd0123ef5678"
     assert result["title"] == "My gate controller"
     assert result["data"] == {
         config_flow.CONF_HOST: "172.2.3.4",
@@ -256,11 +257,12 @@ async def test_flow_with_zeroconf(hass: HomeAssistant) -> None:
     assert result["step_id"] == "confirm_discovery"
 
     with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {"host": "172.100.123.4", "port": 80}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "abcd0123ef5678"
+    assert result["data"] == {"host": "172.100.123.4", "port": 80}
 
 
 async def test_flow_with_zeroconf_when_already_configured(
@@ -276,7 +278,7 @@ async def test_flow_with_zeroconf_when_already_configured(
         "homeassistant.components.blebox.config_flow.Box.async_from_host",
         return_value=feature.product,
     ):
-        result2 = await hass.config_entries.flow.async_init(
+        result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_ZEROCONF},
             data=ZeroconfServiceInfo(
@@ -290,8 +292,8 @@ async def test_flow_with_zeroconf_when_already_configured(
             ),
         )
 
-        assert result2["type"] is FlowResultType.ABORT
-        assert result2["reason"] == "already_configured"
+        assert result["type"] is FlowResultType.ABORT
+        assert result["reason"] == "already_configured"
 
 
 async def test_flow_with_zeroconf_when_device_unsupported(hass: HomeAssistant) -> None:
@@ -422,11 +424,12 @@ async def test_flow_with_dhcp(hass: HomeAssistant) -> None:
     assert result["step_id"] == "confirm_discovery"
 
     with patch("homeassistant.components.blebox.async_setup_entry", return_value=True):
-        result2 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         await hass.async_block_till_done()
 
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "abcd0123ef5678"
+    assert result["data"] == {
         "host": DHCP_SERVICE_INFO.ip,
         "port": DEFAULT_PORT,
     }
@@ -544,7 +547,6 @@ async def test_reconfigure_flow_recovers_after_error(
             result["flow_id"],
             {config_flow.CONF_HOST: "172.2.3.5", config_flow.CONF_PORT: 80},
         )
-        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
