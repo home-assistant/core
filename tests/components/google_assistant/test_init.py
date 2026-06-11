@@ -3,6 +3,7 @@
 from http import HTTPStatus
 
 from homeassistant.components import google_assistant as ga
+from homeassistant.components.google_assistant import DOMAIN
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -60,7 +61,7 @@ async def test_request_sync_service(
 
     await async_setup_component(
         hass,
-        "google_assistant",
+        DOMAIN,
         {"google_assistant": DUMMY_CONFIG},
     )
 

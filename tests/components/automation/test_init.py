@@ -1696,7 +1696,22 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
                 "actions": [],
             },
             "failed to setup triggers",
-            "Integration 'automation' does not provide trigger support.",
+            "Integration 'automation' does not provide trigger support"
+            ". Got {'alias': 'bad_automation', "
+            "'triggers': [{'platform': 'automation'}], 'actions': []",
+            "validation_failed_triggers",
+        ),
+        (
+            {
+                "triggers": [
+                    {"platform": "event", "event_type": "test_event"},
+                    {"platform": "automation"},
+                ],
+                "actions": [],
+            },
+            "failed to setup triggers",
+            "Integration 'automation' does not provide trigger support"
+            ". Got {'alias': 'bad_automation',",
             "validation_failed_triggers",
         ),
         (
@@ -1711,7 +1726,8 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
                 "actions": [],
             },
             "failed to setup conditions",
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            ". Got {'alias': 'bad_automation',",
             "validation_failed_conditions",
         ),
         (
@@ -1725,7 +1741,23 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
                 },
             },
             "failed to setup actions",
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            ". Got {'alias': 'bad_automation',",
+            "validation_failed_actions",
+        ),
+        (
+            {
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": {
+                    "wait_for_trigger": [
+                        {"platform": "event", "event_type": "valid"},
+                        {"platform": "not_a_platform"},
+                    ],
+                },
+            },
+            "failed to setup actions",
+            "Invalid trigger 'not_a_platform' specified"
+            ". Got {'alias': 'bad_automation',",
             "validation_failed_actions",
         ),
     ],
@@ -1807,6 +1839,34 @@ async def test_automation_bad_config_validation(
         )
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 0
+
+
+async def test_automation_trigger_validation_home_assistant_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger validation raising HomeAssistantError doesn't crash."""
+    with patch(
+        "homeassistant.components.automation.config.async_validate_trigger_config",
+        side_effect=HomeAssistantError("trigger validator went boom"),
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "alias": "bad_automation",
+                    "triggers": {"platform": "event", "event_type": "test_event"},
+                    "actions": [],
+                }
+            },
+        )
+
+    assert (
+        "Automation with alias 'bad_automation' failed to setup triggers"
+        " and has been disabled: trigger validator went boom"
+    ) in caplog.text
+    assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
 
 
 async def test_automation_with_error_in_script(
@@ -2926,7 +2986,7 @@ async def test_blueprint_automation(
     """Test blueprint automation."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -2961,7 +3021,7 @@ async def test_blueprint_automation_legacy_schema(
     """Test blueprint automation where the blueprint is using legacy schema."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -3021,7 +3081,7 @@ async def test_blueprint_automation_override(
     """Test blueprint automation where the automation config overrides the blueprint."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -3097,7 +3157,7 @@ async def test_blueprint_automation_bad_config(
     """Test blueprint automation with bad inputs."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -3136,7 +3196,7 @@ async def test_blueprint_automation_fails_substitution(
     ):
         assert await async_setup_component(
             hass,
-            "automation",
+            DOMAIN,
             {
                 "automation": {
                     "use_blueprint": {
