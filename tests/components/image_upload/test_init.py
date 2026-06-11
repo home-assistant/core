@@ -110,7 +110,6 @@ async def test_upload_image_thumbnail_rgba_as_jpeg(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     hass_client: ClientSessionGenerator,
-    hass_ws_client: WebSocketGenerator,
     image_mode: str,
     content_type: str,
 ) -> None:
