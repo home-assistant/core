@@ -205,7 +205,7 @@ async def test_volume_level_with_min_volume(
     read_queue.put_nowait(
         status.Volume(
             Code.from_kind_zone(Kind.VOLUME, Zone.MAIN),
-            None,
+            b"",
             receiver_volume,
         )
     )

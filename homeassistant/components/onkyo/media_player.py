@@ -297,8 +297,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         """
         min_raw = (self._min_volume / 100) * self._volume_resolution
         max_raw = (self._max_volume / 100) * self._volume_resolution
-        value = round(min_raw + (max_raw - min_raw) * volume)
-        value = max(min_raw, min(max_raw, value))
+        raw_value = min_raw + (max_raw - min_raw) * volume
+        value = round(max(min_raw, min(max_raw, raw_value)))
         message = command.Volume(self._zone, int(value))
         await self._manager.write(message)
 
