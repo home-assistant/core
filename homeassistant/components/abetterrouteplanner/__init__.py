@@ -391,29 +391,38 @@ async def async_setup_entry(
         """Reconcile the device registry against ``selected ∩ present``.
 
         User-deselected vehicles (no longer in ``entry.data[CONF_VEHICLE_IDS]``)
-        are removed immediately — user intent is unambiguous. Vehicles
-        absent from the garage poll but still selected are removed only
-        after ``_ABSENCE_THRESHOLD`` consecutive misses, so a single
-        transient upstream blip cannot orphan a device. The ``misses``
-        counter resets whenever the vehicle reappears.
+        are removed immediately — user intent is unambiguous, and it is config-
+        not poll-driven, so a failed garage fetch never defers it. Vehicles
+        absent from the garage poll but still selected are removed only after
+        ``_ABSENCE_THRESHOLD`` consecutive *successful* polls omit them.
+
+        Only a successful poll carries trustworthy presence: a non-200 fetch
+        leaves ``garage_coordinator.data`` at its last-good value, so when
+        ``last_update_success`` is false the presence read is skipped entirely —
+        it neither advances nor resets the ``misses`` counter. This means a lone
+        upstream blip cannot orphan a device, and a blip mid-streak cannot
+        fabricate the final miss. The counter resets whenever a successful poll
+        shows the vehicle present again.
         """
         device_registry = dr.async_get(hass)
         expected = {int(vehicle_id) for vehicle_id in entry.data[CONF_VEHICLE_IDS]}
+        poll_trusted = garage_coordinator.last_update_success
         present = {vehicle.vehicle_id for vehicle in garage_coordinator.data}
-        authoritative = expected & present
         for device in dr.async_entries_for_config_entry(
             device_registry, entry.entry_id
         ):
             vehicle_id = _vehicle_id_from_device(entry, device)
             if vehicle_id is None:
                 continue
-            if vehicle_id in authoritative:
-                misses.pop(vehicle_id, None)
-                continue
             if vehicle_id not in expected:
                 device_registry.async_remove_device(device.id)
                 misses.pop(vehicle_id, None)
                 telemetry_coordinator.forget_vehicle(vehicle_id)
+                continue
+            if not poll_trusted:
+                continue
+            if vehicle_id in present:
+                misses.pop(vehicle_id, None)
                 continue
             misses[vehicle_id] = misses.get(vehicle_id, 0) + 1
             if misses[vehicle_id] >= _ABSENCE_THRESHOLD:

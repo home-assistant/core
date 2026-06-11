@@ -35,7 +35,7 @@ pre-warm sleep to 0).
 from typing import Any
 from unittest.mock import AsyncMock
 
-from aioabrp import AbrpVehicle, Metric
+from aioabrp import AbrpApiError, AbrpVehicle, Metric
 import pytest
 
 import homeassistant.components.abetterrouteplanner as integration_module
@@ -334,6 +334,60 @@ async def test_transient_absence_does_not_remove(
     mock_abrp_client.return_value = [_VEHICLE_A]  # would be miss 2 if no reset
     await _poll(hass, entry)
     assert device_registry.async_get_device(identifiers={(DOMAIN, scope_b)}) is not None
+
+
+# ---------------------------------------------------------------------------
+# a failed poll cannot supply (or reset) the absence streak
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("fake_stream")
+async def test_failed_poll_does_not_advance_absence_counter(
+    hass: HomeAssistant,
+    token_entry: dict[str, Any],
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A non-200 garage poll neither removes nor resets the absence streak.
+
+    Only a successful (200) garage poll carries trustworthy presence: a failed
+    fetch leaves ``coordinator.data`` at its last-good value, so the absence
+    counter must ignore it entirely. Removal therefore requires two
+    *successful* polls that both omit the vehicle — a transient failure between
+    the first absent poll and the second can neither supply the second tick nor
+    reset the streak.
+
+    Sequence:
+    * Setup: A + B → both devices registered.
+    * Poll 1 (success): A only → ``misses[B] = 1``; B still present.
+    * Poll 2 (failure): ``async_get_vehicles`` raises ``AbrpApiError`` →
+      counter untouched; B still present.  This is the regression guard: the
+      previous behaviour fired the listener against the stale "absent"
+      ``data`` snapshot, ticked the count to 2, and removed B here.
+    * Poll 3 (success): A only → ``misses[B] = 2`` → B removed, proving the
+      streak survived the failure unchanged rather than resetting to 0.
+    """
+    entry = _two_vehicle_entry(token_entry)
+    mock_abrp_client.return_value = [_VEHICLE_A, _VEHICLE_B]
+    await _setup_integration(hass, entry)
+    scope_b = _device_scope(entry, MOCK_VEHICLE_ID_2)
+
+    # Poll 1 (success): first trustworthy absent observation.
+    mock_abrp_client.return_value = [_VEHICLE_A]
+    await _poll(hass, entry)
+    assert device_registry.async_get_device(identifiers={(DOMAIN, scope_b)}) is not None
+
+    # Poll 2 (failure): the garage fetch errors; ``data`` stays at the
+    # last-good (already-absent) snapshot.  Must NOT advance the counter.
+    mock_abrp_client.side_effect = AbrpApiError("garage 503")
+    await _poll(hass, entry)
+    assert device_registry.async_get_device(identifiers={(DOMAIN, scope_b)}) is not None
+
+    # Poll 3 (success): second trustworthy absent observation → removed.
+    mock_abrp_client.side_effect = None
+    mock_abrp_client.return_value = [_VEHICLE_A]
+    await _poll(hass, entry)
+    assert device_registry.async_get_device(identifiers={(DOMAIN, scope_b)}) is None
 
 
 # ---------------------------------------------------------------------------
