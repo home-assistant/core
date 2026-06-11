@@ -10,6 +10,7 @@ from pyoverkiz.const import (
     REXEL_OAUTH_POLICY,
     REXEL_OAUTH_TOKEN_URL,
 )
+from pyoverkiz.enums import Server
 import pytest
 
 from homeassistant import config_entries
@@ -126,6 +127,52 @@ async def test_full_flow_single_gateway(
     assert result["data"]["hub"] == "rexel"
     assert result["data"]["gateway_id"] == TEST_GATEWAY_ID
     assert "token" in result["data"]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_full_flow_local_or_cloud_choice(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """When Rexel offers a local API, choosing cloud still runs the OAuth2 flow."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Rexel is not in SERVERS_WITH_LOCAL_API yet; simulate the local API support
+    # so the user is offered the local/cloud choice before the OAuth2 flow.
+    with patch(
+        "homeassistant.components.overkiz.config_flow.SERVERS_WITH_LOCAL_API",
+        {Server.REXEL},
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"hub": "rexel"}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "local_or_cloud"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"api_type": "cloud"}
+        )
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert REXEL_OAUTH_AUTHORIZE_URL in result["url"]
+
+    await _async_oauth_external_step(
+        hass, hass_client_no_auth, aioclient_mock, result["flow_id"]
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
+        return_value=[GatewayCandidate(gateway_id=TEST_GATEWAY_ID, label="My Home")],
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_GATEWAY_ID
     assert len(mock_setup_entry.mock_calls) == 1
 
 

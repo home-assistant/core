@@ -116,14 +116,14 @@ class OverkizConfigFlow(
         if user_input:
             self._server = user_input[CONF_HUB]
 
-            # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
-            if self._server == Server.REXEL:
-                return await self.async_step_pick_implementation()
-
             # Some Overkiz hubs do support a local API
             # Users can choose between local or cloud API.
             if self._server in SERVERS_WITH_LOCAL_API:
                 return await self.async_step_local_or_cloud()
+
+            # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
+            if self._server == Server.REXEL:
+                return await self.async_step_pick_implementation()
 
             return await self.async_step_cloud()
 
@@ -147,6 +147,10 @@ class OverkizConfigFlow(
 
             if self._api_type == APIType.LOCAL:
                 return await self.async_step_local()
+
+            # Rexel authenticates via OAuth2 (Azure AD B2C with PKCE).
+            if self._server == Server.REXEL:
+                return await self.async_step_pick_implementation()
 
             return await self.async_step_cloud()
 
@@ -450,14 +454,11 @@ class OverkizConfigFlow(
         self._api_type = entry_data.get(CONF_API_TYPE, APIType.CLOUD)
         self._server = entry_data[CONF_HUB]
 
-        # Rexel reauth re-runs the OAuth2 flow; no extra state to restore.
-        if self._server == Server.REXEL:
-            return await self.async_step_user(dict(entry_data))
-
         if self._api_type == APIType.LOCAL:
             self._host = entry_data[CONF_HOST]
             self._verify_ssl = entry_data[CONF_VERIFY_SSL]
-        else:
+        # Rexel cloud reauth re-runs the OAuth2 flow; there is no stored username.
+        elif self._server != Server.REXEL:
             self._user = entry_data[CONF_USERNAME]
 
         return await self.async_step_user(dict(entry_data))
