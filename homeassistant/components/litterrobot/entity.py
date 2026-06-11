@@ -1,7 +1,7 @@
 """Litter-Robot entities for common data and methods."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, Concatenate, Generic, TypeVar
+from typing import Any, Concatenate, Generic, NoReturn, TypeVar
 
 from pylitterbot import Pet, Robot
 from pylitterbot.exceptions import LitterRobotException
@@ -36,6 +36,15 @@ def whisker_command[_WhiskerEntityT2: LitterRobotEntity, **_P](
             ) from ex
 
     return handler
+
+
+def raise_update_failed(name: str) -> NoReturn:
+    """Raise when the robot rejected an update without an error response."""
+    raise HomeAssistantError(
+        translation_domain=DOMAIN,
+        translation_key="update_failed",
+        translation_placeholders={"name": name},
+    )
 
 
 def get_device_info(whisker_entity: Robot | Pet) -> DeviceInfo:
