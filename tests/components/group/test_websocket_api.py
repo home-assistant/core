@@ -84,6 +84,62 @@ async def test_groups_for_entity(
     }
 
 
+async def test_groups_for_entity_excludes_own_group(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test listing compatible groups excludes the entity's own group."""
+    hass.states.async_set("light.one", "on")
+    hass.states.async_set("light.two", "on")
+
+    kitchen_group = MockConfigEntry(
+        domain=group.DOMAIN,
+        options={
+            "all": False,
+            "entities": ["light.one"],
+            "group_type": "light",
+            "hide_members": False,
+            "name": "Kitchen lights",
+        },
+        title="Kitchen lights",
+    )
+    kitchen_group.add_to_hass(hass)
+
+    bedroom_group = MockConfigEntry(
+        domain=group.DOMAIN,
+        options={
+            "all": False,
+            "entities": ["light.two"],
+            "group_type": "light",
+            "hide_members": False,
+            "name": "Bedroom lights",
+        },
+        title="Bedroom lights",
+    )
+    bedroom_group.add_to_hass(hass)
+
+    assert await async_setup_component(hass, group.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "group/groups_for_entity", "entity_id": "light.kitchen_lights"}
+    )
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert response["result"] == {
+        "group_type": "light",
+        "groups": [
+            {
+                "entry_id": bedroom_group.entry_id,
+                "entity_id": "light.bedroom_lights",
+                "name": "Bedroom lights",
+            },
+        ],
+    }
+
+
 async def test_add_entity_to_group(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -170,6 +226,44 @@ async def test_add_entity_to_group_hides_member(
     assert entity_registry.async_get(entity_entry.entity_id).hidden_by is (
         er.RegistryEntryHider.INTEGRATION
     )
+
+
+async def test_add_entity_to_group_rejects_own_group(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test adding a group entity to itself is rejected."""
+    hass.states.async_set("light.one", "on")
+
+    light_group = MockConfigEntry(
+        domain=group.DOMAIN,
+        options={
+            "all": False,
+            "entities": ["light.one"],
+            "group_type": "light",
+            "hide_members": False,
+            "name": "Kitchen lights",
+        },
+        title="Kitchen lights",
+    )
+    light_group.add_to_hass(hass)
+
+    assert await async_setup_component(hass, group.DOMAIN, {})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "group/add_entity",
+            "entry_id": light_group.entry_id,
+            "entity_id": "light.kitchen_lights",
+        }
+    )
+    response = await client.receive_json()
+
+    assert not response["success"]
+    assert response["error"]["code"] == "invalid_entity"
+    assert light_group.options["entities"] == ["light.one"]
 
 
 async def test_add_incompatible_entity_to_group(

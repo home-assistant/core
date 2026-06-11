@@ -70,20 +70,26 @@ def websocket_groups_for_entity(
     entity_id = msg[ATTR_ENTITY_ID]
     group_type, entries = _compatible_group_entries(hass, entity_id)
     registry = er.async_get(hass)
+    groups = []
+
+    for entry in entries:
+        group_entity_id = _group_entity_id_for_config_entry(registry, entry)
+        if group_entity_id == entity_id or entity_id in entry.options[CONF_ENTITIES]:
+            continue
+
+        groups.append(
+            {
+                "entry_id": entry.entry_id,
+                "entity_id": group_entity_id,
+                "name": entry.title,
+            }
+        )
 
     connection.send_result(
         msg["id"],
         {
             "group_type": group_type,
-            "groups": [
-                {
-                    "entry_id": entry.entry_id,
-                    "entity_id": _group_entity_id_for_config_entry(registry, entry),
-                    "name": entry.title,
-                }
-                for entry in entries
-                if entity_id not in entry.options[CONF_ENTITIES]
-            ],
+            "groups": groups,
         },
     )
 
@@ -112,6 +118,13 @@ async def websocket_add_entity_to_group(
 
     group_type = _group_type_for_entity_id(entity_id)
     if group_type is None or entry.options.get("group_type") != group_type:
+        connection.send_error(
+            msg["id"], "invalid_entity", "Entity cannot be added to this group"
+        )
+        return
+
+    registry = er.async_get(hass)
+    if _group_entity_id_for_config_entry(registry, entry) == entity_id:
         connection.send_error(
             msg["id"], "invalid_entity", "Entity cannot be added to this group"
         )
