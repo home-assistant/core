@@ -6,13 +6,16 @@ from pyaqvify import AqvifyAuthException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.aqvify.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 
 async def test_load_unload_entry(
@@ -93,3 +96,38 @@ async def test_setup_entry_auth_error_triggers_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_device_remove_devices(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    mock_config_entry: MockConfigEntry,
+    mock_aqvify_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test we can only remove a device that no longer exists."""
+    assert await async_setup_component(hass, "config", {})
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    device_entry = device_registry.async_get_device(
+        identifiers={
+            (
+                DOMAIN,
+                "test_account_id_DeviceKey_1",
+            )
+        },
+    )
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(device_entry.id, mock_config_entry.entry_id)
+    assert not response["success"]
+
+    old_device_entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "STALE-DEVICE-UUID")},
+    )
+    response = await client.remove_device(
+        old_device_entry.id, mock_config_entry.entry_id
+    )
+
+    assert response["success"]
