@@ -138,6 +138,10 @@
           "energy_flap_opened": "Energy flap opened",
           "not_in_charge": "Not charging",
           "unavailable": "Unavailable",
+          "v2g_charging_waiting": "V2G charging - waiting",
+          "v2l_connected": "V2L connected",
+          "v2g_discharging": "V2G discharging",
+          "v2g_charging_normal": "V2G charging"
           "waiting_for_a_planned_charge": "Waiting for planned charge",
           "waiting_for_current_charge": "Waiting for current charge"
         }
