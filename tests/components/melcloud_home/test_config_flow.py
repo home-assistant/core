@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.melcloud_home.const import DOMAIN
-from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
+from homeassistant.const import CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -135,33 +135,33 @@ async def test_full_flow_reauth(
     assert mock_config_entry.data == MOCK_REAUTH_INPUT
 
 
-async def test_full_flow_reauth_new_account(
+async def test_reauth_flow_wrong_account(
     hass: HomeAssistant,
     mock_melcloud_client: AsyncMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the full reauth flow., with a new account."""
+    """Test the reauth flow aborts when a different account is used."""
     mock_config_entry.add_to_hass(hass)
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "reauth_confirm"
+    mock_melcloud_client.get_context.return_value = (
+        mock_melcloud_client.get_context.return_value.model_copy(
+            update={"id": "user-uuid-2"}
+        )
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        user_input={
-            CONF_EMAIL: "new-mail-address@example.com",
-            CONF_PASSWORD: "dontlookatmynewpassword",
-        },
+        user_input=MOCK_REAUTH_INPUT,
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "reauth_successful"
+    assert result["reason"] == "unique_id_mismatch"
+    assert mock_config_entry.data == MOCK_USER_INPUT
+    assert mock_config_entry.unique_id == "user-uuid-1"
 
 
 @pytest.mark.parametrize(
