@@ -68,15 +68,6 @@
         "name": "Auto-shutdown delay"
       }
     },
-    "select": {
-      "hour_format": {
-        "name": "Hour format",
-        "state": {
-          "12": "12-hour",
-          "24": "24-hour"
-        }
-      }
-    },
     "sensor": {
       "card_insertion_state": {
         "name": "Card slot",

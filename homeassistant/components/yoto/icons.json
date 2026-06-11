@@ -31,11 +31,6 @@
         "default": "mdi:power-sleep"
       }
     },
-    "select": {
-      "hour_format": {
-        "default": "mdi:clock-digital"
-      }
-    },
     "sensor": {
       "card_insertion_state": {
         "default": "mdi:card-bulleted-outline",
