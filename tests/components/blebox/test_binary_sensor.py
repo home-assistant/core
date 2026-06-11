@@ -48,23 +48,76 @@ def open_sensor_fixture() -> tuple[AsyncMock, str]:
     return feature, "binary_sensor.my_open_sensor_window"
 
 
+@pytest.fixture(name="inputsensor")
+def inputsensor_fixture() -> tuple[AsyncMock, str]:
+    """Return a default inputSensor fixture."""
+    feature: AsyncMock = mock_feature(
+        "binary_sensors",
+        blebox_uniapi.binary_sensor.Input,
+        unique_id="BleBox-inputSensorD-aa11bb22cc33-0.input",
+        full_name="inputSensorD-0.input",
+        device_class="input",
+    )
+    type(feature).name = PropertyMock(return_value=None)
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My input sensor")
+    type(product).model = PropertyMock(return_value="inputSensorD")
+    return feature, "binary_sensor.my_input_sensor"
+
+
+@pytest.mark.parametrize(
+    (
+        "fixture_name",
+        "unique_id",
+        "expected_name",
+        "expected_device_class",
+        "expected_state",
+        "expected_device_name",
+    ),
+    [
+        pytest.param(
+            "rainsensor",
+            "BleBox-windRainSensor-ea68e74f4f49-0.rain",
+            "My rain sensor Moisture",
+            BinarySensorDeviceClass.MOISTURE,
+            STATE_ON,
+            "My rain sensor",
+            id="moisture",
+        ),
+        pytest.param(
+            "inputsensor",
+            "BleBox-inputSensorD-aa11bb22cc33-0.input",
+            "My input sensor",
+            None,
+            STATE_ON,
+            "My input sensor",
+            id="input",
+        ),
+    ],
+)
 async def test_init(
-    rainsensor: AsyncMock, device_registry: dr.DeviceRegistry, hass: HomeAssistant
+    hass: HomeAssistant,
+    fixture_name: str,
+    unique_id: str,
+    expected_name: str,
+    expected_device_class: BinarySensorDeviceClass | None,
+    expected_state: str,
+    expected_device_name: str,
+    device_registry: dr.DeviceRegistry,
+    request: pytest.FixtureRequest,
 ) -> None:
     """Test binary_sensor initialisation."""
-    _, entity_id = rainsensor
+    _, entity_id = request.getfixturevalue(fixture_name)
     entry = await async_setup_entity(hass, entity_id)
-    assert entry.unique_id == "BleBox-windRainSensor-ea68e74f4f49-0.rain"
+    assert entry.unique_id == unique_id
 
     state = hass.states.get(entity_id)
-    assert state.name == "My rain sensor Moisture"
-
-    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOISTURE
-    assert state.state == STATE_ON
+    assert state.name == expected_name
+    assert state.attributes.get(ATTR_DEVICE_CLASS) == expected_device_class
+    assert state.state == expected_state
 
     device = device_registry.async_get(entry.device_id)
-
-    assert device.name == "My rain sensor"
+    assert device.name == expected_device_name
 
 
 async def test_binary_sensor_with_name(hass: HomeAssistant) -> None:
