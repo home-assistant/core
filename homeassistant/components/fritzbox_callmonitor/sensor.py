@@ -7,7 +7,6 @@ from enum import StrEnum
 import logging
 import queue
 from threading import Event as ThreadingEvent, Thread
-from time import sleep
 from typing import Any, cast
 
 from fritzconnection.core.fritzmonitor import FritzMonitor
@@ -218,7 +217,6 @@ class FritzBoxCallMonitor:
             else:
                 _LOGGER.debug("Received event: %s", event)
                 self._parse(event)
-                sleep(1)
 
     def _parse(self, event: str) -> None:
         """Parse the call information and set the sensor states."""
