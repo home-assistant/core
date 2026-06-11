@@ -656,7 +656,7 @@ async def test_stream_wrong_type(
     mock_create_stream.return_value = Message(
         type="message",
         id="message_id",
-        model="claude-opus-4-6",
+        model="claude-fable-5",
         role="assistant",
         content=[TextBlock(type="text", text="This is not a stream")],
         usage=Usage(input_tokens=42, output_tokens=42),
@@ -1897,7 +1897,7 @@ async def test_web_fetch_error(
         data={
             CONF_LLM_HASS_API: llm.LLM_API_ASSIST,
             CONF_CODE_EXECUTION: True,
-            CONF_CHAT_MODEL: "claude-opus-4-6",
+            CONF_CHAT_MODEL: "claude-fable-5",
             CONF_WEB_FETCH: True,
             CONF_WEB_FETCH_MAX_USES: 5,
         },
