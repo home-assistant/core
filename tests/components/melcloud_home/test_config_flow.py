@@ -129,7 +129,6 @@ async def test_full_flow_reauth(
         result["flow_id"],
         user_input=MOCK_REAUTH_INPUT,
     )
-    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"

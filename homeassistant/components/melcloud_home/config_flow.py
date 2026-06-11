@@ -107,10 +107,12 @@ class MelCloudHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         reauth_entry = self._get_reauth_entry()
         if user_input is not None:
-            errors, _ = await self._async_validate_credentials(
+            errors, user_id = await self._async_validate_credentials(
                 user_input[CONF_EMAIL], user_input[CONF_PASSWORD]
             )
             if not errors:
+                await self.async_set_unique_id(user_id)
+                self._abort_if_unique_id_mismatch()
                 return self.async_update_reload_and_abort(
                     reauth_entry,
                     data_updates={
