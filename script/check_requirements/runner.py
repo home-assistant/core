@@ -16,6 +16,8 @@ What the runner defers to the LLM (NEEDS_AGENT):
 - `async_blocking`: inspection of the dependency source for blocking I/O
   inside `async def` functions. Always deferred when the source repo is
   available — the deterministic stage cannot read the upstream source.
+- `security`: lightweight scan of the upstream source for supply-chain red
+  flags. Always deferred — the agent fetches the source and inspects it.
 """
 
 from .diff import parse_diff
@@ -137,6 +139,7 @@ def run_checks(
             pkg.checks[CheckKind.REPO_PUBLIC] = fail
             pkg.checks[CheckKind.PR_LINK] = fail
             pkg.checks[CheckKind.ASYNC_BLOCKING] = fail
+            pkg.checks[CheckKind.SECURITY] = fail
         elif pkg.repo_url:
             pkg.checks[CheckKind.REPO_PUBLIC] = CheckResult(
                 CheckStatus.NEEDS_AGENT,
@@ -145,6 +148,10 @@ def run_checks(
             pkg.checks[CheckKind.PR_LINK] = CheckResult(
                 CheckStatus.NEEDS_AGENT,
                 "Presence of the required link in the PR description must be verified by the agent.",
+            )
+            pkg.checks[CheckKind.SECURITY] = CheckResult(
+                CheckStatus.NEEDS_AGENT,
+                "Baseline supply-chain source scan must be performed by the agent.",
             )
             if pkg.old_version is None:
                 async_reason = (
@@ -168,6 +175,10 @@ def run_checks(
             pkg.checks[CheckKind.REPO_PUBLIC] = fail
             pkg.checks[CheckKind.PR_LINK] = fail
             pkg.checks[CheckKind.ASYNC_BLOCKING] = fail
+            pkg.checks[CheckKind.SECURITY] = CheckResult(
+                CheckStatus.FAIL,
+                "No source repository URL on PyPI — source cannot be inspected.",
+            )
     result = CheckRunResult(pr_number=pr_number, packages=packages)
     result.rendered_comment = render_comment(result)
     return result
