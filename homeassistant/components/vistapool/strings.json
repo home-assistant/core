@@ -39,6 +39,68 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "backwash": {
+        "name": "Backwash"
+      },
+      "chlorine_module": {
+        "name": "Chlorine module"
+      },
+      "chlorine_pump": {
+        "name": "Chlorine pump"
+      },
+      "conductivity_module": {
+        "name": "Conductivity module"
+      },
+      "dosing_tank": {
+        "name": "Dosing tank"
+      },
+      "electrolysis_low": {
+        "name": "Electrolysis low"
+      },
+      "filtration": {
+        "name": "Filtration"
+      },
+      "heating": {
+        "name": "Heating"
+      },
+      "hidro_cover_reduction": {
+        "name": "Hidro cover reduction"
+      },
+      "hidro_fl2": {
+        "name": "Hidro FL2"
+      },
+      "hidro_flow": {
+        "name": "Hidro flow"
+      },
+      "hidro_module": {
+        "name": "Hidro module"
+      },
+      "hydrolysis_low": {
+        "name": "Hydrolysis low"
+      },
+      "io_module": {
+        "name": "IO module"
+      },
+      "ph_acid_pump": {
+        "name": "pH acid pump"
+      },
+      "ph_base_pump": {
+        "name": "pH base pump"
+      },
+      "ph_module": {
+        "name": "pH module"
+      },
+      "ph_pump_alarm": {
+        "name": "pH pump alarm"
+      },
+      "redox_module": {
+        "name": "Redox module"
+      },
+      "redox_pump": {
+        "name": "Redox pump"
+      }
+    },
     "button": {
       "led_pulse": {
         "name": "LED next color"
