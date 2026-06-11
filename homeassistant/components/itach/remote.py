@@ -86,7 +86,7 @@ def _format_command_table(commands: Iterable[dict[str, str]]) -> str:
     )
 
 
-def _create_remote_entity(
+def _setup_remote_entity(
     itachip2ir: Any, device_config: dict[str, Any]
 ) -> ITachIP2IRRemote:
     """Create an iTach remote entity from YAML device config."""
@@ -116,7 +116,7 @@ def setup_platform(
         return
 
     devices = [
-        _create_remote_entity(itachip2ir, device_config)
+        _setup_remote_entity(itachip2ir, device_config)
         for device_config in config[CONF_DEVICES]
     ]
     add_entities(devices, True)
