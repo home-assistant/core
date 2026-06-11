@@ -124,12 +124,12 @@ _LOGGER = logging.getLogger(__name__)
 # Upper bound on the best-effort recorder query used to prime `for:` durations
 # at setup. If history can't be read within this window we fall back to the
 # conservative live-state anchor rather than blocking condition setup.
-HISTORY_PRIME_TIMEOUT = 10
+HISTORY_PRIMING_TIMEOUT = 10
 
 # How far back the `for:` priming query reaches. Caps the cost of the query for
 # very long `for:` durations; beyond this we rely on the live-state anchor, so
 # such conditions may only become true once enough time has elapsed since setup.
-MAX_HISTORY_PRIME_LOOKBACK = timedelta(hours=6)
+MAX_HISTORY_PRIMING_LOOKBACK = timedelta(hours=6)
 
 _PLATFORM_ALIASES: dict[str | None, str | None] = {
     "and": None,
@@ -507,8 +507,8 @@ class EntityConditionBase(Condition):
         self._valid_since: dict[str, datetime] = {}
         # Entities whose `for:` anchor is currently being resolved from recorder
         # history. While an entity is here the live listener leaves its anchor to
-        # the prime, except that an invalidation removes it (the run broke, so the
-        # in-flight history is stale and live tracking takes over).
+        # the priming, except that an invalidation removes it (the run broke, so
+        # the in-flight history is stale and live tracking takes over).
         self._priming: set[str] = set()
 
     def entity_filter(self, entities: set[str]) -> set[str]:
@@ -551,7 +551,7 @@ class EntityConditionBase(Condition):
             and self.is_valid_state(_state)
         ):
             # While an entity is being primed from history, leave its anchor to
-            # the prime: the entity stayed valid, so the run is unbroken and the
+            # the priming: the entity stayed valid, so the run is unbroken and the
             # history start (which can be earlier than this update) is accurate.
             if entity_id in self._priming:
                 return
@@ -614,7 +614,7 @@ class EntityConditionBase(Condition):
 
         For each currently-valid entity the anchor is the start of its current
         continuous run of validity, read from recorder history (bounded by
-        `MAX_HISTORY_PRIME_LOOKBACK`) and combined with the current state's
+        `MAX_HISTORY_PRIMING_LOOKBACK`) and combined with the current state's
         anchor, or the current state's anchor alone when the recorder is
         unavailable or the read fails. An entity is added to `_valid_since` only
         once this resolves, so a newly tracked entity does not participate in the
@@ -663,11 +663,11 @@ class EntityConditionBase(Condition):
 
         if TYPE_CHECKING:
             assert self._duration is not None
-        lookback = min(self._duration, MAX_HISTORY_PRIME_LOOKBACK)
+        lookback = min(self._duration, MAX_HISTORY_PRIMING_LOOKBACK)
         start_time = dt_util.utcnow() - lookback
         instance = get_instance(self._hass)
         try:
-            async with asyncio.timeout(HISTORY_PRIME_TIMEOUT):
+            async with asyncio.timeout(HISTORY_PRIMING_TIMEOUT):
                 # The history query only sees committed rows. Wait for the
                 # recorder to flush its queue first.
                 if (commit_future := instance.async_get_commit_future()) is not None:
