@@ -144,8 +144,6 @@ def _sensor_device_info_to_hass(
     adv: Aranet4Advertisement,
 ) -> DeviceInfo:
     """Convert a sensor device info to hass device info."""
-    # Tie the device to its Bluetooth address so the address shows on the device
-    # page and other integrations referencing the same device attach to it.
     hass_device_info = DeviceInfo(
         connections={(CONNECTION_BLUETOOTH, adv.device.address)}
     )
