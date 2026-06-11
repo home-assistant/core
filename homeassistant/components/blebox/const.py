@@ -7,6 +7,7 @@ DEFAULT_SETUP_TIMEOUT = 10
 # translation strings
 ADDRESS_ALREADY_CONFIGURED = "address_already_configured"
 CANNOT_CONNECT = "cannot_connect"
+INVALID_AUTH = "invalid_auth"
 UNSUPPORTED_VERSION = "unsupported_version"
 UNKNOWN = "unknown"
 
