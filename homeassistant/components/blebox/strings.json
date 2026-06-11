@@ -30,13 +30,24 @@
           "port": "[%key:common::config_flow::data::port%]",
           "username": "[%key:common::config_flow::data::username%]"
         },
+        "data_description": {
+          "host": "The IP address of your BleBox device.",
+          "password": "The password for your BleBox device.",
+          "port": "The port of your BleBox device.",
+          "username": "The username for your BleBox device."
+        },
         "description": "Set up your BleBox to integrate with Home Assistant.",
         "title": "Set up your BleBox device"
       }
     }
   },
   "entity": {
+    "light": { "channel": { "name": "Channel {index}" } },
     "sensor": {
+      "active_power": { "name": "Active power" },
+      "active_power_n": { "name": "Active power {index}" },
+      "apparent_power": { "name": "Apparent power" },
+      "apparent_power_n": { "name": "Apparent power {index}" },
       "co2_level": {
         "name": "Carbon dioxide level",
         "state": {
@@ -49,7 +60,14 @@
           "unhealthy": "Unhealthy"
         }
       },
+      "current": { "name": "Current" },
+      "current_n": { "name": "Current {index}" },
+      "forward_active_energy": { "name": "Forward active energy" },
+      "forward_active_energy_n": { "name": "Forward active energy {index}" },
+      "frequency": { "name": "Frequency" },
+      "frequency_n": { "name": "Frequency {index}" },
       "open_status": {
+        "name": "Open status",
         "state": {
           "ajar": "Ajar",
           "closed": "[%key:common::state::closed%]",
@@ -57,7 +75,16 @@
           "open": "[%key:common::state::open%]",
           "unclosed_or_unlocked": "Unclosed or unlocked"
         }
-      }
+      },
+      "power_consumption": { "name": "Energy last hour" },
+      "reactive_power": { "name": "Reactive power" },
+      "reactive_power_n": { "name": "Reactive power {index}" },
+      "reverse_active_energy": { "name": "Reverse active energy" },
+      "reverse_active_energy_n": { "name": "Reverse active energy {index}" },
+      "temperature": { "name": "Temperature" },
+      "temperature_n": { "name": "Temperature {index}" },
+      "voltage": { "name": "Voltage" },
+      "voltage_n": { "name": "Voltage {index}" }
     }
   },
   "exceptions": {

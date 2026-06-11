@@ -48,7 +48,7 @@ def firmwareupdate_fixture() -> tuple[blebox_uniapi.update.Update, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My airSensor")
     type(product).model = PropertyMock(return_value="airSensor")
-    return (feature, "update.my_airsensor_airsensor_firmware")
+    return (feature, "update.my_airsensor_firmware")
 
 
 async def test_init(
@@ -63,7 +63,7 @@ async def test_init(
     assert entry.unique_id == "BleBox-airSensor-4a3fdaad90aa-firmware"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My airSensor airSensor-firmware"
+    assert state.name == "My airSensor Firmware"
     assert state.attributes[ATTR_DEVICE_CLASS] == UpdateDeviceClass.FIRMWARE
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]

@@ -71,6 +71,11 @@ class BleBoxLightEntity(BleBoxEntity[blebox_uniapi.light.Light], LightEntity):
         super().__init__(coordinator, feature)
         if feature.effect_list:
             self._attr_supported_features = LightEntityFeature.EFFECT
+        if feature.index is not None:
+            self._attr_translation_key = "channel"
+            self._attr_translation_placeholders = {"index": str(feature.index + 1)}
+        else:
+            self._attr_name = None
 
     @property
     def is_on(self) -> bool:
