@@ -35,7 +35,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Code comments
 
-- Comments in the code should be used to explain why something is done, not what is being done. Comments should not restate the code, but rather provide context, rationale, or explanations for non-obvious decisions. Comments for obvious decisions only clutter the code and are not helpful.
+- Keep comments concise. Flag comments that over-explain straightforward code, narrate the obvious, or read like AI commentary (multi-sentence justifications for a single line). Prefer one short line stating the non-obvious constraint, or no comment at all.
 
 ## Testing
 
