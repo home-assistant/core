@@ -26,7 +26,6 @@ type ThebenConfigEntry = ConfigEntry[SmgwSensorCoordinator]
 class SmgwSensorCoordinator(DataUpdateCoordinator):
     """The data update coordinator for the Theben Conexa Smartmeter gateway integration."""
 
-    _scheduled_updates: CALLBACK_TYPE
     __api: ConexaSMGW
     gateway_info: ConexaSMGW.GatewayInfo
 
@@ -41,6 +40,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
             update_interval=None,
             always_update=False,
         )
+        self._scheduled_updates: CALLBACK_TYPE | None = None
         self._unscheduled_updates: CALLBACK_TYPE | None = None
         self.retries = 0
 
@@ -131,7 +131,9 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
 
     async def async_shutdown(self) -> None:
         """Cancel any updates before shutting down."""
-        self._scheduled_updates()
+        if self._scheduled_updates:
+            self._scheduled_updates()
+            self._scheduled_updates = None
 
         if self._unscheduled_updates is not None:
             self._unscheduled_updates()

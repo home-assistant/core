@@ -23,5 +23,15 @@
         "description": "As a prerequisite you must be able to login to your smartmeter gateway from a web browser via \"https://'<'IP of your gateway'>'\"."
       }
     }
+  },
+  "entity": {
+    "sensor": {
+      "power_consumed": {
+        "name": "Total Power Consumed"
+      },
+      "power_supplied": {
+        "name": "Total Power Supplied"
+      }
+    }
   }
 }
