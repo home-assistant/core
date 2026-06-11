@@ -5636,10 +5636,17 @@ async def test_state_condition_attr_duration_history_loaded_for_added_entity(
         # Adding the label tracks the entity, but its anchor is resolved in a
         # background task. Until that completes the entity has no _valid_since
         # entry and is not counted yet — even though it will be met once loaded.
-        entity_reg.async_update_entity(entity_id, labels={label.label_id})
-        assert test.async_check() is False
+        # Hold the recorder flush open so the load deterministically cannot
+        # finish before the intermediate check.
+        instance = get_instance(hass)
+        gate: asyncio.Future[None] = hass.loop.create_future()
+        with patch.object(instance, "async_get_commit_future", return_value=gate):
+            entity_reg.async_update_entity(entity_id, labels={label.label_id})
+            assert test.async_check() is False
 
-        await hass.async_block_till_done()
+            # Release the flush; the query runs and the anchor is stored.
+            gate.set_result(None)
+            await hass.async_block_till_done()
 
         # History loaded: continuously valid for 10s → 5s `for:` is met.
         assert test.async_check() is True
