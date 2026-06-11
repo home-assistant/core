@@ -45,6 +45,14 @@
         "name": "Bluetooth audio"
       }
     },
+    "light": {
+      "day_ambient_light": {
+        "name": "Day ambient light"
+      },
+      "night_ambient_light": {
+        "name": "Night ambient light"
+      }
+    },
     "number": {
       "day_display_brightness": {
         "name": "Day display brightness"

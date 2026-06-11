@@ -8,6 +8,14 @@
         "default": "mdi:bluetooth-audio"
       }
     },
+    "light": {
+      "day_ambient_light": {
+        "default": "mdi:lightbulb-on"
+      },
+      "night_ambient_light": {
+        "default": "mdi:lightbulb-night"
+      }
+    },
     "number": {
       "day_display_brightness": {
         "default": "mdi:brightness-7"
