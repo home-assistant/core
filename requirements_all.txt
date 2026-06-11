@@ -190,7 +190,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==14.0.0
+aioamazondevices==14.0.3
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -331,6 +331,9 @@ aiolyric==2.1.1
 
 # homeassistant.components.mealie
 aiomealie==1.2.4
+
+# homeassistant.components.melcloud_home
+aiomelcloudhome==0.1.5
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -663,7 +666,7 @@ bleak-retry-connector==4.6.1
 bleak==3.0.2
 
 # homeassistant.components.blebox
-blebox-uniapi==2.5.4
+blebox-uniapi==2.5.5
 
 # homeassistant.components.blink
 blinkpy==0.25.2
@@ -1229,7 +1232,7 @@ hass-splunk==0.1.4
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.6.0
+hassil==3.7.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.2.1
@@ -1302,7 +1305,7 @@ huum==0.8.2
 hyperion-py==0.7.6
 
 # homeassistant.components.hypontech
-hyponcloud==1.0.0
+hyponcloud==1.0.1
 
 # homeassistant.components.iammeter
 iammeter==0.2.1
@@ -2791,7 +2794,7 @@ pytradfri[async]==9.0.1
 pytrafikverket==1.1.1
 
 # homeassistant.components.v2c
-pytrydan==1.0.1
+pytrydan==1.0.2
 
 # homeassistant.components.uptimerobot
 pyuptimerobot==25.0.0
@@ -2896,7 +2899,7 @@ renault-api==0.5.12
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.20.1
+reolink-aio==0.21.0
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.1.0
