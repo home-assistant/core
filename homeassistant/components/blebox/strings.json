@@ -37,6 +37,18 @@
   },
   "entity": {
     "sensor": {
+      "co2_level": {
+        "name": "Carbon dioxide level",
+        "state": {
+          "acceptable": "Acceptable",
+          "excellent": "Excellent",
+          "good": "Good",
+          "hazardous": "Hazardous",
+          "medium": "Medium",
+          "poor": "Poor",
+          "unhealthy": "Unhealthy"
+        }
+      },
       "forward_reactive_energy": { "name": "Forward reactive energy" },
       "forward_reactive_energy_n": {
         "name": "Forward reactive energy {index}"
