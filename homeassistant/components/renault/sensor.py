@@ -145,6 +145,7 @@ SENSOR_TYPES: tuple[RenaultSensorEntityDescription[Any], ...] = (
             "waiting_for_current_charge",
             "energy_flap_opened",
             "charge_in_progress",
+            "v2l_connected",
             "v2g_charging_normal",
             "v2g_charging_waiting",
             "v2g_discharging",
