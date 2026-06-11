@@ -164,6 +164,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/apsystems/ @mawoka-myblock @SonnenladenGmbH
 /homeassistant/components/aquacell/ @Jordi1990
 /tests/components/aquacell/ @Jordi1990
+/homeassistant/components/aqvify/ @astrandb
+/tests/components/aqvify/ @astrandb
 /homeassistant/components/aranet/ @aschmitz @thecode @anrijs
 /tests/components/aranet/ @aschmitz @thecode @anrijs
 /homeassistant/components/arcam_fmj/ @elupus
@@ -455,6 +457,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/ecovacs/ @mib1185 @edenhaus @Augar
 /homeassistant/components/ecowitt/ @pvizeli
 /tests/components/ecowitt/ @pvizeli
+/homeassistant/components/edifier_infrared/ @abmantis
+/tests/components/edifier_infrared/ @abmantis
 /homeassistant/components/efergy/ @tkdrob
 /tests/components/efergy/ @tkdrob
 /homeassistant/components/egardia/ @jeroenterheerdt
@@ -503,6 +507,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
 /tests/components/enphase_envoy/ @bdraco @cgarwood @catsmanac
 /homeassistant/components/entur_public_transport/ @hfurubotten @SanderBlom
+/homeassistant/components/envertech_evt800/ @daniel-bergmann-00
+/tests/components/envertech_evt800/ @daniel-bergmann-00
 /homeassistant/components/environment_canada/ @gwww @michaeldavie
 /tests/components/environment_canada/ @gwww @michaeldavie
 /homeassistant/components/ephember/ @ttroy50 @roberty99
@@ -572,8 +578,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/flo/ @dmulcahey
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
-/homeassistant/components/fluss/ @fluss
-/tests/components/fluss/ @fluss
+/homeassistant/components/fluss/ @fluss @Marcello17
+/tests/components/fluss/ @fluss @Marcello17
 /homeassistant/components/flux_led/ @icemanch
 /tests/components/flux_led/ @icemanch
 /homeassistant/components/forecast_solar/ @klaasnicolaas @frenck
@@ -625,8 +631,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/generic_hygrostat/ @Shulyaka
 /homeassistant/components/geniushub/ @manzanotti
 /tests/components/geniushub/ @manzanotti
-/homeassistant/components/gentex_homelink/ @niaexa @ryanjones-gentex
-/tests/components/gentex_homelink/ @niaexa @ryanjones-gentex
+/homeassistant/components/gentex_homelink/ @Gentex-Corporation/Homelink @rjones-gentex
+/tests/components/gentex_homelink/ @Gentex-Corporation/Homelink @rjones-gentex
 /homeassistant/components/geo_json_events/ @exxamalte
 /tests/components/geo_json_events/ @exxamalte
 /homeassistant/components/geo_location/ @home-assistant/core
@@ -720,6 +726,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/heatmiser/ @andylockran
 /homeassistant/components/hegel/ @boazca
 /tests/components/hegel/ @boazca
+/homeassistant/components/helty/ @ebaschiera
+/tests/components/helty/ @ebaschiera
 /homeassistant/components/heos/ @andrewsayre
 /tests/components/heos/ @andrewsayre
 /homeassistant/components/here_travel_time/ @eifinger
@@ -838,6 +846,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/imgw_pib/ @bieniu
 /homeassistant/components/immich/ @mib1185
 /tests/components/immich/ @mib1185
+/homeassistant/components/imou/ @Imou-OpenPlatform
+/tests/components/imou/ @Imou-OpenPlatform
 /homeassistant/components/improv_ble/ @emontnemery
 /tests/components/improv_ble/ @emontnemery
 /homeassistant/components/incomfort/ @jbouwh
@@ -939,6 +949,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/kiosker/ @Claeysson
 /homeassistant/components/kitchen_sink/ @home-assistant/core
 /tests/components/kitchen_sink/ @home-assistant/core
+/homeassistant/components/klik_aan_klik_uit/ @Phunkafizer
+/tests/components/klik_aan_klik_uit/ @Phunkafizer
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knocki/ @joostlek @jgatto1 @JakeBosh
@@ -1076,6 +1088,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/mediaroom/ @dgomes
 /homeassistant/components/melcloud/ @erwindouna
 /tests/components/melcloud/ @erwindouna
+/homeassistant/components/melcloud_home/ @erwindouna
+/tests/components/melcloud_home/ @erwindouna
 /homeassistant/components/melissa/ @kennedyshead
 /tests/components/melissa/ @kennedyshead
 /homeassistant/components/melnor/ @vanstinator

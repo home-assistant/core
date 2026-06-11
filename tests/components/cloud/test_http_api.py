@@ -34,6 +34,7 @@ from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disab
 )
 from homeassistant.components.cloud.const import DEFAULT_EXPOSED_DOMAINS, DOMAIN
 from homeassistant.components.cloud.http_api import validate_language_voice
+from homeassistant.components.frontend import DATA_THEMES
 from homeassistant.components.google_assistant.helpers import (  # pylint: disable=home-assistant-component-root-import
     GoogleEntity,
 )
@@ -1890,6 +1891,12 @@ async def test_download_support_package(
     hass.config.components.add("test")  # This is a custom integration from the fixture
 
     assert await async_setup_component(hass, "system_health", {})
+
+    # Register custom themes so the support package surfaces them
+    hass.data[DATA_THEMES] = {
+        "midnight": {"primary-color": "#000000"},
+        "solarized-dark": {"primary-color": "#002b36"},
+    }
 
     with patch("uuid.UUID.hex", new_callable=PropertyMock) as hexmock:
         hexmock.return_value = "12345678901234567890"

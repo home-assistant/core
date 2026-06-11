@@ -339,6 +339,7 @@ class IntegrationSensor(RestoreSensor):
             else max_sub_interval
         )
         self._max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: None
+        # pylint: disable-next=home-assistant-enforce-utcnow
         self._last_integration_time: datetime = datetime.now(tz=UTC)
         self._last_integration_trigger = _IntegrationTrigger.StateEvent
         self._attr_suggested_display_precision = round_digits or 2
@@ -498,6 +499,7 @@ class IntegrationSensor(RestoreSensor):
                 old_timestamp, new_timestamp, old_state, new_state
             )
             self._last_integration_trigger = _IntegrationTrigger.StateEvent
+            # pylint: disable-next=home-assistant-enforce-utcnow
             self._last_integration_time = datetime.now(tz=UTC)
         finally:
             # When max_sub_interval exceeds without state change the source is assumed
@@ -606,6 +608,7 @@ class IntegrationSensor(RestoreSensor):
                 self._update_integral(area)
                 self.async_write_ha_state()
 
+                # pylint: disable-next=home-assistant-enforce-utcnow
                 self._last_integration_time = datetime.now(tz=UTC)
                 self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
 

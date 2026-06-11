@@ -24,6 +24,7 @@ from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
 )
+from homeassistant.components.frontend import DATA_THEMES
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
@@ -508,6 +509,15 @@ class DownloadSupportPackageView(HomeAssistantView):
             "custom_integrations": custom_integrations,
         }
 
+    @callback
+    def _get_themes_info(self, hass: HomeAssistant) -> dict[str, Any]:
+        """Collect information about user-installed custom themes."""
+        themes: dict[str, Any] = hass.data.get(DATA_THEMES, {})
+        return {
+            "count": len(themes),
+            "themes": sorted(themes),
+        }
+
     async def _generate_markdown(
         self,
         hass: HomeAssistant,
@@ -567,6 +577,25 @@ class DownloadSupportPackageView(HomeAssistantView):
                         f"{integration['version']} | "
                         f"{doc_url}\n"
                     )
+                markdown += "\n</details>\n\n"
+
+        # Add custom themes information
+        try:
+            themes_info = self._get_themes_info(hass)
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Custom Themes\n\n"
+            markdown += "Unable to collect themes information\n\n"
+        else:
+            markdown += "## Custom Themes\n\n"
+            markdown += f"Custom themes: {themes_info['count']}\n\n"
+
+            if themes_info["themes"]:
+                markdown += "<details><summary>Custom themes</summary>\n\n"
+                markdown += "Name\n"
+                markdown += "---\n"
+                for theme in themes_info["themes"]:
+                    markdown += f"{theme}\n"
                 markdown += "\n</details>\n\n"
 
         for domain, domain_info in domains_info.items():
