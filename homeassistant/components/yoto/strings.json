@@ -128,6 +128,9 @@
       },
       "pause_volume_down": {
         "name": "Pause with volume down"
+      },
+      "repeat_all": {
+        "name": "Repeat all"
       }
     },
     "time": {
