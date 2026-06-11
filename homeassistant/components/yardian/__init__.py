@@ -21,7 +21,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: YardianConfigEntry) -> b
     host = entry.data[CONF_HOST]
     access_token = entry.data[CONF_ACCESS_TOKEN]
 
-    controller = AsyncYardianClient(async_get_clientsession(hass), host, access_token)
+    # Change this line to use .create()
+    # This ensures the coordinator's controller knows if it is YP or YC
+    controller = await AsyncYardianClient.create(
+        async_get_clientsession(hass), host, token=access_token
+    )
+
     coordinator = YardianUpdateCoordinator(hass, entry, controller)
     await coordinator.async_config_entry_first_refresh()
 

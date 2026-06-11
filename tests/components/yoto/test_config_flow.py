@@ -1,13 +1,20 @@
 """Tests for the Yoto config flow."""
 
 from http import HTTPStatus
+from unittest.mock import MagicMock
 from urllib.parse import parse_qs, urlparse
 
 import jwt
 import pytest
+from yoto_api import AuthenticationError
 
 from homeassistant.components.yoto.const import DOMAIN, YOTO_AUDIENCE, YOTO_SCOPES
-from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_DHCP,
+    SOURCE_REAUTH,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -147,6 +154,106 @@ async def test_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "setup_credentials", "mock_setup_entry"
+)
+async def test_reauth_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Reauthorizing the same account updates the existing entry's token."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await _complete_callback(
+        hass,
+        result,
+        hass_client_no_auth,
+        aioclient_mock,
+        refresh_token="new-refresh-token",
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data["token"]["refresh_token"] == "new-refresh-token"
+
+
+@pytest.mark.usefixtures(
+    "current_request_with_host", "setup_credentials", "mock_setup_entry"
+)
+async def test_reauth_unique_id_mismatch(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Reauthorizing with a different account aborts."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    other_token = jwt.encode(
+        {"sub": "auth0|other-user"}, "test-secret-long-enough-for-hmac-sha256"
+    )
+    await _complete_callback(
+        hass, result, hass_client_no_auth, aioclient_mock, access_token=other_token
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("current_request_with_host", "setup_credentials")
+async def test_reauth_recovers_failed_entry(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A successful reauth reloads an entry that failed to authenticate."""
+    mock_config_entry.add_to_hass(hass)
+    mock_yoto_client.refresh.side_effect = AuthenticationError("denied")
+
+    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+
+    mock_yoto_client.refresh.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(flows[0]["flow_id"], {})
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    await _complete_callback(
+        hass,
+        result,
+        hass_client_no_auth,
+        aioclient_mock,
+        refresh_token="new-refresh-token",
+    )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize(
