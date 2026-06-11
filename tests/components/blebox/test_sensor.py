@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, PropertyMock
 import blebox_uniapi
 import pytest
 
-from homeassistant.components.blebox.const import OPEN_STATUS
+from homeassistant.components.blebox.const import CO2_LEVEL, OPEN_STATUS
 from homeassistant.components.sensor import ATTR_OPTIONS, SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -303,6 +303,81 @@ async def test_open_status_sensor_none_value(
 ) -> None:
     """Test that a None native_value yields an unknown state."""
     feature_mock, entity_id = open_status_sensor
+
+    def set_none():
+        feature_mock.native_value = None
+
+    feature_mock.async_update = AsyncMock(side_effect=set_none)
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.fixture(name="co2_definition_sensor")
+def co2_definition_sensor_fixture():
+    """Return a default co2Definition sensor mock."""
+    feature = mock_feature(
+        "sensors",
+        blebox_uniapi.sensor.GenericSensor,
+        unique_id="BleBox-co2Sensor-1afe34db9437-0.co2Definition",
+        full_name="co2Sensor-0.co2Definition",
+        device_class="co2Definition",
+        native_value=None,
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My CO2 sensor")
+    type(product).model = PropertyMock(return_value="co2Sensor")
+    return (feature, "sensor.my_co2_sensor_co2sensor_0_co2definition")
+
+
+async def test_co2_definition_sensor_init(
+    co2_definition_sensor, hass: HomeAssistant
+) -> None:
+    """Test co2Definition sensor initial state is unknown."""
+    _, entity_id = co2_definition_sensor
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.ENUM
+    assert state.attributes[ATTR_OPTIONS] == list(CO2_LEVEL.values())
+    assert state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("raw_value", "expected_state"),
+    [
+        pytest.param(0, "excellent", id="0_excellent"),
+        pytest.param(1, "good", id="1_good"),
+        pytest.param(2, "acceptable", id="2_acceptable"),
+        pytest.param(3, "medium", id="3_medium"),
+        pytest.param(4, "poor", id="4_poor"),
+        pytest.param(5, "unhealthy", id="5_unhealthy"),
+        pytest.param(6, "hazardous", id="6_hazardous"),
+    ],
+)
+async def test_co2_definition_sensor_value_mapping(
+    co2_definition_sensor,
+    hass: HomeAssistant,
+    raw_value: int,
+    expected_state: str,
+) -> None:
+    """Test that each raw co2Definition value maps to the correct string state."""
+    feature_mock, entity_id = co2_definition_sensor
+
+    feature_mock.native_value = raw_value
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.state == expected_state
+    assert state.state in CO2_LEVEL.values()
+
+
+async def test_co2_definition_sensor_none_value(
+    co2_definition_sensor, hass: HomeAssistant
+) -> None:
+    """Test that a None native_value yields an unknown state."""
+    feature_mock, entity_id = co2_definition_sensor
 
     def set_none():
         feature_mock.native_value = None
