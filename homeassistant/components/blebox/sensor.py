@@ -97,12 +97,14 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="forwardReactiveEnergy",
+        translation_key="forward_reactive_energy",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
         native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     BleBoxSensorEntityDescription(
         key="reverseReactiveEnergy",
+        translation_key="reverse_reactive_energy",
         device_class=SensorDeviceClass.REACTIVE_ENERGY,
         native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,

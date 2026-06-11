@@ -37,6 +37,10 @@
   },
   "entity": {
     "sensor": {
+      "forward_reactive_energy": { "name": "Forward reactive energy" },
+      "forward_reactive_energy_n": {
+        "name": "Forward reactive energy {index}"
+      },
       "open_status": {
         "state": {
           "ajar": "Ajar",
@@ -45,7 +49,9 @@
           "open": "[%key:common::state::open%]",
           "unclosed_or_unlocked": "Unclosed or unlocked"
         }
-      }
+      },
+      "reverse_reactive_energy": { "name": "Reverse reactive energy" },
+      "reverse_reactive_energy_n": { "name": "Reverse reactive energy {index}" }
     }
   },
   "exceptions": {
