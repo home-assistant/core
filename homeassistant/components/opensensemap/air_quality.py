@@ -117,9 +117,9 @@ class OpenSenseMapQuality(CoordinatorEntity[OpenSenseMapCoordinator], AirQuality
     @property
     def particulate_matter_2_5(self) -> float | None:
         """Return the particulate matter 2.5 level."""
-        return self.coordinator.data.pm2_5
+        return self.coordinator.data.pm2_5.value
 
     @property
     def particulate_matter_10(self) -> float | None:
         """Return the particulate matter 10 level."""
-        return self.coordinator.data.pm10
+        return self.coordinator.data.pm10.value
