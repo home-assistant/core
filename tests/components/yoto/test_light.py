@@ -29,8 +29,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 pytestmark = pytest.mark.usefixtures("setup_credentials")
 
-DAY_LIGHT_ENTITY_ID = "light.nursery_yoto_day_ambient_light"
-NIGHT_LIGHT_ENTITY_ID = "light.nursery_yoto_night_ambient_light"
+LIGHT_ENTITY_ID = "light.nursery_yoto_ambient_light"
 
 
 async def _setup(hass: HomeAssistant, mock_config_entry: MockConfigEntry) -> None:
@@ -52,12 +51,12 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_no_lights_for_mini(
+async def test_no_light_for_mini(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """The Yoto Mini has no ambient light, so no light entities are created."""
+    """The Yoto Mini has no ambient light, so no light entity is created."""
     player = mock_yoto_client.players[PLAYER_ID]
     player.device = replace(player.device, device_family="mini")
 
@@ -67,35 +66,25 @@ async def test_no_lights_for_mini(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "service_data", "expected_colour"),
+    ("service_data", "expected_rgb"),
     [
-        # Configured day colour #40bfd9 reports brightness 217 (its
-        # brightest channel); a new colour is scaled back by it.
+        # The lamp colour is 0x194a55: brightness 85 (its brightest
+        # channel), full-brightness colour (75, 222, 255). New values are
+        # combined with whichever half the call does not provide.
         pytest.param(
-            DAY_LIGHT_ENTITY_ID,
             {ATTR_RGB_COLOR: (255, 0, 0)},
-            {"day_ambient_colour": "#d90000"},
-            id="day-set-colour",
+            (85, 0, 0),
+            id="set-colour-keeps-brightness",
         ),
         pytest.param(
-            DAY_LIGHT_ENTITY_ID,
             {ATTR_BRIGHTNESS: 128},
-            {"day_ambient_colour": "#267080"},
-            id="day-set-brightness",
+            (38, 111, 128),
+            id="set-brightness-keeps-colour",
         ),
         pytest.param(
-            DAY_LIGHT_ENTITY_ID,
             {ATTR_RGB_COLOR: (0, 255, 0), ATTR_BRIGHTNESS: 255},
-            {"day_ambient_colour": "#00ff00"},
-            id="day-set-colour-and-brightness",
-        ),
-        # Night light is off (#000000); turning it on without arguments
-        # defaults to white at full brightness.
-        pytest.param(
-            NIGHT_LIGHT_ENTITY_ID,
-            {},
-            {"night_ambient_colour": "#ffffff"},
-            id="night-turn-on-default",
+            (0, 255, 0),
+            id="set-colour-and-brightness",
         ),
     ],
 )
@@ -103,24 +92,40 @@ async def test_turn_on(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    entity_id: str,
     service_data: dict[str, object],
-    expected_colour: dict[str, str],
+    expected_rgb: tuple[int, int, int],
 ) -> None:
-    """Turning on writes the matching ambient colour config field."""
+    """Turning on sends the combined colour to the player."""
     await _setup(hass, mock_config_entry)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_id, **service_data},
+        {ATTR_ENTITY_ID: LIGHT_ENTITY_ID, **service_data},
         blocking=True,
     )
 
-    mock_yoto_client.set_player_config.assert_awaited_once_with(
-        PLAYER_ID, **expected_colour
+    mock_yoto_client.set_ambients.assert_awaited_once_with(PLAYER_ID, *expected_rgb)
+    mock_yoto_client.request_player_status.assert_awaited_once_with(PLAYER_ID)
+
+
+async def test_turn_on_while_off(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Turning on an unlit lamp without arguments defaults to white."""
+    mock_yoto_client.players[PLAYER_ID].status.nightlight_mode = "off"
+    await _setup(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: LIGHT_ENTITY_ID},
+        blocking=True,
     )
-    mock_yoto_client.update_player_info.assert_awaited_once_with(PLAYER_ID)
+
+    mock_yoto_client.set_ambients.assert_awaited_once_with(PLAYER_ID, 255, 255, 255)
 
 
 async def test_turn_off(
@@ -128,19 +133,17 @@ async def test_turn_off(
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Turning off writes black to the ambient colour config field."""
+    """Turning off sends black to the player."""
     await _setup(hass, mock_config_entry)
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: DAY_LIGHT_ENTITY_ID},
+        {ATTR_ENTITY_ID: LIGHT_ENTITY_ID},
         blocking=True,
     )
 
-    mock_yoto_client.set_player_config.assert_awaited_once_with(
-        PLAYER_ID, day_ambient_colour="#000000"
-    )
+    mock_yoto_client.set_ambients.assert_awaited_once_with(PLAYER_ID, 0, 0, 0)
 
 
 async def test_turn_on_failure(
@@ -148,16 +151,14 @@ async def test_turn_on_failure(
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A failed config write raises a Home Assistant error."""
+    """A failed lamp command raises a Home Assistant error."""
     await _setup(hass, mock_config_entry)
-    mock_yoto_client.set_player_config.side_effect = YotoError("MQTT timeout")
+    mock_yoto_client.set_ambients.side_effect = YotoError("MQTT timeout")
 
-    with pytest.raises(
-        HomeAssistantError, match="Failed to update Yoto player settings"
-    ):
+    with pytest.raises(HomeAssistantError, match="Yoto command failed"):
         await hass.services.async_call(
             LIGHT_DOMAIN,
             SERVICE_TURN_ON,
-            {ATTR_ENTITY_ID: DAY_LIGHT_ENTITY_ID},
+            {ATTR_ENTITY_ID: LIGHT_ENTITY_ID},
             blocking=True,
         )

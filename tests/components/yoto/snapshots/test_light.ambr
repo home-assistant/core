@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[light.nursery_yoto_day_ambient_light-entry]
+# name: test_all_entities[light.nursery_yoto_ambient_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -16,8 +16,8 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'light',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'light.nursery_yoto_day_ambient_light',
+    'entity_category': None,
+    'entity_id': 'light.nursery_yoto_ambient_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -25,34 +25,34 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Day ambient light',
+    'object_id_base': 'Ambient light',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Day ambient light',
+    'original_name': 'Ambient light',
     'platform': 'yoto',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'day_ambient_light',
-    'unique_id': 'player-test_day_ambient_light',
+    'translation_key': 'ambient_light',
+    'unique_id': 'player-test_ambient_light',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[light.nursery_yoto_day_ambient_light-state]
+# name: test_all_entities[light.nursery_yoto_ambient_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 217,
+      'brightness': 85,
       'color_mode': <ColorMode.RGB: 'rgb'>,
-      'friendly_name': 'Nursery Yoto Day ambient light',
+      'friendly_name': 'Nursery Yoto Ambient light',
       'hs_color': tuple(
-        190.333,
+        191.0,
         70.588,
       ),
       'rgb_color': tuple(
         75,
-        224,
+        222,
         255,
       ),
       'supported_color_modes': list([
@@ -61,77 +61,14 @@
       'supported_features': <LightEntityFeature: 0>,
       'xy_color': tuple(
         0.168,
-        0.293,
+        0.29,
       ),
     }),
     'context': <ANY>,
-    'entity_id': 'light.nursery_yoto_day_ambient_light',
+    'entity_id': 'light.nursery_yoto_ambient_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
-  })
-# ---
-# name: test_all_entities[light.nursery_yoto_night_ambient_light-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'supported_color_modes': list([
-        <ColorMode.RGB: 'rgb'>,
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'light',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'light.nursery_yoto_night_ambient_light',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Night ambient light',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Night ambient light',
-    'platform': 'yoto',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'night_ambient_light',
-    'unique_id': 'player-test_night_ambient_light',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[light.nursery_yoto_night_ambient_light-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'Nursery Yoto Night ambient light',
-      'hs_color': None,
-      'rgb_color': None,
-      'supported_color_modes': list([
-        <ColorMode.RGB: 'rgb'>,
-      ]),
-      'supported_features': <LightEntityFeature: 0>,
-      'xy_color': None,
-    }),
-    'context': <ANY>,
-    'entity_id': 'light.nursery_yoto_night_ambient_light',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'off',
   })
 # ---

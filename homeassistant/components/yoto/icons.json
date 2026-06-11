@@ -9,10 +9,7 @@
       }
     },
     "light": {
-      "day_ambient_light": {
-        "default": "mdi:lightbulb-on"
-      },
-      "night_ambient_light": {
+      "ambient_light": {
         "default": "mdi:lightbulb-night"
       }
     },

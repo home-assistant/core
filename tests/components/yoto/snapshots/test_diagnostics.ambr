@@ -142,7 +142,7 @@
           'is_audio_device_connected': False,
           'is_bluetooth_audio_connected': True,
           'is_charging': True,
-          'nightlight_mode': None,
+          'nightlight_mode': '0x194a55',
           'system_volume_percentage': None,
           'updated_at': None,
           'user_volume_percentage': None,

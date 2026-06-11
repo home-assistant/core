@@ -46,11 +46,8 @@
       }
     },
     "light": {
-      "day_ambient_light": {
-        "name": "Day ambient light"
-      },
-      "night_ambient_light": {
-        "name": "Night ambient light"
+      "ambient_light": {
+        "name": "Ambient light"
       }
     },
     "number": {

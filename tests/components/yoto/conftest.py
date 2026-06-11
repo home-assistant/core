@@ -123,6 +123,7 @@ def _build_player() -> YotoPlayer:
         day_mode=DayMode.DAY,
         is_audio_device_connected=False,
         is_bluetooth_audio_connected=True,
+        nightlight_mode="0x194a55",
         current_display_brightness=85,
     )
     player.last_event = PlaybackEvent(
