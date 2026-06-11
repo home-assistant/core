@@ -33,6 +33,7 @@ PET_DATA = load_json_object_fixture("pet_data.json", DOMAIN)
 def create_mock_robot(
     robot_data: dict | None,
     account: Account,
+    *,
     v4: bool,
     v5: bool,
     v5_pro: bool,
@@ -102,7 +103,15 @@ def create_mock_account(
         []
         if skip_robots
         else [
-            create_mock_robot(robot_data, account, v4, v5, v5_pro, feeder, side_effect)
+            create_mock_robot(
+                robot_data,
+                account,
+                v4=v4,
+                v5=v5,
+                v5_pro=v5_pro,
+                feeder=feeder,
+                side_effect=side_effect,
+            )
         ]
     )
     account.get_robots = lambda robot_class: [
