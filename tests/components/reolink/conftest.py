@@ -170,6 +170,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.port = TEST_BC_PORT
     host_mock.baichuan.connection_type = ConnectionEnum(TEST_BC_CON)
     host_mock.baichuan.events_active = False
+    host_mock.baichuan.webhook_subscribed = False
     host_mock.baichuan.login_sucess = True
     host_mock.baichuan.subscribe_events = AsyncMock()
     host_mock.baichuan.unsubscribe_events = AsyncMock()
