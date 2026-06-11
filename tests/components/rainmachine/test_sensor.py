@@ -1,5 +1,6 @@
 """Test RainMachine sensors."""
 
+import logging
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -44,6 +45,7 @@ async def test_device_info_hw_version_is_string(
 ) -> None:
     """Test that hw_version is a string even when API returns int."""
     with (
+        caplog.at_level(logging.WARNING, logger="homeassistant.helpers.frame"),
         patch("homeassistant.components.rainmachine.Client", return_value=client),
         patch("homeassistant.components.rainmachine.PLATFORMS", [Platform.SENSOR]),
     ):
