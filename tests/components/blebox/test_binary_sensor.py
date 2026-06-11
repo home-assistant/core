@@ -22,11 +22,13 @@ def airsensor_fixture() -> tuple[AsyncMock, str]:
         unique_id="BleBox-windRainSensor-ea68e74f4f49-0.rain",
         full_name="windRainSensor-0.rain",
         device_class="moisture",
+        index=None,
     )
+    type(feature).name = PropertyMock(return_value=None)
     product = feature.product
     type(product).name = PropertyMock(return_value="My rain sensor")
     type(product).model = PropertyMock(return_value="rainSensor")
-    return feature, "binary_sensor.my_rain_sensor_windrainsensor_0_rain"
+    return feature, "binary_sensor.my_rain_sensor_moisture"
 
 
 @pytest.fixture(name="open_sensor")
@@ -39,10 +41,11 @@ def open_sensor_fixture() -> tuple[AsyncMock, str]:
         full_name="openSensor-0.open",
         device_class="open",
     )
+    type(feature).name = PropertyMock(return_value=None)
     product = feature.product
     type(product).name = PropertyMock(return_value="My open sensor")
     type(product).model = PropertyMock(return_value="openSensor")
-    return feature, "binary_sensor.my_open_sensor_opensensor_0_open"
+    return feature, "binary_sensor.my_open_sensor_window"
 
 
 @pytest.fixture(name="inputsensor")
@@ -55,10 +58,11 @@ def inputsensor_fixture() -> tuple[AsyncMock, str]:
         full_name="inputSensorD-0.input",
         device_class="input",
     )
+    type(feature).name = PropertyMock(return_value=None)
     product = feature.product
     type(product).name = PropertyMock(return_value="My input sensor")
     type(product).model = PropertyMock(return_value="inputSensorD")
-    return feature, "binary_sensor.my_input_sensor_inputsensord_0_input"
+    return feature, "binary_sensor.my_input_sensor"
 
 
 @pytest.mark.parametrize(
@@ -74,7 +78,7 @@ def inputsensor_fixture() -> tuple[AsyncMock, str]:
         pytest.param(
             "rainsensor",
             "BleBox-windRainSensor-ea68e74f4f49-0.rain",
-            "My rain sensor windRainSensor-0.rain",
+            "My rain sensor Moisture",
             BinarySensorDeviceClass.MOISTURE,
             STATE_ON,
             "My rain sensor",
@@ -83,7 +87,7 @@ def inputsensor_fixture() -> tuple[AsyncMock, str]:
         pytest.param(
             "inputsensor",
             "BleBox-inputSensorD-aa11bb22cc33-0.input",
-            "My input sensor inputSensorD-0.input",
+            "My input sensor",
             None,
             STATE_ON,
             "My input sensor",
@@ -116,6 +120,26 @@ async def test_init(
     assert device.name == expected_device_name
 
 
+async def test_binary_sensor_with_name(hass: HomeAssistant) -> None:
+    """Test that a binary sensor with a feature name uses it as the entity name."""
+    feature = mock_feature(
+        "binary_sensors",
+        blebox_uniapi.binary_sensor.Rain,
+        unique_id="BleBox-windRainSensor-ea68e74f4f49-0.rain",
+        full_name="windRainSensor-0.rain",
+        device_class="moisture",
+        index=0,
+    )
+    type(feature).name = PropertyMock(return_value="Front yard")
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My rain sensor")
+    type(product).model = PropertyMock(return_value="rainSensor")
+
+    await async_setup_entity(hass, "binary_sensor.my_rain_sensor_front_yard")
+    state = hass.states.get("binary_sensor.my_rain_sensor_front_yard")
+    assert state.name == "My rain sensor Front yard"
+
+
 async def test_open_sensor_init(
     open_sensor: tuple[AsyncMock, str],
     device_registry: dr.DeviceRegistry,
@@ -127,7 +151,7 @@ async def test_open_sensor_init(
     assert entry.unique_id == "BleBox-openSensor-1afe34db9437-0.open"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My open sensor openSensor-0.open"
+    assert state.name == "My open sensor Window"
     assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.WINDOW
 
     device = device_registry.async_get(entry.device_id)

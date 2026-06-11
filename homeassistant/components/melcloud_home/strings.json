@@ -19,11 +19,22 @@
           "email": "Email address for your MELCloud Home account.",
           "password": "Password for your MELCloud Home account."
         },
-        "description": "Login to MELCloud Home with the email address and password associated with your account."
+        "description": "Log in to MELCloud Home with the email address and password associated with your account."
       }
     }
   },
   "entity": {
+    "binary_sensor": {
+      "error": {
+        "name": "Error"
+      },
+      "forced_hot_water": {
+        "name": "Forced hot water"
+      },
+      "standby": {
+        "name": "Standby"
+      }
+    },
     "climate": {
       "ata_unit": {
         "state_attributes": {
