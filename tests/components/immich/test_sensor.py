@@ -1,6 +1,6 @@
 """Test the Immich sensor platform."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from aiohttp import ContentTypeError, RequestInfo
 from multidict import CIMultiDict, CIMultiDictProxy
@@ -50,7 +50,7 @@ async def test_admin_sensors(
 
 async def test_update_error_does_not_leak_api_key(
     hass: HomeAssistant,
-    mock_immich: AsyncMock,
+    mock_immich: Mock,
     mock_config_entry: MockConfigEntry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
