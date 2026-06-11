@@ -59,6 +59,8 @@ async def async_setup_entry(
 class ImouCamera(ImouEntity, Camera):
     """Representation of an Imou camera stream."""
 
+    _attr_supported_features = CameraEntityFeature.STREAM
+
     def __init__(
         self,
         coordinator: ImouDataUpdateCoordinator,
@@ -102,8 +104,3 @@ class ImouCamera(ImouEntity, Camera):
         header_on = bool(header[PARAM_STATE]) if header else False
         motion_on = bool(motion[PARAM_STATE]) if motion else False
         return header_on or motion_on
-
-    @property
-    def supported_features(self) -> CameraEntityFeature:
-        """Flag streaming support."""
-        return CameraEntityFeature.STREAM
