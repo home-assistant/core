@@ -59,7 +59,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
     await hass.async_add_executor_job(account.setup)
 
     entry.runtime_data = account
-    entry.async_on_unload(account.cancel_fetch)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
@@ -68,4 +67,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bool:
     """Unload a config entry."""
+    await hass.async_add_executor_job(entry.runtime_data.cancel_fetch)
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
