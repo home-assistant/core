@@ -26,7 +26,6 @@ from homeassistant.const import (
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
-    EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -36,8 +35,6 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
-    Event,
-    EventStateChangedData,
     HomeAssistant,
     ServiceCall,
     State,
@@ -4226,70 +4223,6 @@ async def test_entity_trigger_duration_each_entity_off_cancels_only_that_entity(
     assert calls[0]["entity_id"] == entity_b
 
     unsub()
-
-
-async def test_entity_trigger_first_nested_state_revert(
-    hass: HomeAssistant,
-) -> None:
-    """Test a synchronous bus listener reverting a state change.
-
-    Writing states from a synchronous bus listener during state change
-    dispatch is not supported: the nested state write is dispatched to the
-    target tracker before the event that caused it, inverting per-entity
-    delivery order. Supported state change tracking via
-    async_track_state_change_event or async_track_state_change_filtered is
-    deferred precisely so callbacks cannot run inside the dispatch loop and
-    cause this.
-
-    This test documents the resulting behavior rather than guaranteeing it:
-    the trigger evaluates the events in inverted order, firing on the
-    delivered-last on-event, and the tracked states view retains the stale
-    "on" state — suppressing later first-matches — until the entity changes
-    again.
-    """
-    entity_a = "test.entity_a"
-    entity_b = "test.entity_b"
-    hass.states.async_set(entity_a, STATE_OFF)
-    hass.states.async_set(entity_b, STATE_OFF)
-    await hass.async_block_till_done()
-
-    @callback
-    def revert_entity_a(event: Event[EventStateChangedData]) -> None:
-        """Synchronously turn entity_a off again when it turns on."""
-        if (
-            event.data["entity_id"] == entity_a
-            and (new_state := event.data["new_state"]) is not None
-            and new_state.state == STATE_ON
-        ):
-            hass.states.async_set(entity_a, STATE_OFF)
-
-    # Registered before the trigger is armed, so it runs before the state
-    # change tracker's bus listener and its nested write is dispatched to
-    # the tracker first.
-    unsub_revert = hass.bus.async_listen(EVENT_STATE_CHANGED, revert_entity_a)
-
-    calls: list[dict[str, Any]] = []
-    unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration=None
-    )
-
-    # entity_a turns on and is synchronously reverted to off. The trigger
-    # receives (on→off) then (off→on) and fires on the on-event, which is
-    # delivered last even though it fired first.
-    hass.states.async_set(entity_a, STATE_ON)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0]["entity_id"] == entity_a
-
-    # entity_a is off, so entity_b is now the first matching entity, but the
-    # tracked states view still holds the stale "on" state for entity_a, so
-    # the trigger does not fire.
-    hass.states.async_set(entity_b, STATE_ON)
-    await hass.async_block_till_done()
-    assert len(calls) == 1
-
-    unsub()
-    unsub_revert()
 
 
 async def test_entity_trigger_duration_all_requires_all(
