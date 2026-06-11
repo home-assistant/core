@@ -2188,7 +2188,7 @@ async def test_setup_with_advanced_settings(
     assert result["data_schema"].schema[mqtt.CONF_WS_PATH]
     assert result["data_schema"].schema[mqtt.CONF_WS_HEADERS]
 
-    # second iteration, advanced settings with client cert and key
+    # third iteration, advanced settings with client cert and key
     # set and bad json payload
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

@@ -5409,7 +5409,7 @@ async def async_get_broker_settings(
             or user_input_basic[ADVANCED_OPTIONS]
         )
         if user_input_basic.get(ADVANCED_OPTIONS):
-            # Treat the previous post as an update of the current settings/
+            # Treat the previous post as an update of the current settings
             # (if there was a basic broker setup step)
             current_config.update(user_input_basic)
             complete_settings = False
@@ -5418,7 +5418,7 @@ async def async_get_broker_settings(
         ):
             current_config.update(validated_user_input)
         else:
-            # Treat the previous post as an update of the current settings/
+            # Treat the previous post as an update of the current settings
             # (if there was a basic broker setup step)
             current_config.update(user_input_basic)
             complete_settings = False
