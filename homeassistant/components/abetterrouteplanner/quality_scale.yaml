@@ -41,7 +41,12 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics:
+    status: todo
+    comment: >-
+      Deferred to a follow-up PR per the core review of #173433; the in-memory
+      connection-triage fields on the telemetry coordinator already retain the
+      data a diagnostics dump will surface.
   discovery:
     status: exempt
     comment: Cloud service, no local discovery possible.
@@ -69,8 +74,6 @@ rules:
   stale-devices: done
 
   # Platinum
-  async-dependency:
-    status: exempt
-    comment: No external Python dependency; all I/O via in-tree aiohttp client.
+  async-dependency: done
   inject-websession: done
   strict-typing: done
