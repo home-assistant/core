@@ -1,7 +1,7 @@
 """Tests for the Overkiz Rexel OAuth2 config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError
 from pyoverkiz.client import GatewayCandidate
@@ -18,8 +18,13 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.setup import async_setup_component
 
@@ -287,3 +292,59 @@ async def test_reauth_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert config_entry.data["token"]["access_token"] == "mock-access-token"
+
+
+def _rexel_config_entry() -> MockConfigEntry:
+    """Return a Rexel config entry backed by an OAuth2 token bundle."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "mock-access-token"},
+            "hub": "rexel",
+            "gateway_id": TEST_GATEWAY_ID,
+        },
+    )
+
+
+async def test_setup_token_reauth_error_starts_reauth(hass: HomeAssistant) -> None:
+    """A non-recoverable token refresh failure triggers reauth."""
+    config_entry = _rexel_config_entry()
+    config_entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.login.side_effect = OAuth2TokenRequestReauthError(
+        request_info=MagicMock(), domain=DOMAIN
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.create_rexel_client", return_value=client
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+async def test_setup_token_transient_error_retries(hass: HomeAssistant) -> None:
+    """A recoverable token refresh failure retries setup."""
+    config_entry = _rexel_config_entry()
+    config_entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.login.side_effect = OAuth2TokenRequestError(
+        request_info=MagicMock(), domain=DOMAIN
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.create_rexel_client", return_value=client
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()

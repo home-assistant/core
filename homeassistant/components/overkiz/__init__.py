@@ -37,7 +37,12 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     config_entry_oauth2_flow,
     config_validation as cv,
@@ -131,10 +136,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         BadCredentialsError,
         NoSuchTokenError,
         NotAuthenticatedError,
+        OAuth2TokenRequestReauthError,
     ) as exception:
         raise ConfigEntryAuthFailed("Invalid authentication") from exception
     except TooManyRequestsError as exception:
         raise ConfigEntryNotReady("Too many requests, try again later") from exception
+    except OAuth2TokenRequestError as exception:
+        raise ConfigEntryNotReady("Failed to refresh OAuth2 token") from exception
     except (TimeoutError, ClientError) as exception:
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceError as exception:
