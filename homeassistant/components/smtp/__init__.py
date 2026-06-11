@@ -73,7 +73,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmtpConfigEntry) -> bool
         ),
     )
     try:
-        client.connect().quit()
+        await hass.async_add_executor_job(lambda: client.connect().quit())
     except SMTPAuthenticationError as e:
         raise ConfigEntryError(
             translation_domain=DOMAIN,

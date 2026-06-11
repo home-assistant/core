@@ -137,7 +137,7 @@ async def async_setup_entry(
 
     async_add_entities(
         [
-            MobileAppNotifyEntity(config_entry, subentry, client)
+            MailNotifyEntity(config_entry, subentry, client)
             for subentry in config_entry.subentries.values()
         ],
     )
@@ -157,7 +157,7 @@ async def async_setup_entry(
             entity_registry.async_remove(entity.entity_id)
 
 
-class MobileAppNotifyEntity(NotifyEntity):
+class MailNotifyEntity(NotifyEntity):
     """Representation of an SMTP notify entity."""
 
     _attr_has_entity_name = True

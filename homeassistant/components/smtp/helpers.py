@@ -162,7 +162,7 @@ def _build_multipart_msg(
     hass: HomeAssistant, message: str, images: list[str]
 ) -> MIMEMultipart:
     """Build Multipart message with images as attachments."""
-    _LOGGER.debug("Building multipart email with image attachme_build_html_msgnt(s)")
+    _LOGGER.debug("Building multipart email with image attachment(s)")
     msg = MIMEMultipart()
     body_txt = MIMEText(message)
     msg.attach(body_txt)
