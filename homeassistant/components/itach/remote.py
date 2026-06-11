@@ -79,13 +79,11 @@ def _format_command_value(value: str) -> str:
 
 def _format_command_table(commands: Iterable[dict[str, str]]) -> str:
     """Format YAML commands for pyitachip2ir."""
-    command_table = ""
-    for command in commands:
-        command_table += (
-            f"{_format_command_value(command[CONF_NAME])}\n"
-            f"{_format_command_value(command[CONF_DATA])}\n"
-        )
-    return command_table
+    return "".join(
+        f"{_format_command_value(command[CONF_NAME])}\n"
+        f"{_format_command_value(command[CONF_DATA])}\n"
+        for command in commands
+    )
 
 
 def _create_remote_entity(
