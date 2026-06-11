@@ -3,6 +3,7 @@
   dict({
     'auth_implementation': 'abetterrouteplanner',
     'known_vehicle_ids': list([
+      '524289123456',
       '941349991303',
     ]),
     'token': dict({

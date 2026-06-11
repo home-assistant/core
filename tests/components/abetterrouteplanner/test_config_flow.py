@@ -7,6 +7,7 @@ from typing import Any
 from unittest.mock import AsyncMock
 from urllib.parse import parse_qs, urlparse
 
+from aioabrp import AbrpApiError, AbrpAuthError, AbrpVehicle
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -24,13 +25,10 @@ from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
-    ABRP_GET_TLM_URL,
     MOCK_VEHICLE_ID,
     REDIRECT_URI,
     USER_SUB,
-    build_garage_response,
     build_id_token,
-    build_vehicle_record,
     complete_oauth_callback,
 )
 
@@ -39,6 +37,16 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 EXPECTED_SCOPE = "oidc profile email offline_access"
+
+
+def _vehicle(vehicle_id: int, name: str) -> AbrpVehicle:
+    """Build a typed ``AbrpVehicle`` for a config-flow garage."""
+    return AbrpVehicle(
+        vehicle_id=vehicle_id,
+        name=name,
+        vehicle_model=f"model:{vehicle_id}",
+        paint=None,
+    )
 
 
 def _mock_token_post(aioclient_mock: AiohttpClientMocker) -> None:
@@ -90,6 +98,7 @@ async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     mock_setup_entry: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
@@ -123,7 +132,6 @@ async def test_full_flow(
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
 
     _mock_token_post(aioclient_mock)
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response())
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -281,14 +289,15 @@ async def test_pick_vehicles_no_vehicles_aborts(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """An empty garage aborts the flow with ``no_vehicles``."""
+    mock_abrp_client.return_value = []
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
     _mock_token_post(aioclient_mock)
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response([]))
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -314,20 +323,19 @@ async def test_pick_vehicles_creates_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     vehicle_ids: list[int],
     picked_ids: list[str],
 ) -> None:
     """Picker shows for 1/N vehicles; selected ids land in entry.data['vehicle_ids']."""
-    records = [
-        build_vehicle_record(vehicle_id=vid, name=f"Vehicle {vid}")
-        for vid in vehicle_ids
+    mock_abrp_client.return_value = [
+        _vehicle(vid, f"Vehicle {vid}") for vid in vehicle_ids
     ]
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
     _mock_token_post(aioclient_mock)
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response(records))
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -393,6 +401,7 @@ async def test_pick_vehicles_aborts_if_entry_appeared_during_picker(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
     """Picker submission re-runs the duplicate check (finding F race coverage).
@@ -406,7 +415,6 @@ async def test_pick_vehicles_aborts_if_entry_appeared_during_picker(
     )
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
     _mock_token_post(aioclient_mock)
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response())
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -431,6 +439,7 @@ async def test_pick_vehicles_empty_selection_rejected(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
 ) -> None:
     """An empty picker submission re-renders the form with a ``base`` error.
 
@@ -444,7 +453,6 @@ async def test_pick_vehicles_empty_selection_rejected(
     )
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
     _mock_token_post(aioclient_mock)
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response())
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -461,22 +469,17 @@ async def test_pick_vehicles_empty_selection_rejected(
 
 
 @pytest.mark.parametrize(
-    ("api_response_kwargs", "expected_reason"),
+    ("side_effect", "expected_reason"),
     [
         pytest.param(
-            {"json": {"status": "error", "error": "invalid session"}},
+            AbrpAuthError("invalid session"),
             "api_unauthorized",
-            id="auth_error_envelope",
+            id="auth_error",
         ),
         pytest.param(
-            {"json": {"status": "error", "error": "backend overloaded"}},
+            AbrpApiError("backend overloaded"),
             "cannot_connect",
-            id="generic_error_envelope",
-        ),
-        pytest.param(
-            {"status": HTTPStatus.INTERNAL_SERVER_ERROR},
-            "cannot_connect",
-            id="server_error",
+            id="api_error",
         ),
     ],
 )
@@ -485,16 +488,21 @@ async def test_garage_fetch_error_aborts(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
-    api_response_kwargs: dict[str, Any],
+    mock_abrp_client: AsyncMock,
+    side_effect: Exception,
     expected_reason: str,
 ) -> None:
-    """An API error between OAuth and the picker aborts the flow."""
+    """An API error between OAuth and the picker aborts the flow.
+
+    ``AbrpAuthError`` maps to ``api_unauthorized`` and ``AbrpApiError`` maps to
+    ``cannot_connect``.
+    """
+    mock_abrp_client.side_effect = side_effect
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
     _mock_token_post(aioclient_mock)
-    aioclient_mock.post(ABRP_GET_TLM_URL, **api_response_kwargs)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -508,9 +516,10 @@ async def test_reauth_skips_pick_vehicles(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """A reauth flow must complete without driving the picker (no get_tlm call)."""
+    """A reauth flow must complete without driving the picker (no garage fetch)."""
     config_entry.add_to_hass(hass)
 
     result = await config_entry.start_reauth_flow(hass)
@@ -537,10 +546,9 @@ async def test_reauth_skips_pick_vehicles(
     assert result["reason"] == "reauth_successful"
     assert config_entry.data["token"]["access_token"] == "updated-access-token"
 
-    # Only the OAuth token endpoint was called; the garage endpoint must not
-    # be hit during reauth (would imply the picker step ran).
-    called_urls = [str(call[1]) for call in aioclient_mock.mock_calls]
-    assert ABRP_GET_TLM_URL not in called_urls
+    # The garage must not be fetched during reauth (would imply the picker
+    # step ran).
+    assert mock_abrp_client.call_count == 0
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
@@ -651,6 +659,7 @@ async def test_reconfigure_happy_path(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     token_entry: dict[str, Any],
     picked_ids: list[str],
     expected_vehicle_ids: list[str],
@@ -659,11 +668,10 @@ async def test_reconfigure_happy_path(
     config_entry = _reconfigure_entry(token_entry)
     config_entry.add_to_hass(hass)
 
-    records = [
-        build_vehicle_record(vehicle_id=1, name="Vehicle 1"),
-        build_vehicle_record(vehicle_id=2, name="Vehicle 2"),
+    mock_abrp_client.return_value = [
+        _vehicle(1, "Vehicle 1"),
+        _vehicle(2, "Vehicle 2"),
     ]
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response(records))
 
     result = await _drive_reconfigure_through_token_exchange(
         hass, hass_client_no_auth, aioclient_mock, config_entry
@@ -689,6 +697,7 @@ async def test_reconfigure_wrong_account(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     token_entry: dict[str, Any],
 ) -> None:
     """Re-OAuth with a different ``sub`` aborts with ``wrong_account``.
@@ -713,25 +722,26 @@ async def test_reconfigure_wrong_account(
     assert config_entry.unique_id == USER_SUB
     assert config_entry.data == original_data
 
-    called_urls = [str(call[1]) for call in aioclient_mock.mock_calls]
-    assert ABRP_GET_TLM_URL not in called_urls
+    # The unique-id guard runs before the garage fetch on the wrong-account
+    # path, so the client must not have been called.
+    assert mock_abrp_client.call_count == 0
 
 
 @pytest.mark.parametrize(
-    ("api_response_kwargs", "expected_reason"),
+    ("garage_outcome", "expected_reason"),
     [
         pytest.param(
-            {"json": {"status": "error", "error": "invalid session"}},
+            AbrpAuthError("invalid session"),
             "api_unauthorized",
             id="api_unauthorized",
         ),
         pytest.param(
-            {"status": HTTPStatus.INTERNAL_SERVER_ERROR},
+            AbrpApiError("backend overloaded"),
             "cannot_connect",
             id="cannot_connect",
         ),
         pytest.param(
-            {"json": build_garage_response([])},
+            [],
             "no_vehicles",
             id="no_vehicles",
         ),
@@ -742,8 +752,9 @@ async def test_reconfigure_garage_fetch_error(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     token_entry: dict[str, Any],
-    api_response_kwargs: dict[str, Any],
+    garage_outcome: Exception | list[AbrpVehicle],
     expected_reason: str,
 ) -> None:
     """Garage-fetch failure on reconfigure aborts with the matching reason."""
@@ -751,7 +762,10 @@ async def test_reconfigure_garage_fetch_error(
     config_entry.add_to_hass(hass)
     original_data = dict(config_entry.data)
 
-    aioclient_mock.post(ABRP_GET_TLM_URL, **api_response_kwargs)
+    if isinstance(garage_outcome, BaseException):
+        mock_abrp_client.side_effect = garage_outcome
+    else:
+        mock_abrp_client.return_value = garage_outcome
 
     result = await _drive_reconfigure_through_token_exchange(
         hass, hass_client_no_auth, aioclient_mock, config_entry
@@ -767,17 +781,17 @@ async def test_reconfigure_empty_submission(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     token_entry: dict[str, Any],
 ) -> None:
     """Submitting an empty selection on reconfigure re-renders with an error."""
     config_entry = _reconfigure_entry(token_entry)
     config_entry.add_to_hass(hass)
 
-    records = [
-        build_vehicle_record(vehicle_id=1, name="Vehicle 1"),
-        build_vehicle_record(vehicle_id=2, name="Vehicle 2"),
+    mock_abrp_client.return_value = [
+        _vehicle(1, "Vehicle 1"),
+        _vehicle(2, "Vehicle 2"),
     ]
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response(records))
 
     result = await _drive_reconfigure_through_token_exchange(
         hass, hass_client_no_auth, aioclient_mock, config_entry
@@ -800,6 +814,7 @@ async def test_reconfigure_picker_defaults_to_current_selection(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     token_entry: dict[str, Any],
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -813,11 +828,10 @@ async def test_reconfigure_picker_defaults_to_current_selection(
     config_entry = _reconfigure_entry(token_entry)
     config_entry.add_to_hass(hass)
 
-    records = [
-        build_vehicle_record(vehicle_id=1, name="Vehicle 1"),
-        build_vehicle_record(vehicle_id=2, name="Vehicle 2"),
+    mock_abrp_client.return_value = [
+        _vehicle(1, "Vehicle 1"),
+        _vehicle(2, "Vehicle 2"),
     ]
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response(records))
 
     result = await _drive_reconfigure_through_token_exchange(
         hass, hass_client_no_auth, aioclient_mock, config_entry
@@ -836,6 +850,7 @@ async def test_reconfigure_unions_prior_known_with_current_garage(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    mock_abrp_client: AsyncMock,
     token_entry: dict[str, Any],
 ) -> None:
     """Reconfigure unions prior ``CONF_KNOWN_VEHICLE_IDS`` with the current garage.
@@ -882,8 +897,7 @@ async def test_reconfigure_unions_prior_known_with_current_garage(
     # Garage at reconfigure time returns ONLY vehicle 1 — vehicle 2 is
     # transiently absent (deleted-and-re-added in ABRP, rate-limited poll,
     # etc.). The union semantic must keep "2" in KNOWN regardless.
-    records = [build_vehicle_record(vehicle_id=1, name="Vehicle 1")]
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response(records))
+    mock_abrp_client.return_value = [_vehicle(1, "Vehicle 1")]
 
     result = await _drive_reconfigure_through_token_exchange(
         hass, hass_client_no_auth, aioclient_mock, config_entry
