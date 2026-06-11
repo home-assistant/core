@@ -440,20 +440,11 @@ class OsramIrLight(OsramIrEmitterEntity, LightEntity):
 
 
 def _snap_hue(hue: float) -> int:
-    """Snap an arbitrary hue to one of the physical remote presets."""
+    """Snap an arbitrary hue to the nearest physical remote preset."""
     normalized_hue = hue % 360
 
-    if 60 < normalized_hue <= 90:
-        return 60
-    if 90 < normalized_hue < 120:
-        return 120
-    if 180 < normalized_hue <= 210:
-        return 180
-    if 210 < normalized_hue < 240:
-        return 240
-    if 300 < normalized_hue <= 330:
-        return 300
-    if 330 < normalized_hue < 360:
-        return 0
-
-    return int(normalized_hue / 15) * 15 % 360
+    # 360° is included as an alias for 0° to handle the wrap-around at red.
+    return min(
+        SUPPORTED_HUES,
+        key=lambda supported_hue: abs(normalized_hue - supported_hue),
+    ) % 360
