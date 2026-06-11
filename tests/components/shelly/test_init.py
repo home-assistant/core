@@ -525,7 +525,10 @@ async def test_entry_missing_port(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
-            ip_address="192.168.1.37", device_mac="123456789ABC", port=80
+            ip_address="192.168.1.37",
+            device_mac="123456789ABC",
+            port=80,
+            verify_ssl=False,
         )
 
 
@@ -549,7 +552,10 @@ async def test_rpc_entry_custom_port(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
         assert rpc_device_mock.call_args[0][2] == ConnectionOptions(
-            ip_address="192.168.1.37", device_mac="123456789ABC", port=8001
+            ip_address="192.168.1.37",
+            device_mac="123456789ABC",
+            port=8001,
+            verify_ssl=False,
         )
 
 

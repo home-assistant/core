@@ -7,7 +7,7 @@ from typing import Final
 from aioshelly.ble.const import BLE_SCRIPT_NAME
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions
-from aioshelly.const import DEFAULT_COAP_PORT, DEFAULT_HTTPS_PORT, RPC_GENERATIONS
+from aioshelly.const import DEFAULT_COAP_PORT, RPC_GENERATIONS
 from aioshelly.exceptions import (
     DeviceConnectionError,
     InvalidAuthError,
@@ -176,18 +176,11 @@ async def _async_setup_block_entry(
     hass: HomeAssistant, entry: ShellyConfigEntry
 ) -> bool:
     """Set up Shelly block based device from a config entry."""
-    port = get_http_port(entry.data)
-    options_kwargs = {}
-    if port == DEFAULT_HTTPS_PORT:
-        options_kwargs["verify_ssl"] = entry.data.get(CONF_VERIFY_SSL, False)
-
     options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
         device_mac=entry.unique_id,
-        port=port,
-        **options_kwargs,
     )
 
     coap_context = await get_coap_context(hass)
@@ -296,18 +289,13 @@ async def _async_setup_block_entry(
 
 async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Set up Shelly RPC based device from a config entry."""
-    port = get_http_port(entry.data)
-    options_kwargs = {}
-    if port == DEFAULT_HTTPS_PORT:
-        options_kwargs["verify_ssl"] = entry.data.get(CONF_VERIFY_SSL, False)
-
     options = ConnectionOptions(
         entry.data[CONF_HOST],
         entry.data.get(CONF_USERNAME),
         entry.data.get(CONF_PASSWORD),
         device_mac=entry.unique_id,
-        port=port,
-        **options_kwargs,
+        port=get_http_port(entry.data),
+        verify_ssl=entry.data.get(CONF_VERIFY_SSL, False),
     )
 
     ws_context = await get_ws_context(hass)
