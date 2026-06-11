@@ -71,8 +71,7 @@ async def async_setup_entry(
         async_add_entities(
             AqvifySensor(coordinator, description, device_key)
             for description in ENTITIES
-            for device_key in entry.runtime_data.data.devices.devices
-            if device_key in new_devices_set
+            for device_key in new_devices_set
         )
 
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
