@@ -11,7 +11,7 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -48,21 +48,15 @@ async def test_all_entities(
     [
         pytest.param(
             "number.nursery_yoto_day_maximum_volume",
-            70,
-            {"day_max_volume_limit": 70},
+            14,
+            {"day_max_volume_limit": 14},
             id="day-max-volume",
         ),
         pytest.param(
             "number.nursery_yoto_night_maximum_volume",
-            30,
-            {"night_max_volume_limit": 30},
+            5,
+            {"night_max_volume_limit": 5},
             id="night-max-volume",
-        ),
-        pytest.param(
-            "number.nursery_yoto_day_display_brightness",
-            90,
-            {"day_display_brightness": 90},
-            id="day-display-brightness",
         ),
         pytest.param(
             "number.nursery_yoto_night_display_brightness",
@@ -114,6 +108,21 @@ async def test_set_value(
     mock_yoto_client.update_player_info.assert_awaited_once_with(PLAYER_ID)
 
 
+@pytest.mark.usefixtures("mock_yoto_client")
+async def test_brightness_unavailable_while_auto(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Manual brightness sliders are unavailable while auto brightness is on."""
+    await _setup(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("number.nursery_yoto_day_display_brightness").state
+        == STATE_UNAVAILABLE
+    )
+    assert hass.states.get("number.nursery_yoto_night_display_brightness").state == "40"
+
+
 async def test_set_value_failure(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
@@ -129,6 +138,6 @@ async def test_set_value_failure(
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: "number.nursery_yoto_day_maximum_volume", ATTR_VALUE: 50},
+            {ATTR_ENTITY_ID: "number.nursery_yoto_day_maximum_volume", ATTR_VALUE: 10},
             blocking=True,
         )

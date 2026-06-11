@@ -117,7 +117,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'unavailable',
   })
 # ---
 # name: test_all_entities[number.nursery_yoto_day_maximum_volume-entry]
@@ -127,7 +127,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
+      'max': 16,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
@@ -159,25 +159,24 @@
     'supported_features': 0,
     'translation_key': 'day_max_volume_limit',
     'unique_id': 'player-test_day_max_volume_limit',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[number.nursery_yoto_day_maximum_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nursery Yoto Day maximum volume',
-      'max': 100,
+      'max': 16,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
-      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.nursery_yoto_day_maximum_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '80',
+    'state': '12',
   })
 # ---
 # name: test_all_entities[number.nursery_yoto_dimmed_display_brightness-entry]
@@ -368,7 +367,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 100,
+      'max': 16,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
@@ -400,24 +399,23 @@
     'supported_features': 0,
     'translation_key': 'night_max_volume_limit',
     'unique_id': 'player-test_night_max_volume_limit',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[number.nursery_yoto_night_maximum_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nursery Yoto Night maximum volume',
-      'max': 100,
+      'max': 16,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 1,
-      'unit_of_measurement': '%',
     }),
     'context': <ANY>,
     'entity_id': 'number.nursery_yoto_night_maximum_volume',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50',
+    'state': '8',
   })
 # ---

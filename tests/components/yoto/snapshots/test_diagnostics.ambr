@@ -61,7 +61,7 @@
             'day_ambient_colour': '#40bfd9',
             'day_display_brightness': None,
             'day_display_brightness_auto': True,
-            'day_max_volume_limit': 80,
+            'day_max_volume_limit': 12,
             'day_sounds_off': False,
             'day_time': dict({
               '__type': "<class 'datetime.time'>",
@@ -78,7 +78,7 @@
             'night_ambient_colour': '#000000',
             'night_display_brightness': 40,
             'night_display_brightness_auto': False,
-            'night_max_volume_limit': 50,
+            'night_max_volume_limit': 8,
             'night_sounds_off': True,
             'night_time': dict({
               '__type': "<class 'datetime.time'>",

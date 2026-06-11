@@ -30,16 +30,18 @@ class YotoNumberEntityDescription(NumberEntityDescription):
 
     value_fn: Callable[[PlayerConfig], int | None]
     config_field: str
+    available_fn: Callable[[PlayerConfig], bool] = lambda config: True
 
 
 NUMBERS: tuple[YotoNumberEntityDescription, ...] = (
+    # Max volume limits use the player's 16 hardware volume steps, not a
+    # percentage — the same scale the firmware reports for playback volume.
     YotoNumberEntityDescription(
         key="day_max_volume_limit",
         translation_key="day_max_volume_limit",
         native_min_value=0,
-        native_max_value=100,
+        native_max_value=16,
         native_step=1,
-        native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda config: config.day_max_volume_limit,
         config_field="day_max_volume_limit",
@@ -48,15 +50,15 @@ NUMBERS: tuple[YotoNumberEntityDescription, ...] = (
         key="night_max_volume_limit",
         translation_key="night_max_volume_limit",
         native_min_value=0,
-        native_max_value=100,
+        native_max_value=16,
         native_step=1,
-        native_unit_of_measurement=PERCENTAGE,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda config: config.night_max_volume_limit,
         config_field="night_max_volume_limit",
     ),
-    # Day/night display brightness report None while auto brightness is
-    # active; writing a value switches the player to manual brightness.
+    # Manual day/night display brightness only applies while automatic
+    # brightness is off; the sliders go unavailable while auto is active
+    # (turn the matching auto-brightness switch off to use them).
     YotoNumberEntityDescription(
         key="day_display_brightness",
         translation_key="day_display_brightness",
@@ -67,6 +69,7 @@ NUMBERS: tuple[YotoNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda config: config.day_display_brightness,
         config_field="day_display_brightness",
+        available_fn=lambda config: not config.day_display_brightness_auto,
     ),
     YotoNumberEntityDescription(
         key="night_display_brightness",
@@ -78,6 +81,7 @@ NUMBERS: tuple[YotoNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda config: config.night_display_brightness,
         config_field="night_display_brightness",
+        available_fn=lambda config: not config.night_display_brightness_auto,
     ),
     YotoNumberEntityDescription(
         key="display_dim_brightness",
@@ -148,6 +152,13 @@ class YotoNumber(YotoEntity, NumberEntity):
         super().__init__(coordinator, player)
         self.entity_description = description
         self._attr_unique_id = f"{player.id}_{description.key}"
+
+    @property
+    def available(self) -> bool:
+        """Return if the entity is available."""
+        return super().available and self.entity_description.available_fn(
+            self.player.info.config
+        )
 
     @property
     def native_value(self) -> int | None:

@@ -95,6 +95,9 @@
       },
       "pause_volume_down": {
         "default": "mdi:volume-minus"
+      },
+      "repeat_all": {
+        "default": "mdi:repeat"
       }
     },
     "time": {
