@@ -11,8 +11,10 @@ from homeassistant import config_entries
 from homeassistant.components.blebox import config_flow
 from homeassistant.components.blebox.const import DEFAULT_PORT, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP, ConfigEntryState
+from homeassistant.const import CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.setup import async_setup_component
@@ -432,14 +434,18 @@ async def test_flow_with_dhcp(hass: HomeAssistant) -> None:
     assert result["data"] == {
         "host": DHCP_SERVICE_INFO.ip,
         "port": DEFAULT_PORT,
+        CONF_MAC: "4c:eb:d6:1d:a3:48",
     }
 
 
 async def test_flow_with_dhcp_when_already_configured(
-    hass: HomeAssistant, config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    valid_feature_mock,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that DHCP discovery updates the host when device is already configured."""
-    config_entry.add_to_hass(hass)
+    """Test that DHCP discovery updates the host and MAC when device is already configured."""
+    await async_setup_config_entry(hass, config_entry, assert_success=True)
 
     with patch(
         "homeassistant.components.blebox.config_flow.Box.async_from_host",
@@ -454,6 +460,11 @@ async def test_flow_with_dhcp_when_already_configured(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert config_entry.data[config_flow.CONF_HOST] == DHCP_SERVICE_INFO.ip
+    assert config_entry.data[CONF_MAC] == "4c:eb:d6:1d:a3:48"
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, "abcd0123ef5678")})
+    assert device is not None
+    assert (dr.CONNECTION_NETWORK_MAC, "4c:eb:d6:1d:a3:48") in device.connections
 
 
 @pytest.mark.parametrize(
