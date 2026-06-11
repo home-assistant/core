@@ -6,6 +6,7 @@ import json
 import logging
 from typing import Any, cast
 
+from aioabrp import AbrpApiError, AbrpAuthError, AbrpClient, AbrpVehicle, StaticAuth
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -22,7 +23,6 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .api import AbrpApiError, AbrpAuthError, AbrpClient, AbrpVehicle
 from .const import ABRP_APP_KEY, CONF_KNOWN_VEHICLE_IDS, CONF_VEHICLE_IDS, DOMAIN
 from .oauth import AbetterrouteplannerOAuth2Implementation
 
@@ -152,7 +152,7 @@ class AbetterrouteplannerFlowHandler(
         client = AbrpClient(
             async_get_clientsession(self.hass),
             ABRP_APP_KEY,
-            data["token"]["access_token"],
+            StaticAuth(data["token"]["access_token"]),
         )
         try:
             vehicles = await client.async_get_vehicles()
