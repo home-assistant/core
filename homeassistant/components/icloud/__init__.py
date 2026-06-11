@@ -67,5 +67,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
 
 async def async_unload_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bool:
     """Unload a config entry."""
-    await hass.async_add_executor_job(entry.runtime_data.cancel_fetch)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await hass.async_add_executor_job(entry.runtime_data.cancel_fetch)
+    return unload_ok
