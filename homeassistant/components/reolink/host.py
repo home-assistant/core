@@ -11,6 +11,7 @@ import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
 from reolink_aio.baichuan import DEFAULT_BC_PORT
+from reolink_aio.const import UNKNOWN
 from reolink_aio.enums import ConnectionEnum, SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
@@ -40,6 +41,7 @@ from .const import (
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DOMAIN,
 )
@@ -105,6 +107,7 @@ class ReolinkHost:
             bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
             bc_connection=bc_connection,
             bc_only=config.get(CONF_BC_ONLY, False),
+            uid=config.get(CONF_UID, UNKNOWN),
         )
 
         self.last_wake: defaultdict[int, float] = defaultdict(float)

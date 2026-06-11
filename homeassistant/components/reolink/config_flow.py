@@ -41,6 +41,7 @@ from .const import (
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DOMAIN,
 )
@@ -312,6 +313,7 @@ class ReolinkFlowHandler(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_BC_PORT] = host.api.baichuan.port
                 user_input[CONF_BC_ONLY] = host.api.baichuan_only
                 user_input[CONF_BC_CONNECT] = host.api.baichuan.connection_type.value
+                user_input[CONF_UID] = host.api.uid
                 user_input[CONF_SUPPORTS_PRIVACY_MODE] = host.api.supported(
                     None, "privacy_mode"
                 )
