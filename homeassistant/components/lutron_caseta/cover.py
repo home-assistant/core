@@ -79,7 +79,7 @@ class LutronCasetaShade(LutronCasetaUpdatableEntity, CoverEntity):
         """Stop the cover."""
         # Send appropriate directional command before stop to ensure it works correctly
         # Use tracked direction if moving, otherwise use position-based heuristic
-        if self._movement_direction == ShadeMovementDirection.OPENING or (
+        if self._movement_direction is ShadeMovementDirection.OPENING or (
             self._movement_direction in (ShadeMovementDirection.STOPPED, None)
             and self.current_cover_position >= 50
         ):

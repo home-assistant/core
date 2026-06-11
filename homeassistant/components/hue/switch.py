@@ -113,7 +113,6 @@ class HueBehaviorInstanceEnabledEntity(HueResourceEnabledEntity):
         key="behavior_instance",
         device_class=SwitchDeviceClass.SWITCH,
         entity_category=EntityCategory.CONFIG,
-        has_entity_name=False,
     )
 
     @property

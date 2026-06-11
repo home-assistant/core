@@ -44,7 +44,6 @@ async def async_setup_entry(
                 translation_key="outlet_number_load_cycle",
                 translation_placeholders={"outlet_name": outlet_name},
                 device_class=ButtonDeviceClass.RESTART,
-                entity_registry_enabled_default=True,
             ),
         }
 

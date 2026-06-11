@@ -12,14 +12,13 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import SUBENTRY_TYPE_STOP, SUBENTRY_TYPE_VELOV_STATION
-from .coordinator import DataGrandLyonConfigEntry, DataGrandLyonCoordinator
-from .entity import DataGrandLyonEntity, DataGrandLyonVelovEntity
+from .coordinator import DataGrandLyonConfigEntry
+from .entity import DataGrandLyonTclEntity, DataGrandLyonVelovEntity
 
 PARALLEL_UPDATES = 0
 
@@ -170,12 +169,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Data Grand Lyon sensor entities."""
-    coordinator = entry.runtime_data
+    tcl_coordinator = entry.runtime_data.tcl_coordinator
+    velov_coordinator = entry.runtime_data.velov_coordinator
 
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_STOP):
         async_add_entities(
             (
-                DataGrandLyonStopSensor(coordinator, subentry, description)
+                DataGrandLyonStopSensor(tcl_coordinator, subentry, description)
                 for description in STOP_SENSOR_DESCRIPTIONS
             ),
             config_subentry_id=subentry.subentry_id,
@@ -184,41 +184,31 @@ async def async_setup_entry(
     for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_VELOV_STATION):
         async_add_entities(
             (
-                DataGrandLyonVelovSensor(coordinator, subentry, description)
+                DataGrandLyonVelovSensor(velov_coordinator, subentry, description)
                 for description in VELOV_SENSOR_DESCRIPTIONS
             ),
             config_subentry_id=subentry.subentry_id,
         )
 
 
-class DataGrandLyonStopSensor(DataGrandLyonEntity, SensorEntity):
+class DataGrandLyonStopSensor(DataGrandLyonTclEntity, SensorEntity):
     """Sensor for Data Grand Lyon stop departures."""
 
     entity_description: DataGrandLyonStopSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: DataGrandLyonCoordinator,
-        subentry: ConfigSubentry,
-        description: DataGrandLyonStopSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, subentry, description, "TCL", "Stop")
-
-    def _get_departure(self) -> TclPassage | None:
-        """Return the departure for this sensor's index, or None."""
-        departures = self.coordinator.data.stops.get(self._subentry_id, [])
-        index = self.entity_description.departure_index
-        if index >= len(departures):
-            return None
-        return departures[index]
+    @property
+    def available(self) -> bool:
+        """Return True if the departure index exists."""
+        return super().available and self.entity_description.departure_index < len(
+            self.coordinator.data[self._subentry_id]
+        )
 
     @property
     def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
-        departure = self._get_departure()
-        if departure is None:
-            return None
+        departure = self.coordinator.data[self._subentry_id][
+            self.entity_description.departure_index
+        ]
         return self.entity_description.value_fn(departure)
 
 
@@ -227,18 +217,9 @@ class DataGrandLyonVelovSensor(DataGrandLyonVelovEntity, SensorEntity):
 
     entity_description: DataGrandLyonVelovSensorEntityDescription
 
-    def __init__(
-        self,
-        coordinator: DataGrandLyonCoordinator,
-        subentry: ConfigSubentry,
-        description: DataGrandLyonVelovSensorEntityDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, subentry, description)
-
     @property
     def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
         return self.entity_description.value_fn(
-            self.coordinator.data.velov_stations[self._subentry_id]
+            self.coordinator.data[self._subentry_id]
         )

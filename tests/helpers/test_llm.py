@@ -419,8 +419,10 @@ async def test_assist_api_prompt(
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
+
     assert api.api_prompt == (
-        "Only if the user wants to control a device, tell them to expose entities to their "
+        "Only if the user wants to control a device, tell them to expose"
+        " entities to their "
         "voice assistant in Home Assistant."
     )
 
@@ -480,6 +482,46 @@ async def test_assist_api_prompt(
         {"friendly_name": "Kitchen", "temperature": Decimal("0.9"), "humidity": 65},
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
+
+    # Create two sensors with different display precisions
+    power1 = entity_registry.async_get_or_create(
+        "sensor",
+        "power1",
+        "mock-id-power-1",
+        original_name="Power 1",
+        suggested_object_id="power1",
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity_options(
+        power1.entity_id,
+        "sensor",
+        {"display_precision": 0},
+    )
+    hass.states.async_set(
+        power1.entity_id,
+        "1234.1234",
+        {"friendly_name": "Power 1"},
+    )
+    async_expose_entity(hass, "conversation", power1.entity_id, True)
+    power2 = entity_registry.async_get_or_create(
+        "sensor",
+        "power2",
+        "mock-id-power-2",
+        original_name="Power 2",
+        suggested_object_id="power2",
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity_options(
+        power2.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2},
+    )
+    hass.states.async_set(
+        power2.entity_id,
+        "1234.1234",
+        {"friendly_name": "Power 2"},
+    )
+    async_expose_entity(hass, "conversation", power2.entity_id, True)
 
     def create_entity(
         device: dr.DeviceEntry,
@@ -582,7 +624,8 @@ async def test_assist_api_prompt(
             suggested_area="Test Area 2",
         )
     )
-    exposed_entities_prompt = """Live Context: An overview of the areas and the devices in this smart home:
+    exposed_entities_prompt = """\
+Live Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
   state: unavailable
@@ -596,6 +639,14 @@ async def test_assist_api_prompt(
 - names: Living Room
   domain: light
   state: 'on'
+  areas: Test Area, Alternative name
+- names: Power 1
+  domain: sensor
+  state: '1234'
+  areas: Test Area, Alternative name
+- names: Power 2
+  domain: sensor
+  state: '1234.12'
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
@@ -630,7 +681,8 @@ async def test_assist_api_prompt(
   state: unavailable
   areas: Test Area 2
 """
-    stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
+    stateless_exposed_entities_prompt = """\
+Static Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
   areas: Test Area 2
@@ -638,6 +690,12 @@ async def test_assist_api_prompt(
   domain: light
 - names: Living Room
   domain: light
+  areas: Test Area, Alternative name
+- names: Power 1
+  domain: sensor
+  areas: Test Area, Alternative name
+- names: Power 2
+  domain: sensor
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
@@ -674,30 +732,45 @@ async def test_assist_api_prompt(
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "
-        "ask user to specify an area, unless there is only one device of that type."
+        "ask the user to specify an area, unless there is only one device of that type."
     )
-    dynamic_context_prompt = """You ARE equipped to answer questions about the current state of
-the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
-functionality if the question requires live data.
-If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
-from the static context below.
-If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
-"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
-    1.  Recognize this requires live data.
-    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
-    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
-For general knowledge questions not about the home: Answer truthfully from internal knowledge.
-"""
+    dynamic_context_prompt = (
+        "You ARE equipped to answer questions about the"
+        " current state of\nthe home using the"
+        " `GetLiveContext` tool. This is a primary"
+        " function. Do not state you lack the\n"
+        "functionality if the question requires live"
+        " data.\nIf the user asks about device"
+        ' existence/type (e.g., "Do I have lights in'
+        ' the bedroom?"): Answer\nfrom the static'
+        " context below.\nIf the user asks about the"
+        ' CURRENT state, value, or mode (e.g., "Is'
+        ' the lock locked?",\n"Is the fan on?",'
+        ' "What mode is the thermostat in?", "What'
+        ' is the temperature outside?"):\n'
+        "    1.  Recognize this requires live data.\n"
+        "    2.  You MUST call `GetLiveContext`. This"
+        " tool will provide the needed real-time"
+        " information (like temperature from the local"
+        " weather, lock status, etc.).\n"
+        "    3.  Use the tool's response** to answer"
+        ' the user accurately (e.g., "The temperature'
+        ' outside is [value from tool].").\n'
+        "For general knowledge questions not about the"
+        " home: Answer truthfully from internal"
+        " knowledge.\n"
+    )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
-    # Verify that the GetLiveContext tool returns the same results as the exposed_entities_prompt
+    # Verify that the GetLiveContext tool returns the same results
+    # as the exposed_entities_prompt
     result = await api.async_call_tool(
         llm.ToolInput(tool_name="GetLiveContext", tool_args={})
     )
@@ -715,26 +788,27 @@ For general knowledge questions not about the home: Answer truthfully from inter
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Add floor
     floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     area_prompt = (
-        "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        "You are in area Test Area (floor 2) and all generic commands"
+        " like 'turn on the lights' "
         "should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Register device for timers
@@ -744,9 +818,9 @@ For general knowledge questions not about the home: Answer truthfully from inter
     # The no_timer_prompt is gone
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}"""
     )
 
 
@@ -817,6 +891,23 @@ async def test_get_live_context_tool_filter(
         original_name="Front Door",
         suggested_object_id="front_door",
     )
+    # Two entities sharing the same name in different areas
+    office_ac = entity_registry.async_get_or_create(
+        "climate",
+        "test",
+        "office_ac",
+        original_name="AC",
+        device_id=office_device.id,
+        suggested_object_id="office_ac",
+    )
+    kitchen_ac = entity_registry.async_get_or_create(
+        "climate",
+        "test",
+        "kitchen_ac",
+        original_name="AC",
+        device_id=kitchen_device.id,
+        suggested_object_id="kitchen_ac",
+    )
     entity_registry.async_update_entity(
         kitchen_light.entity_id, aliases=[er.COMPUTED_NAME, "Cooking Lamp"]
     )
@@ -826,6 +917,8 @@ async def test_get_live_context_tool_filter(
         kitchen_light.entity_id,
         office_switch.entity_id,
         front_door.entity_id,
+        office_ac.entity_id,
+        kitchen_ac.entity_id,
     ):
         async_expose_entity(hass, "conversation", entity_id, True)
 
@@ -833,6 +926,8 @@ async def test_get_live_context_tool_filter(
     hass.states.async_set(kitchen_light.entity_id, "off")
     hass.states.async_set(office_switch.entity_id, "on")
     hass.states.async_set(front_door.entity_id, "locked")
+    hass.states.async_set(office_ac.entity_id, "cool")
+    hass.states.async_set(kitchen_ac.entity_id, "heat")
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
@@ -1030,13 +1125,38 @@ async def test_get_live_context_tool_filter(
     result = await api.async_call_tool(
         llm.ToolInput(
             tool_name="GetLiveContext",
-            tool_args={"domain": "climate"},
+            tool_args={"domain": "fan"},
         )
     )
     assert result == {
         "success": False,
-        "error": "No exposed entities found in domain(s): climate",
+        "error": "No exposed entities found in domain(s): fan",
     }
+
+    # Entities sharing a name are all returned rather than failing as an
+    # ambiguous match, since this tool only returns context.
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "AC"},
+        )
+    )
+    assert result["success"] is True
+    assert result["result"].count("domain: climate") == 2
+    assert "Office" in result["result"]
+    assert "Kitchen" in result["result"]
+
+    # Combining a shared name with an area narrows to the single match
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "AC", "area": "Kitchen"},
+        )
+    )
+    assert result["success"] is True
+    assert result["result"].count("domain: climate") == 1
+    assert "Kitchen" in result["result"]
+    assert "Office" not in result["result"]
 
 
 async def test_script_tool(

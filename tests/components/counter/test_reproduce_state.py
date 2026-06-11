@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.counter import DOMAIN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.state import async_reproduce_state
 
@@ -19,7 +20,7 @@ async def test_reproducing_states(
         {"minimum": 5, "maximum": 15, "step": 3},
     )
 
-    configure_calls = async_mock_service(hass, "counter", "set_value")
+    configure_calls = async_mock_service(hass, DOMAIN, "set_value")
 
     # These calls should do nothing as entities already in desired state
     await async_reproduce_state(

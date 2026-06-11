@@ -1,6 +1,5 @@
 """Test Roborock config flow."""
 
-import asyncio
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
@@ -19,13 +18,15 @@ from homeassistant import config_entries
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
     CONF_ENTRY_CODE,
-    CONF_REGION,
+    CONF_ROBOROCK_SERVER_URL,
     CONF_SHOW_ROOMS,
     CONF_SHOW_WALLS,
     DOMAIN,
     DRAWABLES,
+    REGION_CUSTOM,
+    REGION_US,
 )
-from homeassistant.const import CONF_USERNAME, Platform
+from homeassistant.const import CONF_REGION, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -436,13 +437,12 @@ async def test_config_flow_with_region(
             mock_client.request_code_v4 = AsyncMock(return_value=None)
             mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
 
-            # base_url is awaited in config_flow, so it needs to be an awaitable
-            future_base_url = asyncio.Future()
+            future_base_url = hass.loop.create_future()
             future_base_url.set_result("https://usiot.roborock.com")
             mock_client.base_url = future_base_url
 
             result = await hass.config_entries.flow.async_configure(
-                result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: "us"}
+                result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_US}
             )
 
             # Check that the client was initialized with the correct base_url
@@ -466,3 +466,155 @@ async def test_config_flow_with_region(
     assert result["data"][CONF_BASE_URL] == "https://usiot.roborock.com"
     assert result["result"]
     assert len(mock_setup.mock_calls) == 1
+
+
+async def test_config_flow_with_custom_url(
+    hass: HomeAssistant,
+) -> None:
+    """Handle the config flow with a custom server URL."""
+    custom_url = "https://api-roborock.example.com:555"
+    with patch(
+        "homeassistant.components.roborock.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_CUSTOM}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "custom_url"
+
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient"
+        ) as mock_client_cls:
+            mock_client = mock_client_cls.return_value
+            mock_client.request_code_v4 = AsyncMock(return_value=None)
+            mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
+
+            future_base_url = hass.loop.create_future()
+            future_base_url.set_result(custom_url)
+            mock_client.base_url = future_base_url
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_ROBOROCK_SERVER_URL: custom_url}
+            )
+
+            mock_client_cls.assert_called_with(
+                USER_EMAIL,
+                base_url=custom_url,
+                session=async_get_clientsession(hass),
+            )
+
+            assert result["type"] is FlowResultType.FORM
+            assert result["step_id"] == "code"
+            assert result["errors"] == {}
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+            )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["context"]["unique_id"] == ROBOROCK_RRUID
+    assert result["title"] == USER_EMAIL
+    assert result["data"][CONF_BASE_URL] == custom_url
+    assert result["result"]
+    assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    (
+        "request_code_side_effect",
+        "request_code_errors",
+    ),
+    [
+        (RoborockException(), {"base": "unknown_roborock"}),
+        (RoborockUrlException(), {"base": "unknown_url"}),
+        (Exception(), {"base": "unknown"}),
+    ],
+)
+async def test_config_flow_custom_url_failures(
+    hass: HomeAssistant,
+    request_code_side_effect: Exception,
+    request_code_errors: dict[str, str],
+) -> None:
+    """Handle errors in the custom URL step and recover."""
+    custom_url = "https://api-roborock.example.com:555"
+    with patch(
+        "homeassistant.components.roborock.async_setup_entry", return_value=True
+    ) as mock_setup:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_CUSTOM}
+        )
+        assert result["step_id"] == "custom_url"
+
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient"
+        ) as mock_client_cls:
+            mock_client_cls.return_value.request_code_v4 = AsyncMock(
+                side_effect=request_code_side_effect
+            )
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_ROBOROCK_SERVER_URL: custom_url}
+            )
+            assert result["type"] is FlowResultType.FORM
+            assert result["step_id"] == "custom_url"
+            assert result["errors"] == request_code_errors
+
+        with patch(
+            "homeassistant.components.roborock.config_flow.RoborockApiClient"
+        ) as mock_client_cls:
+            mock_client = mock_client_cls.return_value
+            mock_client.request_code_v4 = AsyncMock(return_value=None)
+            mock_client.code_login_v4 = AsyncMock(return_value=USER_DATA)
+            future_base_url = hass.loop.create_future()
+            future_base_url.set_result(custom_url)
+            mock_client.base_url = future_base_url
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], {CONF_ROBOROCK_SERVER_URL: custom_url}
+            )
+            assert result["type"] is FlowResultType.FORM
+            assert result["step_id"] == "code"
+
+            result = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={CONF_ENTRY_CODE: "123456"}
+            )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(mock_setup.mock_calls) == 1
+
+
+@pytest.mark.parametrize(
+    "invalid_url",
+    [
+        pytest.param("not-a-url", id="no_scheme"),
+        pytest.param("ftp://example.com", id="wrong_scheme"),
+        pytest.param("https://", id="missing_host"),
+    ],
+)
+async def test_config_flow_custom_url_invalid_format(
+    hass: HomeAssistant,
+    invalid_url: str,
+) -> None:
+    """Show a field error when the URL has an invalid format."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USERNAME: USER_EMAIL, CONF_REGION: REGION_CUSTOM}
+    )
+    assert result["step_id"] == "custom_url"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_ROBOROCK_SERVER_URL: invalid_url}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "custom_url"
+    assert result["errors"] == {CONF_ROBOROCK_SERVER_URL: "invalid_url_format"}

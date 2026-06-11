@@ -65,7 +65,7 @@ async def test_setup_retries_when_rediscovery_finds_nothing(
     mock_config_entry: MockConfigEntry,
     mock_nobo_class: MagicMock,
 ) -> None:
-    """Setup retries with cannot_connect when the stored IP fails and rediscovery is empty."""
+    """Setup retries when stored IP fails and rediscovery is empty."""
     mock_config_entry.add_to_hass(hass)
     failing_hub = MagicMock(spec=pynobo_nobo)
     failing_hub.connect.side_effect = OSError("Unreachable")
@@ -88,7 +88,7 @@ async def test_setup_retries_when_rediscovered_ip_also_fails(
     mock_config_entry: MockConfigEntry,
     mock_nobo_class: MagicMock,
 ) -> None:
-    """Setup retries with cannot_connect when both the stored and rediscovered IPs fail."""
+    """Setup retries when both stored and rediscovered IPs fail."""
     mock_config_entry.add_to_hass(hass)
     first_failing_hub = MagicMock(spec=pynobo_nobo)
     first_failing_hub.connect.side_effect = OSError("Unreachable")

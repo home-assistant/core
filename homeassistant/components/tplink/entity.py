@@ -433,7 +433,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 parent=parent,
             )
             for feat in device.features.values()
-            if feat.type == feature_type
+            if feat.type is feature_type
             and feat.id not in EXCLUDED_FEATURES
             and (
                 feat.category is not Feature.Category.Primary
@@ -475,7 +475,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
     ) -> list[_E]:
         """Create entities for device and its children.
 
-        This is a helper that calls *_entities_for_device* for the device and its children.
+        Calls *_entities_for_device* for the device and its children.
         """
         entities: list[_E] = []
         # Add parent entities before children so via_device id works.
@@ -620,7 +620,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
     ) -> list[_E]:
         """Create entities for device and its children.
 
-        This is a helper that calls *_entities_for_device* for the device and its children.
+        Calls *_entities_for_device* for the device and its children.
         """
         entities: list[_E] = []
 

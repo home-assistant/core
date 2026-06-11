@@ -8,7 +8,7 @@ import voluptuous as vol
 from homeassistant.components import fan, switch
 from homeassistant.components.humidifier import HumidifierDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import CONF_NAME, PERCENTAGE
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME, PERCENTAGE
 from homeassistant.helpers import selector
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaConfigFlowHandler,
@@ -16,7 +16,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from . import (
-    CONF_DEVICE_CLASS,
     CONF_DRY_TOLERANCE,
     CONF_HUMIDIFIER,
     CONF_MIN_DUR,

@@ -109,7 +109,7 @@ RE_REQUEST_DOMAIN = re.compile(r".*tests\/components\/([^/]+)\/.*")
 
 @pytest.fixture(scope="session", autouse=find_spec("zeroconf") is not None)
 def patch_zeroconf_multiple_catcher() -> Generator[None]:
-    """If installed, patch zeroconf wrapper that detects if multiple instances are used."""
+    """Patch zeroconf wrapper that detects multiple instances."""
     with patch(
         "homeassistant.components.zeroconf.install_multiple_zeroconf_catcher",
         side_effect=lambda zc: None,
@@ -722,6 +722,7 @@ def supervisor_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
         auto_update=True,
         country=None,
         detect_blocking_io=False,
+        feature_flags={},
     )
     return supervisor_client.supervisor.info
 

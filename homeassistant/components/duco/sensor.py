@@ -24,7 +24,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -95,7 +95,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         value_fn=lambda node: node.sensor.co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2,),
+        node_types=(NodeType.UCCO2, NodeType.VLVCO2, NodeType.VLVCO2RH),
     ),
     DucoSensorEntityDescription(
         key="iaq_co2",
@@ -104,7 +104,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2,),
+        node_types=(NodeType.UCCO2, NodeType.VLVCO2, NodeType.VLVCO2RH),
     ),
     DucoSensorEntityDescription(
         key="humidity",
@@ -112,7 +112,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda node: node.sensor.rh if node.sensor else None,
-        node_types=(NodeType.BSRH, NodeType.UCRH),
+        node_types=(NodeType.BSRH, NodeType.UCRH, NodeType.VLVRH, NodeType.VLVCO2RH),
     ),
     DucoSensorEntityDescription(
         key="iaq_rh",
@@ -121,7 +121,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_rh if node.sensor else None,
-        node_types=(NodeType.BSRH, NodeType.UCRH),
+        node_types=(NodeType.BSRH, NodeType.UCRH, NodeType.VLVRH, NodeType.VLVCO2RH),
     ),
 )
 
@@ -158,7 +158,13 @@ async def async_setup_entry(
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are
         # not deregistered by the firmware and will never appear here as stale.
-        stale_node_ids = known_nodes - coordinator.data.nodes.keys()
+        # The BOX node can transiently disappear from the API response, so keep
+        # node 1 to avoid removing the main controller device.
+        stale_node_ids = {
+            node_id
+            for node_id in known_nodes - coordinator.data.nodes.keys()
+            if node_id != BOX_NODE_ID
+        }
         if stale_node_ids:
             device_reg = dr.async_get(hass)
             mac = entry.unique_id

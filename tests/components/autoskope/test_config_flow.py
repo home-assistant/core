@@ -26,11 +26,8 @@ USER_INPUT = {
 }
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_autoskope_client: AsyncMock) -> None:
     """Test full user config flow from form to entry creation."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -60,10 +57,10 @@ async def test_full_flow(
         (CannotConnect("Connection failed"), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
     hass: HomeAssistant,
     mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:
@@ -91,10 +88,9 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_invalid_url(
-    hass: HomeAssistant,
-    mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_autoskope_client: AsyncMock
 ) -> None:
     """Test config flow rejects invalid URL with recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -142,10 +138,9 @@ async def test_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_custom_host(
-    hass: HomeAssistant,
-    mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_autoskope_client: AsyncMock
 ) -> None:
     """Test config flow with a custom white-label host."""
     result = await hass.config_entries.flow.async_init(
@@ -167,11 +162,11 @@ async def test_custom_host(
     assert result["result"].unique_id == "test_user@https://custom.autoskope.server"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reauth flow updates password and reloads entry."""
     mock_config_entry.add_to_hass(hass)
@@ -201,11 +196,11 @@ async def test_reauth_flow(
         (CannotConnect("Connection failed"), "cannot_connect"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_autoskope_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:

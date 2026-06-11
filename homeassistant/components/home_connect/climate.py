@@ -272,7 +272,6 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 translation_placeholders={
                     **get_dict_from_home_connect_error(err),
                     "appliance_name": self.appliance.info.name,
-                    "value": BSH_POWER_ON,
                 },
             ) from err
 

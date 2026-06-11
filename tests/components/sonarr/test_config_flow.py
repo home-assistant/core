@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock, patch
 
 from aiopyarr import ArrAuthenticationException, ArrException
+import pytest
 
 from homeassistant.components.sonarr.const import (
     CONF_MORE_OPTIONS,
@@ -51,10 +52,9 @@ async def test_cannot_connect(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_url_rewrite(
-    hass: HomeAssistant,
-    mock_sonarr_config_flow: MagicMock,
-    mock_setup_entry: None,
+    hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
@@ -116,10 +116,10 @@ async def test_unknown_error(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_reauth_flow_implementation(
     hass: HomeAssistant,
     mock_sonarr_config_flow: MagicMock,
-    mock_setup_entry: None,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the manual reauth flow from start to finish."""
@@ -149,10 +149,9 @@ async def test_full_reauth_flow_implementation(
     assert entry.data[CONF_API_KEY] == "test-api-key-reauth"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant,
-    mock_sonarr_config_flow: MagicMock,
-    mock_setup_entry: None,
+    hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
@@ -177,10 +176,9 @@ async def test_full_user_flow_implementation(
     assert result["data"][CONF_URL] == "http://192.168.1.189:8989/"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_user_flow_with_verify_ssl(
-    hass: HomeAssistant,
-    mock_sonarr_config_flow: MagicMock,
-    mock_setup_entry: None,
+    hass: HomeAssistant, mock_sonarr_config_flow: MagicMock
 ) -> None:
     """Test the full manual user flow with verify SSL option."""
     result = await hass.config_entries.flow.async_init(
@@ -207,10 +205,9 @@ async def test_full_user_flow_with_verify_ssl(
 
 
 @patch("homeassistant.components.sonarr.PLATFORMS", [])
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: None,
-    init_integration: MockConfigEntry,
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
     """Test updating options."""
     entry = init_integration

@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 import functools
 import logging
-from typing import TYPE_CHECKING, Any, Concatenate, ParamSpec, TypeVar, overload
+from typing import TYPE_CHECKING, Any, Concatenate, overload
 
 from aioautomower.exceptions import ApiError
 from aioautomower.model import MowerActivities, MowerAttributes, MowerStates, WorkArea
@@ -35,18 +35,14 @@ ERROR_STATES = [
 ]
 
 
-_Entity = TypeVar("_Entity", bound="AutomowerBaseEntity")
-_P = ParamSpec("_P")
-
-
 @overload
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     _func: Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, None]]: ...
 
 
 @overload
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     *,
     poll_after_sending: bool = False,
 ) -> Callable[
@@ -55,7 +51,7 @@ def handle_sending_exception(
 ]: ...
 
 
-def handle_sending_exception(
+def handle_sending_exception[_Entity: AutomowerBaseEntity, **_P](
     _func: Callable[Concatenate[_Entity, _P], Coroutine[Any, Any, Any]] | None = None,
     *,
     poll_after_sending: bool = False,

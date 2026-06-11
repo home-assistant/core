@@ -422,6 +422,7 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
             },
         )
 
+        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise ServiceValidationError(
             "Invalid alarm code provided",
             translation_domain=DOMAIN,
@@ -455,12 +456,15 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
             self._state_ts = state.last_updated
-            if next_state := state.attributes.get(ATTR_NEXT_STATE):
-                # If in arming or pending state we record the transition,
-                # not the current state
-                self._state = AlarmControlPanelState(next_state)
-            else:
-                self._state = AlarmControlPanelState(state.state)
+            try:
+                if next_state := state.attributes.get(ATTR_NEXT_STATE):
+                    # If in arming or pending state we record the transition,
+                    # not the current state
+                    self._state = AlarmControlPanelState(next_state)
+                else:
+                    self._state = AlarmControlPanelState(state.state)
+            except ValueError:
+                return
 
             if prev_state := state.attributes.get(ATTR_PREVIOUS_STATE):
                 self._previous_state = prev_state

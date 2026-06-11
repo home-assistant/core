@@ -35,9 +35,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_target_entities,
@@ -134,7 +134,7 @@ async def test_timer_trigger_options_validation(
         ),
     ],
 )
-async def test_timer_trigger_behavior_any(
+async def test_timer_trigger_behavior_each(
     hass: HomeAssistant,
     target_timers: dict[str, list[str]],
     trigger_target_config: dict[str, Any],
@@ -144,8 +144,8 @@ async def test_timer_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the timer trigger fires when any timer's last_transition changes to a specific value."""
-    await assert_trigger_behavior_any(
+    """Test timer trigger fires on any timer last_transition change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_timers,
         trigger_target_config=trigger_target_config,
@@ -202,7 +202,7 @@ async def test_timer_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the timer trigger fires when the first timer's last_transition changes to a specific value."""
+    """Test timer trigger fires on first timer last_transition change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_timers,
@@ -250,7 +250,7 @@ async def test_timer_trigger_behavior_first(
         ),
     ],
 )
-async def test_timer_trigger_behavior_last(
+async def test_timer_trigger_behavior_all(
     hass: HomeAssistant,
     target_timers: dict[str, list[str]],
     trigger_target_config: dict[str, Any],
@@ -260,8 +260,8 @@ async def test_timer_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the timer trigger fires when the last timer's last_transition changes to a specific value."""
-    await assert_trigger_behavior_last(
+    """Test timer trigger fires when all timers have transitioned."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_timers,
         trigger_target_config=trigger_target_config,
@@ -388,7 +388,7 @@ async def test_time_remaining_trigger_paused_before_threshold(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test time_remaining trigger does not fire when timer is paused before threshold."""
+    """Test time_remaining trigger does not fire when timer is paused."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
@@ -427,7 +427,7 @@ async def test_time_remaining_trigger_cancelled_before_threshold(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test time_remaining trigger does not fire when timer is cancelled before threshold."""
+    """Test time_remaining trigger does not fire when timer is cancelled."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
@@ -516,7 +516,7 @@ async def test_time_remaining_trigger_short_timer(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test time_remaining trigger does not fire when timer duration is shorter than remaining threshold."""
+    """Test time_remaining trigger skips when duration < threshold."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 
@@ -585,7 +585,7 @@ async def test_time_remaining_trigger_already_active_past_threshold_at_attach(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test trigger does not schedule for timers already past the fire point at attach."""
+    """Test trigger ignores timers already past the fire point at attach."""
     now = dt_util.utcnow()
     calls: list[dict[str, Any]] = []
 

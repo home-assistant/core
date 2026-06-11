@@ -67,7 +67,7 @@ async def _async_upload_file(service_call: ServiceCall) -> None:
             await coordinator.api.albums.async_add_assets_to_album(
                 target_album, [upload_result.asset_id]
             )
-    except ImmichError as ex:
+    except (ImmichError, FileNotFoundError) as ex:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="upload_failed",

@@ -113,11 +113,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: RainbirdConfigEntry) -> 
     except RainbirdApiException as err:
         raise ConfigEntryNotReady from err
 
+    # Rain Bird devices can only handle a single request at a time. This shared
+    # lock ensures that the background coordinators do not poll the device
+    # concurrently.
+    device_lock = asyncio.Lock()
     data = RainbirdData(
         controller,
         model_info,
-        coordinator=RainbirdUpdateCoordinator(hass, entry, controller, model_info),
-        schedule_coordinator=RainbirdScheduleUpdateCoordinator(hass, entry, controller),
+        coordinator=RainbirdUpdateCoordinator(
+            hass, entry, controller, model_info, device_lock
+        ),
+        schedule_coordinator=RainbirdScheduleUpdateCoordinator(
+            hass, entry, controller, device_lock
+        ),
     )
     await data.coordinator.async_config_entry_first_refresh()
 

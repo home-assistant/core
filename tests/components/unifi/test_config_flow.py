@@ -537,7 +537,7 @@ async def test_flow_integration_discovery_aborts_on_direct_connect_host(
 async def test_flow_integration_discovery_updates_existing_entry_on_rediscovery(
     hass: HomeAssistant,
 ) -> None:
-    """Test that an existing entry's host is refreshed when rediscovered with the same MAC."""
+    """Test existing entry's host is refreshed when rediscovered with same MAC."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(INTEGRATION_DISCOVERY_INFO["hw_addr"]),

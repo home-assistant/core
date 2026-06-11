@@ -75,11 +75,6 @@ class HomematicipWeatherSensor(HomematicipGenericEntity, WeatherEntity):
         super().__init__(hap, device, feature_id="weather")
 
     @property
-    def name(self) -> str:
-        """Return the name of the sensor."""
-        return self._device.label
-
-    @property
     def native_temperature(self) -> float:
         """Return the platform temperature."""
         return self._device.actualTemperature
@@ -118,6 +113,7 @@ class HomematicipWeatherSensorPro(HomematicipWeatherSensor):
 class HomematicipHomeWeather(HomematicipGenericEntity, WeatherEntity):
     """Representation of the HomematicIP home weather."""
 
+    _attr_has_entity_name = False
     _attr_native_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_native_wind_speed_unit = UnitOfSpeed.KILOMETERS_PER_HOUR
     _attr_attribution = "Powered by Homematic IP"

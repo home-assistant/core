@@ -669,7 +669,8 @@ async def websocket_node_alerts(
                         "comments": [
                             {
                                 "level": "info",
-                                "text": "This device has been provisioned but is not yet included in the "
+                                "text": "This device has been provisioned"
+                                " but is not yet included in the "
                                 "network.",
                             }
                         ],
@@ -686,7 +687,9 @@ async def websocket_node_alerts(
         comments.append(
             {
                 "level": "warning",
-                "text": "This device is currently being interviewed and may not be fully operational.",
+                "text": "This device is currently being"
+                " interviewed and may not be fully"
+                " operational.",
             }
         )
     connection.send_result(

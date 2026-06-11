@@ -1,0 +1,1068 @@
+# serializer version: 1
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.heating_circuit_1_patterilammitys_operation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.heating_circuit_1_patterilammitys_operation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heating circuit 1 Patterilämmitys Operation mode',
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'automatic',
+  })
+# ---
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_home_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Home/Away mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Home/Away mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'home_away_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_home_away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_home_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Home/Away mode',
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_pump_summer_stop-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'stop',
+        'run',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_pump_summer_stop',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Pump summer stop',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Pump summer stop',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_pump_summer_stop_control',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_relay_pump_summer_stop_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-l1_constant_temp_relay_summer_stop][select.ouman_eh_800_pump_summer_stop-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Pump summer stop',
+      'options': list([
+        'auto',
+        'stop',
+        'run',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_pump_summer_stop',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entities[select-no_room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-no_room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heating circuit 1 Patterilämmitys Operation mode',
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'automatic',
+  })
+# ---
+# name: test_entities[select-no_room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l2_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-no_room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heating circuit 2 Lattialämmitys Operation mode',
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'automatic',
+  })
+# ---
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_home_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Home/Away mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Home/Away mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'home_away_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_home_away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-no_room_sensors][select.ouman_eh_800_home_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Home/Away mode',
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entities[select-relay_temp_difference][select.ouman_eh_800_home_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Home/Away mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Home/Away mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'home_away_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_home_away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-relay_temp_difference][select.ouman_eh_800_home_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Home/Away mode',
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entities[select-relay_temp_difference][select.ouman_eh_800_relay_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_relay_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Relay control',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Relay control',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_control',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_relay_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-relay_temp_difference][select.ouman_eh_800_relay_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Relay control',
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_relay_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entities[select-relay_temperature][select.ouman_eh_800_home_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Home/Away mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Home/Away mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'home_away_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_home_away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-relay_temperature][select.ouman_eh_800_home_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Home/Away mode',
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entities[select-relay_temperature][select.ouman_eh_800_relay_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_relay_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Relay control',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Relay control',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_control',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_relay_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-relay_temperature][select.ouman_eh_800_relay_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Relay control',
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_relay_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entities[select-relay_time_program][select.ouman_eh_800_home_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Home/Away mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Home/Away mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'home_away_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_home_away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-relay_time_program][select.ouman_eh_800_home_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Home/Away mode',
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entities[select-relay_time_program][select.ouman_eh_800_relay_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_relay_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Relay control',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Relay control',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_control',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_relay_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-relay_time_program][select.ouman_eh_800_relay_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Relay control',
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_relay_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entities[select-relay_valve_position][select.ouman_eh_800_home_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Home/Away mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Home/Away mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'home_away_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_home_away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-relay_valve_position][select.ouman_eh_800_home_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Home/Away mode',
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---
+# name: test_entities[select-relay_valve_position][select.ouman_eh_800_relay_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_relay_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Relay control',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Relay control',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'relay_control',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_relay_control',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-relay_valve_position][select.ouman_eh_800_relay_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Relay control',
+      'options': list([
+        'auto',
+        'on',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_relay_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'auto',
+  })
+# ---
+# name: test_entities[select-room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l1_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-room_sensors][select.heating_circuit_1_patterilammitys_operation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heating circuit 1 Patterilämmitys Operation mode',
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heating_circuit_1_patterilammitys_operation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'automatic',
+  })
+# ---
+# name: test_entities[select-room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Operation mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Operation mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'operation_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_l2_operation_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-room_sensors][select.heating_circuit_2_lattialammitys_operation_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heating circuit 2 Lattialämmitys Operation mode',
+      'options': list([
+        'automatic',
+        'temperature_drop',
+        'big_temperature_drop',
+        'normal_temperature',
+        'shutdown',
+        'manual_valve_control',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heating_circuit_2_lattialammitys_operation_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'automatic',
+  })
+# ---
+# name: test_entities[select-room_sensors][select.ouman_eh_800_home_away_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': None,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Home/Away mode',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Home/Away mode',
+    'platform': 'ouman_eh_800',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'home_away_mode',
+    'unique_id': '01JABCDEFGHIJKLMNOPQRSTUVW_main_home_away_mode',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_entities[select-room_sensors][select.ouman_eh_800_home_away_mode-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Ouman EH-800 Home/Away mode',
+      'options': list([
+        'home',
+        'away',
+        'off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.ouman_eh_800_home_away_mode',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'home',
+  })
+# ---

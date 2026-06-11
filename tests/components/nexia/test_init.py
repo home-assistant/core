@@ -34,7 +34,7 @@ async def test_device_remove_devices(
     config_entry = await async_init_integration(hass)
     entry_id = config_entry.entry_id
 
-    entity = entity_registry.entities["sensor.nick_office_temperature"]
+    entity = entity_registry.entities["sensor.nick_office_nick_office_temperature"]
 
     live_zone_device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)

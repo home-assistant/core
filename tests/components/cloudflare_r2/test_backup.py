@@ -411,7 +411,9 @@ async def test_multipart_upload_consistent_part_sizes(
     assert len(uploaded_part_sizes) >= 2, "Expected at least 2 parts"
     non_trailing_parts = uploaded_part_sizes[:-1]
     assert all(size == MULTIPART_MIN_PART_SIZE_BYTES for size in non_trailing_parts), (
-        f"All non-trailing parts should be {MULTIPART_MIN_PART_SIZE_BYTES} bytes, got {non_trailing_parts}"
+        f"All non-trailing parts should be"
+        f" {MULTIPART_MIN_PART_SIZE_BYTES} bytes,"
+        f" got {non_trailing_parts}"
     )
 
     # Verify the trailing part contains the remainder
@@ -524,7 +526,9 @@ async def test_error_during_delete(
     assert response["success"]
     assert response["result"] == {
         "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.entry_id}": "Failed during async_delete_backup"
+            f"{DOMAIN}.{mock_config_entry.entry_id}": (
+                "Failed during async_delete_backup"
+            )
         }
     }
 

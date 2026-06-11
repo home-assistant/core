@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, switch
+from homeassistant.components import switch
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
     ATTR_DEVICE_CLASS,
@@ -52,7 +53,7 @@ from tests.components.switch import common
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {switch.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {switch.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -61,7 +62,7 @@ DEFAULT_CONFIG = {
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     switch.DOMAIN: {
                         "name": "test",
                         "state_topic": "state-topic",
@@ -76,7 +77,7 @@ DEFAULT_CONFIG = {
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     switch.DOMAIN: {
                         "name": "test",
                         "state_topic": "state-topic",
@@ -124,7 +125,7 @@ async def test_controlling_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 switch.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -171,7 +172,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 switch.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -195,7 +196,7 @@ async def test_sending_inital_state_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 switch.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -239,7 +240,7 @@ async def test_sending_mqtt_commands_with_command_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 switch.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -302,7 +303,7 @@ async def test_default_availability_payload(
 ) -> None:
     """Test availability by default payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             switch.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -328,7 +329,7 @@ async def test_custom_availability_payload(
 ) -> None:
     """Test availability by custom payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             switch.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -354,7 +355,7 @@ async def test_custom_availability_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 switch.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -451,7 +452,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 switch.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -493,8 +494,8 @@ async def test_discovery_update_switch_topic_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered switch."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][switch.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][switch.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][switch.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][switch.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "switch/state1"
@@ -529,8 +530,8 @@ async def test_discovery_update_switch_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered switch."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][switch.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][switch.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][switch.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][switch.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "switch/state1"
@@ -737,7 +738,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         switch.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][switch.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][switch.DOMAIN],
         topic,
         value,
         attribute,
@@ -830,6 +831,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

@@ -15,11 +15,12 @@ from homeassistant.components.tts import (
     Voice,
 )
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, CONF_PROMPT, CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED
+from .const import CONF_CHAT_MODEL, CONF_TTS_SPEED, RECOMMENDED_TTS_SPEED
 from .entity import OpenAIBaseLLMEntity
 
 if TYPE_CHECKING:

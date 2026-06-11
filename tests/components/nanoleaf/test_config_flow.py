@@ -358,7 +358,8 @@ async def test_import_discovery_integration(
     """Test discovery integration import.
 
     Test with different discovery flow sources and corresponding types.
-    Test with different .nanoleaf_conf files with device_id (>= 2021.4), host (< 2021.4) and combination.
+    Test with different .nanoleaf_conf files with device_id
+    (>= 2021.4), host (< 2021.4) and combination.
     Test removing the .nanoleaf_conf file if it was the only device in the file.
     Test updating the .nanoleaf_conf file if it was not the only device in the file.
     """

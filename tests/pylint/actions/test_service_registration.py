@@ -182,7 +182,7 @@ def test_helper_function_flagged(
     linter: UnittestLinter,
     registration_checker: ServiceRegistrationChecker,
 ) -> None:
-    """Test that services registered in helper functions called from async_setup_entry are flagged."""
+    """Test services in helper functions called from setup are flagged."""
     root_node = astroid.parse(
         """
 def _register_services(hass):

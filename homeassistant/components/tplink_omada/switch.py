@@ -76,7 +76,8 @@ async def async_setup_entry(
         )
         async_add_entities(entities)
 
-    # Register switch port entities for switches that are connected, such that we can determine the port information
+    # Register switch port entities for switches that are
+    # connected, so we can determine the port information
     await controller.async_register_device_entities(
         device_filter=lambda d: (
             d.type == "switch" and d.status_category == DeviceStatusCategory.CONNECTED
@@ -133,7 +134,7 @@ class OmadaDevicePortSwitchEntityDescription[
     TDevice: OmadaDevice,
     TPort,
 ](SwitchEntityDescription):
-    """Entity description for a toggle switch derived from a network port on an Omada device."""
+    """Entity description for a port toggle on an Omada device."""
 
     exists_func: Callable[[TDevice, TPort], bool] = lambda _, p: True
     coordinator_update_func: Callable[[TCoordinator, TDevice, TPort], TPort | None]
@@ -147,7 +148,7 @@ class OmadaSwitchPortSwitchEntityDescription(
         OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails
     ]
 ):
-    """Entity description for a toggle switch for a feature of a Port on an Omada Switch."""
+    """Entity description for a switch port feature toggle."""
 
     coordinator_update_func: Callable[
         [OmadaSwitchPortCoordinator, OmadaSwitch, OmadaSwitchPortDetails],
@@ -161,7 +162,7 @@ class OmadaGatewayPortConfigSwitchEntityDescription(
         OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig
     ]
 ):
-    """Entity description for a toggle switch for a configuration of a Port on an Omada Gateway."""
+    """Entity description for a gateway port config toggle."""
 
     coordinator_update_func: Callable[
         [OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortConfig],
@@ -179,7 +180,7 @@ class OmadaGatewayPortStatusSwitchEntityDescription(
         OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus
     ]
 ):
-    """Entity description for a toggle switch for a status of a Port on an Omada Gateway."""
+    """Entity description for a gateway port status toggle."""
 
     coordinator_update_func: Callable[
         [OmadaGatewayCoordinator, OmadaGateway, OmadaGatewayPortStatus],

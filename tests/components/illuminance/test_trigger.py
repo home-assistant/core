@@ -17,9 +17,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_numerical_state_value_changed_trigger_states,
@@ -120,7 +120,7 @@ async def test_illuminance_trigger_options_validation(
         ),
     ],
 )
-async def test_illuminance_trigger_binary_sensor_behavior_any(
+async def test_illuminance_trigger_binary_sensor_behavior_each(
     hass: HomeAssistant,
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -130,8 +130,8 @@ async def test_illuminance_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance trigger fires for binary_sensor entities with device_class light."""
-    await assert_trigger_behavior_any(
+    """Test trigger fires for binary_sensor with device_class light."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
@@ -222,7 +222,7 @@ async def test_illuminance_trigger_binary_sensor_behavior_first(
         ),
     ],
 )
-async def test_illuminance_trigger_binary_sensor_behavior_last(
+async def test_illuminance_trigger_binary_sensor_behavior_all(
     hass: HomeAssistant,
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -232,8 +232,8 @@ async def test_illuminance_trigger_binary_sensor_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance trigger fires when the last binary_sensor changes state."""
-    await assert_trigger_behavior_last(
+    """Test illuminance trigger fires when all binary_sensors have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
@@ -268,7 +268,7 @@ async def test_illuminance_trigger_binary_sensor_behavior_last(
         ),
     ],
 )
-async def test_illuminance_trigger_sensor_behavior_any(
+async def test_illuminance_trigger_sensor_behavior_each(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -278,8 +278,8 @@ async def test_illuminance_trigger_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance trigger fires for sensor entities with device_class illuminance."""
-    await assert_trigger_behavior_any(
+    """Test trigger fires for sensor with device_class illuminance."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
@@ -316,7 +316,7 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance crossed_threshold trigger fires on the first sensor state change."""
+    """Test crossed_threshold trigger fires on first sensor change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_sensors,
@@ -344,7 +344,7 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_illuminance_trigger_sensor_crossed_threshold_behavior_last(
+async def test_illuminance_trigger_sensor_crossed_threshold_behavior_all(
     hass: HomeAssistant,
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
@@ -354,8 +354,8 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance crossed_threshold trigger fires when the last sensor changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when all sensors have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,

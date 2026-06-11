@@ -178,7 +178,6 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: 255 if x is None else x,
             ha_to_device=lambda x: None if x == 255 else int(x),
             native_step=1,
-            native_unit_of_measurement=None,
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.OnLevel,),
@@ -199,7 +198,6 @@ DISCOVERY_SCHEMAS = [
             device_to_ha=lambda x: 255 if x is None else x,
             ha_to_device=lambda x: None if x == 255 else int(x),
             native_step=1,
-            native_unit_of_measurement=None,
         ),
         entity_class=MatterNumber,
         required_attributes=(clusters.LevelControl.Attributes.StartUpCurrentLevel,),
@@ -360,7 +358,7 @@ DISCOVERY_SCHEMAS = [
                     None if x is None else min(x, 200) / 2
                 )  # Matter range (1-200, capped at 200)
             ),
-            ha_to_device=lambda x: round(x * 2),  # HA range 0.5–100.0%
+            ha_to_device=lambda x: round(x * 2),  # HA range 0.5-100.0%
             mode=NumberMode.SLIDER,
         ),
         entity_class=MatterLevelControlNumber,

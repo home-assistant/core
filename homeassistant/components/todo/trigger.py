@@ -78,7 +78,7 @@ class ItemChangeListener(TargetEntityChangeTracker):
     @override
     @callback
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
-        """Restart the listeners when the list of entities of the tracked targets is updated."""
+        """Restart listeners when tracked target entities change."""
         if self._pending_listener_task:
             self._pending_listener_task.cancel()
         self._pending_listener_task = self._hass.async_create_task(

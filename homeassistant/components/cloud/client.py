@@ -220,8 +220,11 @@ class CloudClient(Interface):
                 )
                 if is_cloud_ice_servers_enabled:
                     if self._cloud_ice_servers_listener is None:
-                        self._cloud_ice_servers_listener = await self.cloud.ice_servers.async_register_ice_servers_listener(
-                            register_cloud_ice_server
+                        ice_servers = self.cloud.ice_servers
+                        self._cloud_ice_servers_listener = (
+                            await ice_servers.async_register_ice_servers_listener(
+                                register_cloud_ice_server
+                            )
                         )
                 elif self._cloud_ice_servers_listener:
                     self._cloud_ice_servers_listener()

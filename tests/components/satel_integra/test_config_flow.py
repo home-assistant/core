@@ -693,11 +693,9 @@ async def test_same_host_config_disallowed(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_encryption_key_changed(
-    hass: HomeAssistant,
-    mock_satel: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_satel: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow when encryption key is changed."""
     mock_config_entry.add_to_hass(hass)
@@ -729,11 +727,9 @@ async def test_reconfigure_encryption_key_changed(
     assert mock_config_entry.data == expected_data
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_encryption_key_removed(
-    hass: HomeAssistant,
-    mock_satel: AsyncMock,
-    mock_setup_entry: AsyncMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_satel: AsyncMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow when encryption key is explicitly removed."""
     # Start with config that has encryption key

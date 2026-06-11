@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from pynobo import nobo
+from pynobo import PynoboError, nobo
 
 from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
@@ -22,6 +22,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
@@ -105,13 +106,18 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
-        if hvac_mode == HVACMode.AUTO:
-            await self.async_set_preset_mode(PRESET_NONE)
-        elif hvac_mode == HVACMode.HEAT:
-            await self.async_set_preset_mode(PRESET_COMFORT)
+        preset = PRESET_COMFORT if hvac_mode == HVACMode.HEAT else PRESET_NONE
+        await self._apply_preset(preset, "set_hvac_mode_failed")
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new zone override."""
+        await self._apply_preset(preset_mode, "set_preset_mode_failed")
+
+    async def _apply_preset(
+        self,
+        preset_mode: str,
+        translation_key: str,
+    ) -> None:
         if preset_mode == PRESET_ECO:
             mode = nobo.API.OVERRIDE_MODE_ECO
         elif preset_mode == PRESET_AWAY:
@@ -120,21 +126,33 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
             mode = nobo.API.OVERRIDE_MODE_COMFORT
         else:  # PRESET_NONE
             mode = nobo.API.OVERRIDE_MODE_NORMAL
-        await self._nobo.async_create_override(
-            mode,
-            self._override_type,
-            nobo.API.OVERRIDE_TARGET_ZONE,
-            self._id,
-        )
+        try:
+            await self._nobo.async_create_override(
+                mode,
+                self._override_type,
+                nobo.API.OVERRIDE_TARGET_ZONE,
+                self._id,
+            )
+        except PynoboError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key=translation_key,
+            ) from err
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TARGET_TEMP_LOW in kwargs:
             low = round(kwargs[ATTR_TARGET_TEMP_LOW])
             high = round(kwargs[ATTR_TARGET_TEMP_HIGH])
-            await self._nobo.async_update_zone(
-                self._id, temp_comfort_c=high, temp_eco_c=low
-            )
+            try:
+                await self._nobo.async_update_zone(
+                    self._id, temp_comfort_c=high, temp_eco_c=low
+                )
+            except PynoboError as err:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="set_temperature_failed",
+                ) from err
 
     async def async_update(self) -> None:
         """Fetch new state data for this zone."""

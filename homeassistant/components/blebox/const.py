@@ -14,6 +14,13 @@ UNKNOWN = "unknown"
 DEFAULT_HOST = "192.168.0.2"
 DEFAULT_PORT = 80
 
+OPEN_STATUS: dict[int, str] = {
+    0: "open",
+    1: "unclosed_or_unlocked",
+    2: "ajar",
+    3: "closed_but_unlocked",
+    4: "closed",
+}
 
 LIGHT_MAX_KELVINS = 6500  # 154 Mireds
 LIGHT_MIN_KELVINS = 2700  # 370 Mireds

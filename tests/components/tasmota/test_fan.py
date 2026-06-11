@@ -188,7 +188,8 @@ async def test_sending_mqtt_commands(
     assert state.attributes["percentage"] == 0
     mqtt_mock.async_publish.reset_mock()
 
-    # Finally, turn the fan on again and verify MQTT message is sent with last known speed
+    # Finally, turn the fan on again and verify MQTT message is sent
+    # with last known speed
     await common.async_turn_on(hass, "fan.tasmota")
     mqtt_mock.async_publish.assert_called_once_with(
         "tasmota_49A3BC/cmnd/FanSpeed", "3", 0, False, message_expiry_interval=None

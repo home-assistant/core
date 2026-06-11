@@ -155,7 +155,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 key="WanIPAddress",
                 translation_key="wan_ip_address",
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "WanIPv6Address": HuaweiSensorEntityDescription(
                 key="WanIPv6Address",
@@ -330,7 +329,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "nrrsrq": HuaweiSensorEntityDescription(
                 key="nrrsrq",
@@ -340,7 +338,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "nrsinr": HuaweiSensorEntityDescription(
                 key="nrsinr",
@@ -351,7 +348,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "nrtxpower": HuaweiSensorEntityDescription(
                 key="nrtxpower",
@@ -418,7 +414,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "rsrq": HuaweiSensorEntityDescription(
                 key="rsrq",
@@ -428,7 +423,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 icon_fn=lambda x: signal_icon((-20, -15, -10), x),
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "rssi": HuaweiSensorEntityDescription(
                 key="rssi",
@@ -439,7 +433,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "rxlev": HuaweiSensorEntityDescription(
                 key="rxlev",
@@ -461,7 +454,6 @@ SENSOR_META: dict[str, HuaweiSensorGroup] = {
                 suggested_display_precision=0,
                 state_class=SensorStateClass.MEASUREMENT,
                 entity_category=EntityCategory.DIAGNOSTIC,
-                entity_registry_enabled_default=True,
             ),
             "tac": HuaweiSensorEntityDescription(
                 key="tac",

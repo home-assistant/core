@@ -55,7 +55,6 @@ DESCRIPTIONS = [
         native_min_value=MIN_TEMP,
         native_max_value=MAX_TEMP,
         native_step=PRECISION_HALVES,
-        entity_registry_enabled_default=True,
     ),
     CometBlueNumberEntityDescription(
         key="comfort_setpoint",
@@ -68,7 +67,6 @@ DESCRIPTIONS = [
         native_min_value=MIN_TEMP,
         native_max_value=MAX_TEMP,
         native_step=PRECISION_HALVES,
-        entity_registry_enabled_default=True,
     ),
 ]
 
