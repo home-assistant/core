@@ -19,7 +19,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _my_pv_connecton(func):
+def _my_pv_connection(func):
     @functools.wraps(func)
     async def wrapper(self, *args, **kwargs):
         if not self._device.connected and not await self._device.connect():
@@ -125,12 +125,12 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         """
         return await self._device.disconnect()
 
-    @_my_pv_connecton
+    @_my_pv_connection
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         await self._device.fetch_data()
 
-    @_my_pv_connecton
+    @_my_pv_connection
     async def set_target_temperature(self, temperature: float) -> bool:
         """Set setup value for the given key."""
         result = await self._device.set_target_temperature(temperature)
@@ -141,14 +141,14 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         """Get the data value for the given key."""
         return self._device.get_data_value(key)
 
-    @_my_pv_connecton
+    @_my_pv_connection
     async def turn_on(self):
         """Turn on the device."""
         result = await self._device.turn_on()
         self.async_update_listeners()
         return result
 
-    @_my_pv_connecton
+    @_my_pv_connection
     async def turn_off(self):
         """Turn off the device."""
         result = await self._device.turn_off()
