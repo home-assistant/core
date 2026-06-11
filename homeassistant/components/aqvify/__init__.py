@@ -33,7 +33,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> b
 async def async_remove_config_entry_device(
     hass: HomeAssistant, config_entry: AqvifyConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
-    """Remove a config entry from a Aqvify device."""
+    """Remove a config entry from an Aqvify device."""
 
     return not device_entry.identifiers.intersection(
         (DOMAIN, f"{config_entry.unique_id}_{device_id}")
