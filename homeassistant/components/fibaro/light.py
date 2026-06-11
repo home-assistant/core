@@ -79,10 +79,13 @@ class FibaroLight(FibaroEntity, LightEntity):
             or "RGBW" in fibaro_device.type
             or "rgbw" in fibaro_device.type
         )
-        supports_dimming = (
-            fibaro_device.has_interface("levelChange")
-            or fibaro_device.type == "com.fibaro.multilevelSwitch"
-        ) and "setValue" in fibaro_device.actions
+        supports_dimming = fibaro_device.has_interface("levelChange") or (
+            (
+                fibaro_device.base_type == "com.fibaro.multilevelSwitch"
+                or fibaro_device.type == "com.fibaro.multilevelSwitch"
+            )
+            and "setValue" in fibaro_device.actions
+        )
 
         if supports_color and supports_white_v:
             self._attr_supported_color_modes = {ColorMode.RGBW}
