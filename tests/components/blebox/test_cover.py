@@ -54,6 +54,7 @@ def shutterbox_fixture():
         state=None,
         has_stop=True,
         has_tilt=True,
+        is_calibrated=True,
         is_slider=True,
         is_position_inverted=True,
         cover_type=None,
@@ -450,6 +451,21 @@ async def test_tilt_with_position_supported_features(
     assert supported_features & CoverEntityFeature.OPEN_TILT
     assert supported_features & CoverEntityFeature.CLOSE_TILT
     assert supported_features & CoverEntityFeature.SET_TILT_POSITION
+
+
+async def test_tilt_not_calibrated_no_set_tilt_position(
+    shutterbox, hass: HomeAssistant
+) -> None:
+    """Test that SET_TILT_POSITION is absent when tilt is present but not calibrated."""
+    feature_mock, entity_id = shutterbox
+    feature_mock.is_calibrated = False
+
+    await async_setup_entity(hass, entity_id)
+
+    supported_features = hass.states.get(entity_id).attributes[ATTR_SUPPORTED_FEATURES]
+    assert supported_features & CoverEntityFeature.OPEN_TILT
+    assert supported_features & CoverEntityFeature.CLOSE_TILT
+    assert not supported_features & CoverEntityFeature.SET_TILT_POSITION
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
