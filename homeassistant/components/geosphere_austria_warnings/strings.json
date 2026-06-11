@@ -1,0 +1,88 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "unique_id_mismatch": "The selected zone is located in a different municipality. To monitor another municipality, add a new entry instead."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "municipality_not_found": "No Austrian municipality was found at the location of the selected zone.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "zone_not_found": "The selected zone does not exist."
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "zone": "[%key:component::geosphere_austria_warnings::config::step::user::data::zone%]"
+        },
+        "data_description": {
+          "zone": "[%key:component::geosphere_austria_warnings::config::step::user::data_description::zone%]"
+        },
+        "description": "Select the zone to monitor for official GeoSphere Austria weather warnings. The new zone must be located in the same municipality."
+      },
+      "user": {
+        "data": {
+          "zone": "Zone"
+        },
+        "data_description": {
+          "zone": "Warnings are provided for the Austrian municipality at the location of this zone."
+        },
+        "description": "Select the zone to monitor for official GeoSphere Austria weather warnings."
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "auto_thunderstorm_warning": {
+        "name": "Automatic thunderstorm warning"
+      },
+      "black_ice_warning": {
+        "name": "Black ice warning"
+      },
+      "cold_warning": {
+        "name": "Cold warning"
+      },
+      "heat_warning": {
+        "name": "Heat warning"
+      },
+      "rain_warning": {
+        "name": "Rain warning"
+      },
+      "snow_warning": {
+        "name": "Snow warning"
+      },
+      "storm_warning": {
+        "name": "Storm warning"
+      },
+      "thunderstorm_warning": {
+        "name": "Thunderstorm warning"
+      }
+    },
+    "sensor": {
+      "active_warnings": {
+        "name": "Active warnings"
+      },
+      "warning_level": {
+        "name": "Warning level",
+        "state": {
+          "none": "No warning",
+          "orange": "Orange",
+          "red": "Red",
+          "yellow": "Yellow"
+        }
+      }
+    }
+  },
+  "exceptions": {
+    "api_error": {
+      "message": "The GeoSphere Austria Warn API returned an unexpected response: {error}"
+    },
+    "connection_error": {
+      "message": "Error communicating with the GeoSphere Austria Warn API: {error}"
+    },
+    "municipality_not_found": {
+      "message": "No Austrian municipality was found for the configured location"
+    }
+  }
+}

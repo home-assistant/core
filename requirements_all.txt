@@ -2204,6 +2204,9 @@ pyfttt==0.3
 # homeassistant.components.skybeacon
 pygatt[GATTTOOL]==4.0.5
 
+# homeassistant.components.geosphere_austria_warnings
+pygeosphere-warnings==0.1.0
+
 # homeassistant.components.gtfs
 pygtfs==0.1.9
 
