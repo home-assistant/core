@@ -325,10 +325,11 @@ def co2_definition_sensor_fixture():
         device_class="co2Definition",
         native_value=None,
     )
+    type(feature).name = PropertyMock(return_value=None)
     product = feature.product
     type(product).name = PropertyMock(return_value="My CO2 sensor")
     type(product).model = PropertyMock(return_value="co2Sensor")
-    return (feature, "sensor.my_co2_sensor_co2sensor_0_co2definition")
+    return (feature, "sensor.my_co2_sensor_carbon_dioxide_level")
 
 
 async def test_co2_definition_sensor_init(
