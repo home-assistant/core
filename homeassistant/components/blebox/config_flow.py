@@ -14,16 +14,8 @@ from blebox_uniapi.session import ApiHost
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_MAC,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_USERNAME,
-)
-from homeassistant.helpers import device_registry as dr
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
@@ -141,20 +133,8 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.device_config["name"] = product.name
         # Check if configured but IP changed since
-        existing_entry = await self.async_set_unique_id(product.unique_id)
-        if existing_entry and (mac := self.device_config.get(CONF_MAC)):
-            device_registry = dr.async_get(self.hass)
-            if device_entry := device_registry.async_get_device(
-                identifiers={(DOMAIN, product.unique_id)}
-            ):
-                device_registry.async_update_device(
-                    device_entry.id,
-                    merge_connections={(dr.CONNECTION_NETWORK_MAC, mac)},
-                )
-        updates: dict[str, Any] = {CONF_HOST: host}
-        if mac := self.device_config.get(CONF_MAC):
-            updates[CONF_MAC] = mac
-        self._abort_if_unique_id_configured(updates=updates)
+        await self.async_set_unique_id(product.unique_id)
+        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
         self.context.update(
             {
                 "title_placeholders": {
@@ -170,7 +150,6 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle DHCP discovery."""
-        self.device_config[CONF_MAC] = format_mac(discovery_info.macaddress)
         return await self._async_handle_discovery(discovery_info.ip, DEFAULT_PORT)
 
     async def async_step_zeroconf(
@@ -186,15 +165,12 @@ class BleBoxConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle discovery confirmation."""
         if user_input is not None:
-            data: dict[str, Any] = {
-                "host": self.device_config["host"],
-                "port": self.device_config["port"],
-            }
-            if mac := self.device_config.get(CONF_MAC):
-                data[CONF_MAC] = mac
             return self.async_create_entry(
                 title=self.device_config["name"],
-                data=data,
+                data={
+                    "host": self.device_config["host"],
+                    "port": self.device_config["port"],
+                },
             )
 
         return self.async_show_form(
