@@ -404,20 +404,12 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         """Handle a registry-driven change to the tracked entity set."""
         if (coro := self._apply_entities_update(tracked_entities)) is None:
             return
-        # Track the task so it can be cancelled on unsubscribe and so its
-        # exception is retrieved (and logged) rather than surfacing only via
-        # asyncio's "Task exception was never retrieved" at garbage collection.
-        task = self._hass.async_create_task(coro, "Target entity tracker update")
+        # Tracked so it can be cancelled on unsubscribe.
+        task = self._hass.async_create_background_task(
+            coro, "Target entity tracker update"
+        )
         self._update_tasks.add(task)
-        task.add_done_callback(self._on_update_task_done)
-
-    def _on_update_task_done(self, task: asyncio.Task[None]) -> None:
-        """Drop a finished update task and surface any unexpected error."""
-        self._update_tasks.discard(task)
-        if not task.cancelled() and (exc := task.exception()) is not None:
-            _LOGGER.error(
-                "Error handling tracked entities update: %s", exc, exc_info=exc
-            )
+        task.add_done_callback(self._update_tasks.discard)
 
     def _apply_entities_update(
         self, tracked_entities: set[str]

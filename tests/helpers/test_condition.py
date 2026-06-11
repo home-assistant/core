@@ -63,7 +63,7 @@ from homeassistant.helpers.condition import (
     BEHAVIOR_ALL,
     BEHAVIOR_ANY,
     CONDITIONS,
-    MAX_HISTORY_PRIME_LOOKBACK,
+    MAX_HISTORY_PRIMING_LOOKBACK,
     Condition,
     ConditionChecker,
     EntityConditionBase,
@@ -5563,7 +5563,7 @@ async def test_state_condition_attr_duration_history_lookback_capped(
             )
 
         # The 8h `for:` is clamped to the 6h cap.
-        assert dt_util.utcnow() - captured["start_time"] == MAX_HISTORY_PRIME_LOOKBACK
+        assert dt_util.utcnow() - captured["start_time"] == MAX_HISTORY_PRIMING_LOOKBACK
 
 
 async def test_state_condition_attr_duration_history_long_for_uses_live_anchor(
@@ -5646,7 +5646,7 @@ async def test_state_condition_attr_duration_history_loaded_for_added_entity(
 
             # Release the flush; the query runs and the anchor is stored.
             gate.set_result(None)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         # History loaded: continuously valid for 10s → 5s `for:` is met.
         assert test.async_check() is True
@@ -5700,7 +5700,7 @@ async def test_state_condition_attr_duration_not_counted_while_history_loads(
 
             # Release the flush; the query runs and the anchor is stored.
             gate.set_result(None)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         # Loaded now → met.
         assert test.async_check() is True
@@ -5758,7 +5758,7 @@ async def test_state_condition_attr_duration_benign_change_during_load_keeps_his
             assert test.async_check() is False
 
             gate.set_result(None)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         # History was applied despite the benign change → valid since t=0 → met.
         assert test.async_check() is True
@@ -5811,7 +5811,7 @@ async def test_state_condition_attr_duration_invalidation_during_load_discards_h
             await asyncio.sleep(0)
 
             gate.set_result(None)
-            await hass.async_block_till_done()
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         # Stale history was discarded; the anchor is the post-dip time (now), so
         # the 5s `for:` is not yet met.

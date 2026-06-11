@@ -614,12 +614,13 @@ class EntityConditionBase(Condition):
 
         For each currently-valid entity the anchor is the start of its current
         continuous run of validity, read from recorder history (bounded by
-        `MAX_HISTORY_PRIMING_LOOKBACK`) and combined with the current state's
-        anchor, or the current state's anchor alone when the recorder is
-        unavailable or the read fails. An entity is added to `_valid_since` only
-        once this resolves, so a newly tracked entity does not participate in the
-        condition until its anchor is known — rather than briefly using a
-        conservative anchor that then changes.
+        `MAX_HISTORY_PRIMING_LOOKBACK`). The earlier of that and the current
+        state's own anchor wins, so a run that began before the lookback window
+        is not cut short. When the recorder is unavailable or the read fails,
+        the current state's anchor is used alone. An entity is added to
+        `_valid_since` only once this resolves, so a newly tracked entity does
+        not participate in the condition until its anchor is known — rather than
+        briefly using a conservative anchor that then changes.
 
         While loading, an entity is held in `_priming`. A live change that keeps
         it valid is ignored (the run is unbroken, history is accurate), but an
@@ -655,7 +656,9 @@ class EntityConditionBase(Condition):
     ) -> None:
         """Move each anchor in `anchors` back to the true start of its run.
 
-        Mutates `anchors` in place.
+        For each entity the anchor becomes the earlier of the recorded run start
+        and the existing (live) anchor; entities with no usable history keep
+        their existing anchor. Mutates `anchors` in place.
         """
         from sqlalchemy.exc import SQLAlchemyError  # noqa: PLC0415
 
@@ -700,27 +703,27 @@ class EntityConditionBase(Condition):
                 anchors[entity_id] = min(valid_since, anchors[entity_id])
 
     def _valid_since_from_history(
-        self, entity_id: str, rows: Iterable[State]
+        self, entity_id: str, rows: list[State]
     ) -> datetime | None:
         """Return when the current continuous run of valid states began.
 
-        Walks historical states oldest-first and returns the anchor time of the
-        first state in the most recent unbroken run of valid states, or None if
-        the most recently recorded state is not valid (e.g. the recorder lags
-        behind the live state machine).
+        Walks recorded states newest-first and stops at the first one that is
+        not valid; the anchor is the oldest state in the unbroken run leading up
+        to the latest recorded state. (We can't just take the first valid state
+        in the window: an intervening invalid period breaks the run, so the
+        anchor must come from after it.) Returns None when the latest recorded
+        state is not valid, e.g. the recorder lags behind the live state machine.
         """
         # Recorder rows are LazyState objects, which skip State.__init__ and so
         # never populate the domain/object_id that the validity checks rely on.
         domain, object_id = split_entity_id(entity_id)
         valid_since: datetime | None = None
-        for _state in rows:
+        for _state in reversed(rows):
             _state.domain = domain
             _state.object_id = object_id
-            if self._should_include(_state) and self.is_valid_state(_state):
-                if valid_since is None:
-                    valid_since = self._state_valid_since(_state)
-            else:
-                valid_since = None
+            if not (self._should_include(_state) and self.is_valid_state(_state)):
+                break
+            valid_since = self._state_valid_since(_state)
         return valid_since
 
     @override
