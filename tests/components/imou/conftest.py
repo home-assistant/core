@@ -87,3 +87,18 @@ async def init_integration(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     return mock_imou_ha_device_manager
+
+
+@pytest.fixture
+async def init_integration_stable_camera(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_imou_openapi_client: AsyncMock,
+    mock_imou_ha_device_manager: MagicMock,
+) -> MagicMock:
+    """Set up Imou with stable camera access tokens for snapshot tests."""
+    mock_config_entry.add_to_hass(hass)
+    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+    return mock_imou_ha_device_manager
