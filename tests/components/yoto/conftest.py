@@ -11,10 +11,10 @@ from yoto_api import (
     Card,
     Chapter,
     Device,
+    Group,
     PlaybackEvent,
     PlaybackStatus,
     PlayerInfo,
-    PlayerStatus,
     Track,
     YotoPlayer,
 )
@@ -33,6 +33,7 @@ from tests.common import MockConfigEntry
 USER_ID = "auth0|user-test"
 PLAYER_ID = "player-test"
 CARD_ID = "card-test"
+GROUP_ID = "group-test"
 SCOPES = " ".join(YOTO_SCOPES)
 ACCESS_TOKEN = jwt.encode({"sub": USER_ID}, "test-secret-long-enough-for-hmac-sha256")
 
@@ -78,16 +79,15 @@ def _build_player() -> YotoPlayer:
             device_family="v3",
             generation="gen3",
         ),
+        is_online=True,
         devices_refreshed_at=now,
         info_refreshed_at=now,
         last_event_received_at=now,
     )
     player.info = PlayerInfo(
-        device_id=PLAYER_ID,
         firmware_version="v2.17.5",
         mac="aa:bb:cc:dd:ee:ff",
     )
-    player.status = PlayerStatus(device_id=PLAYER_ID, is_online=True)
     player.last_event = PlaybackEvent(
         player_id=PLAYER_ID,
         playback_status=PlaybackStatus.PLAYING,
@@ -120,6 +120,16 @@ def mock_setup_entry() -> Generator[AsyncMock]:
         yield mock_setup
 
 
+def _build_group() -> Group:
+    """Build a representative Yoto card group."""
+    return Group(
+        id=GROUP_ID,
+        name="Bedtime",
+        image_url="https://example.test/group.jpg",
+        card_ids=[CARD_ID],
+    )
+
+
 @pytest.fixture
 def mock_yoto_client() -> Generator[MagicMock]:
     """Patch YotoClient used by the runtime to a configurable mock."""
@@ -129,6 +139,7 @@ def mock_yoto_client() -> Generator[MagicMock]:
         client = client_class.return_value
         client.players = {PLAYER_ID: _build_player()}
         client.library = {CARD_ID: _build_card()}
+        client.groups = {GROUP_ID: _build_group()}
         client.token = MagicMock(refresh_token="mock-refresh-token")
         yield client
 
