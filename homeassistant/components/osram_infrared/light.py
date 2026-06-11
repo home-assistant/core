@@ -68,6 +68,8 @@ HUE_TO_CODE: Final[dict[int, OsramLightCode]] = {
     300: OsramLightCode.HUE_300,
 }
 
+SUPPORTED_HUES: Final[tuple[int, ...]] = (*HUE_TO_CODE, 360)
+
 CODE_TO_HUE: Final[dict[OsramLightCode, int]] = {
     code: hue for hue, code in HUE_TO_CODE.items()
 }
