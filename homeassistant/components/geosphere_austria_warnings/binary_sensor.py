@@ -10,11 +10,11 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .coordinator import GeoSphereConfigEntry
+from .coordinator import GeoSphereConfigEntry, GeoSphereUpdateCoordinator
 from .entity import GeoSphereEntity
 
 PARALLEL_UPDATES = 0
@@ -81,8 +81,22 @@ class GeoSphereWarningBinarySensor(GeoSphereEntity, BinarySensorEntity):
 
     entity_description: GeoSphereWarningBinarySensorDescription
 
-    @property
-    def _warnings(self) -> list[WeatherWarning]:
+    def __init__(
+        self,
+        coordinator: GeoSphereUpdateCoordinator,
+        description: GeoSphereWarningBinarySensorDescription,
+    ) -> None:
+        """Initialize the binary sensor."""
+        super().__init__(coordinator, description)
+        self._warnings = self._current_warnings()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Refresh the cached warnings when the coordinator updates."""
+        self._warnings = self._current_warnings()
+        super()._handle_coordinator_update()
+
+    def _current_warnings(self) -> list[WeatherWarning]:
         """Return all warnings of this sensor's type, including upcoming ones."""
         return sorted(
             (
