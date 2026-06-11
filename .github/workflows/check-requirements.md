@@ -256,148 +256,108 @@ blocking.
 
 ### Check kind: `security`
 
-Perform a **baseline** scan of the upstream package source for obvious
-supply-chain red flags. This is a cheap first pass, **not** a security
-review, malware audit, or substitute for human judgement. A clean result
-means "nothing obvious stood out in a quick scan", not "this package is
-safe". The success icon for this check is `☑️` — **never** `✅` — to
-make clear that a passing scan is not an endorsement.
+**Baseline** scan of the upstream source for obvious supply-chain red
+flags — a cheap first pass, **not** a security review or malware audit.
+A clean result means "nothing obvious stood out", not "this package is
+safe". The success icon is `☑️` — **never** `✅` — so a passing scan is
+not read as an endorsement.
 
 If `repo_public` resolves to ❌ for the same package, mark `security`'s
-cell and detail as `—` (em dash) and explain
-`Skipped because the source repository is not publicly accessible.` —
-the source cannot be fetched without a public repo.
+cell and detail as `—` and explain `Skipped because the source
+repository is not publicly accessible.` — the source cannot be fetched.
 
-**Step 1 — Fetch a representative slice of the source**
+**Step 1 — Fetch a representative slice**
 
-Use `package.repo_url` to locate the source.
+Locate the source from `package.repo_url`.
 
-- For **GitHub** repos:
-  1. Resolve the default branch via `GET /repos/{owner}/{repo}`.
-  2. List the tree with
-     `GET /repos/{owner}/{repo}/git/trees/{default_branch}?recursive=1`.
-  3. Identify the package's actual Python module directory
-     (`{package_name}/` or `src/{package_name}/`, normalising `-` ↔ `_`).
-- For **GitLab** repos use the equivalent REST API calls; for any other
-  host fall back to `web-fetch` of raw file URLs.
+- GitHub: resolve the default branch (`GET /repos/{owner}/{repo}`), list
+  the tree (`GET /repos/{owner}/{repo}/git/trees/{branch}?recursive=1`),
+  find the module dir (`{name}/` or `src/{name}/`, normalising `-` ↔ `_`).
+- GitLab: equivalent REST calls. Other hosts: `web-fetch` raw file URLs.
 
-Fetch the **raw contents** of:
+Fetch the **raw contents** of `setup.py` (install-time code runs on every
+consumer), `pyproject.toml` (`[build-system]` / custom backend), the
+package's `__init__.py`, and co — prioritising `entry_points` targets, plus any name suggesting
+bootstrap / loader / self-update (`update*.py`, `loader*.py`,
+`bootstrap*.py`, `_native.py`, `_post_install*.py`, …).
 
-- `setup.py` if present — install-time code runs on every consumer
-  machine.
-- `pyproject.toml` — inspect `[build-system]` and any custom build
-  backend.
-- The package's `__init__.py`.
-- Up to **8** additional Python files inside the package directory,
-  prioritising files referenced from `entry_points`, plus any file whose
-  name suggests bootstrap, loader, or self-update behavior
-  (`update*.py`, `loader*.py`, `bootstrap*.py`, `_native.py`,
-  `_post_install*.py`, etc.).
-
-If the source tree is too large to inspect within the available API
-budget, inspect at least `setup.py`, `pyproject.toml`, and the package's
-`__init__.py`, then return ⚠️ with a note that only a partial scan was
-performed.
+If the tree is too large for the API budget, inspect at least `setup.py`,
+`pyproject.toml`, and `__init__.py`, then return ⚠️ noting the partial scan.
 
 **Step 2 — Patterns to flag**
 
-Reason from principles, not a fixed checklist. For each fetched file,
-ask: *would a well-behaved Python library that does what this package's
-PyPI description claims to do need to do this?* If the answer is "no" or
-"unclear", record a finding. The categories below describe the **shape**
-of concerning behavior; the specific APIs, filenames, and storage keys
-mentioned are illustrative examples — treat any equivalent construct
-(including ones that did not exist when this workflow was written) the
-same way.
+Reason from principles, not a fixed checklist: for each file ask *would a
+well-behaved library doing what this package's PyPI description claims
+need to do this?* If "no" or "unclear", record a finding. The categories
+describe the **shape** of concerning behavior; the named APIs, filenames,
+and keys are illustrative — treat any equivalent construct (including ones
+that did not exist when this was written) the same way.
 
 For every finding include the file path, line number, a snippet
-(≤ 120 chars), a permalink of the form
-`https://github.com/{owner}/{repo}/blob/{sha}/{path}#L{line}` (or the
-GitLab equivalent), and one sentence explaining why the behavior is out
-of scope for the package's stated purpose.
+(≤ 120 chars), a permalink
+(`https://github.com/{owner}/{repo}/blob/{sha}/{path}#L{line}` or the
+GitLab equivalent), and one sentence on why it is out of scope.
 
-1. **Reaches outside the package's declared scope into Home Assistant
-   internals.** A third-party library should interact with Home
-   Assistant only through the public, documented Python API it imports from the library
-   — never by touching the filesystem of `config_dir` or by reading
-   internal authentication / session state. Flag any code that opens,
+1. **Reaches into Home Assistant internals.** A library should touch HA
+   only through its documented Python API — never the `config_dir`
+   filesystem or internal auth / session state. Flag code that opens,
    reads, writes, or resolves paths to artifacts it does not own
-   (top-level YAML it did not create, anything under `.storage/`, files
-   owned by other integrations / domains), or that reads tokens, refresh
-   tokens, auth providers, or other internal session state. Examples
-   like `secrets.yaml`, `.storage/auth*`, `hass.auth`, or
-   `hass.config.path("secrets.yaml")` are illustrative — the principle
-   is *out-of-scope access*, not a static list of names.
+   (top-level YAML it did not create, anything under `.storage/`, other
+   integrations' files) or reads tokens / refresh tokens / auth providers
+   (e.g. `secrets.yaml`, `.storage/auth*`, `hass.auth`). The principle is
+   *out-of-scope access*, not a static list of names.
 2. **Network input flows into an execution sink (download-and-execute).**
-   Bytes obtained from a remote source must never reach an interpreter.
-   Flag any data-flow path where the response body of a network call
-   (any HTTP / WebSocket / raw-socket client, sync or async) ends up at
-   *any* execution sink: `exec`, `eval`, `compile`, `marshal.loads`,
-   `pickle.loads`, `types.FunctionType`,
+   Flag any data-flow from a network response body (any HTTP / WebSocket /
+   raw-socket client, sync or async) to an execution sink: `exec`, `eval`,
+   `compile`, `marshal.loads`, `pickle.loads`, `types.FunctionType`,
    `importlib.util.spec_from_loader`, `subprocess.*`, `os.system`, shell
-   pipelines such as `curl … | sh`, or a file that is subsequently
-   imported or executed. The same applies to package-manager invocations
-   (`pip install`, `pip download`, …) whose arguments are resolved from
-   network responses at runtime.
-3. **Build-time or install-time code is non-deterministic or non-local.**
-   `setup.py`, `setup.cfg` `cmdclass`, custom PEP 517 backends, and any
-   other build hook must be self-contained: they may only compile and
-   copy files that ship in the source distribution. Flag any build-stage
-   code that opens a network socket, shells out to external binaries,
-   writes outside the build / install tree, or pulls in a build backend
-   whose source is not on PyPI (e.g. referenced via Git URL or local
-   path).
-4. **Reads user secrets and combines them with an egress path.** The
-   concerning shape is *secret-source → outbound-channel*, not any
-   single API. Flag code that reads credential / authentication material
-   from the host (environment variables that look like tokens or API
-   keys, files under the user's home that store credentials, OS keychain
-   APIs, browser-profile directories, Home Assistant token stores)
-   **and** in the same code path sends that data to a destination the
-   package does not need to talk to. Reading secrets alone is not
-   enough; sending data out alone is not enough; the *combination* is
-   the signal.
-5. **Hides what it does from a reader.** Source that a maintainer cannot
-   reasonably review is itself a smell. Flag any pattern where opaque
-   data flows into an execution sink: large encoded / compressed / hex
-   strings (decoded via `base64`, `codecs`, `zlib`, `lzma`,
-   `bytes.fromhex`, or any future equivalent) passed to `exec` / `eval`
-   / `compile` / `__import__`; identifiers assembled at runtime from
-   non-literal pieces and then imported; or any other construct whose
-   evident purpose is to make the real behavior unreadable.
-6. **Hard-coded network destination that does not match the package's
-   stated purpose.** Flag outbound URLs or hosts that do not appear in
-   the package's PyPI `project_urls` and have no obvious connection to
-   its function — especially short-link / paste services, ephemeral
-   tunnels, raw IP addresses, or non-default ports against unknown hosts
-   — and any network call originating from module top-level /
-   `__init__.py` (which executes on import for every consumer).
+   pipelines (`curl … | sh`), or a file later imported / executed — plus
+   package-manager calls (`pip install` / `download`) with args resolved
+   from network responses at runtime.
+3. **Build / install-time code is non-deterministic or non-local.**
+   `setup.py`, `setup.cfg` `cmdclass`, custom PEP 517 backends, and other
+   build hooks must only compile and copy files shipped in the sdist. Flag
+   build-stage code that opens a socket, shells out, writes outside the
+   build / install tree, or pulls a build backend not on PyPI (Git URL /
+   local path).
+4. **Reads secrets and combines them with an egress path.** The shape is
+   *secret-source → outbound-channel*. Flag code that reads credential
+   material (token-like env vars, credential files under the user's home,
+   OS keychain APIs, browser-profile dirs, HA token stores) **and** in the
+   same path sends it to a destination the package needn't talk to.
+   Reading or sending alone is not enough — the *combination* is the signal.
+5. **Hides what it does.** Flag opaque data flowing into an execution
+   sink: large encoded / compressed / hex strings (`base64`, `codecs`,
+   `zlib`, `lzma`, `bytes.fromhex`, or any equivalent) passed to `exec` /
+   `eval` / `compile` / `__import__`; identifiers assembled at runtime
+   then imported; or any construct whose evident purpose is to make the
+   behavior unreadable.
+6. **Hard-coded network destination off-purpose.** Flag outbound URLs or
+   hosts absent from the package's PyPI `project_urls` with no obvious
+   connection to its function — short-link / paste services, ephemeral
+   tunnels, raw IPs, non-default ports against unknown hosts — and any
+   network call at module top-level / `__init__.py` (runs on import for
+   every consumer).
 
-If a behavior is clearly out of scope for the package's stated purpose
-but does not fit any of the categories above, flag it under whichever
-category fits best and explain in the finding. The list of categories is
-meant to guide reasoning, not bound it.
+A clearly out-of-scope behavior that fits none of the above: flag under
+the closest category and explain. The categories guide reasoning, not bound it.
 
 **Verdict**
 
-Aggregate the findings for the package and produce one of:
+Aggregate the findings into one of:
 
 - `☑️ Baseline scan found nothing obvious in <list of inspected files>.
   This is not a security review — only the cheap checks were run.`
-  Use `☑️` (**not** `✅`) so a passing scan is not read as an
-  endorsement.
-- `⚠️ <one-line summary>` when patterns were found that have plausible
-  legitimate uses.
-  Include the file path, line number, snippet, and permalink for each
-  match in the bullet's detail so a human reviewer can decide.
-- `❌ <one-line summary>` for patterns with no legitimate explanation
-  for a Python dependency, for example: install-time network execution,
-  decode-and-exec of opaque blobs, reads of `secrets.yaml` or
-  `.storage/auth*`, or env-var / token exfiltration to an external host.
-  Include the same file path / line / snippet / permalink detail.
+  Use `☑️` (**not** `✅`) so a passing scan is not read as an endorsement.
+- `⚠️ <one-line summary>` — patterns with plausible legitimate uses;
+  include path / line / snippet / permalink per match for the reviewer.
+- `❌ <one-line summary>` — patterns with no legitimate explanation
+  (install-time network execution, decode-and-exec of opaque blobs, reads
+  of `secrets.yaml` / `.storage/auth*`, token exfiltration to an external
+  host); same detail.
 
-Be precise. False positives are expected — when in doubt, prefer `⚠️`
-with context over `❌`. This check is informational and never blocks the
+Be precise. False positives are expected — when in doubt prefer `⚠️` with
+context over `❌`. This check is informational and never blocks the
 workflow on its own; a human reviewer decides whether to merge.
 
 ## Notes
@@ -408,8 +368,3 @@ workflow on its own; a human reviewer decides whether to merge.
 - If `/tmp/gh-aw/deterministic/results.json` is missing (upstream
   cancelled/failed), emit nothing — the post-step verification is
   gated and won't complain.
-- The `security` check is a **baseline** scan, not a full security
-  review. It is informational only — it surfaces findings for a human
-  reviewer but never blocks the workflow on its own. The success icon
-  is intentionally `☑️` (and *never* `✅`) so a passing scan does not
-  read as an endorsement: it only means nothing obvious stood out.
