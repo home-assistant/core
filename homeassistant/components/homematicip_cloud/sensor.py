@@ -23,7 +23,6 @@ from homematicip.device import (
     LightSensor,
     MotionDetectorIndoor,
     MotionDetectorOutdoor,
-    MotionDetectorPushButton,
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
@@ -217,9 +216,10 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
         MotionDetectorOutdoor: lambda device: [
             HomematicipIlluminanceSensor(hap, device),
         ],
-        MotionDetectorPushButton: lambda device: [
-            HomematicipIlluminanceSensor(hap, device),
-        ],
+        # MotionDetectorPushButton is a subclass of MotionDetectorOutdoor, so
+        # the isinstance dispatch above already covers it. A separate entry
+        # would register HomematicipIlluminanceSensor twice and trigger a
+        # unique_id collision.
         PresenceDetectorIndoor: lambda device: [
             HomematicipIlluminanceSensor(hap, device),
         ],

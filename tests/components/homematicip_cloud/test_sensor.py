@@ -1,6 +1,7 @@
 """Tests for HomematicIP Cloud sensor."""
 
 from homematicip.base.enums import ValveState, WindowState
+import pytest
 
 from homeassistant.components.homematicip_cloud import DOMAIN
 from homeassistant.components.homematicip_cloud.entity import (
@@ -338,6 +339,33 @@ async def test_hmip_illuminance_sensor2(
     assert ha_state.attributes[ATTR_CURRENT_ILLUMINATION] == 785.2
     assert ha_state.attributes[ATTR_HIGHEST_ILLUMINATION] == 837.1
     assert ha_state.attributes[ATTR_LOWEST_ILLUMINATION] == 785.2
+
+
+async def test_hmip_motion_detector_push_button_single_illuminance(
+    hass: HomeAssistant,
+    default_mock_hap_factory: HomeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test MotionDetectorPushButton produces exactly one illuminance sensor."""
+    # MotionDetectorPushButton subclasses MotionDetectorOutdoor; an isinstance
+    # dispatch loop would otherwise register HomematicipIlluminanceSensor twice.
+    # HA's entity platform silently drops the second one with an error log, so
+    # the bug is observable only via the duplicate-unique-id error message.
+    await default_mock_hap_factory.async_get_mock_hap(
+        test_devices=["Bewegungsmelder für 55er Rahmen – innen"]
+    )
+    illuminance_states = [
+        state
+        for state in hass.states.async_all("sensor")
+        if state.entity_id.endswith("_illuminance")
+    ]
+    assert len(illuminance_states) == 1
+    assert (
+        illuminance_states[0].entity_id
+        == "sensor.bewegungsmelder_fur_55er_rahmen_innen_illuminance"
+    )
+    assert illuminance_states[0].state == "14.2"
+    assert "does not generate unique IDs" not in caplog.text
 
 
 async def test_hmip_windspeed_sensor(
