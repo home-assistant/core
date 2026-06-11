@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, history, statistics
+from homeassistant.components.recorder import DOMAIN, Recorder, history, statistics
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import (
     StatisticMeanType,
@@ -4471,13 +4471,13 @@ async def test_get_statistics_service(
     await async_recorder_block_till_done(hass)
 
     result = await hass.services.async_call(
-        "recorder", "get_statistics", service_args, return_response=True, blocking=True
+        DOMAIN, "get_statistics", service_args, return_response=True, blocking=True
     )
     assert result == expected_result
 
     with pytest.raises(exceptions.Unauthorized):
         result = await hass.services.async_call(
-            "recorder",
+            DOMAIN,
             "get_statistics",
             service_args,
             return_response=True,
@@ -4538,7 +4538,7 @@ async def test_get_statistics_service_missing_mandatory_keys(
         match=re.escape(f"required key not provided @ data['{missing_key}']"),
     ):
         await hass.services.async_call(
-            "recorder",
+            DOMAIN,
             "get_statistics",
             service_args,
             return_response=True,

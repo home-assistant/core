@@ -457,7 +457,14 @@ class MatterLight(MatterEntity, LightEntity):
             self._transitions_disabled = True
             LOGGER.warning(
                 "Detected a device that has been reported to have firmware issues "
-                "with light transitions. Transitions will be disabled for this light"
+                "with light transitions. Transitions will be disabled for this "
+                "light: %s %s (vendor_id: %s, product_id: %s, hw: %s, sw: %s)",
+                device_info.vendorName,
+                device_info.productName,
+                device_info.vendorID,
+                device_info.productID,
+                device_info.hardwareVersionString,
+                device_info.softwareVersionString,
             )
 
 

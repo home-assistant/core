@@ -5,7 +5,6 @@ from unittest.mock import ANY, AsyncMock, patch
 from duco_connectivity import (
     BoardInfo,
     DiagComponent,
-    DiagStatus,
     DucoConnectionError,
     DucoError,
     DucoResponseError,
@@ -96,6 +95,29 @@ async def test_setup_entry_success(
 ) -> None:
     """Test successful setup of the Duco integration."""
     assert init_integration.state is ConfigEntryState.LOADED
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(DucoError("lan info error"), id="duco_error"),
+        pytest.param(DucoConnectionError("lan info offline"), id="connection_error"),
+    ],
+)
+async def test_setup_entry_ignores_lan_info_failures(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    exception: Exception,
+) -> None:
+    """Test setup succeeds when the supplemental LAN info endpoint fails."""
+    mock_duco_client.async_get_lan_info.side_effect = exception
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
 @pytest.mark.parametrize("unsupported_board_info", UNSUPPORTED_BOARD_INFOS)
@@ -196,7 +218,7 @@ async def test_setup_entry_creates_http_client(
         mock_client_class.return_value.async_get_lan_info.return_value = mock_lan_info
         mock_client_class.return_value.async_get_nodes.return_value = mock_nodes
         mock_client_class.return_value.async_get_diagnostics.return_value = [
-            DiagComponent(component="Ventilation", status=DiagStatus.OK)
+            DiagComponent(component="Ventilation", status="Ok")
         ]
         (
             mock_client_class.return_value.async_get_write_requests_remaining
