@@ -10,20 +10,10 @@ OAUTH2_CLIENT_ID = "ha-abrp-integration"
 # usual ``openid``). ``offline_access`` is required to receive a refresh token.
 OAUTH2_SCOPES: list[str] = ["oidc", "profile", "email", "offline_access"]
 
-ABRP_API_BASE = "https://api.iternio.com/1"
-# SSE telemetry. Probe-confirmed base is ``/2`` (not ``/v2``); the
-# swagger ``servers.url`` agrees.
-ABRP_API_V2_BASE = "https://api.iternio.com/2"
-ABRP_V2_TLM_ENDPOINT = "tlm"
-# v2 splits auth across two headers: the static partner key in ``X-API-KEY``
-# and the per-user session (OAuth ``access_token``) in ``X-ABRP-SESSION``.
-HEADER_API_KEY = "X-API-KEY"
-HEADER_ABRP_SESSION = "X-ABRP-SESSION"
-
 # Partner API key issued by ABRP (Iternio) for the Home Assistant integration.
+# Passed to ``aioabrp.AbrpClient`` / ``aioabrp.TelemetryStream`` as the API
+# key; all endpoint/header/base-URL wiring now lives in the library.
 ABRP_APP_KEY = "97b4bb90-b8f5-413b-9f28-09789a3777ed"
-
-ENDPOINT_GET_TLM = "session/get_tlm"
 
 # Config entry key holding the list of tracked vehicle IDs.
 #
