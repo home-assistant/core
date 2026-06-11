@@ -230,7 +230,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             _LOGGER.debug("Updating item %s with new name %s", item.uid, item.summary)
 
             if has_completed_changed:
-                # Both has changed -> Item version increases, otherwise rejected by API
+                # Both have changed -> Item version increases, otherwise rejected by API
                 version = existing_item.version + 1
             else:
                 version = existing_item.version
