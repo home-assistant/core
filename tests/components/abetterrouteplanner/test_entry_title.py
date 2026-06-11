@@ -21,14 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.setup import async_setup_component
 
-from .conftest import (
-    ABRP_GET_TLM_URL,
-    MOCK_VEHICLE_ID,
-    USER_SUB,
-    build_garage_response,
-    build_vehicle_record,
-    complete_oauth_callback,
-)
+from .conftest import MOCK_VEHICLE_ID, USER_SUB, complete_oauth_callback
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -53,6 +46,11 @@ def _build_id_token_with_payload(payload: dict[str, Any]) -> str:
     The integration only inspects the payload (the OAuth code exchange already
     authenticated the issuer over TLS), so the header and signature are opaque
     placeholders.  Tests use this to drive the JWT-claims preference chain.
+
+    ``conftest.build_id_token`` only supports ``sub`` + optional ``email``,
+    but these tests need to inject a ``name`` claim too, so the payload is
+    built inline here (the conftest contract explicitly allows building the
+    token inline in the test for ``name``-claim cases).
     """
     payload_b64 = (
         base64.urlsafe_b64encode(json.dumps(payload).encode()).rstrip(b"=").decode()
@@ -104,7 +102,9 @@ def _queue_token_post(aioclient_mock: AiohttpClientMocker, id_token: str) -> Non
         ),
     ],
 )
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_setup_entry", "mock_abrp_client"
+)
 async def test_entry_title_from_claims(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -123,7 +123,6 @@ async def test_entry_title_from_claims(
     )
     await complete_oauth_callback(hass, hass_client_no_auth, result["flow_id"])
     _queue_token_post(aioclient_mock, _build_id_token_with_payload(payload))
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response())
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -229,7 +228,9 @@ async def test_reauth_does_not_retitle_existing_entry(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("current_request_with_host", "mock_setup_entry")
+@pytest.mark.usefixtures(
+    "current_request_with_host", "mock_setup_entry", "mock_abrp_client"
+)
 async def test_reconfigure_does_not_retitle_existing_entry(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -255,7 +256,7 @@ async def test_reconfigure_does_not_retitle_existing_entry(
         data={
             "auth_implementation": DOMAIN,
             "token": token_entry,
-            "vehicle_ids": ["1"],
+            "vehicle_ids": [str(MOCK_VEHICLE_ID)],
         },
     )
     config_entry.add_to_hass(hass)
@@ -269,19 +270,13 @@ async def test_reconfigure_does_not_retitle_existing_entry(
             {"sub": USER_SUB, "name": "Different Name", "email": "diff@e.com"}
         ),
     )
-    aioclient_mock.post(
-        ABRP_GET_TLM_URL,
-        json=build_garage_response(
-            [build_vehicle_record(vehicle_id=1, name="Vehicle 1")]
-        ),
-    )
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pick_vehicles"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"vehicle_ids": ["1"]}
+        result["flow_id"], {"vehicle_ids": [str(MOCK_VEHICLE_ID)]}
     )
 
     assert result["type"] is FlowResultType.ABORT

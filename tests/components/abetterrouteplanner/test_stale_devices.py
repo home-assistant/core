@@ -12,7 +12,8 @@ Exercises:
   vehicles and after ``_ABSENCE_THRESHOLD`` (= 2) consecutive misses for
   ABRP-side absent ones.  A ``misses: dict[int, int]`` closure accumulator
   tracks the consecutive count and is cleared whenever the vehicle
-  re-appears.
+  re-appears.  Removal also calls ``telemetry_coordinator.forget_vehicle``
+  to sweep the per-vehicle telemetry surfaces.
 * The listener runs once eagerly at setup-time (before platform-forward) and
   is registered against ``garage_coordinator.async_add_listener`` for
   steady-state polls.
@@ -24,20 +25,21 @@ Behavioural assertions only — no direct ``misses`` peek. The counter-reset
 oracle drives sequential polls and observes the device-survives /
 device-removed transitions across them.
 
-Design note: like ``test_vehicle_rename.py``, this file avoids ``freezer``
-and drives the listener via ``coordinator.async_refresh()`` directly.  The
-0.5 s real-time pre-warm is accepted; patching ``asyncio.sleep`` globally
-breaks the SSE retry backoff.
+The garage is varied by reassigning ``mock_abrp_client.return_value`` to a
+new ``list[AbrpVehicle]`` and driving ``garage_coordinator.async_refresh()``;
+push telemetry is driven through ``fake_stream.fire_frame`` (the conftest
+synchronous ``TelemetryStream`` double, which also collapses the setup
+pre-warm sleep to 0).
 """
 
 from typing import Any
 from unittest.mock import AsyncMock
 
+from aioabrp import AbrpVehicle, Metric
 import pytest
 
 import homeassistant.components.abetterrouteplanner as integration_module
 from homeassistant.components.abetterrouteplanner import AbrpData
-from homeassistant.components.abetterrouteplanner.api import AbrpVehicle
 from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -52,6 +54,7 @@ from .conftest import (
     MOCK_VEHICLE_NAME,
     MOCK_VEHICLE_NAME_2,
     SENSOR_TEST_SUB,
+    build_metric_value,
 )
 
 from tests.common import MockConfigEntry
@@ -80,11 +83,7 @@ _VEHICLE_B = _make_vehicle(MOCK_VEHICLE_ID_2, MOCK_VEHICLE_NAME_2, MOCK_VEHICLE_
 async def _setup_integration(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> MockConfigEntry:
-    """Register the integration's OAuth implementation and set up the entry.
-
-    Accepts the 0.5 s real-time pre-warm sleep — see
-    ``project_abrp_asyncio_sleep_test_patching`` for the rationale.
-    """
+    """Register the integration's OAuth implementation and set up the entry."""
     assert await async_setup_component(hass, "auth", {})
     assert await async_setup_component(hass, DOMAIN, {})
     entry.add_to_hass(hass)
@@ -97,7 +96,8 @@ async def _poll(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Trigger one garage-coordinator refresh and drain the event bus.
 
     Directly calls ``async_refresh()`` on the coordinator so tests do not
-    need ``freezer`` (which would deadlock the 0.5 s pre-warm sleep).
+    need ``freezer`` (which would deadlock if the pre-warm sleep were not
+    collapsed by ``fake_stream``).
     """
     runtime_data: AbrpData = entry.runtime_data
     await runtime_data.garage_coordinator.async_refresh()
@@ -122,7 +122,7 @@ def _two_vehicle_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_user_deselect_removes_device_at_setup(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -169,7 +169,7 @@ async def test_user_deselect_removes_device_at_setup(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 @pytest.mark.parametrize(
     ("absent_poll_count", "expected_present"),
     [
@@ -214,11 +214,88 @@ async def test_abrp_side_deletion_removes_after_threshold(
 
 
 # ---------------------------------------------------------------------------
+# removal sweeps the per-vehicle telemetry surfaces via forget_vehicle
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("fake_stream")
+async def test_threshold_removal_forgets_telemetry_surfaces(
+    hass: HomeAssistant,
+    token_entry: dict[str, Any],
+    mock_abrp_client: AsyncMock,
+    device_registry: dr.DeviceRegistry,
+    fake_stream: Any,
+) -> None:
+    """Threshold removal calls ``forget_vehicle`` and clears its 4 surfaces.
+
+    ``_remove_stale_devices`` is wired to
+    ``telemetry_coordinator.forget_vehicle(vid)`` on every removal path so the
+    in-memory telemetry maps stay honest with the device registry. This test
+    drives a real telemetry frame into the coordinator for vehicle B first (so
+    all four surfaces — ``data``, ``last_reported_at``, ``last_provider`` and
+    the ``(vid, *)`` ``_presence_seen`` entries — are populated), then deletes B
+    upstream and lets the listener fire to the threshold. After removal every
+    surface for B must be cleared, while A's surfaces are untouched.
+
+    Asserting the surface clearance (rather than mocking ``forget_vehicle``) is
+    the behavioural proof that the removal path actually swept the telemetry
+    state and not merely the device registry row.
+    """
+    entry = _two_vehicle_entry(token_entry)
+    mock_abrp_client.return_value = [_VEHICLE_A, _VEHICLE_B]
+    await _setup_integration(hass, entry)
+
+    runtime_data: AbrpData = entry.runtime_data
+    telemetry = runtime_data.telemetry_coordinator
+
+    # Populate all four per-vehicle surfaces for A and B via push frames. A
+    # provider string is supplied so ``last_provider`` is non-empty, and the
+    # metric is registered as a presence predicate so the frame records a
+    # ``(vid, Metric)`` entry in ``_presence_seen``.
+    telemetry.register_presence_predicates([Metric.SOC])
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID,
+        {Metric.SOC: build_metric_value(55.0, provider="tesla")},
+    )
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID_2,
+        {Metric.SOC: build_metric_value(42.0, provider="tesla")},
+    )
+
+    # Pre-condition: B is present across all four surfaces.
+    assert MOCK_VEHICLE_ID_2 in telemetry.data
+    assert MOCK_VEHICLE_ID_2 in telemetry.last_reported_at
+    assert MOCK_VEHICLE_ID_2 in telemetry.last_provider
+    assert (MOCK_VEHICLE_ID_2, Metric.SOC) in telemetry._presence_seen
+
+    scope_b = _device_scope(entry, MOCK_VEHICLE_ID_2)
+    assert device_registry.async_get_device(identifiers={(DOMAIN, scope_b)}) is not None
+
+    # B vanishes upstream; drive to the threshold so the device is removed.
+    mock_abrp_client.return_value = [_VEHICLE_A]
+    await _poll(hass, entry)
+    await _poll(hass, entry)
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, scope_b)}) is None
+
+    # All four B surfaces swept; A's surfaces untouched.
+    assert MOCK_VEHICLE_ID_2 not in telemetry.data
+    assert MOCK_VEHICLE_ID_2 not in telemetry.last_reported_at
+    assert MOCK_VEHICLE_ID_2 not in telemetry.last_provider
+    assert not any(pair[0] == MOCK_VEHICLE_ID_2 for pair in telemetry._presence_seen)
+
+    assert MOCK_VEHICLE_ID in telemetry.data
+    assert MOCK_VEHICLE_ID in telemetry.last_reported_at
+    assert MOCK_VEHICLE_ID in telemetry.last_provider
+    assert (MOCK_VEHICLE_ID, Metric.SOC) in telemetry._presence_seen
+
+
+# ---------------------------------------------------------------------------
 # transient absence → device stays, counter resets
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_transient_absence_does_not_remove(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -264,7 +341,7 @@ async def test_transient_absence_does_not_remove(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_manually_renamed_device_still_removed(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -295,10 +372,9 @@ async def test_manually_renamed_device_still_removed(
     device_b = device_registry.async_get_device(identifiers={(DOMAIN, scope_b)})
     assert device_b is not None
     device_registry.async_update_device(device_b.id, name_by_user="My Daily Driver")
-    assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, scope_b)}).name_by_user
-        == "My Daily Driver"
-    )
+    renamed = device_registry.async_get_device(identifiers={(DOMAIN, scope_b)})
+    assert renamed is not None
+    assert renamed.name_by_user == "My Daily Driver"
 
     mock_abrp_client.return_value = [_VEHICLE_A]
     await _poll(hass, entry)
@@ -312,7 +388,7 @@ async def test_manually_renamed_device_still_removed(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_remove_config_entry_device_returns_true(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -358,7 +434,7 @@ async def test_remove_config_entry_device_returns_true(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_counter_resets_on_reappearance(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -415,7 +491,7 @@ async def test_counter_resets_on_reappearance(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_non_matching_identifier_device_left_alone(
     hass: HomeAssistant,
     token_entry: dict[str, Any],

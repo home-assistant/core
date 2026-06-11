@@ -34,8 +34,14 @@ Design notes
   the entity-platform topology.
 * Like ``test_stale_devices.py`` and ``test_vehicle_rename.py``, we avoid
   ``freezer`` and drive listener fires via ``coordinator.async_refresh()``
-  directly; the 0.5 s real-time pre-warm is accepted because patching
-  ``asyncio.sleep`` globally would short-circuit the SSE retry backoff.
+  directly. The garage is varied across polls by reassigning
+  ``mock_abrp_client.return_value`` (the patched
+  ``aioabrp.AbrpClient.async_get_vehicles``) between refreshes.
+* Every test completes setup with a non-empty ``CONF_VEHICLE_IDS``, so each
+  uses the ``fake_stream`` fixture: it patches the integration's
+  ``TelemetryStream`` with a synchronous no-op double and collapses the setup
+  pre-warm sleep to 0. The fake-stream class persists across the reload patch
+  context, so a reload that re-runs setup reconstructs against it cleanly.
 """
 
 from collections.abc import Iterator
@@ -43,10 +49,10 @@ from contextlib import contextmanager
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from aioabrp import AbrpVehicle
 import pytest
 
 from homeassistant.components.abetterrouteplanner import AbrpData, const as abrp_const
-from homeassistant.components.abetterrouteplanner.api import AbrpVehicle
 from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -112,8 +118,8 @@ async def _setup_integration(
 ) -> MockConfigEntry:
     """Register the integration's OAuth implementation and set up the entry.
 
-    Accepts the 0.5 s real-time pre-warm sleep — see
-    ``project_abrp_asyncio_sleep_test_patching`` for the rationale.
+    The ``fake_stream`` fixture collapses the setup pre-warm sleep to 0, so
+    setup returns without the real-time wait.
     """
     assert await async_setup_component(hass, "auth", {})
     assert await async_setup_component(hass, DOMAIN, {})
@@ -182,7 +188,7 @@ def _spy_schedule_reload(hass: HomeAssistant) -> Iterator[MagicMock]:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_fresh_install_no_reload_on_first_listener_fire(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -227,7 +233,7 @@ async def test_fresh_install_no_reload_on_first_listener_fire(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 @pytest.mark.parametrize(
     ("vehicle_ids", "expected_known"),
     [
@@ -286,7 +292,7 @@ async def test_migration_seeds_known_to_live_garage(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_migration_idempotent_when_known_already_present(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -327,7 +333,7 @@ async def test_migration_idempotent_when_known_already_present(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_new_vehicle_auto_added_and_reload_scheduled(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -374,7 +380,7 @@ async def test_new_vehicle_auto_added_and_reload_scheduled(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_multiple_new_vehicles_added_in_single_reload(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -422,7 +428,7 @@ async def test_multiple_new_vehicles_added_in_single_reload(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_user_declined_vehicle_does_not_re_add(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -476,7 +482,7 @@ async def test_user_declined_vehicle_does_not_re_add(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_disappear_then_reappear_no_reload(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -544,7 +550,7 @@ async def test_disappear_then_reappear_no_reload(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_re_appearance_after_stale_removal_schedules_reload(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -604,7 +610,7 @@ async def test_re_appearance_after_stale_removal_schedules_reload(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_three_sibling_listeners_registered(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -666,7 +672,7 @@ async def test_three_sibling_listeners_registered(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 @pytest.mark.parametrize(
     ("poll1_vehicles", "poll2_vehicles", "expected_final_set"),
     [
@@ -756,7 +762,7 @@ async def test_reload_coalesces_back_to_back_polls(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_empty_live_garage_does_not_mass_decline(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -805,7 +811,7 @@ async def test_empty_live_garage_does_not_mass_decline(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_deferred_migration_seeds_on_first_non_empty_poll(
     hass: HomeAssistant,
     token_entry: dict[str, Any],

@@ -9,36 +9,42 @@ Surface under test:
   ``CONF_VEHICLE_IDS`` are dropped silently; selected ``vehicle_id`` values
   missing from the coordinator payload log a warning and skip (no
   entity, no device, no repair issue).
+
+Telemetry data model
+--------------------
+The coordinator surfaces typed library state, not raw SSE wire frames:
+``coordinator.data`` is ``dict[int, dict[Metric, MetricValue]]``. Tests drive
+it through the two committed seams in ``conftest.py``:
+
+* ``mock_abrp_client.seed_responses[vid] = {Metric.X: build_metric_value(...)}``
+  for the setup-time seed snapshot, and
+* ``fake_stream.fire_frame(vid, {Metric.X: build_metric_value(...)})`` for a
+  post-setup push frame (the dispatcher / lazy-create path).
+
+Wire-shape parsing, per-metric delta merge, null-leaf retention, and the raw
+``chargingState`` member mapping are owned by ``aioabrp`` and covered by the
+library's own suite — the integration test only asserts behaviour on the typed
+``MetricValue`` boundary.
 """
 
-from collections.abc import Callable, Generator
 from datetime import UTC, datetime
 import json
 import logging
 from pathlib import Path
-from typing import Any, get_args
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aioabrp import AbrpVehicle, CatalogEntry, ChargingState, Metric
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import abetterrouteplanner as abrp_module
-from homeassistant.components.abetterrouteplanner import AbrpData
-from homeassistant.components.abetterrouteplanner._sensor_value_fns import (
-    _CHARGING_STATE_OPTIONS,
-    _charging_state,
-    _power_w,
-    _soc_percent,
-    _unknown_charging_states_seen,
-    _voltage_v,
-)
-from homeassistant.components.abetterrouteplanner._telemetry_models import (
-    ChargingStateValue,
-)
-from homeassistant.components.abetterrouteplanner.api import AbrpVehicle, CatalogEntry
 from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
-from homeassistant.components.abetterrouteplanner.sensor import SENSORS_BY_KEY
+from homeassistant.components.abetterrouteplanner.sensor import (
+    CHARGING_STATE_OPTIONS,
+    SENSORS_BY_METRIC,
+)
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
@@ -51,7 +57,7 @@ from .conftest import (
     MOCK_VEHICLE_ID_2,
     MOCK_VEHICLE_MODEL,
     SENSOR_TEST_SUB,
-    build_telemetry_frame,
+    build_metric_value,
 )
 
 from tests.common import (
@@ -72,49 +78,28 @@ CHARGING_STATE_UNIQUE_ID = f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_charging_state"
 _INTEGRATION_DIR = Path(abrp_module.__file__).parent
 
 
-@pytest.fixture(autouse=True)
-def _isolate_unknown_charging_states() -> Generator[None]:
-    """Keep the module-level ``_unknown_charging_states_seen`` set test-local.
-
-    ``_charging_state`` records every unrecognized wire member in a
-    process-global set to dedup its once-per-process WARNING. Several tests
-    here feed it unrecognized members (``"FOO"`` in the null-safety
-    parametrize, ``"WARP_DRIVE"`` in the warn-once test); without isolation
-    those leak across tests and make the warn-once dedup assertion
-    order-dependent. Snapshot the set before each test and restore it after
-    so no test pollutes the global.
-    """
-    snapshot = set(_unknown_charging_states_seen)
-    yield
-    _unknown_charging_states_seen.clear()
-    _unknown_charging_states_seen.update(snapshot)
-
-
 async def _setup_integration(
     hass: HomeAssistant, entry: MockConfigEntry
 ) -> MockConfigEntry:
     """Register the integration's OAuth implementation and set up the entry.
 
-    Patches the SSE pre-warm constant to ``0`` so tests neither pay the
-    wall-clock cost nor deadlock under freezegun's monotonic patch.
-    Patching the constant (rather than module-globally mocking
-    ``asyncio.sleep``) keeps the SSE retry backoff loop using a real
-    sleep — see ``project_abrp_asyncio_sleep_test_patching`` memory.
+    Tests that complete setup with a non-empty ``CONF_VEHICLE_IDS`` selection
+    MUST also request the ``fake_stream`` fixture: a real
+    :class:`aioabrp.TelemetryStream` would otherwise be constructed and try to
+    open an SSE connection. ``fake_stream`` patches the stream class with a
+    synchronous test double AND collapses the pre-warm window to ``0``, so no
+    additional ``PREWARM_WINDOW_SECONDS`` patch is needed here.
     """
     assert await async_setup_component(hass, "auth", {})
     assert await async_setup_component(hass, DOMAIN, {})
     entry.add_to_hass(hass)
-    with patch(
-        "homeassistant.components.abetterrouteplanner.PREWARM_WINDOW_SECONDS",
-        0,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     return entry
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_unselected_vehicle_absent_from_registries(
     hass: HomeAssistant,
@@ -155,7 +140,7 @@ async def test_unselected_vehicle_absent_from_registries(
         assert unselected_marker not in registry_entry.unique_id
 
 
-@pytest.mark.usefixtures("mock_abrp_client")
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_selected_vehicle_missing_from_garage_logs_and_skips(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -194,61 +179,57 @@ async def test_selected_vehicle_missing_from_garage_logs_and_skips(
 # Telemetry sensor tests ------------------------------------------------------
 
 
-def _push_telemetry_frame(entry: MockConfigEntry, frame: dict[str, Any]) -> None:
-    """Push a synthesized frame into the telemetry coordinator's apply_frame.
-
-    Tests mock at the *coordinator boundary*, not at raw SSE bytes.
-    ``runtime_data.telemetry_coordinator.apply_frame`` is the public seam.
-    """
-    runtime_data: AbrpData = entry.runtime_data
-    runtime_data.telemetry_coordinator.apply_frame(frame)
-
-
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_telemetry_sensors_snapshot(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    fake_stream: Any,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Entity registry shows all 3 telemetry sensors with scoped unique_ids.
+    """Entity registry + states snapshot for the full per-vehicle metric set.
 
-    The snapshot pins:
+    Every metric is fired for the selected vehicle so all 11 telemetry
+    entities exist (entity creation is lazy — a metric entity surfaces only
+    after its metric first carries a value). The snapshot pins:
 
-    * Three telemetry sensors per selected vehicle (soc / power / voltage)
-      alongside the ``vehicle_model`` diagnostic sensor.
+    * One entity per metric (soc / power / voltage / soe / odometer /
+      calibrated_ref_cons / battery_capacity / soh / range /
+      battery_temperature / charging_state).
     * Each unique_id scoped by ``entry.unique_id`` —
-      ``f"{sub}_{vehicle_id}_{description.key}"`` — so two ABRP accounts
-      on one HA can't collide.
+      ``f"{sub}_{vehicle_id}_{description.key}"`` — so two ABRP accounts on
+      one HA can't collide.
     * ``device_class``, ``state_class``, ``unit_of_measurement``, and
-      ``entity_category`` per the SENSORS registry.
+      ``entity_category`` per the SENSORS registry, plus the rendered native
+      state and the deterministic ``last_reported_at`` stamp.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    # Seed the telemetry coordinator with one full frame so the snapshot
-    # captures the rendered states (not just registry metadata). Freeze
-    # time around the frame push (post-setup) so the new ``last_reported_at``
-    # attribute stamped by ``apply_frame`` is deterministic in the snapshot.
-    # Context-manager scope
-    # — applied AFTER setup completes to avoid the prewarm-sleep deadlock.
+    # Fire one frame carrying EVERY metric so the snapshot captures all
+    # entities with rendered states (not just registry metadata). Freeze
+    # time around the push so the receipt-stamped ``last_reported_at`` is
+    # deterministic. SOC / SOH are PERCENT values on the typed boundary
+    # (the library scales the wire ``frac`` before HA sees it). The
+    # charging-state metric carries a typed ``ChargingState`` member, mapped
+    # to its HA option string by the enum sensor.
     with freeze_time("2026-05-24T12:00:00+00:00"):
-        _push_telemetry_frame(
-            config_entry_with_vehicles,
-            build_telemetry_frame(
-                MOCK_VEHICLE_ID,
-                soc=0.85,
-                power=23300.0,
-                voltage=704.0,
-                # Wake-only telemetry fields land in the snapshot via the
-                # same frame so the registry capture covers both sensors.
-                range_m=100000.0,
-                battery_temp_c=23.7,
-                # ENUM sensor: seeded so its registry shape (device_class=enum,
-                # options, no state_class/unit) is pinned in the snapshot.
-                charging_state="CHARGING_AC",
-            ),
+        fake_stream.fire_frame(
+            MOCK_VEHICLE_ID,
+            {
+                Metric.SOC: build_metric_value(85.0),
+                Metric.POWER: build_metric_value(23300.0),
+                Metric.VOLTAGE: build_metric_value(704.0),
+                Metric.SOE: build_metric_value(68000.0),
+                Metric.ODOMETER: build_metric_value(120000.0),
+                Metric.CALIBRATED_REF_CONS: build_metric_value(175.0),
+                Metric.BATTERY_CAPACITY: build_metric_value(92000.0),
+                Metric.SOH: build_metric_value(98.0),
+                Metric.RANGE: build_metric_value(100000.0),
+                Metric.BATTERY_TEMPERATURE: build_metric_value(23.7),
+                Metric.CHARGING_STATE: build_metric_value(ChargingState.CHARGING_AC),
+            },
         )
         await hass.async_block_till_done()
 
@@ -258,23 +239,23 @@ async def test_telemetry_sensors_snapshot(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
-async def test_soc_scaled_to_percent_with_one_dp(
+async def test_soc_native_value_is_percent(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
 ) -> None:
-    """SoC ``frac`` field is multiplied by 100 and rendered with 1 decimal place.
+    """SoC surfaces the typed PERCENT ``MetricValue.value`` with one decimal.
 
-    Computed shape: ``round(d["soc"]["frac"] * 100, 1)``.
-    ``0.857`` → ``85.7`` (one dp).
+    The library scales the wire ``frac`` to a percentage before HA sees it,
+    so the sensor's ``native_value`` is the float percent directly. With
+    ``suggested_display_precision=1`` a ``85.7`` percent reading renders as
+    ``"85.7"``.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        build_telemetry_frame(MOCK_VEHICLE_ID, soc=0.857),
-    )
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.SOC: build_metric_value(85.7)})
     await hass.async_block_till_done()
 
     state = hass.states.get(SOC_ENTITY_ID)
@@ -282,104 +263,69 @@ async def test_soc_scaled_to_percent_with_one_dp(
     assert state.state == "85.7"
 
 
-@pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
-)
-async def test_partial_update_merge_retains_prior_metrics(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
+async def test_seeded_metric_surfaces_at_setup(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: AsyncMock,
 ) -> None:
-    """Per-metric frames merge; unchanged metrics keep their previous state.
+    """A metric present in the setup seed snapshot creates its entity eagerly.
 
-    Wire frames are deltas: a power-only event must not zero out the
-    previously-received soc. This is observable at the *entity* layer —
-    after pushing a soc-only frame the soc sensor reflects it, then a
-    power-only frame leaves the soc state unchanged.
+    The seed path (``mock_abrp_client.seed_responses``) populates
+    ``coordinator.data`` before the platform forwards, so the platform's
+    seed-frame scan creates the entity at setup time without a post-setup
+    push frame. SOC is a PERCENT value on the typed boundary, so a seeded
+    ``42.0`` renders as ``"42.0"``.
     """
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {
+        Metric.SOC: build_metric_value(42.0)
+    }
+
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        build_telemetry_frame(MOCK_VEHICLE_ID, soc=0.5),
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(SOC_ENTITY_ID).state == "50.0"
-
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        build_telemetry_frame(MOCK_VEHICLE_ID, power=12000.0),
-    )
-    await hass.async_block_till_done()
-
-    assert hass.states.get(SOC_ENTITY_ID).state == "50.0"
-    assert hass.states.get(POWER_ENTITY_ID).state == "12000.0"
-
-
-# An absent metric produces NO entity (not an entity with state ``unknown``).
-# That "no entity created" behaviour is pinned in ``test_lazy_sensors.py``;
-# the underlying ``apply_frame`` null-filter semantics are pinned at the
-# coordinator layer in ``test_coordinator.py::test_apply_frame_skips_*``.
+    state = hass.states.get(SOC_ENTITY_ID)
+    assert state is not None
+    assert state.state == "42.0"
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
-async def test_partial_update_retains_prior_on_null_frame(
+async def test_available_follows_native_value(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
 ) -> None:
-    """Regression: a null leaf in a delta must not clobber the prior good value.
+    """``available`` tracks ``native_value is not None``.
 
-    Bug walk-through: the user's screenshot showed all live sensors greyed
-    out after some upstream events. Root cause: ``apply_frame`` shallow-
-    overlays the frame, so a delta containing ``{"power": null}`` overwrites
-    the previously-merged ``{"power": {"w": 50000.0}}`` with ``None`` —
-    ``value_fn`` then returns ``None`` and the sensor flips unavailable.
-
-    Fix invariant: a null leaf in a frame means "no update for this metric
-    in this delta" — equivalent to the key being omitted entirely. After
-    frame A ``{soc=0.42, power=50000}`` then frame B ``{"power": null}`` the
-    SoC sensor must still read ``"42.0"`` and Power ``"50000.0"``.
+    A live frame carrying a non-None value makes the sensor available; the
+    entity surfaces a rendered state rather than ``unavailable``.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        build_telemetry_frame(MOCK_VEHICLE_ID, soc=0.42, power=50000.0),
-    )
-    await hass.async_block_till_done()
-    assert hass.states.get(SOC_ENTITY_ID).state == "42.0"
-    assert hass.states.get(POWER_ENTITY_ID).state == "50000.0"
-
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        {"vehicleId": MOCK_VEHICLE_ID, "power": None},
-    )
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.POWER: build_metric_value(12000.0)})
     await hass.async_block_till_done()
 
-    assert hass.states.get(SOC_ENTITY_ID).state == "42.0"
-    assert hass.states.get(POWER_ENTITY_ID).state == "50000.0"
+    state = hass.states.get(POWER_ENTITY_ID)
+    assert state is not None
+    assert state.state != "unavailable"
+    assert state.state == "12000.0"
 
 
 # ---------- Range + Battery Temperature sensors ----------------------------
 #
-# * Range: wire key ``estimatedBatteryRange.m`` (meters, float). HA
-#   ``translation_key="range"``. DISTANCE class, MEASUREMENT state_class
-#   (instantaneous level, not accumulating). Native ``m``, suggested unit
-#   ``km`` with display precision 0 — mirrors odometer's unit-conversion
-#   shape so the user reads km on the dashboard while the recorder keeps
-#   the canonical meter scale for unit-flip safety.
-# * Battery Temperature: wire key ``batteryTemperature.c`` (Celsius,
-#   float). HA ``translation_key="battery_temperature"``. TEMPERATURE
-#   class, MEASUREMENT state_class. Display precision 1 — one decimal is
-#   enough to read true thermal fluctuation without fake precision.
+# * Range: HA ``translation_key="range"``. DISTANCE class, MEASUREMENT
+#   state_class (instantaneous level, not accumulating). Native ``m``,
+#   suggested unit ``km`` with display precision 0 — mirrors odometer's
+#   unit-conversion shape so the user reads km on the dashboard while the
+#   recorder keeps the canonical meter scale for unit-flip safety.
+# * Battery Temperature: HA ``translation_key="battery_temperature"``.
+#   TEMPERATURE class, MEASUREMENT state_class. Display precision 1 — one
+#   decimal is enough to read true thermal fluctuation without fake precision.
 #
-# Both inherit ``AbrpRestorableTelemetrySensor``'s RestoreSensor +
-# ``last_reported_at`` semantics automatically — no restoration-specific
-# test surface added here. The wake-only character of these metrics
-# (Range can update mid-drive; Battery Temp may persist during thermal-
-# management cycles) is implicitly covered by the ``test_restore.py``
-# trajectory matrix.
+# The typed ``MetricValue.value`` is the canonical-unit float (meters for
+# range, Celsius for battery temperature); HA's unit conversion handles the
+# km display.
 #
 # Entity_id slug rendering (``has_entity_name=True`` + device name +
 # translation_key):
@@ -406,31 +352,28 @@ BATTERY_TEMP_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_battery_temp
     ],
 )
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_range_sensor_state(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
     range_m: float,
     expected_state: str,
 ) -> None:
-    """Range sensor surfaces ``estimatedBatteryRange.m`` rendered in km.
+    """Range sensor surfaces the meters ``MetricValue.value`` rendered in km.
 
     Native ``METERS`` + ``suggested_unit_of_measurement=KILOMETERS`` +
     ``suggested_display_precision=0`` mirror the existing odometer
-    sensor's wire-meters-to-display-km translation, so the user sees a
-    familiar km value on the dashboard while the LTS pipeline keeps the
-    canonical meter scale for unit-flip / locale conversions.
+    sensor's meters-to-display-km translation, so the user sees a familiar
+    km value on the dashboard while the LTS pipeline keeps the canonical
+    meter scale for unit-flip / locale conversions.
 
-    The entity surfaces on the first frame carrying the field via the
-    ``_estimated_battery_range_m`` value_fn registered in ``SENSORS``.
+    The entity surfaces on the first frame carrying ``Metric.RANGE``.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        build_telemetry_frame(MOCK_VEHICLE_ID, range_m=range_m),
-    )
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.RANGE: build_metric_value(range_m)})
     await hass.async_block_till_done()
 
     state = hass.states.get(RANGE_ENTITY_ID)
@@ -448,125 +391,35 @@ async def test_range_sensor_state(
     ],
 )
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_battery_temperature_sensor_state(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
     temp_c: float,
     expected_state: str,
 ) -> None:
-    """Battery Temperature sensor surfaces ``batteryTemperature.c`` in °C.
+    """Battery Temperature sensor surfaces the Celsius ``MetricValue.value``.
 
     Native unit is Celsius; ``suggested_display_precision=1`` gives one
     decimal place — enough to read meaningful thermal fluctuation
     (charging warm-up, ambient pre-conditioning) without inflating
     noise. Negative values are pinned because winter operation is a
-    real wire shape, not a degenerate one.
+    real shape, not a degenerate one.
 
-    The entity surfaces on the first frame carrying the field via the
-    ``_battery_temperature_c`` value_fn registered in ``SENSORS``.
+    The entity surfaces on the first frame carrying ``Metric.BATTERY_TEMPERATURE``.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        build_telemetry_frame(MOCK_VEHICLE_ID, battery_temp_c=temp_c),
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID, {Metric.BATTERY_TEMPERATURE: build_metric_value(temp_c)}
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(BATTERY_TEMP_ENTITY_ID)
     assert state is not None
     assert state.state == expected_state
-
-
-# ---------- value_fn null-safety unit tests --------------------------------
-#
-# Defense-in-depth for the lazy presence-predicate path. The coordinator
-# calls these directly on every SSE frame so a missing isinstance guard
-# would propagate a TypeError into the SSE consumer task. The full HA setup
-# isn't needed — these are pure functions over the wire shape.
-
-
-@pytest.mark.parametrize(
-    ("value_fn", "frame", "expected"),
-    [
-        # Happy path.
-        pytest.param(_soc_percent, {"soc": {"frac": 0.5}}, 50.0, id="soc_ok"),
-        pytest.param(_power_w, {"power": {"w": 1234.0}}, 1234.0, id="power_ok"),
-        pytest.param(_voltage_v, {"voltage": {"v": 400.0}}, 400.0, id="voltage_ok"),
-        # Key absent — most common upstream-delta case.
-        pytest.param(_soc_percent, {}, None, id="soc_absent"),
-        pytest.param(_power_w, {}, None, id="power_absent"),
-        pytest.param(_voltage_v, {}, None, id="voltage_absent"),
-        # Key present but value is null (upstream sentinel).
-        pytest.param(_soc_percent, {"soc": None}, None, id="soc_null"),
-        pytest.param(_power_w, {"power": None}, None, id="power_null"),
-        pytest.param(_voltage_v, {"voltage": None}, None, id="voltage_null"),
-        # Key present but value is empty dict (no inner field).
-        pytest.param(_soc_percent, {"soc": {}}, None, id="soc_empty"),
-        pytest.param(_power_w, {"power": {}}, None, id="power_empty"),
-        pytest.param(_voltage_v, {"voltage": {}}, None, id="voltage_empty"),
-        # Inner numeric leaf is null — ``null * 100`` would TypeError if the
-        # isinstance guard were absent.
-        pytest.param(_soc_percent, {"soc": {"frac": None}}, None, id="soc_inner_null"),
-        pytest.param(_power_w, {"power": {"w": None}}, None, id="power_inner_null"),
-        pytest.param(
-            _voltage_v, {"voltage": {"v": None}}, None, id="voltage_inner_null"
-        ),
-        # Inner leaf is the wrong type — bool is a subclass of int in Python,
-        # so the explicit ``isinstance(_, bool)`` check matters.
-        pytest.param(_soc_percent, {"soc": {"frac": True}}, None, id="soc_inner_bool"),
-        pytest.param(_power_w, {"power": {"w": "5000"}}, None, id="power_inner_str"),
-        # ENUM charging_state: every degenerate / unrecognized shape maps to
-        # ``None`` (never a raw string — an out-of-``options`` value makes HA
-        # core raise ``ValueError`` at state write).
-        pytest.param(_charging_state, {}, None, id="charging_state_absent"),
-        pytest.param(
-            _charging_state, {"chargingState": None}, None, id="charging_state_null"
-        ),
-        pytest.param(
-            _charging_state, {"chargingState": {}}, None, id="charging_state_empty"
-        ),
-        pytest.param(
-            _charging_state,
-            {"chargingState": {"time": "2026-05-24T12:00:00Z"}},
-            None,
-            id="charging_state_missing_state",
-        ),
-        pytest.param(
-            _charging_state,
-            {"chargingState": {"state": None}},
-            None,
-            id="charging_state_inner_null",
-        ),
-        pytest.param(
-            _charging_state,
-            {"chargingState": {"state": ""}},
-            None,
-            id="charging_state_inner_empty_string",
-        ),
-        pytest.param(
-            _charging_state,
-            {"chargingState": {"state": 123}},
-            None,
-            id="charging_state_inner_int",
-        ),
-        pytest.param(
-            _charging_state,
-            {"chargingState": {"state": "FOO"}},
-            None,
-            id="charging_state_unrecognized_member",
-        ),
-    ],
-)
-def test_value_fn_null_safety(
-    value_fn: Callable[[dict[str, Any]], float | str | None],
-    frame: dict[str, Any],
-    expected: float | str | None,
-) -> None:
-    """Each value_fn returns ``None`` for every degenerate wire shape."""
-    assert value_fn(frame) == expected
 
 
 # ---------------------------------------------------------------------------
@@ -666,7 +519,7 @@ def _build_prefix_match_catalog() -> dict[str, CatalogEntry]:
     }
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_sse_client")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
 async def test_device_info_model_uses_catalog_prefix_match(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -687,7 +540,7 @@ async def test_device_info_model_uses_catalog_prefix_match(
     ]
 
     with patch(
-        "homeassistant.components.abetterrouteplanner.api.AbrpClient.async_get_catalog",
+        "aioabrp.AbrpClient.async_get_catalog",
         return_value=_build_prefix_match_catalog(),
     ):
         await _setup_integration(hass, config_entry_with_vehicles)
@@ -699,7 +552,7 @@ async def test_device_info_model_uses_catalog_prefix_match(
     assert device.model == _PREFIX_MATCH_DEVICE_MODEL
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_sse_client")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
 async def test_device_info_model_falls_back_to_typecode_on_catalog_miss(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -764,7 +617,7 @@ def _build_two_make_catalog() -> dict[str, CatalogEntry]:
     }
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_sse_client")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
 async def test_device_info_manufacturer_uses_catalog_make(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -795,7 +648,7 @@ async def test_device_info_manufacturer_uses_catalog_make(
     )
 
     with patch(
-        "homeassistant.components.abetterrouteplanner.api.AbrpClient.async_get_catalog",
+        "aioabrp.AbrpClient.async_get_catalog",
         return_value=_build_two_make_catalog(),
     ):
         await _setup_integration(hass, entry)
@@ -813,7 +666,7 @@ async def test_device_info_manufacturer_uses_catalog_make(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_device_info_manufacturer_falls_back_to_integration_name_on_catalog_miss(
     hass: HomeAssistant,
@@ -838,7 +691,7 @@ async def test_device_info_manufacturer_falls_back_to_integration_name_on_catalo
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_device_info_configuration_url_is_per_vehicle_deep_link(
     hass: HomeAssistant,
@@ -877,32 +730,36 @@ async def test_device_info_configuration_url_is_per_vehicle_deep_link(
 # ---- Sensor-bucket UX: telemetry sensors promoted to the primary bucket ---
 
 
-# Per-sensor wire-shape payload sufficient to lazy-create the entity.
-_DIAGNOSTIC_FRAME_BY_KEY: dict[str, dict[str, Any]] = {
-    "voltage": {"voltage": {"v": 704.0}},
-    "calibrated_ref_cons": {"calibratedRefCons": {"wh_per_km": 175.0}},
-    "battery_capacity": {"batteryCapacity": {"wh": 75000.0}},
-    "soh": {"soh": {"frac": 0.92}},
-}
-
-
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 @pytest.mark.parametrize(
-    "sensor_key",
+    ("sensor_key", "metric", "value"),
     [
-        pytest.param("voltage", id="voltage"),
-        pytest.param("calibrated_ref_cons", id="calibrated_ref_cons"),
-        pytest.param("battery_capacity", id="battery_capacity"),
-        pytest.param("soh", id="soh"),
+        pytest.param("voltage", Metric.VOLTAGE, 704.0, id="voltage"),
+        pytest.param(
+            "calibrated_ref_cons",
+            Metric.CALIBRATED_REF_CONS,
+            175.0,
+            id="calibrated_ref_cons",
+        ),
+        pytest.param(
+            "battery_capacity",
+            Metric.BATTERY_CAPACITY,
+            75000.0,
+            id="battery_capacity",
+        ),
+        pytest.param("soh", Metric.SOH, 92.0, id="soh"),
     ],
 )
 async def test_diagnostic_telemetry_sensors_moved_out_of_diagnostic(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    fake_stream: Any,
     sensor_key: str,
+    metric: Metric,
+    value: float,
 ) -> None:
     """Four telemetry sensors no longer carry ``EntityCategory.DIAGNOSTIC``.
 
@@ -912,13 +769,8 @@ async def test_diagnostic_telemetry_sensors_moved_out_of_diagnostic(
     ``entity_registry.async_get(...).entity_category``, not via
     ``state.attributes`` (which omits the field when it is ``None``).
     """
-    frame_payload = _DIAGNOSTIC_FRAME_BY_KEY[sensor_key]
-
     await _setup_integration(hass, config_entry_with_vehicles)
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        {"vehicleId": MOCK_VEHICLE_ID, **frame_payload},
-    )
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, {metric: build_metric_value(value)})
     await hass.async_block_till_done()
 
     entity_id = _lookup_sensor_entity_id(
@@ -931,12 +783,13 @@ async def test_diagnostic_telemetry_sensors_moved_out_of_diagnostic(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_calibrated_ref_cons_renamed_to_short_form(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    fake_stream: Any,
 ) -> None:
     """The Calibrated Ref Cons sensor's friendly name translates to the short form.
 
@@ -948,9 +801,8 @@ async def test_calibrated_ref_cons_renamed_to_short_form(
     independent of friendly-name composition with the device prefix.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        {"vehicleId": MOCK_VEHICLE_ID, "calibratedRefCons": {"wh_per_km": 175.0}},
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID, {Metric.CALIBRATED_REF_CONS: build_metric_value(175.0)}
     )
     await hass.async_block_till_done()
 
@@ -969,7 +821,7 @@ async def test_calibrated_ref_cons_renamed_to_short_form(
 # ---- Device anchor at setup + Type Code sensor absence -------------------
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_sse_client")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
 async def test_per_vehicle_device_anchored_at_setup(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -1005,7 +857,7 @@ async def test_per_vehicle_device_anchored_at_setup(
     )
 
     with patch(
-        "homeassistant.components.abetterrouteplanner.api.AbrpClient.async_get_catalog",
+        "aioabrp.AbrpClient.async_get_catalog",
         return_value=_build_two_make_catalog(),
     ):
         await _setup_integration(hass, entry)
@@ -1040,7 +892,7 @@ async def test_per_vehicle_device_anchored_at_setup(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_no_type_code_entity_created(
     hass: HomeAssistant,
@@ -1073,73 +925,74 @@ async def test_no_type_code_entity_created(
 # ---------------------------------------------------------------------------
 #
 # A single ``SensorDeviceClass.ENUM`` sensor surfacing the categorical
-# ``chargingState`` wire field (CHARGING_AC / CHARGING_DC /
-# CHARGING_UNKNOWN / NOT_CHARGING / PLUGGED_IN). Mapped to lowercase HA
-# option keys; unknown / malformed members map to ``None`` (never a raw
-# string — an out-of-``options`` value makes HA core raise ``ValueError``
-# at state write). Shares the generic telemetry-sensor base, so lazy
-# create + restore + ``last_reported_at`` / ``provider`` attributes come
-# for free.
+# ``charging_state`` metric. The library emits a typed ``ChargingState``
+# member; the integration maps it to its HA option string
+# (charging_ac / charging_dc / charging_unknown / not_charging /
+# plugged_in) via ``CHARGING_STATE_OPTIONS``. Shares the generic
+# telemetry-sensor base, so lazy create + restore + ``last_reported_at`` /
+# ``provider`` attributes come for free.
 
 
 @pytest.mark.parametrize(
-    ("wire_state", "expected_option"),
+    ("charging_state", "expected_option"),
     [
-        pytest.param("CHARGING_AC", "charging_ac", id="charging_ac"),
-        pytest.param("CHARGING_DC", "charging_dc", id="charging_dc"),
-        pytest.param("CHARGING_UNKNOWN", "charging_unknown", id="charging_unknown"),
-        pytest.param("NOT_CHARGING", "not_charging", id="not_charging"),
-        pytest.param("PLUGGED_IN", "plugged_in", id="plugged_in"),
+        pytest.param(ChargingState.CHARGING_AC, "charging_ac", id="charging_ac"),
+        pytest.param(ChargingState.CHARGING_DC, "charging_dc", id="charging_dc"),
+        pytest.param(
+            ChargingState.CHARGING_UNKNOWN, "charging_unknown", id="charging_unknown"
+        ),
+        pytest.param(ChargingState.NOT_CHARGING, "not_charging", id="not_charging"),
+        pytest.param(ChargingState.PLUGGED_IN, "plugged_in", id="plugged_in"),
     ],
 )
-def test_charging_state_value_fn_maps_all_wire_members(
-    wire_state: str,
+def test_charging_state_options_map_every_member(
+    charging_state: ChargingState,
     expected_option: str,
 ) -> None:
-    """Every wire enum member maps to its lowercase HA option key.
+    """Every ``ChargingState`` member maps to its lowercase HA option key.
 
-    Pure value_fn contract over the 5-member closed enum. Pairs with the
-    cross-pin guard (which proves the option set stays in sync with the
-    ``ChargingStateValue`` literal, the entity description ``options``, and
-    the ``strings.json`` / ``icons.json`` per-state maps).
+    ``CHARGING_STATE_OPTIONS`` is the HA-owned, total-over-``ChargingState``
+    map the enum sensor reads to coerce a typed library member to a valid
+    ``options`` string. Pairs with the cross-pin guard (which proves the
+    option set stays in sync with the entity description ``options`` and the
+    ``strings.json`` / ``icons.json`` per-state maps).
     """
-    frame: dict[str, Any] = {"chargingState": {"state": wire_state}}
-    assert _charging_state(frame) == expected_option
+    assert CHARGING_STATE_OPTIONS[charging_state] == expected_option
 
 
 @pytest.mark.parametrize(
-    ("wire_state", "expected_option"),
+    ("charging_state", "expected_option"),
     [
-        pytest.param("CHARGING_AC", "charging_ac", id="charging_ac"),
-        pytest.param("NOT_CHARGING", "not_charging", id="not_charging"),
-        pytest.param("PLUGGED_IN", "plugged_in", id="plugged_in"),
+        pytest.param(ChargingState.CHARGING_AC, "charging_ac", id="charging_ac"),
+        pytest.param(ChargingState.NOT_CHARGING, "not_charging", id="not_charging"),
+        pytest.param(ChargingState.PLUGGED_IN, "plugged_in", id="plugged_in"),
     ],
 )
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_charging_state_lazy_create_via_dispatcher(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    wire_state: str,
+    fake_stream: Any,
+    charging_state: ChargingState,
     expected_option: str,
 ) -> None:
-    """First ``chargingState`` frame after setup lazily creates the enum sensor.
+    """First ``charging_state`` frame after setup lazily creates the enum sensor.
 
-    Routes the frame through ``apply_frame`` *after* the platform has
-    registered its presence predicates, exercising the dispatcher
+    Routes the frame through the stream's ``on_update`` *after* the platform
+    has registered its presence predicates, exercising the dispatcher
     ``_on_new_metric`` path (the primary path for an event-driven field
     rarely present in the seed snapshot). The entity must be absent before
     the frame and surface the mapped lowercase option afterwards.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    # Negation: no chargingState frame yet → no entity.
+    # Negation: no charging_state frame yet → no entity.
     assert hass.states.get(CHARGING_STATE_ENTITY_ID) is None
 
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        build_telemetry_frame(MOCK_VEHICLE_ID, charging_state=wire_state),
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID, {Metric.CHARGING_STATE: build_metric_value(charging_state)}
     )
     await hass.async_block_till_done()
 
@@ -1149,11 +1002,12 @@ async def test_charging_state_lazy_create_via_dispatcher(
 
 
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_charging_state_registry_shape(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
 ) -> None:
     """The enum sensor is ENUM device_class, the 5 options, and no state_class.
 
@@ -1162,109 +1016,53 @@ async def test_charging_state_registry_shape(
     copy-paste from a numeric sensor can't attach one). ENUM sensors carry
     no unit and are LTS-ineligible.
     """
-    description = SENSORS_BY_KEY["charging_state"]
+    description = SENSORS_BY_METRIC[Metric.CHARGING_STATE]
     assert description.device_class is SensorDeviceClass.ENUM
-    assert description.options == list(_CHARGING_STATE_OPTIONS.values())
+    assert description.options == list(CHARGING_STATE_OPTIONS.values())
     assert description.state_class is None
     assert description.native_unit_of_measurement is None
 
     await _setup_integration(hass, config_entry_with_vehicles)
-    _push_telemetry_frame(
-        config_entry_with_vehicles,
-        build_telemetry_frame(MOCK_VEHICLE_ID, charging_state="CHARGING_AC"),
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID,
+        {Metric.CHARGING_STATE: build_metric_value(ChargingState.CHARGING_AC)},
     )
     await hass.async_block_till_done()
 
     state = hass.states.get(CHARGING_STATE_ENTITY_ID)
     assert state is not None
     assert state.attributes["device_class"] == SensorDeviceClass.ENUM
-    assert state.attributes["options"] == list(_CHARGING_STATE_OPTIONS.values())
+    assert state.attributes["options"] == list(CHARGING_STATE_OPTIONS.values())
     assert "state_class" not in state.attributes
     assert "unit_of_measurement" not in state.attributes
 
 
-def test_charging_state_warns_once_on_unrecognized(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """An unrecognized non-empty wire member logs WARNING exactly once.
-
-    Upstream enum drift (a future member the integration hasn't mapped)
-    must leave a runtime breadcrumb — diagnostics surfaces field names but
-    not values. The warning is deduped via the module-level
-    ``_unknown_charging_states_seen`` set so a high-frequency stream of the
-    same unknown member doesn't spam the log. The value_fn still returns
-    ``None`` (never the raw string).
-
-    The ``_unknown_charging_states_seen`` global is reset around every test
-    by the autouse ``_isolate_unknown_charging_states`` fixture, so this
-    test starts from a clean dedup state regardless of run order.
-    """
-    unknown_frame: dict[str, Any] = {"chargingState": {"state": "WARP_DRIVE"}}
-
-    with caplog.at_level(
-        logging.WARNING, logger="homeassistant.components.abetterrouteplanner"
-    ):
-        assert _charging_state(unknown_frame) is None
-        first = [
-            record
-            for record in caplog.records
-            if record.levelno == logging.WARNING and "WARP_DRIVE" in record.getMessage()
-        ]
-        assert len(first) == 1
-
-        # Second occurrence of the SAME member must NOT re-log.
-        assert _charging_state(unknown_frame) is None
-        second = [
-            record
-            for record in caplog.records
-            if record.levelno == logging.WARNING and "WARP_DRIVE" in record.getMessage()
-        ]
-        assert len(second) == 1
-
-
-def test_charging_state_empty_string_does_not_warn(
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """An empty ``state`` maps to ``None`` WITHOUT logging a warning.
-
-    Exercises the ``state and ...`` truthiness short-circuit in the value_fn:
-    an empty string is a malformed/blank shape, not an unrecognized future
-    member, so it must NOT emit the enum-drift WARNING nor pollute the
-    ``_unknown_charging_states_seen`` dedup set (which would otherwise grow
-    an empty-string key).
-    """
-    with caplog.at_level(
-        logging.WARNING, logger="homeassistant.components.abetterrouteplanner"
-    ):
-        assert _charging_state({"chargingState": {"state": ""}}) is None
-
-    assert not any(record.levelno == logging.WARNING for record in caplog.records)
-    assert "" not in _unknown_charging_states_seen
-
-
 @pytest.mark.usefixtures(
-    "entity_registry_enabled_by_default", "mock_abrp_client", "mock_sse_client"
+    "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
 async def test_charging_state_provider_and_stamp_attributes(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
 ) -> None:
     """The enum sensor surfaces ``provider`` + ``last_reported_at`` like numerics.
 
     The generic base composes both attributes for the enum sensor with no
     enum-specific override — a live frame carrying a provider stamps both
     the per-metric ``last_provider`` and ``last_reported_at`` maps, and the
-    entity surfaces them.
+    entity surfaces them. ``last_reported_at`` is the RECEIPT time (stamped
+    by the coordinator), so freezing time around the push pins it.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
     stamp = datetime(2026, 5, 24, 12, 0, 0, tzinfo=UTC)
     with freeze_time(stamp):
-        _push_telemetry_frame(
-            config_entry_with_vehicles,
+        fake_stream.fire_frame(
+            MOCK_VEHICLE_ID,
             {
-                "vehicleId": MOCK_VEHICLE_ID,
-                "chargingState": {"state": "CHARGING_DC", "provider": "RIVIAN_STREAM"},
+                Metric.CHARGING_STATE: build_metric_value(
+                    ChargingState.CHARGING_DC, provider="RIVIAN_STREAM"
+                )
             },
         )
         await hass.async_block_till_done()
@@ -1321,6 +1119,10 @@ async def _charging_restart_setup(
     slug the integration computes from ``has_entity_name`` + device name +
     translation_key) so the eager-from-registry probe re-creates the entity
     BEFORE the first wake frame, and wires the recorder restore cache.
+
+    The TelemetryStream is faked by the ``fake_stream`` fixture (which also
+    collapses the pre-warm window to ``0``), so this helper drives a real
+    ``async_setup`` without opening an SSE connection.
     """
     hass.set_state(CoreState.not_running)
     if restored_states is not None:
@@ -1335,12 +1137,8 @@ async def _charging_restart_setup(
         config_entry=entry,
         suggested_object_id="rivian_r2_2027_standard_long_range_charging_state",
     )
-    with patch(
-        "homeassistant.components.abetterrouteplanner.PREWARM_WINDOW_SECONDS",
-        0,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
     await hass.async_block_till_done()
 
@@ -1356,18 +1154,17 @@ async def _charging_restart_setup(
         pytest.param("bogus", "unavailable", id="unknown_value_rejected"),
     ],
 )
-@pytest.mark.usefixtures("mock_abrp_client", "mock_sse_client")
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_charging_state_restore_native_value(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_seed_responses: AsyncMock,
     restored_value: str,
     expected_state: str,
 ) -> None:
     """Restored enum state survives restart only when it is a valid option.
 
-    Three trajectories share the restore-setup → assert-state structure:
+    Four trajectories share the restore-setup → assert-state structure:
 
     - ``parked_not_charging_survives`` — a parked/unplugged vehicle whose
       last seen state was ``not_charging`` restores ``not_charging`` (not
@@ -1380,9 +1177,11 @@ async def test_charging_state_restore_native_value(
       ``AbrpEnumSensor._restore_native_value`` → entity ``unavailable``.
       This mirrors HA core's ENUM rejection and prevents a ``ValueError``
       at state write.
-    """
-    mock_seed_responses.responses[MOCK_VEHICLE_ID] = {}
 
+    No seed is configured for the vehicle (the seed table defaults to an
+    empty dict), so the entity is re-created purely from the pre-seeded
+    registry row, exercising the restore path without a live wake frame.
+    """
     await _charging_restart_setup(
         hass,
         config_entry_with_vehicles,
@@ -1395,20 +1194,17 @@ async def test_charging_state_restore_native_value(
     assert state.state == expected_state
 
 
-@pytest.mark.usefixtures("mock_abrp_client", "mock_sse_client")
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
 async def test_charging_state_restores_provider_and_stamp(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_seed_responses: AsyncMock,
 ) -> None:
     """Restored ``provider`` + ``last_reported_at`` surface on the enum sensor.
 
     The enum sensor inherits the shared base's stamp/provider restore, so a
     parked vehicle keeps both attributes across restart without a wake frame.
     """
-    mock_seed_responses.responses[MOCK_VEHICLE_ID] = {}
-
     stamp_iso = "2026-05-20T12:00:00+00:00"
     stamp_dt = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
 
@@ -1436,26 +1232,26 @@ async def test_charging_state_restores_provider_and_stamp(
 
 
 def test_charging_state_options_cross_pinned() -> None:
-    """The 5-member truth stays in sync across every copy.
+    """The truth stays in sync across every copy.
 
-    Four copies of the closed enum must agree, or a drift goes RED:
+    Three copies of the closed enum must agree, or a drift goes RED:
 
-    1. ``_CHARGING_STATE_OPTIONS`` keys ↔ the ``ChargingStateValue`` literal
-       members. ``ChargingStateValue`` is a PEP 695 ``type`` alias
-       (``TypeAliasType``), so its members live at ``.__value__.__args__`` —
-       read via ``get_args(ChargingStateValue.__value__)``.
-    2. ``_CHARGING_STATE_OPTIONS`` values ↔ the enum entity description's
+    1. ``CHARGING_STATE_OPTIONS`` keys cover every library ``ChargingState``
+       member (the map must be total so ``native_value`` always resolves to
+       a valid option).
+    2. ``CHARGING_STATE_OPTIONS`` values ↔ the enum entity description's
        ``options`` list.
-    3. + 4. ``_CHARGING_STATE_OPTIONS`` values ↔ the
+    3. + 4. ``CHARGING_STATE_OPTIONS`` values ↔ the
        ``entity.sensor.charging_state.state`` keyset in BOTH ``strings.json``
        and ``icons.json`` (a missing label / icon silently renders the raw
        option key in the UI). The source files are read directly (not the
        generated ``translations/en.json``).
     """
-    assert set(_CHARGING_STATE_OPTIONS) == set(get_args(ChargingStateValue.__value__))
+    assert set(CHARGING_STATE_OPTIONS) == set(ChargingState)
 
-    description = SENSORS_BY_KEY["charging_state"]
-    assert set(_CHARGING_STATE_OPTIONS.values()) == set(description.options)
+    description = SENSORS_BY_METRIC[Metric.CHARGING_STATE]
+    assert description.options is not None
+    assert set(CHARGING_STATE_OPTIONS.values()) == set(description.options)
 
     strings = json.loads(
         (_INTEGRATION_DIR / "strings.json").read_text(encoding="utf-8")
@@ -1463,5 +1259,5 @@ def test_charging_state_options_cross_pinned() -> None:
     icons = json.loads((_INTEGRATION_DIR / "icons.json").read_text(encoding="utf-8"))
     strings_states = strings["entity"]["sensor"]["charging_state"]["state"]
     icons_states = icons["entity"]["sensor"]["charging_state"]["state"]
-    assert set(_CHARGING_STATE_OPTIONS.values()) == set(strings_states)
-    assert set(_CHARGING_STATE_OPTIONS.values()) == set(icons_states)
+    assert set(CHARGING_STATE_OPTIONS.values()) == set(strings_states)
+    assert set(CHARGING_STATE_OPTIONS.values()) == set(icons_states)

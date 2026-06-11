@@ -3,14 +3,14 @@
 from http import HTTPStatus
 import time
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
+from aioabrp import AbrpApiError, AbrpAuthError
 from aiohttp import ClientError
 import pytest
 from yarl import URL
 
 from homeassistant.components.abetterrouteplanner import AbrpData
-from homeassistant.components.abetterrouteplanner.api import AbrpApiError, AbrpAuthError
 from homeassistant.components.abetterrouteplanner.const import (
     CONF_VEHICLE_IDS,
     DOMAIN,
@@ -27,14 +27,10 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.setup import async_setup_component
 
 from .conftest import (
-    ABRP_GET_TLM_URL,
-    ABRP_VEHICLE_LIST_URL,
     MOCK_VEHICLE_ID,
     MOCK_VEHICLE_ID_2,
     SENSOR_TEST_SUB,
     USER_SUB,
-    build_catalog_response,
-    build_garage_response,
     build_id_token,
     complete_oauth_callback,
 )
@@ -61,7 +57,11 @@ async def test_setup_and_unload(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Setup with a fresh token loads the entry; unload returns it to NOT_LOADED."""
+    """Setup with a fresh token loads the entry; unload returns it to NOT_LOADED.
+
+    The default ``config_entry`` selects no vehicles, so no telemetry stream is
+    spawned and no ``fake_stream`` fixture is needed.
+    """
     config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -71,11 +71,14 @@ async def test_setup_and_unload(
     runtime_data = config_entry.runtime_data
     assert isinstance(runtime_data, AbrpData)
     assert isinstance(runtime_data.session, OAuth2Session)
+    # No vehicles selected → no stream constructed.
+    assert runtime_data.stream is None
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    unloaded_state: ConfigEntryState = config_entry.state
+    assert unloaded_state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.parametrize("expires_at", [time.time() - 3600], ids=["expired"])
@@ -177,13 +180,18 @@ async def test_setup_missing_implementation(
     assert hasattr(config_entry_oauth2_flow, "async_get_config_entry_implementation")
 
 
-@pytest.mark.usefixtures("current_request_with_host", "mock_sse_client")
+@pytest.mark.usefixtures("current_request_with_host", "mock_abrp_client", "fake_stream")
 async def test_full_flow_end_to_end(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """End-to-end: user config flow drives real async_setup_entry to LOADED."""
+    """End-to-end: user config flow drives real async_setup_entry to LOADED.
+
+    The picker's garage fetch and the setup-path garage refresh + seed are
+    served by ``mock_abrp_client``; the SSE stream is faked by ``fake_stream``
+    because the user selects a vehicle (non-empty ``CONF_VEHICLE_IDS``).
+    """
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -201,8 +209,6 @@ async def test_full_flow_end_to_end(
             "id_token": build_id_token(USER_SUB),
         },
     )
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response())
-    aioclient_mock.get(ABRP_VEHICLE_LIST_URL, json=build_catalog_response())
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -229,7 +235,8 @@ async def test_full_flow_end_to_end(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
-    assert entry.state is ConfigEntryState.NOT_LOADED
+    unloaded_state: ConfigEntryState = entry.state
+    assert unloaded_state is ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.usefixtures("current_request_with_host", "mock_abrp_client")
@@ -239,7 +246,11 @@ async def test_reauth_end_to_end(
     aioclient_mock: AiohttpClientMocker,
     config_entry: MockConfigEntry,
 ) -> None:
-    """End-to-end reauth: real async_setup_entry runs on reload after reauth."""
+    """End-to-end reauth: real async_setup_entry runs on reload after reauth.
+
+    The reauth path is sticky on the existing (empty) selection, so no stream
+    is spawned and ``fake_stream`` is unnecessary.
+    """
     config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -278,7 +289,7 @@ async def test_reauth_end_to_end(
     assert entry.data["token"]["access_token"] == "updated-access-token"
 
 
-@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("current_request_with_host", "mock_abrp_client", "fake_stream")
 async def test_full_flow_stale_token_refresh_unauthorized(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -330,8 +341,6 @@ async def test_full_flow_stale_token_refresh_unauthorized(
         return next(responses)
 
     aioclient_mock.post(OAUTH2_TOKEN, side_effect=_sequential_token_response)
-    aioclient_mock.post(ABRP_GET_TLM_URL, json=build_garage_response())
-    aioclient_mock.get(ABRP_VEHICLE_LIST_URL, json=build_catalog_response())
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     assert result["type"] is FlowResultType.FORM
@@ -350,8 +359,9 @@ async def test_full_flow_stale_token_refresh_unauthorized(
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
-    # Three POSTs went out: the initial token exchange, the garage fetch for
-    # the picker, and the refresh that 401'd during async_setup_entry.
+    # Two POSTs went out to the token endpoint: the initial authorization_code
+    # exchange, and the refresh that 401'd during async_setup_entry. The garage
+    # is now served by the mocked AbrpClient, not the token endpoint.
     token_calls = [
         call for call in aioclient_mock.mock_calls if str(call[1]) == OAUTH2_TOKEN
     ]
@@ -370,10 +380,11 @@ async def test_first_refresh_auth_error_starts_reauth(
 ) -> None:
     """A coordinator first-refresh ``AbrpAuthError`` triggers reauth.
 
-    The OAuth session is valid (no token-refresh failure) but the v1 API
-    rejects the access token (e.g. ABRP-side revocation). The integration
-    must surface this as ``ConfigEntryAuthFailed`` so HA puts the entry in
-    ``SETUP_ERROR`` and starts a reauth flow.
+    The OAuth session is valid (no token-refresh failure) but the ABRP API
+    rejects the access token (e.g. ABRP-side revocation). The garage
+    coordinator's ``async_get_vehicles`` raises ``AbrpAuthError`` and the
+    integration must surface this as ``ConfigEntryAuthFailed`` so HA puts the
+    entry in ``SETUP_ERROR`` and starts a reauth flow.
     """
     config_entry.add_to_hass(hass)
     mock_abrp_client.side_effect = AbrpAuthError("invalid session")
@@ -409,93 +420,129 @@ async def test_first_refresh_api_error_setup_retry(
     assert not hass.config_entries.flow.async_progress()
 
 
-# SSE consumer task tests -----------------------------------------------------
-
-
-async def test_sse_task_starts_on_setup(
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_stream_spawned_with_filtered_vehicle_ids(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: AsyncMock,
-    mock_sse_client: MagicMock,
+    fake_stream: Any,
 ) -> None:
-    """The SSE consumer is registered as an entry-scoped background task.
+    """Setup spawns the telemetry stream for the selected ∩ present vehicles.
 
-    ``stream(...)`` being called proves the task launched and entered its
-    first connect attempt. The task itself is owned by the entry so
-    ``ConfigEntry._background_tasks`` carries an active handle until
-    unload.
+    Only ``MOCK_VEHICLE_ID`` is selected (out of the 2-vehicle garage), so the
+    stream is constructed with exactly that id, started, and named after the
+    entry title. The runtime data carries the live stream handle.
     """
     config_entry_with_vehicles.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_sse_client.called
-    background_tasks = getattr(config_entry_with_vehicles, "_background_tasks", set())
-    assert any(not task.done() for task in background_tasks)
+    assert config_entry_with_vehicles.state is ConfigEntryState.LOADED
+
+    stream = fake_stream.stream
+    assert stream is not None
+    assert stream.vehicle_ids == [MOCK_VEHICLE_ID]
+    assert stream.started is True
+    assert stream.name == config_entry_with_vehicles.title
+
+    runtime_data = config_entry_with_vehicles.runtime_data
+    assert isinstance(runtime_data, AbrpData)
+    assert runtime_data.stream is stream
 
 
-async def test_sse_task_cancelled_on_unload(
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_stream_vehicle_ids_filtered_against_garage(
     hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: AsyncMock,
-    mock_sse_client: MagicMock,
+    token_entry: dict[str, Any],
+    fake_stream: Any,
 ) -> None:
-    """Unloading the entry cancels the SSE consumer task cleanly.
+    """A selected vehicle absent from the live garage is dropped from the stream.
 
-    All background tasks tracked on the entry must finish (cancelled or
-    completed) before unload returns; a hanging task would block HA
-    shutdown.
+    The entry selects ``MOCK_VEHICLE_ID`` plus a bogus id that the garage poll
+    never returns; the stream is constructed with only the present id, proving
+    the ``selected ∩ present`` filter is applied before spawning the stream.
     """
-    config_entry_with_vehicles.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
-    await hass.async_block_till_done()
-
-    tasks_at_setup = list(
-        getattr(config_entry_with_vehicles, "_background_tasks", set())
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SENSOR_TEST_SUB,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": token_entry,
+            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), "999999999999"],
+        },
     )
-    assert tasks_at_setup
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    stream = fake_stream.stream
+    assert stream is not None
+    assert stream.vehicle_ids == [MOCK_VEHICLE_ID]
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_no_stream_when_no_vehicles_selected(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    fake_stream: Any,
+) -> None:
+    """An entry with an empty selection spawns NO telemetry stream.
+
+    ``config_entry`` selects no vehicles. Even with ``fake_stream`` patched in,
+    the integration must skip stream construction entirely and leave
+    ``runtime_data.stream`` as ``None``.
+    """
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert fake_stream.stream is None
+    runtime_data = config_entry.runtime_data
+    assert isinstance(runtime_data, AbrpData)
+    assert runtime_data.stream is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_unload_stops_stream(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
+) -> None:
+    """Unloading an entry with a live stream stops it before unloading platforms."""
+    config_entry_with_vehicles.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
+    await hass.async_block_till_done()
+
+    stream = fake_stream.stream
+    assert stream is not None
+    assert stream.stopped is False
 
     assert await hass.config_entries.async_unload(config_entry_with_vehicles.entry_id)
     await hass.async_block_till_done()
 
-    for task in tasks_at_setup:
-        assert task.done()
+    assert config_entry_with_vehicles.state is ConfigEntryState.NOT_LOADED
+    assert stream.stopped is True
 
 
-async def test_async_setup_entry_seeds_telemetry_for_each_selected_vehicle(
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_seed_runs_for_each_vehicle_before_stream_spawn(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
     mock_abrp_client: AsyncMock,
-    mock_sse_client: MagicMock,
-    mock_seed_responses: AsyncMock,
+    fake_stream: Any,
 ) -> None:
-    """``async_setup_entry`` seeds telemetry once per vehicle, AFTER garage refresh, BEFORE SSE spawn.
+    """``async_setup_entry`` seeds telemetry once per selected vehicle, before the stream.
 
-    Between garage first-refresh and platform forward, the integration calls
-    ``async_seed_from_json_poll(selected_ids, token)`` so
-    the sensor platform sees a populated ``telemetry_coordinator.data`` and
-    can compute the per-metric visibility default deterministically.
-
-    Order matters two ways:
-
-    * **AFTER garage first-refresh** — the seed needs the selected
-      ``vehicle_ids`` filtered against the live garage so we don't poll for
-      a vehicle the user just removed from ABRP (the endpoint 401s on
-      not-owned vehicles).
-    * **BEFORE SSE task spawn** — so the SSE consumer doesn't race the
-      seed and clobber a fresh frame with an older one-shot poll. The
-      ordering is also what the sensor platform relies on for its visible-
-      default decision at registration time.
-
-    The 2-vehicle config_entry + set-equality oracle pins that EVERY
-    selected vehicle is seeded (no silent drops, no deduplication
-    regression).
-
-    Three assertions: (a) seed was called for EACH selected vehicle id
-    (set equality, not membership), (b) garage's ``async_get_vehicles``
-    was called before the seed, (c) SSE ``stream`` was called after the
-    seed.
+    Between garage first-refresh and the stream spawn, the integration seeds
+    the telemetry coordinator via ``AbrpClient.async_get_current_telemetry``
+    for every selected ∩ present vehicle so the sensor platform sees a
+    populated snapshot. The 2-vehicle selection pins that EVERY selected
+    vehicle is seeded (set equality, not membership), and that the stream is
+    constructed afterwards with the same id set.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -508,54 +555,27 @@ async def test_async_setup_entry_seeds_telemetry_for_each_selected_vehicle(
     )
     entry.add_to_hass(hass)
 
-    # Attach a parent MagicMock to capture interleaved call order across the
-    # three boundary mocks (garage / seed / SSE). ``parent.mock_calls`` then
-    # records each child call with its child name so we can assert ordering
-    # without disturbing each mock's existing side_effect (the conftest
-    # fixtures configure those carefully and overriding would break them).
-    parent = MagicMock()
-    parent.attach_mock(mock_abrp_client, "garage")
-    parent.attach_mock(mock_seed_responses, "seed")
-    parent.attach_mock(mock_sse_client, "sse")
+    # Record which vehicle ids the seed path polls. Patch the bound function
+    # directly (no autospec — the conftest already patched this attribute, and
+    # autospec cannot spec an existing mock). Because the patch is not
+    # autospecced, the class-attribute mock is not bound on access, so the
+    # integration's ``client.async_get_current_telemetry(vid)`` call lands as
+    # ``mock(vid)`` — the vehicle id is the sole positional arg.
+    async def _record_seed(vehicle_id: int) -> dict[Any, Any]:
+        return {}
 
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "aioabrp.AbrpClient.async_get_current_telemetry",
+        side_effect=_record_seed,
+    ) as mock_seed:
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
-    seeded_vehicle_ids = {call.args[0] for call in mock_seed_responses.call_args_list}
+    seeded_vehicle_ids = {call.args[0] for call in mock_seed.call_args_list}
     assert seeded_vehicle_ids == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
 
-    call_names = [call[0].split(".", 1)[0] for call in parent.mock_calls]
-    assert "garage" in call_names, f"garage refresh not observed; calls={call_names}"
-    assert "seed" in call_names, f"seed not observed; calls={call_names}"
-    assert "sse" in call_names, f"SSE spawn not observed; calls={call_names}"
-    assert call_names.index("garage") < call_names.index("seed"), (
-        f"seed must run AFTER garage refresh; calls={call_names}"
-    )
-    assert call_names.index("seed") < call_names.index("sse"), (
-        f"seed must run BEFORE SSE spawn; calls={call_names}"
-    )
-
-
-async def test_sse_auth_failure_starts_reauth(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: AsyncMock,
-    mock_sse_client: MagicMock,
-) -> None:
-    """An ``AbrpAuthError`` from the SSE stream surfaces HA's reauth flow.
-
-    The SSE consumer task can't fail entry setup (setup completed before
-    it raised); instead the auth error reaches HA via the coordinator's
-    ``async_set_update_error(ConfigEntryAuthFailed)`` path and starts the
-    standard reauth flow for the entry.
-    """
-    mock_sse_client.side_effect = AbrpAuthError("invalid session")
-    config_entry_with_vehicles.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(config_entry_with_vehicles.entry_id)
-    await hass.async_block_till_done()
-
-    flows = hass.config_entries.flow.async_progress()
-    assert len(flows) == 1
-    assert flows[0]["context"]["source"] == SOURCE_REAUTH
-    assert flows[0]["context"]["entry_id"] == config_entry_with_vehicles.entry_id
+    # Stream spawned after seeding, with the same (filtered) selection.
+    stream = fake_stream.stream
+    assert stream is not None
+    assert set(stream.vehicle_ids) == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
+    assert stream.started is True

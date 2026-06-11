@@ -9,25 +9,23 @@ guards on ``device.name_by_user is not None``, and calls
 ``vehicle.name or vehicle.vehicle_model`` differs from the current
 ``device.name``.
 
-Design note: these tests avoid ``freezegun``'s ``FrozenDateTimeFactory``
-entirely.  Under a frozen clock ``asyncio.sleep(PREWARM_WINDOW_SECONDS)``
-inside ``async_setup_entry`` never wakes up (the asyncio event loop uses
-``time.monotonic`` which is frozen) and the test hangs.  Instead, each test
-triggers the garage-coordinator refresh directly via
-``coordinator.async_refresh()``, which exercises the same listener code-path
-without needing to advance real time.  The 0.5 s real-time prewarm sleep is
-left in place — patching ``asyncio.sleep`` globally would also short-circuit
-the SSE retry backoff and turn the eager-started ``_run_sse_loop`` into a
-tight loop that prevents ``async_setup_entry`` from returning.
+Rename changes are driven entirely through the garage coordinator: each test
+reassigns ``mock_abrp_client.return_value`` (the patched
+``AbrpClient.async_get_vehicles``) to a fresh ``list[AbrpVehicle]`` carrying
+the same ``vehicle_id`` but a new ``name`` / ``vehicle_model``, then triggers
+``garage_coordinator.async_refresh()`` to fire the listener. The ``fake_stream``
+fixture collapses the setup pre-warm sleep to 0, so setup returns immediately
+without a real SSE consumer and these tests need neither ``freezer`` nor any
+``asyncio.sleep`` patching.
 """
 
 from typing import Any
 from unittest.mock import AsyncMock
 
+from aioabrp import AbrpVehicle
 import pytest
 
 from homeassistant.components.abetterrouteplanner import AbrpData
-from homeassistant.components.abetterrouteplanner.api import AbrpVehicle
 from homeassistant.components.abetterrouteplanner.const import (
     CONF_KNOWN_VEHICLE_IDS,
     CONF_VEHICLE_IDS,
@@ -57,11 +55,9 @@ async def _setup_integration(
 ) -> MockConfigEntry:
     """Register the integration's OAuth implementation and set up the entry.
 
-    The 0.5 s real-time prewarm sleep in ``async_setup_entry`` is allowed to
-    elapse.  A global ``asyncio.sleep`` patch would also short-circuit the
-    SSE backoff in ``_run_sse_loop`` and turn the eager-started SSE task
-    into a tight loop that prevents ``async_setup_entry`` from returning,
-    so this helper accepts the small wall-clock cost instead.
+    The ``fake_stream`` fixture patches both ``TelemetryStream`` (with a
+    synchronous double) and ``PREWARM_WINDOW_SECONDS`` to ``0``, so setup
+    returns immediately without a real SSE consumer or wall-clock wait.
     """
     assert await async_setup_component(hass, "auth", {})
     assert await async_setup_component(hass, DOMAIN, {})
@@ -74,9 +70,9 @@ async def _setup_integration(
 async def _poll(hass: HomeAssistant, entry: MockConfigEntry) -> None:
     """Trigger one garage-coordinator refresh and drain the event bus.
 
-    Directly calls ``async_refresh()`` on the coordinator so tests do not
-    need ``freezer`` and the resulting ``asyncio.sleep`` / select-timeout
-    interaction with a frozen clock.
+    Directly calls ``async_refresh()`` on the coordinator so the
+    ``_propagate_renames`` listener fires against whatever
+    ``mock_abrp_client.return_value`` is currently set to.
     """
     runtime_data: AbrpData = entry.runtime_data
     await runtime_data.garage_coordinator.async_refresh()
@@ -104,7 +100,7 @@ def _device_scope(entry: MockConfigEntry, vehicle_id: int) -> str:
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 @pytest.mark.parametrize(
     (
         "poll1_name",
@@ -175,11 +171,9 @@ async def test_rename_propagation_table(
     3. Assert ``device.name == expected_name``.
 
     Cases ``rename_propagates``, ``fallback_vehicle_model_changes``,
-    ``null_to_custom_string``, ``custom_string_to_null_fallback`` FAIL on
-    current code: no rename listener exists, so ``device.name`` stays at the
-    poll-1 value and the assertion against ``expected_name`` fails.
-
-    Case ``no_op_unchanged`` passes trivially — name was already correct.
+    ``null_to_custom_string``, ``custom_string_to_null_fallback`` exercise the
+    listener pushing ``vehicle.name or vehicle.vehicle_model`` into the device
+    registry; ``no_op_unchanged`` exercises the unchanged-name short-circuit.
     """
     mock_abrp_client.return_value = [
         _make_vehicle(MOCK_VEHICLE_ID, poll1_name, poll1_vehicle_model)
@@ -207,7 +201,7 @@ async def test_rename_propagation_table(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_name_by_user_guard_prevents_overwrite(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
@@ -242,6 +236,7 @@ async def test_name_by_user_guard_prevents_overwrite(
     # User renames the device in the HA UI
     device_registry.async_update_device(device.id, name_by_user="My Tesla")
     device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    assert device is not None
     assert device.name_by_user == "My Tesla"
 
     # Poll 2: ABRP rename arrives — listener must skip due to name_by_user guard
@@ -263,7 +258,7 @@ async def test_name_by_user_guard_prevents_overwrite(
 _NEW_VEHICLE_ID = 999_000_001
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_new_vehicle_mid_life_does_not_crash(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
@@ -323,7 +318,7 @@ async def test_new_vehicle_mid_life_does_not_crash(
 # ---------------------------------------------------------------------------
 
 
-@pytest.mark.usefixtures("mock_sse_client", "mock_seed_responses")
+@pytest.mark.usefixtures("fake_stream")
 async def test_vehicle_disappears_mid_life_does_not_crash(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
