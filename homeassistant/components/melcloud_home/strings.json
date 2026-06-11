@@ -19,7 +19,7 @@
           "email": "Email address for your MELCloud Home account.",
           "password": "Password for your MELCloud Home account."
         },
-        "description": "Login to MELCloud Home with the email address and password associated with your account."
+        "description": "Log in to MELCloud Home with the email address and password associated with your account."
       }
     }
   },
