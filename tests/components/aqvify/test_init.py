@@ -80,8 +80,8 @@ async def test_device_registry_integration(
         device_registry, mock_config_entry.entry_id
     )
 
-    # Snapshot the devices to ensure they have the correct structure
-    assert device_entries == snapshot
+    de = sorted(device_entries, key=lambda entr: entr.serial_number)
+    assert de == snapshot
 
 
 async def test_setup_entry_auth_error_triggers_reauth(
@@ -110,7 +110,6 @@ async def test_devices_multiple_created_count(
     mock_aqvify_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    # load_device_file: str,
 ) -> None:
     """Test that added devices are created."""
     await setup_integration(hass, mock_config_entry)
