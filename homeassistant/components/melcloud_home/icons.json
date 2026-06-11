@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "forced_hot_water": {
+        "default": "mdi:water-boiler"
+      },
+      "standby": {
+        "default": "mdi:power-sleep"
+      }
+    }
+  }
+}
