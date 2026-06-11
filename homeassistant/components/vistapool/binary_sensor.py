@@ -24,7 +24,7 @@ from .const import (
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 TANK_MODULE_PATHS = (
     "modules.ph.tank",
