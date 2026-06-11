@@ -1338,7 +1338,12 @@ async def test_eventbus_nested_fire_dispatch_order(hass: HomeAssistant) -> None:
 
     Event dispatch is reentrant: an event fired from within a synchronous
     listener is dispatched immediately, nested inside the dispatch of the
-    outer event. As a result, the order in which a listener observes the two
+    outer event.
+
+    The implementation of event listeners is such that listeners are called
+    in the order they were registered
+
+    As a result, the order in which a listener observes the two
     events depends on its registration position relative to the listener
     which fires the nested event: listeners registered before it observe
     fire order, listeners registered after it observe the nested event
