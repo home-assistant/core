@@ -15,7 +15,6 @@ class MelCloudHomeEntity(CoordinatorEntity[MelCloudHomeCoordinator]):
     """Base entity for MELCloud Home."""
 
     _attr_has_entity_name = True
-    _attr_name: str | None = None
 
 
 class MelCloudHomeUnitEntity[_UnitT: (ATAUnit, ATWUnit)](MelCloudHomeEntity):

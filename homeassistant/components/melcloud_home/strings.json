@@ -24,6 +24,17 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "error": {
+        "name": "Error"
+      },
+      "forced_hot_water": {
+        "name": "Forced hot water"
+      },
+      "standby": {
+        "name": "Standby"
+      }
+    },
     "climate": {
       "ata_unit": {
         "state_attributes": {

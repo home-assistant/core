@@ -1,6 +1,6 @@
 """Test the MELCloud Home climate platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiomelcloudhome import (
     ATAFanSpeed,
@@ -29,6 +29,7 @@ from homeassistant.const import (
     ATTR_TEMPERATURE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -50,8 +51,14 @@ async def test_climate_platform(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test all climate entity states and attributes from fixture data."""
-    await setup_integration(hass, mock_config_entry)
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    with patch(
+        "homeassistant.components.melcloud_home.PLATFORMS",
+        [Platform.CLIMATE],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )
 
 
 @pytest.mark.parametrize(
