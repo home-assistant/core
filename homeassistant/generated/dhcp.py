@@ -216,7 +216,7 @@ DHCP: Final[list[dict[str, str | bool]]] = [
     },
     {
         "domain": "blebox",
-        "hostname": "seltvenitianblind*",
+        "hostname": "seltvenetianblind*",
     },
     {
         "domain": "blebox",
