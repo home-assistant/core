@@ -35,6 +35,19 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "open_status": {
+        "state": {
+          "ajar": "Ajar",
+          "closed": "[%key:common::state::closed%]",
+          "closed_but_unlocked": "Closed but unlocked",
+          "open": "[%key:common::state::open%]",
+          "unclosed_or_unlocked": "Unclosed or unlocked"
+        }
+      }
+    }
+  },
   "exceptions": {
     "bad_value": {
       "message": "Turning on the light failed: {error}"
