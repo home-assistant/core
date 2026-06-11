@@ -23,6 +23,10 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Python 3.14 explicitly allows `except TypeA, TypeB:` without parentheses. Never flag this as an issue.
 - Python 3.14 evaluates annotations lazily (PEP 649). Forward references in annotations do not need to be quoted — annotations can reference names defined later in the module without quoting them or using `from __future__ import annotations`. Do not flag unquoted forward references in annotations as issues.
 
+## Code comments
+
+- Comments in the code should be used to explain why something is done, not what is being done. Comments should not restate the code, but rather provide context, rationale, or explanations for non-obvious decisions. Comments for obvious decisions only clutter the code and are not helpful.
+
 ## Testing
 
 - Use `uv run pytest` to run tests
