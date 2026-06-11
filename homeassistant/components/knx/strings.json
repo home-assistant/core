@@ -1140,20 +1140,20 @@
       "communication_settings": {
         "data": {
           "rate_limit": "Rate limit",
-          "state_updater": "State updater",
-          "telegram_db_load_hours": "Group monitor history"
+          "state_updater": "State updater"
         },
         "data_description": {
           "rate_limit": "Maximum outgoing telegrams per second.\n`0` to disable limit. Recommended: `0` or between `20` and `40`",
-          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option.",
-          "telegram_db_load_hours": "Number of hours of telegram history to load when the group monitor is opened."
+          "state_updater": "Sets the default behavior for reading state addresses from the KNX Bus.\nWhen enabled, Home Assistant will monitor each group address and read it from the bus if no value has been received for one hour.\nWhen disabled, state addresses will only be read once after a bus connection is established.\nThis behavior can be overridden for individual entities using the `sync_state` option."
         },
         "sections": {
-          "telegram_store_sqlite": {
+          "telegram_store_section": {
             "data": {
+              "telegram_db_load_hours": "Group monitor history",
               "telegram_db_retention_days": "Retention period"
             },
             "data_description": {
+              "telegram_db_load_hours": "Number of hours of telegram history to load when the group monitor is opened.",
               "telegram_db_retention_days": "Number of days to keep telegram history. Older telegrams are automatically deleted nightly at 3 AM. Set to `0` to delete all telegram history on every nightly run."
             },
             "name": "Telegram store settings"

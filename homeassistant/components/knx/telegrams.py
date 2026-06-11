@@ -24,12 +24,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.storage import STORAGE_DIR, Store
 from homeassistant.util import dt as dt_util
-from homeassistant.util.signal_type import SignalType
 
 from .const import (
-    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
-    KNX_TELEGRAM_DB_PATH_DEFAULT,
+    KNX_TELEGRAM_DB_PATH_SQLITE,
+    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+    SIGNAL_KNX_TELEGRAM,
     KNXConfigEntryOptions,
 )
 from .project import KNXProject
@@ -47,12 +47,6 @@ EVICT_EXPIRED_HOUR = 3
 # Websocket queries flush on demand (``flush_first=True``), so the only telegrams
 # at risk from a longer interval are those buffered during an ungraceful shutdown.
 FLUSH_INTERVAL_SECONDS = 600
-
-# dispatcher signal for KNX interface device triggers
-SIGNAL_KNX_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType("knx_telegram")
-SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM: SignalType[Telegram, TelegramDict] = SignalType(
-    "knx_data_secure_issue_telegram"
-)
 
 
 class DecodedTelegramPayload(TypedDict):
@@ -95,16 +89,13 @@ class Telegrams:
         self.project = project
         self.config = config
 
-        self.db_path: str = config.get(
-            CONF_KNX_TELEGRAM_DB_PATH, KNX_TELEGRAM_DB_PATH_DEFAULT
-        )
         self.retention_days: int = config[CONF_KNX_TELEGRAM_DB_RETENTION_DAYS]
 
         self.store: BufferedSqliteStore | None = None
         self._uninitialized_store: BufferedSqliteStore | None = None
         self._evict_expired_unsub: CALLBACK_TYPE | None = None
 
-        full_path = hass.config.path(STORAGE_DIR, self.db_path)
+        full_path = hass.config.path(STORAGE_DIR, KNX_TELEGRAM_DB_PATH_SQLITE)
         os.makedirs(os.path.dirname(full_path), exist_ok=True)
         self._uninitialized_store = BufferedSqliteStore(
             full_path,

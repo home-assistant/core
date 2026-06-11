@@ -4,17 +4,12 @@ from __future__ import annotations
 
 import os
 from typing import Any
-import uuid
 
 from knx_telegram_store import TelegramQuery
 
-from homeassistant.components.knx.const import (
-    CONF_KNX_TELEGRAM_DB_PATH,
-    DOMAIN,
-    KNX_MODULE_KEY,
-)
+from homeassistant.components.knx.const import DOMAIN, KNX_MODULE_KEY
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.storage import STORAGE_DIR, Store
+from homeassistant.helpers.storage import Store
 
 from .conftest import KNXTestKit
 
@@ -37,78 +32,57 @@ async def test_migrate_telegrams_json_to_sqlite(
     # returns the list. Save the inner list, not the fixture wrapper dict.
     await store.async_save(legacy_data["data"])
 
-    # Setup integration with SQLite (unique filename)
-    db_name = f"test_telegrams_{uuid.uuid4().hex}.db"
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {
-            CONF_KNX_TELEGRAM_DB_PATH: db_name,
-        },
+    await knx.setup_integration()
+    telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
+
+    await hass.async_block_till_done()
+
+    # Verify migration
+    assert telegrams_module.store is not None
+    result = await telegrams_module.store.query(TelegramQuery(order_descending=False))
+    assert len(result.telegrams) == 10
+
+    # Check normalization: [0] -> (0,)
+    # Note: Backend might return list even if stored as tuple due to JSON serialization
+    assert result.telegrams[0].destination == "3/2/100"
+    payload_0 = result.telegrams[0].payload
+    assert isinstance(payload_0, (list, tuple))
+    assert tuple(payload_0) == (0,)
+
+    # Check normalization: [7, 158] -> (7, 158)
+    assert result.telegrams[2].destination == "1/2/11"
+    payload_2 = result.telegrams[2].payload
+    assert isinstance(payload_2, (list, tuple))
+    assert tuple(payload_2) == (7, 158)
+
+    # Check None payload stays None
+    assert result.telegrams[3].destination == "3/7/62"
+    assert result.telegrams[3].payload is None
+
+    # Check int payload stays int
+    assert result.telegrams[4].destination == "1/4/100"
+    assert result.telegrams[4].payload == 1
+
+    # Check long string payload
+    assert result.telegrams[6].destination == "0/6/0"
+    payload_6 = result.telegrams[6].payload
+    assert isinstance(payload_6, (list, tuple))
+    assert tuple(payload_6) == (
+        77,
+        53,
+        32,
+        83,
+        48,
+        32,
+        65,
+        51,
+        51,
+        53,
+        32,
+        69,
+        48,
+        48,
     )
 
-    try:
-        await knx.setup_integration(add_entry_to_hass=False)
-        telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
-
-        await hass.async_block_till_done()
-
-        # Verify migration
-        assert telegrams_module.store is not None
-        result = await telegrams_module.store.query(
-            TelegramQuery(order_descending=False)
-        )
-        assert len(result.telegrams) == 10
-
-        # Check normalization: [0] -> (0,)
-        # Note: Backend might return list even if stored as tuple due to JSON serialization
-        assert result.telegrams[0].destination == "3/2/100"
-        payload_0 = result.telegrams[0].payload
-        assert isinstance(payload_0, (list, tuple))
-        assert tuple(payload_0) == (0,)
-
-        # Check normalization: [7, 158] -> (7, 158)
-        assert result.telegrams[2].destination == "1/2/11"
-        payload_2 = result.telegrams[2].payload
-        assert isinstance(payload_2, (list, tuple))
-        assert tuple(payload_2) == (7, 158)
-
-        # Check None payload stays None
-        assert result.telegrams[3].destination == "3/7/62"
-        assert result.telegrams[3].payload is None
-
-        # Check int payload stays int
-        assert result.telegrams[4].destination == "1/4/100"
-        assert result.telegrams[4].payload == 1
-
-        # Check long string payload
-        assert result.telegrams[6].destination == "0/6/0"
-        payload_6 = result.telegrams[6].payload
-        assert isinstance(payload_6, (list, tuple))
-        assert tuple(payload_6) == (
-            77,
-            53,
-            32,
-            83,
-            48,
-            32,
-            65,
-            51,
-            51,
-            53,
-            32,
-            69,
-            48,
-            48,
-        )
-
-        # Verify legacy file removal
-        assert not os.path.exists(legacy_path)
-
-    finally:
-        # Cleanup DB file and sidecars
-        db_path = hass.config.path(STORAGE_DIR, db_name)
-        for path in (db_path, f"{db_path}-wal", f"{db_path}-shm"):
-            if os.path.exists(path):
-                await hass.async_add_executor_job(os.remove, path)
+    # Verify legacy file removal
+    assert not os.path.exists(legacy_path)

@@ -25,12 +25,11 @@ from .const import (
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
-    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DATA_HASS_CONFIG,
     DOMAIN,
     KNX_MODULE_KEY,
-    KNX_TELEGRAM_DB_PATH_DEFAULT,
+    KNX_TELEGRAM_DB_PATH_SQLITE,
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     SUPPORTED_PLATFORMS_UI,
@@ -180,7 +179,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_KNX_RATE_LIMIT,
             CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
             CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
-            CONF_KNX_TELEGRAM_DB_PATH,
         ):
             if key in new_data:
                 new_options[key] = new_data.pop(key)
@@ -191,7 +189,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         new_options.setdefault(
             CONF_KNX_TELEGRAM_DB_LOAD_HOURS, KNX_TELEGRAM_LOAD_HOURS_DEFAULT
         )
-        new_options.setdefault(CONF_KNX_TELEGRAM_DB_PATH, KNX_TELEGRAM_DB_PATH_DEFAULT)
         new_options.setdefault(CONF_KNX_STATE_UPDATER, CONF_KNX_DEFAULT_STATE_UPDATER)
         new_options.setdefault(CONF_KNX_RATE_LIMIT, CONF_KNX_DEFAULT_RATE_LIMIT)
 
@@ -255,11 +252,11 @@ async def async_remove_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
         with contextlib.suppress(FileNotFoundError):
             (storage_dir / PROJECT_STORAGE_KEY).unlink()
         with contextlib.suppress(FileNotFoundError):
-            (storage_dir / KNX_TELEGRAM_DB_PATH_DEFAULT).unlink()
+            (storage_dir / KNX_TELEGRAM_DB_PATH_SQLITE).unlink()
         with contextlib.suppress(FileNotFoundError):
-            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_DEFAULT}-wal").unlink()
+            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_SQLITE}-wal").unlink()
         with contextlib.suppress(FileNotFoundError):
-            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_DEFAULT}-shm").unlink()
+            (storage_dir / f"{KNX_TELEGRAM_DB_PATH_SQLITE}-shm").unlink()
 
         with contextlib.suppress(FileNotFoundError, OSError):
             (storage_dir / DOMAIN).rmdir()

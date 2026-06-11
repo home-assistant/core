@@ -22,6 +22,7 @@ from .const import (
     DOMAIN,
     REPAIR_ISSUE_DATA_SECURE_GROUP_KEY,
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
+    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
     KNXConfigEntryData,
 )
 from .storage.keyring import DEFAULT_KNX_KEYRING_FILENAME, save_uploaded_knxkeys_file
@@ -50,8 +51,6 @@ async def async_create_fix_flow(
 @callback
 def data_secure_group_key_issue_dispatcher(knx_module: KNXModule) -> Callable[[], None]:
     """Watcher for DataSecure group key issues."""
-    from .telegrams import SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM  # noqa: PLC0415
-
     return async_dispatcher_connect(
         knx_module.hass,
         signal=SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,

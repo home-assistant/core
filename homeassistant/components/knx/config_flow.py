@@ -58,7 +58,6 @@ from .const import (
     DEFAULT_ROUTING_IA,
     DOMAIN,
     KNX_MODULE_KEY,
-    KNX_TELEGRAM_DB_PATH_DEFAULT,
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     KNXConfigEntryData,
@@ -83,12 +82,11 @@ DEFAULT_ENTRY_OPTIONS = KNXConfigEntryOptions(
     state_updater=CONF_KNX_DEFAULT_STATE_UPDATER,
     telegram_db_retention_days=KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     telegram_db_load_hours=KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
-    telegram_db_path=KNX_TELEGRAM_DB_PATH_DEFAULT,
 )
 
 CONF_KEYRING_FILE: Final = "knxkeys_file"
 
-CONF_KNX_TELEGRAM_STORE_SECTION: Final = "telegram_store_sqlite"
+CONF_KNX_TELEGRAM_STORE_SECTION: Final = "telegram_store_section"
 
 CONF_KNX_TUNNELING_TYPE: Final = "tunneling_type"
 CONF_KNX_TUNNELING_TYPE_LABELS: Final = {
@@ -950,11 +948,14 @@ class KNXOptionsFlow(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Manage KNX communication settings."""
         if user_input is not None:
+            telegram_store_section = user_input[CONF_KNX_TELEGRAM_STORE_SECTION]
             self.new_entry_options |= KNXConfigEntryOptions(
                 state_updater=user_input[CONF_KNX_STATE_UPDATER],
                 rate_limit=user_input[CONF_KNX_RATE_LIMIT],
-                telegram_db_load_hours=user_input[CONF_KNX_TELEGRAM_DB_LOAD_HOURS],
-                telegram_db_retention_days=user_input[CONF_KNX_TELEGRAM_STORE_SECTION][
+                telegram_db_load_hours=telegram_store_section[
+                    CONF_KNX_TELEGRAM_DB_LOAD_HOURS
+                ],
+                telegram_db_retention_days=telegram_store_section[
                     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS
                 ],
             )
@@ -982,24 +983,25 @@ class KNXOptionsFlow(OptionsFlowWithReload):
                 ),
                 vol.Coerce(int),
             ),
-            vol.Required(
-                CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
-                default=self.initial_options.get(
-                    CONF_KNX_TELEGRAM_DB_LOAD_HOURS, KNX_TELEGRAM_LOAD_HOURS_DEFAULT
-                ),
-            ): vol.All(
-                selector.NumberSelector(
-                    selector.NumberSelectorConfig(
-                        min=1,
-                        mode=selector.NumberSelectorMode.BOX,
-                        unit_of_measurement="h",
-                    ),
-                ),
-                vol.Coerce(int),
-            ),
             vol.Required(CONF_KNX_TELEGRAM_STORE_SECTION): data_entry_flow.section(
                 vol.Schema(
                     {
+                        vol.Required(
+                            CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+                            default=self.initial_options.get(
+                                CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+                                KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+                            ),
+                        ): vol.All(
+                            selector.NumberSelector(
+                                selector.NumberSelectorConfig(
+                                    min=1,
+                                    mode=selector.NumberSelectorMode.BOX,
+                                    unit_of_measurement="h",
+                                ),
+                            ),
+                            vol.Coerce(int),
+                        ),
                         vol.Required(
                             CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
                             default=self.initial_options.get(

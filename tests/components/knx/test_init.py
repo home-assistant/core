@@ -39,13 +39,11 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
-    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DOMAIN,
-    KNX_TELEGRAM_DB_PATH_DEFAULT,
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
     KNXConfigEntryData,
@@ -394,7 +392,6 @@ async def test_async_migrate_entry_v1_to_v2(hass: HomeAssistant) -> None:
     assert CONF_KNX_RATE_LIMIT not in config_entry.data
     assert CONF_KNX_TELEGRAM_DB_RETENTION_DAYS not in config_entry.data
     assert CONF_KNX_TELEGRAM_DB_LOAD_HOURS not in config_entry.data
-    assert CONF_KNX_TELEGRAM_DB_PATH not in config_entry.data
 
     assert config_entry.options[CONF_KNX_STATE_UPDATER] is True
     assert config_entry.options[CONF_KNX_RATE_LIMIT] == 30
@@ -405,9 +402,6 @@ async def test_async_migrate_entry_v1_to_v2(hass: HomeAssistant) -> None:
     assert (
         config_entry.options[CONF_KNX_TELEGRAM_DB_LOAD_HOURS]
         == KNX_TELEGRAM_LOAD_HOURS_DEFAULT
-    )
-    assert (
-        config_entry.options[CONF_KNX_TELEGRAM_DB_PATH] == KNX_TELEGRAM_DB_PATH_DEFAULT
     )
     assert config_entry.data["other_setting"] == "some_value"
 

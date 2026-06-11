@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from copy import copy
 from datetime import datetime
-from pathlib import Path
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -12,7 +11,6 @@ from knx_telegram_store import KnxTelegramStoreException, StoredTelegram, Telegr
 import pytest
 
 from homeassistant.components.knx.const import (
-    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DOMAIN,
     KNX_MODULE_KEY,
@@ -143,20 +141,11 @@ async def test_store_telegram_history_error_handling(
     side_effect: Exception,
 ) -> None:
     """Test storage initialization handling for the different failure modes."""
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {
-            CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
-        },
-    )
-
     with patch(
         "knx_telegram_store.BufferedSqliteStore.initialize",
         side_effect=side_effect,
     ):
-        await knx.setup_integration(add_entry_to_hass=False)
+        await knx.setup_integration()
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is None
@@ -170,7 +159,6 @@ async def test_store_telegram_history_error_handling(
 async def test_migrate_telegrams_from_json(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    tmp_path: Path,
 ) -> None:
     """Test legacy JSON telegram history is migrated into the store."""
     fixture = await async_load_json_object_fixture(
@@ -185,19 +173,7 @@ async def test_migrate_telegrams_from_json(
         "data": json_telegrams,
     }
 
-    # File-based (not :memory:) so migration runs. An absolute path keeps the
-    # test hermetic: hass.config.path(STORAGE_DIR, <abs>) resolves to <abs>,
-    # so the db lands in tmp_path instead of the shared testing_config.
-    db_path = tmp_path / "telegrams_migrate_test.db"
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {
-            CONF_KNX_TELEGRAM_DB_PATH: str(db_path),
-        },
-    )
-    await knx.setup_integration(add_entry_to_hass=False)
+    await knx.setup_integration()
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
@@ -220,12 +196,7 @@ async def test_stop_error_handling(
     side_effect: Exception,
 ) -> None:
     """Test that errors while stopping the store are swallowed."""
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options | {CONF_KNX_TELEGRAM_DB_PATH: ":memory:"},
-    )
-    await knx.setup_integration(add_entry_to_hass=False)
+    await knx.setup_integration()
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
@@ -241,12 +212,7 @@ async def test_model_to_dict_resolution(
     knx: KNXTestKit,
 ) -> None:
     """Test model_to_dict name resolution and DPT handling."""
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options | {CONF_KNX_TELEGRAM_DB_PATH: ":memory:"},
-    )
-    await knx.setup_integration(add_entry_to_hass=False)
+    await knx.setup_integration()
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.project.loaded
 
@@ -318,19 +284,6 @@ async def test_model_to_dict_resolution(
     assert result["unit"] == "°C"
 
 
-async def _setup_memory_store(hass: HomeAssistant, knx: KNXTestKit) -> None:
-    """Set up the integration with an in-memory SQLite telegram store."""
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {
-            CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
-        },
-    )
-    await knx.setup_integration(add_entry_to_hass=False)
-
-
 async def test_load_history_needs_migration(
     hass: HomeAssistant,
     knx: KNXTestKit,
@@ -340,7 +293,7 @@ async def test_load_history_needs_migration(
         "knx_telegram_store.BufferedSqliteStore.needs_migration",
         return_value=True,
     ):
-        await _setup_memory_store(hass, knx)
+        await knx.setup_integration()
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
@@ -363,7 +316,7 @@ async def test_load_history_hydrate_error(
         "knx_telegram_store.BufferedSqliteStore.get_last_unique_telegrams",
         side_effect=side_effect,
     ):
-        await _setup_memory_store(hass, knx)
+        await knx.setup_integration()
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
@@ -373,19 +326,9 @@ async def test_load_history_hydrate_error(
 async def test_migrate_telegrams_no_json(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    tmp_path: Path,
 ) -> None:
     """Test migration is a no-op when there is no legacy JSON history."""
-    db_path = tmp_path / "telegrams_no_json.db"
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {
-            CONF_KNX_TELEGRAM_DB_PATH: str(db_path),
-        },
-    )
-    await knx.setup_integration(add_entry_to_hass=False)
+    await knx.setup_integration()
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
@@ -396,7 +339,6 @@ async def test_migrate_telegrams_no_json(
 async def test_migrate_telegrams_unexpected_format(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    tmp_path: Path,
 ) -> None:
     """Test migration skips an unexpected legacy JSON payload format."""
     history_key = "knx/telegrams_history.json"
@@ -407,16 +349,7 @@ async def test_migrate_telegrams_unexpected_format(
         "data": "not a list or dict",
     }
 
-    db_path = tmp_path / "telegrams_bad_format.db"
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {
-            CONF_KNX_TELEGRAM_DB_PATH: str(db_path),
-        },
-    )
-    await knx.setup_integration(add_entry_to_hass=False)
+    await knx.setup_integration()
 
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams
     assert telegrams_module.store is not None
@@ -427,7 +360,6 @@ async def test_migrate_telegrams_unexpected_format(
 async def test_migrate_telegrams_store_error(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    tmp_path: Path,
 ) -> None:
     """Test migration errors are logged without failing setup."""
     history_key = "knx/telegrams_history.json"
@@ -455,20 +387,11 @@ async def test_migrate_telegrams_store_error(
         ],
     }
 
-    db_path = tmp_path / "telegrams_store_error.db"
-    knx.mock_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        knx.mock_config_entry,
-        options=knx.mock_config_entry.options
-        | {
-            CONF_KNX_TELEGRAM_DB_PATH: str(db_path),
-        },
-    )
     with patch(
         "knx_telegram_store.BufferedSqliteStore.store_many",
         side_effect=KnxTelegramStoreException("write failed"),
     ):
-        await knx.setup_integration(add_entry_to_hass=False)
+        await knx.setup_integration()
 
     # Setup still succeeds even though migration failed
     telegrams_module = hass.data[KNX_MODULE_KEY].telegrams

@@ -16,6 +16,7 @@ from homeassistant import config_entries
 from homeassistant.components.knx.config_flow import (
     CONF_KEYRING_FILE,
     CONF_KNX_GATEWAY,
+    CONF_KNX_TELEGRAM_STORE_SECTION,
     CONF_KNX_TUNNELING_TYPE,
     DEFAULT_ENTRY_DATA,
     DEFAULT_ENTRY_OPTIONS,
@@ -41,14 +42,12 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
     CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
-    CONF_KNX_TELEGRAM_DB_PATH,
     CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     CONF_KNX_TUNNEL_ENDPOINT_IA,
     CONF_KNX_TUNNELING,
     CONF_KNX_TUNNELING_TCP,
     CONF_KNX_TUNNELING_TCP_SECURE,
     DOMAIN,
-    KNX_TELEGRAM_DB_PATH_DEFAULT,
     KNX_TELEGRAM_DB_RETENTION_DEFAULT,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
 )
@@ -1066,7 +1065,6 @@ async def test_form_with_automatic_connection_handling(
         CONF_KNX_STATE_UPDATER: True,
         CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: KNX_TELEGRAM_DB_RETENTION_DEFAULT,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
-        CONF_KNX_TELEGRAM_DB_PATH: KNX_TELEGRAM_DB_PATH_DEFAULT,
     }
     knx_setup.assert_called_once()
 
@@ -1689,8 +1687,8 @@ async def test_options_communication_settings(
         user_input={
             CONF_KNX_STATE_UPDATER: False,
             CONF_KNX_RATE_LIMIT: 40,
-            CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
-            "telegram_store_sqlite": {
+            CONF_KNX_TELEGRAM_STORE_SECTION: {
+                CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
                 CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
             },
         },
@@ -1701,7 +1699,6 @@ async def test_options_communication_settings(
         CONF_KNX_RATE_LIMIT: 40,
         CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
-        CONF_KNX_TELEGRAM_DB_PATH: KNX_TELEGRAM_DB_PATH_DEFAULT,
     }
     assert mock_config_entry.data == initial_data
     assert mock_config_entry.options == {
@@ -1709,6 +1706,5 @@ async def test_options_communication_settings(
         CONF_KNX_RATE_LIMIT: 40,
         CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: 30,
         CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
-        CONF_KNX_TELEGRAM_DB_PATH: KNX_TELEGRAM_DB_PATH_DEFAULT,
     }
     assert len(knx_setup.mock_calls) == 2

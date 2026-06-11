@@ -20,7 +20,6 @@ from homeassistant.components.knx.const import (
     CONF_KNX_SECURE_DEVICE_AUTHENTICATION,
     CONF_KNX_SECURE_USER_PASSWORD,
     CONF_KNX_STATE_UPDATER,
-    CONF_KNX_TELEGRAM_DB_PATH,
     DEFAULT_ROUTING_IA,
     DOMAIN,
 )
@@ -100,7 +99,6 @@ async def test_diagnostic_redact(
             CONF_KNX_SECURE_USER_PASSWORD: "user_password",
             CONF_KNX_SECURE_DEVICE_AUTHENTICATION: "device_authentication",
             CONF_KNX_ROUTING_BACKBONE_KEY: "bbaacc44bbaacc44bbaacc44bbaacc44",
-            CONF_KNX_TELEGRAM_DB_PATH: ":memory:",
         },
     )
     knx: KNXTestKit = KNXTestKit(hass, mock_config_entry, hass_storage)

@@ -29,6 +29,8 @@ from .const import (
     DOMAIN,
     KNX_MODULE_KEY,
     KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
+    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
+    SIGNAL_KNX_TELEGRAM,
     SUPPORTED_PLATFORMS_UI,
 )
 from .dpt import get_supported_dpts
@@ -46,11 +48,7 @@ from .storage.entity_store_validation import (
 from .storage.expose_controller import validate_expose_data
 from .storage.serialize import get_serialized_schema
 from .storage.time_server import validate_time_server_data
-from .telegrams import (
-    SIGNAL_KNX_DATA_SECURE_ISSUE_TELEGRAM,
-    SIGNAL_KNX_TELEGRAM,
-    TelegramDict,
-)
+from .telegrams import TelegramDict
 
 if TYPE_CHECKING:
     from .knx_module import KNXModule
