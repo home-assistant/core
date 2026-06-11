@@ -1,18 +1,27 @@
 """Test the Aqvify init."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
-from pyaqvify import AqvifyAuthException
+from freezegun.api import FrozenDateTimeFactory
+from pyaqvify import AqvifyAuthException, AqvifyDevices
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.aqvify.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
+
+EXPECTED_WATER_LEVEL = "-0.136786005"
 
 
 async def test_load_unload_entry(
@@ -93,3 +102,29 @@ async def test_setup_entry_auth_error_triggers_reauth(
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     assert flows[0]["step_id"] == "reauth_confirm"
+
+
+async def test_devices_multiple_created_count(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_aqvify_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+    # load_device_file: str,
+) -> None:
+    """Test that added devices are created."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert len(device_registry.devices) == 2
+    assert hass.states.get("sensor.device_3_water_level") is None
+
+    mock_aqvify_client.async_get_devices.return_value = AqvifyDevices(
+        await async_load_json_array_fixture(hass, "added_devices.json", DOMAIN)
+    )
+
+    freezer.tick(timedelta(seconds=240))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(device_registry.devices) == 3
+    assert hass.states.get("sensor.device_3_water_level").state == EXPECTED_WATER_LEVEL

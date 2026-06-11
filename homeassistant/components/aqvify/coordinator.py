@@ -135,3 +135,10 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
             devices=devices,
             device_data=device_data,
         )
+
+    def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
+        """Add devices."""
+
+        current_devices = set(self.data.devices.devices)
+        new_devices: set[str] = current_devices - added_devices
+        return (new_devices, current_devices)
