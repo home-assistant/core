@@ -74,7 +74,7 @@ async def test_set_target_temperature(
     oven_number_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
 ) -> None:
-    """Test setting the target temperature keeps the current cook mode."""
+    """Test setting the target temperature issues a cook command."""
     entity_id, mock_fixture, cavity = oven_number_entity
     mock = request.getfixturevalue(mock_fixture)
     mock.get_cook_mode.return_value = whirlpool.oven.CookMode.Broil
@@ -111,15 +111,17 @@ async def test_set_target_temperature_failure(
         )
 
 
+@pytest.mark.parametrize("current_mode", [whirlpool.oven.CookMode.Standby, None])
 async def test_set_target_temperature_from_idle(
     hass: HomeAssistant,
     oven_number_entity: tuple[str, str, whirlpool.oven.Cavity],
     request: pytest.FixtureRequest,
+    current_mode: whirlpool.oven.CookMode | None,
 ) -> None:
-    """Test that setting the temperature while idle defaults the mode to Bake."""
+    """Test that setting the temperature with no active cook defaults to Bake."""
     entity_id, mock_fixture, cavity = oven_number_entity
     mock = request.getfixturevalue(mock_fixture)
-    mock.get_cook_mode.return_value = whirlpool.oven.CookMode.Standby
+    mock.get_cook_mode.return_value = current_mode
     await init_integration(hass)
 
     await hass.services.async_call(
