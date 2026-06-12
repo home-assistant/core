@@ -25,7 +25,7 @@ def ccm15_device() -> Generator[None]:
     }
     device_state = CCM15DeviceState(devices=ccm15_devices)
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
+        "homeassistant.components.ccm15.coordinator.CCM15Coordinator._fetch_data",
         return_value=device_state,
     ):
         yield
@@ -36,7 +36,7 @@ def network_failure_ccm15_device() -> Generator[None]:
     """Mock empty set of ccm15 device."""
     device_state = CCM15DeviceState(devices={})
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
+        "homeassistant.components.ccm15.coordinator.CCM15Coordinator._fetch_data",
         return_value=device_state,
     ):
         yield

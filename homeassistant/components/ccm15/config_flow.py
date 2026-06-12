@@ -3,12 +3,14 @@
 import logging
 from typing import Any
 
-from ccm15 import CCM15Device
+import httpx
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DEFAULT_TIMEOUT, DOMAIN
 
@@ -20,6 +22,18 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Optional(CONF_PORT, default=80): cv.port,
     }
 )
+
+
+async def _test_connection(hass: HomeAssistant, host: str, port: int) -> bool:
+    """Probe the controller's status endpoint using HA's shared httpx client."""
+    client = get_async_client(hass)
+    try:
+        response = await client.get(
+            f"http://{host}:{port}/status.xml", timeout=DEFAULT_TIMEOUT
+        )
+    except httpx.RequestError:
+        return False
+    return response.status_code == 200
 
 
 class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -34,11 +48,10 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self._async_abort_entries_match(user_input)
-            ccm15 = CCM15Device(
-                user_input[CONF_HOST], user_input[CONF_PORT], DEFAULT_TIMEOUT
-            )
             try:
-                if not await ccm15.async_test_connection():
+                if not await _test_connection(
+                    self.hass, user_input[CONF_HOST], user_input[CONF_PORT]
+                ):
                     errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")

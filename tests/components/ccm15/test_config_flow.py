@@ -22,7 +22,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
 
     with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection",
+        "homeassistant.components.ccm15.config_flow._test_connection",
         return_value=True,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -53,7 +53,7 @@ async def test_form_invalid_host(
     assert result["errors"] == {}
 
     with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection",
+        "homeassistant.components.ccm15.config_flow._test_connection",
         return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -69,7 +69,7 @@ async def test_form_invalid_host(
     assert len(mock_setup_entry.mock_calls) == 0
 
     with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
+        "homeassistant.components.ccm15.config_flow._test_connection", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -89,7 +89,8 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=False
+        "homeassistant.components.ccm15.config_flow._test_connection",
+        return_value=False,
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -102,7 +103,7 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "cannot_connect"}
 
     with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
+        "homeassistant.components.ccm15.config_flow._test_connection", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -122,7 +123,7 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection",
+        "homeassistant.components.ccm15.config_flow._test_connection",
         side_effect=Exception(),
     ):
         result2 = await hass.config_entries.flow.async_configure(
@@ -136,7 +137,7 @@ async def test_form_unexpected_error(hass: HomeAssistant) -> None:
     assert result2["errors"] == {"base": "unknown"}
 
     with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
+        "homeassistant.components.ccm15.config_flow._test_connection", return_value=True
     ):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],

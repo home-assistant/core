@@ -3404,6 +3404,7 @@ xknx==3.15.0
 # homeassistant.components.knx
 xknxproject==3.9.0
 
+# homeassistant.components.ccm15
 # homeassistant.components.fritz
 # homeassistant.components.rest
 # homeassistant.components.startca
