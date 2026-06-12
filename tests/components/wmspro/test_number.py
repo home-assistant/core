@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
-    "entity_name",
+    "entity_id",
     [
         "number.zonwering_begane_grond_keuken_alle_raw_rotation",
         "number.zonwering_begane_grond_keuken_alle_minimum_rotation",
@@ -36,7 +36,7 @@ async def test_number_update(
     mock_hub_status_prod_slat_rotate: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
-    entity_name: str,
+    entity_id: str,
 ) -> None:
     """Test that a number entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
@@ -44,7 +44,7 @@ async def test_number_update(
     assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
     assert len(mock_hub_status_prod_slat_rotate.mock_calls) == 7
 
-    entity = hass.states.get(entity_name)
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert entity == snapshot
 
@@ -57,7 +57,7 @@ async def test_number_update(
 
 
 @pytest.mark.parametrize(
-    ("entity_name", "initial_value", "target_value"),
+    ("entity_id", "initial_value", "target_value"),
     [
         ("number.zonwering_begane_grond_keuken_alle_raw_rotation", "0", "80"),
         ("number.zonwering_begane_grond_keuken_alle_minimum_rotation", "-75", "-50"),
@@ -72,7 +72,7 @@ async def test_number_set_value(
     mock_hub_status_prod_slat_rotate: AsyncMock,
     mock_action_call: AsyncMock,
     freezer: FrozenDateTimeFactory,
-    entity_name: str,
+    entity_id: str,
     initial_value: str,
     target_value: str,
 ) -> None:
@@ -82,7 +82,7 @@ async def test_number_set_value(
     assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
     assert len(mock_hub_status_prod_slat_rotate.mock_calls) == 7
 
-    entity = hass.states.get(entity_name)
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert float(entity.state) == float(initial_value)
 
@@ -104,14 +104,14 @@ async def test_number_set_value(
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        entity = hass.states.get(entity_name)
+        entity = hass.states.get(entity_id)
         assert entity is not None
         assert float(entity.state) == float(target_value)
         assert len(mock_hub_status_prod_slat_rotate.mock_calls) == before
 
 
 @pytest.mark.parametrize(
-    ("entity_name", "initial_value", "target_value"),
+    ("entity_id", "initial_value", "target_value"),
     [
         ("number.zonwering_begane_grond_keuken_alle_minimum_rotation", "-75", "-50"),
         ("number.zonwering_begane_grond_keuken_alle_maximum_rotation", "75", "100"),
@@ -125,7 +125,7 @@ async def test_number_set_and_restore_value(
     mock_hub_status_prod_slat_rotate: AsyncMock,
     mock_action_call: AsyncMock,
     freezer: FrozenDateTimeFactory,
-    entity_name: str,
+    entity_id: str,
     initial_value: str,
     target_value: str,
 ) -> None:
@@ -135,7 +135,7 @@ async def test_number_set_and_restore_value(
     assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
     assert len(mock_hub_status_prod_slat_rotate.mock_calls) == 7
 
-    entity = hass.states.get(entity_name)
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert float(entity.state) == float(initial_value)
 
@@ -146,14 +146,14 @@ async def test_number_set_and_restore_value(
         blocking=True,
     )
 
-    entity = hass.states.get(entity_name)
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert float(entity.state) == float(target_value)
 
     # Simulate restart by unloading and recreating the entity
     assert await unload_config_entry(hass, mock_config_entry)
     assert await setup_config_entry(hass, mock_config_entry)
-    entity = hass.states.get(entity_name)
+    entity = hass.states.get(entity_id)
     assert entity is not None
     assert float(entity.state) == float(target_value)
 
