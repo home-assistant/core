@@ -110,7 +110,6 @@ class EntityBridge:
             return
         entity_id: str = event.data["entity_id"]
         new_state = event.data.get("new_state")
-        old_state = event.data.get("old_state")
 
         if new_state is None:
             if entity_id in self._registered:
@@ -132,10 +131,6 @@ class EntityBridge:
                 name=f"sandbox:state:{entity_id}",
             )
             return
-
-        if old_state is not None and entity_id not in self._pending:
-            # Existed before we started watching; register it now anyway.
-            pass
 
         if entity_id in self._pending:
             return
