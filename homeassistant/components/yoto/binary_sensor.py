@@ -31,6 +31,7 @@ BINARY_SENSORS: tuple[YotoBinarySensorEntityDescription, ...] = (
     YotoBinarySensorEntityDescription(
         key="charging",
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
+        entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda player: player.status.is_charging,
     ),
     YotoBinarySensorEntityDescription(
