@@ -9,6 +9,8 @@ from homeassistant.components.sandbox.channel import (
     Channel,
     ChannelClosedError,
     ChannelRemoteError,
+    Frame,
+    JsonCodec,
 )
 
 from ._helpers import make_channel_pair
@@ -259,3 +261,81 @@ async def test_concurrency_cap_queues_excess_handlers() -> None:
     finally:
         await channel_a.close()
         await channel_b.close()
+
+
+class _ObservableTransport:
+    """Transport that records close()/wait_closed() and lets a test feed EOF.
+
+    The EOF path inside the read loop sets ``_closed`` but never touches the
+    transport; this records whether a later ``close()`` actually closes it.
+    """
+
+    def __init__(self) -> None:
+        self._inbox: asyncio.Queue[bytes | None] = asyncio.Queue()
+        self.close_calls = 0
+        self.wait_closed_calls = 0
+
+    def feed(self, data: bytes | None) -> None:
+        self._inbox.put_nowait(data)
+
+    async def read_frame(self) -> bytes | None:
+        return await self._inbox.get()
+
+    async def write_frame(self, data: bytes) -> None:
+        return None
+
+    def close(self) -> None:
+        self.close_calls += 1
+
+    async def wait_closed(self) -> None:
+        self.wait_closed_calls += 1
+
+
+async def test_close_after_eof_still_closes_transport() -> None:
+    """close() after EOF finishes the teardown the read loop couldn't.
+
+    On EOF the read loop sets ``_closed`` and cancels inflight handlers but
+    cannot close the transport or await the cancelled tasks (it runs inside
+    the reader). A later close() must still close the transport and await the
+    inflight exactly once — otherwise the byte channel leaks every restart.
+    """
+    transport = _ObservableTransport()
+    channel = Channel.from_transport(transport, name="eof")
+
+    started = asyncio.Event()
+    cancelled = asyncio.Event()
+
+    async def slow(_payload: object) -> None:
+        started.set()
+        try:
+            await asyncio.sleep(60)
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    channel.register("test/slow", slow)
+    channel.start()
+
+    # Drive one inbound call so a handler task is inflight, then feed EOF.
+    transport.feed(JsonCodec().encode(Frame.call(1, "test/slow", None)))
+    await asyncio.wait_for(started.wait(), timeout=2.0)
+    transport.feed(None)
+
+    for _ in range(50):
+        if channel.closed:
+            break
+        await asyncio.sleep(0)
+    # EOF marked the channel closed but did NOT close the transport.
+    assert channel.closed
+    assert transport.close_calls == 0
+
+    await channel.close()
+
+    # close() finished the teardown: transport closed once, inflight awaited.
+    assert transport.close_calls == 1
+    assert transport.wait_closed_calls == 1
+    assert cancelled.is_set()
+
+    # Idempotent: a second close() does no further transport work.
+    await channel.close()
+    assert transport.close_calls == 1
