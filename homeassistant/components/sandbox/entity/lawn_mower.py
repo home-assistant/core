@@ -1,7 +1,5 @@
 """Sandbox proxy for ``lawn_mower`` entities."""
 
-from typing import TYPE_CHECKING
-
 from homeassistant.components.lawn_mower import (
     LawnMowerActivity,
     LawnMowerEntity,
@@ -10,24 +8,12 @@ from homeassistant.components.lawn_mower import (
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxLawnMowerEntity(SandboxProxyEntity, LawnMowerEntity):
     """Proxy for a ``lawn_mower`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``LawnMowerEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = LawnMowerEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = LawnMowerEntityFeature
 
     @property
     def activity(self) -> LawnMowerActivity | None:

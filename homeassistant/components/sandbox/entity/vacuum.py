@@ -1,6 +1,6 @@
 """Sandbox proxy for ``vacuum`` entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.vacuum import (
     ATTR_FAN_SPEED,
@@ -13,9 +13,6 @@ from homeassistant.components.vacuum import (
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 def _segment_from_dict(data: dict[str, Any]) -> Segment:
     """Rebuild a :class:`Segment` dataclass from its serialised dict."""
@@ -26,16 +23,7 @@ def _segment_from_dict(data: dict[str, Any]) -> Segment:
 class SandboxVacuumEntity(SandboxProxyEntity, StateVacuumEntity):
     """Proxy for a ``vacuum`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``VacuumEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = VacuumEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = VacuumEntityFeature
 
     @property
     def activity(self) -> VacuumActivity | None:

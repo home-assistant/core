@@ -1,30 +1,18 @@
 """Sandbox proxy for ``notify`` entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
 from homeassistant.core import Context
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxNotifyEntity(SandboxProxyEntity, NotifyEntity):
     """Proxy for a ``notify`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``NotifyEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = NotifyEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = NotifyEntityFeature
 
     def sandbox_apply_state(
         self,
