@@ -149,7 +149,8 @@ class SupervisorAddonUpdateEntity(HassioAddonEntity, UpdateEntity):
             return changelog
 
         regex_pattern = re.compile(
-            rf"^#* {re.escape(self.latest_version)}\n(?:^(?!#* {re.escape(self.installed_version)}).*\n)*",
+            rf"^#* {re.escape(self.latest_version)}\n"
+            rf"(?:^(?!#* {re.escape(self.installed_version)}).*\n)*",
             re.MULTILINE,
         )
         match = regex_pattern.search(changelog)
@@ -246,7 +247,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         version = AwesomeVersion(self.latest_version)
-        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
+        if version.dev or version.strategy is AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/operating-system/commits/dev"
         return (
             f"https://github.com/home-assistant/operating-system/releases/tag/{version}"
@@ -303,7 +304,7 @@ class SupervisorSupervisorUpdateEntity(HassioSupervisorEntity, UpdateEntity):
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         version = AwesomeVersion(self.latest_version)
-        if version.dev or version.strategy == AwesomeVersionStrategy.UNKNOWN:
+        if version.dev or version.strategy is AwesomeVersionStrategy.UNKNOWN:
             return "https://github.com/home-assistant/supervisor/commits/main"
         return f"https://github.com/home-assistant/supervisor/releases/tag/{version}"
 
@@ -401,7 +402,8 @@ class SupervisorCoreUpdateEntity(HassioCoreEntity, UpdateEntity):
         version = AwesomeVersion(self.latest_version)
         if version.dev:
             return "https://github.com/home-assistant/core/commits/dev"
-        return f"https://{'rc' if version.beta else 'www'}.home-assistant.io/latest-release-notes/"
+        subdomain = "rc" if version.beta else "www"
+        return f"https://{subdomain}.home-assistant.io/latest-release-notes/"
 
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any

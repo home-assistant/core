@@ -20,7 +20,8 @@ LIGHT_ON = 1
 LIGHT_OFF = 2
 
 # API "no reading" sentinels. Most temperatures use centidegrees (-32768 -> -327.68 °C).
-# Some devices report the int16 minimum already in degrees after scaling (-3276800 raw -> -32768 °C).
+# Some devices report the int16 minimum already in degrees
+# after scaling (-3276800 raw -> -32768 C).
 DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
@@ -174,6 +175,8 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     disinfecting = 285
     flex_load_active = 11047
     automatic_start = 11044
+    paused = 11052
+    cancelled = 11053
 
 
 class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
@@ -511,7 +514,9 @@ class DishWasherProgramId(MieleEnum, missing_to_none=True):
     tall_items = 17, 42
     glasses_warm = 19
     quick_intense = 21
-    normal = 30
+    normal = 23, 30
+    pre_wash = 24
+    pot_rests_and_filters = 25
     power_wash = 44, 204
     comfort_wash = 203
     comfort_wash_plus = 209

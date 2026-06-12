@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from homeassistant.components.lovelace import dashboard
+from homeassistant.components.lovelace import DOMAIN, dashboard
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -28,7 +28,7 @@ def mock_onboarding_done() -> Generator[MagicMock]:
 
 async def test_system_health_info_autogen(hass: HomeAssistant) -> None:
     """Test system health info endpoint."""
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(hass, "system_health", {})
     info = await get_system_health_info(hass, "lovelace")
     assert info == {"dashboards": 1, "mode": "auto-gen", "resources": 0}
@@ -45,17 +45,18 @@ async def test_system_health_info_storage_migration(
         "version": 1,
         "data": {"config": {"resources": [], "views": []}},
     }
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     info = await get_system_health_info(hass, "lovelace")
-    # After migration: default dashboard (auto-gen) + migrated "lovelace" dashboard (storage with data)
+    # After migration: default dashboard (auto-gen) + migrated
+    # "lovelace" dashboard (storage with data)
     assert info == {"dashboards": 2, "mode": "storage", "resources": 0, "views": 0}
 
 
 async def test_system_health_info_yaml(hass: HomeAssistant) -> None:
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "system_health", {})
-    assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
+    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
     await hass.async_block_till_done()
     with patch(
         "homeassistant.components.lovelace.dashboard.load_yaml_dict",
@@ -69,7 +70,7 @@ async def test_system_health_info_yaml(hass: HomeAssistant) -> None:
 async def test_system_health_info_yaml_not_found(hass: HomeAssistant) -> None:
     """Test system health info endpoint."""
     assert await async_setup_component(hass, "system_health", {})
-    assert await async_setup_component(hass, "lovelace", {"lovelace": {"mode": "YAML"}})
+    assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "YAML"}})
     await hass.async_block_till_done()
     info = await get_system_health_info(hass, "lovelace")
     # 2 dashboards: default storage (None) + yaml "lovelace" dashboard

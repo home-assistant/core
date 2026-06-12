@@ -102,5 +102,6 @@ class KodiNotificationService(BaseNotificationService):
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
             await self._server.GUI.ShowNotification(title, message, icon, displaytime)
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except jsonrpc_async.TransportError:
             _LOGGER.warning("Unable to fetch Kodi data. Is Kodi online?")

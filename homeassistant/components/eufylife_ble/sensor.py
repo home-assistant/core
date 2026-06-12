@@ -61,10 +61,12 @@ class EufyLifeSensorEntity(SensorEntity):
     def available(self) -> bool:
         """Determine if the entity is available."""
         if self._data.client.advertisement_data_contains_state:
-            # If the device only uses advertisement data, just check if the address is present.
+            # If the device only uses advertisement data,
+            # just check if the address is present.
             return async_address_present(self.hass, self._data.address)
 
-        # If the device needs an active connection, availability is based on whether it is connected.
+        # If the device needs an active connection,
+        # availability is based on whether it is connected.
         return self._data.client.is_connected
 
     @callback

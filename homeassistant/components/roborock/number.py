@@ -74,7 +74,7 @@ async def async_setup_entry(
 
 
 class RoborockNumberEntity(RoborockEntityV1, NumberEntity):
-    """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
+    """A class to set options on a Roborock vacuum with fixed options."""
 
     entity_description: RoborockNumberDescription
 

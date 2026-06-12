@@ -13,9 +13,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     other_states,
@@ -27,7 +27,7 @@ from tests.components.common import (
 
 @pytest.fixture
 async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple alarm control panel entities associated with different targets."""
+    """Create alarm control panel entities for different targets."""
     return await target_entities(hass, "alarm_control_panel")
 
 
@@ -153,7 +153,7 @@ async def test_alarm_control_panel_trigger_options_validation(
         ),
     ],
 )
-async def test_alarm_control_panel_state_trigger_behavior_any(
+async def test_alarm_control_panel_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
@@ -163,8 +163,12 @@ async def test_alarm_control_panel_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the alarm control panel state trigger fires when any alarm control panel state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test alarm control panel state trigger.
+
+    Fires when any alarm control panel state changes to a
+    specific state.
+    """
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_alarm_control_panels,
         trigger_target_config=trigger_target_config,
@@ -259,7 +263,11 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the alarm control panel state trigger fires when the first alarm control panel changes to a specific state."""
+    """Test alarm control panel state trigger.
+
+    Fires when the first alarm control panel changes to a
+    specific state.
+    """
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_alarm_control_panels,
@@ -345,7 +353,7 @@ async def test_alarm_control_panel_state_trigger_behavior_first(
         ),
     ],
 )
-async def test_alarm_control_panel_state_trigger_behavior_last(
+async def test_alarm_control_panel_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_alarm_control_panels: dict[str, list[str]],
     trigger_target_config: dict,
@@ -355,8 +363,12 @@ async def test_alarm_control_panel_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the alarm_control_panel state trigger fires when the last alarm_control_panel changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test alarm_control_panel state trigger.
+
+    Fires when the last alarm_control_panel changes to a
+    specific state.
+    """
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_alarm_control_panels,
         trigger_target_config=trigger_target_config,

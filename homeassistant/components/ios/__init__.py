@@ -1,5 +1,5 @@
 """Native Home Assistant iOS app component."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import datetime
 from http import HTTPStatus
@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import Platform
+from homeassistant.const import CONF_ACTIONS, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, discovery
@@ -41,7 +41,6 @@ from .const import (
     CONF_ACTION_SHOW_IN_CARPLAY,
     CONF_ACTION_SHOW_IN_WATCH,
     CONF_ACTION_USE_CUSTOM_COLORS,
-    CONF_ACTIONS,
     DOMAIN,
 )
 

@@ -216,6 +216,8 @@ class LunatoneLineBroadcastLight(
 
     _attr_assumed_state = True
     _attr_color_mode = ColorMode.BRIGHTNESS
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     def __init__(

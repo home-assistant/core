@@ -81,6 +81,7 @@ def handle_backup_errors[_R, **P](
             return await func(self, *args, **kwargs)
         except AuthenticationError as err:
             self._entry.async_start_reauth(self._hass)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Authentication error") from err
         except OneDriveException as err:
             _LOGGER.error(
@@ -89,12 +90,14 @@ def handle_backup_errors[_R, **P](
                 err,
             )
             _LOGGER.debug("Full error: %s", err, exc_info=True)
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Backup operation failed") from err
         except TimeoutError as err:
             _LOGGER.error(
                 "Error during backup in %s: Timeout",
                 func.__name__,
             )
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError("Backup operation timed out") from err
 
     return wrapper
@@ -177,13 +180,15 @@ class OneDriveBackupAgent(BackupAgent):
                 ),
             )
         except HashMismatchError as err:
+            # pylint: disable-next=home-assistant-exception-not-translated
             raise BackupAgentError(
                 "Hash validation failed, backup file might be corrupt"
             ) from err
 
         _LOGGER.debug("Uploaded backup to %s", backup_filename)
 
-        # Store metadata in separate metadata file (just backup.as_dict(), no extra fields)
+        # Store metadata in separate metadata file
+        # (just backup.as_dict(), no extra fields)
         metadata_content = json_dumps(backup.as_dict())
         try:
             await self._client.upload_file(
@@ -279,4 +284,5 @@ class OneDriveBackupAgent(BackupAgent):
         if backup := metadata_files.get(backup_id):
             return backup
 
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise BackupNotFound(f"Backup {backup_id} not found")

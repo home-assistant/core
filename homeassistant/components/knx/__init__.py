@@ -135,9 +135,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     await hass.config_entries.async_forward_entry_setups(
         entry,
         {
-            Platform.SENSOR,  # always forward sensor for system entities (telegram counter, etc.)
-            *SUPPORTED_PLATFORMS_UI,  # forward all platforms that support UI entity management
-            *configured_platforms_yaml,  # forward yaml-only managed platforms on demand,
+            # always forward sensor for system entities
+            # (telegram counter, etc.)
+            Platform.SENSOR,
+            # forward all platforms that support UI entity
+            # management
+            *SUPPORTED_PLATFORMS_UI,
+            # forward yaml-only managed platforms on demand
+            *configured_platforms_yaml,
         },
     )
 
@@ -168,9 +173,14 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     unload_ok = await hass.config_entries.async_unload_platforms(
         entry,
         {
-            Platform.SENSOR,  # always unload system entities (telegram counter, etc.)
-            *SUPPORTED_PLATFORMS_UI,  # unload all platforms that support UI entity management
-            *configured_platforms_yaml,  # unload yaml-only managed platforms if configured,
+            # always unload system entities
+            # (telegram counter, etc.)
+            Platform.SENSOR,
+            # unload all platforms that support UI entity
+            # management
+            *SUPPORTED_PLATFORMS_UI,
+            # unload yaml-only managed platforms if configured
+            *configured_platforms_yaml,
         },
     )
     if unload_ok:

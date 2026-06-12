@@ -31,7 +31,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -144,7 +144,9 @@ def _sensor_device_info_to_hass(
     adv: Aranet4Advertisement,
 ) -> DeviceInfo:
     """Convert a sensor device info to hass device info."""
-    hass_device_info = DeviceInfo({})
+    hass_device_info = DeviceInfo(
+        connections={(CONNECTION_BLUETOOTH, adv.device.address)}
+    )
     if adv.readings and adv.readings.name:
         hass_device_info[ATTR_NAME] = adv.readings.name
         hass_device_info[ATTR_MANUFACTURER] = ARANET_MANUFACTURER_NAME
@@ -193,7 +195,11 @@ async def async_setup_entry(
             Aranet4BluetoothSensorEntity, async_add_entities
         )
     )
-    entry.async_on_unload(entry.runtime_data.async_register_processor(processor))
+    entry.async_on_unload(
+        entry.runtime_data.async_register_processor(
+            processor, AranetSensorEntityDescription
+        )
+    )
 
 
 class Aranet4BluetoothSensorEntity(

@@ -130,7 +130,8 @@ class DiscogsSensor(SensorEntity):
                 "cat_no": self._attrs["labels"][0]["catno"],
                 "cover_image": self._attrs["cover_image"],
                 "format": (
-                    f"{self._attrs['formats'][0]['name']} ({self._attrs['formats'][0]['descriptions'][0]})"
+                    f"{self._attrs['formats'][0]['name']}"
+                    f" ({self._attrs['formats'][0]['descriptions'][0]})"
                 ),
                 "label": self._attrs["labels"][0]["name"],
                 "released": self._attrs["year"],

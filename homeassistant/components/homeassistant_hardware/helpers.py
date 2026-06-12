@@ -216,7 +216,8 @@ class HardwareInfoDispatcher:
         if self._active_firmware_updates[device] != source_domain:
             current_domain = self._active_firmware_updates[device]
             raise ValueError(
-                f"Firmware update for {device} is owned by {current_domain}, not {source_domain}"
+                f"Firmware update for {device} is owned by"
+                f" {current_domain}, not {source_domain}"
             )
 
         del self._active_firmware_updates[device]

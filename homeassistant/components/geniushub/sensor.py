@@ -75,7 +75,7 @@ class GeniusBattery(GeniusDevice, SensorEntity):
 
         icon = "mdi:battery"
         if battery_level <= 95:
-            icon += f"-{int(round(battery_level / 10 - 0.01)) * 10}"
+            icon += f"-{round(battery_level / 10 - 0.01) * 10}"
 
         return icon
 

@@ -30,7 +30,7 @@ async def async_setup_entry(
     time_settings = [
         setting
         for setting in cast(list[Setting], elk.settings)
-        if setting.value_format == SettingFormat.TIME_OF_DAY
+        if setting.value_format is SettingFormat.TIME_OF_DAY
     ]
 
     create_elk_entities(
@@ -57,7 +57,9 @@ class ElkTimeSetting(ElkAttachedEntity, TimeEntity):
         else:
             self._attr_available = False
             _LOGGER.warning(
-                "Setting type for '%s' differs between the ElkM1 and the entity. Restart the integration to fix",
+                "Setting type for '%s' differs between the"
+                " ElkM1 and the entity. Restart the"
+                " integration to fix",
                 self.entity_id,
             )
 

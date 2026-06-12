@@ -95,11 +95,13 @@ async def test_rpc_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for button.test_name_restart of Test name",
+            "Device communication error occurred while calling action"
+            " for button.test_name_restart of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for button.test_name_restart of Test name",
+            "RPC call error occurred while calling action"
+            " for button.test_name_restart of Test name",
         ),
     ],
 )
@@ -233,11 +235,13 @@ async def test_rpc_blu_trv_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for button.trv_name_calibrate of Test name",
+            "Device communication error occurred while calling action"
+            " for button.trv_name_calibrate of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for button.trv_name_calibrate of Test name",
+            "RPC call error occurred while calling action"
+            " for button.trv_name_calibrate of Test name",
         ),
     ],
 )
@@ -344,7 +348,7 @@ async def test_rpc_remove_virtual_button_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual button will be removed if it has been removed from the device configuration."""
+    """Test virtual button removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(

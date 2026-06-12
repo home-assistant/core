@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from rf_protocols import get_codes
+from rf_protocols.codes.honeywell.string_lights import CODES
 
 from homeassistant.components.light import ColorMode, LightEntity
 from homeassistant.components.radio_frequency import async_send_command
@@ -15,8 +15,6 @@ from homeassistant.helpers.restore_state import RestoreEntity
 from .entity import HoneywellStringLightsEntity
 
 PARALLEL_UPDATES = 1
-
-COMMANDS = get_codes("honeywell/string_lights")
 
 
 async def async_setup_entry(
@@ -57,7 +55,7 @@ class HoneywellStringLight(HoneywellStringLightsEntity, LightEntity, RestoreEnti
 
     async def _async_send_command(self, name: str) -> None:
         """Load the named command and send it via the configured transmitter."""
-        command = await COMMANDS.async_load_command(name)
+        command = await CODES.async_load_command(name)
         await async_send_command(
             self.hass, self._transmitter, command, context=self._context
         )

@@ -172,7 +172,8 @@ class AbstractTemplateAlarmControlPanel(
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity calls AbstractTemplateEntity.__init__.
+    # The super init is not called because
+    # TemplateEntity calls AbstractTemplateEntity.__init__.
     def __init__(self, name: str) -> None:  # pylint: disable=super-init-not-called
         """Setup the templates and scripts."""
 

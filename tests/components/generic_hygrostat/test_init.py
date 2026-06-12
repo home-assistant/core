@@ -163,7 +163,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     expected_helper_device_id: str | None,
     expected_events: list[str],
 ) -> None:
-    """Test the generic_hygrostat config entry is removed when the source entity is removed."""
+    """Test config entry is removed when the source entity is removed."""
     source_entity_entry = entity_registry.async_get(source_entity_id)
 
     assert await hass.config_entries.async_setup(
@@ -239,7 +239,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     expected_helper_device_id: str | None,
     expected_events: list[str],
 ) -> None:
-    """Test the generic_hygrostat config entry is removed when the source entity is removed."""
+    """Test config entry is removed when the source entity is removed."""
     source_entity_entry = entity_registry.async_get(source_entity_id)
 
     # Add another config entry to the source device

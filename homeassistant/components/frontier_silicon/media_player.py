@@ -320,7 +320,7 @@ class AFSAPIDevice(MediaPlayerEntity):
     @fs_command_exception_wrap
     async def async_media_play(self) -> None:
         """Send play command."""
-        if (await self.fs_device.get_play_state()) == PlayState.STOPPED:
+        if (await self.fs_device.get_play_status()) == PlayState.STOPPED:
             # The 'play' command only seems to work when the current stream is paused.
             # We need to send a 'stop' command instead to resume a stopped stream.
             await self.fs_device.stop()
@@ -445,7 +445,8 @@ class AFSAPIDevice(MediaPlayerEntity):
             if len(keys) != 1:
                 raise BrowseError("Presets can only have 1 level")
 
-            # Keys of presets are 0-based, while the list shown on the device starts from 1
+            # Keys of presets are 0-based, while the list shown
+            # on the device starts from 1
             preset = int(keys[0]) - 1
 
             await self.fs_device.select_preset(preset)

@@ -181,13 +181,9 @@ class ThinQFanEntity(ThinQEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-        try:
-            value = percentage_to_ordered_list_item(
-                self._ordered_named_fan_speeds, percentage
-            )
-        except ValueError:
-            _LOGGER.exception("Failed to async_set_percentage")
-            return
+        value = percentage_to_ordered_list_item(
+            self._ordered_named_fan_speeds, percentage
+        )
 
         _LOGGER.debug(
             "[%s:%s] async_set_percentage. percentage=%s, value=%s",

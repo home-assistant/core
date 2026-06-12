@@ -73,7 +73,8 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
     assert result["data"][CONF_DEVICE] is not None
     assert result["data"][CONF_WEBHOOK_ID] is not None
 
-    # Since this is user flow, there is no hostname, so hostname should be the IP address
+    # Since this is user flow, there is no hostname,
+    # so hostname should be the IP address
     assert result["data"][CONF_HOST] == TEST_IP
     assert result["result"].unique_id == TEST_SIMPLE_MAC
 

@@ -351,6 +351,7 @@ def async_register_services(  # noqa: C901
 
         _LOGGER.debug("Created Todoist task: %s", call.data[CONTENT])
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SERVICE_NEW_TASK, handle_new_task, schema=NEW_TASK_SERVICE_SCHEMA
     )

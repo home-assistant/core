@@ -17,7 +17,7 @@ from homeassistant.components.ffmpeg import (
     FFmpegManager,
     get_ffmpeg_manager,
 )
-from homeassistant.components.ffmpeg_motion.binary_sensor import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.ffmpeg_motion.binary_sensor import (  # pylint: disable=home-assistant-component-root-import
     FFmpegBinarySensor,
 )
 from homeassistant.const import CONF_NAME

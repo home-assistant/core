@@ -400,10 +400,16 @@ class _ConditionFail(_HaltScript):
 class _StopScript(_HaltScript):
     """Throw if script needs to stop."""
 
-    def __init__(self, message: str, response: Any) -> None:
+    def __init__(
+        self,
+        message: str,
+        response: Any,
+        conversation_response: str | None | UndefinedType = UNDEFINED,
+    ) -> None:
         """Initialize a halt exception."""
         super().__init__(message)
         self.response = response
+        self.conversation_response = conversation_response
 
 
 class _ScriptRun:
@@ -458,7 +464,7 @@ class _ScriptRun:
 
         try:
             self._log("Running %s", self._script.running_description)
-            for self._step, self._action in enumerate(self._script.sequence):
+            for self._step, self._action in enumerate(self._script.sequence):  # noqa: B020
                 if self._stop.done():
                     script_execution_set("cancelled")
                     break
@@ -480,6 +486,10 @@ class _ScriptRun:
                 raise
 
             response = err.response
+
+            # Bubble up child conversation response
+            if err.conversation_response is not UNDEFINED:
+                self._conversation_response = err.conversation_response
 
         except Exception:
             script_execution_set("error")
@@ -889,7 +899,8 @@ class _ScriptRun:
 
                         if iteration > REPEAT_TERMINATE_ITERATIONS:
                             self._log(
-                                "While condition %s terminated because it looped %s times",
+                                "While condition %s terminated because"
+                                " it looped %s times",
                                 repeat[CONF_WHILE],
                                 REPEAT_TERMINATE_ITERATIONS,
                                 level=logging.CRITICAL,
@@ -978,7 +989,7 @@ class _ScriptRun:
                 ) from ex
         else:
             response = None
-        raise _StopScript(stop, response)
+        raise _StopScript(stop, response, self._conversation_response)
 
     ## Variable actions ##
 
@@ -1015,7 +1026,8 @@ class _ScriptRun:
             if supports_response == SupportsResponse.NONE and return_response:
                 raise vol.Invalid(
                     f"Script does not support '{CONF_RESPONSE_VARIABLE}' for service "
-                    f"'{params[CONF_DOMAIN]}.{params[CONF_SERVICE]}' which does not support response data."
+                    f"'{params[CONF_DOMAIN]}.{params[CONF_SERVICE]}'"
+                    " which does not support response data."
                 )
 
         running_script = (
@@ -1837,7 +1849,8 @@ class Script:
             variables = ScriptRunVariables.create_top_level(run_variables)
             variables["context"] = context
         else:
-            # This is not the top level script, run_variables is an instance of ScriptRunVariables
+            # This is not the top level script, run_variables
+            # is an instance of ScriptRunVariables
             variables = cast(ScriptRunVariables, run_variables)
 
         # Prevent non-allowed recursive calls which will cause deadlocks when we try to

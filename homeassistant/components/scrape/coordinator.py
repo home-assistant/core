@@ -59,7 +59,8 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
             raise UpdateFailed("REST data is not available")
 
         # Detect if content is XML and use appropriate parser
-        # Check Content-Type header first (most reliable), then fall back to content detection
+        # Check Content-Type header first (most reliable),
+        # then fall back to content detection
         parser = "lxml"
         headers = self._rest.headers
         content_type = headers.get("Content-Type", "") if headers else ""
@@ -76,7 +77,8 @@ class ScrapeCoordinator(DataUpdateCoordinator[BeautifulSoup]):
                     after_xml_lower = after_xml.lower()
                     is_html = after_xml_lower.startswith(("<!doctype html", "<html"))
                     if is_html:
-                        # Strip XML declaration from HTML to avoid XMLParsedAsHTMLWarning
+                        # Strip XML declaration from HTML
+                        # to avoid XMLParsedAsHTMLWarning
                         data = after_xml
                     else:
                         parser = "lxml-xml"

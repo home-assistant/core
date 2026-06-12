@@ -139,7 +139,7 @@ class LegacyTriggerFormat(TriggerFormat):
 
 @dataclass
 class TargetTriggerFormat(TriggerFormat):
-    """Target trigger format using platform: calendar.event_started/ended with target."""
+    """Target trigger format using event_started/ended."""
 
     id: str = "target"
 

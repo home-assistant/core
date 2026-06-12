@@ -58,8 +58,7 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         key="weather",
         native_attr_name="significantWeatherCode",
         name="Weather",
-        icon="mdi:weather-sunny",  # but will adapt to current conditions
-        entity_registry_enabled_default=True,
+        icon="mdi:weather-sunny",
     ),
     MetOfficeSensorEntityDescription(
         key="temperature",
@@ -68,7 +67,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
         key="feels_like_temperature",
@@ -77,7 +75,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon=None,
         entity_registry_enabled_default=False,
     ),
     MetOfficeSensorEntityDescription(
@@ -90,7 +87,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
         key="wind_direction",
@@ -130,7 +126,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         name="UV index",
         native_unit_of_measurement=UV_INDEX,
         icon="mdi:weather-sunny-alert",
-        entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
         key="precipitation",
@@ -139,7 +134,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         name="Probability of precipitation",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-rainy",
-        entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
         key="humidity",
@@ -148,7 +142,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        icon=None,
         entity_registry_enabled_default=False,
     ),
     MetOfficeSensorEntityDescription(

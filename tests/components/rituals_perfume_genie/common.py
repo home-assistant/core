@@ -90,7 +90,7 @@ async def init_integration(
     mock_config_entry: MockConfigEntry,
     mock_diffusers: list[MagicMock],
 ) -> None:
-    """Initialize the Rituals Perfume Genie integration with the given Config Entry and Diffuser list."""
+    """Initialize Rituals Perfume Genie with given entry and diffusers."""
     mock_config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.rituals_perfume_genie.Account"

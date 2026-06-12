@@ -23,7 +23,7 @@ TEST_SERIAL_NUMBER = "0011223344556677"
 
 @pytest.fixture
 def validate_input_all_ok() -> Generator[dict[str, AsyncMock | MagicMock]]:
-    """Yield dictionary of mocked functions required for successful test_form execution."""
+    """Yield mocked functions required for successful test_form."""
     with (
         patch(
             BASE_CONFIG_FLOW + "WebioAPI.check_connection",

@@ -81,6 +81,7 @@ async def test_config_exceptions(
         ),
         pytest.raises(config_error),
     ):
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         await async_setup_entry(hass, config_entry)
 
 

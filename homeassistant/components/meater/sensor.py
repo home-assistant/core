@@ -129,7 +129,8 @@ SENSOR_TYPES = (
         ),
     ),
     # Remaining time in seconds. When unknown/calculating default is used. Default: -1
-    # Exposed as a TIMESTAMP sensor where the timestamp is current time + remaining time.
+    # Exposed as a TIMESTAMP sensor where the timestamp is
+    # current time + remaining time.
     MeaterSensorEntityDescription(
         key="cook_time_remaining",
         translation_key="cook_time_remaining",

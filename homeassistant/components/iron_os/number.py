@@ -284,11 +284,16 @@ PINECIL_NUMBER_DESCRIPTIONS_V223: tuple[IronOSNumberEntityDescription, ...] = (
 )
 
 """
-The `device_class` attribute was removed from the `setpoint_temperature`, `sleep_temperature`, and `boost_temp` entities.
-These entities represent user-defined input values, not measured temperatures, and their
-interpretation depends on the device's current unit configuration. Applying a device_class
-results in automatic unit conversions, which introduce rounding errors due to the use of integers.
-This can prevent the correct value from being set, as the input is modified during synchronization with the device.
+The `device_class` attribute was removed from the
+`setpoint_temperature`, `sleep_temperature`, and
+`boost_temp` entities. These entities represent user-defined
+input values, not measured temperatures, and their
+interpretation depends on the device's current unit
+configuration. Applying a device_class results in automatic
+unit conversions, which introduce rounding errors due to the
+use of integers. This can prevent the correct value from
+being set, as the input is modified during synchronization
+with the device.
 """
 PINECIL_TEMP_NUMBER_DESCRIPTIONS: tuple[IronOSNumberEntityDescription, ...] = (
     IronOSNumberEntityDescription(

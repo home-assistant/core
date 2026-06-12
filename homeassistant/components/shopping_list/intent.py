@@ -83,6 +83,8 @@ class ListTopItemsIntent(intent.IntentHandler):
         else:
             items_list = ", ".join(str(itm["name"]) for itm in reversed(items))
             response.async_set_speech(
-                f"These are the top {min(len(items), 5)} items on your shopping list: {items_list}"
+                "These are the top"
+                f" {min(len(items), 5)} items on your"
+                f" shopping list: {items_list}"
             )
         return response
