@@ -709,6 +709,9 @@
     "ptz_preset_not_found": {
       "message": "Could not find PTZ preset with name {preset_name} on camera {camera_name}"
     },
+    "public_bootstrap_failed": {
+      "message": "Could not load the public API bootstrap for camera streams"
+    },
     "relay_not_available": {
       "message": "Relay is no longer available"
     },
@@ -746,6 +749,21 @@
     "deprecate_hdr_switch": {
       "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode switch has been replaced with an HDR Mode select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
       "title": "HDR Mode switch deprecated"
+    },
+    "public_stream_disabled": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Home Assistant could not enable an RTSPS stream for {camera}. You may need to enable a stream manually on the camera, or disable the camera entity if you only need snapshots.",
+            "title": "[%key:component::unifiprotect::issues::public_stream_disabled::fix_flow::step::start::title%]"
+          },
+          "start": {
+            "description": "No RTSPS stream is available for the camera {camera}, so it cannot live stream within Home Assistant. Confirm this repair and Home Assistant will create the highest quality RTSPS stream for you through the UniFi Protect public API.",
+            "title": "No stream is available for camera {camera}"
+          }
+        }
+      },
+      "title": "No stream is available for camera {camera}"
     },
     "rtsp_disabled_readonly": {
       "fix_flow": {
@@ -785,13 +803,15 @@
           "all_updates": "Realtime metrics (WARNING: Greatly increases CPU usage)",
           "disable_rtsp": "Disable the RTSP stream",
           "max_media": "Max number of event to load for Media Browser (increases RAM usage)",
-          "override_connection_host": "Override connection host"
+          "override_connection_host": "Override connection host",
+          "use_public_api_streams": "Use the public API for camera streams"
         },
         "data_description": {
           "all_updates": "Enable realtime metrics updates. Only use if you have enabled diagnostic sensors and want them updated in realtime.",
           "disable_rtsp": "Disable the RTSP stream for all cameras. Use this if you don't need live video feeds.",
           "max_media": "Maximum number of events to load in the Media Browser. Higher values use more RAM.",
-          "override_connection_host": "Override the connection host for the UniFi Protect device."
+          "override_connection_host": "Override the connection host for the UniFi Protect device.",
+          "use_public_api_streams": "Source camera live streams from the official UniFi Protect public API (default). Turn this off to use the legacy private RTSP stream handling. The entities are unaffected either way."
         },
         "description": "Realtime metrics option should only be enabled if you have enabled the diagnostics sensors and want them updated in realtime. If not enabled, they will only update once every 15 minutes.",
         "title": "UniFi Protect options"

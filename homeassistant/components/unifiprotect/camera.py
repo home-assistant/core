@@ -60,6 +60,24 @@ def _create_rtsp_repair(
 
 
 @callback
+def _create_public_stream_repair(
+    hass: HomeAssistant, entry: UFPConfigEntry, camera: UFPCamera
+) -> None:
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"public_stream_disabled_{camera.id}",
+        is_fixable=True,
+        is_persistent=False,
+        learn_more_url="https://www.home-assistant.io/integrations/unifiprotect/#camera-streams",
+        severity=IssueSeverity.WARNING,
+        translation_key="public_stream_disabled",
+        translation_placeholders={"camera": camera.display_name},
+        data={"entry_id": entry.entry_id, "camera_id": camera.id},
+    )
+
+
+@callback
 def _get_camera_channels(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -101,12 +119,94 @@ def _get_camera_channels(
             ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
 
 
+@callback
+def _async_public_camera_entities(
+    hass: HomeAssistant,
+    entry: UFPConfigEntry,
+    data: ProtectData,
+    ufp_device: UFPCamera | None = None,
+) -> list[ProtectDeviceEntity]:
+    """Create camera entities with stream URLs sourced from the public API.
+
+    Mirrors the private path's "expose only working channels" model: one secure
+    entity per *active* RTSPS quality (the first is enabled by default), plus the
+    package camera. When no quality is active the high channel is still created
+    so snapshots work, and a repair offers to activate its stream. RTSPS URLs
+    come from the public API with SRTP stripped for go2rtc.
+    """
+    disable_stream = data.disable_stream
+    entities: list[ProtectDeviceEntity] = []
+    cameras = data.get_cameras() if ufp_device is None else [ufp_device]
+    for camera in cameras:
+        if not camera.channels:
+            if ufp_device is None:
+                # only warn on startup
+                _LOGGER.warning(
+                    "Camera does not have any channels: %s (id: %s)",
+                    camera.display_name,
+                    camera.id,
+                )
+            data.async_add_pending_camera_id(camera.id)
+            continue
+
+        # Public mode supersedes the private per-channel RTSP repair.
+        ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{camera.id}")
+        streams = data.get_rtsps_streams(camera.id)
+        active = set(streams.get_active_stream_qualities()) if streams else set()
+
+        has_stream = False
+        for channel in camera.channels:
+            if channel.is_package:
+                # package camera provides snapshots only; 2 FPS streams buffer
+                entities.append(ProtectCamera(data, camera, channel, True, True, True))
+                continue
+            # The first active quality becomes the default (enabled) entity;
+            # inactive qualities are skipped so an enabled entity always streams.
+            if _QUALITY_BY_CHANNEL_ID.get(channel.id) in active:
+                entities.append(
+                    ProtectCamera(
+                        data, camera, channel, not has_stream, True, disable_stream
+                    )
+                )
+                has_stream = True
+
+        issue_id = f"public_stream_disabled_{camera.id}"
+        if has_stream:
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+            continue
+
+        # No active stream: still expose the camera via the high channel so
+        # snapshots work, and raise a repair to activate it. Skip the repair when
+        # RTSP is globally disabled, the camera is third-party, or the camera is
+        # offline — a disconnected camera has no stream because it is offline (the
+        # library primes connected cameras only), not because it needs activating.
+        entities.append(
+            ProtectCamera(data, camera, camera.channels[0], True, True, disable_stream)
+        )
+        if (
+            disable_stream
+            or camera.is_third_party_camera
+            or camera.state is not StateType.CONNECTED
+        ):
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+        else:
+            _create_public_stream_repair(hass, entry, camera)
+    return entities
+
+
 def _async_camera_entities(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
     data: ProtectData,
     ufp_device: UFPCamera | None = None,
 ) -> list[ProtectDeviceEntity]:
+    if data.use_public_api_streams:
+        return _async_public_camera_entities(hass, entry, data, ufp_device)
+
+    # Legacy private stream path: kept only as a fallback while the private API
+    # still exists. When the private API is removed, drop this branch, the
+    # `use_public_api_streams` option, and the secure/insecure split (the
+    # `{mac}_{id}_insecure` entities), and migrate unique_ids accordingly.
     disable_stream = data.disable_stream
     entities: list[ProtectDeviceEntity] = []
     for camera, channel, is_default in _get_camera_channels(
@@ -169,6 +269,14 @@ async def async_setup_entry(
 _DISABLE_FEATURE = CameraEntityFeature(0)
 _ENABLE_FEATURE = CameraEntityFeature.STREAM
 
+# Maps a private channel id to its public-API RTSPS quality name (the keys
+# consumed by ``RTSPSStreams.get_stream_url``). Keyed on channel id on purpose:
+# the camera unique_id is ``{mac}_{channel.id}`` in both the public and private
+# paths, so the use_public_api_streams toggle stays reversible without entity
+# churn. When the private API (and the toggle) are removed, switch to the
+# channel/quality names and migrate unique_ids.
+_QUALITY_BY_CHANNEL_ID = {0: "high", 1: "medium", 2: "low"}
+
 
 class ProtectCamera(ProtectDeviceEntity, Camera):
     """A Ubiquiti UniFi Protect Camera."""
@@ -194,6 +302,8 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._secure = secure
         self._disable_stream = disable_stream
         self._last_image: bytes | None = None
+        # None for the package channel (snapshot only) and any non-standard id
+        self._quality = _QUALITY_BY_CHANNEL_ID.get(channel.id)
         super().__init__(data, camera)
         device = self.device
 
@@ -214,14 +324,27 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
 
     @callback
     def _async_set_stream_source(self) -> None:
-        channel = self.channel
-        enable_stream = not self._disable_stream and channel.is_rtsp_enabled
-        # SRTP disabled because go2rtc does not support it
-        # https://github.com/AlexxIT/go2rtc/#source-rtsp
-        rtsp_url = channel.rtsps_no_srtp_url if self._secure else channel.rtsp_url
-        source = rtsp_url if enable_stream else None
+        if self.data.use_public_api_streams:
+            source = self._async_public_stream_source()
+        else:
+            channel = self.channel
+            enable_stream = not self._disable_stream and channel.is_rtsp_enabled
+            # SRTP disabled because go2rtc does not support it
+            # https://github.com/AlexxIT/go2rtc/#source-rtsp
+            rtsp_url = channel.rtsps_no_srtp_url if self._secure else channel.rtsp_url
+            source = rtsp_url if enable_stream else None
         self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
         self._stream_source = source
+
+    @callback
+    def _async_public_stream_source(self) -> str | None:
+        """Return the public-API RTSPS stream URL (SRTP stripped for go2rtc)."""
+        if self._disable_stream or self.channel.is_package or self._quality is None:
+            return None
+        streams = self.data.get_rtsps_streams(self.device.id)
+        if streams is None:
+            return None
+        return streams.get_stream_url(self._quality, srtp=False)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
@@ -254,10 +377,13 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
         """Return the Camera Image."""
-        if self.channel.is_package:
-            last_image = await self.device.get_package_snapshot(width, height)
-        else:
-            last_image = await self.device.get_public_api_snapshot()
+        # Both the main and the package snapshot come from the public API; the
+        # package camera is selected with ``package=True`` (``?channel=package``).
+        # width/height are not forwarded (the public snapshot endpoint has no
+        # resize); the camera component scales the returned JPEG itself.
+        last_image = await self.device.get_public_api_snapshot(
+            package=self.channel.is_package
+        )
         self._last_image = last_image
         return self._last_image
 

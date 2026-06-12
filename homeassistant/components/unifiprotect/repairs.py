@@ -4,6 +4,7 @@ from typing import cast
 
 from uiprotect import ProtectApiClient
 from uiprotect.data import Bootstrap, Camera
+from uiprotect.exceptions import ClientError
 import voluptuous as vol
 
 from homeassistant.components.repairs import (
@@ -70,8 +71,8 @@ class CloudAccountRepair(ProtectRepair):
         return self.async_create_entry(data={})
 
 
-class RTSPRepair(ProtectRepair):
-    """Handler for an issue fixing flow."""
+class _CameraRepair(ProtectRepair):
+    """Base handler for a camera-scoped issue fixing flow."""
 
     _camera_id: str
     _camera: Camera | None
@@ -111,6 +112,10 @@ class RTSPRepair(ProtectRepair):
             self._camera = bootstrap.cameras.get(self._camera_id)
             assert self._camera is not None
         return self._camera
+
+
+class RTSPRepair(_CameraRepair):
+    """Handler for an issue fixing flow."""
 
     async def _enable_rtsp(self) -> None:
         camera = await self._get_camera()
@@ -163,6 +168,69 @@ class RTSPRepair(ProtectRepair):
         )
 
 
+class PublicStreamRepair(_CameraRepair):
+    """Handler for a missing public-API RTSPS stream."""
+
+    async def _has_active_stream(self) -> bool:
+        # The issue is raised only when no quality is active; creating the high
+        # stream clears it. Matches the trigger in camera.py so the repair does
+        # not re-raise after a successful fix.
+        streams = await self._api.get_camera_rtsps_streams(self._camera_id)
+        return bool(streams and streams.get_active_stream_qualities())
+
+    async def async_step_init(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+
+        return await self.async_step_start()
+
+    async def async_step_start(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the first step of a fix flow."""
+
+        if user_input is None:
+            # make sure camera object is loaded for placeholders
+            await self._get_camera()
+            placeholders = self._async_get_placeholders()
+            return self.async_show_form(
+                step_id="start",
+                data_schema=vol.Schema({}),
+                description_placeholders=placeholders,
+            )
+
+        # Creating a stream needs write permission; a NotAuthorized/ClientError
+        # routes to the confirm step (which explains the manual fallback)
+        # instead of raising out of the fix flow.
+        try:
+            active = await self._has_active_stream()
+            if not active:
+                await self._api.create_camera_rtsps_streams(self._camera_id, "high")
+                active = await self._has_active_stream()
+        except ClientError:
+            active = False
+
+        if active:
+            await self.hass.config_entries.async_reload(self._entry.entry_id)
+            return self.async_create_entry(data={})
+        return await self.async_step_confirm()
+
+    async def async_step_confirm(
+        self, user_input: dict[str, str] | None = None
+    ) -> RepairsFlowResult:
+        """Handle the confirm step of a fix flow."""
+        if user_input is not None:
+            return self.async_create_entry(data={})
+
+        placeholders = self._async_get_placeholders()
+        return self.async_show_form(
+            step_id="confirm",
+            data_schema=vol.Schema({}),
+            description_placeholders=placeholders,
+        )
+
+
 @callback
 def _async_get_or_create_api_client(
     hass: HomeAssistant, entry: UFPConfigEntry
@@ -189,6 +257,10 @@ async def async_create_fix_flow(
             return CloudAccountRepair(api=api, entry=entry)
         if issue_id.startswith("rtsp_disabled_"):
             return RTSPRepair(
+                api=api, entry=entry, camera_id=cast(str, data["camera_id"])
+            )
+        if issue_id.startswith("public_stream_disabled_"):
+            return PublicStreamRepair(
                 api=api, entry=entry, camera_id=cast(str, data["camera_id"])
             )
     return ConfirmRepairFlow()

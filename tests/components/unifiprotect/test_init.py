@@ -12,6 +12,7 @@ from uiprotect.exceptions import BadRequest, NotAuthorized
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
+    CONF_USE_PUBLIC_API_STREAMS,
     DOMAIN,
 )
 from homeassistant.components.unifiprotect.data import (
@@ -305,6 +306,34 @@ async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture) -> N
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
     assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "ufp_options", [{CONF_USE_PUBLIC_API_STREAMS: True}], indirect=True
+)
+async def test_setup_public_bootstrap_failed_retries(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """A failed public bootstrap retries setup in public stream mode."""
+    ufp.api.update_public = AsyncMock(side_effect=NvrError)
+
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+    assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "ufp_options", [{CONF_USE_PUBLIC_API_STREAMS: False}], indirect=True
+)
+async def test_setup_public_bootstrap_failed_ignored_private_mode(
+    hass: HomeAssistant, ufp: MockUFPFixture
+) -> None:
+    """A failed public bootstrap is best-effort when not using public streams."""
+    ufp.api.update_public = AsyncMock(side_effect=NvrError)
+
+    await hass.config_entries.async_setup(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+    assert ufp.entry.state is ConfigEntryState.LOADED
 
 
 async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> None:

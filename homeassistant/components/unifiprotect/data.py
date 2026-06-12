@@ -9,6 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from uiprotect import ProtectApiClient
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
     Camera,
@@ -38,7 +39,9 @@ from .const import (
     AUTH_RETRIES,
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
+    CONF_USE_PUBLIC_API_STREAMS,
     DEFAULT_MAX_MEDIA,
+    DEFAULT_USE_PUBLIC_API_STREAMS,
     DEVICES_THAT_ADOPT,
     DISPATCH_ADD,
     DISPATCH_ADOPT,
@@ -107,6 +110,13 @@ class ProtectData:
         return self._entry.options.get(CONF_DISABLE_RTSP, False)  # type: ignore[no-any-return]
 
     @property
+    def use_public_api_streams(self) -> bool:
+        """Check if camera streams are sourced from the public API."""
+        return self._entry.options.get(  # type: ignore[no-any-return]
+            CONF_USE_PUBLIC_API_STREAMS, DEFAULT_USE_PUBLIC_API_STREAMS
+        )
+
+    @property
     def max_events(self) -> int:
         """Max number of events to load at once."""
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)  # type: ignore[no-any-return]
@@ -157,6 +167,21 @@ class ProtectData:
                     camera.display_name,
                 )
                 self.ptz_patrols[camera.id] = []
+
+    @callback
+    def get_rtsps_streams(self, camera_id: str) -> RTSPSStreams | None:
+        """Return the library-owned public-API RTSPS streams for a camera.
+
+        The library primes ``PublicCamera.rtsps_streams`` during
+        ``update_public()`` and keeps it fresh (reconnect refresh + create/delete
+        write-through), so the integration reads it synchronously and stores
+        nothing itself.
+        """
+        api = self.api
+        if not api.has_public_bootstrap:
+            return None
+        camera = api.public_bootstrap.cameras.get(camera_id)
+        return camera.rtsps_streams if camera is not None else None
 
     @callback
     def async_setup(self) -> None:
@@ -280,10 +305,18 @@ class ProtectData:
     def _async_add_device(self, device: ProtectAdoptableDeviceModel) -> None:
         if device.is_adopted_by_us:
             _LOGGER.debug("Device adopted: %s", device.id)
-            if isinstance(device, Camera) and device.feature_flags.is_ptz:
+            # Cameras may need async data (PTZ patrols, public RTSPS streams)
+            # loaded before their entities are created on adopt. AiPort
+            # subclasses Camera but has no camera entities/streams, so it skips
+            # the async path.
+            if (
+                isinstance(device, Camera)
+                and device.model is not ModelType.AIPORT
+                and (device.feature_flags.is_ptz or self.use_public_api_streams)
+            ):
                 self._hass.async_create_task(
-                    self._async_adopt_ptz_camera(device),
-                    name="unifiprotect_adopt_ptz_camera",
+                    self._async_adopt_camera(device),
+                    name="unifiprotect_adopt_camera",
                 )
             else:
                 async_dispatcher_send(self._hass, self.adopt_signal, device)
@@ -291,9 +324,18 @@ class ProtectData:
             _LOGGER.debug("New device detected: %s", device.id)
             async_dispatcher_send(self._hass, self.add_signal, device)
 
-    async def _async_adopt_ptz_camera(self, camera: Camera) -> None:
-        """Load PTZ patrol data and dispatch adopt signal for a PTZ camera."""
+    async def _async_adopt_camera(self, camera: Camera) -> None:
+        """Load async camera data and dispatch the adopt signal."""
         await self.async_load_ptz_patrols_for_camera(camera)
+        if self.use_public_api_streams:
+            # Refresh the public bootstrap so the newly-adopted camera is present
+            # and the library has primed its RTSPS streams before entities build.
+            try:
+                await self.api.update_public()
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug(
+                    "Public bootstrap refresh failed on camera adopt", exc_info=True
+                )
         async_dispatcher_send(self._hass, self.adopt_signal, camera)
 
     @callback

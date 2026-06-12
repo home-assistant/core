@@ -163,7 +163,18 @@ async def _async_setup_entry(
     # registered in async_setup() per library docs (subscribe first, then prime).
     try:
         await data_service.api.update_public()
-    except Exception:  # noqa: BLE001
+    except Exception as err:
+        # Public-API camera streams hard-depend on the public bootstrap (the
+        # minimum Protect version always exposes it), so a failed prime means a
+        # transient outage, not a missing feature: bail with ConfigEntryNotReady
+        # so HA retries instead of building streamless camera entities and
+        # raising spurious repairs. Other public data (arm/relay/siren) is
+        # best-effort, so a private-stream entry still proceeds.
+        if data_service.use_public_api_streams:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="public_bootstrap_failed",
+            ) from err
         _LOGGER.debug("Public API bootstrap update failed", exc_info=True)
 
     # Load PTZ patrol data before loading platforms

@@ -44,8 +44,10 @@ from .const import (
     CONF_DISABLE_RTSP,
     CONF_MAX_MEDIA,
     CONF_OVERRIDE_CHOST,
+    CONF_USE_PUBLIC_API_STREAMS,
     DEFAULT_MAX_MEDIA,
     DEFAULT_PORT,
+    DEFAULT_USE_PUBLIC_API_STREAMS,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
     MIN_REQUIRED_PROTECT_V,
@@ -324,6 +326,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_ALL_UPDATES: False,
                 CONF_OVERRIDE_CHOST: False,
                 CONF_MAX_MEDIA: DEFAULT_MAX_MEDIA,
+                CONF_USE_PUBLIC_API_STREAMS: DEFAULT_USE_PUBLIC_API_STREAMS,
             },
         )
 
@@ -552,6 +555,13 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                             CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA
                         ),
                     ): vol.All(vol.Coerce(int), vol.Range(min=100, max=10000)),
+                    vol.Optional(
+                        CONF_USE_PUBLIC_API_STREAMS,
+                        default=self.config_entry.options.get(
+                            CONF_USE_PUBLIC_API_STREAMS,
+                            DEFAULT_USE_PUBLIC_API_STREAMS,
+                        ),
+                    ): bool,
                 }
             ),
         )

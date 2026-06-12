@@ -570,6 +570,7 @@ async def test_form_options(
             "disable_rtsp": True,
             "override_connection_host": True,
             "max_media": 1000,
+            "use_public_api_streams": True,
         }
         await hass.async_block_till_done()
         await hass.config_entries.async_unload(ufp_config_entry.entry_id)

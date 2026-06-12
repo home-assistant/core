@@ -3,9 +3,14 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock
 
+import pytest
 from uiprotect.data import Camera, CloudAccount, Version
 
-from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
+from homeassistant.components.unifiprotect.const import (
+    CONF_DISABLE_RTSP,
+    CONF_USE_PUBLIC_API_STREAMS,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -18,6 +23,12 @@ from tests.components.repairs import (
     start_repair_fix_flow,
 )
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
+
+
+@pytest.fixture(name="ufp_options")
+def _private_stream_options() -> dict[str, bool]:
+    """The RTSP repair belongs to the legacy private stream path."""
+    return {CONF_USE_PUBLIC_API_STREAMS: False}
 
 
 async def test_cloud_user_fix(
