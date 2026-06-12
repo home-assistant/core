@@ -60,7 +60,6 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
         vol.Schema(
             {
                 vol.Required("handler"): str,
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
         )
@@ -93,7 +92,7 @@ class FlowManagerIndexView(_BaseFlowManagerView[_FlowManagerT]):
 
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
-        return {"show_advanced_options": data["show_advanced_options"]}
+        return {}
 
 
 class FlowManagerResourceView(_BaseFlowManagerView[_FlowManagerT]):

@@ -938,3 +938,15 @@ class AvmWrapper(FritzBoxTools):
             "X_AVM-DE_WakeOnLANByMACAddress",
             NewMACAddress=mac_address,
         )
+
+    async def async_get_firmware_extra_infos(self) -> dict[str, Any]:
+        """Return extra infos for firmware."""
+        return await self._async_service_call("UserInterface", "1", "X_AVM-DE_GetInfo")
+
+    async def async_get_device_uptime_hours(self) -> int:
+        """Get device uptime in hours."""
+
+        def _get_uptime_hours() -> int:
+            return int(self.fritz_status.device_uptime // 3600)
+
+        return await self.hass.async_add_executor_job(_get_uptime_hours)

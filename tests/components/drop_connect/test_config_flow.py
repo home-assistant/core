@@ -1,6 +1,7 @@
 """Test config flow."""
 
 from homeassistant import config_entries
+from homeassistant.components.drop_connect.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
@@ -19,7 +20,7 @@ async def test_mqtt_setup(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> N
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop_connect",
+        DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
         data=discovery_info,
     )
@@ -56,7 +57,7 @@ async def test_duplicate(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> No
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop_connect",
+        DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
         data=discovery_info,
     )
@@ -73,7 +74,7 @@ async def test_duplicate(hass: HomeAssistant, mqtt_mock: MqttMockHAClient) -> No
 
     # Attempting configuration of the same object should abort
     result = await hass.config_entries.flow.async_init(
-        "drop_connect",
+        DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
         data=discovery_info,
     )
@@ -95,7 +96,7 @@ async def test_mqtt_setup_incomplete_payload(
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop_connect",
+        DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
         data=discovery_info,
     )
@@ -117,7 +118,7 @@ async def test_mqtt_setup_bad_json(
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop_connect",
+        DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
         data=discovery_info,
     )
@@ -139,7 +140,7 @@ async def test_mqtt_setup_bad_topic(
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop_connect",
+        DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
         data=discovery_info,
     )
@@ -161,7 +162,7 @@ async def test_mqtt_setup_no_payload(
         timestamp=None,
     )
     result = await hass.config_entries.flow.async_init(
-        "drop_connect",
+        DOMAIN,
         context={"source": config_entries.SOURCE_MQTT},
         data=discovery_info,
     )
@@ -173,7 +174,7 @@ async def test_mqtt_setup_no_payload(
 async def test_user_setup(hass: HomeAssistant) -> None:
     """Test user setup."""
     result = await hass.config_entries.flow.async_init(
-        "drop_connect", context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_supported"

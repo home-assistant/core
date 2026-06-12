@@ -2,6 +2,7 @@
   "domain": "opnsense",
   "name": "OPNsense",
   "codeowners": ["@HarlemSquirrel", "@Snuffy2"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/opnsense",
   "integration_type": "hub",
   "iot_class": "local_polling",

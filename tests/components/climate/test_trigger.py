@@ -25,9 +25,9 @@ from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     other_states,
@@ -211,7 +211,7 @@ async def test_climate_trigger_validation(
         ),
     ],
 )
-async def test_climate_state_trigger_behavior_any(
+async def test_climate_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -222,7 +222,7 @@ async def test_climate_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test climate trigger fires on any state change."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -285,7 +285,7 @@ async def test_climate_state_trigger_behavior_any(
         ),
     ],
 )
-async def test_climate_state_attribute_trigger_behavior_any(
+async def test_climate_state_attribute_trigger_behavior_each(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -296,7 +296,7 @@ async def test_climate_state_attribute_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test climate attribute trigger fires on any change."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -462,7 +462,7 @@ async def test_climate_state_attribute_trigger_behavior_first(
         ),
     ],
 )
-async def test_climate_state_trigger_behavior_last(
+async def test_climate_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -472,8 +472,8 @@ async def test_climate_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test climate trigger fires on last state change."""
-    await assert_trigger_behavior_last(
+    """Test climate trigger fires when all climate entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
@@ -523,7 +523,7 @@ async def test_climate_state_trigger_behavior_last(
         ),
     ],
 )
-async def test_climate_state_attribute_trigger_behavior_last(
+async def test_climate_state_attribute_trigger_behavior_all(
     hass: HomeAssistant,
     target_climates: dict[str, list[str]],
     trigger_target_config: dict,
@@ -533,8 +533,8 @@ async def test_climate_state_attribute_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test climate attribute trigger fires on last change."""
-    await assert_trigger_behavior_last(
+    """Test climate attribute trigger fires when all climate entities have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_climates,
         trigger_target_config=trigger_target_config,
