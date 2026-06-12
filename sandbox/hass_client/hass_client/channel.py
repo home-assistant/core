@@ -434,6 +434,19 @@ class Channel:
         if inflight:
             await asyncio.gather(*inflight, return_exceptions=True)
 
+    async def drain_inflight(self, *, timeout: float = 5.0) -> None:
+        """Wait for in-flight inbound handlers to finish before closing.
+
+        Used at graceful shutdown: a call handler whose reply write is still
+        draining (write-lock contention, transport backpressure) must not be
+        cancelled by :meth:`close`, or the caller loses the reply. Bounded by
+        ``timeout`` — any handler still running afterwards is left for
+        ``close()`` to cancel. Does not itself cancel anything.
+        """
+        inflight = [task for task in self._inflight if task is not self._reader_task]
+        if inflight:
+            await asyncio.wait(inflight, timeout=timeout)
+
     async def _write(self, frame: Frame) -> None:
         data = self._codec.encode(frame)
         async with self._write_lock:
