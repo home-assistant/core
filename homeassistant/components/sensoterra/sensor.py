@@ -165,5 +165,5 @@ class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
             return False
 
         # Expire sensor if no update within the last few days.
-        expiration = datetime.now(UTC) - timedelta(days=SENSOR_EXPIRATION_DAYS)
+        expiration = datetime.now(UTC) - timedelta(days=SENSOR_EXPIRATION_DAYS)  # pylint: disable=home-assistant-enforce-utcnow
         return sensor.timestamp >= expiration

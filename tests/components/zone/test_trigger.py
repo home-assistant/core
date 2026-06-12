@@ -1,18 +1,26 @@
 """The tests for the location automation."""
 
+from datetime import timedelta
 from typing import Any
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
 from homeassistant.components import automation, zone
-from homeassistant.const import ATTR_ENTITY_ID, ENTITY_MATCH_ALL, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ENTITY_MATCH_ALL,
+    SERVICE_TURN_OFF,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import Context, HomeAssistant, ServiceCall
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger import async_validate_trigger_config
 from homeassistant.setup import async_setup_component
 
-from tests.common import mock_component
+from tests.common import async_fire_time_changed, mock_component
 from tests.components.common import (
     TriggerStateDescription,
     assert_trigger_behavior_all,
@@ -115,6 +123,144 @@ async def test_if_fires_on_zone_enter(
     await hass.async_block_till_done()
 
     assert len(service_calls) == 2
+
+
+@pytest.mark.parametrize(
+    "coords",
+    [
+        # Coordinates stay inside the zone the whole time, so a coordinate-based
+        # trigger would never see an enter transition.
+        pytest.param(
+            {"latitude": 32.880586, "longitude": -117.237564},
+            id="with_coordinates",
+        ),
+        # No coordinates at all; a coordinate-based trigger could not evaluate.
+        pytest.param({}, id="without_coordinates"),
+    ],
+)
+async def test_if_fires_on_zone_enter_via_in_zones(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    coords: dict[str, float],
+) -> None:
+    """Test the zone trigger fires based on in_zones, not coordinates.
+
+    Only the entity's in_zones attribute changes (from empty to the zone), and
+    that is what drives the enter event.
+    """
+    hass.states.async_set("device_tracker.entity", "hello", {**coords, "in_zones": []})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "device_tracker.entity",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Only in_zones changes; any coordinates are left unchanged.
+    hass.states.async_set(
+        "device_tracker.entity", "hello", {**coords, "in_zones": ["zone.test"]}
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+async def test_zone_enter_ignores_in_zones_for_other_domains(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test the zone trigger uses coordinates for non device_tracker/person.
+
+    A sensor entity reports in_zones that always lists the zone, yet only its
+    coordinates crossing into the zone drives the enter event. If in_zones were
+    honored the entity would already count as "in" and never enter.
+    """
+    hass.states.async_set(
+        "sensor.tracker",
+        "hello",
+        {
+            "latitude": 32.881011,
+            "longitude": -117.234758,
+            "in_zones": ["zone.test"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "sensor.tracker",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # in_zones unchanged (still lists the zone); coordinates move inside.
+    hass.states.async_set(
+        "sensor.tracker",
+        "hello",
+        {
+            "latitude": 32.880586,
+            "longitude": -117.237564,
+            "in_zones": ["zone.test"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
+async def test_zone_trigger_skips_coordinateless_non_tracker(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a coordinate-less non-tracker entity with in_zones is skipped.
+
+    Its in_zones attribute is not honored (wrong domain) and it has no
+    coordinates, so the zone trigger neither fires nor raises.
+    """
+    hass.states.async_set("sensor.tracker", "hello", {"in_zones": []})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "platform": "zone",
+                    "entity_id": "sensor.tracker",
+                    "zone": "zone.test",
+                    "event": "enter",
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set("sensor.tracker", "hello", {"in_zones": ["zone.test"]})
+    await hass.async_block_till_done()
+
+    assert len(service_calls) == 0
+    assert "has no 'latitude' attribute" not in caplog.text
 
 
 async def test_if_fires_on_zone_enter_uuid(
@@ -556,3 +702,162 @@ async def test_zone_trigger_behavior_all(
         trigger_options=trigger_options,
         states=states,
     )
+
+
+# --- Zone occupancy trigger tests ---
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key"),
+    ["zone.occupancy_detected", "zone.occupancy_cleared"],
+)
+async def test_zone_occupancy_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+) -> None:
+    """Test that occupancy triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        {"zone": ZONE_HOME},
+        supports_behavior=False,
+        supports_duration=True,
+        supports_target=False,
+    )
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "from_state", "to_state", "should_fire"),
+    [
+        # occupancy_detected
+        pytest.param("zone.occupancy_detected", "0", "1", True, id="detected_0_to_1"),
+        pytest.param("zone.occupancy_detected", "0", "3", True, id="detected_0_to_3"),
+        pytest.param("zone.occupancy_detected", "1", "2", False, id="detected_1_to_2"),
+        pytest.param("zone.occupancy_detected", "2", "0", False, id="detected_2_to_0"),
+        pytest.param(
+            "zone.occupancy_detected",
+            STATE_UNKNOWN,
+            "1",
+            False,
+            id="detected_unknown_to_1",
+        ),
+        pytest.param(
+            "zone.occupancy_detected",
+            STATE_UNAVAILABLE,
+            "1",
+            False,
+            id="detected_unavailable_to_1",
+        ),
+        pytest.param(
+            "zone.occupancy_detected",
+            "0",
+            STATE_UNAVAILABLE,
+            False,
+            id="detected_0_to_unavailable",
+        ),
+        # occupancy_cleared
+        pytest.param("zone.occupancy_cleared", "1", "0", True, id="cleared_1_to_0"),
+        pytest.param("zone.occupancy_cleared", "3", "0", True, id="cleared_3_to_0"),
+        pytest.param("zone.occupancy_cleared", "2", "1", False, id="cleared_2_to_1"),
+        pytest.param("zone.occupancy_cleared", "0", "1", False, id="cleared_0_to_1"),
+        pytest.param(
+            "zone.occupancy_cleared",
+            "1",
+            STATE_UNAVAILABLE,
+            False,
+            id="cleared_1_to_unavailable",
+        ),
+        pytest.param(
+            "zone.occupancy_cleared",
+            "1",
+            STATE_UNKNOWN,
+            False,
+            id="cleared_1_to_unknown",
+        ),
+    ],
+)
+async def test_zone_occupancy_trigger_transitions(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    from_state: str,
+    to_state: str,
+    should_fire: bool,
+) -> None:
+    """Test occupancy triggers fire on the expected numeric-state transitions."""
+    hass.states.async_set(ZONE_HOME, from_state)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "trigger": trigger_key,
+                    "options": {"zone": ZONE_HOME},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    hass.states.async_set(ZONE_HOME, to_state)
+    await hass.async_block_till_done()
+    assert (len(service_calls) == 1) is should_fire
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("trigger_key", "from_value", "to_value", "revert_value"),
+    [
+        ("zone.occupancy_detected", "0", "1", "0"),
+        ("zone.occupancy_cleared", "1", "0", "1"),
+    ],
+)
+async def test_zone_occupancy_trigger_for_duration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    service_calls: list[ServiceCall],
+    trigger_key: str,
+    from_value: str,
+    to_value: str,
+    revert_value: str,
+) -> None:
+    """Test that `for` delays the firing and an early revert cancels it."""
+    hass.states.async_set(ZONE_HOME, from_value)
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    "trigger": trigger_key,
+                    "options": {"zone": ZONE_HOME, "for": {"seconds": 5}},
+                },
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # Transition, then revert before the duration elapses -> no fire.
+    hass.states.async_set(ZONE_HOME, to_value)
+    await hass.async_block_till_done()
+    hass.states.async_set(ZONE_HOME, revert_value)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # Transition and hold past the duration -> fire once.
+    hass.states.async_set(ZONE_HOME, to_value)
+    await hass.async_block_till_done()
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1

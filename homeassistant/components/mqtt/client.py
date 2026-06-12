@@ -9,6 +9,7 @@ from functools import lru_cache, partial
 from itertools import chain, groupby
 import logging
 from operator import attrgetter
+import queue
 import socket
 import ssl
 import time
@@ -92,6 +93,8 @@ from .util import EnsureJobAfterCooldown, get_file_path, mqtt_config_entry_enabl
 
 _LOGGER = logging.getLogger(__name__)
 
+MQTT_TIMEOUT = 5
+
 MIN_BUFFER_SIZE = 131072  # Minimum buffer size to use if preferred size fails
 PREFERRED_BUFFER_SIZE = 8 * 1024 * 1024  # Set receive buffer size to 8MiB
 
@@ -156,7 +159,6 @@ async def async_publish(
 ) -> None:
     """Publish message to a MQTT topic."""
     if not mqtt_config_entry_enabled(hass):
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
             translation_key="mqtt_not_setup_cannot_publish",
             translation_domain=DOMAIN,
@@ -281,7 +283,6 @@ def async_subscribe_internal(
     try:
         mqtt_data = hass.data[DATA_MQTT]
     except KeyError as exc:
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
             translation_key="mqtt_not_setup_cannot_subscribe",
             translation_domain=DOMAIN,
@@ -289,7 +290,6 @@ def async_subscribe_internal(
         ) from exc
     client = mqtt_data.client
     if not mqtt_config_entry_enabled(hass):
-        # pylint: disable-next=home-assistant-exception-message-with-translation
         raise HomeAssistantError(
             translation_key="mqtt_not_enabled_cannot_subscribe",
             translation_domain=DOMAIN,
@@ -431,6 +431,40 @@ class MqttClientSetup:
     def client(self) -> AsyncMQTTClient:
         """Return the paho MQTT client."""
         return self._client
+
+
+def try_connection(
+    user_input: dict[str, Any],
+) -> bool:
+    """Test if we can connect to an MQTT broker."""
+    mqtt_client_setup = MqttClientSetup(user_input)
+    mqtt_client_setup.setup()
+    client = mqtt_client_setup.client
+
+    result: queue.Queue[bool] = queue.Queue(maxsize=1)
+
+    def on_connect(
+        _mqttc: mqtt.Client,
+        _userdata: None,
+        _connect_flags: mqtt.ConnectFlags,
+        reason_code: mqtt.ReasonCode,
+        _properties: mqtt.Properties | None = None,
+    ) -> None:
+        """Handle connection result."""
+        result.put(not reason_code.is_failure)
+
+    client.on_connect = on_connect
+
+    client.connect_async(user_input[CONF_BROKER], user_input[CONF_PORT])
+    client.loop_start()
+
+    try:
+        return result.get(timeout=MQTT_TIMEOUT)
+    except queue.Empty:
+        return False
+    finally:
+        client.disconnect()
+        client.loop_stop()
 
 
 class MQTT:
@@ -761,7 +795,7 @@ class MQTT:
             keepalive=self.conf.get(CONF_KEEPALIVE, DEFAULT_KEEPALIVE),
             # See:
             # https://eclipse.dev/paho/files/paho.mqtt.python/html/client.html
-            # `clean_start` (bool) – (MQTT v5.0 only) `True`, `False` or
+            # `clean_start` (bool) - (MQTT v5.0 only) `True`, `False` or
             # `MQTT_CLEAN_START_FIRST_ONLY`. Sets the MQTT v5.0 clean_start flag
             #  always, never or on the first successful connect only,
             # respectively. MQTT session data (such as outstanding messages and

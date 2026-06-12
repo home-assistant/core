@@ -25,8 +25,8 @@ PARALLEL_UPDATES = 0
 class IndevoltBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Custom entity description class for Indevolt binary sensors."""
 
-    on_value: int = 1
-    off_value: int = 0
+    on_value: int = 1000
+    off_value: int = 1001
     generation: tuple[int, ...] = (1, 2)
 
 
@@ -35,8 +35,6 @@ BINARY_SENSORS: Final = (
     IndevoltBinarySensorEntityDescription(
         key=IndevoltGrid.METER_CONNECTED,
         translation_key="meter_connected",
-        on_value=1000,
-        off_value=1001,
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,

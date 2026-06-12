@@ -23,6 +23,7 @@ from wyoming.vad import VoiceStarted, VoiceStopped
 from wyoming.wake import Detect, Detection
 
 from homeassistant.components import assist_pipeline, assist_satellite, intent
+from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.assist_satellite import WyomingAssistSatellite
 from homeassistant.components.wyoming.devices import SatelliteDevice
 from homeassistant.const import STATE_ON
@@ -43,7 +44,7 @@ async def setup_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     we can patch functions before the satellite task is run during setup.
     """
     entry = MockConfigEntry(
-        domain="wyoming",
+        domain=DOMAIN,
         data={
             "host": "1.2.3.4",
             "port": 1234,
@@ -1670,6 +1671,28 @@ async def test_announce(
     mock_proc = MagicMock()
     mock_proc.stdout.read = AsyncMock(side_effect=[pcm_audio, b""])
 
+    async def create_subprocess_exec(*args, **kwargs):
+        # Verify ffmpeg is called with a list of allowed protocols before -i
+        protocol_arg_idx: int | None = None
+        input_arg_idx: int | None = None
+        for arg_idx, arg in enumerate(args):
+            if arg == "-protocol_whitelist":
+                protocol_arg_idx = arg_idx
+            elif arg == "-i":
+                input_arg_idx = arg_idx
+
+        assert protocol_arg_idx is not None
+        assert input_arg_idx is not None
+        assert protocol_arg_idx < input_arg_idx, (
+            "-protocol_whitelist must appear before -i"
+        )
+        assert (protocol_arg_idx + 1) < len(args)
+
+        allowed_protocols = set(args[protocol_arg_idx + 1].split(","))
+        assert allowed_protocols == {"file", "http", "https", "tcp", "tls"}
+
+        return mock_proc
+
     with (
         patch(
             "homeassistant.components.wyoming.data.load_wyoming_info",
@@ -1683,10 +1706,7 @@ async def test_announce(
             "homeassistant.components.assist_satellite.entity.async_process_play_media_url",
             new=async_process_play_media_url,
         ),
-        patch(
-            "asyncio.create_subprocess_exec",
-            return_value=mock_proc,
-        ),
+        patch("asyncio.create_subprocess_exec", new=create_subprocess_exec),
     ):
         entry = await setup_config_entry(hass)
         device: SatelliteDevice = entry.runtime_data.device
