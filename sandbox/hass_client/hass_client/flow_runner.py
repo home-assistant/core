@@ -16,8 +16,9 @@ that can't be serialised. The docstring in ``_marshal_result`` is the
 load-bearing note for how the schema is later marshalled.
 """
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 import contextlib
+import ipaddress
 import logging
 from typing import Any, cast
 
@@ -28,7 +29,14 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType, UnknownFlow
+from homeassistant.data_entry_flow import BaseServiceInfo, FlowResultType, UnknownFlow
+from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.hassio import HassioServiceInfo
+from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
+from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.usb import UsbServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from ._proto import sandbox_pb2 as pb
 from .channel import Channel
@@ -122,6 +130,10 @@ class FlowRunner:
     async def _handle_flow_init(self, msg: pb.FlowInit) -> pb.FlowResult:
         context = struct_to_dict(msg.context)
         data = struct_to_dict(msg.data) if msg.HasField("data") else None
+        # Discovery-sourced flows carry their context/payload as JSON-safe
+        # dicts (the proxy flattened the *ServiceInfo / DiscoveryKey objects);
+        # rebuild the real types so async_step_<source> sees what it expects.
+        context, data = _rehydrate_discovery(context, data)
         result = await self.hass.config_entries.flow.async_init(
             msg.handler, context=context, data=data
         )
@@ -218,6 +230,85 @@ def _marshal_result(
                 if isinstance(ctx, Mapping):
                     out.context.update(_to_json_safe(dict(ctx)))
     return out
+
+
+def _build_zeroconf(data: dict[str, Any]) -> ZeroconfServiceInfo:
+    """Rebuild a ZeroconfServiceInfo from its JSON-flattened dict."""
+    return ZeroconfServiceInfo(
+        ip_address=ipaddress.ip_address(data["ip_address"]),
+        ip_addresses=[ipaddress.ip_address(addr) for addr in data["ip_addresses"]],
+        port=data.get("port"),
+        hostname=data["hostname"],
+        type=data["type"],
+        name=data["name"],
+        properties=data["properties"],
+    )
+
+
+def _build_ssdp(data: dict[str, Any]) -> SsdpServiceInfo:
+    """Rebuild an SsdpServiceInfo, restoring its set-typed fields."""
+    return SsdpServiceInfo(
+        ssdp_usn=data["ssdp_usn"],
+        ssdp_st=data["ssdp_st"],
+        upnp=data["upnp"],
+        ssdp_location=data.get("ssdp_location"),
+        ssdp_nt=data.get("ssdp_nt"),
+        ssdp_udn=data.get("ssdp_udn"),
+        ssdp_ext=data.get("ssdp_ext"),
+        ssdp_server=data.get("ssdp_server"),
+        ssdp_headers=data.get("ssdp_headers", {}),
+        ssdp_all_locations=set(data.get("ssdp_all_locations", [])),
+        x_homeassistant_matching_domains=set(
+            data.get("x_homeassistant_matching_domains", [])
+        ),
+    )
+
+
+# Discovery source -> builder that reconstructs the BaseServiceInfo the real
+# ``async_step_<source>`` expects from the JSON-flattened wire dict. Sources
+# whose info type is a plain flat dataclass take ``Class(**data)``; zeroconf /
+# ssdp need field coercion. ``homekit`` reuses ZeroconfServiceInfo. Bluetooth is
+# intentionally absent (its info is an external non-trivially-rebuildable type);
+# an unmapped source leaves ``data`` as a dict and the integration step — not
+# the bridge — decides what to do, with the proxy aborting cleanly if it raises.
+_DISCOVERY_INFO_BUILDERS: dict[str, Callable[[dict[str, Any]], BaseServiceInfo]] = {
+    "zeroconf": _build_zeroconf,
+    "homekit": _build_zeroconf,
+    "ssdp": _build_ssdp,
+    "dhcp": lambda data: DhcpServiceInfo(**data),
+    "usb": lambda data: UsbServiceInfo(**data),
+    "hassio": lambda data: HassioServiceInfo(**data),
+    "mqtt": lambda data: MqttServiceInfo(**data),
+}
+
+
+def _rehydrate_discovery(
+    context: dict[str, Any], data: Any
+) -> tuple[dict[str, Any], Any]:
+    """Rebuild discovery objects flattened by the proxy for the wire.
+
+    Restores ``context["discovery_key"]`` to a :class:`DiscoveryKey` and the
+    first-step ``data`` to the source's :class:`BaseServiceInfo`. Reconstruction
+    failures degrade to the plain dict rather than crash — the proxy's broadened
+    abort is the outer backstop.
+    """
+    discovery_key = context.get("discovery_key")
+    if isinstance(discovery_key, Mapping):
+        context = {
+            **context,
+            "discovery_key": DiscoveryKey.from_json_dict(dict(discovery_key)),
+        }
+    builder = _DISCOVERY_INFO_BUILDERS.get(context.get("source", ""))
+    if builder is not None and isinstance(data, Mapping):
+        try:
+            data = builder(dict(data))
+        except (TypeError, ValueError, KeyError) as err:
+            _LOGGER.warning(
+                "Could not rebuild %s discovery info (%s); passing the raw dict",
+                context.get("source"),
+                err,
+            )
+    return context, data
 
 
 def _marshal_menu_options(menu_options: Any) -> list[Any]:

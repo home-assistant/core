@@ -24,6 +24,9 @@ proxy treats the sandbox's reply as authoritative; a re-shown form (with
 forward to the user as usual.
 """
 
+from collections.abc import Mapping
+import dataclasses
+from ipaddress import IPv4Address, IPv6Address
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -43,6 +46,42 @@ _LOGGER = logging.getLogger(__name__)
 # Holds fire-and-forget abort tasks alive long enough to complete; the
 # framework's ``async_remove`` is synchronous so we can't await them inline.
 _BACKGROUND_ABORTS: set = set()
+
+
+def _to_jsonable(value: Any) -> Any:
+    """Coerce a flow ``context`` / first-step payload into Struct-safe data.
+
+    Discovery flows carry objects a :class:`Struct` can't hold: the
+    ``*ServiceInfo`` dataclass as the first-step ``user_input`` (with
+    ``IPv4Address`` fields, sets, …) and a :class:`DiscoveryKey` dataclass in
+    ``context``. Walk the structure into plain JSON primitives so
+    :func:`dict_to_struct` succeeds; the sandbox side rebuilds the real objects
+    from the same field names (see ``flow_runner._rehydrate_discovery``).
+    """
+    if isinstance(value, Mapping):
+        return {str(key): _to_jsonable(val) for key, val in value.items()}
+    if dataclasses.is_dataclass(value) and not isinstance(value, type):
+        return {
+            field.name: _to_jsonable(getattr(value, field.name))
+            for field in dataclasses.fields(value)
+        }
+    if isinstance(value, (list, tuple, set, frozenset)):
+        return [_to_jsonable(item) for item in value]
+    if isinstance(value, bool) or value is None:
+        return value
+    if isinstance(value, (str, int, float)):
+        return value
+    if isinstance(value, (IPv4Address, IPv6Address)):
+        return str(value)
+    if isinstance(value, bytes):
+        return value.decode("utf-8", "replace")
+    # Last-resort backstop for an exotic type: fall through to ``.value`` if it
+    # looks enum-ish, else ``str()`` — never let an unmappable object crash the
+    # marshal (the broadened ``except`` in ``_forward_step`` is the next net).
+    enum_value = getattr(value, "value", None)
+    if isinstance(enum_value, (str, int, float, bool)):
+        return enum_value
+    return str(value)
 
 
 class SandboxFlowProxy(ConfigFlow):
@@ -123,10 +162,10 @@ class SandboxFlowProxy(ConfigFlow):
                 # DISCOVERY, …) gets its discovery payload here.
                 request = pb.FlowInit(
                     handler=self._handler_key,
-                    context=dict_to_struct(dict(self.context)),
+                    context=dict_to_struct(_to_jsonable(dict(self.context))),
                 )
                 if user_input is not None:
-                    request.data.CopyFrom(dict_to_struct(user_input))
+                    request.data.CopyFrom(dict_to_struct(_to_jsonable(user_input)))
                 result = await channel.call("sandbox/flow_init", request)
                 self._sandbox_flow_id = (
                     result.flow_id if result.HasField("flow_id") else None
@@ -156,6 +195,18 @@ class SandboxFlowProxy(ConfigFlow):
                 "Sandbox %r raised %s on %s step %s: %s",
                 self._sandbox_group,
                 err.error_type or "error",
+                self._handler_key,
+                step_id,
+                err,
+            )
+            return self.async_abort(reason="sandbox_flow_error")
+        except (TypeError, ValueError) as err:
+            # Backstop: an unmapped payload type slipped past ``_to_jsonable``
+            # and ``Struct.update`` rejected it. Abort cleanly rather than let
+            # the marshalling exception crash the flow unhandled.
+            _LOGGER.warning(
+                "Sandbox %r could not marshal %s step %s payload: %s; aborting",
+                self._sandbox_group,
                 self._handler_key,
                 step_id,
                 err,
