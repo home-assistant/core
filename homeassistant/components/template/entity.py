@@ -21,14 +21,12 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.script import Script, _VarsType
-from homeassistant.helpers.template import (
-    _SENTINEL,
-    Template,
-    TemplateStateFromEntityId,
-)
+from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_DEFAULT_ENTITY_ID, CONF_PICTURE
+
+_SENTINEL = object()
 
 
 @dataclass
