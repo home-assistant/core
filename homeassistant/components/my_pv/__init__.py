@@ -57,6 +57,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: MyPVConfigEntry) -> bool:
     """Unload a config entry."""
-    await entry.runtime_data.async_disconnect()
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await entry.runtime_data.async_disconnect()
 
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    return unload_ok
