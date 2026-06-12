@@ -18,14 +18,14 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def ccm15_device() -> Generator[None]:
-    """Mock ccm15 device."""
+    """Return a populated device state from the coordinator."""
     ccm15_devices = {
         0: CCM15SlaveDevice(bytes.fromhex("000000b0b8001b")),
         1: CCM15SlaveDevice(bytes.fromhex("00000041c0001a")),
     }
     device_state = CCM15DeviceState(devices=ccm15_devices)
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
+        "homeassistant.components.ccm15.coordinator.CCM15Coordinator._fetch_data",
         return_value=device_state,
     ):
         yield
@@ -33,10 +33,10 @@ def ccm15_device() -> Generator[None]:
 
 @pytest.fixture
 def network_failure_ccm15_device() -> Generator[None]:
-    """Mock empty set of ccm15 device."""
+    """Return an empty device state, simulating an unreachable controller."""
     device_state = CCM15DeviceState(devices={})
     with patch(
-        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
+        "homeassistant.components.ccm15.coordinator.CCM15Coordinator._fetch_data",
         return_value=device_state,
     ):
         yield

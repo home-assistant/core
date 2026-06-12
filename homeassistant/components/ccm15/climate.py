@@ -79,10 +79,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         self._ac_index: int = ac_index
         self._attr_unique_id = f"{ac_host}.{ac_index}"
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                # Serial numbers are unique identifiers within a specific domain
-                (DOMAIN, f"{ac_host}.{ac_index}"),
-            },
+            identifiers={(DOMAIN, f"{ac_host}.{ac_index}")},
             name=f"Midea {ac_index}",
             manufacturer="Midea",
             model="CCM15",
@@ -131,6 +128,16 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return None
 
     @property
+    def min_temp(self) -> float:
+        """Return the configured minimum target temperature."""
+        return self.coordinator.min_temp
+
+    @property
+    def max_temp(self) -> float:
+        """Return the configured maximum target temperature."""
+        return self.coordinator.max_temp
+
+    @property
     def available(self) -> bool:
         """Return the availability of the entity."""
         return self.data is not None
@@ -156,6 +163,12 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         await self.coordinator.async_set_fan_mode(self._ac_index, self.data, fan_mode)
+
+    async def async_set_swing_mode(self, swing_mode: str) -> None:
+        """Set the swing mode."""
+        await self.coordinator.async_set_swing_mode(
+            self._ac_index, self.data, swing_mode == SWING_ON
+        )
 
     async def async_turn_off(self) -> None:
         """Turn off."""
