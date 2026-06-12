@@ -6,7 +6,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aioccl.exception import CCLDataUpdateException
 import pytest
 
-from homeassistant.components.ccl import KEY_DEVICES
 from homeassistant.components.ccl.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
@@ -29,14 +28,6 @@ def mock_config_entry() -> MockConfigEntry:
         },
         unique_id="0000-0000",
     )
-
-
-@pytest.fixture(autouse=True)
-def clear_devices(hass: HomeAssistant) -> Generator[None]:
-    """Clear devices dictionary before and after each test."""
-    hass.data.setdefault(KEY_DEVICES, {}).clear()
-    yield
-    hass.data.setdefault(KEY_DEVICES, {}).clear()
 
 
 @pytest.fixture

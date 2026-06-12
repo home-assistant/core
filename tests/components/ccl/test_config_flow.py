@@ -7,9 +7,9 @@ from urllib.parse import urlparse
 
 from aioccl.exception import CCLDeviceRegistrationException
 from aiohttp import web
+import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.ccl import KEY_DEVICES
 from homeassistant.components.ccl.config_flow import CCLConfigFlow
 from homeassistant.components.ccl.const import DOMAIN
 from homeassistant.components.webhook import async_generate_url
@@ -50,9 +50,8 @@ async def test_create_entry(
         webhook_url = async_generate_url(hass, WEBHOOK_ID)
         body = {"hello": "world"}
 
-        async def handler_side_effect(request, devices_dict):
-            # Simulate the handler setting last_update_time
-            device = devices_dict[WEBHOOK_ID]
+        async def handler_side_effect(request, device):
+            # Simulate the handler setting last_update_time on the CCLDevice
             device.last_update_time = 123
             return web.Response(status=200)
 
@@ -114,19 +113,14 @@ async def test_ccl_device_registration_exception_handled(
             return_value=WEBHOOK_ID,
         ),
         patch(
-            "homeassistant.components.ccl.config_flow.register",
+            "homeassistant.components.ccl.config_flow.register_webhook",
             side_effect=CCLDeviceRegistrationException("Already registered"),
         ),
+        pytest.raises(CCLDeviceRegistrationException),
     ):
-        # Add device to the devices dict before test starts
-        hass.data[KEY_DEVICES][WEBHOOK_ID] = mock_ccl
-
-        result = await hass.config_entries.flow.async_init(
+        await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
-        # Should continue despite the exception (using existing device)
-        assert result["type"] is FlowResultType.SHOW_PROGRESS
-        assert result["step_id"] == "user"
 
 
 async def test_value_error_webhook_registration(
@@ -239,8 +233,6 @@ async def test_cancelled_error_task_one(
         return_value={"type": FlowResultType.SHOW_PROGRESS_DONE}
     )
 
-    hass.data.setdefault(KEY_DEVICES, {})[WEBHOOK_ID] = mock_ccl
-
     with patch(
         "homeassistant.components.ccl.config_flow.webhook.async_unregister"
     ) as unregister:
@@ -249,7 +241,6 @@ async def test_cancelled_error_task_one(
     assert result["type"] is FlowResultType.SHOW_PROGRESS_DONE
     assert config_flow.data["abort_reason"] == "unknown"
     unregister.assert_called_once_with(hass, WEBHOOK_ID)
-    assert WEBHOOK_ID not in hass.data[KEY_DEVICES]
 
 
 async def test_abort_flow_device_none(
@@ -271,7 +262,10 @@ async def test_abort_flow_device_none(
             "homeassistant.components.ccl.config_flow.CCLDevice",
             return_value=None,
         ),
-        patch("homeassistant.components.ccl.config_flow.register", return_value=None),
+        patch(
+            "homeassistant.components.ccl.config_flow.register_webhook",
+            return_value=None,
+        ),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -320,9 +314,8 @@ async def test_abort_flow_device_id_none(
         webhook_url = async_generate_url(hass, WEBHOOK_ID)
         body = {"hello": "world"}
 
-        async def handler_side_effect(request, devices_dict):
+        async def handler_side_effect(request, device):
             # Set last_update_time but leave device_id as None
-            device = devices_dict[WEBHOOK_ID]
             device.last_update_time = 123
             return web.Response(status=200)
 
@@ -382,8 +375,7 @@ async def test_abort_flow_already_configured(
             client = await hass_client_no_auth()
             webhook_url = async_generate_url(hass, WEBHOOK_ID)
 
-            async def handler_side_effect(request, devices_dict):
-                device = devices_dict[WEBHOOK_ID]
+            async def handler_side_effect(request, device):
                 device.last_update_time = 123
                 return web.Response(status=200)
 

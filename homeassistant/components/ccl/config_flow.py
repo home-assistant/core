@@ -6,8 +6,6 @@ from typing import Any
 from urllib.parse import urlsplit
 
 from aioccl import CCLDevice
-from aioccl.exception import CCLDeviceRegistrationException
-from aioccl.server import register
 
 from homeassistant.components import webhook
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -15,7 +13,7 @@ from homeassistant.const import CONF_HOST, CONF_PATH, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.helpers.network import NoURLAvailableError
 
-from . import KEY_DEVICES, register_webhook
+from . import register_webhook
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -59,22 +57,13 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_PORT] = str(port)
             self.data[CONF_PATH] = webhook.async_generate_path(self.webhook_id)
 
-            self.device = CCLDevice(self.webhook_id)
-            # Try to register the device, but if it already exists, use the existing one
-            try:
-                register(self.hass.data.setdefault(KEY_DEVICES, {}), self.device)
-            except CCLDeviceRegistrationException:
-                _LOGGER.debug(
-                    "Device with webhook ID %s is already registered",
-                    self.webhook_id,
-                )
-                self.device = self.hass.data[KEY_DEVICES][self.webhook_id]
+            self.data["device"] = self.device = CCLDevice(self.webhook_id)
+
             # Try to register the webhook
             try:
-                register_webhook(self.hass, self.webhook_id)
+                register_webhook(self.hass, self.webhook_id, self.device)
             except ValueError as err:
                 _LOGGER.error("Failed to register webhook: %s", err)
-                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
                 self.data = {}
                 self.webhook_id = ""
                 return self.async_abort(reason="invalid_webhook")
@@ -110,7 +99,6 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             except TimeoutError:
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
-                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
                 self.data["abort_reason"] = "connect_timeout"
                 _LOGGER.error(
                     "Device with webhook ID %s timed out waiting for update during config flow",
@@ -120,7 +108,6 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             except asyncio.CancelledError:
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
-                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
                 self.data["abort_reason"] = "unknown"
                 _LOGGER.debug(
                     "Device with webhook ID %s config flow task was cancelled",
@@ -130,7 +117,6 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
             except AbortFlow as err:
                 self.task_one = None
                 webhook.async_unregister(self.hass, self.webhook_id)
-                self.hass.data[KEY_DEVICES].pop(self.webhook_id, None)
                 if err.reason == "already_configured":
                     self.data["abort_reason"] = "already_configured"
                     _LOGGER.debug(
@@ -187,4 +173,3 @@ class CCLConfigFlow(ConfigFlow, domain=DOMAIN):
         webhook_id = self.data.get(CONF_WEBHOOK_ID)
         if webhook_id:
             webhook.async_unregister(self.hass, webhook_id)
-            self.hass.data[KEY_DEVICES].pop(webhook_id, None)
