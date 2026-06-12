@@ -4,10 +4,11 @@ from datetime import timedelta
 import logging
 
 from blebox_uniapi.box import Box
-from blebox_uniapi.error import Error
+from blebox_uniapi.error import Error, UnauthorizedRequest
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -40,6 +41,8 @@ class BleBoxCoordinator(DataUpdateCoordinator[None]):
         """Fetch data from the BleBox device."""
         try:
             await self.box.async_update_data()
+        except UnauthorizedRequest as err:
+            raise ConfigEntryAuthFailed from err
         except Error as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
