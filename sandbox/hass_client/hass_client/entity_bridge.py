@@ -60,6 +60,11 @@ class EntityBridge:
         self._channel: Channel | None = None
         self._registered: set[str] = set()
         self._pending: set[str] = set()
+        # Entities whose removal arrived while their register RPC was still
+        # in flight. The register task flushes (unregisters) them once it
+        # completes — relying on `_registered` membership would miss the
+        # removal because the entity isn't registered yet at removal time.
+        self._removed_while_pending: set[str] = set()
         # Hash of the last description (registry-shaped fields only, no
         # state) sent per entity, so a registry-update resend that mirrors
         # nothing we actually carry is a no-op instead of an event storm.
@@ -111,6 +116,10 @@ class EntityBridge:
                     self._push_unregister(entity_id),
                     name=f"sandbox:unregister:{entity_id}",
                 )
+            elif entity_id in self._pending:
+                # Removed mid-register: the register task hasn't added it to
+                # _registered yet, so flag it and let that task unregister.
+                self._removed_while_pending.add(entity_id)
             return
 
         if entity_id in self._registered:
@@ -170,6 +179,34 @@ class EntityBridge:
             await self._register(entity_id, new_state)
         finally:
             self._pending.discard(entity_id)
+
+        # While the register RPC was in flight, _on_state_changed dropped any
+        # further state_changed for this entity (it was neither registered nor
+        # re-queued). Reconcile that coalesced gap now.
+        #
+        # NOTE: this is the *correctness* fix. Plan 5 (simplification) builds a
+        # single-writer queue on top of the entity push path; when it lands it
+        # should subsume this flush into the queue's ordering guarantees.
+        if entity_id in self._removed_while_pending:
+            # A removal raced the register. Now that register has completed
+            # (and added the entity to _registered), unregister it so main
+            # doesn't keep a ghost proxy.
+            self._removed_while_pending.discard(entity_id)
+            if entity_id in self._registered:
+                self._registered.discard(entity_id)
+                self._last_hash.pop(entity_id, None)
+                await self._push_unregister(entity_id)
+            return
+
+        if entity_id not in self._registered:
+            # Register failed (or was skipped); nothing to flush.
+            return
+
+        current = self.hass.states.get(entity_id)
+        if current is None:
+            return
+        if _state_differs(current, new_state):
+            await self._push_state(entity_id, current)
 
     def _describe(self, entity_id: str) -> dict[str, Any] | None:
         """Build the registry-shaped description for a live entity, or None."""
@@ -301,6 +338,19 @@ def _to_entity_description(
         initial_attributes=initial_attributes,
         device_info=payload.get("device_info"),
     )
+
+
+def _state_differs(current: Any, snapshot: Any) -> bool:
+    """Whether ``current`` state/attributes differ from the registered snapshot.
+
+    ``snapshot`` is the ``new_state`` captured when the register task was
+    created; ``current`` is the live state re-read after the register RPC
+    resolved. A difference means a state change was coalesced away during the
+    in-flight window and must be flushed.
+    """
+    snap_state = getattr(snapshot, "state", None)
+    snap_attrs = dict(snapshot.attributes) if hasattr(snapshot, "attributes") else {}
+    return current.state != snap_state or dict(current.attributes) != snap_attrs
 
 
 def _payload_hash(payload: dict[str, Any]) -> str:

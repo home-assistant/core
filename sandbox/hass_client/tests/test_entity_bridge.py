@@ -313,6 +313,128 @@ async def _register_initial(bridge: EntityBridge, hass: Any, entity: Entity) -> 
         await asyncio.sleep(0)
 
 
+async def test_state_update_during_register_is_flushed(
+    channels: tuple[Channel, Channel], hass_with_demo_component
+) -> None:
+    """A state change coalesced away while register is in flight is flushed.
+
+    The register RPC is held open; a second ``async_set`` lands in the state
+    machine but is dropped by the bridge (entity still pending). Once register
+    completes, the bridge re-reads the live state and pushes the gap.
+    """
+    main, sandbox = channels
+    hass, component = hass_with_demo_component
+
+    register_started = asyncio.Event()
+    release_register = asyncio.Event()
+    register_calls: list[pb.EntityDescription] = []
+    state_calls: list[pb.StateChanged] = []
+
+    async def _on_register(msg: pb.EntityDescription) -> pb.RegisterEntityResult:
+        register_calls.append(msg)
+        register_started.set()
+        await release_register.wait()
+        return pb.RegisterEntityResult(entity_id="demo.lamp_main")
+
+    async def _on_state(msg: pb.StateChanged) -> None:
+        state_calls.append(msg)
+
+    main.register("sandbox/register_entity", _on_register)
+    main.register("sandbox/state_changed", _on_state)
+    main.start()
+    sandbox.start()
+
+    entity = _FakeEntity()
+    component._entities[entity.entity_id] = entity  # noqa: SLF001
+
+    bridge = EntityBridge(hass)
+    bridge.register(sandbox)
+
+    # First appearance → register, which blocks inside the main handler.
+    hass.states.async_set(entity.entity_id, "off", {})
+    await asyncio.wait_for(register_started.wait(), timeout=2.0)
+
+    # A fast second update lands in the state machine but is dropped by the
+    # bridge because the entity is still pending its register RPC.
+    hass.states.async_set(entity.entity_id, "on", {"brightness": 200})
+    for _ in range(20):
+        await asyncio.sleep(0)
+    assert state_calls == []
+
+    # Release register: the bridge re-reads and flushes the coalesced "on".
+    release_register.set()
+    for _ in range(50):
+        if state_calls:
+            break
+        await asyncio.sleep(0)
+
+    assert len(state_calls) == 1
+    assert state_calls[0].state == "on"
+    assert struct_to_dict(state_calls[0].attributes)["brightness"] == 200
+
+    await bridge.async_stop()
+
+
+async def test_removal_during_register_unregisters(
+    channels: tuple[Channel, Channel], hass_with_demo_component
+) -> None:
+    """An entity removed while its register RPC is in flight is unregistered.
+
+    Without the removal-while-pending flag the removal is dropped (the entity
+    isn't in ``_registered`` yet), leaving a ghost proxy on main.
+    """
+    main, sandbox = channels
+    hass, component = hass_with_demo_component
+
+    register_started = asyncio.Event()
+    release_register = asyncio.Event()
+    register_calls: list[pb.EntityDescription] = []
+    unregister_calls: list[pb.UnregisterEntity] = []
+
+    async def _on_register(msg: pb.EntityDescription) -> pb.RegisterEntityResult:
+        register_calls.append(msg)
+        register_started.set()
+        await release_register.wait()
+        return pb.RegisterEntityResult(entity_id="demo.lamp_main")
+
+    async def _on_unregister(msg: pb.UnregisterEntity) -> pb.UnregisterEntityResult:
+        unregister_calls.append(msg)
+        return pb.UnregisterEntityResult(ok=True)
+
+    main.register("sandbox/register_entity", _on_register)
+    main.register("sandbox/unregister_entity", _on_unregister)
+    main.start()
+    sandbox.start()
+
+    entity = _FakeEntity()
+    component._entities[entity.entity_id] = entity  # noqa: SLF001
+
+    bridge = EntityBridge(hass)
+    bridge.register(sandbox)
+
+    hass.states.async_set(entity.entity_id, "off", {})
+    await asyncio.wait_for(register_started.wait(), timeout=2.0)
+
+    # Remove the entity while register is still in flight.
+    hass.states.async_remove(entity.entity_id)
+    for _ in range(20):
+        await asyncio.sleep(0)
+    assert unregister_calls == []
+
+    # Release register: the bridge sees the pending-removal flag and unregisters.
+    release_register.set()
+    for _ in range(50):
+        if unregister_calls:
+            break
+        await asyncio.sleep(0)
+
+    assert len(unregister_calls) == 1
+    assert unregister_calls[0].sandbox_entity_id == entity.entity_id
+    assert entity.entity_id not in bridge._registered  # noqa: SLF001
+
+    await bridge.async_stop()
+
+
 async def test_entity_registry_update_resends_registration(
     channels: tuple[Channel, Channel], hass_with_demo_component
 ) -> None:
