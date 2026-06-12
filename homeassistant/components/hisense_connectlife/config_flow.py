@@ -36,14 +36,8 @@ class HisenseOptionsFlowHandler(OptionsFlow):
                     errors["base"] = "no_coordinator"
                 else:
                     try:
-                        # Re-fetch device list. Support both a callable method and a
-                        # coroutine object returned from a property for tests.
-                        get_devices = coordinator.api_client.async_get_devices
-                        devices = (
-                            await get_devices()
-                            if callable(get_devices)
-                            else await get_devices
-                        )
+                        # Re-fetch device list
+                        devices = await coordinator.api_client.async_get_devices()
                         coordinator._devices = devices  # noqa: SLF001
                         # Force update state once
                         await coordinator.async_refresh()
