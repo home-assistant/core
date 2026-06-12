@@ -257,6 +257,11 @@ message FlowResult {
   // True when a data_schema existed on the sandbox flow but could not be
   // serialized — main then renders a schema-less form rather than abort.
   bool has_data_schema = 18;
+  // MENU result: the navigation options. A list[str] form crosses as a list
+  // of step-id strings; a dict[str,str] (id -> label) form crosses as a list
+  // of [id, label] pairs so order and labels survive.
+  google.protobuf.ListValue menu_options = 19;
+  optional bool sort = 20;  // MENU: frontend sort hint
 }
 
 // --- register_entity (sandbox -> main) ------------------------------------

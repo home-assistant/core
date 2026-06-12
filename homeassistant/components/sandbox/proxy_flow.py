@@ -66,6 +66,11 @@ class SandboxFlowProxy(ConfigFlow):
         self._handler_key = handler_key
         self._sandbox_flow_id: str | None = None
         self._terminated: bool = False
+        # Set when the last sandbox result was a MENU: the framework then
+        # dispatches ``async_step_<chosen>`` for the selected option, which we
+        # must forward as the sandbox flow's ``{"next_step_id": <chosen>}``
+        # menu navigation rather than a fresh step.
+        self._awaiting_menu_selection: bool = False
 
     @property
     def sandbox_group(self) -> str:
@@ -128,7 +133,14 @@ class SandboxFlowProxy(ConfigFlow):
                 )
             else:
                 step = pb.FlowStep(flow_id=self._sandbox_flow_id)
-                if user_input is not None:
+                if self._awaiting_menu_selection:
+                    # The framework dispatched ``async_step_<chosen>`` for the
+                    # menu option the user picked; the sandbox flow expects that
+                    # as a ``{"next_step_id": <chosen>}`` selection on its menu
+                    # step, not a fresh step call.
+                    self._awaiting_menu_selection = False
+                    step.user_input.CopyFrom(dict_to_struct({"next_step_id": step_id}))
+                elif user_input is not None:
                     step.user_input.CopyFrom(dict_to_struct(user_input))
                 result = await channel.call("sandbox/flow_step", step)
         except ChannelClosedError:
@@ -257,13 +269,30 @@ class SandboxFlowProxy(ConfigFlow):
                 preview=result.preview if result.HasField("preview") else None,
             )
 
-        # Any other type (MENU, EXTERNAL_STEP, SHOW_PROGRESS, …) is
-        # not supported; surface a noisy abort so a follow-up doesn't
-        # silently drop the flow on the floor.
-        self._terminated = True
+        if result_type is FlowResultType.MENU:
+            menu_options = _reconstruct_menu_options(
+                listvalue_to_list(result.menu_options)
+            )
+            # The framework will dispatch ``async_step_<chosen>`` for the
+            # option the user picks; mark that the next forwarded step is a
+            # menu navigation choice (see ``_forward_step``).
+            self._awaiting_menu_selection = True
+            return self.async_show_menu(
+                step_id=result.step_id if result.HasField("step_id") else step_id,
+                menu_options=menu_options,
+                sort=result.sort if result.HasField("sort") else False,
+                description_placeholders=placeholders,
+            )
+
+        # Remaining types (EXTERNAL_STEP, SHOW_PROGRESS, …) are not supported;
+        # surface a noisy abort. We deliberately do NOT set ``_terminated`` here:
+        # the sandbox-side flow is still in progress (it returned a non-terminal
+        # result), so ``async_remove`` must still fire ``flow_abort`` to reap it —
+        # otherwise a flow that set a ``unique_id`` wedges retries on
+        # ``already_in_progress`` until the sandbox restarts.
         _LOGGER.warning(
             "Sandbox %r returned unsupported flow result type %s for %s;"
-            " aborting (only FORM/CREATE_ENTRY/ABORT are supported)",
+            " aborting (only FORM/CREATE_ENTRY/ABORT/MENU are supported)",
             self._sandbox_group,
             result_type,
             self._handler_key,
@@ -295,6 +324,18 @@ class SandboxFlowProxy(ConfigFlow):
         )
         _BACKGROUND_ABORTS.add(task)
         task.add_done_callback(_BACKGROUND_ABORTS.discard)
+
+
+def _reconstruct_menu_options(items: list[Any]) -> list[str] | dict[str, str]:
+    """Rebuild MENU ``menu_options`` from the wire list.
+
+    A dict (id → label) form crossed as a list of ``[id, label]`` pairs; a list
+    form crossed as a list of step-id strings. Mirror :func:`_marshal_menu_options`
+    on the sandbox side.
+    """
+    if items and all(isinstance(item, list) and len(item) == 2 for item in items):
+        return {str(item[0]): str(item[1]) for item in items}
+    return [str(item) for item in items]
 
 
 async def _safe_abort(channel: Any, flow_id: str, group: str, handler: str) -> None:

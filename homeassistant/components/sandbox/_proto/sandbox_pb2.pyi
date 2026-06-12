@@ -274,7 +274,7 @@ class FlowAbortResult(_message.Message):
     def __init__(self) -> None: ...
 
 class FlowResult(_message.Message):
-    __slots__ = ("type", "flow_id", "handler", "step_id", "reason", "title", "description", "last_step", "preview", "version", "minor_version", "data", "options", "errors", "description_placeholders", "context", "data_schema", "has_data_schema")
+    __slots__ = ("type", "flow_id", "handler", "step_id", "reason", "title", "description", "last_step", "preview", "version", "minor_version", "data", "options", "errors", "description_placeholders", "context", "data_schema", "has_data_schema", "menu_options", "sort")
     TYPE_FIELD_NUMBER: _ClassVar[int]
     FLOW_ID_FIELD_NUMBER: _ClassVar[int]
     HANDLER_FIELD_NUMBER: _ClassVar[int]
@@ -293,6 +293,8 @@ class FlowResult(_message.Message):
     CONTEXT_FIELD_NUMBER: _ClassVar[int]
     DATA_SCHEMA_FIELD_NUMBER: _ClassVar[int]
     HAS_DATA_SCHEMA_FIELD_NUMBER: _ClassVar[int]
+    MENU_OPTIONS_FIELD_NUMBER: _ClassVar[int]
+    SORT_FIELD_NUMBER: _ClassVar[int]
     type: str
     flow_id: str
     handler: str
@@ -311,7 +313,9 @@ class FlowResult(_message.Message):
     context: _struct_pb2.Struct
     data_schema: _struct_pb2.ListValue
     has_data_schema: bool
-    def __init__(self, type: _Optional[str] = ..., flow_id: _Optional[str] = ..., handler: _Optional[str] = ..., step_id: _Optional[str] = ..., reason: _Optional[str] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., last_step: bool = ..., preview: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., options: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., errors: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., description_placeholders: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., context: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., data_schema: _Optional[_Union[_struct_pb2.ListValue, _Mapping]] = ..., has_data_schema: bool = ...) -> None: ...
+    menu_options: _struct_pb2.ListValue
+    sort: bool
+    def __init__(self, type: _Optional[str] = ..., flow_id: _Optional[str] = ..., handler: _Optional[str] = ..., step_id: _Optional[str] = ..., reason: _Optional[str] = ..., title: _Optional[str] = ..., description: _Optional[str] = ..., last_step: bool = ..., preview: _Optional[str] = ..., version: _Optional[int] = ..., minor_version: _Optional[int] = ..., data: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., options: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., errors: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., description_placeholders: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., context: _Optional[_Union[_struct_pb2.Struct, _Mapping]] = ..., data_schema: _Optional[_Union[_struct_pb2.ListValue, _Mapping]] = ..., has_data_schema: bool = ..., menu_options: _Optional[_Union[_struct_pb2.ListValue, _Mapping]] = ..., sort: bool = ...) -> None: ...
 
 class EntityInfo(_message.Message):
     __slots__ = ("description", "device_info")

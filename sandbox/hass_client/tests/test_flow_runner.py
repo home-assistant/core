@@ -15,7 +15,7 @@ from typing import Any
 from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
-from hass_client.flow_runner import FlowRunner
+from hass_client.flow_runner import FlowRunner, _marshal_menu_options
 from hass_client.messages import dict_to_struct, listvalue_to_list, struct_to_dict
 import pytest
 import voluptuous as vol
@@ -92,6 +92,17 @@ class _VersionedFlow(ConfigFlow, domain="phase4_versioned"):
             data={"host": "1.2.3.4"},
             options={"poll_interval": 30},
         )
+
+
+class _MenuFlow(ConfigFlow, domain="phase4_menu"):
+    """A flow whose first step shows a navigation menu."""
+
+    VERSION = 1
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        return self.async_show_menu(step_id="user", menu_options=["alpha", "beta"])
 
 
 @pytest.fixture(name="channels")
@@ -210,6 +221,46 @@ async def test_create_entry_marshals_version_and_options(
     assert result.version == 2
     assert result.minor_version == 3
     assert struct_to_dict(result.options) == {"poll_interval": 30}
+
+
+async def test_menu_marshals_options(
+    channels: tuple[Channel, Channel], runner: FlowRunner
+) -> None:
+    """A MENU result marshals its list of options onto the wire."""
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+
+    ha_config_entries.HANDLERS["phase4_menu"] = _MenuFlow
+    fake_module = ModuleType("homeassistant.components.phase4_menu")
+    fake_flow_module = ModuleType("homeassistant.components.phase4_menu.config_flow")
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_menu"] = fake_module
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_menu.config_flow"] = (
+        fake_flow_module
+    )
+    runner.hass.config.components.add("phase4_menu")
+    try:
+        init_msg = pb.FlowInit(handler="phase4_menu")
+        init_msg.context.update({"source": "user"})
+        result = await main.call("sandbox/flow_init", init_msg)
+    finally:
+        ha_config_entries.HANDLERS.pop("phase4_menu", None)
+        runner.hass.data[ha_loader.DATA_COMPONENTS].pop("phase4_menu", None)
+        runner.hass.data[ha_loader.DATA_COMPONENTS].pop("phase4_menu.config_flow", None)
+
+    assert result.type == "menu"
+    assert result.step_id == "user"
+    assert listvalue_to_list(result.menu_options) == ["alpha", "beta"]
+
+
+def test_marshal_menu_options_dict_keeps_labels() -> None:
+    """A dict-form menu crosses as ordered [id, label] pairs."""
+    assert _marshal_menu_options({"a": "Option A", "b": "Option B"}) == [
+        ["a", "Option A"],
+        ["b", "Option B"],
+    ]
+    assert _marshal_menu_options(["x", "y"]) == ["x", "y"]
 
 
 async def test_flow_step_validation_error_returns_form(
