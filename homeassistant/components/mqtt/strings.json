@@ -56,7 +56,7 @@
           "keepalive": "A value less than 90 seconds is advised.",
           "password": "The password to log in to your MQTT broker.",
           "port": "The port your MQTT broker listens to. For example 1883.",
-          "protocol": "The MQTT protocol your broker operates at. For example 3.1.1.",
+          "protocol": "The MQTT protocol version that is used. Note that Home Assistant will silently change to version 5 if your broker supports it.",
           "set_ca_cert": "Select **Auto** for automatic CA validation, or **Custom** and select **Next** to set a custom CA certificate, to allow validating your MQTT broker's certificate.",
           "set_client_cert": "Enable and select **Next** to set a client certificate and private key to authenticate against your MQTT broker.",
           "tls_insecure": "Option to ignore validation of your MQTT broker's certificate.",
@@ -1134,18 +1134,8 @@
       "title": "Invalid config found for MQTT {domain} item"
     },
     "protocol_5_migration": {
-      "fix_flow": {
-        "abort": {
-          "mqtt_broker_migration_to_v5_failed": "Migrating the broker ({broker}) protocol version from {protocol} to 5 failed, and the migration has been aborted.\n\nYour broker may not support MQTT protocol version 5.\n\nPlease [reconfigure your MQTT broker settings]({url_mqtt_broker_configuration}) or upgrade your broker to support MQTT protocol version 5 to fix this issue."
-        },
-        "step": {
-          "confirm": {
-            "description": "Home Assistant needs to migrate to MQTT protocol version 5. The currently configured protocol version for broker {broker} is {protocol}. This protocol version is deprecated, and support for it will be removed.\n\nSubmitting this form will attempt to migrate your MQTT broker configuration to use protocol version 5 to fix this issue. If the broker cannot be reached using MQTT protocol version 5, for example because it does not support it, the migration will be aborted.",
-            "title": "MQTT protocol change required"
-          }
-        }
-      },
-      "title": "Deprecated MQTT protocol {protocol} in use"
+      "description": "The automatic migration to MQTT protocol version 5 failed. The currently configured protocol version for MQTT broker {broker} is {protocol}, but this protocol version is deprecated, and support for it will be removed.\n\nMake sure your broker supports protocol version 5. Update your MQTT broker's connection settings, and restart Home Assistant to fix this issue.",
+      "title": "MQTT protocol migration failed"
     },
     "subentry_migration_discovery": {
       "fix_flow": {

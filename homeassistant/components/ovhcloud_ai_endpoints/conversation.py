@@ -12,6 +12,8 @@ from . import OVHcloudAIEndpointsConfigEntry
 from .const import DOMAIN
 from .entity import OVHcloudAIEndpointsEntity
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,

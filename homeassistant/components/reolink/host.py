@@ -11,6 +11,7 @@ import aiohttp
 from aiohttp.web import Request
 from reolink_aio.api import ALLOWED_SPECIAL_CHARS, Host
 from reolink_aio.baichuan import DEFAULT_BC_PORT
+from reolink_aio.const import UNKNOWN
 from reolink_aio.enums import ConnectionEnum, SubType
 from reolink_aio.exceptions import NotSupportedError, ReolinkError, SubscriptionError
 
@@ -40,6 +41,7 @@ from .const import (
     CONF_BC_ONLY,
     CONF_BC_PORT,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DOMAIN,
 )
@@ -105,6 +107,7 @@ class ReolinkHost:
             bc_port=config.get(CONF_BC_PORT, DEFAULT_BC_PORT),
             bc_connection=bc_connection,
             bc_only=config.get(CONF_BC_ONLY, False),
+            uid=config.get(CONF_UID, UNKNOWN),
         )
 
         self.last_wake: defaultdict[int, float] = defaultdict(float)
@@ -369,7 +372,11 @@ class ReolinkHost:
                 )
 
         # start long polling if ONVIF push failed immediately
-        if not self._onvif_push_supported and not self._api.baichuan.privacy_mode():
+        if (
+            self._onvif_long_poll_supported
+            and not self._onvif_push_supported
+            and not self._api.baichuan.privacy_mode()
+        ):
             _LOGGER.debug(
                 "Camera model %s does not support ONVIF push,"
                 " using ONVIF long polling instead",
@@ -378,20 +385,21 @@ class ReolinkHost:
             try:
                 await self._async_start_long_polling(initial=True)
             except NotSupportedError:
-                _LOGGER.debug(
-                    "Camera model %s does not support ONVIF long"
-                    " polling, using fast polling instead",
-                    self._api.model,
-                )
                 self._onvif_long_poll_supported = False
                 await self._api.unsubscribe()
-                await self._async_poll_all_motion()
             else:
                 self._cancel_long_poll_check = async_call_later(
                     self._hass,
                     FIRST_ONVIF_LONG_POLL_TIMEOUT,
                     self._async_check_onvif_long_poll,
                 )
+
+        if not self._onvif_long_poll_supported:
+            _LOGGER.debug(
+                "Camera model %s does not support ONVIF push and long polling, using fast polling instead",
+                self._api.model,
+            )
+            await self._async_poll_all_motion()
 
         self._cancel_tcp_push_check = None
 
@@ -822,7 +830,7 @@ class ReolinkHost:
             return
 
         try:
-            if self._api.session_active:
+            if self._api.session_active and not self._api.baichuan.privacy_mode():
                 await self._api.get_motion_state_all_ch()
         except ReolinkError as err:
             if not self._fast_poll_error:
@@ -834,7 +842,7 @@ class ReolinkHost:
                 )
             self._fast_poll_error = True
         else:
-            if self._api.session_active:
+            if self._api.session_active and not self._api.baichuan.privacy_mode():
                 self._fast_poll_error = False
         finally:
             # schedule next poll
@@ -930,6 +938,8 @@ class ReolinkHost:
     def event_connection(self) -> str:
         """Type of connection to receive events."""
         if self._api.baichuan.events_active:
+            if self._api.baichuan.webhook_subscribed:
+                return "Webhook push"
             return "TCP push"
         if self._webhook_reachable:
             return "ONVIF push"

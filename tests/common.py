@@ -492,7 +492,7 @@ def async_fire_time_changed_exact(
     approach, as this is only for testing.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(UTC)
+        utc_datetime = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -515,7 +515,7 @@ def async_fire_time_changed(
     for an exact microsecond, use async_fire_time_changed_exact.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(UTC)
+        utc_datetime = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
