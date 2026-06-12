@@ -440,7 +440,7 @@ class ProtectSettableKeysMixin(ProtectEntityDescription[T]):
 
     async def ufp_set(self, obj: T, value: Any) -> None:
         """Set value for UniFi Protect device."""
-        _LOGGER.debug("Setting %s to %s for %s", self.name, value, obj.display_name)
+        _LOGGER.debug("Setting %s to %s for %s", self.key, value, obj.display_name)
         if self.ufp_set_method is not None:
             await getattr(obj, self.ufp_set_method)(value)
         elif self.ufp_set_method_fn is not None:
