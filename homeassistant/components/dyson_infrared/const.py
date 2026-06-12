@@ -1,4 +1,5 @@
 """Constants for the Dyson Infrared integration."""
+
 from enum import StrEnum
 
 DOMAIN = "dyson_infrared"

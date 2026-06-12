@@ -1,4 +1,5 @@
 """Tests for the Dyson Infrared config flow."""
+
 from unittest.mock import AsyncMock, patch
 
 from homeassistant.components.dyson_infrared.const import (
@@ -7,112 +8,102 @@ from homeassistant.components.dyson_infrared.const import (
     DOMAIN,
     DysonDeviceType,
 )
-from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+
 from tests.common import MockConfigEntry
 
-async def test_user_form_success(hass: HomeAssistant, entity_registry: er.EntityRegistry) -> None:
-    """Test we get the form and create an entry when successful."""
-    entity_registry.async_get_or_create(
-        domain="infrared",
-        platform="broadlink",
-        unique_id="12345",
-        suggested_object_id="broadlink_living_room",
-        original_name="Broadlink Living Room",
-    )
 
-    # Allarghiamo il patch per coprire l'intero flusso di passaggi del form
-    with patch(
-        "homeassistant.components.infrared.async_get_emitters",
-        new_callable=AsyncMock,
-        return_value=["infrared.broadlink_living_room"],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-
-        with patch(
+async def test_form_and_create_entry(hass: HomeAssistant) -> None:
+    """Test that the user config flow shows the form and creates an entry."""
+    with (
+        patch(
+            "homeassistant.components.dyson_infrared.config_flow.infrared.async_get_emitters",
+            return_value=["infrared.my_living_room_emitter"],
+        ),
+        patch(
+            "homeassistant.components.dyson_infrared.config_flow.er.async_get",
+        ) as mock_er,
+        patch(
             "homeassistant.components.dyson_infrared.async_setup_entry",
             return_value=True,
-        ) as mock_setup_entry:
-            result2 = await hass.config_entries.flow.async_configure(
-                result["flow_id"],
-                {
-                    CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
-                    CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.broadlink_living_room",
-                },
-            )
-            await hass.async_block_till_done()
-
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["title"] == "Dyson Fan via Broadlink Living Room"
-    assert result2["data"] == {
-        CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
-        CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.broadlink_living_room",
-    }
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_user_form_no_emitters(hass: HomeAssistant) -> None:
-    """Test the flow aborts immediately if no infrared emitters are discovered."""
-    with patch(
-        "homeassistant.components.infrared.async_get_emitters",
-        new_callable=AsyncMock,
-        return_value=[],
+        ) as mock_setup_entry,
     ):
+        mock_entry = AsyncMock()
+        mock_entry.name = "My Living Room Emitter"
+        mock_er.return_value.async_get.return_value = mock_entry
+
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
+            DOMAIN, context={"source": "user"}
         )
 
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_emitters"
-
-
-async def test_user_form_already_configured(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
-    """Test the flow aborts if the exact same device/emitter combo is already set up."""
-    entity_registry.async_get_or_create(
-        domain="infrared",
-        platform="broadlink",
-        unique_id="12345",
-        suggested_object_id="broadlink_living_room",
-    )
-
-    old_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="dyson_infrared_fan_infrared.broadlink_living_room",
-        data={
-            CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
-            CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.broadlink_living_room",
-        },
-    )
-    old_entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.infrared.async_get_emitters",
-        new_callable=AsyncMock,
-        return_value=["infrared.broadlink_living_room"],
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}
-        )
-
-        assert result["type"] is FlowResultType.FORM
+        assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "user"
+        assert result["errors"] is None
+
+        user_input = {
+            CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
+            CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.my_living_room_emitter",
+        }
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
-                CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.broadlink_living_room",
-            },
+            user_input,
         )
 
-    assert result2["type"] is FlowResultType.ABORT
+    assert result2["type"] == FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Dyson Fan via My Living Room Emitter"
+    assert result2["data"] == user_input
+    assert len(mock_setup_entry.mock_calls) == 1
+    assert (
+        result2["result"].unique_id
+        == "dyson_infrared_fan_infrared.my_living_room_emitter"
+    )
+
+
+async def test_abort_no_emitters(hass: HomeAssistant) -> None:
+    """Test abort when no infrared emitters are available."""
+    with patch(
+        "homeassistant.components.dyson_infrared.config_flow.infrared.async_get_emitters",
+        return_value=[],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "no_emitters"
+
+
+async def test_abort_if_already_configured(hass: HomeAssistant) -> None:
+    """Test abort when the infrared emitter is already configured."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
+            CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.existing_emitter",
+        },
+        unique_id="dyson_infrared_fan_infrared.existing_emitter",
+    )
+    mock_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.dyson_infrared.config_flow.infrared.async_get_emitters",
+        return_value=["infrared.existing_emitter"],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+
+        user_input = {
+            CONF_DEVICE_TYPE: DysonDeviceType.FAN.value,
+            CONF_INFRARED_EMITTER_ENTITY_ID: "infrared.existing_emitter",
+        }
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input,
+        )
+
+    assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
