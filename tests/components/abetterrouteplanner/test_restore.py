@@ -65,11 +65,17 @@ from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 VOLTAGE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_voltage"
 VOLTAGE_UNIQUE_ID = f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_voltage"
+SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
 
 # Provider sentinel for "this restore-state should omit the ``provider``
 # attribute entirely" — distinct from passing the literal ``None`` value
 # (which would land as a present-but-null attribute).
 _PROVIDER_UNSET: Any = object()
+
+# Wire-time sentinel for "this restore-state should omit the ``wire_time``
+# attribute entirely" — distinct from passing a literal value (e.g. ``None``
+# or a malformed string) that lands under the key in ``State.attributes``.
+_WIRE_TIME_UNSET: Any = object()
 
 RESTORED_PROVIDER = "RIVIAN_STREAM"
 
@@ -79,6 +85,11 @@ RESTORED_PROVIDER = "RIVIAN_STREAM"
 RESTORED_VOLTAGE = 410.0
 RESTORED_STAMP_ISO = "2026-05-20T12:00:00+00:00"
 RESTORED_STAMP_DT = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
+# Wire block ``time`` (``MetricValue.time``) restore anchor — deliberately
+# distinct from the receipt-time ``last_reported_at`` anchor above so a
+# failure trace makes the two slots visibly disjoint.
+RESTORED_WIRE_TIME_ISO = "2026-05-19T08:30:00+00:00"
+RESTORED_WIRE_TIME_DT = datetime(2026, 5, 19, 8, 30, 0, tzinfo=UTC)
 
 
 def _fire_voltage(
@@ -108,6 +119,7 @@ def _voltage_restored_state(
     native_value: float | None = RESTORED_VOLTAGE,
     last_reported_at: str | None = RESTORED_STAMP_ISO,
     provider: Any = _PROVIDER_UNSET,
+    wire_time: Any = _WIRE_TIME_UNSET,
 ) -> tuple[State, dict[str, Any]]:
     """Build a (State, extra_data) tuple for ``mock_restore_cache_with_extra_data``.
 
@@ -122,12 +134,19 @@ def _voltage_restored_state(
     provider slot. Passing any concrete value (string, int, None, empty
     string, etc.) lands it under the ``provider`` key in ``State.attributes``
     so the integration's restore path exercises its type-guard branch.
+
+    ``wire_time`` mirrors ``last_reported_at``: defaults to the sentinel
+    :data:`_WIRE_TIME_UNSET` (key absent); pass an ISO string for the
+    round-trip path or a malformed string for the omit-on-failure path so the
+    restore guard's ``datetime.fromisoformat`` branch is exercised.
     """
     attributes: dict[str, Any] = {}
     if last_reported_at is not None:
         attributes["last_reported_at"] = last_reported_at
     if provider is not _PROVIDER_UNSET:
         attributes["provider"] = provider
+    if wire_time is not _WIRE_TIME_UNSET:
+        attributes["wire_time"] = wire_time
     state = State(
         VOLTAGE_ENTITY_ID,
         str(native_value) if native_value is not None else "unknown",
@@ -814,6 +833,109 @@ async def test_restored_native_value_rejected_when_malformed(
     state = hass.states.get(VOLTAGE_ENTITY_ID)
     assert state is not None
     assert state.state == "unavailable"
+
+
+# ---------------------------------------------------------------------------
+# wire_time attribute — the wire block MetricValue.time (NOT receipt time)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_wire_time_attribute_exposed(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    mock_abrp_client: Any,
+    fake_stream: Any,
+) -> None:
+    """A live frame's ``MetricValue.time`` surfaces as ``attributes["wire_time"]``.
+
+    The wire block ``time`` is distinct from the coordinator's receipt-time
+    ``last_reported_at`` stamp: it is the instant the upstream reported the
+    reading, carried on the typed ``MetricValue``. A later task rebuilds a
+    stream seed from this basis (receipt time would be the wrong basis), so the
+    attribute must expose the wire ``time`` verbatim as a typed ``datetime``.
+    """
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
+
+    await _restart_setup(hass, config_entry_with_vehicles)
+
+    wire_time = datetime(2026, 6, 12, 10, 0, 0, tzinfo=UTC)
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID,
+        Telemetry(soc=build_metric_value(85.0, time=wire_time)),
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(SOC_ENTITY_ID)
+    assert state is not None
+    assert state.attributes["wire_time"] == wire_time
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_restore_wire_time_round_trips_as_datetime(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: Any,
+) -> None:
+    """Restored ISO ``wire_time`` parses back to ``datetime`` before any frame.
+
+    Mirrors :func:`test_restore_last_reported_at_round_trips_as_datetime` for
+    the wire-block ``time`` slot. The recorder serialises the live ``datetime``
+    via HA's ``JSONEncoder`` to an ISO string; the restore path parses it back
+    via ``datetime.fromisoformat`` so a later task can rebuild the stream seed
+    from a typed wire ``time`` (not the receipt-time stamp). Asserts both the
+    runtime type and the value at the pre-frame instant.
+    """
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
+
+    await _restart_setup(
+        hass,
+        config_entry_with_vehicles,
+        entity_registry=entity_registry,
+        preseed_registry_keys=["voltage"],
+        restored_states=[_voltage_restored_state(wire_time=RESTORED_WIRE_TIME_ISO)],
+    )
+
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    wire = state.attributes.get("wire_time")
+    assert isinstance(wire, datetime)
+    assert wire == RESTORED_WIRE_TIME_DT
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_malformed_restored_wire_time_omits_attribute(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_abrp_client: Any,
+) -> None:
+    """Malformed restored ``wire_time`` → attribute ABSENT (not None).
+
+    Mirrors :func:`test_malformed_restored_stamp_omits_attribute` for the
+    wire-block slot: the ``datetime.fromisoformat(...)`` failure in the restore
+    path leaves ``_restored_wire_time`` at ``None`` so the attribute is OMITTED
+    from ``extra_state_attributes`` rather than surfacing as ``wire_time: null``
+    or the raw bad string. The native_value still restores — the malformed
+    wire time affects only its own slot.
+    """
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
+
+    await _restart_setup(
+        hass,
+        config_entry_with_vehicles,
+        entity_registry=entity_registry,
+        preseed_registry_keys=["voltage"],
+        restored_states=[_voltage_restored_state(wire_time="not-a-date")],
+    )
+
+    state = hass.states.get(VOLTAGE_ENTITY_ID)
+    assert state is not None
+    # Native value still restores — the malformed wire time doesn't
+    # poison the value slot.
+    assert state.state == str(RESTORED_VOLTAGE)
+    assert "wire_time" not in state.attributes
 
 
 # ---------------------------------------------------------------------------

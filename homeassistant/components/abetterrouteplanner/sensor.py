@@ -517,6 +517,7 @@ class AbrpTelemetrySensor[T: (float, str)](
         )
         self._restored_native_value: T | None = None
         self._restored_last_reported_at: datetime | None = None
+        self._restored_wire_time: datetime | None = None
         self._restored_provider: str | None = None
 
     def _restore_native_value(self, raw: object) -> T | None:
@@ -558,6 +559,13 @@ class AbrpTelemetrySensor[T: (float, str)](
             if isinstance(stamp_raw, str) and stamp_raw:
                 with suppress(ValueError):
                     self._restored_last_reported_at = datetime.fromisoformat(stamp_raw)
+            # The wire block ``time`` (``MetricValue.time``) round-trips the
+            # same ISO-string path as ``last_reported_at``; on parse failure
+            # the slot stays ``None`` so ``extra_state_attributes`` omits it.
+            wire_raw = state.attributes.get("wire_time")
+            if isinstance(wire_raw, str) and wire_raw:
+                with suppress(ValueError):
+                    self._restored_wire_time = datetime.fromisoformat(wire_raw)
             # Symmetric-reject restore guard for the ``provider``
             # claim — mirrors the wire-boundary filter in the
             # coordinator. ``int``, ``bool``, ``dict``,
@@ -590,7 +598,7 @@ class AbrpTelemetrySensor[T: (float, str)](
 
     @property
     def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Compose ``last_reported_at`` + ``provider`` (per-attribute live-wins).
+        """Compose ``last_reported_at`` + ``provider`` + ``wire_time`` (live-wins).
 
         Returns native ``datetime`` for the stamp — HA's ``JSONEncoder``
         serialises to ISO at persist time, and the frontend renders
@@ -619,6 +627,19 @@ class AbrpTelemetrySensor[T: (float, str)](
         )
         if provider is not None:
             attrs["provider"] = provider
+        # Wire block ``time`` from the live ``MetricValue`` (the instant the
+        # upstream reported the reading), falling back to the restored slot.
+        # Distinct from ``last_reported_at`` (HA receipt time); a later task
+        # rebuilds the stream seed from this basis.
+        tlm = self.coordinator.data.get(self._vehicle_id)
+        live_wire = None
+        if tlm is not None:
+            mv = self.entity_description.value_fn(tlm)
+            if mv is not None:
+                live_wire = mv.time
+        wire = live_wire if live_wire is not None else self._restored_wire_time
+        if wire is not None:
+            attrs["wire_time"] = wire
         return attrs or None
 
     @property
