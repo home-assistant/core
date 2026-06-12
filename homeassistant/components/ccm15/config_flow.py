@@ -7,7 +7,7 @@ from ccm15 import CCM15Device
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.httpx_client import get_async_client
@@ -32,6 +32,7 @@ def _build_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
                 CONF_HOST, default=defaults.get(CONF_HOST, vol.UNDEFINED)
             ): str,
             vol.Optional(CONF_PORT, default=defaults.get(CONF_PORT, 80)): cv.port,
+            vol.Optional(CONF_PASSWORD, default=defaults.get(CONF_PASSWORD, "")): str,
             vol.Optional(
                 CONF_MIN_TEMP,
                 default=defaults.get(CONF_MIN_TEMP, DEFAULT_MIN_TEMP),
@@ -94,7 +95,7 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Allow editing host, port and temperature limits."""
+        """Allow editing host, port, password and temperature limits."""
         entry = self._get_reconfigure_entry()
         errors: dict[str, str] = {}
 

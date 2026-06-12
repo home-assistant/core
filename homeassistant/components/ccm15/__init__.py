@@ -1,6 +1,6 @@
 """The Midea ccm15 AC Controller integration."""
 
-from homeassistant.const import CONF_HOST, CONF_PORT, Platform
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_MAX_TEMP, CONF_MIN_TEMP, DEFAULT_MAX_TEMP, DEFAULT_MIN_TEMP
@@ -16,6 +16,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CCM15ConfigEntry) -> boo
         entry,
         entry.data[CONF_HOST],
         entry.data[CONF_PORT],
+        entry.data.get(CONF_PASSWORD) or None,
         entry.data.get(CONF_MIN_TEMP, DEFAULT_MIN_TEMP),
         entry.data.get(CONF_MAX_TEMP, DEFAULT_MAX_TEMP),
     )

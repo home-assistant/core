@@ -43,6 +43,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         entry: CCM15ConfigEntry,
         host: str,
         port: int,
+        password: str | None = None,
         min_temp: int = DEFAULT_MIN_TEMP,
         max_temp: int = DEFAULT_MAX_TEMP,
     ) -> None:
@@ -59,7 +60,11 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         # would synchronously load the certifi CA bundle and trip the
         # blocking-call detector.
         self._ccm15 = CCM15Device(
-            host, port, DEFAULT_TIMEOUT, client=get_async_client(hass)
+            host,
+            port,
+            DEFAULT_TIMEOUT,
+            client=get_async_client(hass),
+            password=password,
         )
         self._host = host
         self._min_temp = min_temp
@@ -132,6 +137,13 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     ) -> None:
         """Set the fan mode."""
         data.fan_mode = CONST_FAN_CMD_MAP[fan_mode]
+        await self.async_set_state(ac_index, data)
+
+    async def async_set_swing_mode(
+        self, ac_index: int, data: CCM15SlaveDevice, swing_on: bool
+    ) -> None:
+        """Set the swing mode."""
+        data.is_swing_on = swing_on
         await self.async_set_state(ac_index, data)
 
     async def async_set_temperature(

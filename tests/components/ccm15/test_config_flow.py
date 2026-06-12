@@ -12,7 +12,7 @@ from homeassistant.components.ccm15.const import (
     DEFAULT_MIN_TEMP,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -41,6 +41,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 80,
+        CONF_PASSWORD: "",
         CONF_MIN_TEMP: DEFAULT_MIN_TEMP,
         CONF_MAX_TEMP: DEFAULT_MAX_TEMP,
     }
@@ -200,6 +201,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 80,
+                CONF_PASSWORD: "123456",
                 CONF_MIN_TEMP: 17,
                 CONF_MAX_TEMP: 28,
             },
@@ -208,5 +210,6 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_PASSWORD] == "123456"
     assert entry.data[CONF_MIN_TEMP] == 17
     assert entry.data[CONF_MAX_TEMP] == 28
