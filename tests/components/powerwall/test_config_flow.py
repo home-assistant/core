@@ -11,7 +11,7 @@ from tesla_powerwall import (
 )
 
 from homeassistant import config_entries
-from homeassistant.components.powerwall.const import DOMAIN
+from homeassistant.components.powerwall.const import CONFIG_ENTRY_COOKIE, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
@@ -324,6 +324,141 @@ async def test_dhcp_discovery_cannot_connect(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test reconfigure flow updates ip address and password."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**VALID_CONFIG, CONFIG_ENTRY_COOKIE: "old-cookie"},
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_powerwall = await _mock_powerwall_site_name(hass, "My site")
+
+    new_config = {CONF_IP_ADDRESS: "5.6.7.8", CONF_PASSWORD: "new-password"}
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ) as mock_setup_entry,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            new_config,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_IP_ADDRESS] == "5.6.7.8"
+    assert entry.data[CONF_PASSWORD] == "new-password"
+    assert entry.data[CONFIG_ENTRY_COOKIE] is None
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_ip_only(hass: HomeAssistant) -> None:
+    """Test reconfigure flow with only IP change keeps existing password."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_powerwall = await _mock_powerwall_site_name(hass, "My site")
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "5.6.7.8"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_IP_ADDRESS] == "5.6.7.8"
+    assert entry.data[CONF_PASSWORD] == VALID_CONFIG[CONF_PASSWORD]
+
+
+async def test_reconfigure_unique_id_mismatch(hass: HomeAssistant) -> None:
+    """Test reconfigure flow aborts when pointing at a different Powerwall."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_powerwall = await _mock_powerwall_site_name(hass, "Other site")
+    mock_powerwall.get_gateway_din.return_value = "999-0----9-000000000XXX"
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "5.6.7.8", CONF_PASSWORD: "test-password"},
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "unique_id_mismatch"
+
+
+async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
+    """Test reconfigure flow handles connection error."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=VALID_CONFIG,
+        unique_id=MOCK_GATEWAY_DIN,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    mock_powerwall = await _mock_powerwall_side_effect(
+        site_info=PowerwallUnreachableError
+    )
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_IP_ADDRESS: "5.6.7.8", CONF_PASSWORD: "test-password"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {CONF_IP_ADDRESS: "cannot_connect"}
 
 
 async def test_form_reauth(hass: HomeAssistant) -> None:
