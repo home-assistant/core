@@ -103,6 +103,7 @@ class SandboxProcess:
         transport: str = TRANSPORT_STDIO,
         on_failed: Callable[[str], None] | None = None,
         on_channel_ready: Callable[[str, Channel], None] | None = None,
+        on_channel_closed: Callable[[str], None] | None = None,
         on_ready: Callable[[str], None] | None = None,
         on_shutdown_reply: ShutdownReplyCallback | None = None,
     ) -> None:
@@ -117,6 +118,11 @@ class SandboxProcess:
         frame arrives — so its handlers are in place before the runtime's
         own warm-load round-trip lands. It runs synchronously on the
         manager's loop.
+
+        ``on_channel_closed`` is invoked (synchronously, with the group
+        name) right after the control channel is closed on process exit. It
+        is the seam the integration uses to mark a dead sandbox's proxy
+        entities unavailable so they stop serving stale state.
 
         ``on_ready`` is invoked (synchronously, with the group name) once
         the runtime has sent :data:`MSG_READY` and the process is
@@ -134,6 +140,7 @@ class SandboxProcess:
         self._transport = transport
         self._on_failed = on_failed
         self._on_channel_ready = on_channel_ready
+        self._on_channel_closed = on_channel_closed
         self._on_ready = on_ready
         self._on_shutdown_reply = on_shutdown_reply
         self._state: str = "stopped"
@@ -510,6 +517,13 @@ class SandboxProcess:
             if self._channel is not None:
                 await self._channel.close()
                 self._channel = None
+                if self._on_channel_closed is not None:
+                    try:
+                        self._on_channel_closed(self.group)
+                    except Exception:
+                        _LOGGER.exception(
+                            "Sandbox %s on_channel_closed callback raised", self.group
+                        )
             self._ready.clear()
 
     def _build_channel(
@@ -550,6 +564,7 @@ class SandboxManager:
         config: SandboxConfig | None = None,
         on_failed: Callable[[str], None] | None = None,
         on_channel_ready: Callable[[str, Channel], None] | None = None,
+        on_channel_closed: Callable[[str], None] | None = None,
         on_ready: Callable[[str], None] | None = None,
         on_shutdown_reply: ShutdownReplyCallback | None = None,
         transport: str = TRANSPORT_STDIO,
@@ -575,6 +590,7 @@ class SandboxManager:
         self._config = config or SandboxConfig()
         self._on_failed = on_failed
         self._on_channel_ready = on_channel_ready
+        self._on_channel_closed = on_channel_closed
         self._on_ready = on_ready
         self._on_shutdown_reply = on_shutdown_reply
         if transport not in _TRANSPORTS:
@@ -631,6 +647,7 @@ class SandboxManager:
                 transport=self._transport,
                 on_failed=self._on_failed,
                 on_channel_ready=self._on_channel_ready,
+                on_channel_closed=self._on_channel_closed,
                 on_ready=self._on_ready,
                 on_shutdown_reply=self._on_shutdown_reply,
             )

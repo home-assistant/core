@@ -595,6 +595,19 @@ class SandboxBridge:
 
         return build_proxy(self, description)
 
+    @callback
+    def async_mark_all_unavailable(self) -> None:
+        """Flip every proxy this bridge owns to unavailable.
+
+        Called when the sandbox's channel drops (process exit): the proxies
+        would otherwise keep serving the last state they saw — a dead
+        sandbox's ``light`` would read ``on`` forever to automations and the
+        UI. They flip back to available on respawn via the normal
+        register/``state_changed`` round-trip.
+        """
+        for proxy in self._entities.values():
+            proxy.sandbox_set_available(False)
+
     async def async_unload_entry(self, entry: ConfigEntry) -> None:
         """Drop every platform and proxy this bridge added for ``entry``."""
         await self._async_teardown_entry(entry.entry_id)
