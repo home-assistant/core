@@ -597,25 +597,53 @@ class SandboxBridge:
 
     async def async_unload_entry(self, entry: ConfigEntry) -> None:
         """Drop every platform and proxy this bridge added for ``entry``."""
-        domains = [d for (eid, d) in list(self._platforms) if eid == entry.entry_id]
+        await self._async_teardown_entry(entry.entry_id)
+
+    async def async_teardown(self) -> None:
+        """Release every proxy + platform registration this bridge owns.
+
+        Called when a sandbox restart hands the integration a fresh
+        process: the old bridge's proxy entities and their
+        :class:`EntityComponent` platform slots must be torn down so the
+        replacement bridge can re-register the same entries without
+        tripping the ``"has already been setup!"`` guard.
+        """
+        entry_ids = {eid for (eid, _domain) in list(self._platforms)}
+        entry_ids.update(
+            entry_id
+            for proxy in list(self._entities.values())
+            if (entry_id := getattr(proxy.description, "entry_id", None)) is not None
+        )
+        for entry_id in entry_ids:
+            await self._async_teardown_entry(entry_id)
+
+    async def _async_teardown_entry(self, entry_id: str) -> None:
+        """Remove every platform + proxy this bridge added for one entry.
+
+        Shared by :meth:`async_unload_entry` and :meth:`async_teardown`.
+        The :class:`EntityPlatform` is dropped from its
+        :class:`EntityComponent` through the public inverse hook
+        (:meth:`EntityComponent.async_unregister_remote_platform`) — never a
+        private ``_platforms`` poke — and then destroyed, which removes its
+        proxy entities from the state machine.
+        """
+        domains = [d for (eid, d) in list(self._platforms) if eid == entry_id]
         for domain in domains:
-            platform = self._platforms.pop((entry.entry_id, domain), None)
+            platform = self._platforms.pop((entry_id, domain), None)
             if platform is None:
                 continue
-            await platform.async_destroy()
             component: EntityComponent[Any] | None = self.hass.data.get(
                 DATA_INSTANCES, {}
             ).get(domain)
-            if component is not None:
-                # Mirror the EntityComponent.async_unload_entry side-effect.
-                component._platforms.pop(entry.entry_id, None)  # noqa: SLF001
-        # Forget proxies that were owned by this entry.
-        survivors = {
+            if component is not None and platform.config_entry is not None:
+                component.async_unregister_remote_platform(platform.config_entry)
+            await platform.async_destroy()
+        # Forget any proxies that were owned by this entry.
+        self._entities = {
             sid: proxy
             for sid, proxy in self._entities.items()
-            if getattr(proxy.description, "entry_id", None) != entry.entry_id
+            if getattr(proxy.description, "entry_id", None) != entry_id
         }
-        self._entities = survivors
 
 
 _STORE_KEY_FORBIDDEN = ("/", "\\", "\x00")

@@ -103,6 +103,7 @@ class SandboxProcess:
         transport: str = TRANSPORT_STDIO,
         on_failed: Callable[[str], None] | None = None,
         on_channel_ready: Callable[[str, Channel], None] | None = None,
+        on_ready: Callable[[str], None] | None = None,
         on_shutdown_reply: ShutdownReplyCallback | None = None,
     ) -> None:
         """Initialise a supervised sandbox subprocess.
@@ -117,6 +118,12 @@ class SandboxProcess:
         own warm-load round-trip lands. It runs synchronously on the
         manager's loop.
 
+        ``on_ready`` is invoked (synchronously, with the group name) once
+        the runtime has sent :data:`MSG_READY` and the process is
+        ``running`` — on every (re)spawn. It is the seam the integration
+        uses to re-drive ``entry_setup`` for a group's entries after a
+        crash, when the fresh process can actually answer.
+
         ``on_shutdown_reply`` is invoked with the runtime's reply to
         :data:`MSG_SHUTDOWN` so the caller can persist any
         ``restore_state`` payload before the subprocess exits.
@@ -127,6 +134,7 @@ class SandboxProcess:
         self._transport = transport
         self._on_failed = on_failed
         self._on_channel_ready = on_channel_ready
+        self._on_ready = on_ready
         self._on_shutdown_reply = on_shutdown_reply
         self._state: str = "stopped"
         self._process: asyncio.subprocess.Process | None = None
@@ -484,6 +492,13 @@ class SandboxProcess:
             if ready_task.done() and not ready_task.cancelled():
                 self._state = "running"
                 self._ready.set()
+                if self._on_ready is not None:
+                    try:
+                        self._on_ready(self.group)
+                    except Exception:
+                        _LOGGER.exception(
+                            "Sandbox %s on_ready callback raised", self.group
+                        )
                 # Hold here until the process exits.
                 await exit_task
         finally:
@@ -535,6 +550,7 @@ class SandboxManager:
         config: SandboxConfig | None = None,
         on_failed: Callable[[str], None] | None = None,
         on_channel_ready: Callable[[str, Channel], None] | None = None,
+        on_ready: Callable[[str], None] | None = None,
         on_shutdown_reply: ShutdownReplyCallback | None = None,
         transport: str = TRANSPORT_STDIO,
     ) -> None:
@@ -559,6 +575,7 @@ class SandboxManager:
         self._config = config or SandboxConfig()
         self._on_failed = on_failed
         self._on_channel_ready = on_channel_ready
+        self._on_ready = on_ready
         self._on_shutdown_reply = on_shutdown_reply
         if transport not in _TRANSPORTS:
             raise ValueError(
@@ -614,6 +631,7 @@ class SandboxManager:
                 transport=self._transport,
                 on_failed=self._on_failed,
                 on_channel_ready=self._on_channel_ready,
+                on_ready=self._on_ready,
                 on_shutdown_reply=self._on_shutdown_reply,
             )
             self._sandboxes[group] = process
