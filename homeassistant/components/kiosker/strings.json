@@ -104,5 +104,75 @@
         "name": "Disable screensaver"
       }
     }
+  },
+  "services": {
+    "navigate_url": {
+      "description": "Navigate to a specific URL",
+      "fields": {
+        "device_id": {
+          "description": "The Kiosker device to control",
+          "name": "Device"
+        },
+        "url": {
+          "description": "The URL to navigate to",
+          "name": "URL"
+        }
+      },
+      "name": "Navigate to URL"
+    },
+    "set_blackout": {
+      "description": "Set blackout screen with custom message",
+      "fields": {
+        "background": {
+          "description": "Background color in rgb format",
+          "name": "Background color"
+        },
+        "button_background": {
+          "description": "Background color of the dismiss button in rgb format",
+          "name": "Button background color"
+        },
+        "button_foreground": {
+          "description": "Text color of the dismiss button in rgb format",
+          "name": "Button foreground color"
+        },
+        "button_text": {
+          "description": "Text to display on the dismiss button",
+          "name": "Button text"
+        },
+        "device_id": {
+          "description": "The Kiosker device to control",
+          "name": "Device"
+        },
+        "dismissible": {
+          "description": "Whether the blackout can be dismissed by user interaction",
+          "name": "Dismissible"
+        },
+        "expire": {
+          "description": "Time in seconds before the blackout expires",
+          "name": "Expire time"
+        },
+        "foreground": {
+          "description": "Text color in rgb format",
+          "name": "Foreground color"
+        },
+        "icon": {
+          "description": "Icon to display (SF Symbols name)",
+          "name": "Icon"
+        },
+        "sound": {
+          "description": "Sound to play when blackout is displayed (SystemSoundID, e.g., 1007)",
+          "name": "Sound"
+        },
+        "text": {
+          "description": "Text to display on blackout screen",
+          "name": "Text"
+        },
+        "visible": {
+          "description": "Whether the blackout is visible",
+          "name": "Visible"
+        }
+      },
+      "name": "Set blackout"
+    }
   }
 }
