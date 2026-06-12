@@ -62,13 +62,15 @@ def _get_encryption_key(entry: OpenDisplayConfigEntry) -> bytes | None:
         return None
     if len(raw) != 32:
         raise ConfigEntryAuthFailed(
-            "Stored OpenDisplay encryption key is invalid; reauthentication required"
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
         )
     try:
         return bytes.fromhex(raw)
     except ValueError as err:
         raise ConfigEntryAuthFailed(
-            "Stored OpenDisplay encryption key is invalid; reauthentication required"
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
         ) from err
 
 
@@ -108,11 +110,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
             is_flex = device.is_flex
     except (AuthenticationFailedError, AuthenticationRequiredError) as err:
         raise ConfigEntryAuthFailed(
-            f"Encryption key rejected by OpenDisplay device: {err}"
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
         ) from err
     except (BLEConnectionError, BLETimeoutError, OpenDisplayError) as err:
         raise ConfigEntryNotReady(
-            f"Failed to connect to OpenDisplay device: {err}"
+            translation_domain=DOMAIN,
+            translation_key="setup_connection_error",
         ) from err
     device_config = device.config
     if TYPE_CHECKING:
