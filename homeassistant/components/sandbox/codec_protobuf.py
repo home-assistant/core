@@ -8,7 +8,8 @@ lives here, not on :meth:`Channel.register`).
 
 Mirrored verbatim across the no-cross-import boundary (the same file lives at
 ``hass_client.codec_protobuf``); the relative imports resolve to each side's
-own :mod:`messages` + ``_proto`` gencode.
+own :mod:`messages` + ``_proto`` gencode. The two copies are kept
+byte-identical by ``sandbox/proto/check_mirror_drift.sh`` — edit both.
 """
 
 from typing import Any
