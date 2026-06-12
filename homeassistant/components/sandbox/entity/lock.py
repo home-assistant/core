@@ -1,29 +1,17 @@
 """Sandbox proxy for ``lock`` entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.lock import LockEntity, LockEntityFeature, LockState
 
 from . import SandboxProxyEntity
-
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
 
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxLockEntity(SandboxProxyEntity, LockEntity):
     """Proxy for a ``lock`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``LockEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = LockEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = LockEntityFeature
 
     @property
     def is_locked(self) -> bool | None:

@@ -1,7 +1,5 @@
 """Sandbox proxy for ``humidifier`` entities."""
 
-from typing import TYPE_CHECKING
-
 from homeassistant.components.humidifier import (
     ATTR_ACTION,
     ATTR_AVAILABLE_MODES,
@@ -18,24 +16,12 @@ from homeassistant.const import STATE_ON
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxHumidifierEntity(SandboxProxyEntity, HumidifierEntity):
     """Proxy for a ``humidifier`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``HumidifierEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = HumidifierEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = HumidifierEntityFeature
 
     @property
     def is_on(self) -> bool | None:

@@ -1,7 +1,5 @@
 """Sandbox proxy for ``weather`` entities."""
 
-from typing import TYPE_CHECKING
-
 from homeassistant.components.weather import (
     ATTR_WEATHER_HUMIDITY,
     ATTR_WEATHER_TEMPERATURE,
@@ -16,9 +14,6 @@ from homeassistant.components.weather import (
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
@@ -32,16 +27,7 @@ class SandboxWeatherEntity(SandboxProxyEntity, WeatherEntity):
     ``sandbox/docs/query-shaped-rpcs.md``.
     """
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``WeatherEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = WeatherEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = WeatherEntityFeature
 
     @property
     def condition(self) -> str | None:

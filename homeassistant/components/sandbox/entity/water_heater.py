@@ -1,6 +1,6 @@
 """Sandbox proxy for ``water_heater`` entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.water_heater import (
     ATTR_CURRENT_TEMPERATURE,
@@ -18,24 +18,12 @@ from homeassistant.const import UnitOfTemperature
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxWaterHeaterEntity(SandboxProxyEntity, WaterHeaterEntity):
     """Proxy for a ``water_heater`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``WaterHeaterEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = WaterHeaterEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = WaterHeaterEntityFeature
 
     @property
     def temperature_unit(self) -> str:
