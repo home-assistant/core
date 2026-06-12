@@ -60,9 +60,15 @@ def rfxtrx_dsmr_connection_fixture() -> Generator[
 
     connection_factory = MagicMock(wraps=connection_factory)
 
-    with patch(
-        "homeassistant.components.dsmr.sensor.create_rfxtrx_dsmr_reader",
-        connection_factory,
+    with (
+        patch(
+            "homeassistant.components.dsmr.sensor.create_rfxtrx_dsmr_reader",
+            connection_factory,
+        ),
+        patch(
+            "homeassistant.components.dsmr.sensor.create_rfxtrx_tcp_dsmr_reader",
+            connection_factory,
+        ),
     ):
         yield (connection_factory, transport, protocol)
         closed.set()

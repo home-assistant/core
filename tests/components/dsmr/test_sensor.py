@@ -1380,9 +1380,12 @@ async def test_tcp(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Legacy host/port is combined into a socket URL in memory; entry untouched
+    # Legacy host/port entries are combined into a socket URL in memory and
+    # opened with the keep-alive watchdog; the stored entry is left untouched so
+    # a downgrade keeps working.
     assert mock_entry.data["host"] == "localhost"
     assert connection_factory.call_args_list[0][0][0] == "socket://localhost:1234"
+    assert connection_factory.call_args_list[0][1]["keep_alive_interval"] == 60
 
 
 async def test_rfxtrx_tcp(
@@ -1410,9 +1413,66 @@ async def test_rfxtrx_tcp(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Legacy host/port is combined into a socket URL in memory; entry untouched
+    # Legacy host/port entries keep using the TCP reader (with keep-alive); the
+    # stored entry is left untouched so a downgrade keeps working.
     assert mock_entry.data["host"] == "localhost"
+    assert connection_factory.call_args_list[0][0][0] == "localhost"
+    assert connection_factory.call_args_list[0][0][1] == 1234
+    assert connection_factory.call_args_list[0][1]["keep_alive_interval"] == 60
+
+
+async def test_tcp_socket_url(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """A socket:// port should be opened with the keep-alive watchdog."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "socket://localhost:1234",
+        "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
     assert connection_factory.call_args_list[0][0][0] == "socket://localhost:1234"
+    assert connection_factory.call_args_list[0][1]["keep_alive_interval"] == 60
+
+
+async def test_serial_no_keep_alive(
+    hass: HomeAssistant, dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock]
+) -> None:
+    """A local serial device should use the plain reader without keep-alive."""
+    (connection_factory, _transport, _protocol) = dsmr_connection_fixture
+
+    entry_data = {
+        "port": "/dev/ttyUSB0",
+        "dsmr_version": "2.2",
+        "protocol": "dsmr_protocol",
+        "serial_id": "1234",
+        "serial_id_gas": "5678",
+    }
+
+    mock_entry = MockConfigEntry(
+        domain="dsmr", unique_id="/dev/ttyUSB0", data=entry_data
+    )
+
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert connection_factory.call_args_list[0][0][0] == "/dev/ttyUSB0"
+    assert "keep_alive_interval" not in connection_factory.call_args_list[0][1]
 
 
 @patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)

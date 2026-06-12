@@ -9,9 +9,13 @@ from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 from typing import override
+from urllib.parse import urlparse
 
 from dsmr_parser.clients.protocol import create_dsmr_reader
-from dsmr_parser.clients.rfxtrx_protocol import create_rfxtrx_dsmr_reader
+from dsmr_parser.clients.rfxtrx_protocol import (
+    create_rfxtrx_dsmr_reader,
+    create_rfxtrx_tcp_dsmr_reader,
+)
 from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
 
 from homeassistant.components.sensor import (
@@ -767,26 +771,57 @@ async def async_setup_entry(
                 hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
             )
 
-    # Creates an asyncio.Protocol factory for reading DSMR telegrams from
-    # serial and calls update_entities_telegram to update entities on arrival
-    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
-    if protocol == DSMR_PROTOCOL:
-        create_reader = create_dsmr_reader
-    else:
-        create_reader = create_rfxtrx_dsmr_reader
     # Legacy network entries stored host and port separately; combine them into
-    # a single socket:// URL in memory so the entry stays untouched and rolling
-    # back to an older Home Assistant version keeps working.
+    # the single socket://host:port form newer entries already use, in memory
+    # only, so the stored entry stays untouched and rolling back to an older
+    # Home Assistant version keeps working.
     port = entry.data[CONF_PORT]
     if CONF_HOST in entry.data:
         port = f"socket://{entry.data[CONF_HOST]}:{port}"
-    reader_factory = partial(
-        create_reader,
-        port,
-        dsmr_version,
-        update_entities_telegram,
-        loop=hass.loop,
-    )
+
+    # Creates an asyncio.Protocol factory for reading DSMR telegrams and calls
+    # update_entities_telegram to update entities on arrival. A port starting
+    # with "/" is a local serial device, which doesn't need a liveness check.
+    # Anything else is a special URL for a network connection that can drop
+    # silently, so we enable a keep-alive watchdog that closes the connection
+    # (triggering a reconnect) when no telegram arrives in time.
+    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    if port.startswith("/"):
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_dsmr_reader
+        reader_factory = partial(
+            create_reader,
+            port,
+            dsmr_version,
+            update_entities_telegram,
+            loop=hass.loop,
+        )
+    elif protocol == DSMR_PROTOCOL:
+        # create_dsmr_reader opens any URL (socket://, esphome://, ...) and
+        # supports the keep-alive watchdog directly.
+        reader_factory = partial(
+            create_dsmr_reader,
+            port,
+            dsmr_version,
+            update_entities_telegram,
+            loop=hass.loop,
+            keep_alive_interval=60,
+        )
+    else:
+        # The RFXtrx serial reader has no keep-alive support, so the network host
+        # and port are fed to the dedicated TCP reader instead.
+        address = urlparse(port)
+        reader_factory = partial(
+            create_rfxtrx_tcp_dsmr_reader,
+            address.hostname,
+            address.port,
+            dsmr_version,
+            update_entities_telegram,
+            loop=hass.loop,
+            keep_alive_interval=60,
+        )
 
     async def connect_and_reconnect() -> None:
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
