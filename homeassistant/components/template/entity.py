@@ -7,10 +7,16 @@ from typing import Any
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC
 from homeassistant.core import Context, HomeAssistant, callback
+from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.script import Script, _VarsType
-from homeassistant.helpers.template import Template, TemplateStateFromEntityId
+from homeassistant.helpers.template import (
+    Template,
+    TemplateStateFromEntityId,
+    render_complex as template_render_complex,
+)
+from homeassistant.helpers.trigger_template_entity import log_triggered_template_error
 from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_DEFAULT_ENTITY_ID
@@ -25,6 +31,15 @@ class EntityTemplate:
     validator: Callable[[Any], Any] | None
     on_update: Callable[[Any], None] | None
     none_on_template_error: bool
+
+
+@dataclass
+class OnDemandTemplate:
+    """Information class for properly handling on-demand template results."""
+
+    template: Template
+    validator: Callable[[Any], Any] | None
+    render_complex: bool
 
 
 class AbstractTemplateEntity(Entity):
@@ -45,6 +60,7 @@ class AbstractTemplateEntity(Entity):
         self.hass = hass
         self._config = config
         self._templates: dict[str, EntityTemplate] = {}
+        self._on_demand_templates: dict[str, OnDemandTemplate] = {}
         self._action_scripts: dict[str, Script] = {}
 
         if self._optimistic_entity:
@@ -79,8 +95,12 @@ class AbstractTemplateEntity(Entity):
 
     @callback
     @abstractmethod
-    def _render_script_variables(self) -> dict:
+    def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
+
+    @abstractmethod
+    def _render_entity_variables(self) -> dict[str, Any]:
+        """Render entity variables."""
 
     @abstractmethod
     def setup_state_template(
@@ -130,6 +150,62 @@ class AbstractTemplateEntity(Entity):
             If set to false, template errors will be supplied in the result to
             on_update.
         """
+
+    def setup_on_demand_template(
+        self,
+        option: str,
+        validator: Callable[[Any], Any] | None = None,
+        render_complex: bool = False,
+    ) -> None:
+        """Set up a template that renders and validates the result on demand.
+
+        Add a template that will only render when render_on_demand_template is called.
+
+        Parameters
+        ----------
+        option
+            The configuration key provided by ConfigFlow or the yaml option
+        validator:
+            Optional function that validates the rendered result.
+        on_update:
+            Callback to handle the template validated template result.
+            Passed the result of the validator.
+        render_complex (default=False):
+            This signals trigger based template entities to render the template
+            as a complex result. State based template entities always render
+            complex results.
+        none_on_template_error (default=True)
+            If set to false, template errors will be supplied in the result to
+            on_update.
+        """
+        if (template := self._config.get(option)) and isinstance(template, Template):
+            self._on_demand_templates[option] = OnDemandTemplate(
+                template, validator, render_complex
+            )
+
+    def render_on_demand_template(self, option: str) -> Any | None:
+        """Render an on demand template and return the validated result."""
+        if (on_demand_template := self._on_demand_templates.get(option)) is not None:
+            variables = self._render_entity_variables()
+
+            rendered = None
+            try:
+                if on_demand_template.render_complex:
+                    rendered = template_render_complex(
+                        on_demand_template.template, variables
+                    )
+                else:
+                    rendered = on_demand_template.template.async_render(variables)
+            except TemplateError as err:
+                log_triggered_template_error(self.entity_id, err, option)
+
+            return (
+                on_demand_template.validator(rendered)
+                if on_demand_template.validator
+                else rendered
+            )
+
+        return None
 
     def add_template(
         self,

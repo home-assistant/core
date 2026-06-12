@@ -466,28 +466,22 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
 
         # Forecasts
 
-        self._forecast_daily: list[Forecast] | None = []
-        self.setup_template(
+        self.setup_on_demand_template(
             CONF_FORECAST_DAILY,
-            "_forecast_daily",
             validate_forecast(self, CONF_FORECAST_DAILY, "daily"),
-            self._update_forecast("daily"),
+            render_complex=True,
         )
 
-        self._forecast_hourly: list[Forecast] | None = []
-        self.setup_template(
+        self.setup_on_demand_template(
             CONF_FORECAST_HOURLY,
-            "_forecast_hourly",
             validate_forecast(self, CONF_FORECAST_HOURLY, "hourly"),
-            self._update_forecast("hourly"),
+            render_complex=True,
         )
 
-        self._forecast_twice_daily: list[Forecast] | None = []
-        self.setup_template(
+        self.setup_on_demand_template(
             CONF_FORECAST_TWICE_DAILY,
-            "_forecast_twice_daily",
             validate_forecast(self, CONF_FORECAST_TWICE_DAILY, "twice_daily"),
-            self._update_forecast("twice_daily"),
+            render_complex=True,
         )
 
         # Legacy support
@@ -502,11 +496,11 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
 
         # Supported Features
         self._attr_supported_features = 0
-        if CONF_FORECAST_DAILY in self._templates:
+        if CONF_FORECAST_DAILY in self._on_demand_templates:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_DAILY
-        if CONF_FORECAST_HOURLY in self._templates:
+        if CONF_FORECAST_HOURLY in self._on_demand_templates:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_HOURLY
-        if CONF_FORECAST_TWICE_DAILY in self._templates:
+        if CONF_FORECAST_TWICE_DAILY in self._on_demand_templates:
             self._attr_supported_features |= WeatherEntityFeature.FORECAST_TWICE_DAILY
 
     @property
@@ -523,32 +517,29 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity):
         except vol.Invalid:
             self._attr_wind_bearing = vol.Coerce(str)(result)
 
-    @callback
-    def _update_forecast(
+    def _get_forecast(
         self,
+        option: str,
         forecast_type: Literal["daily", "hourly", "twice_daily"],
-    ) -> Callable[[list[Forecast] | None], None]:
-        """Save template result and trigger forecast listener."""
-
-        def update(result: list[Forecast] | None) -> None:
-            setattr(self, f"_forecast_{forecast_type}", result)
-            self.hass.async_create_task(
-                self.async_update_listeners([forecast_type]), eager_start=True
-            )
-
-        return update
+    ) -> list[Forecast]:
+        """Get template forecast result and trigger forecast listener."""
+        result = self.render_on_demand_template(option)
+        self.hass.async_create_task(
+            self.async_update_listeners([forecast_type]), eager_start=True
+        )
+        return result or []
 
     async def async_forecast_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return self._forecast_daily or []
+        return self._get_forecast(CONF_FORECAST_DAILY, "daily")
 
     async def async_forecast_hourly(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return self._forecast_hourly or []
+        return self._get_forecast(CONF_FORECAST_HOURLY, "hourly")
 
     async def async_forecast_twice_daily(self) -> list[Forecast]:
         """Return the daily forecast in native units."""
-        return self._forecast_twice_daily or []
+        return self._get_forecast(CONF_FORECAST_TWICE_DAILY, "twice_daily")
 
 
 class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
