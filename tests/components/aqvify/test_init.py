@@ -1,7 +1,7 @@
 """Test the Aqvify init."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
@@ -18,7 +18,6 @@ import homeassistant.helpers.device_registry as dr
 from . import setup_integration
 
 from tests.common import (
-    Mock,
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_array_fixture,
