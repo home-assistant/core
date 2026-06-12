@@ -709,6 +709,11 @@ async def test_unregister_service_removes_forwarder(
 
 async def test_fire_event_lands_on_main_bus(hass: HomeAssistant) -> None:
     """``fire_event`` re-fires the event on main's bus."""
+    # The group owns the ``zha`` integration, so ``zha_event`` is in an owned
+    # ``<domain>_`` namespace and passes the main-side fire_event gate.
+    owner = MockConfigEntry(domain="zha", title="ZHA", sandbox="built-in")
+    owner.add_to_hass(hass)
+
     _bridge, main_channel, sandbox_channel = await _wire(hass)
 
     received: list[Any] = []
