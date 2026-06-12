@@ -51,34 +51,34 @@ def _climate_entities() -> list[climate.MideaClimateEntityDescription]:
     return [
         climate.MideaClimateEntityDescription(
             key="named",
-            model=[DeviceType.AC],
+            models=[DeviceType.AC],
             translation_key="named",
         ),
         climate.MideaClimateEntityDescription(
             key="extra",
-            model=[DeviceType.AC],
+            models=[DeviceType.AC],
             translation_key="extra",
             entity_registry_enabled_default=False,
         ),
         climate.MideaClimateEntityDescription(
             key="named",
-            model=[DeviceType.CC],
+            models=[DeviceType.CC],
             translation_key="named",
         ),
         climate.MideaClimateEntityDescription(
             key="named",
-            model=[DeviceType.CF],
+            models=[DeviceType.CF],
             translation_key="named",
         ),
         climate.MideaClimateEntityDescription(
             key="named",
-            model=[DeviceType.C3],
+            models=[DeviceType.C3],
             translation_key="named",
             zone=0,
         ),
         climate.MideaClimateEntityDescription(
             key="named",
-            model=[DeviceType.FB],
+            models=[DeviceType.FB],
             translation_key="named",
         ),
     ]
@@ -92,7 +92,7 @@ def _get_description(
     return {
         entity.key: entity
         for entity in _climate_entities()
-        if device_type in entity.model
+        if device_type in entity.models
     }[entity_key]
 
 
@@ -121,7 +121,7 @@ def test_midea_climate_base_methods() -> None:
     assert ent._attr_name is None
     assert ent.hvac_mode == HVACMode.AUTO
     ent.device.attributes["power"] = False
-    assert ent.hvac_mode == HVACMode.OFF
+    assert ent.hvac_mode is None
     ent.device.attributes["power"] = True
     assert ent.target_temperature == 22.0
     assert ent.current_temperature == 21.0
@@ -138,8 +138,6 @@ def test_midea_climate_base_methods() -> None:
     ent.device.attributes.update({"sleep_mode": False, "frost_protect": True})
     assert ent.preset_mode == PRESET_AWAY
     ent.device.attributes.update({"frost_protect": False})
-
-    assert ent.extra_state_attributes == attrs
 
     ent.turn_on()
     ent.turn_off()
