@@ -118,7 +118,14 @@ Channel  (dispatch core: id↔reply map, inflight concurrency, register/call/pus
   nothing but channel frames (no text marker; logs go to stderr).
 
 Concurrency is real: handlers run as independent tasks bounded by an inflight
-semaphore, so a slow handler can't head-of-line-block the channel.
+semaphore, so a slow handler can't head-of-line-block the channel. A second
+bound caps the **total** inflight handler tasks (running + queued): under a
+frame-flood from a compromised peer the dispatch layer sheds — inbound calls are
+rejected with a `ChannelOverloaded` error frame and pushes dropped — rather than
+growing unbounded decoded payloads (each up to the 16 MB frame cap); responses
+are always handled inline so backpressure never starves a reply. Enforced
+identically in both `channel.py` mirrors (`_dispatch`); the per-frame size cap is
+the other half of the channel's memory bound.
 
 ## 5. Lifecycle
 
@@ -232,6 +239,16 @@ re-send it and main refreshes the existing proxy in place (no duplicate).
 Proxy `unique_id`s are prefixed with the source domain (`<domain>:<unique_id>`)
 so two integrations in one group can't collide.
 
+**Main gates registration on ownership, not just a resolvable id.**
+`register_entity` is accepted only when `entry.sandbox == self.group` — the
+sandbox may register entities solely for entries main routed to *this* group, so
+a compromised sandbox cannot attach entities (or pre-create devices) against a
+victim integration's config entry. A `device_info` whose identifiers/connections
+collide with a device already owned by a config entry **outside** this group is
+refused rather than merged, closing the device-registry hijack vector. Enforced
+in `bridge.py` (`_handle_register_entity` / `_reject_foreign_device_merge`,
+deriving trust from `entry.sandbox`).
+
 On main, `SandboxBridge` instantiates a domain-typed proxy (all **31** domains
 have one under `entity/`) and attaches it via the
 `EntityComponent.async_register_remote_platform` core hook. Each outbound proxy
@@ -268,6 +285,19 @@ its schema is exotic. `EventMirror` forwards only `<approved_domain>_*` events
 via `sandbox/fire_event`; main re-fires them so automations react as if the
 integration ran locally.
 
+**Both mirror gates are re-enforced on main from main-side state — the
+sandbox-side `ApprovedDomains` filter is advisory.** Main derives the group's
+*owned domains* independently (`bridge.py` `_owned_domains`: the integration
+domains of entries with `entry.sandbox == self.group`, plus its registered proxy
+platform domains) and applies it to both inbound paths so they can't disagree:
+`register_service` is rejected unless its `domain` is owned (no squatting
+`persistent_notification.*` or any unclaimed `domain.service`); `fire_event` is
+re-fired only when the event name falls in an owned `<domain>_` namespace **and**
+is not a hard-denied core/control-plane event (`homeassistant_*`, `call_service`,
+`state_changed`, …), so a forged `homeassistant_stop` or foreign `zha_event`
+from a compromised sandbox is dropped, never re-fired. Enforced in `bridge.py`
+(`_handle_register_service`, `_handle_fire_event` / `_is_event_allowed`).
+
 **Context: the sandbox echoes ids, it never authors `Context`.** Only a
 `context_id` (a string) crosses the wire — never `parent_id` or `user_id`. Main
 **remembers every `Context` it hands down** to a sandbox (keyed by id, in a
@@ -283,7 +313,10 @@ embedded millisecond timestamp, and a sandbox could craft one to back-/forward-
 date an event (recorder / logbook order by it), so the sandbox string is used
 only as the cache **key**, never as the resulting `Context`'s identity. A cache
 miss is always safe — it degrades to a fresh context, never an error. Either
-way the sandbox cannot invent a `parent_id` or impersonate a `user_id`.
+way the sandbox cannot invent a `parent_id` or impersonate a `user_id`. The
+cache is size-bounded (`_CONTEXT_CACHE_MAX`) on **both** the remember and the
+resolve paths (a single `_store_context` helper), so a sandbox flooding distinct
+unknown `context_id`s can't grow it without bound. Enforced in `bridge.py`.
 
 ## 9. Store routing
 
@@ -303,7 +336,13 @@ This is a declared core hook, not a monkey-patch — and because it's read at
 call time it reaches helpers like `restore_state` that captured the original
 `Store` reference at import. On main, each bridge owns a `_SandboxStoreServer`
 pinned to `<config>/.storage/sandbox/<group>/`, with strict key validation and
-isolation-by-construction (one channel per group).
+isolation-by-construction (one channel per group). Key validation includes a
+length cap (well under `NAME_MAX`), and writes are quota-bounded — a per-key
+value-size cap plus a per-group total-byte and key-count quota — so a compromised
+sandbox cannot exhaust the host disk through the store channel; an over-quota
+write is rejected with a clean error frame (the sandbox's `Store.async_save`
+tolerates the failure and keeps its in-memory data). Enforced in `bridge.py`
+(`_validate_key`, `_SandboxStoreServer._write_sync` / `_enforce_group_quota`).
 
 ## 10. Auth
 
@@ -347,7 +386,11 @@ the translation cache skips). Two seams close the gap:
   the frontend. The sandbox handler reuses core's string loader and pre-fills
   `title` from `integration.name` (main can't — it has no `Integration` for a
   custom). `async_invalidate_translations` evicts a domain's strings on entry
-  reload, so a HACS update at a new `ref` re-pulls.
+  reload, so a HACS update at a new `ref` re-pulls. **Main overlays only the
+  domains it asked the group to resolve:** the provider keeps just the
+  requested ∩ returned intersection, so a compromised sandbox can't return
+  strings for a co-requested victim domain (`hue`, `http`) to poison its
+  frontend strings. Enforced in `translation.py` (`async_get_translations`).
 - **Picker (no sandbox running).** A separate, display-only catalog hook
   (`async_register_sandbox_catalog_provider` in `loader.py`, re-exported via
   `catalog.py`) lets HACS contribute `{domain, name, …, title_translations?}`
@@ -437,3 +480,4 @@ statelessness story. The closing batch, in landing order:
 | **Docker test image** | Multi-stage `python:3.14-slim` runtime image (non-root, no volumes, on-demand pip) + a unix-socket compose harness template. (`plan-docker`) |
 | **Drop the `_v2` suffix** | Dropped the `_v2` suffix across directories, the integration domain, wire strings, storage namespace, protobuf, and the CLI module; removed the stale hassfest ignore. (`plan-rename-sandbox`) |
 | **Drop token + system user, restore context** | Removed the unused `--token` / `SANDBOX_TOKEN` / `SandboxRuntime.token` end-to-end and deleted `auth.py` (per-group system user gone). Main now remembers every `Context` it hands down (15-min-TTL bridge cache, seeded at the service forwarder + proxy-entity call) and restores it verbatim on an echoed id; unknown/expired ids get a fresh main-owned `Context(user_id=None)` with main's own trusted id (never the untrusted sandbox ULID). (`plan-auth-context`, A/B/C) |
+| **Trust-boundary hardening** | Moved the malicious-sandbox guarantees the docs assert onto main, re-derived from main-side state (`entry.sandbox == group` + owned proxy domains) rather than sandbox-supplied ids: `fire_event` owned-`<domain>_`-namespace + core deny-list gate, `register_service` owned-domain gate, `register_entity` `entry.sandbox` ownership + foreign-device-merge refusal, translation overlay narrowed to requested ∩ returned, store-server key-length + value/total/key-count quotas, context-cache eviction on the resolve path, and channel read-backpressure shedding (both mirrors). One adversarial forged-frame test per gate. (`plan-review-trust-boundary`, Phases 1–8) |
