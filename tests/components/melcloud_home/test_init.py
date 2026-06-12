@@ -13,7 +13,7 @@ import pytest
 from homeassistant.components.melcloud_home.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -96,6 +96,41 @@ async def test_new_ata_unit_callback(
         if "living_room" in entity.entity_id
     ]
     assert ata_entities
+
+
+async def test_stale_devices_removed(
+    hass: HomeAssistant,
+    mock_melcloud_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that devices are removed when units disappear from the account."""
+    fixture = await async_load_json_object_fixture(hass, "context.json", DOMAIN)
+    await setup_integration(hass, mock_config_entry)
+
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "ata-unit-uuid-1")})
+    assert device_registry.async_get_device(identifiers={(DOMAIN, "atw-unit-uuid-1")})
+
+    # Poof, now they're gone
+    mock_melcloud_client.get_context.return_value = UserContext.model_validate(
+        {
+            **fixture,
+            "buildings": [
+                {**building, "airToAirUnits": [], "airToWaterUnits": []}
+                for building in fixture["buildings"]
+            ],
+        }
+    )
+    await mock_config_entry.runtime_data.async_refresh()
+
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "ata-unit-uuid-1")})
+        is None
+    )
+    assert (
+        device_registry.async_get_device(identifiers={(DOMAIN, "atw-unit-uuid-1")})
+        is None
+    )
 
 
 async def test_new_atw_unit_callback(
