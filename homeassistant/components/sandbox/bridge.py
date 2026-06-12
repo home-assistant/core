@@ -43,6 +43,20 @@ from typing import Any, NamedTuple
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    EVENT_CALL_SERVICE,
+    EVENT_COMPONENT_LOADED,
+    EVENT_CORE_CONFIG_UPDATE,
+    EVENT_HOMEASSISTANT_CLOSE,
+    EVENT_HOMEASSISTANT_FINAL_WRITE,
+    EVENT_HOMEASSISTANT_START,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    EVENT_SERVICE_REGISTERED,
+    EVENT_SERVICE_REMOVED,
+    EVENT_STATE_CHANGED,
+    EVENT_STATE_REPORTED,
+)
 from homeassistant.core import (
     Context,
     HomeAssistant,
@@ -91,6 +105,30 @@ _REMOTE_PLATFORM_NAME = "sandbox"
 _CONTEXT_TTL = timedelta(minutes=15)
 # Sanity backstop only; the TTL does the real bounding given the low volume.
 _CONTEXT_CACHE_MAX = 2048
+
+# Core/internal event types a sandbox may never fire on main's bus, regardless
+# of which domains it owns. The owned-domain ``<domain>_`` prefix rule already
+# blocks anything outside an owned namespace, but these are hard-denied so an
+# "owned domain" can never alias a control-plane event (e.g. a sandbox owning
+# the ``automation`` integration must still not be able to fire
+# ``homeassistant_stop`` or ``call_service``). Defense in depth — see
+# ``_handle_fire_event`` and ARCHITECTURE §6.
+_DENIED_EVENT_TYPES = frozenset(
+    {
+        EVENT_HOMEASSISTANT_START,
+        EVENT_HOMEASSISTANT_STARTED,
+        EVENT_HOMEASSISTANT_STOP,
+        EVENT_HOMEASSISTANT_FINAL_WRITE,
+        EVENT_HOMEASSISTANT_CLOSE,
+        EVENT_CALL_SERVICE,
+        EVENT_STATE_CHANGED,
+        EVENT_STATE_REPORTED,
+        EVENT_SERVICE_REGISTERED,
+        EVENT_SERVICE_REMOVED,
+        EVENT_COMPONENT_LOADED,
+        EVENT_CORE_CONFIG_UPDATE,
+    }
+)
 
 
 class _CachedContext(NamedTuple):
@@ -545,6 +583,45 @@ class SandboxBridge:
         await self._store_server.async_remove(_validate_key(msg.key))
         return pb.StoreRemoveResult(ok=True)
 
+    @callback
+    def _owned_domains(self) -> set[str]:
+        """Return the set of domains this sandbox group legitimately owns.
+
+        Trust is derived entirely from **main-side** state — never from a value
+        the (possibly compromised) sandbox sends:
+
+        * the integration ``domain`` of every config entry main routed to
+          *this* group (``entry.sandbox == self.group``); plus
+        * the platform domains of the proxy entities this bridge has
+          registered (some integrations legitimately fire events / own services
+          named for a platform they provide rather than their manifest domain).
+
+        Reused by the ``fire_event`` and ``register_service`` gates so the two
+        cannot disagree on what the group is allowed to touch. Cheap and
+        synchronous — ``async_entries`` is an in-memory read, no registry race.
+        """
+        domains = {
+            entry.domain
+            for entry in self.hass.config_entries.async_entries()
+            if entry.sandbox == self.group
+        }
+        domains.update(domain for (_entry_id, domain) in self._platforms)
+        domains.update(proxy.description.domain for proxy in self._entities.values())
+        return domains
+
+    @callback
+    def _is_event_allowed(self, event_type: str) -> bool:
+        """Decide whether the sandbox may fire ``event_type`` on main's bus.
+
+        A core/control-plane event is denied outright; otherwise the name must
+        live in an owned domain's ``<domain>_`` namespace.
+        """
+        if event_type in _DENIED_EVENT_TYPES:
+            return False
+        return any(
+            event_type.startswith(f"{domain}_") for domain in self._owned_domains()
+        )
+
     async def _handle_fire_event(self, msg: pb.FireEvent) -> None:
         """Re-fire a sandbox-side event on main's bus.
 
@@ -553,14 +630,29 @@ class SandboxBridge:
         Context — restoring the original attribution for an id it handed down,
         or a fresh ``user_id=None`` Context otherwise. The sandbox can never
         inject a ``parent_id`` / ``user_id``.
+
+        Main re-derives trust from its own state: the event name must fall in
+        the ``<domain>_`` namespace of a domain this group owns and must not be
+        a core control-plane event (see :meth:`_is_event_allowed`). A forged
+        ``homeassistant_stop`` / ``call_service`` / foreign ``zha_event`` from a
+        compromised sandbox is logged and dropped, never re-fired — and never
+        raised into the dispatch loop (this is a one-way push).
         """
+        event_type = msg.event_type
+        if not self._is_event_allowed(event_type):
+            _LOGGER.warning(
+                "SandboxBridge[%s]: dropping disallowed event %r from sandbox",
+                self.group,
+                event_type,
+            )
+            return
         event_data = struct_to_dict(msg.event_data)
         context = (
             self._resolve_context(msg.context_id)
             if msg.HasField("context_id")
             else None
         )
-        self.hass.bus.async_fire(msg.event_type, event_data, context=context)
+        self.hass.bus.async_fire(event_type, event_data, context=context)
 
     def _ensure_platform(self, entry: ConfigEntry, domain: str) -> EntityPlatform:
         key = (entry.entry_id, domain)
