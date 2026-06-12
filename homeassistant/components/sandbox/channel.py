@@ -41,6 +41,14 @@ inbound message queues at the semaphore (not at the reader) until a slot
 frees up.
 """
 
+# This module is hand-mirrored: a byte-identical copy lives at both
+# ``homeassistant/components/sandbox/channel.py`` and
+# ``sandbox/hass_client/hass_client/channel.py``. The HA Core integration must
+# not import from ``hass_client`` (and ``hass_client`` must not import from
+# ``homeassistant.components.*``), so the file is duplicated rather than shared.
+# EDIT BOTH COPIES IN THE SAME CHANGE — ``sandbox/proto/check_mirror_drift.sh``
+# fails the build if they diverge.
+
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 import contextlib

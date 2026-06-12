@@ -9,7 +9,8 @@ and the serialized voluptuous schema.
 Mirrored verbatim across the no-cross-import boundary, exactly like
 :mod:`channel` / :mod:`protocol`: the same file lives at
 ``hass_client.messages``. The relative ``._proto`` import resolves to each
-side's own checked-in gencode, so the two copies are byte-identical.
+side's own checked-in gencode, so the two copies are byte-identical — and
+``sandbox/proto/check_mirror_drift.sh`` fails the build if they drift apart.
 
 Numbers note: ``google.protobuf.Struct`` stores every number as a double, so
 an ``int`` that crosses inside a dynamic field arrives as a ``float``
