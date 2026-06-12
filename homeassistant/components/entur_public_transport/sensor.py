@@ -141,8 +141,15 @@ async def async_setup_entry(
     entities = []
     for place in data.all_stop_places_quays():
         try:
-            given_name = f"{name} {data.get_stop_info(place).name}"
+            stop_info = data.get_stop_info(place)
         except KeyError:
+            stop_info = None
+
+        if stop_info:
+            given_name = f"{name} {stop_info.name}"
+        elif place in name:
+            given_name = name
+        else:
             given_name = f"{name} {place}"
 
         entities.append(

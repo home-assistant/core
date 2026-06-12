@@ -65,6 +65,21 @@ async def test_sensor_unavailable_when_no_data(
     assert state is None
 
 
+async def test_sensor_uses_stop_id_name_when_stop_info_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_entur_client: MagicMock,
+) -> None:
+    """Test sensor uses the stop ID in its name when stop info is missing."""
+    mock_entur_client.get_stop_info.return_value = None
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.entur_nsr_stopplace_548")
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_sensor_has_unique_id(
     hass: HomeAssistant,
