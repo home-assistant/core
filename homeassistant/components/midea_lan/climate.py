@@ -508,17 +508,18 @@ class MideaC3Climate(MideaClimate):
         self._zone = zone
         self._power_attr = MideaC3Climate._powers[zone]
 
-    def _temperature(self, minimum: bool) -> list[float]:
+    def _temperature(self, *, minimum: bool) -> list[float]:
         """Midea C3 Climate temperature."""
         value = (
             C3Attributes.temperature_min if minimum else C3Attributes.temperature_max
         )
         temperatures = self._device.get_attribute(value)
+        fallback = float(TEMPERATURE_MIN if minimum else TEMPERATURE_MAX)
         if not isinstance(temperatures, list):
-            return [TEMPERATURE_MIN, TEMPERATURE_MIN]
+            return [fallback, fallback]
         parsed_temperatures = [float(temperature) for temperature in temperatures]
         if len(parsed_temperatures) < 2:
-            return [TEMPERATURE_MIN, TEMPERATURE_MIN]
+            return [fallback, fallback]
         return parsed_temperatures
 
     _attr_supported_features = FEATURES_TARGET_AND_POWER
@@ -536,22 +537,22 @@ class MideaC3Climate(MideaClimate):
     @property
     def min_temp(self) -> float:
         """Midea C3 Climate min temperature."""
-        return self._temperature(True)[self._zone]
+        return self._temperature(minimum=True)[self._zone]
 
     @property
     def max_temp(self) -> float:
         """Midea C3 Climate max temperature."""
-        return self._temperature(False)[self._zone]
+        return self._temperature(minimum=False)[self._zone]
 
     @property
     def target_temperature_low(self) -> float:
         """Midea C3 Climate target temperature low."""
-        return self._temperature(True)[self._zone]
+        return self._temperature(minimum=True)[self._zone]
 
     @property
     def target_temperature_high(self) -> float:
         """Midea C3 Climate target temperature high."""
-        return self._temperature(False)[self._zone]
+        return self._temperature(minimum=False)[self._zone]
 
     def turn_on(self, **kwargs: Any) -> None:
         """Midea C3 Climate turn on."""

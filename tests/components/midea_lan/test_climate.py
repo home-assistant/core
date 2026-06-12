@@ -414,7 +414,7 @@ def test_midea_climate_fallback_paths() -> None:
         )
         assert c3.target_temperature_step == 0.5
         assert c3.min_temp == climate.TEMPERATURE_MIN
-        assert c3.max_temp == climate.TEMPERATURE_MIN
+        assert c3.max_temp == climate.TEMPERATURE_MAX
         assert c3.target_temperature is None
 
         fb = climate.MideaFBClimate(
