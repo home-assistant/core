@@ -13,11 +13,10 @@ domains use the same mechanical pattern.
 
 import contextlib
 from enum import IntFlag
-from typing import TYPE_CHECKING, Any, NoReturn, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from homeassistant.const import EntityCategory
 from homeassistant.core import Context
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -25,20 +24,6 @@ from ..messages import struct_to_dict
 
 if TYPE_CHECKING:
     from ..bridge import SandboxBridge, SandboxEntityDescription
-
-
-def raise_not_proxied(operation: str) -> NoReturn:
-    """Raise for a query/subscribe entity API the bridge can't proxy yet.
-
-    The entity-method bridge only forwards fire-and-forget service calls. The
-    server-side query, subscription, and WS-only mutation APIs (calendar
-    listings/event edits, weather forecasts, media browsing/search, update
-    release notes, vacuum segments, …) need a request/response RPC that does not
-    exist yet. Until it lands the proxy fails loudly with a clear message
-    instead of silently returning empty results. See
-    ``sandbox/docs/query-shaped-rpcs.md``.
-    """
-    raise HomeAssistantError(f"{operation} is not yet supported for sandboxed entities")
 
 
 class SandboxProxyEntity(Entity):
@@ -321,5 +306,4 @@ _DOMAIN_PROXIES: dict[str, type[SandboxProxyEntity]] = _build_registry()
 __all__ = [
     "SandboxProxyEntity",
     "build_proxy",
-    "raise_not_proxied",
 ]
