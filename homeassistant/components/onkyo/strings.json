@@ -63,7 +63,7 @@
     "error": {
       "empty_input_source_list": "Input source list cannot be empty",
       "empty_listening_mode_list": "Listening mode list cannot be empty",
-      "min_volume_below_max": "Minimum volume must be lower than maximum volume."
+      "min_volume_below_max": "Minimum volume must be lower than maximum volume"
     },
     "step": {
       "init": {
