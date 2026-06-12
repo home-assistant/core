@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.bridge import (
+    _CONTEXT_CACHE_MAX,
     SandboxBridge,
     SandboxEntityDescription,
     _translate_remote_error,
@@ -753,3 +754,160 @@ async def test_fire_event_lands_on_main_bus(hass: HomeAssistant) -> None:
         await sandbox_channel.close()
 
     assert received == [{"command": "on", "device_ieee": "0a:0b:0c"}]
+
+
+# ---------------------------------------------------------------------------
+# Adversarial / forged-frame gates (trust-boundary hardening)
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "event_type",
+    [
+        "homeassistant_stop",  # hard-denied core event
+        "call_service",  # hard-denied core event
+        "state_changed",  # hard-denied core event
+        "zha_event",  # unowned domain — group owns nothing here
+        "hue_event",  # unowned domain
+    ],
+)
+async def test_fire_event_forged_type_dropped(
+    hass: HomeAssistant, event_type: str
+) -> None:
+    """A compromised sandbox cannot fire core/foreign events on main's bus."""
+    # The group owns only ``demo`` — nothing that namespaces the forged events.
+    MockConfigEntry(domain="demo", title="Demo", sandbox="built-in").add_to_hass(hass)
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    received: list[Any] = []
+
+    @callback
+    def _listener(event: Any) -> None:
+        received.append(event)
+
+    hass.bus.async_listen(event_type, _listener)
+
+    try:
+        forged = pb.FireEvent(event_type=event_type)
+        forged.event_data.update({"injected": True})
+        await sandbox_channel.push("sandbox/fire_event", forged)
+        # Let the push handler run; the event must never reach the bus.
+        for _ in range(20):
+            await asyncio.sleep(0)
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert received == []
+
+
+async def test_register_service_unowned_domain_rejected(
+    hass: HomeAssistant,
+) -> None:
+    """A sandbox cannot register a service in a domain it doesn't own."""
+    # The group owns ``demo``; ``persistent_notification`` is not its to claim.
+    MockConfigEntry(domain="demo", title="Demo", sandbox="built-in").add_to_hass(hass)
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    try:
+        with pytest.raises(ChannelRemoteError, match="not owned by group"):
+            await sandbox_channel.call(
+                "sandbox/register_service",
+                pb.RegisterService(
+                    domain="persistent_notification",
+                    service="create",
+                    supports_response="none",
+                ),
+            )
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert not hass.services.has_service("persistent_notification", "create")
+
+
+async def test_register_entity_foreign_entry_rejected(
+    hass: HomeAssistant,
+) -> None:
+    """A sandbox cannot attach entities to an entry routed to another group."""
+    # The entry belongs to a *different* sandbox group than this bridge's.
+    foreign = MockConfigEntry(domain="light", title="Victim", sandbox="other-group")
+    foreign.add_to_hass(hass)
+    _bridge, main_channel, sandbox_channel = await _wire(hass)  # group="built-in"
+
+    try:
+        with pytest.raises(ChannelRemoteError, match="not owned by group"):
+            await sandbox_channel.call(
+                "sandbox/register_entity",
+                make_entity_description(
+                    entry_id=foreign.entry_id,
+                    domain="light",
+                    sandbox_entity_id="light.victim",
+                ),
+            )
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+
+async def test_register_entity_foreign_device_merge_rejected(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """A sandbox cannot merge into a device owned by a foreign config entry."""
+    # A victim integration owns a device with identifier ("victim", "dev-1").
+    victim = MockConfigEntry(domain="victim", title="Victim")
+    victim.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=victim.entry_id,
+        identifiers={("victim", "dev-1")},
+        name="Victim Device",
+    )
+
+    # The sandbox owns its own entry but forges device_info colliding with the
+    # victim's identifiers to try to graft onto its device.
+    owned = MockConfigEntry(domain="light", title="Owned", sandbox="built-in")
+    owned.add_to_hass(hass)
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    try:
+        with pytest.raises(ChannelRemoteError, match="outside group"):
+            await sandbox_channel.call(
+                "sandbox/register_entity",
+                make_entity_description(
+                    entry_id=owned.entry_id,
+                    domain="light",
+                    sandbox_entity_id="light.evil",
+                    unique_id="evil",
+                    supported_features=0,
+                    capabilities={"supported_color_modes": ["onoff"]},
+                    initial_state=STATE_ON,
+                    initial_attributes={"color_mode": "onoff"},
+                    device_info={"identifiers": [["victim", "dev-1"]]},
+                ),
+            )
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    # The victim's device still belongs only to the victim entry.
+    device = device_registry.async_get_device(identifiers={("victim", "dev-1")})
+    assert device is not None
+    assert device.config_entries == {victim.entry_id}
+
+
+async def test_context_cache_bounded_under_id_flood(
+    hass: HomeAssistant,
+) -> None:
+    """Resolving a flood of distinct unknown context_ids stays cache-bounded."""
+    bridge, main_channel, sandbox_channel = await _wire(hass)
+
+    try:
+        # Each unknown id mints a fresh Context cached under that key; without
+        # eviction on the resolve path this would grow without bound.
+        for i in range(_CONTEXT_CACHE_MAX * 2):
+            bridge._resolve_context(f"forged-{i}")
+        assert len(bridge._contexts) <= _CONTEXT_CACHE_MAX
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()

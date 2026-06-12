@@ -23,7 +23,11 @@ from typing import Any
 import pytest
 
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
-from homeassistant.components.sandbox.bridge import SandboxBridge
+from homeassistant.components.sandbox.bridge import (
+    _STORE_MAX_KEY_LENGTH,
+    _STORE_MAX_VALUE_BYTES,
+    SandboxBridge,
+)
 from homeassistant.components.sandbox.channel import Channel, ChannelRemoteError
 from homeassistant.components.sandbox.messages import struct_to_dict
 from homeassistant.core import HomeAssistant
@@ -181,6 +185,43 @@ async def test_store_rejects_missing_key(hass: HomeAssistant) -> None:
     finally:
         await main_channel.close()
         await sandbox_channel.close()
+
+
+async def test_store_rejects_overlong_key(hass: HomeAssistant) -> None:
+    """A key past the length cap is rejected before any file IO."""
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+    try:
+        with pytest.raises(ChannelRemoteError, match="too long"):
+            await sandbox_channel.call(
+                "sandbox/store_save",
+                pb.StoreSave(key="k" * (_STORE_MAX_KEY_LENGTH + 1)),
+            )
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+
+async def test_store_rejects_oversized_value(hass: HomeAssistant) -> None:
+    """A value past the per-key byte cap is rejected, nothing hits disk."""
+    _bridge, main_channel, sandbox_channel = await _wire(hass)
+    oversized = "x" * (_STORE_MAX_VALUE_BYTES + 1)
+    save = pb.StoreSave(key="too_big")
+    save.data.update(
+        {
+            "version": 1,
+            "minor_version": 1,
+            "key": "too_big",
+            "data": {"blob": oversized},
+        }
+    )
+    try:
+        with pytest.raises(ChannelRemoteError, match="too large"):
+            await sandbox_channel.call("sandbox/store_save", save)
+    finally:
+        await main_channel.close()
+        await sandbox_channel.close()
+
+    assert not _store_path(hass, "built-in", "too_big").exists()
 
 
 async def test_store_groups_are_isolated(hass: HomeAssistant) -> None:

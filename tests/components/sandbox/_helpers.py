@@ -48,13 +48,17 @@ def make_channel_pair(
     name_b: str = "b",
     max_inflight_a: int | None = None,
     max_inflight_b: int | None = None,
+    max_queued_a: int | None = None,
+    max_queued_b: int | None = None,
     use_json: bool = False,
 ) -> tuple[Channel, Channel]:
     """Return two channels connected to each other in-memory.
 
-    ``max_inflight_a`` / ``max_inflight_b`` override the per-side
-    handler concurrency cap when set; otherwise the channel's default
-    applies. Useful for exercising the bounded-semaphore path.
+    ``max_inflight_a`` / ``max_inflight_b`` override the per-side handler
+    concurrency cap; ``max_queued_a`` / ``max_queued_b`` override the per-side
+    inflight (queued + running) shed cap. Both default to the channel's own
+    defaults. Useful for exercising the bounded-semaphore and read-backpressure
+    paths.
 
     The pair speaks protobuf by default (production parity, so real
     handlers receive typed messages). ``use_json=True`` falls back to the
@@ -65,12 +69,16 @@ def make_channel_pair(
     reader_b = asyncio.StreamReader()
     writer_a = _LoopbackWriter(reader_b)  # a's writes → b's reader
     writer_b = _LoopbackWriter(reader_a)
-    kwargs_a: dict[str, int] = (
-        {"max_inflight": max_inflight_a} if max_inflight_a is not None else {}
-    )
-    kwargs_b: dict[str, int] = (
-        {"max_inflight": max_inflight_b} if max_inflight_b is not None else {}
-    )
+    kwargs_a: dict[str, int] = {}
+    kwargs_b: dict[str, int] = {}
+    if max_inflight_a is not None:
+        kwargs_a["max_inflight"] = max_inflight_a
+    if max_inflight_b is not None:
+        kwargs_b["max_inflight"] = max_inflight_b
+    if max_queued_a is not None:
+        kwargs_a["max_queued"] = max_queued_a
+    if max_queued_b is not None:
+        kwargs_b["max_queued"] = max_queued_b
     codec_a = JsonCodec() if use_json else ProtobufCodec()
     codec_b = JsonCodec() if use_json else ProtobufCodec()
     channel_a = Channel(reader_a, writer_a, name=name_a, codec=codec_a, **kwargs_a)  # type: ignore[arg-type]

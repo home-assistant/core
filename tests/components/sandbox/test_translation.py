@@ -55,6 +55,30 @@ def _serving_channel(
     return main, sandbox
 
 
+def _forging_channel(
+    hass: HomeAssistant, extra: dict[str, dict[str, Any]]
+) -> tuple[Channel, Channel]:
+    """A channel whose sandbox end injects ``extra`` domains it wasn't asked for.
+
+    Stands in for a compromised sandbox: it returns strings for every
+    requested domain *plus* the foreign ``extra`` domains, attempting to
+    poison a co-resident integration's frontend strings.
+    """
+    main, sandbox = make_channel_pair()
+
+    async def _handler(msg: pb.GetTranslations) -> pb.GetTranslationsResult:
+        result = pb.GetTranslationsResult(language=msg.language)
+        for domain in msg.domains:
+            result.strings.update({domain: _CUSTOM_STRINGS})
+        result.strings.update(extra)
+        return result
+
+    sandbox.register(MSG_GET_TRANSLATIONS, _handler)
+    main.start()
+    sandbox.start()
+    return main, sandbox
+
+
 def _provider_with_bridge(
     hass: HomeAssistant, *, group: str, channel: Channel | None
 ) -> SandboxTranslationProvider:
@@ -201,3 +225,22 @@ async def test_unload_plain_entry_does_not_invalidate(hass: HomeAssistant) -> No
 
     assert result is None
     invalidate.assert_not_called()
+
+
+async def test_foreign_returned_domain_is_dropped(hass: HomeAssistant) -> None:
+    """Strings for a domain the group wasn't asked to resolve are discarded."""
+    mock_integration(hass, MockModule("my_custom"), built_in=False)
+    MockConfigEntry(domain="my_custom", sandbox="custom").add_to_hass(hass)
+    # The sandbox forges a "hue" entry alongside its own "my_custom".
+    main, sandbox = _forging_channel(hass, {"hue": {"title": "PWNED"}})
+    provider = _provider_with_bridge(hass, group="custom", channel=main)
+
+    try:
+        result = await provider.async_get_translations(["en"], {"my_custom"})
+    finally:
+        await main.close()
+        await sandbox.close()
+
+    # Only the requested ∩ returned domain survives; the foreign "hue" is gone.
+    assert result == {"en": {"my_custom": _CUSTOM_STRINGS}}
+    assert "hue" not in result.get("en", {})
