@@ -59,6 +59,15 @@ Handler = Callable[[Any], Awaitable[Any]]
 
 DEFAULT_MAX_INFLIGHT = 16
 
+# Hard cap on inbound handler tasks (running + queued) a flood may create. The
+# inflight semaphore bounds how many handlers *run*; without this, queued
+# handler tasks — each pinning a decoded payload up to MAX_FRAME_SIZE — could
+# still grow without bound under a frame-flood. Over the cap, inbound calls are
+# rejected with an error frame and pushes are dropped (responses are always
+# handled inline, so backpressure never starves a reply). Generous enough that
+# honest fan-out never trips it.
+DEFAULT_MAX_QUEUED = 1024
+
 # Hard cap on a single frame's body. A length prefix larger than this aborts
 # the channel rather than letting a compromised sandbox allocate the host to
 # death (same hardening spirit as the auth key check).
@@ -324,6 +333,7 @@ class Channel:
         codec: Codec | None = None,
         name: str = "channel",
         max_inflight: int = DEFAULT_MAX_INFLIGHT,
+        max_queued: int = DEFAULT_MAX_QUEUED,
     ) -> None:
         """Wrap a reader/writer pair (or a transport) into a channel.
 
@@ -354,6 +364,7 @@ class Channel:
         self._write_lock = asyncio.Lock()
         self._inflight: set[asyncio.Task[None]] = set()
         self._inflight_sem = asyncio.Semaphore(max_inflight)
+        self._max_queued = max_queued
 
     @classmethod
     def from_transport(
@@ -513,6 +524,24 @@ class Channel:
                         frame.error or "unknown error",
                         frame.error_type,
                         frame.error_data,
+                    )
+                )
+            return
+
+        # Backpressure: responses are handled inline above and never shed.
+        # Bound the inbound handler tasks (each pins a decoded payload) so a
+        # frame-flood throttles here instead of growing memory without bound —
+        # reject calls with an error frame, silently drop pushes.
+        if len(self._inflight) >= self._max_queued:
+            if frame.kind is FrameKind.CALL:
+                self._spawn_handler(
+                    self._write(
+                        Frame.error_response(
+                            frame.id,
+                            "channel overloaded",
+                            "ChannelOverloaded",
+                            msg_type=frame.type,
+                        )
                     )
                 )
             return
