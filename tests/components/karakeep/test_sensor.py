@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .const import TEST_STATS, TEST_URL
+from .const import TEST_STATS
 
 from tests.common import MockConfigEntry
 
@@ -65,7 +65,7 @@ async def test_device_info(
     await setup_integration(hass, mock_config_entry)
 
     device_entry = device_registry.async_get_device(
-        identifiers={("karakeep", TEST_URL)}
+        identifiers={("karakeep", mock_config_entry.entry_id)}
     )
     assert device_entry is not None
     assert device_entry.name == "Karakeep"
