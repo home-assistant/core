@@ -24,6 +24,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
+PARALLEL_UPDATES = 1
+
 ATA_HVAC_MODE_TO_OPERATION: dict[HVACMode, ATAOperationMode] = {
     HVACMode.HEAT: ATAOperationMode.HEAT,
     HVACMode.COOL: ATAOperationMode.COOL,
@@ -103,7 +105,6 @@ async def async_setup_entry(
         async_add_entities(ATAClimateEntity(coordinator, unit) for unit in units)
 
     def _async_add_new_atw_units(units: list[ATWUnit]) -> None:
-        # Erwin: create zone 1 for all units, and zone 2 only when the unit supports it.
         async_add_entities(
             ATWZoneClimateEntity(coordinator, unit, zone_number)
             for unit in units
@@ -186,12 +187,12 @@ class ATAClimateEntity(MelCloudHomeATAUnitEntity, ClimateEntity):
     @property
     def current_temperature(self) -> float | None:
         """Return the current room temperature."""
-        return self.unit.room_temperature if self.unit else None
+        return self.unit.room_temperature
 
     @property
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
-        return self.unit.set_temperature if self.unit else None
+        return self.unit.set_temperature
 
     @property
     def hvac_mode(self) -> HVACMode:

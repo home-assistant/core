@@ -1,5 +1,6 @@
 """Support for LG TV running on NetCast 3 or 4."""
 
+from collections import Counter
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -133,13 +134,22 @@ class LgTVDevice(MediaPlayerEntity):
 
                 channel_list = client.query_data("channel_list")
                 if channel_list:
-                    channel_names = []
+                    channel_pairs = []
                     for channel in channel_list:
                         channel_name = channel.find("chname")
                         if channel_name is not None:
-                            channel_names.append(str(channel_name.text))
-                    self._sources = dict(zip(channel_names, channel_list, strict=False))
-                    # sort source names by the major channel number
+                            channel_pairs.append((str(channel_name.text), channel))
+
+                    name_count = Counter(name for name, _ in channel_pairs)
+
+                    self._sources = {}
+                    for name, channel in channel_pairs:
+                        if name_count[name] > 1:
+                            major = channel.find("major")
+                            if major is not None:
+                                name = f"{name} ({major.text})"
+                        self._sources[name] = channel
+
                     source_tuples = [
                         (k, source.find("major").text)
                         for k, source in self._sources.items()

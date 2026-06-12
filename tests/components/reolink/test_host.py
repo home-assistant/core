@@ -553,5 +553,12 @@ async def test_diagnostics_event_connection(
 
     # set TCP push as active
     reolink_host.baichuan.events_active = True
+    reolink_host.baichuan.webhook_subscribed = False
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag["event connection"] == "TCP push"
+
+    # set Webhook push as active
+    reolink_host.baichuan.events_active = True
+    reolink_host.baichuan.webhook_subscribed = True
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+    assert diag["event connection"] == "Webhook push"
