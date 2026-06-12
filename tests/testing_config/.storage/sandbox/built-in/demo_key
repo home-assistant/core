@@ -1,8 +1,8 @@
 {
+  "minor_version": 3,
   "data": {
     "counter": 42
   },
-  "version": 2,
-  "minor_version": 3,
-  "key": "demo_key"
+  "key": "demo_key",
+  "version": 2
 }

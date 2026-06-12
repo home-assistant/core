@@ -15,13 +15,20 @@ from typing import Any
 from hass_client._proto import sandbox_pb2 as pb
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
-from hass_client.flow_runner import FlowRunner, _marshal_menu_options
+from hass_client.flow_runner import (
+    FlowRunner,
+    _marshal_menu_options,
+    _rehydrate_discovery,
+)
 from hass_client.messages import dict_to_struct, listvalue_to_list, struct_to_dict
 import pytest
 import voluptuous as vol
 
 from homeassistant import config_entries as ha_config_entries, loader as ha_loader
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 
 class _LoopbackWriter:
@@ -91,6 +98,23 @@ class _VersionedFlow(ConfigFlow, domain="phase4_versioned"):
             title="Versioned",
             data={"host": "1.2.3.4"},
             options={"poll_interval": 30},
+        )
+
+
+class _ZeroconfFlow(ConfigFlow, domain="phase4_zeroconf"):
+    """A discovery flow whose first step is async_step_zeroconf."""
+
+    VERSION = 1
+
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        # The step must receive the real dataclass, not a plain dict — reading
+        # the ``host`` property (derived from ``ip_address``) proves it.
+        assert isinstance(discovery_info, ZeroconfServiceInfo)
+        return self.async_create_entry(
+            title=discovery_info.host,
+            data={"host": discovery_info.host, "name": discovery_info.name},
         )
 
 
@@ -252,6 +276,74 @@ async def test_menu_marshals_options(
     assert result.type == "menu"
     assert result.step_id == "user"
     assert listvalue_to_list(result.menu_options) == ["alpha", "beta"]
+
+
+async def test_zeroconf_discovery_rebuilds_service_info(
+    channels: tuple[Channel, Channel], runner: FlowRunner
+) -> None:
+    """A zeroconf-sourced flow gets a real ZeroconfServiceInfo, not a dict."""
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+
+    ha_config_entries.HANDLERS["phase4_zeroconf"] = _ZeroconfFlow
+    fake_module = ModuleType("homeassistant.components.phase4_zeroconf")
+    fake_flow_module = ModuleType(
+        "homeassistant.components.phase4_zeroconf.config_flow"
+    )
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_zeroconf"] = fake_module
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_zeroconf.config_flow"] = (
+        fake_flow_module
+    )
+    runner.hass.config.components.add("phase4_zeroconf")
+    try:
+        init_msg = pb.FlowInit(handler="phase4_zeroconf")
+        init_msg.context.update({"source": "zeroconf"})
+        # The wire payload is the proxy's JSON-flattened ZeroconfServiceInfo.
+        init_msg.data.update(
+            {
+                "ip_address": "1.2.3.4",
+                "ip_addresses": ["1.2.3.4"],
+                "port": 80,
+                "hostname": "device.local.",
+                "type": "_x._tcp.local.",
+                "name": "device",
+                "properties": {},
+            }
+        )
+        result = await main.call("sandbox/flow_init", init_msg)
+    finally:
+        ha_config_entries.HANDLERS.pop("phase4_zeroconf", None)
+        runner.hass.data[ha_loader.DATA_COMPONENTS].pop("phase4_zeroconf", None)
+        runner.hass.data[ha_loader.DATA_COMPONENTS].pop(
+            "phase4_zeroconf.config_flow", None
+        )
+
+    assert result.type == "create_entry"
+    assert result.title == "1.2.3.4"
+    assert struct_to_dict(result.data) == {"host": "1.2.3.4", "name": "device"}
+
+
+def test_rehydrate_discovery_rebuilds_objects() -> None:
+    """_rehydrate_discovery restores DiscoveryKey + the source's ServiceInfo."""
+    context, data = _rehydrate_discovery(
+        {
+            "source": "dhcp",
+            "discovery_key": {"domain": "x", "key": "k", "version": 1},
+        },
+        {"ip": "1.2.3.4", "hostname": "host", "macaddress": "aabbcc112233"},
+    )
+    assert isinstance(context["discovery_key"], DiscoveryKey)
+    assert context["discovery_key"].domain == "x"
+    assert isinstance(data, DhcpServiceInfo)
+    assert data.ip == "1.2.3.4"
+
+
+def test_rehydrate_discovery_unmapped_source_keeps_dict() -> None:
+    """An unmapped source (bluetooth) leaves the payload as a dict (backstop)."""
+    _context, data = _rehydrate_discovery({"source": "bluetooth"}, {"address": "AA"})
+    assert data == {"address": "AA"}
 
 
 def test_marshal_menu_options_dict_keeps_labels() -> None:

@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Iterator
 import contextlib
+from ipaddress import ip_address
 from typing import cast
 from unittest.mock import patch
 
@@ -18,6 +19,8 @@ from homeassistant.components.sandbox.router import SandboxFlowRouter
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from ._helpers import FakeSandboxManager, make_channel_pair
 
@@ -94,6 +97,7 @@ def ignore_translations_for_mock_domains() -> list[str]:
         "test_proxy_abort",
         "test_proxy_menu",
         "test_proxy_progress",
+        "test_proxy_discovery",
     ]
 
 
@@ -405,6 +409,72 @@ async def test_unsupported_result_type_aborts_and_reaps_sandbox_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "sandbox_unsupported_result_type"
+
+
+async def test_discovery_flow_marshals_service_info(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A zeroconf-sourced flow flattens its ServiceInfo + DiscoveryKey safely.
+
+    Without the JSON coercion, ``dict_to_struct`` raises on the
+    ``ZeroconfServiceInfo`` (IPv4Address fields) / ``DiscoveryKey`` and the
+    discovery flow crashes unhandled.
+    """
+    mock_integration(hass, MockModule("test_proxy_discovery"))
+    responses = [
+        pb.FlowResult(
+            type=FlowResultType.ABORT.value,
+            flow_id="sandbox-flow-disc",
+            handler="test_proxy_discovery",
+            reason="already_configured",
+        )
+    ]
+    info = ZeroconfServiceInfo(
+        ip_address=ip_address("1.2.3.4"),
+        ip_addresses=[ip_address("1.2.3.4")],
+        port=80,
+        hostname="device.local.",
+        type="_x._tcp.local.",
+        name="device",
+        properties={},
+    )
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses) as stub,
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_discovery",
+            context={
+                "source": "zeroconf",
+                "discovery_key": DiscoveryKey(
+                    domain="test_proxy_discovery", key="abc", version=1
+                ),
+            },
+            data=info,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert len(stub.init_calls) == 1
+    ctx = struct_to_dict(stub.init_calls[0].context)
+    assert ctx["source"] == "zeroconf"
+    # The DiscoveryKey dataclass crossed as a JSON-safe dict.
+    assert ctx["discovery_key"] == {
+        "domain": "test_proxy_discovery",
+        "key": "abc",
+        "version": 1,
+    }
+    # The ServiceInfo dataclass crossed as a JSON-safe dict (IPs stringified,
+    # derived ``host``/``addresses`` properties absent — fields only).
+    data = struct_to_dict(stub.init_calls[0].data)
+    assert data["ip_address"] == "1.2.3.4"
+    assert data["ip_addresses"] == ["1.2.3.4"]
+    assert data["hostname"] == "device.local."
+    assert "host" not in data
 
 
 async def _install_router(hass: HomeAssistant, manager: FakeSandboxManager) -> None:
