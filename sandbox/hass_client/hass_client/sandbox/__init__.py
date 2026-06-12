@@ -183,15 +183,15 @@ class SandboxRuntime:
             # written by the previous run's shutdown handler. Bare HA —
             # no bootstrap — so we call it ourselves; any RestoreEntity
             # that registers during entry_setup will see its prior state
-            # cached. Handlers register *after* the warm-load so no
-            # entry_setup can arrive before the cache is populated.
+            # cached. Ready is pushed *after* the warm-load (and after handler
+            # registration) so no entry_setup can be processed before the
+            # cache is populated.
             self._channel.start()
-            # Signal readiness as the channel's first outbound frame — the
-            # manager flips to "running" on its arrival. Sent before the
-            # warm-load so the handshake timing matches the old stdout
-            # marker (which was written before warm-load too).
-            await self._channel.push(MSG_READY)
-            await _load_restore_state(hass)
+            # Register every inbound call handler BEFORE signalling readiness.
+            # The manager only sends `entry_setup` (and friends) once it sees
+            # Ready, so an `entry_setup` arriving in the gap between Ready and
+            # handler registration used to hit `ChannelUnknownType` ->
+            # SETUP_ERROR. Registering first removes that race entirely.
             self._channel.register("sandbox/ping", _handle_ping)
             self._channel.register(MSG_SHUTDOWN, self._handle_shutdown)
             self._channel.register(
@@ -202,6 +202,15 @@ class SandboxRuntime:
             self._entity_bridge.register(self._channel)
             self._service_mirror.register(self._channel)
             self._event_mirror.register(self._channel)
+            # Warm-load this group's restore-state cache (an *outbound*
+            # store_load that routes to main via current_sandbox) before Ready
+            # so no entry_setup can be processed before the cache is populated
+            # — a fresh RestoreEntity must see its prior state.
+            await _load_restore_state(hass)
+            # Ready is the LAST frame sent: handlers are up and the restore
+            # cache is warm, so every entry_setup the manager now sends lands
+            # on a registered, ready handler.
+            await self._channel.push(MSG_READY)
 
         self._ready.set()
         try:
