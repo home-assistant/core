@@ -37,7 +37,7 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         """Initialize the Dyson infrared fan entity."""
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
 
-        self._attr_name = name
+        self._attr_translation_key = "dyson_ir_fan"
         self._attr_unique_id = unique_id
         self._attr_has_entity_name = True
         self._attr_speed_count = 10
