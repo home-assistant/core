@@ -676,7 +676,7 @@ async def test_off_action_optimistic(
 )
 @pytest.mark.parametrize(
     ("brightness", "brightness_pct"),
-    [(2, 1), (255, 100), (124, 49)],
+    [(2, 1), (255, 100), (124, 49), (1, 0), (254, 100)],
 )
 @pytest.mark.usefixtures("setup_state_light")
 async def test_level_action_no_template(
