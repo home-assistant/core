@@ -2,7 +2,13 @@
 
 from unittest.mock import AsyncMock, patch
 
-from aiokarakeep import KarakeepAuthError, KarakeepConnectionError
+from aiokarakeep import (
+    KarakeepApiError,
+    KarakeepAuthError,
+    KarakeepConnectionError,
+    KarakeepInvalidResponseError,
+)
+import pytest
 
 from homeassistant.components.karakeep.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
@@ -49,15 +55,22 @@ async def test_setup_entry_auth_failure(
     assert flows[0]["context"]["source"] == SOURCE_REAUTH
 
 
-async def test_setup_entry_connection_failure(
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        KarakeepConnectionError("Cannot connect"),
+        KarakeepApiError("API error", 500),
+        KarakeepInvalidResponseError("Invalid response"),
+    ],
+)
+async def test_setup_entry_update_failure(
     hass: HomeAssistant,
     mock_karakeep_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
 ) -> None:
-    """Test setup retries on connection errors."""
-    mock_karakeep_client.async_get_stats.side_effect = KarakeepConnectionError(
-        "Cannot connect"
-    )
+    """Test setup retries on update failures."""
+    mock_karakeep_client.async_get_stats.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 
