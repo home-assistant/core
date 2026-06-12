@@ -13,7 +13,6 @@ integration creates outside its own entry) are skipped with a debug log.
 """
 
 import asyncio
-from collections.abc import Iterable
 import json
 import logging
 from typing import Any
@@ -26,6 +25,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES
 from homeassistant.helpers.entity_registry import EVENT_ENTITY_REGISTRY_UPDATED
 
+from ._json import json_safe
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
@@ -397,7 +397,7 @@ def _describe_entity(entity: Entity, entry_id: str) -> dict[str, Any]:
     """Build a wire payload describing ``entity`` for ``register_entity``."""
     platform = entity.platform
     domain = platform.domain if platform is not None else entity.entity_id.split(".")[0]
-    capabilities = _serialise(entity.capability_attributes or {})
+    capabilities = json_safe(entity.capability_attributes or {})
     entity_category = entity.entity_category
     payload: dict[str, Any] = {
         "entry_id": entry_id,
@@ -428,7 +428,7 @@ def _serialise_device_info(device_info: Any) -> dict[str, Any] | None:
     (``entry_type``). Sets become lists of two-element lists (preserving
     the pair shape main needs to rebuild tuples); enums become their
     string value; ``URL`` instances become strings. Anything else passes
-    through ``_serialise`` for generic JSON-safety.
+    through :func:`json_safe` for generic JSON-safety.
     """
     if not device_info:
         return None
@@ -450,7 +450,7 @@ def _serialise_device_info(device_info: Any) -> dict[str, Any] | None:
         elif key == "configuration_url":
             out[key] = str(value) if value is not None else None
         else:
-            out[key] = _serialise(value)
+            out[key] = json_safe(value)
     return out
 
 
@@ -461,30 +461,6 @@ def _stringify(value: Any) -> str | None:
     if isinstance(value, str):
         return value
     return str(value)
-
-
-def _serialise(value: Any) -> Any:
-    """JSON-safe recursive coercion for capability dicts."""
-    if isinstance(value, dict):
-        return {str(k): _serialise(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple, set, frozenset)):
-        return [_serialise(v) for v in _iter(value)]
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    enum_value = getattr(value, "value", None)
-    if isinstance(enum_value, (str, int, float, bool)):
-        return enum_value
-    return str(value)
-
-
-def _iter(value: Any) -> Iterable[Any]:
-    """Stable iteration order for sets/frozensets."""
-    if isinstance(value, (set, frozenset)):
-        try:
-            return sorted(value)
-        except TypeError:
-            return list(value)
-    return value
 
 
 __all__ = ["EntityBridge"]

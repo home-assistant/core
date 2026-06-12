@@ -40,6 +40,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 
+from ._json import json_safe
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
@@ -103,7 +104,7 @@ class EventMirror:
         if not self.approved.approves_event(event_type):
             return
         msg = pb.FireEvent(event_type=event_type)
-        msg.event_data.update(_to_json_safe(dict(event.data)))
+        msg.event_data.update(json_safe(dict(event.data)))
         # Forward only the context id — never parent_id / user_id.
         if event.context is not None and event.context.id:
             msg.context_id = event.context.id
@@ -118,26 +119,6 @@ class EventMirror:
             await self._channel.push(MSG_FIRE_EVENT, msg)
         except Exception:
             _LOGGER.exception("EventMirror: forward failed for %s", msg.event_type)
-
-
-def _to_json_safe(value: Any) -> Any:
-    """JSON-coerce arbitrary event-data objects.
-
-    Event data on the sandbox bus is best-effort: integrations can stash
-    domain objects in there. We don't want a single non-serialisable
-    field to drop the whole event, so we coerce recursively and fall
-    back to ``str(value)`` for unknown shapes.
-    """
-    if isinstance(value, dict):
-        return {str(k): _to_json_safe(v) for k, v in value.items()}
-    if isinstance(value, (list, tuple, set, frozenset)):
-        return [_to_json_safe(v) for v in value]
-    if isinstance(value, (str, int, float, bool)) or value is None:
-        return value
-    enum_value = getattr(value, "value", None)
-    if isinstance(enum_value, (str, int, float, bool)):
-        return enum_value
-    return str(value)
 
 
 __all__ = ["EventMirror"]
