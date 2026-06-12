@@ -17,9 +17,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_component import DATA_INSTANCES
-from homeassistant.helpers.json import json_bytes
-from homeassistant.util.json import json_loads
 
+from ._json import json_safe
 from ._proto import sandbox_pb2 as pb
 from .approved_domains import ApprovedDomains
 from .channel import Channel
@@ -219,7 +218,7 @@ def _json_safe(result: Any) -> dict[str, Any]:
     """
     if not result:
         return {}
-    return json_loads(json_bytes(result))
+    return json_safe(result)
 
 
 def _entry_from_proto(msg: pb.EntrySetup) -> ConfigEntry:
