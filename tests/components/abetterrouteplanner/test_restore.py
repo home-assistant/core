@@ -49,7 +49,7 @@ SSE-consumer pre-queue it relied on no longer exists.
 from datetime import UTC, datetime
 from typing import Any
 
-from aioabrp import Metric
+from aioabrp import Telemetry
 from freezegun import freeze_time
 import pytest
 
@@ -99,7 +99,7 @@ def _fire_voltage(
     assert entry.runtime_data is not None  # entry set up before firing.
     fake_stream.fire_frame(
         MOCK_VEHICLE_ID,
-        {Metric.VOLTAGE: build_metric_value(voltage, provider=provider)},
+        Telemetry(voltage=build_metric_value(voltage, provider=provider)),
     )
 
 
@@ -212,7 +212,7 @@ async def test_cold_install_lazy_create_preserved(
     lazy creation via the dispatcher — the lazy-creation contract must
     survive across HA restart unbroken.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(hass, config_entry_with_vehicles)
 
@@ -253,7 +253,7 @@ async def test_restart_eager_create_from_registry(
     (acceptable degradation for the "registry present but recorder
     pruned" path).
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -310,7 +310,7 @@ async def test_restore_native_value_then_optional_frame(
     touches the voltage slot — that preservation is implicit in the typed
     per-metric model and covered by the per-metric-stamp test below.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -346,7 +346,7 @@ async def test_restore_last_reported_at_round_trips_as_datetime(
     Asserts both the runtime type (``isinstance(..., datetime)``) and the
     value (equals the original ``datetime`` we stuffed in).
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -386,7 +386,7 @@ async def test_malformed_restored_stamp_omits_attribute(
     stamp slot, not the value slot. This distinguishes "omit the bad field"
     from "lose all restoration".
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -439,7 +439,7 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     apply, so each ``fire_frame`` is wrapped in ``freeze_time`` to pin the
     stamp to a known instant.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -454,7 +454,7 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
 
     with freeze_time(t1):
         fake_stream.fire_frame(
-            MOCK_VEHICLE_ID, {Metric.VOLTAGE: build_metric_value(400.0)}
+            MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(400.0))
         )
         await hass.async_block_till_done()
 
@@ -465,7 +465,7 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
     with freeze_time(t2):
         # Frame for a DIFFERENT metric — the batch carries soc only, so the
         # voltage slot AND its stamp are untouched.
-        fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.SOC: build_metric_value(50.0)})
+        fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(50.0)))
         await hass.async_block_till_done()
 
     state = hass.states.get(VOLTAGE_ENTITY_ID)
@@ -474,7 +474,7 @@ async def test_last_reported_at_stamps_per_metric_not_per_merged_state(
 
     with freeze_time(t3):
         fake_stream.fire_frame(
-            MOCK_VEHICLE_ID, {Metric.VOLTAGE: build_metric_value(410.0)}
+            MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(410.0))
         )
         await hass.async_block_till_done()
 
@@ -509,7 +509,7 @@ async def test_provider_attribute_appears_from_live_frame(
     fires on the first non-None voltage frame and the entity immediately
     surfaces the provider string.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(hass, config_entry_with_vehicles)
 
@@ -545,7 +545,7 @@ async def test_provider_attribute_absent_when_live_frame_lacks_provider(
     library only emits a typed ``MetricValue`` with a clean provider or
     ``None``), so this HA-side test exercises the ``None`` case only.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(hass, config_entry_with_vehicles)
 
@@ -574,7 +574,7 @@ async def test_provider_attribute_restored_from_recorder_when_no_live_frame(
     restart + eager-from-registry, the entity exposes both restored attributes
     without depending on a wake-event frame to land.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -621,7 +621,7 @@ async def test_provider_per_attribute_live_wins_over_restored(
     4. Assert: ``provider == A`` (restored, sticky-on-omission),
        ``last_reported_at == t2`` (live wins on the stamp axis).
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -693,7 +693,7 @@ async def test_provider_attribute_absent_when_restored_value_malformed(
     present-with-null leak. The ``last_reported_at`` slot survives unaffected
     (this distinguishes "omit the bad field" from "lose all restoration").
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -737,7 +737,7 @@ async def test_deselected_vehicle_skips_eager_create_with_restore_cache(
     attribute — a regression that half-created the entity (registry row +
     state object, no native_value) would still fail this assertion.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
     # Entry exists but CONF_VEHICLE_IDS is empty (user just deselected this
     # vehicle).
     entry = MockConfigEntry(
@@ -801,7 +801,7 @@ async def test_restored_native_value_rejected_when_malformed(
     Malformed → slot stays None → ``native_value`` returns None →
     ``available`` returns False → ``state.state == "unavailable"``.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _restart_setup(
         hass,
@@ -847,7 +847,7 @@ async def test_foreign_config_entry_voltage_row_skipped_by_eager_probe(
     The eager-probe's ``entry_row.config_entry_id != entry.entry_id`` filter
     must skip the foreign row so the foreign row's attribution survives.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     # Foreign entry — same OIDC sub (so unique_id collides), different
     # entry_id. Added to hass so the registry accepts the row.

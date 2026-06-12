@@ -35,7 +35,7 @@ pre-warm sleep to 0).
 from typing import Any
 from unittest.mock import AsyncMock
 
-from aioabrp import AbrpApiError, AbrpVehicle, Metric
+from aioabrp import AbrpApiError, AbrpVehicle, Metric, Telemetry
 import pytest
 
 import homeassistant.components.abetterrouteplanner as integration_module
@@ -255,11 +255,11 @@ async def test_threshold_removal_forgets_telemetry_surfaces(
     telemetry.register_presence_predicates([Metric.SOC])
     fake_stream.fire_frame(
         MOCK_VEHICLE_ID,
-        {Metric.SOC: build_metric_value(55.0, provider="tesla")},
+        Telemetry(soc=build_metric_value(55.0, provider="tesla")),
     )
     fake_stream.fire_frame(
         MOCK_VEHICLE_ID_2,
-        {Metric.SOC: build_metric_value(42.0, provider="tesla")},
+        Telemetry(soc=build_metric_value(42.0, provider="tesla")),
     )
 
     # Pre-condition: B is present across all four surfaces.

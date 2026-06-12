@@ -31,6 +31,7 @@ from aioabrp import (
     ConnectionEvent,
     ConnectionState,
     Metric,
+    Telemetry,
 )
 import pytest
 
@@ -81,21 +82,21 @@ async def test_provider_set_then_sticky_on_omission_then_updated(
 
     coordinator.on_update(
         MOCK_VEHICLE_ID,
-        {Metric.VOLTAGE: build_metric_value(400.0, provider="RIVIAN_STREAM")},
+        Telemetry(voltage=build_metric_value(400.0, provider="RIVIAN_STREAM")),
     )
     assert coordinator.last_provider[MOCK_VEHICLE_ID][Metric.VOLTAGE] == "RIVIAN_STREAM"
 
     # provider=None: the metric is present but carries no provider — retain.
     coordinator.on_update(
         MOCK_VEHICLE_ID,
-        {Metric.VOLTAGE: build_metric_value(420.0, provider=None)},
+        Telemetry(voltage=build_metric_value(420.0, provider=None)),
     )
     assert coordinator.last_provider[MOCK_VEHICLE_ID][Metric.VOLTAGE] == "RIVIAN_STREAM"
 
     # A fresh provider wins — last-frame semantics.
     coordinator.on_update(
         MOCK_VEHICLE_ID,
-        {Metric.VOLTAGE: build_metric_value(420.0, provider="APP_LOCATION")},
+        Telemetry(voltage=build_metric_value(420.0, provider="APP_LOCATION")),
     )
     assert coordinator.last_provider[MOCK_VEHICLE_ID][Metric.VOLTAGE] == "APP_LOCATION"
 
@@ -112,14 +113,14 @@ async def test_provider_isolated_per_vehicle_and_metric(
 
     coordinator.on_update(
         MOCK_VEHICLE_ID,
-        {
-            Metric.SOC: build_metric_value(0.85, provider="TESLA_FLEET_STREAM"),
-            Metric.ODOMETER: build_metric_value(100000.0, provider="APP_LOCATION"),
-        },
+        Telemetry(
+            soc=build_metric_value(0.85, provider="TESLA_FLEET_STREAM"),
+            odometer=build_metric_value(100000.0, provider="APP_LOCATION"),
+        ),
     )
     coordinator.on_update(
         MOCK_VEHICLE_ID_2,
-        {Metric.VOLTAGE: build_metric_value(380.0, provider="RIVIAN_STREAM")},
+        Telemetry(voltage=build_metric_value(380.0, provider="RIVIAN_STREAM")),
     )
 
     assert coordinator.last_provider[MOCK_VEHICLE_ID][Metric.SOC] == (
@@ -156,7 +157,7 @@ async def test_last_reported_at_is_receipt_time_not_wire_time(
     ):
         coordinator.on_update(
             MOCK_VEHICLE_ID,
-            {Metric.SOC: build_metric_value(0.5, time=wire_time)},
+            Telemetry(soc=build_metric_value(0.5, time=wire_time)),
         )
 
     stamp = coordinator.last_reported_at[MOCK_VEHICLE_ID][Metric.SOC]
@@ -192,10 +193,10 @@ async def test_presence_dispatch_fires_on_first_seen_for_registered_metrics(
     unsub = async_dispatcher_connect(hass, signal, _record)
     try:
         # First appearance of a registered metric → one dispatch.
-        coordinator.on_update(MOCK_VEHICLE_ID, {Metric.SOC: build_metric_value(0.5)})
+        coordinator.on_update(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(0.5)))
         # A metric NOT in the presence set → no dispatch.
         coordinator.on_update(
-            MOCK_VEHICLE_ID, {Metric.VOLTAGE: build_metric_value(400.0)}
+            MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(400.0))
         )
         await hass.async_block_till_done()
         assert dispatched == [(MOCK_VEHICLE_ID, Metric.SOC)]
@@ -203,7 +204,7 @@ async def test_presence_dispatch_fires_on_first_seen_for_registered_metrics(
         # The sensor platform marks the pair seen after creating the entity;
         # a later frame for the same pair must not re-fire the signal.
         coordinator.mark_metric_seen(MOCK_VEHICLE_ID, Metric.SOC)
-        coordinator.on_update(MOCK_VEHICLE_ID, {Metric.SOC: build_metric_value(0.6)})
+        coordinator.on_update(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(0.6)))
         await hass.async_block_till_done()
         assert dispatched == [(MOCK_VEHICLE_ID, Metric.SOC)]
     finally:
@@ -233,7 +234,7 @@ async def test_mark_metric_seen_suppresses_dispatch(
     unsub = async_dispatcher_connect(hass, signal, _record)
     try:
         coordinator.mark_metric_seen(MOCK_VEHICLE_ID, Metric.SOC)
-        coordinator.on_update(MOCK_VEHICLE_ID, {Metric.SOC: build_metric_value(0.5)})
+        coordinator.on_update(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(0.5)))
         await hass.async_block_till_done()
 
         assert dispatched == []
@@ -363,11 +364,11 @@ async def test_forget_vehicle_clears_all_four_surfaces_and_re_dispatches(
     try:
         coordinator.on_update(
             MOCK_VEHICLE_ID,
-            {Metric.VOLTAGE: build_metric_value(400.0, provider="RIVIAN_STREAM")},
+            Telemetry(voltage=build_metric_value(400.0, provider="RIVIAN_STREAM")),
         )
         coordinator.on_update(
             MOCK_VEHICLE_ID_2,
-            {Metric.VOLTAGE: build_metric_value(380.0, provider="TESLA_FLEET_STREAM")},
+            Telemetry(voltage=build_metric_value(380.0, provider="TESLA_FLEET_STREAM")),
         )
         await hass.async_block_till_done()
         assert dispatched == [
@@ -400,7 +401,7 @@ async def test_forget_vehicle_clears_all_four_surfaces_and_re_dispatches(
 
         # Re-adding the forgotten vid re-fires the first-seen dispatch.
         coordinator.on_update(
-            MOCK_VEHICLE_ID, {Metric.VOLTAGE: build_metric_value(401.0)}
+            MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(401.0))
         )
         await hass.async_block_till_done()
         assert dispatched.count((MOCK_VEHICLE_ID, Metric.VOLTAGE)) == 2
@@ -454,9 +455,9 @@ async def test_async_seed_swallows_abrp_errors_for_one_vehicle(
     """
     coordinator = telemetry_coordinator
 
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {
-        Metric.SOC: build_metric_value(0.42)
-    }
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry(
+        soc=build_metric_value(0.42)
+    )
     mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = swallowed_error
 
     # ``async_get_current_telemetry`` is patched on the class by
@@ -466,7 +467,8 @@ async def test_async_seed_swallows_abrp_errors_for_one_vehicle(
 
     await coordinator.async_seed(client, [MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2])
 
-    assert coordinator.data[MOCK_VEHICLE_ID][Metric.SOC].value == 0.42
+    assert coordinator.data[MOCK_VEHICLE_ID].soc is not None
+    assert coordinator.data[MOCK_VEHICLE_ID].soc.value == 0.42
     assert MOCK_VEHICLE_ID_2 not in coordinator.data
 
 

@@ -26,7 +26,7 @@ is driven by ``fake_stream.fire_frame`` (a synchronous double for the real
 
 from typing import Any
 
-from aioabrp import Metric
+from aioabrp import Telemetry
 import pytest
 
 from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
@@ -100,9 +100,9 @@ async def test_seed_only_soc_creates_only_soc_entity(
     platform-forward time; absent metrics produce no entity at all (no
     create-then-hide).
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {
-        Metric.SOC: build_metric_value(50.0)
-    }
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry(
+        soc=build_metric_value(50.0)
+    )
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -130,13 +130,13 @@ async def test_stream_only_metric_creates_entity(
     ``voltage`` do NOT exist. Only metrics present in the seed or a live frame
     get an entity.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.POWER: build_metric_value(1234.0)})
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(1234.0)))
     await hass.async_block_till_done()
 
     state = hass.states.get(POWER_ENTITY_ID)
@@ -169,7 +169,7 @@ async def test_post_setup_dispatcher_creates_entity(
        ``power`` remain absent. Voltage lives in the main Sensors bucket
        (``entity_category is None``).
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -177,7 +177,9 @@ async def test_post_setup_dispatcher_creates_entity(
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
     assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is None
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.VOLTAGE: build_metric_value(400.0)})
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID, Telemetry(voltage=build_metric_value(400.0))
+    )
     await hass.async_block_till_done()
 
     assert entity_registry.async_get(VOLTAGE_ENTITY_ID) is not None
@@ -216,17 +218,17 @@ async def test_dispatcher_idempotent_on_repeated_frames(
     ``async_add_entities``, causing duplicate unique-id warnings and broken
     entity state. The second frame's value still surfaces as the new state.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
     # No telemetry entities at setup.
     assert entity_registry.async_get(POWER_ENTITY_ID) is None
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.POWER: build_metric_value(5000.0)})
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(5000.0)))
     await hass.async_block_till_done()
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.POWER: build_metric_value(6000.0)})
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(6000.0)))
     await hass.async_block_till_done()
 
     all_entries = er.async_entries_for_config_entry(
@@ -289,8 +291,8 @@ async def test_multi_vehicle_entity_isolation(
             CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
         },
     )
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = Telemetry()
 
     await _lazy_setup(hass, entry)
 
@@ -298,7 +300,7 @@ async def test_multi_vehicle_entity_isolation(
     assert entity_registry.async_get(absent_entity_id) is None
 
     fake_stream.fire_frame(
-        active_vehicle_id, {Metric.VOLTAGE: build_metric_value(400.0)}
+        active_vehicle_id, Telemetry(voltage=build_metric_value(400.0))
     )
     await hass.async_block_till_done()
 
@@ -324,7 +326,7 @@ async def test_absent_metric_entities_not_created(
     seed or a live frame — there is no create-all-then-hide pattern, so absent
     metrics leave no registry row at all.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -353,13 +355,13 @@ async def test_soe_sensor_lazy_creates_on_first_frame(
     renders the state in the suggested unit, so a ``MetricValue`` of
     ``75000`` Wh shows as ``75.0`` kWh.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
     assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soe") is None
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.SOE: build_metric_value(75000.0)})
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soe=build_metric_value(75000.0)))
     await hass.async_block_till_done()
 
     entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soe")
@@ -394,14 +396,14 @@ async def test_odometer_sensor_lazy_creates_on_first_frame(
     ``TOTAL_INCREASING`` → ``MEASUREMENT`` (LTS-breaking) surfaces as a clean
     test failure rather than a silent statistics drift.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
     assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "odometer") is None
 
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.ODOMETER: build_metric_value(123456.0)}
+        MOCK_VEHICLE_ID, Telemetry(odometer=build_metric_value(123456.0))
     )
     await hass.async_block_till_done()
 
@@ -438,7 +440,7 @@ async def test_calibrated_ref_cons_sensor_lazy_creates_on_first_frame(
     native ``Wh/km`` unit and ``state.state`` is the raw value. Lives in the
     main Sensors bucket (``entity_category is None``).
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -448,7 +450,7 @@ async def test_calibrated_ref_cons_sensor_lazy_creates_on_first_frame(
     )
 
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.CALIBRATED_REF_CONS: build_metric_value(175.0)}
+        MOCK_VEHICLE_ID, Telemetry(calibrated_ref_cons=build_metric_value(175.0))
     )
     await hass.async_block_till_done()
 
@@ -487,7 +489,7 @@ async def test_battery_capacity_sensor_lazy_creates_static(
     ``"state_class" not in state.attributes`` assertion catches a future
     regression where someone reflexively adds ``MEASUREMENT``.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -496,7 +498,7 @@ async def test_battery_capacity_sensor_lazy_creates_static(
     )
 
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.BATTERY_CAPACITY: build_metric_value(75000.0)}
+        MOCK_VEHICLE_ID, Telemetry(battery_capacity=build_metric_value(75000.0))
     )
     await hass.async_block_till_done()
 
@@ -534,13 +536,13 @@ async def test_soh_sensor_lazy_creates_on_first_frame(
     the ``MetricValue`` (the library did the x100), so ``92.0`` -> ``92.0 %``.
     The ``"device_class" not in state.attributes`` assertion pins the omission.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
     assert _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh") is None
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.SOH: build_metric_value(92.0)})
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soh=build_metric_value(92.0)))
     await hass.async_block_till_done()
 
     entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh")
@@ -575,7 +577,7 @@ async def test_battery_temperature_sensor_stays_primary_category(
     ``entity_category=EntityCategory.DIAGNOSTIC`` to the description fails this
     test loudly.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
@@ -585,7 +587,7 @@ async def test_battery_temperature_sensor_stays_primary_category(
     )
 
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.BATTERY_TEMPERATURE: build_metric_value(22.5)}
+        MOCK_VEHICLE_ID, Telemetry(battery_temperature=build_metric_value(22.5))
     )
     await hass.async_block_till_done()
 
@@ -616,11 +618,11 @@ async def test_soh_above_100_percent_surfaces_uncapped(
     doesn't clamp. Regression pin: catches a future ``min(value, 100.0)`` that
     would flatten the post-recalibration drift signal LTS is meant to capture.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.SOH: build_metric_value(105.0)})
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soh=build_metric_value(105.0)))
     await hass.async_block_till_done()
 
     entity_id = _unique_id_lookup(entity_registry, MOCK_VEHICLE_ID, "soh")
@@ -645,12 +647,12 @@ async def test_battery_capacity_recalibration_jump_updates_state(
     (no exception, value updates). The LTS opt-out means the recorder skips
     this entity, so the user sees the change as a single state transition.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
 
     await _lazy_setup(hass, config_entry_with_vehicles)
 
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.BATTERY_CAPACITY: build_metric_value(75000.0)}
+        MOCK_VEHICLE_ID, Telemetry(battery_capacity=build_metric_value(75000.0))
     )
     await hass.async_block_till_done()
 
@@ -661,7 +663,7 @@ async def test_battery_capacity_recalibration_jump_updates_state(
     assert first_state.state == "75.0"
 
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.BATTERY_CAPACITY: build_metric_value(74500.0)}
+        MOCK_VEHICLE_ID, Telemetry(battery_capacity=build_metric_value(74500.0))
     )
     await hass.async_block_till_done()
 
@@ -694,13 +696,13 @@ async def test_new_sensor_multi_vehicle_isolation(
             CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
         },
     )
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {}
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = {}
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID_2] = Telemetry()
 
     await _lazy_setup(hass, entry)
 
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.CALIBRATED_REF_CONS: build_metric_value(175.0)}
+        MOCK_VEHICLE_ID, Telemetry(calibrated_ref_cons=build_metric_value(175.0))
     )
     await hass.async_block_till_done()
 

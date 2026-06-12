@@ -5,7 +5,7 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aioabrp import AbrpApiError, AbrpAuthError
+from aioabrp import AbrpApiError, AbrpAuthError, Telemetry
 from aiohttp import ClientError
 import pytest
 from yarl import URL
@@ -561,8 +561,8 @@ async def test_seed_runs_for_each_vehicle_before_stream_spawn(
     # autospecced, the class-attribute mock is not bound on access, so the
     # integration's ``client.async_get_current_telemetry(vid)`` call lands as
     # ``mock(vid)`` — the vehicle id is the sole positional arg.
-    async def _record_seed(vehicle_id: int) -> dict[Any, Any]:
-        return {}
+    async def _record_seed(vehicle_id: int) -> Telemetry:
+        return Telemetry()
 
     with patch(
         "aioabrp.AbrpClient.async_get_current_telemetry",

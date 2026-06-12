@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
-from aioabrp import AbrpVehicle, CatalogEntry, ChargingState, Metric
+from aioabrp import AbrpVehicle, CatalogEntry, ChargingState, Metric, Telemetry
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -217,19 +217,19 @@ async def test_telemetry_sensors_snapshot(
     with freeze_time("2026-05-24T12:00:00+00:00"):
         fake_stream.fire_frame(
             MOCK_VEHICLE_ID,
-            {
-                Metric.SOC: build_metric_value(85.0),
-                Metric.POWER: build_metric_value(23300.0),
-                Metric.VOLTAGE: build_metric_value(704.0),
-                Metric.SOE: build_metric_value(68000.0),
-                Metric.ODOMETER: build_metric_value(120000.0),
-                Metric.CALIBRATED_REF_CONS: build_metric_value(175.0),
-                Metric.BATTERY_CAPACITY: build_metric_value(92000.0),
-                Metric.SOH: build_metric_value(98.0),
-                Metric.RANGE: build_metric_value(100000.0),
-                Metric.BATTERY_TEMPERATURE: build_metric_value(23.7),
-                Metric.CHARGING_STATE: build_metric_value(ChargingState.CHARGING_AC),
-            },
+            Telemetry(
+                soc=build_metric_value(85.0),
+                power=build_metric_value(23300.0),
+                voltage=build_metric_value(704.0),
+                soe=build_metric_value(68000.0),
+                odometer=build_metric_value(120000.0),
+                calibrated_ref_cons=build_metric_value(175.0),
+                battery_capacity=build_metric_value(92000.0),
+                soh=build_metric_value(98.0),
+                range=build_metric_value(100000.0),
+                battery_temperature=build_metric_value(23.7),
+                charging_state=build_metric_value(ChargingState.CHARGING_AC),
+            ),
         )
         await hass.async_block_till_done()
 
@@ -255,7 +255,7 @@ async def test_soc_native_value_is_percent(
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.SOC: build_metric_value(85.7)})
+    fake_stream.fire_frame(MOCK_VEHICLE_ID, Telemetry(soc=build_metric_value(85.7)))
     await hass.async_block_till_done()
 
     state = hass.states.get(SOC_ENTITY_ID)
@@ -277,9 +277,9 @@ async def test_seeded_metric_surfaces_at_setup(
     push frame. SOC is a PERCENT value on the typed boundary, so a seeded
     ``42.0`` renders as ``"42.0"``.
     """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {
-        Metric.SOC: build_metric_value(42.0)
-    }
+    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry(
+        soc=build_metric_value(42.0)
+    )
 
     await _setup_integration(hass, config_entry_with_vehicles)
 
@@ -303,7 +303,9 @@ async def test_available_follows_native_value(
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.POWER: build_metric_value(12000.0)})
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID, Telemetry(power=build_metric_value(12000.0))
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(POWER_ENTITY_ID)
@@ -373,7 +375,9 @@ async def test_range_sensor_state(
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {Metric.RANGE: build_metric_value(range_m)})
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID, Telemetry(range=build_metric_value(range_m))
+    )
     await hass.async_block_till_done()
 
     state = hass.states.get(RANGE_ENTITY_ID)
@@ -413,7 +417,7 @@ async def test_battery_temperature_sensor_state(
     await _setup_integration(hass, config_entry_with_vehicles)
 
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.BATTERY_TEMPERATURE: build_metric_value(temp_c)}
+        MOCK_VEHICLE_ID, Telemetry(battery_temperature=build_metric_value(temp_c))
     )
     await hass.async_block_till_done()
 
@@ -770,7 +774,9 @@ async def test_diagnostic_telemetry_sensors_moved_out_of_diagnostic(
     ``state.attributes`` (which omits the field when it is ``None``).
     """
     await _setup_integration(hass, config_entry_with_vehicles)
-    fake_stream.fire_frame(MOCK_VEHICLE_ID, {metric: build_metric_value(value)})
+    fake_stream.fire_frame(
+        MOCK_VEHICLE_ID, Telemetry(**{metric.value: build_metric_value(value)})
+    )
     await hass.async_block_till_done()
 
     entity_id = _lookup_sensor_entity_id(
@@ -802,7 +808,7 @@ async def test_calibrated_ref_cons_renamed_to_short_form(
     """
     await _setup_integration(hass, config_entry_with_vehicles)
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.CALIBRATED_REF_CONS: build_metric_value(175.0)}
+        MOCK_VEHICLE_ID, Telemetry(calibrated_ref_cons=build_metric_value(175.0))
     )
     await hass.async_block_till_done()
 
@@ -992,7 +998,8 @@ async def test_charging_state_lazy_create_via_dispatcher(
     assert hass.states.get(CHARGING_STATE_ENTITY_ID) is None
 
     fake_stream.fire_frame(
-        MOCK_VEHICLE_ID, {Metric.CHARGING_STATE: build_metric_value(charging_state)}
+        MOCK_VEHICLE_ID,
+        Telemetry(charging_state=build_metric_value(charging_state)),
     )
     await hass.async_block_till_done()
 
@@ -1025,7 +1032,7 @@ async def test_charging_state_registry_shape(
     await _setup_integration(hass, config_entry_with_vehicles)
     fake_stream.fire_frame(
         MOCK_VEHICLE_ID,
-        {Metric.CHARGING_STATE: build_metric_value(ChargingState.CHARGING_AC)},
+        Telemetry(charging_state=build_metric_value(ChargingState.CHARGING_AC)),
     )
     await hass.async_block_till_done()
 
@@ -1059,11 +1066,11 @@ async def test_charging_state_provider_and_stamp_attributes(
     with freeze_time(stamp):
         fake_stream.fire_frame(
             MOCK_VEHICLE_ID,
-            {
-                Metric.CHARGING_STATE: build_metric_value(
+            Telemetry(
+                charging_state=build_metric_value(
                     ChargingState.CHARGING_DC, provider="RIVIAN_STREAM"
                 )
-            },
+            ),
         )
         await hass.async_block_till_done()
 

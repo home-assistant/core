@@ -14,8 +14,8 @@ from aioabrp import (
     CatalogEntry,
     ChargingState,
     ConnectionEvent,
-    Metric,
     MetricValue,
+    Telemetry,
 )
 import pytest
 
@@ -215,14 +215,14 @@ def mock_abrp_client(
     - ``async_get_current_telemetry`` (the coordinator seed path, autospec):
       per-vehicle configurable typed returns. Tests populate
       ``mock_abrp_client.seed_responses`` keyed by vehicle id with either a
-      ``dict[Metric, MetricValue]`` (returned) or a ``BaseException`` (raised),
+      ``Telemetry`` (returned) or a ``BaseException`` (raised),
       e.g.::
 
-          mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = {
-              Metric.SOC: build_metric_value(42.0)
-          }
+          mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry(
+              soc=build_metric_value(42.0)
+          )
 
-      Any vehicle id absent from the table seeds an empty dict.
+      Any vehicle id absent from the table seeds an empty ``Telemetry()``.
 
     Autospec/self decision: all three patches use ``autospec=True``. Because
     autospec preserves the bound-method signature, the ``async_get_current_telemetry``
@@ -233,10 +233,10 @@ def mock_abrp_client(
     The ``async_get_vehicles`` mock is yielded as the primary handle, with
     ``.seed_responses`` attached to it for ergonomic per-vehicle seeding.
     """
-    seed_responses: dict[int, dict[Metric, MetricValue] | BaseException] = {}
+    seed_responses: dict[int, Telemetry | BaseException] = {}
 
-    async def _seed(self: Any, vehicle_id: int) -> dict[Metric, MetricValue]:
-        outcome = seed_responses.get(vehicle_id, {})
+    async def _seed(self: Any, vehicle_id: int) -> Telemetry:
+        outcome = seed_responses.get(vehicle_id, Telemetry())
         if isinstance(outcome, BaseException):
             raise outcome
         return outcome
@@ -305,12 +305,12 @@ class _StreamDriver:
         """The most recently constructed fake stream (None before setup)."""
         return self._cls.instances[-1] if self._cls.instances else None
 
-    def fire_frame(self, vehicle_id: int, metrics: dict[Metric, MetricValue]) -> None:
-        """Invoke the coordinator's on_update with a typed metric batch."""
+    def fire_frame(self, vehicle_id: int, telemetry: Telemetry) -> None:
+        """Invoke the coordinator's on_update with a typed Telemetry frame."""
         assert self.stream is not None, (
             "fire_frame called before TelemetryStream construction"
         )
-        self.stream.on_update(vehicle_id, metrics)
+        self.stream.on_update(vehicle_id, telemetry)
 
     def fire_connection(self, event: ConnectionEvent) -> None:
         """Invoke the coordinator's on_connection_change with a transition."""
