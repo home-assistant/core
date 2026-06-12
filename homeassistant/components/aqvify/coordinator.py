@@ -36,7 +36,6 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
     """Data update coordinator for Aqvify devices."""
 
     config_entry: AqvifyConfigEntry
-    previous_devices: set[str] = set()
 
     def __init__(self, hass: HomeAssistant, entry: AqvifyConfigEntry) -> None:
         """Initialize the Aqvify data update coordinator."""
@@ -51,6 +50,7 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
         self.api_client = AqvifyAPI(
             entry.data[CONF_API_KEY], websession=async_get_clientsession(hass)
         )
+        self.previous_devices: set[str] = set()
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
