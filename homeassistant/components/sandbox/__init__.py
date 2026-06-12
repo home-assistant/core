@@ -18,6 +18,7 @@ from dataclasses import dataclass, field
 import logging
 from typing import Any
 
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 import homeassistant.helpers.config_validation as cv
@@ -47,6 +48,10 @@ class SandboxData:
     router: SandboxFlowRouter | None = None
     channels: dict[str, Channel] = field(default_factory=dict)
     bridges: dict[str, SandboxBridge] = field(default_factory=dict)
+    # A bridge displaced by a restart, held until the fresh process goes
+    # ready so its proxies + platform slots can be torn down right before
+    # the replacement re-registers the same entries (keyed by group).
+    pending_teardown: dict[str, SandboxBridge] = field(default_factory=dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -55,10 +60,51 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_SANDBOX] = data
 
     def _on_channel_ready(group: str, channel: Channel) -> None:
-        # Drop any prior bridge for this group (a sandbox restart hands us
-        # a fresh channel — the previous bridge owned the dead one).
+        # A sandbox restart hands us a fresh channel; the previous bridge
+        # owned the dead one. Install the new bridge now (its handlers must
+        # be live before the channel reader starts) but defer tearing the
+        # old one down — its proxies + EntityComponent platform slots are
+        # released in ``_on_ready`` right before the fresh process
+        # re-registers, so the entities stay visible (Phase 2 marks them
+        # unavailable) across the restart gap instead of vanishing.
+        old_bridge = data.bridges.get(group)
         data.channels[group] = channel
         data.bridges[group] = async_create_bridge(hass, group=group, channel=channel)
+        if old_bridge is None:
+            return
+        # A second crash before the first respawn went ready would orphan
+        # the earlier pending bridge — tear it down now so neither leaks.
+        previous = data.pending_teardown.get(group)
+        if previous is not None and previous is not old_bridge:
+            hass.async_create_task(previous.async_teardown())
+        data.pending_teardown[group] = old_bridge
+
+    def _on_ready(group: str) -> None:
+        # The fresh process is up and can answer ``entry_setup``. Tear down
+        # the displaced bridge and re-drive setup for the group's entries so
+        # the new bridge repopulates. Capturing the loaded entries
+        # synchronously here is what keeps a *first* start (entries not yet
+        # loaded) from being mistaken for a respawn and double-setting-up.
+        old_bridge = data.pending_teardown.pop(group, None)
+        loaded = [
+            entry.entry_id
+            for entry in hass.config_entries.async_entries()
+            if entry.sandbox == group and entry.state is ConfigEntryState.LOADED
+        ]
+        if old_bridge is None and not loaded:
+            return
+        hass.async_create_task(_async_recover_group(old_bridge, loaded))
+
+    async def _async_recover_group(
+        old_bridge: SandboxBridge | None, loaded_entry_ids: list[str]
+    ) -> None:
+        # Teardown must complete before the reload's setup re-registers the
+        # same entry — otherwise ``async_register_remote_platform`` trips the
+        # "already been setup!" guard on the still-registered old platform.
+        if old_bridge is not None:
+            await old_bridge.async_teardown()
+        for entry_id in loaded_entry_ids:
+            hass.config_entries.async_schedule_reload(entry_id)
 
     async def _on_shutdown_reply(group: str, reply: Any) -> None:
         """Persist the sandbox's restore-state snapshot.
@@ -93,6 +139,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     manager = SandboxManager(
         hass,
         on_channel_ready=_on_channel_ready,
+        on_ready=_on_ready,
         on_shutdown_reply=_on_shutdown_reply,
     )
     router = SandboxFlowRouter(hass, manager, data=data)
@@ -123,6 +170,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         await manager.async_stop_all()
         data.channels.clear()
         data.bridges.clear()
+        data.pending_teardown.clear()
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _on_stop)
 

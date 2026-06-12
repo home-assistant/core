@@ -223,6 +223,20 @@ class EntityComponent[_EntityT: entity.Entity = entity.Entity]:
             )
         self._platforms[key] = platform
 
+    @callback
+    def async_unregister_remote_platform(
+        self, config_entry: ConfigEntry
+    ) -> EntityPlatform | None:
+        """Drop a platform registered via ``async_register_remote_platform``.
+
+        The inverse of :meth:`async_register_remote_platform`: removes the
+        config entry's platform slot so the entry can be registered again
+        (e.g. after a sandbox restart hands ``sandbox`` a fresh process).
+        Returns the removed :class:`EntityPlatform` so the caller can reset
+        it, or ``None`` if nothing was registered for the entry.
+        """
+        return self._platforms.pop(config_entry.entry_id, None)
+
     async def async_extract_from_service(
         self, service_call: ServiceCall, expand_group: bool = True
     ) -> list[_EntityT]:
