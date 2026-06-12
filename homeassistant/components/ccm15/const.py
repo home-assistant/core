@@ -10,7 +10,7 @@ from homeassistant.components.climate import (
 )
 
 DOMAIN = "ccm15"
-DEFAULT_TIMEOUT = 10
+DEFAULT_TIMEOUT = 20
 DEFAULT_INTERVAL = 30
 
 CONF_MIN_TEMP = "min_temp"
