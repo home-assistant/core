@@ -103,10 +103,19 @@ class EntryRunner:
             _LOGGER.exception(
                 "sandbox entry_setup raised for %s (%s)", entry.title, entry.domain
             )
+            # Drop the failed entry so a re-sent entry_setup for the same
+            # entry_id isn't rejected with "entry already loaded". Main is the
+            # only retry driver (the sandbox hass is never started, so its own
+            # ConfigEntryNotReady timer never fires) — this just makes the
+            # re-send start clean.
+            config_entries._entries.pop(entry.entry_id, None)  # noqa: SLF001
             return pb.EntrySetupResult(
                 ok=False, reason=str(err) or err.__class__.__name__
             )
         if not ok:
+            # Same cleanup on a plain failed setup (returns False / SETUP_ERROR
+            # / SETUP_RETRY) so the entry_id is free for main's retry.
+            config_entries._entries.pop(entry.entry_id, None)  # noqa: SLF001
             return pb.EntrySetupResult(
                 ok=False, reason=entry.reason or f"async_setup returned {ok!r}"
             )
