@@ -3,6 +3,7 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
 from pyaqvify import AqvifyAuthException, AqvifyDevices
 import pytest
@@ -17,11 +18,13 @@ import homeassistant.helpers.device_registry as dr
 from . import setup_integration
 
 from tests.common import (
+    Mock,
     MockConfigEntry,
     async_fire_time_changed,
     async_load_json_array_fixture,
 )
 
+WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
 EXPECTED_WATER_LEVEL = "-0.136786005"
 
 
@@ -82,8 +85,10 @@ async def test_device_registry_integration(
         device_registry, mock_config_entry.entry_id
     )
 
-    de = sorted(device_entries, key=lambda entr: entr.serial_number)
-    assert de == snapshot
+    sorted_devices = sorted(
+        device_entries, key=lambda dev_entry: dev_entry.serial_number
+    )
+    assert sorted_devices == snapshot
 
 
 async def test_setup_entry_auth_error_triggers_reauth(
@@ -129,7 +134,6 @@ async def test_devices_multiple_created_count(
 
     assert len(device_registry.devices) == 3
     assert hass.states.get("sensor.device_3_water_level").state == EXPECTED_WATER_LEVEL
-WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
 
 
 @pytest.mark.parametrize(
