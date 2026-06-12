@@ -52,3 +52,4 @@ class WebControlProRotationResetButton(WebControlProGenericEntity, ButtonEntity)
         # Delete the min and max override values to reset the rotation range to the default
         del action["minValue"]
         del action["maxValue"]
+        # The library will take care of the update and persistence on the next poll refresh

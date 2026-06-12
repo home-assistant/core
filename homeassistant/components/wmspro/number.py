@@ -86,8 +86,9 @@ class WebControlProSlatRange(WebControlProGenericEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Update the current min/max value."""
         action = self._dest.action(ACTION_DESC.SlatRotate)
-        # Push the new min/max rotation to the hub as custom overwrite
+        # Push the new min/max rotation to the hub as custom overwrite via the action items
         action[self._value_name] = value
+        # The library will take care of the update and persistence on the next poll refresh
 
 
 class WebControlProSlatRangeMin(WebControlProSlatRange):
