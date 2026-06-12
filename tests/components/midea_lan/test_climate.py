@@ -306,7 +306,7 @@ def test_midea_c3_specific() -> None:
     assert ent.target_temperature_high == 30
     assert ent.hvac_mode == HVACMode.AUTO
     ent.device.attributes[C3Attributes.mode] = None
-    assert ent.hvac_mode == HVACMode.OFF
+    assert ent.hvac_mode is None
     assert ent.target_temperature == 22
     assert ent.current_temperature is None
 
@@ -395,7 +395,7 @@ def test_midea_climate_fallback_paths() -> None:
         )
         assert cf.min_temp == climate.TEMPERATURE_MIN
         assert cf.max_temp == climate.TEMPERATURE_MAX
-        assert cf.current_temperature == climate.TEMPERATURE_MIN
+        assert cf.current_temperature is None
 
         c3 = climate.MideaC3Climate(
             DummyDevice(
@@ -415,7 +415,7 @@ def test_midea_climate_fallback_paths() -> None:
         assert c3.target_temperature_step == 0.5
         assert c3.min_temp == climate.TEMPERATURE_MIN
         assert c3.max_temp == climate.TEMPERATURE_MIN
-        assert c3.target_temperature == climate.TEMPERATURE_MIN
+        assert c3.target_temperature is None
 
         fb = climate.MideaFBClimate(
             DummyDevice(
@@ -429,7 +429,7 @@ def test_midea_climate_fallback_paths() -> None:
             _get_description(DeviceType.FB, "named"),
         )
         assert fb.preset_mode == PRESET_NONE
-        assert fb.current_temperature == 5.0
+        assert fb.current_temperature is None
 
 
 @pytest.mark.parametrize(
