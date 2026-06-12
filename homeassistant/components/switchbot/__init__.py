@@ -97,6 +97,7 @@ PLATFORMS_BY_TYPE = {
     SupportedModels.HUBMINI_MATTER.value: [Platform.SENSOR],
     SupportedModels.CIRCULATOR_FAN.value: [Platform.FAN, Platform.SENSOR],
     SupportedModels.STANDING_FAN.value: [
+        Platform.FAN,
         Platform.SELECT,
         Platform.NUMBER,
         Platform.SWITCH,
