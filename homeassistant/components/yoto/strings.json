@@ -37,6 +37,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "bluetooth_audio": {
+        "name": "Bluetooth audio"
+      },
+      "headphones": {
+        "name": "Headphones"
+      }
+    },
     "sensor": {
       "card_insertion_state": {
         "name": "Card slot",
