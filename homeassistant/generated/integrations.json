@@ -4717,11 +4717,6 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
-    "nexen": {
-      "name": "Nexen",
-      "integration_type": "virtual",
-      "supported_by": "hypontech"
-    },
     "nexity": {
       "name": "Nexity Eug\u00e9nie",
       "integration_type": "virtual",

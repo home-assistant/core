@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import logging
 from typing import Any
 
-from hyponcloud import KNOWN_OEMS, AuthenticationError, HyponCloud
+from hyponcloud import KNOWN_OEMS, AdminInfo, AuthenticationError, HyponCloud
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
@@ -25,6 +25,13 @@ OEM_OPTIONS = [
     SelectOptionDict(value=str(oem.id), label=f"{oem.name} ({oem.monitoring_url})")
     for oem in KNOWN_OEMS
 ]
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): str,
+    }
+)
 
 
 def _data_schema(default_oem: int = DEFAULT_OEM) -> vol.Schema:
@@ -62,6 +69,30 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._default_oem = DEFAULT_OEM
 
+    async def _async_validate_input(
+        self, entry_data: Mapping[str, Any]
+    ) -> tuple[AdminInfo | None, dict[str, str]]:
+        """Validate user input."""
+        errors: dict[str, str] = {}
+        session = async_get_clientsession(self.hass)
+        hypon = HyponCloud(
+            entry_data[CONF_USERNAME],
+            entry_data[CONF_PASSWORD],
+            session,
+            oem=entry_data[CONF_OEM],
+        )
+        try:
+            await hypon.connect()
+            return await hypon.get_admin_info(), errors
+        except AuthenticationError:
+            errors["base"] = "invalid_auth"
+        except TimeoutError, ConnectionError:
+            errors["base"] = "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
+        return None, errors
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -71,24 +102,8 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             entry_data = _entry_data(user_input)
             default_oem = entry_data[CONF_OEM]
-            session = async_get_clientsession(self.hass)
-            hypon = HyponCloud(
-                entry_data[CONF_USERNAME],
-                entry_data[CONF_PASSWORD],
-                session,
-                oem=entry_data[CONF_OEM],
-            )
-            try:
-                await hypon.connect()
-                admin_info = await hypon.get_admin_info()
-            except AuthenticationError:
-                errors["base"] = "invalid_auth"
-            except TimeoutError, ConnectionError:
-                errors["base"] = "cannot_connect"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
-            else:
+            admin_info, errors = await self._async_validate_input(entry_data)
+            if admin_info is not None:
                 await self.async_set_unique_id(
                     _unique_id(admin_info.id, entry_data[CONF_OEM])
                 )
@@ -104,7 +119,6 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
                     data_updates={
                         CONF_USERNAME: entry_data[CONF_USERNAME],
                         CONF_PASSWORD: entry_data[CONF_PASSWORD],
-                        CONF_OEM: entry_data[CONF_OEM],
                     },
                 )
 
@@ -117,4 +131,31 @@ class HypontechConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reauthentication."""
         self._default_oem = int(entry_data.get(CONF_OEM, DEFAULT_OEM))
-        return await self.async_step_user()
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication confirmation."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            entry_data = {**user_input, CONF_OEM: self._default_oem}
+            admin_info, errors = await self._async_validate_input(entry_data)
+            if admin_info is not None:
+                await self.async_set_unique_id(
+                    _unique_id(admin_info.id, entry_data[CONF_OEM])
+                )
+                self._abort_if_unique_id_mismatch(reason="wrong_account")
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={
+                        CONF_USERNAME: entry_data[CONF_USERNAME],
+                        CONF_PASSWORD: entry_data[CONF_PASSWORD],
+                    },
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=STEP_REAUTH_DATA_SCHEMA,
+            errors=errors,
+        )

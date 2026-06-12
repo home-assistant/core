@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.hypontech.config_flow import OEM_OPTIONS
 from homeassistant.components.hypontech.const import CONF_OEM, DEFAULT_OEM, DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -27,6 +27,15 @@ TEST_ENTRY_DATA = {
     CONF_PASSWORD: "test-password",
     CONF_OEM: DEFAULT_OEM,
 }
+TEST_REAUTH_INPUT = {
+    CONF_USERNAME: "test@example.com",
+    CONF_PASSWORD: "test-password",
+}
+
+
+def assert_oem_not_in_schema(result: ConfigFlowResult) -> None:
+    """Assert the form data schema does not contain the OEM field."""
+    assert CONF_OEM not in {field.schema for field in result["data_schema"].schema}
 
 
 def test_oem_options_include_portal_url() -> None:
@@ -146,17 +155,47 @@ async def test_reauth_flow(
 
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"
+    assert_oem_not_in_schema(result)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {**TEST_USER_INPUT, CONF_PASSWORD: "password"},
+        {**TEST_REAUTH_INPUT, CONF_PASSWORD: "password"},
     )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_PASSWORD] == "password"
-    assert mock_config_entry.data[CONF_OEM] == DEFAULT_OEM
+    assert CONF_OEM not in mock_config_entry.data
+
+
+async def test_reauth_flow_uses_stored_oem(
+    hass: HomeAssistant, mock_hyponcloud: AsyncMock
+) -> None:
+    """Test reauthentication uses the stored OEM without exposing it."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={**TEST_ENTRY_DATA, CONF_OEM: NEXEN_OEM},
+        unique_id=f"{NEXEN_OEM}:{TEST_ACCOUNT_ID}",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert_oem_not_in_schema(result)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {**TEST_REAUTH_INPUT, CONF_PASSWORD: "new-password"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    assert mock_config_entry.data[CONF_OEM] == NEXEN_OEM
+    hyponcloud_class = cast(Mock, mock_hyponcloud.hyponcloud_class)
+    assert hyponcloud_class.call_args.kwargs["oem"] == NEXEN_OEM
 
 
 @pytest.mark.parametrize(
@@ -179,12 +218,13 @@ async def test_reauth_flow_errors(
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"
+    assert_oem_not_in_schema(result)
 
     mock_hyponcloud.connect.side_effect = side_effect
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {**TEST_USER_INPUT, CONF_PASSWORD: "new-password"},
+        {**TEST_REAUTH_INPUT, CONF_PASSWORD: "new-password"},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -193,7 +233,7 @@ async def test_reauth_flow_errors(
     mock_hyponcloud.connect.side_effect = None
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {**TEST_USER_INPUT, CONF_PASSWORD: "new-password"},
+        {**TEST_REAUTH_INPUT, CONF_PASSWORD: "new-password"},
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -207,13 +247,14 @@ async def test_reauth_flow_wrong_account(
     mock_config_entry.add_to_hass(hass)
     result = await mock_config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
+    assert result["step_id"] == "reauth_confirm"
+    assert_oem_not_in_schema(result)
 
     mock_hyponcloud.get_admin_info.return_value.id = "different_account_id_456"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {**TEST_USER_INPUT, CONF_USERNAME: "different@example.com"},
+        {**TEST_REAUTH_INPUT, CONF_USERNAME: "different@example.com"},
     )
 
     assert result["type"] is FlowResultType.ABORT
