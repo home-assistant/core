@@ -17,6 +17,7 @@ from homeassistant.components.sandbox.manager import (
     SandboxConfig,
     SandboxFailedError,
     SandboxManager,
+    SandboxProcess,
     SandboxStartError,
 )
 from homeassistant.core import HomeAssistant
@@ -162,3 +163,57 @@ async def test_default_command_carries_name_and_url_only(
     assert "--url" in builtin_argv
     assert "stdio://" in builtin_argv
     assert "--token" not in builtin_argv
+
+
+class _PausingProcess(SandboxProcess):
+    """A SandboxProcess that suspends inside ``_spawn`` until released.
+
+    Lets a test land ``stop()`` while a spawn is in flight (``self._process``
+    still None) — the exact window where ``stop()`` used to miss the child
+    and then block on the supervisor forever.
+    """
+
+    def __init__(self, *args: object, **kwargs: object) -> None:
+        super().__init__(*args, **kwargs)  # type: ignore[arg-type]
+        self.spawn_entered = asyncio.Event()
+        self.spawn_release = asyncio.Event()
+
+    async def _spawn(self, command: list[str]) -> asyncio.subprocess.Process | None:
+        self.spawn_entered.set()
+        await self.spawn_release.wait()
+        return await super()._spawn(command)
+
+
+async def test_stop_during_spawn_does_not_hang(hass: HomeAssistant) -> None:
+    """stop() landing mid-spawn terminates the child and returns (no hang).
+
+    A healthy child that never signals ready is spawned; stop() is triggered
+    while ``_spawn`` is suspended, so ``self._process`` is still None when
+    stop() reads it. The post-spawn ``_stopping`` check must kill the child
+    so the supervisor returns and stop() completes within the grace window.
+    """
+    # A child that just sleeps — healthy, never sends MSG_READY.
+    sleeping_cmd = [sys.executable, "-c", "import time; time.sleep(300)"]
+    process = _PausingProcess(
+        "built-in",
+        lambda _url: sleeping_cmd,
+        FAST_CONFIG,
+    )
+
+    start_task = asyncio.create_task(process.start())
+    await asyncio.wait_for(process.spawn_entered.wait(), timeout=5.0)
+
+    # stop() runs now, while _spawn is paused and self._process is None.
+    stop_task = asyncio.create_task(process.stop())
+    await asyncio.sleep(0)
+    process.spawn_release.set()
+
+    # Neither call may hang: bound both well under stop()'s own backstop.
+    results = await asyncio.wait_for(
+        asyncio.gather(start_task, stop_task, return_exceptions=True),
+        timeout=15.0,
+    )
+    assert isinstance(results[0], SandboxStartError)
+    assert results[1] is None
+    assert process.state == "stopped"
+    assert process.pid is None
