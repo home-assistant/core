@@ -41,9 +41,10 @@ _LOGGER = logging.getLogger(__name__)
 # Scalar optional-string fields copied verbatim from the integration's
 # FlowResult onto the proto. Dynamic dicts (data / options / errors /
 # description_placeholders / context) and data_schema get bespoke handling in
-# ``_marshal_result``. Result types beyond FORM / CREATE_ENTRY / ABORT carry no
-# extra fields (e.g. menu_options) — the main-side proxy only supports those
-# three and aborts noisily on anything else.
+# ``_marshal_result``. MENU additionally carries menu_options / sort; the
+# remaining result types (external-step / progress) carry no extra fields —
+# the main-side proxy supports FORM / CREATE_ENTRY / ABORT / MENU and aborts
+# cleanly on anything else.
 _SCALAR_STRING_FIELDS = (
     "flow_id",
     "handler",
@@ -156,9 +157,10 @@ def _marshal_result(
     :meth:`ConfigFlow.async_set_unique_id`) is pulled out of the live
     flow when the result type doesn't already include it.
 
-    Only FORM / CREATE_ENTRY / ABORT fields are carried — the main-side proxy
-    supports only those three and aborts noisily on anything else, so
-    ``menu_options`` / ``subentries`` / ``url`` / … are intentionally dropped.
+    FORM / CREATE_ENTRY / ABORT / MENU fields are carried — the main-side proxy
+    supports those four and aborts cleanly on anything else, so the
+    external-step / progress extras (``subentries`` / ``url`` / …) are
+    intentionally dropped.
     """
     out = pb.FlowResult(type=_flow_type_value(result["type"]))
     for key in _SCALAR_STRING_FIELDS:
@@ -173,6 +175,11 @@ def _marshal_result(
         out.last_step = bool(result["last_step"])
     if result.get("preview") is not None:
         out.preview = str(result["preview"])
+    menu_options = result.get("menu_options")
+    if menu_options is not None:
+        out.menu_options.extend(_marshal_menu_options(menu_options))
+    if result.get("sort") is not None:
+        out.sort = bool(result["sort"])
     for key in _STRUCT_FIELDS:
         value = result.get(key)
         if isinstance(value, Mapping):
@@ -211,6 +218,18 @@ def _marshal_result(
                 if isinstance(ctx, Mapping):
                     out.context.update(_to_json_safe(dict(ctx)))
     return out
+
+
+def _marshal_menu_options(menu_options: Any) -> list[Any]:
+    """Render MENU ``menu_options`` (list[str] or dict[str,str]) as a wire list.
+
+    A dict maps step-id → label; it crosses as a list of ``[id, label]`` pairs
+    so order and labels survive the round-trip. A plain list crosses as a list
+    of step-id strings. The proxy on main rebuilds the original shape.
+    """
+    if isinstance(menu_options, Mapping):
+        return [[str(key), str(label)] for key, label in menu_options.items()]
+    return [str(option) for option in menu_options]
 
 
 def _flow_type_value(value: Any) -> str:

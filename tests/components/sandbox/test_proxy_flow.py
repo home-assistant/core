@@ -8,6 +8,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.sandbox import proxy_flow as proxy_flow_module
 from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.channel import Channel
 from homeassistant.components.sandbox.manager import SandboxManager
@@ -91,6 +92,8 @@ def ignore_translations_for_mock_domains() -> list[str]:
         "test_proxy_full",
         "test_proxy_errors",
         "test_proxy_abort",
+        "test_proxy_menu",
+        "test_proxy_progress",
     ]
 
 
@@ -285,6 +288,123 @@ async def test_abort_is_propagated(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_menu_flow_renders_and_navigates(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A sandbox MENU renders on main and a selection forwards as navigation."""
+    mock_integration(hass, MockModule("test_proxy_menu"))
+    menu = pb.FlowResult(
+        type=FlowResultType.MENU.value,
+        flow_id="sandbox-flow-menu",
+        handler="test_proxy_menu",
+        step_id="user",
+    )
+    menu.menu_options.extend(["option_a", "option_b"])
+    create_entry = pb.FlowResult(
+        type=FlowResultType.CREATE_ENTRY.value,
+        flow_id="sandbox-flow-menu",
+        handler="test_proxy_menu",
+        title="Done",
+    )
+    create_entry.data.update({"chosen": "a"})
+    responses = [menu, create_entry]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses) as stub,
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_menu", context={"source": SOURCE_USER}
+        )
+        assert result["type"] is FlowResultType.MENU
+        assert result["menu_options"] == ["option_a", "option_b"]
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"next_step_id": "option_a"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # The menu selection forwarded as a navigation choice, not a fresh step.
+    assert len(stub.step_calls) == 1
+    assert struct_to_dict(stub.step_calls[0].user_input) == {"next_step_id": "option_a"}
+
+
+async def test_menu_dict_options_round_trip(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A dict-form MENU (id -> label) keeps its labels and order on main."""
+    mock_integration(hass, MockModule("test_proxy_menu"))
+    menu = pb.FlowResult(
+        type=FlowResultType.MENU.value,
+        flow_id="sandbox-flow-menu2",
+        handler="test_proxy_menu",
+        step_id="user",
+    )
+    # Crosses as a list of [id, label] pairs.
+    menu.menu_options.extend([["a", "Option A"], ["b", "Option B"]])
+    responses = [menu]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses),
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_menu", context={"source": SOURCE_USER}
+        )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == {"a": "Option A", "b": "Option B"}
+
+
+async def test_unsupported_result_type_aborts_and_reaps_sandbox_flow(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """An unsupported result aborts on main AND reaps the sandbox-side flow.
+
+    The leak fix: the sandbox flow is still in progress, so ``async_remove``
+    must fire ``flow_abort`` — otherwise a flow that set a ``unique_id`` would
+    wedge retries on ``already_in_progress``.
+    """
+    mock_integration(hass, MockModule("test_proxy_progress"))
+    responses = [
+        pb.FlowResult(
+            type=FlowResultType.SHOW_PROGRESS.value,
+            flow_id="sandbox-flow-progress",
+            handler="test_proxy_progress",
+            step_id="user",
+        )
+    ]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses) as stub,
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_progress", context={"source": SOURCE_USER}
+        )
+        # async_remove fires the abort as a background task on the loop (not
+        # hass-tracked), so await the outstanding abort tasks directly.
+        await asyncio.gather(*list(proxy_flow_module._BACKGROUND_ABORTS))
+        assert len(stub.abort_calls) == 1
+        assert stub.abort_calls[0].flow_id == "sandbox-flow-progress"
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "sandbox_unsupported_result_type"
 
 
 async def _install_router(hass: HomeAssistant, manager: FakeSandboxManager) -> None:
