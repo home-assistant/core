@@ -1155,7 +1155,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/motionmount/ @laiho-vogels
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
 /tests/components/mqtt/ @emontnemery @jbouwh @bdraco
-/homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mta/ @OnFreund
 /tests/components/mta/ @OnFreund
 /homeassistant/components/mullvad/ @meichthys
