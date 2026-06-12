@@ -18,6 +18,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -144,6 +145,24 @@ async def test_setup_platform_initializes_client(hass: HomeAssistant) -> None:
     mock_client.async_connect.assert_awaited_once_with()
 
 
+async def test_setup_platform_closes_client_on_home_assistant_stop(
+    hass: HomeAssistant,
+) -> None:
+    """Test setup closes the iTach client on Home Assistant stop."""
+    mock_client = _mock_itach_client()
+
+    with patch(
+        "homeassistant.components.itach.client.ItachClient",
+        return_value=mock_client,
+    ):
+        await _async_setup_itach_remote(hass)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_client.close.assert_awaited_once_with()
+
+
 async def test_setup_platform_connect_failure(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
@@ -207,9 +226,8 @@ async def test_turn_on_sends_on_command() -> None:
         await entity.async_turn_on()
 
     assert entity.is_on is True
-    mock_client.async_send_ir.assert_awaited_once_with(
-        *_expected_send_ir_call(1, 2, VALID_PRONTO, 2).args,
-        **_expected_send_ir_call(1, 2, VALID_PRONTO, 2).kwargs,
+    assert mock_client.async_send_ir.await_args == _expected_send_ir_call(
+        1, 2, VALID_PRONTO, 2
     )
     mock_write_state.assert_called_once_with()
 
@@ -225,9 +243,8 @@ async def test_turn_off_sends_off_command() -> None:
         await entity.async_turn_off()
 
     assert entity.is_on is False
-    mock_client.async_send_ir.assert_awaited_once_with(
-        *_expected_send_ir_call(1, 2, VALID_PRONTO_OFF, 2).args,
-        **_expected_send_ir_call(1, 2, VALID_PRONTO_OFF, 2).kwargs,
+    assert mock_client.async_send_ir.await_args == _expected_send_ir_call(
+        1, 2, VALID_PRONTO_OFF, 2
     )
     mock_write_state.assert_called_once_with()
 
@@ -264,9 +281,8 @@ async def test_send_command_applies_num_repeats_to_ir_count() -> None:
 
     await entity.async_send_command(["VOLUME_UP"], num_repeats=3)
 
-    mock_client.async_send_ir.assert_awaited_once_with(
-        *_expected_send_ir_call(1, 2, VALID_PRONTO, 6).args,
-        **_expected_send_ir_call(1, 2, VALID_PRONTO, 6).kwargs,
+    assert mock_client.async_send_ir.await_args == _expected_send_ir_call(
+        1, 2, VALID_PRONTO, 6
     )
 
 

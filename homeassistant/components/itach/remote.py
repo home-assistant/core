@@ -20,8 +20,9 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     DEVICE_DEFAULT_NAME,
+    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -130,6 +131,12 @@ async def async_setup_platform(
         _LOGGER.error("Invalid iTach command data: %s", err)
         await client.close()
         return
+
+    async def async_close_client(_event: Event[Any]) -> None:
+        """Close the iTach client on Home Assistant stop."""
+        await client.close()
+
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_client)
 
     add_entities(devices, True)
 
