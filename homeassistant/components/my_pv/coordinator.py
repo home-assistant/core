@@ -19,9 +19,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _my_pv_connection[_R](func):
+def _my_pv_connection(func):
     @functools.wraps(func)
-    async def wrapper(self, *args, **kwargs) -> _R | None:
+    async def wrapper(self, *args, **kwargs):
         if not self._device.connected and not await self._device.connect():
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
