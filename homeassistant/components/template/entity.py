@@ -167,16 +167,10 @@ class AbstractTemplateEntity(Entity):
             The configuration key provided by ConfigFlow or the yaml option
         validator:
             Optional function that validates the rendered result.
-        on_update:
-            Callback to handle the template validated template result.
-            Passed the result of the validator.
         render_complex (default=False):
             This signals trigger based template entities to render the template
             as a complex result. State based template entities always render
             complex results.
-        none_on_template_error (default=True)
-            If set to false, template errors will be supplied in the result to
-            on_update.
         """
         if (template := self._config.get(option)) and isinstance(template, Template):
             self._on_demand_templates[option] = OnDemandTemplate(
