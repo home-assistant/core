@@ -47,13 +47,17 @@ SSE-consumer pre-queue it relied on no longer exists.
 """
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import Any
 
-from aioabrp import Telemetry
+from aioabrp import ChargingState, Telemetry
 from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
+from homeassistant.components.abetterrouteplanner.sensor import (
+    build_seed_from_restored_state,
+)
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -66,6 +70,7 @@ from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 VOLTAGE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_voltage"
 VOLTAGE_UNIQUE_ID = f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_voltage"
 SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
+CHARGING_STATE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_charging_state"
 
 # Provider sentinel for "this restore-state should omit the ``provider``
 # attribute entirely" — distinct from passing the literal ``None`` value
@@ -1011,3 +1016,224 @@ async def test_foreign_config_entry_voltage_row_skipped_by_eager_probe(
     refetched = entity_registry.async_get(foreign_row.entity_id)
     assert refetched is not None
     assert refetched.config_entry_id == foreign_entry.entry_id
+
+
+# ---------------------------------------------------------------------------
+# build_seed_from_restored_state — rebuild a per-vehicle Telemetry seed
+# ---------------------------------------------------------------------------
+
+
+def _charging_state_restored_state(
+    *,
+    native_value: str = "charging_dc",
+    wire_time: str = RESTORED_WIRE_TIME_ISO,
+) -> tuple[State, dict[str, Any]]:
+    """Build a (State, extra_data) tuple for the charging_state enum sensor.
+
+    Mirrors :func:`_voltage_restored_state` for the categorical ENUM sensor:
+    the restored ``native_value`` is the HA option string (not the library
+    ``ChargingState`` member), and ``wire_time`` is an ISO string the restore
+    path parses back via ``datetime.fromisoformat``. No ``provider`` slot is
+    seeded so the seed helper exercises the provider-absent branch for the enum.
+    """
+    attributes: dict[str, Any] = {"wire_time": wire_time}
+    state = State(
+        CHARGING_STATE_ENTITY_ID,
+        native_value,
+        attributes=attributes,
+    )
+    extra_data: dict[str, Any] = {"native_value": native_value}
+    return state, extra_data
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_build_seed_from_restored_state_rebuilds_metric_values(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The seed helper rebuilds a per-vehicle Telemetry from restored state.
+
+    Drives the helper that a later task uses to warm the stream gate BEFORE
+    entities/stream exist: it reads ``restore_state.last_states`` (populated at
+    HA bootstrap), maps each ``(vehicle_id, metric)`` -> sensor ``unique_id`` ->
+    entity_id via the registry, and rebuilds a ``MetricValue`` from the restored
+    typed ``native_value`` + the ``wire_time`` / ``provider`` attributes.
+
+    Seeds both a numeric metric (voltage, with a ``provider`` attribute) and the
+    enum metric (charging_state, no provider). Asserts:
+
+    - numeric ``.value`` is a ``float``, ``.time`` the parsed ``datetime``,
+      ``.provider`` the restored string;
+    - enum ``.value`` is the reverse-mapped ``ChargingState`` member, ``.time``
+      parsed, ``.provider`` ``None``.
+    """
+    # Restore cache must be wired while HA is not running so RestoreStateData
+    # surfaces it; the registry rows give the helper its unique_id -> entity_id
+    # mapping. No entry setup / stream is required — the helper is a pure
+    # in-memory lookup over restore_state + the entity registry.
+    hass.set_state(CoreState.not_running)
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            _voltage_restored_state(
+                provider=RESTORED_PROVIDER,
+                wire_time=RESTORED_WIRE_TIME_ISO,
+            ),
+            _charging_state_restored_state(),
+        ],
+    )
+    config_entry_with_vehicles.add_to_hass(hass)
+    for key in ("voltage", "charging_state"):
+        entity_registry.async_get_or_create(
+            domain="sensor",
+            platform=DOMAIN,
+            unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_{key}",
+            config_entry=config_entry_with_vehicles,
+            suggested_object_id=f"rivian_r2_2027_standard_long_range_{key}",
+        )
+
+    seed = build_seed_from_restored_state(
+        hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
+    )
+
+    assert MOCK_VEHICLE_ID in seed
+    telemetry = seed[MOCK_VEHICLE_ID]
+
+    voltage = telemetry.voltage
+    assert voltage is not None
+    assert isinstance(voltage.value, float)
+    assert voltage.value == RESTORED_VOLTAGE
+    assert voltage.time == RESTORED_WIRE_TIME_DT
+    assert voltage.provider == RESTORED_PROVIDER
+
+    charging = telemetry.charging_state
+    assert charging is not None
+    assert charging.value is ChargingState.CHARGING_DC
+    assert charging.time == RESTORED_WIRE_TIME_DT
+    assert charging.provider is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_build_seed_skips_metrics_failing_restore_guards(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Restore-guard failures drop the metric (and the vehicle when it's alone).
+
+    Seeds two vehicle slots whose every rebuild guard fails, so the rebuilt seed
+    must carry neither field — and because they are the ONLY seeded metrics, the
+    vehicle is absent from the dict entirely (the "no rebuildable slot → omitted"
+    contract):
+
+    - voltage with a malformed ``wire_time`` (``"not-a-date"``): the
+      ``datetime.fromisoformat`` guard fails, so the numeric slot is dropped.
+    - charging_state with an out-of-``options`` native_value
+      (``"bogus_state"``): the ``OPTION_TO_CHARGING_STATE`` reverse-map miss
+      drops the enum slot.
+
+    Both have an otherwise-valid restore shape, isolating the single failing
+    guard per metric.
+    """
+    hass.set_state(CoreState.not_running)
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            _voltage_restored_state(wire_time="not-a-date"),
+            _charging_state_restored_state(native_value="bogus_state"),
+        ],
+    )
+    config_entry_with_vehicles.add_to_hass(hass)
+    for key in ("voltage", "charging_state"):
+        entity_registry.async_get_or_create(
+            domain="sensor",
+            platform=DOMAIN,
+            unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_{key}",
+            config_entry=config_entry_with_vehicles,
+            suggested_object_id=f"rivian_r2_2027_standard_long_range_{key}",
+        )
+
+    seed = build_seed_from_restored_state(
+        hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
+    )
+
+    # No rebuildable slot for the vehicle → omitted from the seed entirely.
+    assert seed == {}
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_build_seed_rejects_bool_numeric_native_value(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A bool numeric ``native_value`` is rejected (``bool`` is an ``int`` subclass).
+
+    Guards against a regression that dropped the explicit ``isinstance(_, bool)``
+    exclusion from the numeric arm: ``True`` would otherwise pass the
+    ``isinstance(_, (int, float, Decimal))`` check and coerce to ``1.0``. The
+    only seeded metric fails, so the vehicle is absent from the seed.
+    """
+    hass.set_state(CoreState.not_running)
+    mock_restore_cache_with_extra_data(
+        hass,
+        [_voltage_restored_state(native_value=True, wire_time=RESTORED_WIRE_TIME_ISO)],
+    )
+    config_entry_with_vehicles.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_voltage",
+        config_entry=config_entry_with_vehicles,
+        suggested_object_id="rivian_r2_2027_standard_long_range_voltage",
+    )
+
+    seed = build_seed_from_restored_state(
+        hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
+    )
+
+    assert seed == {}
+
+
+@pytest.mark.usefixtures("mock_abrp_client")
+async def test_build_seed_accepts_decimal_numeric_native_value(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A ``Decimal`` numeric ``native_value`` is accepted and coerced to ``float``.
+
+    The real recorder round-trip can surface a ``Decimal`` (via
+    ``SensorExtraStoredData``); the in-memory test cache surfaces a plain float.
+    This pins the ``Decimal`` accept arm + ``float()`` coercion that the
+    happy-path test (plain float) does not reach: the rebuilt ``MetricValue``
+    carries a real ``float`` equal to the decimal magnitude.
+    """
+    hass.set_state(CoreState.not_running)
+    mock_restore_cache_with_extra_data(
+        hass,
+        [
+            _voltage_restored_state(
+                native_value=Decimal("410.0"), wire_time=RESTORED_WIRE_TIME_ISO
+            )
+        ],
+    )
+    config_entry_with_vehicles.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_voltage",
+        config_entry=config_entry_with_vehicles,
+        suggested_object_id="rivian_r2_2027_standard_long_range_voltage",
+    )
+
+    seed = build_seed_from_restored_state(
+        hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
+    )
+
+    assert MOCK_VEHICLE_ID in seed
+    voltage = seed[MOCK_VEHICLE_ID].voltage
+    assert voltage is not None
+    assert isinstance(voltage.value, float)
+    assert voltage.value == 410.0

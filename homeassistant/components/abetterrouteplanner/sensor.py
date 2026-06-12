@@ -16,10 +16,11 @@ dispatcher signal fired along the push path
 ``aioabrp.TelemetryStream → AbrpTelemetryCoordinator.on_update``.
 """
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from contextlib import suppress
 from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 import logging
 from typing import Any
 
@@ -42,7 +43,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, restore_state
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -292,6 +293,106 @@ SENSORS: tuple[
 SENSORS_BY_METRIC: dict[
     Metric, AbrpNumericSensorEntityDescription | AbrpEnumSensorEntityDescription
 ] = {description.metric: description for description in SENSORS}
+
+
+# Inverse of the live enum mapping: HA option string -> library ChargingState.
+# Used by the restored-state seed path to reverse-map a recorder-cached option
+# string back to the library member a fresh ``Telemetry`` / ``MetricValue``
+# needs.
+OPTION_TO_CHARGING_STATE: dict[str, ChargingState] = {
+    option: state for state, option in CHARGING_STATE_OPTIONS.items()
+}
+
+
+def _metric_value_from_restored(
+    description: AbrpNumericSensorEntityDescription | AbrpEnumSensorEntityDescription,
+    native_value: object,
+    attributes: Mapping[str, Any],
+) -> MetricValue | None:
+    """Rebuild a ``MetricValue`` from a restored (value, wire_time, provider).
+
+    Returns ``None`` when the restored slot can't form a usable ``MetricValue``:
+    a missing / malformed ``wire_time`` (the seed's monotonicity basis), an
+    out-of-``options`` enum string, or a non-numeric numeric value. Mirrors the
+    sensor's own restore guards so the seed never carries a shape the live path
+    would reject.
+    """
+    wire_raw = attributes.get("wire_time")
+    if not isinstance(wire_raw, str) or not wire_raw:
+        return None
+    try:
+        wire = datetime.fromisoformat(wire_raw)
+    except ValueError:
+        return None
+    provider_raw = attributes.get("provider")
+    provider = provider_raw if _is_clean_provider_str(provider_raw) else None
+
+    if isinstance(description, AbrpEnumSensorEntityDescription):
+        if not isinstance(native_value, str):
+            return None
+        state = OPTION_TO_CHARGING_STATE.get(native_value)
+        if state is None:
+            return None
+        return MetricValue(value=state, time=wire, provider=provider)
+
+    # Numeric: accept int/float/Decimal, reject bool (a subclass of int). The
+    # recorder round-trip can surface a ``Decimal`` via
+    # ``SensorExtraStoredData``; the in-memory test-cache path surfaces a plain
+    # ``float`` — both are coerced to ``float`` here.
+    if isinstance(native_value, bool) or not isinstance(
+        native_value, (int, float, Decimal)
+    ):
+        return None
+    return MetricValue(value=float(native_value), time=wire, provider=provider)
+
+
+def build_seed_from_restored_state(
+    hass: HomeAssistant,
+    entry: AbetterrouteplannerConfigEntry,
+    vehicle_ids: list[int],
+) -> dict[int, Telemetry]:
+    """Rebuild a per-vehicle ``Telemetry`` seed from restored sensor state.
+
+    Reads ``restore_state.last_states`` (populated at HA bootstrap, available
+    BEFORE entities are created) keyed by ``entity_id``, mapping each
+    ``(vehicle_id, metric)`` -> sensor ``unique_id`` -> entity_id via the entity
+    registry. Each restored slot rebuilds a ``MetricValue`` from the typed
+    ``native_value`` + the ``wire_time`` / ``provider`` attributes; the wire
+    ``time`` (not the receipt-time ``last_reported_at``) is the seed's
+    monotonicity basis.
+
+    A synchronous function: it does only in-memory lookups (no I/O / await), so
+    a later setup-time caller can warm the stream gate without awaiting. Metrics
+    with no sensor surface (e.g. location) have no restored source and are
+    simply absent from the seed; a vehicle with no rebuildable slot is omitted
+    entirely.
+    """
+    restored = restore_state.async_get(hass).last_states
+    registry = er.async_get(hass)
+    seed: dict[int, Telemetry] = {}
+    for vehicle_id in vehicle_ids:
+        scope = f"{entry.unique_id}_{vehicle_id}"
+        fields: dict[str, MetricValue] = {}
+        for description in SENSORS:
+            unique_id = f"{scope}_{description.key}"
+            entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
+            if entity_id is None or entity_id not in restored:
+                continue
+            stored = restored[entity_id]
+            extra = stored.extra_data
+            native_value = (
+                extra.as_dict().get("native_value") if extra is not None else None
+            )
+            metric_value = _metric_value_from_restored(
+                description, native_value, stored.state.attributes
+            )
+            if metric_value is not None:
+                # ``Telemetry`` field name == ``metric.value`` (documented
+                # bridge), so the kwarg key is the library metric value.
+                fields[description.metric.value] = metric_value
+        if fields:
+            seed[vehicle_id] = Telemetry(**fields)
+    return seed
 
 
 def _extract_value(
