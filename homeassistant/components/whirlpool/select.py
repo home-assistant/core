@@ -128,7 +128,9 @@ class WhirlpoolOvenCookModeSelect(WhirlpoolOvenEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the cook mode, keeping the current/last target temperature."""
-        target = self._appliance.get_target_temp(self.cavity) or DEFAULT_OVEN_TEMP
+        target = self._appliance.get_target_temp(self.cavity)
+        if target is None:
+            target = DEFAULT_OVEN_TEMP
         WhirlpoolOvenCookModeSelect._check_service_request(
             await self._appliance.set_cook(
                 target_temp=target,
