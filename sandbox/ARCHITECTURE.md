@@ -6,8 +6,8 @@
 > services, and events. It is a state-of-the-system reference, not a history.
 > A condensed changelog of the work that produced this state is at the bottom.
 >
-> Deeper, source-linked detail lives in [`OVERVIEW.md`](OVERVIEW.md); the
-> design rationale for individual decisions is in [`docs/`](docs/).
+> The design rationale for individual decisions is in [`docs/`](docs/); a quick
+> file map is in [§15](#15-where-to-look-in-the-code).
 
 ## 1. Goal
 
@@ -58,10 +58,12 @@ The subprocess runs a private `HomeAssistant` instance hosting:
 
 ## 3. Routing
 
-`classify(integration)` is a pure function run from the router at flow creation
-and at entry setup (for entries with no `ConfigEntry.sandbox` value yet). It
-uses `Integration.platforms_exists()` so it never imports the integration to
-make the call. First match wins:
+`classify(integration)` is a pure function run from the router **at flow
+creation** (`async_create_flow`). At entry setup the router reads the routing
+tag already persisted on `ConfigEntry.sandbox` rather than re-classifying — an
+entry with no `sandbox` value simply runs on main. `classify` uses
+`Integration.platforms_exists()` so it never imports the integration to make the
+call. First match wins:
 
 1. `integration_type == "system"` → **main** (part of the HA runtime; sandboxing is meaningless).
 2. `domain ∈ ALWAYS_MAIN` → **main** (hand-picked deny-list, each with an inline "why").
@@ -129,7 +131,10 @@ python -m hass_client.sandbox --name <group> --url stdio://
 
 **Crash recovery** is bounded: `SandboxProcess` restarts on unexpected exit up
 to 3 times in a 60s sliding window with backoff; exceeding the budget marks the
-sandbox `failed` and the router surfaces `SETUP_RETRY` on affected entries.
+sandbox `failed`, `ensure_started` raises `SandboxFailedError`, and the router
+marks affected entries `SETUP_ERROR`. (`SETUP_RETRY` is reserved for the
+narrower case of a `ChannelClosedError` *during* an `entry_setup` round-trip,
+where a retry can succeed.)
 
 **Graceful shutdown** on `EVENT_HOMEASSISTANT_STOP`: the manager fans out
 `sandbox/shutdown`; each sandbox unloads its entries, snapshots
@@ -374,6 +379,32 @@ waits on the websocket transport). See
 - **Query-shaped subscriptions** — the request/response RPCs shipped (§8: service-path + `entity_query`), so `calendar`/`weather`/`media_player`/`update`/`vacuum` queries answer with real data. What remains is the **subscription/push** primitive for the streaming `*/subscribe` commands (`weather/subscribe_forecast`, `calendar/event/subscribe`) and the `todo` item-list push that would un-block the `todo` platform, plus the `media_player.browse_media` media-source caveat (a sandboxed player's browse omits the main-side `media_source` tree). Full catalogue in [`docs/query-shaped-rpcs.md`](docs/query-shaped-rpcs.md).
 - **pip/egress validation** for custom-integration dependencies in the container (§7).
 
+## 15. Where to look in the code
+
+The landing notes under [`status/`](status/) (`STATUS-phase-N.md` +
+`STATUS-plan-*.md`) are the authoritative record of what each phase/plan
+actually built, deferred, and flagged forward. For a quick map:
+
+| Concern | HA Core side (`homeassistant/components/sandbox/`) | Sandbox side (`hass_client/hass_client/`) |
+|---|---|---|
+| Classifier | `classifier.py` | — |
+| Lifecycle | `manager.py`, `__init__.py` | `sandbox/__init__.py`, `sandbox/__main__.py` |
+| Channel / wire | `channel.py`, `codec_protobuf.py`, `messages.py` | `channel.py`, `codec_protobuf.py`, `messages.py` |
+| Config flow | `router.py`, `proxy_flow.py`, `schema_bridge.py` | `flow_runner.py` |
+| Entity bridge | `bridge.py`, `entity/` | `entry_runner.py`, `entity_bridge.py` |
+| Service / event mirror | `bridge.py` | `service_mirror.py`, `event_mirror.py`, `approved_domains.py` |
+| Context restoration | `bridge.py` (`_remember_context` / `_resolve_context`) | — |
+| Store routing | `bridge.py` (`_SandboxStoreServer`), `helpers/sandbox_context.py`, `helpers/storage.py` | `sandbox_bridge.py` |
+| Integration source | `sources.py` | `sources.py` |
+| Translations | `translation.py`, `catalog.py`, `helpers/translation.py`, `loader.py` | `sandbox/__init__.py` (`_handle_get_translations`) |
+| Shutdown | `__init__.py` (`_on_stop`), `manager.py` | `sandbox/__init__.py` (`_run_graceful_shutdown`) |
+| Test infra | — | `testing/`, `run_compat.py` |
+
+The wire-protocol constants live in two files that mirror each other verbatim:
+`homeassistant/components/sandbox/protocol.py` and
+`hass_client/hass_client/protocol.py` (along with the mirrored `channel.py` /
+`codec_protobuf.py` / `messages.py`).
+
 ---
 
 ## Changelog
@@ -392,8 +423,5 @@ statelessness story. The closing batch, in landing order:
 | **Protobuf wire + pluggable transports** | Rewrote the wire from JSON-lines to a three-layer Channel/Codec/Transport split: protobuf `Frame`s with typed per-message handlers (codec owns the registry), length-prefixed framing, a `Ready` frame replacing the text marker, and stdio + unix-socket transports. Context crosses as `context_id` only (no `parent_id`/`user_id` on the wire). WebSocket explicitly out of scope. (`plan-transport`, T1→T2→T3→T5) |
 | **Stateless sandboxes** | `entry_setup` carries a typed `IntegrationSource`; custom (HACS) code is fetched at startup as a sha-pinned tarball via a HACS-agnostic resolver hook, with a process-lifetime cache. (`plan-ephemeral-sources`) |
 | **Docker test image** | Multi-stage `python:3.14-slim` runtime image (non-root, no volumes, on-demand pip) + a unix-socket compose harness template. (`plan-docker`) |
-| **Rename `sandbox_v2` → `sandbox`** | Dropped the now-meaningless `_v2` suffix across directories, the integration domain, wire strings, storage namespace, protobuf, and the CLI module, now that v1 is gone; removed the hassfest ignore that masked v1's errors. (`plan-rename-sandbox`) |
+| **Drop the `_v2` suffix** | Dropped the `_v2` suffix across directories, the integration domain, wire strings, storage namespace, protobuf, and the CLI module; removed the stale hassfest ignore. (`plan-rename-sandbox`) |
 | **Drop token + system user, restore context** | Removed the unused `--token` / `SANDBOX_TOKEN` / `SandboxRuntime.token` end-to-end and deleted `auth.py` (per-group system user gone). Main now remembers every `Context` it hands down (15-min-TTL bridge cache, seeded at the service forwarder + proxy-entity call) and restores it verbatim on an echoed id; unknown/expired ids get a fresh main-owned `Context(user_id=None)` with main's own trusted id (never the untrusted sandbox ULID). (`plan-auth-context`, A/B/C) |
-
-v1 (the original `sandbox` implementation) was removed 2026-05-28 — recover it
-from git history if ever needed.

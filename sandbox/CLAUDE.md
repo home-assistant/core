@@ -1,25 +1,19 @@
 # Home Assistant Sandbox
 
-This directory is the home for the sandbox rewrite (it dropped its earlier
-versioned suffix once v1 was gone). The sandbox runs Home Assistant integrations in
-isolated subprocesses while main keeps a single unified view of devices,
-entities, services, and events.
-
-v1 has been **removed** (2026-05-28) — it previously occupied these same
-paths (`../sandbox/` and `../homeassistant/components/sandbox/`) that the
-rewrite now lives at; recover it from git history if ever needed. This
-happened before the rewrite shipped a stable release (the documented gate's
-second condition), as a deliberate call relying on git history for rollback.
+This directory is the home for the sandbox. The sandbox runs Home Assistant
+integrations in isolated subprocesses while main keeps a single unified view of
+devices, entities, services, and events.
 
 ## Read these first
 
-- [`OVERVIEW.md`](OVERVIEW.md) — full architecture: routing,
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — full architecture: routing,
   lifecycle, flow forwarding, entity bridge, service/event mirror,
-  scoped auth, store routing, shutdown, test infra.
+  auth, store routing, translations, shutdown, test infra, and the
+  core-HA touch surface.
 - [`plan.md`](plan.md) — phase-by-phase task list. Phases 0–20 are
   all ✅ COMPLETE; the follow-up phases (12 concurrent dispatcher,
   13 remaining domain proxies, 14 schema/unique_id/unload-hook/perf,
-  15 v1-baseline sweep, 16 cross-integration sweep + backlog,
+  15 baseline compat sweep, 16 cross-integration sweep + backlog,
   17 `ConfigEntry.sandbox` field, 19 device-registry bridging,
   20 drop unwired `share_*` + design doc) closed every Phase 5–10
   deferral; the state-sharing consumer is now an explicit design
@@ -87,7 +81,7 @@ The resolver MUST pin `ref` to an exact commit sha — core performs **no
 network I/O**, so it trusts the resolver's pin (`tag` is logs-only). The fetch
 + process-lifetime `(url, ref)` cache live in `hass_client/sources.py`; the
 download primitive is injectable so tests never hit the network. See
-OVERVIEW.md "Integration source — fetch before setup (stateless)".
+ARCHITECTURE.md §7 "Statelessness — integration source fetched at startup".
 
 Runtime gap (follow-up, pairs with `plan-docker.md`): the bare-HA sandbox must
 run `async_process_requirements` (pip) for custom integrations that ship
@@ -96,7 +90,7 @@ shipped + tested; the pip/egress runtime is not validated here.
 
 ## Core HA files modified (high-review surface)
 
-the sandbox touches three core HA surfaces. Each is intentional, small, and was
+the sandbox touches five core HA surfaces. Each is intentional, small, and was
 introduced by a specific phase — see the matching STATUS file for
 the rationale.
 
@@ -122,12 +116,23 @@ the rationale.
   sandbox `Store` IO routes to main at call time. This **replaced** the
   Phase 8 module-level `Store` rebinding — no more monkey-patch.
   **plan-sandbox-context (Phase A1 + A2).**
+- `homeassistant/helpers/translation.py` —
+  `async_register_sandbox_translation_provider` + the `_TranslationCache`
+  overlay (sandboxed strings flow through the same English-fallback + cache
+  machinery as disk strings) and `async_invalidate_translations` (the first
+  translation-cache eviction API, dropping a domain's strings on entry
+  reload). **plan-translation-forwarding (Phase B).**
+- `homeassistant/loader.py` —
+  `async_register_sandbox_catalog_provider` + the catalog merge in
+  `async_get_integration_descriptions`, so a sandbox-only custom integration
+  is discoverable + named in the add-integration picker without spawning its
+  sandbox. **plan-translation-forwarding (Phase A).**
 
-Iron Law: do **not** monkey-patch private internals. v1's direct
-write to `EntityComponent._platforms` is the cautionary tale —
-the sandbox took the slightly bigger PR to add the public hook instead. The
-Phase 8 `Store` rebinding was the same smell; plan-sandbox-context
-replaced it with the declared `current_sandbox` core HA hook.
+Iron Law: do **not** monkey-patch private internals. A direct write to
+`EntityComponent._platforms` would be the cautionary tale — the sandbox took the
+slightly bigger PR to add the public hook instead. The Phase 8 `Store` rebinding
+was the same smell; plan-sandbox-context replaced it with the declared
+`current_sandbox` core HA hook.
 
 ## Open follow-ups (not yet shipped)
 
@@ -143,11 +148,6 @@ took the codebase from Phase 11 to Phase 17. What's still open:
   `share/subscribe_*` protocol, the main-side filter, and the
   remaining open questions. The actual consumer + main-side
   handlers are owed in a future phase against that design.
-- **v1 removal. DONE (2026-05-28).** The numeric gate (Phase 11) was cleared
-  by Phase 17 (99.67 % full sweep, 99.97 % v1 baseline). v1 (`../sandbox/` +
-  `../homeassistant/components/sandbox/` + `tests/components/sandbox/`) was
-  removed ahead of the "the sandbox shipped a stable release" condition, relying on git
-  history for rollback.
 - **Diagnostic snapshot drift / clock-pinning.** Phase 17's
   `BACKLOG.md` documents two test-side residuals: ~30 diagnostic
   snapshots showing `+ 'sandbox': 'built-in'` (fix is `pytest
