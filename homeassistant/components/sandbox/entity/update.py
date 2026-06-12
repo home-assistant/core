@@ -1,6 +1,6 @@
 """Sandbox proxy for ``update`` entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.update import (
     ATTR_INSTALLED_VERSION,
@@ -10,9 +10,6 @@ from homeassistant.components.update import (
 )
 
 from . import SandboxProxyEntity
-
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
 
 # These attribute names are emitted by ``UpdateEntity.state_attributes``
 # (see ``components/update/__init__.py``). They're defined in
@@ -31,16 +28,7 @@ _ATTR_UPDATE_PERCENTAGE = "update_percentage"
 class SandboxUpdateEntity(SandboxProxyEntity, UpdateEntity):
     """Proxy for an ``update`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``UpdateEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = UpdateEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = UpdateEntityFeature
 
     @property
     def installed_version(self) -> str | None:

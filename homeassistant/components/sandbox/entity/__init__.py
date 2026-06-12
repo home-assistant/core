@@ -46,6 +46,12 @@ class SandboxProxyEntity(Entity):
 
     _attr_should_poll = False
 
+    # Domain subclasses set this to their ``<Domain>EntityFeature`` IntFlag so
+    # the base coerces ``supported_features`` into it. ``light``'s
+    # capability_attributes does ``X in supported_features``, which only works
+    # on the flag, not a plain int. ``None`` → leave it a plain int.
+    _features_flag: type[IntFlag] | None = None
+
     def __init__(
         self,
         bridge: SandboxBridge,
@@ -70,15 +76,27 @@ class SandboxProxyEntity(Entity):
                 self._attr_entity_category = EntityCategory(description.entity_category)
         if description.device_class:
             self._attr_device_class = description.device_class
-        # Domains like ``light`` index supported_features with bitwise
-        # ``in``; ``None`` blows up the check, so default to 0.
-        self._attr_supported_features = int(description.supported_features or 0)
+        self._attr_supported_features = self._coerce_supported_features(
+            description.supported_features
+        )
         # Surface the sandbox-side DeviceInfo so EntityPlatform's normal
         # async_add_entities path runs dr.async_get_or_create and links
         # the proxy to the matching DeviceEntry (idempotent with the
         # pre-creation the bridge does).
         if description.device_info is not None:
             self._attr_device_info = cast(DeviceInfo, description.device_info)
+
+    def _coerce_supported_features(self, value: int | None) -> IntFlag | int:
+        """Coerce ``supported_features`` into the domain's IntFlag.
+
+        Domains like ``light`` index ``supported_features`` with bitwise
+        ``in``, which only works on the IntFlag; ``None`` blows up the check,
+        so default to 0. Domains without a ``_features_flag`` keep a plain int.
+        """
+        features = int(value or 0)
+        if self._features_flag is not None:
+            return self._features_flag(features)
+        return features
 
     @property
     def available(self) -> bool:
@@ -119,15 +137,9 @@ class SandboxProxyEntity(Entity):
             self._attr_entity_category = None
         if description.device_class:
             self._attr_device_class = description.device_class
-        # Domain subclasses store supported_features as their own IntFlag
-        # (light's capability_attributes does ``X in supported_features``,
-        # which only works on the flag). Preserve that type when refreshing.
-        features = int(description.supported_features or 0)
-        current = self._attr_supported_features
-        if isinstance(current, IntFlag):
-            self._attr_supported_features = type(current)(features)
-        else:
-            self._attr_supported_features = features
+        self._attr_supported_features = self._coerce_supported_features(
+            description.supported_features
+        )
         if description.device_info is not None:
             self._attr_device_info = cast(DeviceInfo, description.device_info)
         if self.hass is not None:

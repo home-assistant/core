@@ -1,6 +1,6 @@
 """Sandbox proxy for ``media_player`` entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.media_player import (
     ATTR_APP_ID,
@@ -32,9 +32,6 @@ from homeassistant.components.media_player import (
 from homeassistant.exceptions import HomeAssistantError
 
 from . import SandboxProxyEntity
-
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
 
 
 def _browse_media_from_dict(data: dict[str, Any]) -> BrowseMedia:
@@ -80,16 +77,7 @@ def _search_media_from_dict(data: dict[str, Any]) -> SearchMedia:
 class SandboxMediaPlayerEntity(SandboxProxyEntity, MediaPlayerEntity):
     """Proxy for a ``media_player`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``MediaPlayerEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = MediaPlayerEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = MediaPlayerEntityFeature
 
     @property
     def state(self) -> MediaPlayerState | None:

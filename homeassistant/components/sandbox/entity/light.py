@@ -1,6 +1,6 @@
 """Sandbox proxy for ``light`` entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -24,26 +24,12 @@ from homeassistant.const import STATE_ON
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxLightEntity(SandboxProxyEntity, LightEntity):
     """Proxy for a ``light`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Initialise the proxy with ``supported_features`` as a LightEntityFeature."""
-        super().__init__(bridge, description)
-        # ``light``'s capability_attributes does ``X in supported_features``,
-        # which only works on the IntFlag. The base class stores the int.
-        self._attr_supported_features = LightEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = LightEntityFeature
 
     @property
     def is_on(self) -> bool | None:

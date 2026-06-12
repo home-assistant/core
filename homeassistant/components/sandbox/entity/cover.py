@@ -1,6 +1,6 @@
 """Sandbox proxy for ``cover`` entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -13,24 +13,12 @@ from homeassistant.components.cover import (
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxCoverEntity(SandboxProxyEntity, CoverEntity):
     """Proxy for a ``cover`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``CoverEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = CoverEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = CoverEntityFeature
 
     @property
     def is_opening(self) -> bool | None:

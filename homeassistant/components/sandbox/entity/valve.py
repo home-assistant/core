@@ -1,7 +1,5 @@
 """Sandbox proxy for ``valve`` entities."""
 
-from typing import TYPE_CHECKING
-
 from homeassistant.components.valve import (
     ATTR_CURRENT_POSITION,
     ATTR_IS_CLOSED,
@@ -12,24 +10,12 @@ from homeassistant.components.valve import (
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxValveEntity(SandboxProxyEntity, ValveEntity):
     """Proxy for a ``valve`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``ValveEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = ValveEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = ValveEntityFeature
 
     @property
     def reports_position(self) -> bool:

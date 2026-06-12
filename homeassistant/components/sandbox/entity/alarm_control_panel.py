@@ -1,7 +1,5 @@
 """Sandbox proxy for ``alarm_control_panel`` entities."""
 
-from typing import TYPE_CHECKING
-
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
@@ -11,24 +9,12 @@ from homeassistant.components.alarm_control_panel import (
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxAlarmControlPanelEntity(SandboxProxyEntity, AlarmControlPanelEntity):
     """Proxy for an ``alarm_control_panel`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``AlarmControlPanelEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = AlarmControlPanelEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = AlarmControlPanelEntityFeature
 
     @property
     def alarm_state(self) -> AlarmControlPanelState | None:

@@ -1,7 +1,7 @@
 """Sandbox proxy for ``remote`` entities."""
 
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY_LIST,
@@ -13,24 +13,12 @@ from homeassistant.const import STATE_ON
 
 from . import SandboxProxyEntity
 
-if TYPE_CHECKING:
-    from ..bridge import SandboxBridge, SandboxEntityDescription
-
 
 # pylint: disable-next=home-assistant-enforce-class-module
 class SandboxRemoteEntity(SandboxProxyEntity, RemoteEntity):
     """Proxy for a ``remote`` entity in a sandbox."""
 
-    def __init__(
-        self,
-        bridge: SandboxBridge,
-        description: SandboxEntityDescription,
-    ) -> None:
-        """Wrap ``supported_features`` as ``RemoteEntityFeature``."""
-        super().__init__(bridge, description)
-        self._attr_supported_features = RemoteEntityFeature(
-            description.supported_features or 0
-        )
+    _features_flag = RemoteEntityFeature
 
     @property
     def is_on(self) -> bool | None:
