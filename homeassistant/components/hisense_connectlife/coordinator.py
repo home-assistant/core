@@ -192,8 +192,8 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
             # update and notify
             self._notify_update()
 
-        except TimeoutError, ClientError:
-            _LOGGER.exception("Error handling websocket message")
+        except (TimeoutError, ClientError) as error:
+            _LOGGER.error("Error handling websocket message: %s", error)
 
     def _should_process_message(self, message: dict[str, Any]) -> bool:
         """Deal with the message if needed."""
@@ -267,8 +267,10 @@ class HisenseACPluginDataUpdateCoordinator(DataUpdateCoordinator):
         if online_status is not None:
             try:
                 online = int(online_status) == 1
-            except TypeError, ValueError:
-                _LOGGER.warning("Invalid onlinestats value: %s", online_status)
+            except (TypeError, ValueError) as e:
+                _LOGGER.warning(
+                    "Invalid onlinestats value: %s, error: %s", online_status, e
+                )
                 return
             device_data["offlineState"] = 0 if online else 1
             _LOGGER.debug(

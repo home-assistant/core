@@ -6,15 +6,6 @@ import pytest
 
 from homeassistant.components.hisense_connectlife.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
-
-
-@pytest.fixture
-def mock_hass():
-    """Mock Home Assistant instance."""
-    hass = MagicMock(spec=HomeAssistant)
-    hass.data = {}
-    return hass
 
 
 @pytest.fixture

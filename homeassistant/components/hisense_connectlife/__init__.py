@@ -57,7 +57,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
-        await session.async_ensure_token_valid()
     except ClientResponseError as err:
         if 400 <= err.status < 500:
             raise ConfigEntryAuthFailed(
