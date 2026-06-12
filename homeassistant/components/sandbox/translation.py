@@ -83,8 +83,13 @@ class SandboxTranslationProvider:
                 continue
             for language in languages:
                 strings = await self._fetch(channel, group, language, domains)
-                for domain, domain_strings in strings.items():
-                    result.setdefault(language, {})[domain] = domain_strings
+                # Trust only the domains we actually asked this group to
+                # resolve. A compromised sandbox can return strings for any
+                # domain (e.g. a co-requested ``hue`` / ``http`` it does not
+                # own) to poison a victim integration's frontend strings; keep
+                # only the requested ∩ returned intersection.
+                for domain in domains & strings.keys():
+                    result.setdefault(language, {})[domain] = strings[domain]
         return result
 
     async def _resolve_sandbox_group(self, domain: str) -> str | None:
