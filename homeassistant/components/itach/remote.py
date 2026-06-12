@@ -4,7 +4,7 @@ from collections.abc import Iterable
 import logging
 from typing import Any
 
-import pyitachip2ir
+from pyitach import ItachClient, ItachError
 import voluptuous as vol
 
 from homeassistant.components import remote
@@ -22,9 +22,13 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+
+from .client import async_create_client, async_send_command as async_send_itach_command
+from .command import CommandParseError, ParsedItachCommand, parse_pronto_command
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,87 +75,115 @@ PLATFORM_SCHEMA = REMOTE_PLATFORM_SCHEMA.extend(
 )
 
 
-def _format_command_value(value: str) -> str:
-    """Format a command name or command data value."""
+def _format_command_name(value: str) -> str:
+    """Format a legacy command name."""
     value = value.strip()
     return value or EMPTY_COMMAND_PLACEHOLDER
 
 
-def _format_command_table(commands: Iterable[dict[str, str]]) -> str:
-    """Format YAML commands for pyitachip2ir."""
-    return "".join(
-        f"{_format_command_value(command[CONF_NAME])}\n"
-        f"{_format_command_value(command[CONF_DATA])}\n"
+def _commands_from_config(
+    commands: Iterable[dict[str, str]],
+) -> dict[str, ParsedItachCommand]:
+    """Parse legacy YAML commands keyed by command name."""
+    return {
+        _format_command_name(command[CONF_NAME]): parse_pronto_command(
+            command[CONF_DATA]
+        )
         for command in commands
-    )
+    }
 
 
 def _setup_remote_entity(
-    itachip2ir: Any, device_config: dict[str, Any]
+    client: ItachClient, device_config: dict[str, Any]
 ) -> ITachIP2IRRemote:
     """Create an iTach remote entity from YAML device config."""
     name = device_config.get(CONF_NAME)
     modaddr = int(device_config.get(CONF_MODADDR, DEFAULT_MODADDR))
     connaddr = int(device_config.get(CONF_CONNADDR, DEFAULT_CONNADDR))
     ir_count = int(device_config.get(CONF_IR_COUNT, DEFAULT_IR_COUNT))
-    command_table = _format_command_table(device_config[CONF_COMMANDS])
+    commands = _commands_from_config(device_config[CONF_COMMANDS])
 
-    itachip2ir.addDevice(name, modaddr, connaddr, command_table)
-    return ITachIP2IRRemote(itachip2ir, name, ir_count)
+    return ITachIP2IRRemote(client, name, modaddr, connaddr, ir_count, commands)
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the ITach connection and devices."""
-    itachip2ir = pyitachip2ir.ITachIP2IR(
-        config.get(CONF_MAC), config[CONF_HOST], int(config[CONF_PORT])
-    )
-
-    if not itachip2ir.ready(CONNECT_TIMEOUT):
+    try:
+        client = await async_create_client(
+            config[CONF_HOST], int(config[CONF_PORT]), CONNECT_TIMEOUT / 1000
+        )
+    except ItachError:
         _LOGGER.error("Unable to find iTach")
         return
 
-    devices = [
-        _setup_remote_entity(itachip2ir, device_config)
-        for device_config in config[CONF_DEVICES]
-    ]
+    try:
+        devices = [
+            _setup_remote_entity(client, device_config)
+            for device_config in config[CONF_DEVICES]
+        ]
+    except CommandParseError as err:
+        _LOGGER.error("Invalid iTach command data: %s", err)
+        await client.close()
+        return
+
     add_entities(devices, True)
 
 
 class ITachIP2IRRemote(remote.RemoteEntity):
     """Device that sends commands to an ITachIP2IR device."""
 
-    def __init__(self, itachip2ir: Any, name: str | None, ir_count: int) -> None:
+    def __init__(
+        self,
+        client: ItachClient,
+        name: str | None,
+        modaddr: int,
+        connaddr: int,
+        ir_count: int,
+        commands: dict[str, ParsedItachCommand],
+    ) -> None:
         """Initialize device."""
-        self.itachip2ir = itachip2ir
+        self._client = client
         self._attr_is_on = False
         self._attr_name = name or DEVICE_DEFAULT_NAME
+        self._modaddr = modaddr
+        self._connaddr = connaddr
         self._ir_count = ir_count or DEFAULT_IR_COUNT
+        self._commands = commands
 
-    def turn_on(self, **kwargs: Any) -> None:
+    async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._attr_is_on = True
-        self.itachip2ir.send(self.name, "ON", self._ir_count)
-        self.schedule_update_ha_state()
+        await self._async_send_named_command("ON", self._ir_count)
+        self.async_write_ha_state()
 
-    def turn_off(self, **kwargs: Any) -> None:
+    async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._attr_is_on = False
-        self.itachip2ir.send(self.name, "OFF", self._ir_count)
-        self.schedule_update_ha_state()
+        await self._async_send_named_command("OFF", self._ir_count)
+        self.async_write_ha_state()
 
-    def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
+    async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a command to one device."""
         num_repeats = kwargs.get(ATTR_NUM_REPEATS, DEFAULT_NUM_REPEATS)
         for single_command in command:
-            self.itachip2ir.send(
-                self.name, single_command, self._ir_count * num_repeats
+            await self._async_send_named_command(
+                single_command, self._ir_count * num_repeats
             )
 
-    def update(self) -> None:
-        """Update the device."""
-        self.itachip2ir.update()
+    async def _async_send_named_command(self, command_name: str, repeat: int) -> None:
+        """Send one named legacy command."""
+        if (command := self._commands.get(command_name)) is None:
+            raise HomeAssistantError(f"Command {command_name} is not configured")
+
+        await async_send_itach_command(
+            self._client,
+            self._modaddr,
+            self._connaddr,
+            command,
+            repeat,
+        )

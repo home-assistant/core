@@ -2,11 +2,14 @@
 
 import logging
 from typing import Any
-from unittest.mock import MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
+from pyitach import ItachClient, ItachConnectionError
 import pytest
 
 from homeassistant.components.itach import remote
+from homeassistant.components.itach.client import command_to_gc_timings
+from homeassistant.components.itach.command import parse_pronto_command
 from homeassistant.components.remote import DOMAIN as REMOTE_DOMAIN
 from homeassistant.const import (
     CONF_DEVICES,
@@ -17,7 +20,11 @@ from homeassistant.const import (
     DEVICE_DEFAULT_NAME,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.setup import async_setup_component
+
+VALID_PRONTO = "0000 006D 0001 0000 0015 0016"
+VALID_PRONTO_OFF = "0000 006D 0001 0000 0016 0017"
 
 # Test helpers.
 
@@ -34,7 +41,7 @@ def _default_config(**overrides: Any) -> dict[str, Any]:
                 "commands": [
                     {
                         CONF_NAME: "ON",
-                        "data": "sendir-on",
+                        "data": VALID_PRONTO,
                     },
                 ],
             }
@@ -69,14 +76,44 @@ async def _async_setup_itach_remote(
     await hass.async_block_till_done()
 
 
+def _mock_itach_client() -> MagicMock:
+    """Return a mocked pyitach client."""
+    mock_client = MagicMock(spec=ItachClient)
+    mock_client.async_connect = AsyncMock()
+    mock_client.async_send_ir = AsyncMock()
+    mock_client.close = AsyncMock()
+    return mock_client
+
+
+def _parsed_command(data: str = VALID_PRONTO) -> Any:
+    """Return parsed test command data."""
+    return parse_pronto_command(data)
+
+
+def _expected_send_ir_call(
+    module: int,
+    connector: int,
+    command_data: str,
+    repeat: int,
+) -> Any:
+    """Return expected async_send_ir call."""
+    command = parse_pronto_command(command_data)
+    return call(
+        module,
+        connector,
+        command.modulation,
+        command_to_gc_timings(command),
+        repeat=repeat,
+    )
+
+
 async def test_setup_platform_creates_entity(hass: HomeAssistant) -> None:
     """Test setup creates one remote entity from YAML config."""
-    mock_itach = MagicMock()
-    mock_itach.ready.return_value = True
+    mock_client = _mock_itach_client()
 
     with patch(
-        "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
-        return_value=mock_itach,
+        "homeassistant.components.itach.client.ItachClient",
+        return_value=mock_client,
     ):
         await _async_setup_itach_remote(hass)
 
@@ -86,212 +123,211 @@ async def test_setup_platform_creates_entity(hass: HomeAssistant) -> None:
     assert state.state == "off"
 
 
-async def test_setup_platform_initializes_library(hass: HomeAssistant) -> None:
-    """Test setup initializes the pyitachip2ir client with YAML values."""
-    mock_itach = MagicMock()
-    mock_itach.ready.return_value = True
+async def test_setup_platform_initializes_client(hass: HomeAssistant) -> None:
+    """Test setup initializes the pyitach client with YAML values."""
+    mock_client = _mock_itach_client()
 
     with patch(
-        "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
-        return_value=mock_itach,
-    ) as mock_itach_class:
+        "homeassistant.components.itach.client.ItachClient",
+        return_value=mock_client,
+    ) as mock_client_class:
         await _async_setup_itach_remote(
             hass,
             **{CONF_MAC: "AA:BB:CC:DD:EE:FF"},
         )
 
-    mock_itach_class.assert_called_once_with(
-        "AA:BB:CC:DD:EE:FF",
+    mock_client_class.assert_called_once_with(
         "192.168.1.50",
         4998,
+        timeout=remote.CONNECT_TIMEOUT / 1000,
     )
+    mock_client.async_connect.assert_awaited_once_with()
 
 
-async def test_setup_platform_ready_failure(
+async def test_setup_platform_connect_failure(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test setup does not create an entity when iTach is not ready."""
-    mock_itach = MagicMock()
-    mock_itach.ready.return_value = False
+    """Test setup does not create an entity when iTach cannot connect."""
+    mock_client = _mock_itach_client()
+    mock_client.async_connect.side_effect = ItachConnectionError("cannot connect")
 
     caplog.set_level(logging.ERROR)
 
     with patch(
-        "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
-        return_value=mock_itach,
+        "homeassistant.components.itach.client.ItachClient",
+        return_value=mock_client,
     ):
         await _async_setup_itach_remote(hass)
 
     assert hass.states.get("remote.tv") is None
-    mock_itach.ready.assert_called_once_with(remote.CONNECT_TIMEOUT)
-    mock_itach.addDevice.assert_not_called()
+    mock_client.async_connect.assert_awaited_once_with()
+    mock_client.close.assert_awaited_once_with()
     assert "Unable to find iTach" in caplog.text
 
 
-async def test_setup_platform_adds_device_with_command_table(
-    hass: HomeAssistant,
+async def test_setup_platform_rejects_invalid_command_data(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test setup adds a device with the expected command table."""
-    mock_itach = MagicMock()
-    mock_itach.ready.return_value = True
-    devices = [
-        {
-            CONF_NAME: "TV",
-            "modaddr": 1,
-            "connaddr": 2,
-            "commands": [
-                {
-                    CONF_NAME: "ON",
-                    "data": "sendir-on",
-                },
-                {
-                    CONF_NAME: "OFF",
-                    "data": "sendir-off",
-                },
-            ],
-        }
-    ]
-
-    with patch(
-        "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
-        return_value=mock_itach,
-    ):
-        await _async_setup_itach_remote(hass, **{CONF_DEVICES: devices})
-
-    mock_itach.addDevice.assert_called_once_with(
-        "TV",
-        1,
-        2,
-        "ON\nsendir-on\nOFF\nsendir-off\n",
-    )
-
-
-def test_turn_on_sends_on_command() -> None:
-    """Test turn_on sends the ON command."""
-    mock_itach = MagicMock()
-    entity = remote.ITachIP2IRRemote(mock_itach, "TV", 2)
-
-    with patch.object(entity, "schedule_update_ha_state") as mock_schedule_update:
-        entity.turn_on()
-
-    assert entity.is_on is True
-    mock_itach.send.assert_called_once_with("TV", "ON", 2)
-    mock_schedule_update.assert_called_once_with()
-
-
-def test_turn_off_sends_off_command() -> None:
-    """Test turn_off sends the OFF command."""
-    mock_itach = MagicMock()
-    entity = remote.ITachIP2IRRemote(mock_itach, "TV", 2)
-
-    with patch.object(entity, "schedule_update_ha_state") as mock_schedule_update:
-        entity.turn_off()
-
-    assert entity.is_on is False
-    mock_itach.send.assert_called_once_with("TV", "OFF", 2)
-    mock_schedule_update.assert_called_once_with()
-
-
-def test_send_command_sends_each_command() -> None:
-    """Test send_command sends each command."""
-    mock_itach = MagicMock()
-    entity = remote.ITachIP2IRRemote(mock_itach, "TV", 2)
-
-    entity.send_command(["VOLUME_UP", "VOLUME_DOWN"])
-
-    assert mock_itach.send.call_args_list == [
-        call("TV", "VOLUME_UP", 2),
-        call("TV", "VOLUME_DOWN", 2),
-    ]
-
-
-def test_send_command_applies_num_repeats_to_ir_count() -> None:
-    """Test send_command multiplies ir_count by num_repeats."""
-    mock_itach = MagicMock()
-    entity = remote.ITachIP2IRRemote(mock_itach, "TV", 2)
-
-    entity.send_command(["VOLUME_UP"], num_repeats=3)
-
-    mock_itach.send.assert_called_once_with("TV", "VOLUME_UP", 6)
-
-
-def test_update_calls_library_update() -> None:
-    """Test update calls the pyitachip2ir update method."""
-    mock_itach = MagicMock()
-    entity = remote.ITachIP2IRRemote(mock_itach, "TV", 2)
-
-    entity.update()
-
-    mock_itach.update.assert_called_once_with()
-
-
-async def test_setup_platform_uses_default_values(hass: HomeAssistant) -> None:
-    """Test setup uses default values for optional YAML fields."""
-    mock_itach = MagicMock()
-    mock_itach.ready.return_value = True
-    devices = [
-        {
-            "connaddr": 2,
-            "commands": [
-                {
-                    CONF_NAME: "ON",
-                    "data": "sendir-on",
-                },
-            ],
-        }
-    ]
-
-    with patch(
-        "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
-        return_value=mock_itach,
-    ) as mock_itach_class:
-        await _async_setup_itach_remote(hass, **{CONF_DEVICES: devices})
-
-    states = hass.states.async_all(REMOTE_DOMAIN)
-
-    mock_itach_class.assert_called_once_with(None, "192.168.1.50", 4998)
-    mock_itach.addDevice.assert_called_once_with(
-        None,
-        1,
-        2,
-        "ON\nsendir-on\n",
-    )
-    assert len(states) == 1
-    assert states[0].name == DEVICE_DEFAULT_NAME
-
-
-async def test_setup_platform_uses_empty_string_placeholders_for_empty_commands(
-    hass: HomeAssistant,
-) -> None:
-    """Test setup converts empty command names and data to placeholders."""
-    mock_itach = MagicMock()
-    mock_itach.ready.return_value = True
+    """Test setup does not create an entity with invalid command data."""
+    mock_client = _mock_itach_client()
     devices = [
         {
             CONF_NAME: "TV",
             "connaddr": 1,
             "commands": [
                 {
-                    CONF_NAME: "",
-                    "data": "",
+                    CONF_NAME: "ON",
+                    "data": "sendir-on",
                 },
+            ],
+        }
+    ]
+
+    caplog.set_level(logging.ERROR)
+
+    with patch(
+        "homeassistant.components.itach.client.ItachClient",
+        return_value=mock_client,
+    ):
+        await _async_setup_itach_remote(hass, **{CONF_DEVICES: devices})
+
+    assert hass.states.get("remote.tv") is None
+    mock_client.close.assert_awaited_once_with()
+    assert "Invalid iTach command data" in caplog.text
+
+
+async def test_turn_on_sends_on_command() -> None:
+    """Test turn_on sends the ON command."""
+    mock_client = _mock_itach_client()
+    entity = remote.ITachIP2IRRemote(
+        mock_client, "TV", 1, 2, 2, {"ON": _parsed_command()}
+    )
+
+    with patch.object(entity, "async_write_ha_state") as mock_write_state:
+        await entity.async_turn_on()
+
+    assert entity.is_on is True
+    mock_client.async_send_ir.assert_awaited_once_with(
+        *_expected_send_ir_call(1, 2, VALID_PRONTO, 2).args,
+        **_expected_send_ir_call(1, 2, VALID_PRONTO, 2).kwargs,
+    )
+    mock_write_state.assert_called_once_with()
+
+
+async def test_turn_off_sends_off_command() -> None:
+    """Test turn_off sends the OFF command."""
+    mock_client = _mock_itach_client()
+    entity = remote.ITachIP2IRRemote(
+        mock_client, "TV", 1, 2, 2, {"OFF": _parsed_command(VALID_PRONTO_OFF)}
+    )
+
+    with patch.object(entity, "async_write_ha_state") as mock_write_state:
+        await entity.async_turn_off()
+
+    assert entity.is_on is False
+    mock_client.async_send_ir.assert_awaited_once_with(
+        *_expected_send_ir_call(1, 2, VALID_PRONTO_OFF, 2).args,
+        **_expected_send_ir_call(1, 2, VALID_PRONTO_OFF, 2).kwargs,
+    )
+    mock_write_state.assert_called_once_with()
+
+
+async def test_send_command_sends_each_command() -> None:
+    """Test send_command sends each command."""
+    mock_client = _mock_itach_client()
+    entity = remote.ITachIP2IRRemote(
+        mock_client,
+        "TV",
+        1,
+        2,
+        2,
+        {
+            "VOLUME_UP": _parsed_command(),
+            "VOLUME_DOWN": _parsed_command(VALID_PRONTO_OFF),
+        },
+    )
+
+    await entity.async_send_command(["VOLUME_UP", "VOLUME_DOWN"])
+
+    assert mock_client.async_send_ir.await_args_list == [
+        _expected_send_ir_call(1, 2, VALID_PRONTO, 2),
+        _expected_send_ir_call(1, 2, VALID_PRONTO_OFF, 2),
+    ]
+
+
+async def test_send_command_applies_num_repeats_to_ir_count() -> None:
+    """Test send_command multiplies ir_count by num_repeats."""
+    mock_client = _mock_itach_client()
+    entity = remote.ITachIP2IRRemote(
+        mock_client, "TV", 1, 2, 2, {"VOLUME_UP": _parsed_command()}
+    )
+
+    await entity.async_send_command(["VOLUME_UP"], num_repeats=3)
+
+    mock_client.async_send_ir.assert_awaited_once_with(
+        *_expected_send_ir_call(1, 2, VALID_PRONTO, 6).args,
+        **_expected_send_ir_call(1, 2, VALID_PRONTO, 6).kwargs,
+    )
+
+
+async def test_send_command_raises_for_unknown_command() -> None:
+    """Test send_command raises for an unknown command."""
+    mock_client = _mock_itach_client()
+    entity = remote.ITachIP2IRRemote(
+        mock_client, "TV", 1, 2, 2, {"VOLUME_UP": _parsed_command()}
+    )
+
+    with pytest.raises(
+        HomeAssistantError, match="Command VOLUME_DOWN is not configured"
+    ):
+        await entity.async_send_command(["VOLUME_DOWN"])
+
+    mock_client.async_send_ir.assert_not_awaited()
+
+
+async def test_setup_platform_uses_default_values(hass: HomeAssistant) -> None:
+    """Test setup uses default values for optional YAML fields."""
+    mock_client = _mock_itach_client()
+    devices = [
+        {
+            "connaddr": 2,
+            "commands": [
                 {
-                    CONF_NAME: "   ",
-                    "data": "   ",
+                    CONF_NAME: "ON",
+                    "data": VALID_PRONTO,
                 },
             ],
         }
     ]
 
     with patch(
-        "homeassistant.components.itach.remote.pyitachip2ir.ITachIP2IR",
-        return_value=mock_itach,
-    ):
+        "homeassistant.components.itach.client.ItachClient",
+        return_value=mock_client,
+    ) as mock_client_class:
         await _async_setup_itach_remote(hass, **{CONF_DEVICES: devices})
 
-    mock_itach.addDevice.assert_called_once_with(
-        "TV",
-        1,
-        1,
-        '""\n""\n""\n""\n',
+    states = hass.states.async_all(REMOTE_DOMAIN)
+
+    mock_client_class.assert_called_once_with(
+        "192.168.1.50",
+        4998,
+        timeout=remote.CONNECT_TIMEOUT / 1000,
     )
+    assert len(states) == 1
+    assert states[0].name == DEVICE_DEFAULT_NAME
+
+
+def test_commands_from_config_uses_empty_string_placeholder_for_empty_command_name() -> (
+    None
+):
+    """Test empty command names are stored as placeholders."""
+    commands = remote._commands_from_config(
+        [
+            {
+                CONF_NAME: "",
+                "data": VALID_PRONTO,
+            }
+        ]
+    )
+
+    assert list(commands) == [remote.EMPTY_COMMAND_PLACEHOLDER]
