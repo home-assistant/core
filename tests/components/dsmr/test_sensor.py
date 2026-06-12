@@ -1380,8 +1380,9 @@ async def test_tcp(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert connection_factory.call_args_list[0][0][0] == "localhost"
-    assert connection_factory.call_args_list[0][0][1] == "1234"
+    # Legacy host/port is combined into a socket URL in memory; entry untouched
+    assert mock_entry.data["host"] == "localhost"
+    assert connection_factory.call_args_list[0][0][0] == "socket://localhost:1234"
 
 
 async def test_rfxtrx_tcp(
@@ -1409,8 +1410,9 @@ async def test_rfxtrx_tcp(
     await hass.config_entries.async_setup(mock_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert connection_factory.call_args_list[0][0][0] == "localhost"
-    assert connection_factory.call_args_list[0][0][1] == "1234"
+    # Legacy host/port is combined into a socket URL in memory; entry untouched
+    assert mock_entry.data["host"] == "localhost"
+    assert connection_factory.call_args_list[0][0][0] == "socket://localhost:1234"
 
 
 @patch("homeassistant.components.dsmr.sensor.DEFAULT_RECONNECT_INTERVAL", 0)

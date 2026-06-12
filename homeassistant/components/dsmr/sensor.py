@@ -9,11 +9,8 @@ from datetime import timedelta
 from enum import IntEnum
 from functools import partial
 
-from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
-from dsmr_parser.clients.rfxtrx_protocol import (
-    create_rfxtrx_dsmr_reader,
-    create_rfxtrx_tcp_dsmr_reader,
-)
+from dsmr_parser.clients.protocol import create_dsmr_reader
+from dsmr_parser.clients.rfxtrx_protocol import create_rfxtrx_dsmr_reader
 from dsmr_parser.objects import DSMRObject, MbusDevice, Telegram
 
 from homeassistant.components.sensor import (
@@ -772,32 +769,23 @@ async def async_setup_entry(
     # Creates an asyncio.Protocol factory for reading DSMR telegrams from
     # serial and calls update_entities_telegram to update entities on arrival
     protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
-    if CONF_HOST in entry.data:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_tcp_dsmr_reader
-        else:
-            create_reader = create_rfxtrx_tcp_dsmr_reader
-        reader_factory = partial(
-            create_reader,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
-            dsmr_version,
-            update_entities_telegram,
-            loop=hass.loop,
-            keep_alive_interval=60,
-        )
+    if protocol == DSMR_PROTOCOL:
+        create_reader = create_dsmr_reader
     else:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_dsmr_reader
-        else:
-            create_reader = create_rfxtrx_dsmr_reader
-        reader_factory = partial(
-            create_reader,
-            entry.data[CONF_PORT],
-            dsmr_version,
-            update_entities_telegram,
-            loop=hass.loop,
-        )
+        create_reader = create_rfxtrx_dsmr_reader
+    # Legacy network entries stored host and port separately; combine them into
+    # a single socket:// URL in memory so the entry stays untouched and rolling
+    # back to an older Home Assistant version keeps working.
+    port = entry.data[CONF_PORT]
+    if CONF_HOST in entry.data:
+        port = f"socket://{entry.data[CONF_HOST]}:{port}"
+    reader_factory = partial(
+        create_reader,
+        port,
+        dsmr_version,
+        update_entities_telegram,
+        loop=hass.loop,
+    )
 
     async def connect_and_reconnect() -> None:
         """Connect to DSMR and keep reconnecting until Home Assistant stops."""
@@ -813,7 +801,7 @@ async def async_setup_entry(
             update_entities_telegram({})
 
             try:
-                transport, protocol = await hass.loop.create_task(reader_factory())
+                transport, protocol = await reader_factory()
 
                 if transport:
                     # Register listener to close transport on HA shutdown
