@@ -185,15 +185,6 @@
           "auto": "[%key:common::state::auto%]",
           "manual": "[%key:common::state::manual%]",
           "performance": "Boost"
-        },
-        "state_attributes": {
-          "operation_mode": {
-            "state": {
-              "auto": "[%key:common::state::auto%]",
-              "manual": "[%key:common::state::manual%]",
-              "performance": "Boost"
-            }
-          }
         }
       }
     }
