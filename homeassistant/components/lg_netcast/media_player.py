@@ -1,5 +1,6 @@
 """Support for LG TV running on NetCast 3 or 4."""
 
+from collections import Counter
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
 
@@ -139,9 +140,7 @@ class LgTVDevice(MediaPlayerEntity):
                         if channel_name is not None:
                             channel_pairs.append((str(channel_name.text), channel))
 
-                    name_count: dict[str, int] = {}
-                    for name, _ in channel_pairs:
-                        name_count[name] = name_count.get(name, 0) + 1
+                    name_count = Counter(name for name, _ in channel_pairs)
 
                     self._sources = {}
                     for name, channel in channel_pairs:
