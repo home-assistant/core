@@ -11,4 +11,5 @@ class SamsungDeviceType(StrEnum):
     """Samsung device types."""
 
     TV = "tv"
-    AC = "ac"
+    AC_2A20 = "samsung_ac_2a20"
+    AC_0292 = "samsung_ac_0292"
