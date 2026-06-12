@@ -186,6 +186,24 @@ class SandboxProcess:
             self._supervise(), name=f"sandbox[{self.group}]"
         )
 
+        await self._wait_ready_or_stopped()
+
+        if self._state == "running":
+            return
+
+        await self.stop()
+        raise SandboxStartError(
+            f"Sandbox {self.group!r} failed to start (state={self._state})"
+        )
+
+    async def _wait_ready_or_stopped(self) -> None:
+        """Block until the process is running or the supervisor has stopped.
+
+        Bounded by ``ready_timeout``. Shared by :meth:`start` and
+        :meth:`async_wait_until_ready` so a caller that arrives while a
+        (re)spawn is still in flight waits for the same readiness signal
+        instead of racing a half-open channel.
+        """
         ready_task = asyncio.create_task(self._ready.wait())
         stopped_task = asyncio.create_task(self._stopped.wait())
         try:
@@ -201,38 +219,64 @@ class SandboxProcess:
                     with contextlib.suppress(asyncio.CancelledError):
                         await task
 
+    async def async_wait_until_ready(self) -> None:
+        """Wait for an in-flight (re)spawn to reach ``running`` (bounded)."""
         if self._state == "running":
             return
+        await self._wait_ready_or_stopped()
 
-        await self.stop()
-        raise SandboxStartError(
-            f"Sandbox {self.group!r} failed to start (state={self._state})"
-        )
+    async def _terminate(self, proc: asyncio.subprocess.Process) -> None:
+        """SIGTERM a process, escalating to SIGKILL after the grace window."""
+        if proc.returncode is not None:
+            return
+        with contextlib.suppress(ProcessLookupError):
+            proc.terminate()
+        try:
+            await asyncio.wait_for(proc.wait(), timeout=self._config.shutdown_grace)
+        except TimeoutError:
+            _LOGGER.warning(
+                "Sandbox %s did not exit on SIGTERM within %.1fs; sending SIGKILL",
+                self.group,
+                self._config.shutdown_grace,
+            )
+            with contextlib.suppress(ProcessLookupError):
+                proc.kill()
+            with contextlib.suppress(BaseException):
+                await proc.wait()
 
     async def stop(self) -> None:
         """Terminate the subprocess and wait for the supervisor to exit."""
         self._stopping = True
         proc = self._process
-        if proc is not None and proc.returncode is None:
-            with contextlib.suppress(ProcessLookupError):
-                proc.terminate()
-            try:
-                await asyncio.wait_for(proc.wait(), timeout=self._config.shutdown_grace)
-            except TimeoutError:
-                _LOGGER.warning(
-                    "Sandbox %s did not exit on SIGTERM within %.1fs; sending SIGKILL",
-                    self.group,
-                    self._config.shutdown_grace,
-                )
-                with contextlib.suppress(ProcessLookupError):
-                    proc.kill()
-                with contextlib.suppress(BaseException):
-                    await proc.wait()
+        if proc is not None:
+            await self._terminate(proc)
 
         supervisor = self._supervisor
         if supervisor is not None:
+            # A stop() that lands *inside* ``_spawn`` reads ``self._process``
+            # as None and so terminates nothing; the freshly-spawned child
+            # would then run healthy-but-unsupervised and the supervisor would
+            # block on it forever. The post-spawn ``_stopping`` check in
+            # ``_run_one_*`` kills that child, so the supervisor always
+            # returns — but bound the wait + SIGKILL fallthrough as a backstop
+            # against any other slow exit rather than hang HA shutdown.
             try:
-                await supervisor
+                await asyncio.wait_for(
+                    asyncio.shield(supervisor),
+                    timeout=self._config.ready_timeout + self._config.shutdown_grace,
+                )
+            except TimeoutError:
+                _LOGGER.warning(
+                    "Sandbox %s supervisor did not exit; killing child and cancelling",
+                    self.group,
+                )
+                proc = self._process
+                if proc is not None and proc.returncode is None:
+                    with contextlib.suppress(ProcessLookupError):
+                        proc.kill()
+                supervisor.cancel()
+                with contextlib.suppress(asyncio.CancelledError, Exception):
+                    await supervisor
             finally:
                 self._supervisor = None
 
@@ -363,6 +407,11 @@ class SandboxProcess:
             return
         self._process = proc
         try:
+            if self._stopping:
+                # stop() landed mid-spawn and saw self._process as None;
+                # terminate the child it missed so it never runs unsupervised.
+                await self._terminate(proc)
+                return
             # Open the channel up front — stdout carries nothing but frames
             # now. Handlers go on before the reader starts so the runtime's
             # warm-load round-trip (and any early push) is never dropped.
@@ -404,6 +453,12 @@ class SandboxProcess:
                 return
             self._process = proc
             try:
+                if self._stopping:
+                    # stop() landed mid-spawn and saw self._process as None;
+                    # terminate the child it missed so it never runs
+                    # unsupervised.
+                    await self._terminate(proc)
+                    return
                 # The runtime connects back as part of its startup; race the
                 # accept against an early exit so a crash-before-connect does
                 # not hang here forever.
@@ -493,8 +548,16 @@ class SandboxProcess:
             )
 
         try:
+            # The ready handshake is bounded on *every* attempt, not just the
+            # first start() — a respawned child that opens its channel but
+            # never signals ready would otherwise leave the sandbox 'starting'
+            # forever. On timeout the child is killed below; _run_one returns
+            # and the supervisor loop counts the attempt against the restart
+            # budget like any other failed spawn.
             await asyncio.wait(
-                {ready_task, exit_task}, return_when=asyncio.FIRST_COMPLETED
+                {ready_task, exit_task},
+                return_when=asyncio.FIRST_COMPLETED,
+                timeout=self._config.ready_timeout,
             )
             if ready_task.done() and not ready_task.cancelled():
                 self._state = "running"
@@ -508,6 +571,13 @@ class SandboxProcess:
                         )
                 # Hold here until the process exits.
                 await exit_task
+            elif not exit_task.done():
+                _LOGGER.warning(
+                    "Sandbox %s did not signal ready within %.1fs; killing hung child",
+                    self.group,
+                    self._config.ready_timeout,
+                )
+                await self._terminate(proc)
         finally:
             for task in (ready_task, exit_task, *drain_tasks):
                 if not task.done():
@@ -627,8 +697,16 @@ class SandboxManager:
         async with lock:
             existing = self._sandboxes.get(group)
             if existing is not None:
-                if existing.state in ("starting", "running"):
+                if existing.state == "running":
                     return existing
+                if existing.state == "starting":
+                    # A (re)spawn is in flight — wait for readiness rather than
+                    # handing back a process whose channel is open but whose
+                    # runtime has not answered yet (a 'starting' zombie).
+                    await existing.async_wait_until_ready()
+                    if existing.state == "running":
+                        return existing
+                    raise SandboxFailedError(f"Sandbox {group!r} did not become ready")
                 if existing.state == "failed":
                     raise SandboxFailedError(f"Sandbox {group!r} is in a failed state")
                 # Was stopped — drop the stale process and re-spawn.
