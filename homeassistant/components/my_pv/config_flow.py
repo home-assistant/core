@@ -94,9 +94,10 @@ class MyPVConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             await device.disconnect()
 
-        await self.async_set_unique_id(device.serial_number)
-        # Update host ip address when device is already configured and abort.
-        self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
+        if device.serial_number:
+            await self.async_set_unique_id(device.serial_number)
+            # Update host ip address when device is already configured and abort.
+            self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
         self._device_model = device.model
         if password_needed:
