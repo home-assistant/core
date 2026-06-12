@@ -79,6 +79,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             hass.async_create_task(previous.async_teardown())
         data.pending_teardown[group] = old_bridge
 
+    def _on_channel_closed(group: str) -> None:
+        # The sandbox process exited and its channel is closed. Mark its
+        # proxies unavailable so a dead sandbox stops serving stale state;
+        # they recover on respawn via the normal register/state round-trip.
+        bridge = data.bridges.get(group)
+        if bridge is not None:
+            bridge.async_mark_all_unavailable()
+
     def _on_ready(group: str) -> None:
         # The fresh process is up and can answer ``entry_setup``. Tear down
         # the displaced bridge and re-drive setup for the group's entries so
@@ -139,6 +147,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     manager = SandboxManager(
         hass,
         on_channel_ready=_on_channel_ready,
+        on_channel_closed=_on_channel_closed,
         on_ready=_on_ready,
         on_shutdown_reply=_on_shutdown_reply,
     )
