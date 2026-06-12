@@ -356,12 +356,14 @@ def fake_stream() -> Generator[_StreamDriver]:
             name: str | None = None,
             backoff: Any = (5.0, 10.0, 30.0, 60.0),
             watchdog_seconds: float = 300.0,
+            seed: dict[int, Telemetry] | None = None,
         ) -> None:
             """Record the injected callbacks and register this instance."""
             self.vehicle_ids = list(vehicle_ids)
             self.on_update = on_update
             self.on_connection_change = on_connection_change
             self.name = name
+            self.seed = seed
             self.started = False
             self.stopped = False
             _FakeTelemetryStream.instances.append(self)

@@ -472,7 +472,25 @@ async def async_setup_entry(
     # covers any post-setup first-arrival.
     stream: TelemetryStream | None = None
     if vehicle_ids:
-        await telemetry_coordinator.async_seed(client, vehicle_ids)
+        # Prefer restored sensor state (warms the gate without a network call);
+        # poll one-shot only for vehicles with no restored snapshot (first init
+        # or state pruned past the restore-state expiry). Imported locally:
+        # ``sensor`` imports ``AbetterrouteplannerConfigEntry`` from this module,
+        # so a top-level import here would form a circular import at load time.
+        from .sensor import build_seed_from_restored_state  # noqa: PLC0415
+
+        # The restored seed warms ONLY the stream's monotonicity gate — it is
+        # deliberately NOT pushed into ``coordinator.data`` (no ``_apply_metrics``
+        # / ``on_update`` call). Routing it through the coordinator would stamp a
+        # fresh receipt-time ``last_reported_at`` onto values that may be hours
+        # old, corrupting the freshness the attribute reports. Restored sensor
+        # *display* is owned separately by the sensor platform's
+        # eager-from-registry probe + ``RestoreSensor``. Do not "just seed the
+        # coordinator too" — that reintroduces the freshness bug.
+        seed = build_seed_from_restored_state(hass, entry, vehicle_ids)
+        unseeded = [vid for vid in vehicle_ids if vid not in seed]
+        if unseeded:
+            await telemetry_coordinator.async_seed(client, unseeded)
         stream = TelemetryStream(
             websession,
             ABRP_APP_KEY,
@@ -481,6 +499,7 @@ async def async_setup_entry(
             on_update=telemetry_coordinator.on_update,
             on_connection_change=telemetry_coordinator.on_connection_change,
             name=entry.title,
+            seed=seed,
         )
         await stream.start()
         await asyncio.sleep(PREWARM_WINDOW_SECONDS)

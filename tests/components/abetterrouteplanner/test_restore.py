@@ -49,6 +49,7 @@ SSE-consumer pre-queue it relied on no longer exists.
 from datetime import UTC, datetime
 from decimal import Decimal
 from typing import Any
+from unittest.mock import patch
 
 from aioabrp import ChargingState, Telemetry
 from freezegun import freeze_time
@@ -63,7 +64,12 @@ from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
-from .conftest import MOCK_VEHICLE_ID, SENSOR_TEST_SUB, build_metric_value
+from .conftest import (
+    MOCK_VEHICLE_ID,
+    MOCK_VEHICLE_ID_2,
+    SENSOR_TEST_SUB,
+    build_metric_value,
+)
 
 from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
@@ -1237,3 +1243,156 @@ async def test_build_seed_accepts_decimal_numeric_native_value(
     assert voltage is not None
     assert isinstance(voltage.value, float)
     assert voltage.value == 410.0
+
+
+# ---------------------------------------------------------------------------
+# Setup wiring: restored seed warms the stream gate; poll only on first init
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_setup_seeds_stream_from_restored_state_and_skips_poll(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    fake_stream: Any,
+) -> None:
+    """Restart path: the stream is seeded from restored state and the poll skipped.
+
+    The restore cache + entity registry hold a voltage row with a valid
+    ``wire_time`` for ``MOCK_VEHICLE_ID``, so ``build_seed_from_restored_state``
+    returns a non-empty seed. ``async_setup_entry`` must:
+
+    - construct the ``TelemetryStream`` with ``seed=`` equal to that rebuilt
+      ``dict[int, Telemetry]`` (gate-warming without a network call), and
+    - NOT call the one-shot poll (``async_get_current_telemetry``) — the only
+      selected vehicle is already seeded, so it is not in ``unseeded``.
+    """
+
+    # Patch the one-shot getter so we can assert it is NOT called on the restart
+    # path. Non-autospec (the conftest already patched this attribute); the
+    # integration calls ``client.async_get_current_telemetry(vid)`` so the
+    # vehicle id lands as the sole positional arg.
+    async def _record_poll(vehicle_id: int) -> Telemetry:
+        return Telemetry()
+
+    with patch(
+        "aioabrp.AbrpClient.async_get_current_telemetry",
+        side_effect=_record_poll,
+    ) as mock_poll:
+        await _restart_setup(
+            hass,
+            config_entry_with_vehicles,
+            entity_registry=entity_registry,
+            preseed_registry_keys=["voltage"],
+            restored_states=[_voltage_restored_state(wire_time=RESTORED_WIRE_TIME_ISO)],
+        )
+
+    # The vehicle was seeded from restored state → the one-shot poll is skipped.
+    assert mock_poll.call_count == 0
+
+    # The stream carries the rebuilt seed verbatim.
+    stream = fake_stream.stream
+    assert stream is not None
+    assert stream.seed is not None
+    assert MOCK_VEHICLE_ID in stream.seed
+    voltage = stream.seed[MOCK_VEHICLE_ID].voltage
+    assert voltage is not None
+    assert voltage.value == RESTORED_VOLTAGE
+    assert voltage.time == RESTORED_WIRE_TIME_DT
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_setup_polls_on_first_init_when_no_restored_state(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
+) -> None:
+    """First init (empty restore cache): the stream gets an empty seed and polls.
+
+    With no restore cache and no registry rows,
+    ``build_seed_from_restored_state`` returns ``{}``. The only selected vehicle
+    is therefore unseeded, so ``async_setup_entry`` must fall back to the
+    one-shot poll for it, and construct the stream with an empty ``seed``.
+    """
+
+    async def _record_poll(vehicle_id: int) -> Telemetry:
+        return Telemetry()
+
+    with patch(
+        "aioabrp.AbrpClient.async_get_current_telemetry",
+        side_effect=_record_poll,
+    ) as mock_poll:
+        await _restart_setup(hass, config_entry_with_vehicles)
+
+    # Unseeded vehicle → the one-shot poll ran for it.
+    polled_ids = {call.args[0] for call in mock_poll.call_args_list}
+    assert polled_ids == {MOCK_VEHICLE_ID}
+
+    # The stream's seed is empty (nothing restored).
+    stream = fake_stream.stream
+    assert stream is not None
+    assert stream.seed == {}
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_setup_partitions_mixed_seeded_and_unseeded_vehicles(
+    hass: HomeAssistant,
+    token_entry: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+    fake_stream: Any,
+) -> None:
+    """Mixed garage: only the restored vehicle seeds; only the other is polled.
+
+    Exercises the partition that is the heart of B3
+    (``unseeded = [vid for vid in vehicle_ids if vid not in seed]``) at the
+    interesting interior point rather than the all/none boundaries. A
+    two-vehicle entry selects both ``MOCK_VEHICLE_ID`` and ``MOCK_VEHICLE_ID_2``,
+    but only ``MOCK_VEHICLE_ID`` has restored state (the ``_restart_setup``
+    preseed wires restore cache + registry for that vehicle's voltage only).
+
+    Asserts:
+    - ``stream.seed`` keys == ``{MOCK_VEHICLE_ID}`` (only the restored vehicle),
+    - the one-shot poll ran for EXACTLY ``{MOCK_VEHICLE_ID_2}`` (the unseeded
+      vehicle), never the already-seeded one.
+    """
+    # Two-vehicle entry mirroring ``config_entry_with_vehicles`` (same
+    # SENSOR_TEST_SUB scope so the restore-state unique_id formula matches),
+    # but selecting BOTH garage vehicles.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=SENSOR_TEST_SUB,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": token_entry,
+            CONF_VEHICLE_IDS: [str(MOCK_VEHICLE_ID), str(MOCK_VEHICLE_ID_2)],
+        },
+    )
+
+    async def _record_poll(vehicle_id: int) -> Telemetry:
+        return Telemetry()
+
+    with patch(
+        "aioabrp.AbrpClient.async_get_current_telemetry",
+        side_effect=_record_poll,
+    ) as mock_poll:
+        # ``_restart_setup`` preseeds restore cache + registry for
+        # MOCK_VEHICLE_ID's voltage only, leaving MOCK_VEHICLE_ID_2 unseeded.
+        await _restart_setup(
+            hass,
+            entry,
+            entity_registry=entity_registry,
+            preseed_registry_keys=["voltage"],
+            restored_states=[_voltage_restored_state(wire_time=RESTORED_WIRE_TIME_ISO)],
+        )
+
+    # The poll ran for EXACTLY the unseeded vehicle — never the seeded one.
+    polled_ids = {call.args[0] for call in mock_poll.call_args_list}
+    assert polled_ids == {MOCK_VEHICLE_ID_2}
+
+    # The stream's seed carries only the restored vehicle.
+    stream = fake_stream.stream
+    assert stream is not None
+    assert set(stream.seed) == {MOCK_VEHICLE_ID}
+    # Both selected (and present) vehicles are still streamed.
+    assert set(stream.vehicle_ids) == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
