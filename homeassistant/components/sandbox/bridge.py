@@ -520,6 +520,13 @@ class SandboxBridge:
         sandbox side. Exception translation reuses
         :func:`_translate_remote_error`.
 
+        The service ``domain`` must be one this group owns (same main-side
+        :meth:`_owned_domains` derivation the fire_event gate uses): a
+        compromised sandbox may not squat ``persistent_notification.*`` or any
+        other ``domain.service`` slot outside the domains main routed to it.
+        An unowned domain is rejected with a :class:`HomeAssistantError` (the
+        channel turns it into a remote-error frame).
+
         If a service with the same ``(domain, service)`` already exists
         on main (e.g. the host ``light`` EntityComponent registered
         ``light.turn_on`` for our proxy entities, or another integration
@@ -528,6 +535,18 @@ class SandboxBridge:
         """
         domain = msg.domain.lower()
         service = msg.service.lower()
+        if domain not in self._owned_domains():
+            _LOGGER.warning(
+                "SandboxBridge[%s]: refusing register_service for unowned "
+                "domain %r (%s.%s)",
+                self.group,
+                domain,
+                domain,
+                service,
+            )
+            raise HomeAssistantError(
+                f"register_service: domain {domain!r} not owned by group {self.group!r}"
+            )
         supports_response = _parse_supports_response(msg.supports_response)
         if self.hass.services.has_service(domain, service):
             _LOGGER.debug(
