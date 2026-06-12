@@ -339,3 +339,54 @@ async def test_close_after_eof_still_closes_transport() -> None:
     # Idempotent: a second close() does no further transport work.
     await channel.close()
     assert transport.close_calls == 1
+
+
+async def test_read_backpressure_sheds_over_queued_cap() -> None:
+    """A frame-flood is bounded: over the cap, calls are shed not queued.
+
+    With a tiny ``max_queued`` and handlers that never return, the reader keeps
+    draining the wire but stops growing handler tasks — once the cap is hit,
+    further calls come back as ``ChannelOverloaded`` instead of piling up
+    unbounded decoded payloads.
+    """
+    channel_a, channel_b = make_channel_pair(
+        max_inflight_b=2, max_queued_b=3, use_json=True
+    )
+    channel_a.start()
+    channel_b.start()
+    release = asyncio.Event()
+
+    async def never(_payload: dict) -> int:
+        await release.wait()
+        return 1
+
+    channel_b.register("test/never", never)
+
+    pending: list[asyncio.Task] = []
+    try:
+        # Fill the queue cap (3) with handlers parked on the semaphore/await.
+        pending = [
+            asyncio.create_task(channel_a.call("test/never", {"idx": i}))
+            for i in range(3)
+        ]
+        for _ in range(50):
+            if len(channel_b._inflight) >= 3:
+                break
+            await asyncio.sleep(0)
+        assert len(channel_b._inflight) == 3
+
+        # The next call is shed with a ChannelOverloaded error frame.
+        with pytest.raises(ChannelRemoteError) as err:
+            await asyncio.wait_for(
+                channel_a.call("test/never", {"idx": 99}), timeout=2.0
+            )
+        assert err.value.error_type == "ChannelOverloaded"
+
+        # The reader threw the excess away rather than growing the inflight set.
+        assert len(channel_b._inflight) == 3
+    finally:
+        release.set()
+        for task in pending:
+            task.cancel()
+        await channel_a.close()
+        await channel_b.close()
