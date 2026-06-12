@@ -1,7 +1,7 @@
 """Fixtures for Entur public transport tests."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime, timedelta
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -15,6 +15,7 @@ from homeassistant.components.entur_public_transport.const import (
 )
 from homeassistant.const import CONF_SHOW_ON_MAP
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -43,7 +44,7 @@ def mock_estimated_call() -> MagicMock:
     """Return a mock estimated call."""
     call = MagicMock()
     call.is_realtime = True
-    call.expected_departure_time = datetime.now(tz=UTC) + timedelta(minutes=5)
+    call.expected_departure_time = dt_util.utcnow() + timedelta(minutes=5)
     call.front_display = "45 Voss"
     call.line_id = "NSB:Line:45"
     call.transport_mode = "rail"

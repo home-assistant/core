@@ -16,6 +16,7 @@ from homeassistant.components.entur_public_transport.const import (
     ATTR_NEXT_UP_ROUTE,
     ATTR_NEXT_UP_ROUTE_ID,
     ATTR_ROUTE,
+    CONF_EXPAND_PLATFORMS,
     DOMAIN,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
@@ -257,6 +258,14 @@ YAML_CONFIG = {
     }
 }
 
+YAML_CONFIG_WITH_EXPAND = {
+    "sensor": {
+        "platform": DOMAIN,
+        "stop_ids": ["NSR:StopPlace:548"],
+        CONF_EXPAND_PLATFORMS: False,
+    }
+}
+
 
 async def test_yaml_import_success_creates_deprecation_issue(
     hass: HomeAssistant,
@@ -265,6 +274,20 @@ async def test_yaml_import_success_creates_deprecation_issue(
 ) -> None:
     """Test successful YAML import creates a deprecation issue."""
     assert await async_setup_component(hass, "sensor", YAML_CONFIG)
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+async def test_yaml_import_with_expand_platforms_still_imports(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_entur_client: MagicMock,
+) -> None:
+    """Test legacy expand_platforms YAML still imports."""
+    assert await async_setup_component(hass, "sensor", YAML_CONFIG_WITH_EXPAND)
     await hass.async_block_till_done()
 
     assert issue_registry.async_get_issue(
