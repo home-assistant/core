@@ -393,12 +393,7 @@ class DatasetStore:
         """
         if not preferred_extended_address:
             return
-        if entry.preferred_extended_address is None:
-            self.async_set_preferred_border_agent(
-                entry.id, preferred_border_agent_id, preferred_extended_address
-            )
-            return
-        if (
+        if entry.preferred_extended_address is None or (
             preferred_border_agent_id is not None
             and preferred_border_agent_id == entry.preferred_border_agent_id
             and preferred_extended_address != entry.preferred_extended_address
