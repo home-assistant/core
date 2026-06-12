@@ -36,22 +36,28 @@
   "entity": {
     "sensor": {
       "archived": {
-        "name": "Archived"
+        "name": "Archived",
+        "unit_of_measurement": "items"
       },
       "bookmarks": {
-        "name": "Bookmarks"
+        "name": "Bookmarks",
+        "unit_of_measurement": "bookmarks"
       },
       "favorites": {
-        "name": "Favorites"
+        "name": "Favorites",
+        "unit_of_measurement": "favorites"
       },
       "highlights": {
-        "name": "Highlights"
+        "name": "Highlights",
+        "unit_of_measurement": "highlights"
       },
       "lists": {
-        "name": "Lists"
+        "name": "Lists",
+        "unit_of_measurement": "lists"
       },
       "tags": {
-        "name": "Tags"
+        "name": "Tags",
+        "unit_of_measurement": "tags"
       }
     }
   }
