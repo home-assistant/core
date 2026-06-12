@@ -1,4 +1,4 @@
-"""The my-PV integration for Home Assistant."""
+"""Data update coordinator for Home Assistant."""
 
 from datetime import timedelta
 import functools

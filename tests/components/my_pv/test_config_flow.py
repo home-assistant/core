@@ -225,7 +225,7 @@ async def test_step_dhcp_auth(hass: HomeAssistant) -> None:
 
 
 async def test_step_dhcp_auth_wrong_password(hass: HomeAssistant) -> None:
-    """Test for DHCP discovery that requires a password."""
+    """Test for DHCP discovery with an incorrect password."""
 
     with (
         patch(
@@ -309,7 +309,7 @@ async def test_step_zeroconf(hass: HomeAssistant) -> None:
 
 
 async def test_step_zeroconf_wrong_password(hass: HomeAssistant) -> None:
-    """Test for Zeroconf discovery that requires a password."""
+    """Test for Zeroconf discovery with an incorrect password."""
 
     with (
         patch(
