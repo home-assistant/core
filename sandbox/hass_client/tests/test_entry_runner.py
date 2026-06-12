@@ -140,7 +140,7 @@ async def test_entry_setup_calls_integration_setup_entry(
         version=1,
         minor_version=1,
     )
-    payload.data.update({"host": "1.2.3.4"})
+    payload.data.update({"host": "1.2.3.4", "port": 8123})
     result = await main.call("sandbox/entry_setup", payload)
 
     assert result.ok
@@ -148,6 +148,9 @@ async def test_entry_setup_calls_integration_setup_entry(
     assert len(setup_calls) == 1
     assert setup_calls[0].entry_id == "test_entry_id_5"
     assert setup_calls[0].data["host"] == "1.2.3.4"
+    # Int config survives the Struct wire as int, not float (Phase 7).
+    assert setup_calls[0].data["port"] == 8123
+    assert isinstance(setup_calls[0].data["port"], int)
 
 
 async def test_entry_setup_reports_failure_reason(
@@ -271,13 +274,15 @@ async def test_call_service_dispatches_through_services(
     runner.hass.services.async_register("test_call", "do_it", _svc_handler)
 
     call_msg = pb.CallService(domain="test_call", service="do_it")
-    call_msg.service_data.update({"hello": "world"})
+    call_msg.service_data.update({"hello": "world", "brightness": 255})
     result = await main.call("sandbox/call_service", call_msg)
 
     # No return_response: proto result has no `response` field set (was
     # `result is None` on the dict wire).
     assert not result.HasField("response")
-    assert seen == [{"hello": "world"}]
+    assert seen == [{"hello": "world", "brightness": 255}]
+    # Int service-data field arrives as int on the sandbox side (Phase 7).
+    assert isinstance(seen[0]["brightness"], int)
 
 
 class _FakeEntity:
