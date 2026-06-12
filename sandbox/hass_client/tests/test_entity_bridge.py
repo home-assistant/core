@@ -18,6 +18,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 from hass_client._proto import sandbox_pb2 as pb
+from hass_client.approved_domains import ApprovedDomains
 from hass_client.channel import Channel
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.entity_bridge import EntityBridge
@@ -311,6 +312,58 @@ async def _register_initial(bridge: EntityBridge, hass: Any, entity: Entity) -> 
         if entity.entity_id in bridge._registered:  # noqa: SLF001
             break
         await asyncio.sleep(0)
+
+
+async def test_unregister_releases_domain_approval(
+    channels: tuple[Channel, Channel], hass_with_demo_component
+) -> None:
+    """Registering an entity approves its domain; unregistering releases it.
+
+    The per-entity ``approved.add`` in ``_register`` previously had no
+    matching decrement, leaking the approval for the process lifetime.
+    """
+    main, sandbox = channels
+    hass, component = hass_with_demo_component
+
+    async def _on_register(msg: pb.EntityDescription) -> pb.RegisterEntityResult:
+        return pb.RegisterEntityResult(entity_id="demo.lamp_main")
+
+    async def _on_unregister(msg: pb.UnregisterEntity) -> pb.UnregisterEntityResult:
+        return pb.UnregisterEntityResult(ok=True)
+
+    main.register("sandbox/register_entity", _on_register)
+    main.register("sandbox/unregister_entity", _on_unregister)
+    main.start()
+    sandbox.start()
+
+    entity = _FakeEntity()
+    component._entities[entity.entity_id] = entity  # noqa: SLF001
+
+    approved = ApprovedDomains()
+    bridge = EntityBridge(hass, approved)
+    bridge.register(sandbox)
+
+    await _register_initial(bridge, hass, entity)
+    assert approved.approves("demo")
+
+    # Entity removed → the only approval for "demo" is released.
+    now = datetime.now(tz=datetime.now().astimezone().tzinfo)
+    hass.bus.async_fire(
+        EVENT_STATE_CHANGED,
+        {
+            "entity_id": entity.entity_id,
+            "old_state": State(entity.entity_id, "off", {}, last_updated=now),
+            "new_state": None,
+        },
+    )
+    for _ in range(50):
+        if not approved.approves("demo"):
+            break
+        await asyncio.sleep(0)
+
+    assert not approved.approves("demo")
+
+    await bridge.async_stop()
 
 
 async def test_state_update_during_register_is_flushed(
