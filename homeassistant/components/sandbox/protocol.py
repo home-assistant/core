@@ -6,15 +6,15 @@ this module holds the type-string constants. Both sides share the same
 names — kept here on the HA side and mirrored verbatim in
 :mod:`hass_client.protocol` so neither has to import the other.
 
-The wire is protobuf (default codec :class:`~.codec_protobuf.ProtobufCodec`):
-each ``type`` maps to a request/result proto message pair in
-:mod:`.messages` (the `REGISTRY`), generated from
-``sandbox/proto/sandbox.proto``. The payload shapes described below
-are the *logical* contract for each call — they are carried as those typed
-proto messages, not free-form dicts (only genuinely dynamic fields, e.g.
+The wire is protobuf (codec :class:`~.codec_protobuf.ProtobufCodec`, which a
+:class:`~.channel.Channel` now requires explicitly): each ``type`` maps to a
+request/result proto message pair in :mod:`.messages` (the `REGISTRY`),
+generated from ``sandbox/proto/sandbox.proto``. The payload shapes described
+below are the *logical* contract for each call — they are carried as those
+typed proto messages, not free-form dicts (only genuinely dynamic fields, e.g.
 ``service_data`` / state attributes / serialized voluptuous schemas, cross
-as ``Struct`` / ``ListValue``). The line-oriented :class:`~.channel.JsonCodec`
-is retained only as the channel-core test/debug wire.
+as ``Struct`` / ``ListValue``). A registry-free line-oriented JSON codec lives
+in the test helpers as the channel-core test/debug wire.
 
 Main → Sandbox calls:
 
