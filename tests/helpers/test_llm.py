@@ -1134,7 +1134,7 @@ async def test_script_tool(
     assert tool.name == "test_script"
     assert (
         tool.description
-        == "This is a test script. Aliases: ['script name', 'script alias']"
+        == "This is a test script. Aliases: ['script alias', 'script name']"
     )
     schema = {
         vol.Required("beer", description="Number of beers"): cv.string,
@@ -1149,7 +1149,7 @@ async def test_script_tool(
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
-            "This is a test script. Aliases: ['script name', 'script alias']",
+            "This is a test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
         ),
         "script_with_no_fields": (
@@ -1258,14 +1258,14 @@ async def test_script_tool(
     assert tool.name == "test_script"
     assert (
         tool.description
-        == "This is a new test script. Aliases: ['script name', 'script alias']"
+        == "This is a new test script. Aliases: ['script alias', 'script name']"
     )
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
-            "This is a new test script. Aliases: ['script name', 'script alias']",
+            "This is a new test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
         ),
         "script_with_no_fields": (
