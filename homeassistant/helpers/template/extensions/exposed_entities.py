@@ -3,7 +3,6 @@
 from collections.abc import Iterable
 from typing import TYPE_CHECKING
 
-from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.helpers import entity_registry as er
 
 from .base import BaseTemplateExtension, TemplateFunction
@@ -21,19 +20,25 @@ class ExposedEntitiesExtension(BaseTemplateExtension):
             environment,
             functions=[
                 TemplateFunction(
-                    "exposed_entities",
-                    self.exposed_entities,
+                    "assist_exposed_entities",
+                    self.assist_exposed_entities,
                     as_global=True,
-                    as_filter=True,
                     requires_hass=True,
                 ),
             ],
         )
 
-    def exposed_entities(self, assistant: str) -> Iterable[str]:
-        """Return entity IDs for all entities exposed to a particular assistant."""
+    def assist_exposed_entities(self) -> Iterable[str]:
+        """Return entity IDs for all entities exposed to the conversation integration."""
+        # Imported here to avoid a circular import at module load time, as this
+        # extension is imported very early during bootstrap.
+        from homeassistant.components import conversation  # noqa: PLC0415
+        from homeassistant.components.homeassistant.exposed_entities import (  # noqa: PLC0415
+            async_should_expose,
+        )
+
         return [
             entry.entity_id
             for entry in er.async_get(self.hass).entities.values()
-            if async_should_expose(self.hass, assistant, entry.entity_id)
+            if async_should_expose(self.hass, conversation.DOMAIN, entry.entity_id)
         ]
