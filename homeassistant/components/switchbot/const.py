@@ -71,6 +71,7 @@ class SupportedModels(StrEnum):
     LOCK_VISION = "lock_vision"
     LOCK_PRO_WIFI = "lock_pro_wifi"
     WEATHER_STATION = "weather_station"
+    CANDLE_WARMER_LAMP = "candle_warmer_lamp"
 
 
 CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -120,6 +121,7 @@ CONNECTABLE_SUPPORTED_MODEL_TYPES = {
     SwitchbotModel.LOCK_VISION_PRO: SupportedModels.LOCK_VISION_PRO,
     SwitchbotModel.LOCK_VISION: SupportedModels.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI: SupportedModels.LOCK_PRO_WIFI,
+    SwitchbotModel.CANDLE_WARMER_LAMP: SupportedModels.CANDLE_WARMER_LAMP,
 }
 
 NON_CONNECTABLE_SUPPORTED_MODEL_TYPES = {
@@ -169,6 +171,7 @@ ENCRYPTED_MODELS = {
     SwitchbotModel.LOCK_VISION_PRO,
     SwitchbotModel.LOCK_VISION,
     SwitchbotModel.LOCK_PRO_WIFI,
+    SwitchbotModel.CANDLE_WARMER_LAMP,
 }
 
 ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
@@ -202,6 +205,7 @@ ENCRYPTED_SWITCHBOT_MODEL_TO_CLASS: dict[
     SwitchbotModel.LOCK_VISION_PRO: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_VISION: switchbot.SwitchbotLock,
     SwitchbotModel.LOCK_PRO_WIFI: switchbot.SwitchbotLock,
+    SwitchbotModel.CANDLE_WARMER_LAMP: switchbot.SwitchbotCandleWarmerLamp,
 }
 
 HASS_SENSOR_TYPE_TO_SWITCHBOT_MODEL = {
