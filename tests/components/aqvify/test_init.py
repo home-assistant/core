@@ -10,6 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.aqvify.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 
@@ -47,8 +48,9 @@ async def test_load_unload_entry(
         (None, ConfigEntryState.LOADED),
         (AqvifyAuthException, ConfigEntryState.SETUP_ERROR),
         (TimeoutError, ConfigEntryState.SETUP_RETRY),
+        (ClientResponseError(Mock(), Mock(), status=500), ConfigEntryState.SETUP_RETRY),
     ],
-    ids=["no_error", "auth_error", "timeout_error"],
+    ids=["no_error", "auth_error", "timeout_error", "communications_error"],
 )
 async def test_setup_entry_with_error(
     hass: HomeAssistant,
@@ -127,3 +129,101 @@ async def test_devices_multiple_created_count(
 
     assert len(device_registry.devices) == 3
     assert hass.states.get("sensor.device_3_water_level").state == EXPECTED_WATER_LEVEL
+WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
+
+
+@pytest.mark.parametrize(
+    ("exception", "log_message", "expected_state"),
+    [
+        (
+            TimeoutError,
+            "Timeout occurred while communicating",
+            EXPECTED_WATER_LEVEL,
+        ),
+        (
+            ClientResponseError(Mock(), Mock(), status=500),
+            "An error occurred while communicating",
+            EXPECTED_WATER_LEVEL,
+        ),
+        (
+            AqvifyAuthException,
+            "Authentication failed",
+            "unavailable",
+        ),
+    ],
+    ids=["timeout_error", "communications_error", "auth_error"],
+)
+async def test_coordinator_get_devices_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aqvify_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    log_message: str,
+    expected_state: str,
+) -> None:
+    """Tests that the coordinator handles errors from async_get_devices."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_aqvify_client.async_get_devices.side_effect = exception
+
+    caplog.clear()
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == STATE_UNAVAILABLE
+    assert log_message in caplog.text
+
+    mock_aqvify_client.async_get_devices.side_effect = None
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("exception", "log_message", "expected_state"),
+    [
+        (TimeoutError, "Timeout occurred while communicating", EXPECTED_WATER_LEVEL),
+        (
+            ClientResponseError(Mock(), Mock(), status=500),
+            "An error occurred while communicating",
+            EXPECTED_WATER_LEVEL,
+        ),
+        (AqvifyAuthException, "Invalid API key.", "unavailable"),
+    ],
+    ids=["timeout_error", "communications_error", "auth_error"],
+)
+async def test_coordinator_get_device_data_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aqvify_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    log_message: str,
+    expected_state: str,
+) -> None:
+    """Tests that the coordinator handles errors from async_get_device_latest_data."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_aqvify_client.async_get_device_latest_data.side_effect = exception
+
+    caplog.clear()
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == STATE_UNAVAILABLE
+    assert log_message in caplog.text
+    mock_aqvify_client.async_get_device_latest_data.side_effect = None
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == expected_state
