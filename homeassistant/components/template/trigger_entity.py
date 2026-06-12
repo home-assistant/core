@@ -146,11 +146,11 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         return super().available
 
     @callback
-    def _render_script_variables(self) -> dict:
+    def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         return self._rendered_entity_variables or {}
 
-    def _render_entity_variables(self):
+    def _render_entity_variables(self) -> dict[str, Any]:
         """Render entity variables."""
 
         # Attach this variable to coordinator variables
