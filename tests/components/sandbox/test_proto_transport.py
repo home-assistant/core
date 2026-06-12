@@ -41,7 +41,10 @@ from tests.common import MockConfigEntry
 def _entry_fixture(hass: HomeAssistant) -> ConfigEntry:
     """A loaded light MockConfigEntry registered against ``hass``."""
     entry = MockConfigEntry(
-        domain="light", title="Sandboxed Hue", data={"host": "1.2.3.4"}
+        domain="light",
+        title="Sandboxed Hue",
+        data={"host": "1.2.3.4"},
+        sandbox="built-in",
     )
     entry.add_to_hass(hass)
     return entry

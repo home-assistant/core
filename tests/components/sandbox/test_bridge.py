@@ -47,9 +47,12 @@ def ignore_translations_for_mock_domains() -> list[str]:
 
 @pytest.fixture(name="entry")
 def _entry_fixture(hass: HomeAssistant) -> ConfigEntry:
-    """A loaded MockConfigEntry registered against ``hass``."""
+    """A loaded MockConfigEntry routed to the ``built-in`` sandbox group."""
     entry = MockConfigEntry(
-        domain="light", title="Sandboxed Hue", data={"host": "1.2.3.4"}
+        domain="light",
+        title="Sandboxed Hue",
+        data={"host": "1.2.3.4"},
+        sandbox="built-in",
     )
     entry.add_to_hass(hass)
     return entry
@@ -101,9 +104,9 @@ async def test_register_entity_prefixes_unique_id_with_source_domain(
     """
     _bridge, main_channel, sandbox_channel = await _wire(hass)
 
-    entry_a = MockConfigEntry(domain="demo_a", title="A")
+    entry_a = MockConfigEntry(domain="demo_a", title="A", sandbox="built-in")
     entry_a.add_to_hass(hass)
-    entry_b = MockConfigEntry(domain="demo_b", title="B")
+    entry_b = MockConfigEntry(domain="demo_b", title="B", sandbox="built-in")
     entry_b.add_to_hass(hass)
 
     def _payload(entry_id: str, sandbox_entity_id: str) -> pb.EntityDescription:
@@ -509,7 +512,7 @@ async def test_register_entity_auto_loads_domain_component(
     """The bridge spins up the host EntityComponent for unfamiliar domains."""
     # `switch` is a different domain than the entry's owner (`light`) —
     # registering a switch proxy must trigger ``async_setup_component``.
-    entry = MockConfigEntry(domain="generic", title="Generic")
+    entry = MockConfigEntry(domain="generic", title="Generic", sandbox="built-in")
     entry.add_to_hass(hass)
     # Ensure switch isn't pre-loaded by the test fixture chain.
     assert "switch" not in hass.config.components

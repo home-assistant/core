@@ -426,6 +426,17 @@ class SandboxBridge:
             raise HomeAssistantError(
                 f"register_entity: unknown entry_id {description.entry_id!r}"
             )
+        # Trust the entry_id only after re-deriving ownership from main-side
+        # state: the sandbox may register entities *only* for entries main
+        # routed to this very group. Without this a compromised sandbox could
+        # attach entities (and pre-create devices) against a victim
+        # integration's config entry. ``entry.sandbox`` is set by main at flow
+        # completion, never by the sandbox.
+        if entry.sandbox != self.group:
+            raise HomeAssistantError(
+                f"register_entity: entry {description.entry_id!r} not owned by "
+                f"group {self.group!r}"
+            )
         # Namespace the proxy unique_id with the source integration domain so
         # two integrations in one group reusing the same unique_id don't
         # collide on the shared sandbox platform_name. A None unique_id
@@ -443,8 +454,16 @@ class SandboxBridge:
         # EntityPlatform.async_add_entities is idempotent on (identifiers,
         # connections) and will reuse the same DeviceEntry.
         if description.device_info is not None:
+            device_registry = dr.async_get(self.hass)
+            # ``async_get_or_create`` merges into an existing device that shares
+            # the supplied identifiers/connections, adding our entry to its
+            # config_entries set. Refuse to merge into a device already owned by
+            # an entry outside this group, so a sandbox cannot hijack a foreign
+            # integration's device with crafted identifiers. The device stays
+            # scoped to the (now-verified-owned) entry.
+            self._reject_foreign_device_merge(device_registry, description)
             try:
-                device = dr.async_get(self.hass).async_get_or_create(
+                device = device_registry.async_get_or_create(
                     config_entry_id=description.entry_id,
                     **description.device_info,
                 )
@@ -468,6 +487,48 @@ class SandboxBridge:
         await platform.async_add_entities([proxy])
         self._entities[description.sandbox_entity_id] = proxy
         return pb.RegisterEntityResult(entity_id=proxy.entity_id or "")
+
+    @callback
+    def _owned_entry_ids(self) -> set[str]:
+        """Return the entry_ids of every config entry main routed to this group."""
+        return {
+            entry.entry_id
+            for entry in self.hass.config_entries.async_entries()
+            if entry.sandbox == self.group
+        }
+
+    @callback
+    def _reject_foreign_device_merge(
+        self,
+        device_registry: dr.DeviceRegistry,
+        description: SandboxEntityDescription,
+    ) -> None:
+        """Reject a device pre-create that would merge into a foreign entry.
+
+        ``async_get_or_create`` matches an existing device by any shared
+        identifier or connection and adds our config entry to it. If that
+        device already belongs to a config entry outside this sandbox group,
+        merging would let a compromised sandbox graft onto (and thereby reach)
+        a foreign integration's device. We refuse — the sandbox may only touch
+        devices that are unowned or already owned by one of *its* entries.
+        """
+        info = description.device_info or {}
+        identifiers: set[tuple[str, str]] = info.get("identifiers") or set()
+        connections: set[tuple[str, str]] = info.get("connections") or set()
+        if not identifiers and not connections:
+            return
+        existing = device_registry.async_get_device(
+            identifiers=identifiers or None, connections=connections or None
+        )
+        if existing is None:
+            return
+        foreign = existing.config_entries - self._owned_entry_ids()
+        if foreign:
+            raise HomeAssistantError(
+                f"register_entity: device for "
+                f"{description.sandbox_entity_id!r} already belongs to a config "
+                f"entry outside group {self.group!r}; refusing to merge"
+            )
 
     async def _ensure_domain_loaded(self, domain: str) -> None:
         """Make sure the domain's :class:`EntityComponent` is loaded on main."""
