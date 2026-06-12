@@ -9,6 +9,7 @@ from freezegun.api import FrozenDateTimeFactory
 from PIL import Image
 import pytest
 
+from homeassistant.components.image_upload import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
