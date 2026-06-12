@@ -27,7 +27,7 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
         self.entity_description = entity_description
 
     async def async_added_to_hass(self) -> None:
-        """Called when sensor is added to Home Assistant."""
+        """Called when entity is added to Home Assistant."""
         await super().async_added_to_hass()
 
         self._handle_coordinator_update()
