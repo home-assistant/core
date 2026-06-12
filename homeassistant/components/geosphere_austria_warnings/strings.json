@@ -33,32 +33,6 @@
     }
   },
   "entity": {
-    "binary_sensor": {
-      "auto_thunderstorm_warning": {
-        "name": "Automatic thunderstorm warning"
-      },
-      "black_ice_warning": {
-        "name": "Black ice warning"
-      },
-      "cold_warning": {
-        "name": "Cold warning"
-      },
-      "heat_warning": {
-        "name": "Heat warning"
-      },
-      "rain_warning": {
-        "name": "Rain warning"
-      },
-      "snow_warning": {
-        "name": "Snow warning"
-      },
-      "storm_warning": {
-        "name": "Storm warning"
-      },
-      "thunderstorm_warning": {
-        "name": "Thunderstorm warning"
-      }
-    },
     "sensor": {
       "active_warnings": {
         "name": "Active warnings"

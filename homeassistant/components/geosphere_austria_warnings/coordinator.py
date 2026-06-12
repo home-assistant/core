@@ -1,6 +1,5 @@
 """Data update coordinator for the GeoSphere Austria Warnings integration."""
 
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 
 from pygeosphere_warnings import (
@@ -27,15 +26,7 @@ UPDATE_INTERVAL = timedelta(minutes=5)
 type GeoSphereConfigEntry = ConfigEntry[GeoSphereUpdateCoordinator]
 
 
-@dataclass(kw_only=True, frozen=True)
-class GeoSphereData:
-    """Class to hold the data of a GeoSphere Austria Warnings config entry."""
-
-    location_warnings: LocationWarnings
-    thunderstorm_intensity: int
-
-
-class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
+class GeoSphereUpdateCoordinator(DataUpdateCoordinator[LocationWarnings]):
     """Coordinator fetching warnings for a single municipality."""
 
     config_entry: GeoSphereConfigEntry
@@ -57,7 +48,7 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
         """Return the warning text language based on the user's language."""
         return "de" if self.hass.config.language.partition("-")[0] == "de" else "en"
 
-    async def _async_update_data(self) -> GeoSphereData:
+    async def _async_update_data(self) -> LocationWarnings:
         """Fetch warnings, skipping the full fetch when nothing changed."""
         try:
             last_modified = await self.client.get_last_modified()
@@ -73,10 +64,7 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
                     self._language,
                 )
             else:
-                location_warnings = self.data.location_warnings
-            # Automated thunderstorm warnings are a separate product and not
-            # covered by the Last-Modified precheck of the warning status.
-            thunderstorms = await self.client.get_thunderstorms()
+                location_warnings = self.data
         except GeoSphereMunicipalityNotFoundError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -95,9 +83,4 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
                 translation_placeholders={"error": str(err)},
             ) from err
         self._last_modified = last_modified
-        return GeoSphereData(
-            location_warnings=location_warnings,
-            thunderstorm_intensity=thunderstorms.get(
-                location_warnings.municipality.municipality_id, 0
-            ),
-        )
+        return location_warnings

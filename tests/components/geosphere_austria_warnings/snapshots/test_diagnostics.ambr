@@ -10,7 +10,6 @@
       'name': 'Schwechat',
       'url_name': 'schwechat',
     }),
-    'thunderstorm_intensity': 2,
     'warnings': list([
       dict({
         'change_id': 6,

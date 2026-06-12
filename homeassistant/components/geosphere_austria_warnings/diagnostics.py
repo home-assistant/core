@@ -39,9 +39,6 @@ async def async_get_config_entry_diagnostics(
     data = entry.runtime_data.data
     return {
         "entry_data": async_redact_data(entry.data, TO_REDACT),
-        "municipality": asdict(data.location_warnings.municipality),
-        "warnings": [
-            _serialize_warning(warning) for warning in data.location_warnings.warnings
-        ],
-        "thunderstorm_intensity": data.thunderstorm_intensity,
+        "municipality": asdict(data.municipality),
+        "warnings": [_serialize_warning(warning) for warning in data.warnings],
     }

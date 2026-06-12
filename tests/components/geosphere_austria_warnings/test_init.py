@@ -68,14 +68,12 @@ async def test_warnings_fetch_skipped_when_unchanged(
     """Test that the HEAD precheck avoids refetching unchanged warnings."""
     await setup_integration(hass, mock_config_entry)
     assert mock_client.get_warnings_for_coords.call_count == 1
-    assert mock_client.get_thunderstorms.call_count == 1
 
     # Unchanged Last-Modified: warnings are not refetched
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_client.get_warnings_for_coords.call_count == 1
-    assert mock_client.get_thunderstorms.call_count == 2
 
     # New Last-Modified: warnings are refetched
     mock_client.get_last_modified.return_value = datetime(
@@ -85,7 +83,6 @@ async def test_warnings_fetch_skipped_when_unchanged(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert mock_client.get_warnings_for_coords.call_count == 2
-    assert mock_client.get_thunderstorms.call_count == 3
 
 
 @pytest.mark.freeze_time("2023-03-27 12:00:00+00:00")
@@ -97,14 +94,14 @@ async def test_entities_unavailable_on_error(
 ) -> None:
     """Test that entities become unavailable when the update fails."""
     await setup_integration(hass, mock_config_entry)
-    assert (state := hass.states.get("binary_sensor.schwechat_storm_warning"))
-    assert state.state == "on"
+    assert (state := hass.states.get("sensor.schwechat_active_warnings"))
+    assert state.state != STATE_UNAVAILABLE
 
     mock_client.get_last_modified.side_effect = GeoSphereConnectionError
     freezer.tick(UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert (state := hass.states.get("binary_sensor.schwechat_storm_warning"))
+    assert (state := hass.states.get("sensor.schwechat_active_warnings"))
     assert state.state == STATE_UNAVAILABLE
 
 

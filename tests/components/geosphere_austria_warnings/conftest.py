@@ -50,7 +50,6 @@ def mock_client() -> Generator[AsyncMock]:
         client.get_warnings_for_coords.return_value = LocationWarnings.from_api(
             load_json_object_fixture("get_warnings_for_coords.json", DOMAIN)
         )
-        client.get_thunderstorms.return_value = {"30740": 2}
         yield client
 
 

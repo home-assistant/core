@@ -78,7 +78,7 @@ class GeoSphereSensor(GeoSphereEntity, SensorEntity):
         now = dt_util.utcnow()
         active_warnings = [
             warning
-            for warning in self.coordinator.data.location_warnings.warnings
+            for warning in self.coordinator.data.warnings
             if warning.is_active(now)
         ]
         return self.entity_description.value_fn(active_warnings)
