@@ -10,7 +10,7 @@ from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -23,7 +23,7 @@ def _my_pv_connection[_R](func):
     @functools.wraps(func)
     async def wrapper(self, *args, **kwargs) -> _R | None:
         if not self._device.connected and not await self._device.connect():
-            raise UpdateFailed(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
             )
@@ -33,7 +33,7 @@ def _my_pv_connection[_R](func):
         except MyPVAuthenticationError as exc:
             raise ConfigEntryAuthFailed from exc
         except MyPVConnectionError as exc:
-            raise UpdateFailed(
+            raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="device_unavailable",
                 translation_placeholders={"uri": self._device.uri},
@@ -125,10 +125,24 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         """
         return await self._device.disconnect()
 
-    @_my_pv_connection
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
-        await self._device.fetch_data()
+        if not self._device.connected and not await self._device.connect():
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+            )
+
+        try:
+            await self._device.fetch_data()
+        except MyPVAuthenticationError as exc:
+            raise ConfigEntryAuthFailed from exc
+        except MyPVConnectionError as exc:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="device_unavailable",
+                translation_placeholders={"uri": self._device.uri},
+            ) from exc
 
     @_my_pv_connection
     async def set_target_temperature(self, temperature: float) -> bool:
