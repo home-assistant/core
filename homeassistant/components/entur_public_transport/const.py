@@ -6,7 +6,6 @@ DOMAIN = "entur_public_transport"
 
 API_CLIENT_NAME = "homeassistant-{}"
 
-CONF_EXPAND_PLATFORMS = "expand_platforms"
 CONF_STOP_IDS = "stop_ids"
 CONF_WHITELIST_LINES = "line_whitelist"
 CONF_OMIT_NON_BOARDING = "omit_non_boarding"

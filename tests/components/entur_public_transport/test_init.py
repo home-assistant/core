@@ -6,7 +6,6 @@ from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.entur_public_transport.const import (
-    CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_WHITELIST_LINES,
@@ -101,30 +100,6 @@ async def test_setup_entry_expand_quays(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_entur_client.expand_all_quays.assert_called_once()
-
-
-async def test_setup_entry_skips_expand_quays_when_disabled(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_entur_client: MagicMock,
-) -> None:
-    """Test that expand_all_quays is skipped when disabled by import."""
-    hass.config_entries.async_update_entry(
-        mock_config_entry,
-        options={
-            CONF_EXPAND_PLATFORMS: False,
-            CONF_SHOW_ON_MAP: False,
-            CONF_WHITELIST_LINES: [],
-            CONF_OMIT_NON_BOARDING: True,
-            CONF_NUMBER_OF_DEPARTURES: 2,
-        },
-    )
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    mock_entur_client.expand_all_quays.assert_not_called()
 
 
 @pytest.mark.parametrize(

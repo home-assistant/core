@@ -6,7 +6,6 @@ from aiohttp import ClientError
 import pytest
 
 from homeassistant.components.entur_public_transport.const import (
-    CONF_EXPAND_PLATFORMS,
     CONF_NUMBER_OF_DEPARTURES,
     CONF_OMIT_NON_BOARDING,
     CONF_STOP_IDS,
@@ -38,7 +37,6 @@ async def test_full_user_flow(
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
             CONF_NAME: "My Bus Stop",
-            CONF_EXPAND_PLATFORMS: False,
             CONF_SHOW_ON_MAP: False,
             CONF_WHITELIST_LINES: [],
             CONF_OMIT_NON_BOARDING: True,
@@ -53,7 +51,6 @@ async def test_full_user_flow(
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
     }
     assert result["options"] == {
-        CONF_EXPAND_PLATFORMS: False,
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
@@ -78,7 +75,6 @@ async def test_user_flow_with_quay(
         {
             CONF_STOP_IDS: ["NSR:Quay:48550"],
             CONF_NAME: "My Quay",
-            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -105,7 +101,6 @@ async def test_user_flow_invalid_stop_id(
         {
             CONF_STOP_IDS: ["invalid_id"],
             CONF_NAME: "My Bus Stop",
-            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -124,7 +119,6 @@ async def test_user_flow_invalid_stop_id(
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
             CONF_NAME: "My Bus Stop",
-            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -150,7 +144,6 @@ async def test_user_flow_mixed_invalid_stop_ids(
         {
             CONF_STOP_IDS: ["invalid_id", "NSR:StopPlace:548"],
             CONF_NAME: "My Bus Stop",
-            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -183,7 +176,6 @@ async def test_user_flow_cannot_connect(
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
             CONF_NAME: "My Bus Stop",
-            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -200,7 +192,6 @@ async def test_user_flow_cannot_connect(
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
             CONF_NAME: "My Bus Stop",
-            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -228,7 +219,6 @@ async def test_user_flow_unknown_error(
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
             CONF_NAME: "My Bus Stop",
-            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -245,7 +235,6 @@ async def test_user_flow_unknown_error(
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
             CONF_NAME: "My Bus Stop",
-            CONF_EXPAND_PLATFORMS: True,
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -309,7 +298,6 @@ async def test_options_flow(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_EXPAND_PLATFORMS: True,
         CONF_SHOW_ON_MAP: True,
         CONF_WHITELIST_LINES: ["NSB:Line:45"],
         CONF_OMIT_NON_BOARDING: False,
@@ -326,7 +314,6 @@ async def test_import_flow_success(
     yaml_config = {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
         CONF_NAME: "My Bus Stop",
-        CONF_EXPAND_PLATFORMS: False,
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
@@ -346,7 +333,6 @@ async def test_import_flow_success(
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
     }
     assert result["options"] == {
-        CONF_EXPAND_PLATFORMS: False,
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
