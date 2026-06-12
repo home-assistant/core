@@ -131,10 +131,18 @@ class SandboxFlowRouter:
         try:
             result = await channel.call(MSG_ENTRY_SETUP, payload)
         except ChannelClosedError:
+            # The router runs *outside* ConfigEntry.async_setup, so the
+            # SETUP_RETRY timer (async_call_later) that core wires there is
+            # never armed for a sandbox entry — setting SETUP_RETRY here would
+            # wedge the entry in a retry state that never retries (and a later
+            # async_setup would raise OperationNotAllowed). Report SETUP_ERROR
+            # honestly instead; the entry stays recoverable via a manual
+            # reload. (Follow-up: a router-driven true retry — see
+            # ARCHITECTURE.md §5.)
             entry._async_set_state(  # noqa: SLF001
                 self._hass,
-                ConfigEntryState.SETUP_RETRY,
-                "Sandbox channel closed during setup",
+                ConfigEntryState.SETUP_ERROR,
+                "Sandbox channel closed during setup; reload to retry",
             )
             return False
         except ChannelRemoteError as err:

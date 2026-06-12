@@ -322,6 +322,7 @@ class Channel:
         self._handlers: dict[str, Handler] = {}
         self._reader_task: asyncio.Task[None] | None = None
         self._closed: bool = False
+        self._close_done: bool = False
         self._write_lock = asyncio.Lock()
         self._inflight: set[asyncio.Task[None]] = set()
         self._inflight_sem = asyncio.Semaphore(max_inflight)
@@ -386,16 +387,27 @@ class Channel:
         await self._write(Frame.push(msg_type, payload))
 
     async def close(self) -> None:
-        """Close the channel and cancel any in-flight calls."""
-        if self._closed:
-            return
+        """Close the channel and cancel any in-flight calls.
+
+        Idempotent and safe after the read loop has already marked the
+        channel closed on EOF: that path sets ``_closed`` and cancels
+        inflight tasks but cannot close the transport or await the cancelled
+        tasks (it runs *inside* the reader). ``close()`` always finishes that
+        teardown — closing the transport and awaiting inflight exactly once
+        via the ``_close_done`` guard — no matter who set ``_closed`` first,
+        so the stdin pipe / unix connection never leaks across a restart.
+        """
         self._closed = True
+        # Fail any still-pending calls; a no-op if the read loop already did.
         for future in self._pending.values():
             if not future.done():
                 future.set_exception(
                     ChannelClosedError(f"channel {self._name!r} is closed")
                 )
         self._pending.clear()
+        if self._close_done:
+            return
+        self._close_done = True
         inflight = list(self._inflight)
         for task in inflight:
             task.cancel()
