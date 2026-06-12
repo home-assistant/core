@@ -132,9 +132,21 @@ python -m hass_client.sandbox --name <group> --url stdio://
 **Crash recovery** is bounded: `SandboxProcess` restarts on unexpected exit up
 to 3 times in a 60s sliding window with backoff; exceeding the budget marks the
 sandbox `failed`, `ensure_started` raises `SandboxFailedError`, and the router
-marks affected entries `SETUP_ERROR`. (`SETUP_RETRY` is reserved for the
-narrower case of a `ChannelClosedError` *during* an `entry_setup` round-trip,
-where a retry can succeed.)
+marks affected entries `SETUP_ERROR`. A `ChannelClosedError` *during* an
+`entry_setup` round-trip (the sandbox crashed mid-setup) is also reported as
+`SETUP_ERROR` — the entry stays recoverable via a manual reload. The router
+runs *outside* `ConfigEntry.async_setup`, so it cannot reach core's
+`SETUP_RETRY` timer (`async_call_later`); setting `SETUP_RETRY` from the router
+would wedge the entry in a retry state that never fires. A router-driven true
+retry is a follow-up.
+
+When a crashed sandbox respawns, the manager's `on_ready` hook fires once the
+fresh process is up: the displaced bridge is torn down (its proxy entities +
+`EntityComponent` platform slots released through the public
+`async_unregister_remote_platform` hook) and the group's still-`LOADED` entries
+are re-driven through `async_schedule_reload`, so every entity re-registers
+against the new bridge. While the sandbox is down its proxies are flipped
+unavailable (via `on_channel_closed`) rather than serving stale state.
 
 **Graceful shutdown** on `EVENT_HOMEASSISTANT_STOP`: the manager fans out
 `sandbox/shutdown`; each sandbox unloads its entries, snapshots
