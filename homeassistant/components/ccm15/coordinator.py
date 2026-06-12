@@ -147,10 +147,8 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             await self.async_request_refresh()
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
-        """Return the slave device for an index, or None if out of range."""
-        if ac_index < 0 or ac_index >= len(self.data.devices):
-            return None
-        return self.data.devices[ac_index]
+        """Return the slave device for an index, or None if not present."""
+        return self.data.devices.get(ac_index)
 
     async def async_set_hvac_mode(
         self, ac_index: int, data: CCM15SlaveDevice, hvac_mode: HVACMode
