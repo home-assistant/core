@@ -22,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.location import has_location
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from . import get_base_unique_id
+from . import base_unique_id
 from .const import CONF_LOCATION_ENTITY, CONF_STATION, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -71,7 +71,9 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the specific location configuration step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(get_base_unique_id(user_input))
+            await self.async_set_unique_id(
+                base_unique_id(user_input[CONF_LATITUDE], user_input[CONF_LONGITUDE])
+            )
             self._abort_if_unique_id_configured()
             try:
                 info = await validate_input(self.hass, user_input)
@@ -123,8 +125,9 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_API_KEY: user_input[CONF_API_KEY],
                         CONF_LOCATION_ENTITY: entity_entry.id,
                     }
-                    await self.async_set_unique_id(get_base_unique_id(data))
-                    self._abort_if_unique_id_configured()
+                    self._async_abort_entries_match(
+                        {CONF_LOCATION_ENTITY: entity_entry.id}
+                    )
                     try:
                         await validate_input(
                             self.hass,

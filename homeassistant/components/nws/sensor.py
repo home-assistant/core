@@ -1,9 +1,7 @@
 """Sensors for National Weather Service (NWS)."""
 
-from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
 
 from pynws import SimpleNWS
 
@@ -13,6 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -159,7 +158,7 @@ async def async_setup_entry(
     async_add_entities(
         NWSSensor(
             hass=hass,
-            entry_data=entry.data,
+            entry=entry,
             nws_data=nws_data,
             description=description,
             station=station,
@@ -178,7 +177,7 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
     def __init__(
         self,
         hass: HomeAssistant,
-        entry_data: Mapping[str, Any],
+        entry: ConfigEntry,
         nws_data: NWSData,
         description: NWSSensorEntityDescription,
         station: str,
@@ -192,8 +191,8 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
             self._attr_name = f"{station} {description.name}"
         if hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_native_unit_of_measurement = description.unit_convert
-        self._attr_device_info = device_info(entry_data, nws_data)
-        self._attr_unique_id = f"{get_base_unique_id(entry_data)}_{description.key}"
+        self._attr_device_info = device_info(entry, nws_data)
+        self._attr_unique_id = f"{get_base_unique_id(entry)}_{description.key}"
 
     @property
     def _nws(self) -> SimpleNWS:

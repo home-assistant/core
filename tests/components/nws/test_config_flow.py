@@ -177,6 +177,7 @@ async def test_form_entity(
         CONF_API_KEY: "test",
         CONF_LOCATION_ENTITY: entry.id,
     }
+    assert result2["result"].unique_id is None
     assert len(mock_setup_entry.mock_calls) == 1
 
 

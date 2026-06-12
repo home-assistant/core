@@ -1,6 +1,5 @@
 """Support for NWS weather service."""
 
-from collections.abc import Mapping
 from functools import partial
 from typing import Any, Required, TypedDict, cast
 
@@ -24,6 +23,7 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntityFeature,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfLength,
     UnitOfPressure,
@@ -42,12 +42,13 @@ from homeassistant.helpers.update_coordinator import TimestampDataUpdateCoordina
 from homeassistant.util.json import JsonValueType
 from homeassistant.util.unit_conversion import SpeedConverter, TemperatureConverter
 
-from . import NWSConfigEntry, NWSData, device_info, get_base_unique_id
+from . import NWSConfigEntry, NWSData, base_unique_id, device_info, get_base_unique_id
 from .const import (
     ATTR_FORECAST_DETAILED_DESCRIPTION,
     ATTR_FORECAST_SHORT_DESCRIPTION,
     ATTRIBUTION,
     CONDITION_CLASSES,
+    CONF_LOCATION_ENTITY,
     DAYNIGHT,
     DOMAIN,
     FORECAST_VALID_TIME,
@@ -92,11 +93,13 @@ async def async_setup_entry(
     entity_registry = er.async_get(hass)
     nws_data = entry.runtime_data
 
-    # Remove hourly entity from legacy config entries
-    if entity_id := entity_registry.async_get_entity_id(
-        WEATHER_DOMAIN,
-        DOMAIN,
-        _calculate_unique_id(entry.data, HOURLY),
+    # Remove hourly entity from legacy config entries (location-based only)
+    if not entry.data.get(CONF_LOCATION_ENTITY) and (
+        entity_id := entity_registry.async_get_entity_id(
+            WEATHER_DOMAIN,
+            DOMAIN,
+            f"{base_unique_id(entry.data['latitude'], entry.data['longitude'])}_{HOURLY}",
+        )
     ):
         entity_registry.async_remove(entity_id)
 
@@ -109,7 +112,7 @@ async def async_setup_entry(
         supports_response=SupportsResponse.ONLY,
     )
 
-    async_add_entities([NWSWeather(entry.data, nws_data)], False)
+    async_add_entities([NWSWeather(entry, nws_data)], False)
 
 
 class ExtraForecast(TypedDict, total=False):
@@ -123,9 +126,9 @@ class ExtraForecast(TypedDict, total=False):
     short_description: str | None
 
 
-def _calculate_unique_id(entry_data: Mapping[str, Any], mode: str) -> str:
+def _calculate_unique_id(entry: ConfigEntry, mode: str) -> str:
     """Calculate unique ID."""
-    return f"{get_base_unique_id(entry_data)}_{mode}"
+    return f"{get_base_unique_id(entry)}_{mode}"
 
 
 class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]]):
@@ -143,7 +146,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
 
     def __init__(
         self,
-        entry_data: Mapping[str, Any],
+        entry: ConfigEntry,
         nws_data: NWSData,
     ) -> None:
         """Initialise the platform with a data instance and station name."""
@@ -156,8 +159,8 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         )
         self._nws_data = nws_data
 
-        self._attr_unique_id = _calculate_unique_id(entry_data, DAYNIGHT)
-        self._attr_device_info = device_info(entry_data, nws_data)
+        self._attr_unique_id = _calculate_unique_id(entry, DAYNIGHT)
+        self._attr_device_info = device_info(entry, nws_data)
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""

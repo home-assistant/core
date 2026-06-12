@@ -1,10 +1,9 @@
 """The National Weather Service integration."""
 
-from collections.abc import Awaitable, Callable, Mapping
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import datetime
 import logging
-from typing import Any
 
 from pynws import NwsNoDataError, SimpleNWS, call_with_retry
 
@@ -57,11 +56,11 @@ def base_unique_id(latitude: float, longitude: float) -> str:
     return f"{latitude}_{longitude}"
 
 
-def get_base_unique_id(entry_data: Mapping[str, Any]) -> str:
-    """Return base unique id from config entry data."""
-    if location_entity := entry_data.get(CONF_LOCATION_ENTITY):
-        return f"entity_{location_entity}"
-    return base_unique_id(entry_data[CONF_LATITUDE], entry_data[CONF_LONGITUDE])
+def get_base_unique_id(entry: ConfigEntry) -> str:
+    """Return base unique id from config entry."""
+    if entry.data.get(CONF_LOCATION_ENTITY):
+        return entry.entry_id
+    return base_unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])
 
 
 @dataclass
@@ -271,13 +270,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-def device_info(entry_data: Mapping[str, Any], nws_data: NWSData) -> DeviceInfo:
+def device_info(entry: ConfigEntry, nws_data: NWSData) -> DeviceInfo:
     """Return device registry information."""
-    uid = get_base_unique_id(entry_data)
+    uid = get_base_unique_id(entry)
     if nws_data.location_entity_id:
         name = f"NWS: {nws_data.location_entity_id}"
     else:
-        name = f"NWS: {entry_data[CONF_LATITUDE]}, {entry_data[CONF_LONGITUDE]}"
+        name = f"NWS: {entry.data[CONF_LATITUDE]}, {entry.data[CONF_LONGITUDE]}"
     return DeviceInfo(
         entry_type=DeviceEntryType.SERVICE,
         identifiers={(DOMAIN, uid)},
