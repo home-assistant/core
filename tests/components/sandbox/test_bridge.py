@@ -539,6 +539,9 @@ async def test_register_entity_auto_loads_domain_component(
 
 async def test_register_service_installs_forwarder(hass: HomeAssistant) -> None:
     """A sandbox-registered service appears on main and forwards calls back."""
+    MockConfigEntry(
+        domain="mirror_demo", title="Mirror", sandbox="built-in"
+    ).add_to_hass(hass)
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     seen_calls: list[pb.CallService] = []
 
@@ -583,6 +586,9 @@ async def test_forwarded_context_restores_on_echoed_state(
     echoing that same context_id, main restores the *original*
     ``user_id`` / ``parent_id`` instead of minting a fresh attribution.
     """
+    MockConfigEntry(
+        domain="mirror_demo", title="Mirror", sandbox="built-in"
+    ).add_to_hass(hass)
     _bridge, main_channel, sandbox_channel = await _wire(hass)
     forwarded_ids: list[str] = []
 
@@ -653,6 +659,9 @@ async def test_register_service_skips_existing_handler(
     hass: HomeAssistant,
 ) -> None:
     """Main already owning ``(domain, service)`` is not clobbered."""
+    MockConfigEntry(
+        domain="mirror_local", title="Mirror", sandbox="built-in"
+    ).add_to_hass(hass)
     _bridge, main_channel, sandbox_channel = await _wire(hass)
 
     async def _local(_call: Any) -> None:
@@ -682,6 +691,9 @@ async def test_unregister_service_removes_forwarder(
     hass: HomeAssistant,
 ) -> None:
     """``unregister_service`` drops the bridge-installed forwarder."""
+    MockConfigEntry(
+        domain="mirror_demo", title="Mirror", sandbox="built-in"
+    ).add_to_hass(hass)
     _bridge, main_channel, sandbox_channel = await _wire(hass)
 
     try:
