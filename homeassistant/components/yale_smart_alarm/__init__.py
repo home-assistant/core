@@ -31,7 +31,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> boo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
     """Migrate old entry."""
-    LOGGER.debug("Migrating from version %s", entry.version)
+    LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
     if entry.version == 1:
         new_options = entry.options.copy()
@@ -66,6 +66,8 @@ async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bo
                 )
         hass.config_entries.async_update_entry(entry, minor_version=3)
 
-    LOGGER.debug("Migration to version %s successful", entry.version)
+    LOGGER.debug(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
 
     return True
