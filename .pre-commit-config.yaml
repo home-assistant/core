@@ -75,6 +75,16 @@ repos:
         pass_filenames: false
         stages: [manual]
         files: ^sandbox/proto/sandbox\.proto$
+      # Drift guard for the hand-mirrored sandbox wire modules (channel.py,
+      # codec_protobuf.py, messages.py). A plain byte-for-byte diff with no
+      # external tooling, so — unlike the proto gencode guard above — it runs as
+      # a regular hook whenever either copy of a mirrored file changes.
+      - id: sandbox-mirror-drift
+        name: sandbox wire-module mirror drift guard
+        entry: sandbox/proto/check_mirror_drift.sh
+        language: script
+        pass_filenames: false
+        files: ^(homeassistant/components/sandbox|sandbox/hass_client/hass_client)/(channel|codec_protobuf|messages)\.py$
       # Run mypy through our wrapper script in order to get the possible
       # pyenv and/or virtualenv activated; it may not have been e.g. if
       # committing from a GUI tool that was not launched from an activated

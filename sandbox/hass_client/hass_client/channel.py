@@ -1,11 +1,37 @@
-"""Sandbox-side mirror of ``homeassistant.components.sandbox.channel``.
+"""Request/response channel between manager and sandbox runtime.
 
-Kept as a stand-alone module to honour the project boundary: the HA Core
-integration must not import from ``hass_client`` at integration-load time,
-and ``hass_client`` does not pull from ``homeassistant.components.*``. The
-two files speak the same wire format — see the docstring on the HA side
-for the layering (Channel / Codec / Transport) and the :class:`Frame`
-shape.
+The channel is split into three layers so the wire format and the byte
+transport can each be swapped without touching the concurrency-critical
+dispatch core:
+
+* :class:`Channel` — the dispatch core: pending-id map, inflight
+  semaphore, ``register`` / ``call`` / ``push`` / ``close``. It speaks in
+  :class:`Frame` objects and never touches raw bytes.
+* :class:`Codec` — turns a :class:`Frame` into bytes and back.
+  :class:`~.codec_protobuf.ProtobufCodec` is the production wire (a typed
+  protobuf ``Frame`` envelope; the codec owns the ``type → message`` registry
+  so this dispatch core stays codec-agnostic). :class:`JsonCodec` (one JSON
+  object per frame) is retained only as the channel-core test/debug wire.
+* :class:`Transport` — moves whole frame blobs over some byte channel.
+  :class:`StreamTransport` length-prefixes each frame (4-byte big-endian
+  length + body) over an :class:`asyncio.StreamReader` /
+  :class:`asyncio.StreamWriter` pair (stdio, unix socket). A future
+  ``WebSocketTransport`` drops in via :meth:`Channel.from_transport` using
+  aiohttp's native binary framing.
+
+The :class:`Frame` shape mirrors the three message kinds that cross the
+wire:
+
+* **call**: ``id`` (>0), ``type``, ``payload`` — expects a reply
+* **push**: ``id`` 0, ``type``, ``payload`` — one-way, no reply
+* **response**: ``id`` (>0), ``ok``, and either ``result`` or
+  ``error`` / ``error_type`` / ``error_data``
+
+The channel is symmetric: either side may call or be called on. The same
+class runs in the HA Core integration and inside the sandbox subprocess
+(the sandbox side lives at :mod:`hass_client.channel`; the two are kept in
+sync by the protocol shape rather than a shared import — the integration
+must not depend on ``hass_client``).
 
 Inbound calls and pushes are dispatched in their own tasks so a handler
 that itself issues :meth:`Channel.call` does not block the reader — the
@@ -14,6 +40,14 @@ bounded semaphore caps how many handlers can run concurrently; the N+1th
 inbound message queues at the semaphore (not at the reader) until a slot
 frees up.
 """
+
+# This module is hand-mirrored: a byte-identical copy lives at both
+# ``homeassistant/components/sandbox/channel.py`` and
+# ``sandbox/hass_client/hass_client/channel.py``. The HA Core integration must
+# not import from ``hass_client`` (and ``hass_client`` must not import from
+# ``homeassistant.components.*``), so the file is duplicated rather than shared.
+# EDIT BOTH COPIES IN THE SAME CHANGE — ``sandbox/proto/check_mirror_drift.sh``
+# fails the build if they diverge.
 
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
@@ -43,15 +77,15 @@ DEFAULT_MAX_INFLIGHT = 16
 DEFAULT_MAX_QUEUED = 1024
 
 # Hard cap on a single frame's body. A length prefix larger than this aborts
-# the channel rather than letting a compromised peer allocate the process to
-# death.
+# the channel rather than letting a compromised sandbox allocate the host to
+# death (same hardening spirit as the auth key check).
 MAX_FRAME_SIZE = 16 * 1024 * 1024
 
 _LENGTH_PREFIX = struct.Struct(">I")
 
 
 def _serialize_invalid(err: vol.Invalid) -> dict[str, Any]:
-    """Capture a ``vol.Invalid``'s message + path so main can rebuild it.
+    """Capture a ``vol.Invalid``'s message + path so the peer can rebuild it.
 
     Path parts may be ``vol.Marker``s or other non-JSON objects, so each
     part is stringified.
@@ -64,7 +98,7 @@ def _serialize_invalid(err: vol.Invalid) -> dict[str, Any]:
 
 
 def error_data_for(err: BaseException) -> dict[str, Any] | None:
-    """Structured payload that lets main reconstruct a voluptuous error.
+    """Structured payload that lets the peer reconstruct a voluptuous error.
 
     ``MultipleInvalid`` is a subclass of ``Invalid``, so it is checked first.
     Returns ``None`` for anything that is not a voluptuous error.
@@ -227,7 +261,9 @@ class StreamTransport:
     """Length-prefixed framing over a reader/writer pair.
 
     Each frame is a 4-byte big-endian length followed by exactly that many
-    body bytes. Used for stdio and unix-socket connections.
+    body bytes. Used for stdio and unix-socket connections — anywhere the
+    byte channel is an :class:`asyncio.StreamReader` /
+    :class:`asyncio.StreamWriter` pair.
     """
 
     def __init__(
@@ -376,7 +412,12 @@ class Channel:
     async def call(
         self, msg_type: str, payload: Any = None, *, timeout: float | None = None
     ) -> Any:
-        """Send a request and await its response."""
+        """Send a request and await its response.
+
+        Raises :class:`ChannelClosedError` if the channel closes while the
+        call is in flight and :class:`ChannelRemoteError` if the remote
+        returns an error response.
+        """
         if self._closed:
             raise ChannelClosedError(f"channel {self._name!r} is closed")
         call_id = self._next_id
@@ -458,7 +499,7 @@ class Channel:
                 try:
                     data = await self._transport.read_frame()
                 except FrameTooLargeError as err:
-                    _LOGGER.error("channel %s: %s; aborting channel", self._name, err)
+                    _LOGGER.error("Channel %s: %s; aborting channel", self._name, err)
                     return
                 if data is None:
                     return
@@ -466,7 +507,7 @@ class Channel:
                     frame = self._codec.decode(data)
                 except Exception:  # noqa: BLE001
                     _LOGGER.warning(
-                        "channel %s: dropping undecodable frame (%d bytes)",
+                        "Channel %s: dropping undecodable frame (%d bytes)",
                         self._name,
                         len(data),
                     )
@@ -475,8 +516,9 @@ class Channel:
         except asyncio.CancelledError:
             raise
         except Exception:
-            _LOGGER.exception("channel %s: read loop crashed", self._name)
+            _LOGGER.exception("Channel %s: read loop crashed", self._name)
         finally:
+            # Mark closed so any pending calls don't hang forever.
             if not self._closed:
                 self._closed = True
                 for future in self._pending.values():
@@ -491,6 +533,7 @@ class Channel:
     def _dispatch(self, frame: Frame) -> None:
         """Route an inbound frame; non-blocking — handlers run in tasks."""
         if frame.kind is FrameKind.RESPONSE:
+            # Response to a call we sent out — set the future inline; no I/O.
             future = self._pending.get(frame.id)
             if future is None or future.done():
                 return
@@ -527,6 +570,8 @@ class Channel:
         handler = self._handlers.get(frame.type)
 
         if frame.kind is FrameKind.PUSH:
+            # One-way push. Dispatch in a task so a slow push handler
+            # cannot block the reader from draining the next message.
             if handler is not None:
                 self._spawn_handler(
                     self._run_push_handler(frame.type, handler, frame.payload)
@@ -534,6 +579,8 @@ class Channel:
             return
 
         if handler is None:
+            # No work to do — write the unknown-type error directly. Still
+            # spawn it so a stalled writer cannot stall the reader.
             self._spawn_handler(
                 self._write(
                     Frame.error_response(
@@ -567,7 +614,7 @@ class Channel:
                 raise
             except Exception:
                 _LOGGER.exception(
-                    "channel %s: push handler for %s raised",
+                    "Channel %s: push handler for %s raised",
                     self._name,
                     msg_type,
                 )
