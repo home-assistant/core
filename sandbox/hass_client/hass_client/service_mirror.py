@@ -64,15 +64,37 @@ class ServiceMirror:
         self._unsub_removed = self.hass.bus.async_listen(
             EVENT_SERVICE_REMOVED, self._on_service_removed
         )
+        # Replay services a domain registered *before* it became approved:
+        # EVENT_SERVICE_REGISTERED fires synchronously during
+        # ``async_setup_entry``, but the entry runner only approves the
+        # domain once setup returns, so those early registrations were
+        # dropped. Re-mirror them the moment the domain is approved.
+        self.approved.add_listener(self.async_sync_domain)
 
     async def async_stop(self) -> None:
         """Detach the bus listeners."""
+        self.approved.remove_listener(self.async_sync_domain)
         if self._unsub_registered is not None:
             self._unsub_registered()
             self._unsub_registered = None
         if self._unsub_removed is not None:
             self._unsub_removed()
             self._unsub_removed = None
+
+    @callback
+    def async_sync_domain(self, domain: str) -> None:
+        """Mirror every already-registered service of a freshly-approved domain.
+
+        Invoked as an :class:`ApprovedDomains` approve listener. Services
+        already mirrored (``_mirrored``) are skipped, so this is a no-op for
+        a domain that was approved before its services registered.
+        """
+        if self._channel is None or self._channel.closed:
+            return
+        if not self.approved.approves(domain):
+            return
+        for service in self.hass.services.async_services_for_domain(domain):
+            self._mirror_service(domain, service)
 
     @callback
     def _on_service_registered(self, event: Event) -> None:
@@ -89,6 +111,15 @@ class ServiceMirror:
                 sorted(self.approved.domains),
             )
             return
+        self._mirror_service(domain, service)
+
+    @callback
+    def _mirror_service(self, domain: str, service: str) -> None:
+        """Push one ``register_service`` for ``domain.service`` (once).
+
+        Shared by the live ``EVENT_SERVICE_REGISTERED`` path and the
+        approval-replay path. Caller guarantees the domain is approved.
+        """
         key = (domain.lower(), service.lower())
         if key in self._mirrored:
             return
