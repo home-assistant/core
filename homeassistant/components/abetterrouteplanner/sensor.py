@@ -294,12 +294,32 @@ SENSORS_BY_METRIC: dict[
 ] = {description.metric: description for description in SENSORS}
 
 
+def _telemetry_unique_id(
+    entry: AbetterrouteplannerConfigEntry, vehicle_id: int, key: str
+) -> str:
+    """Build a telemetry sensor's ``unique_id`` — the ONE definition of the scheme.
+
+    Every telemetry sensor registers under this id; the eager-from-registry
+    probe and the restore-state seed rebuild both look entities up by re-deriving
+    it here, so they cannot drift from what the sensors actually registered.
+    """
+    return f"{entry.unique_id}_{vehicle_id}_{key}"
+
+
 def build_seed_from_restored_state(
     hass: HomeAssistant,
     entry: AbetterrouteplannerConfigEntry,
     vehicle_ids: list[int],
 ) -> dict[int, dict[Metric, datetime]]:
     """Rebuild a per-vehicle wire-time seed from restored sensor state.
+
+    After a restart the stream's monotonicity gate starts cold; ABRP can
+    re-deliver frames whose wire ``time`` is OLDER than what was last received
+    before the restart (reconnect full-state snapshots, backdated provider
+    rollups). Without a seed the cold gate would adopt those stale frames and
+    overwrite fresher persisted values; seeding the gate with the last-known
+    wire time per (vehicle, metric) makes it drop those backdated frames after a
+    restart, exactly as it would mid-session.
 
     Reads ``restore_state.last_states`` (populated at HA bootstrap, available
     before entities are created) keyed by the sensor ``unique_id`` -> entity
@@ -312,10 +332,9 @@ def build_seed_from_restored_state(
     registry = er.async_get(hass)
     seed: dict[int, dict[Metric, datetime]] = {}
     for vehicle_id in vehicle_ids:
-        scope = f"{entry.unique_id}_{vehicle_id}"
         times: dict[Metric, datetime] = {}
         for description in SENSORS:
-            unique_id = f"{scope}_{description.key}"
+            unique_id = _telemetry_unique_id(entry, vehicle_id, description.key)
             entity_id = registry.async_get_entity_id("sensor", DOMAIN, unique_id)
             if entity_id is None or entity_id not in restored:
                 continue
@@ -407,9 +426,8 @@ async def async_setup_entry(
         # lifts the recorder's last value back into ``native_value`` in
         # ``async_added_to_hass``. Marked seen so the dispatcher does
         # not double-create when the next frame arrives.
-        scope = f"{entry.unique_id}_{vehicle.vehicle_id}"
         for description in SENSORS:
-            unique_id = f"{scope}_{description.key}"
+            unique_id = _telemetry_unique_id(entry, vehicle.vehicle_id, description.key)
             entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
             if entity_id is None:
                 continue
@@ -545,7 +563,9 @@ class AbrpTelemetrySensor[T: (float, str)](
         self._vehicle_id = vehicle.vehicle_id
         self._metric = description.metric
         scope = f"{entry.unique_id}_{vehicle.vehicle_id}"
-        self._attr_unique_id = f"{scope}_{description.key}"
+        self._attr_unique_id = _telemetry_unique_id(
+            entry, vehicle.vehicle_id, description.key
+        )
         # Same device identifier shape as the anchor pass in
         # ``async_setup_entry`` so HA links every telemetry entity for
         # this vehicle to the device created there.
