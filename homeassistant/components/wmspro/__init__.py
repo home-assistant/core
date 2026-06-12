@@ -33,7 +33,9 @@ type WebControlProConfigEntry = ConfigEntry[WebControlPro]
 def _build_storage_config_dir(
     hass: HomeAssistant, entry: WebControlProConfigEntry
 ) -> Path:
+    """Build the path to the config directory for a given config entry."""
     return Path(hass.config.path(STORAGE_DIR, f"{DOMAIN}-{entry.entry_id}"))
+
 
 async def async_setup_entry(
     hass: HomeAssistant, entry: WebControlProConfigEntry
