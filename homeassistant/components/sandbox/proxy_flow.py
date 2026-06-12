@@ -193,7 +193,21 @@ class SandboxFlowProxy(ConfigFlow):
 
         if result_type is FlowResultType.CREATE_ENTRY:
             entry_data = struct_to_dict(result.data)
+            options = (
+                struct_to_dict(result.options) if result.HasField("options") else None
+            )
             self._terminated = True
+            # ``async_create_entry`` stamps the created result's
+            # ``version``/``minor_version`` from ``self.VERSION``/
+            # ``self.MINOR_VERSION`` (read off the instance, not the class —
+            # see ``ConfigFlow.async_create_entry``). Override the proxy
+            # instance's values with the sandbox flow's so the entry carries
+            # the integration's real schema version; otherwise the proxy's
+            # default ``VERSION=1`` triggers a spurious migration on next setup.
+            if result.HasField("version"):
+                self.VERSION = result.version
+            if result.HasField("minor_version"):
+                self.MINOR_VERSION = result.minor_version
             create_result = self.async_create_entry(
                 title=(
                     result.title
@@ -205,6 +219,7 @@ class SandboxFlowProxy(ConfigFlow):
                     result.description if result.HasField("description") else None
                 ),
                 description_placeholders=placeholders,
+                options=options,
             )
             # Tag the FlowResult so the framework's entry constructor in
             # ``ConfigEntriesFlowManager.async_finish_flow`` reads it into
