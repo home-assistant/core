@@ -11,19 +11,15 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_PORT,
     CONF_PROTOCOL,
-    CONF_TOKEN,
     CONF_TYPE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_KEY, CONF_SUBTYPE, DOMAIN
+from .const import CONF_SUBTYPE
 
 _PLATFORMS: list[Platform] = [Platform.CLIMATE]
-
-CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -31,9 +27,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     data = entry.data
     device_id: int = data[CONF_DEVICE_ID]
-    token = data.get(CONF_TOKEN, "")
-    key = data.get(CONF_KEY, "")
-    protocol = ProtocolVersion(data[CONF_PROTOCOL])
 
     device = await hass.async_add_executor_job(
         device_selector,
@@ -42,9 +35,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         data.get(CONF_TYPE, DeviceType.AC),
         data[CONF_IP_ADDRESS],
         data[CONF_PORT],
-        token,
-        key,
-        protocol,
+        "",
+        "",
+        ProtocolVersion(data[CONF_PROTOCOL]),
         data[CONF_MODEL],
         data.get(CONF_SUBTYPE, 0),
         "",
