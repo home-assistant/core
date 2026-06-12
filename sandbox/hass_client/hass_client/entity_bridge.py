@@ -65,6 +65,9 @@ class EntityBridge:
         # completes — relying on `_registered` membership would miss the
         # removal because the entity isn't registered yet at removal time.
         self._removed_while_pending: set[str] = set()
+        # Domain each registered entity contributed to ApprovedDomains, so its
+        # approval refcount can be released symmetrically on unregister.
+        self._approved_domain: dict[str, str] = {}
         # Hash of the last description (registry-shaped fields only, no
         # state) sent per entity, so a registry-update resend that mirrors
         # nothing we actually carry is a no-op instead of an event storm.
@@ -112,6 +115,7 @@ class EntityBridge:
         if new_state is None:
             if entity_id in self._registered:
                 self._registered.discard(entity_id)
+                self._release_approval(entity_id)
                 asyncio.create_task(  # noqa: RUF006
                     self._push_unregister(entity_id),
                     name=f"sandbox:unregister:{entity_id}",
@@ -195,6 +199,7 @@ class EntityBridge:
             if entity_id in self._registered:
                 self._registered.discard(entity_id)
                 self._last_hash.pop(entity_id, None)
+                self._release_approval(entity_id)
                 await self._push_unregister(entity_id)
             return
 
@@ -254,7 +259,21 @@ class EntityBridge:
         self._last_hash[entity_id] = new_hash
         # Approve the entity's domain so the service + event mirrors
         # let through registrations / events that originate from it.
+        # Record the domain so the approval is released on unregister.
+        self._approved_domain[entity_id] = payload["domain"]
         self.approved.add(payload["domain"])
+
+    def _release_approval(self, entity_id: str) -> None:
+        """Release the approval refcount ``entity_id`` contributed, if any.
+
+        Symmetric with the per-entity ``approved.add`` in :meth:`_register`:
+        the last entity of a platform domain to unregister drops the gate, so
+        the service/event mirrors stop approving a domain with no owning
+        entities.
+        """
+        domain = self._approved_domain.pop(entity_id, None)
+        if domain is not None:
+            self.approved.remove(domain)
 
     async def _resend(self, entity_id: str) -> None:
         """Re-send a registration as an upsert after a registry change.
