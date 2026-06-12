@@ -135,16 +135,12 @@ async def test_async_setup_entry_auth_failure(
         mock_oauth_session_cls.return_value = mock_oauth_session
 
         # First call succeeds, second call raises 401
-        mock_oauth_session.async_ensure_token_valid.side_effect = [
-            None,
-            ClientResponseError(
-                request_info=MagicMock(),
-                history=(),
-                status=401,
-                message="Unauthorized",
-            ),
-        ]
-
+        mock_oauth_session.async_ensure_token_valid.side_effect = ClientResponseError(
+            request_info=MagicMock(),
+            history=(),
+            status=401,
+            message="Unauthorized",
+        )
         with pytest.raises(
             ConfigEntryAuthFailed, match="OAuth session is not valid, reauth required"
         ):

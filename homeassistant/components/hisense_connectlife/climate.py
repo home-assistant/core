@@ -124,7 +124,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         super().__init__(coordinator)
         self._coordinator = coordinator
         self._device_id: str | None = device.puid
-        self._attr_unique_id = f"{device.device_id}_climate"
+        self._attr_unique_id = f"{device.device_id}"
         self._attr_name = device.name
         self._attr_translation_key = "climate"
 
@@ -148,7 +148,7 @@ class HisenseClimate(CoordinatorEntity, ClimateEntity):
         self._cached_swing_mode = SWING_OFF
 
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, device.device_id or "")},
+            identifiers={(DOMAIN, device.device_id)},
             name=device.name,
             manufacturer="Hisense",
             model=f"{device.type_name} ({device.feature_name})",
