@@ -257,6 +257,9 @@ async def test_register_service_with_schema_validates_on_main(
     hass: HomeAssistant,
 ) -> None:
     """Sandbox-mirrored service uses its reconstructed schema on main calls."""
+    MockConfigEntry(domain="mock_svc", title="Mock", sandbox="built-in").add_to_hass(
+        hass
+    )
     main_channel, sandbox_channel = make_channel_pair(
         name_a="main-mock", name_b="sandbox-mock"
     )
