@@ -40,11 +40,8 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-# The bulb only exposes relative brighter and dimmer commands.
-# Adjust this value after testing the actual number of steps required to move
-# between minimum and maximum brightness.
 BRIGHTNESS_LEVELS = 5
-BRIGHTNESS_SCALE = (1, BRIGHTNESS_LEVELS)
+BRIGHTNESS_SCALE = (0, BRIGHTNESS_LEVELS)
 
 # Use the dedicated white command for colors with low saturation.
 WHITE_SATURATION_THRESHOLD = 45.0
