@@ -57,9 +57,7 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: No diagnostic or configuration entities; all entities use the default category.
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
