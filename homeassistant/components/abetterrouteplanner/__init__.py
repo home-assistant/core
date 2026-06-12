@@ -472,34 +472,18 @@ async def async_setup_entry(
     # covers any post-setup first-arrival.
     stream: TelemetryStream | None = None
     if vehicle_ids:
-        # Prefer restored sensor state (warms the gate without a network call);
-        # poll one-shot only for vehicles with no restored snapshot (first init
-        # or state pruned past the restore-state expiry). Imported locally:
-        # ``sensor`` imports ``AbetterrouteplannerConfigEntry`` from this module,
-        # so a top-level import here would form a circular import at load time.
-        from .sensor import build_seed_from_restored_state  # noqa: PLC0415
+        # Poll one-shot only for vehicles we have never created sensors for
+        # (fresh install or a newly-added vehicle). Vehicles already known to
+        # the entity registry restore their last values via the sensor
+        # platform's eager-from-registry probe + ``RestoreSensor``, so
+        # re-polling them on every startup is wasted work. Imported locally:
+        # ``sensor`` imports ``AbetterrouteplannerConfigEntry`` from this
+        # module, so a top-level import would form a circular import.
+        from .sensor import vehicles_without_sensors  # noqa: PLC0415
 
-        # The restored seed warms ONLY the stream's monotonicity gate — it is
-        # deliberately NOT pushed into ``coordinator.data`` (no ``_apply_metrics``
-        # / ``on_update`` call). Routing it through the coordinator would stamp a
-        # fresh receipt-time ``last_reported_at`` onto values that may be hours
-        # old, corrupting the freshness the attribute reports. Restored sensor
-        # *display* is owned separately by the sensor platform's
-        # eager-from-registry probe + ``RestoreSensor``. Do not "just seed the
-        # coordinator too" — that reintroduces the freshness bug.
-        seed = build_seed_from_restored_state(hass, entry, vehicle_ids)
-        # ``unseeded`` is the complement of the seed: vehicles with no restored
-        # wire_time to rebuild from — a brand-new vehicle on this install, a
-        # fresh install (seed is ``{}`` so every vehicle is unseeded), or a
-        # vehicle parked past the restore-state expiry. It does NOT alter the
-        # seed; it only decides who still needs a one-shot poll. ``async_seed``
-        # fills ``coordinator.data`` for those vehicles (initial display +
-        # lazy entity creation), NOT the gate — their gate starts cold and
-        # warms from their first live frames, which is correct since there is
-        # no persisted history to protect.
-        unseeded = [vid for vid in vehicle_ids if vid not in seed]
-        if unseeded:
-            await telemetry_coordinator.async_seed(client, unseeded)
+        new_vehicles = vehicles_without_sensors(hass, entry, vehicle_ids)
+        if new_vehicles:
+            await telemetry_coordinator.async_seed(client, new_vehicles)
         stream = TelemetryStream(
             websession,
             ABRP_APP_KEY,
@@ -508,7 +492,6 @@ async def async_setup_entry(
             on_update=telemetry_coordinator.on_update,
             on_connection_change=telemetry_coordinator.on_connection_change,
             name=entry.title,
-            seed=seed,
         )
         await stream.start()
         await asyncio.sleep(PREWARM_WINDOW_SECONDS)

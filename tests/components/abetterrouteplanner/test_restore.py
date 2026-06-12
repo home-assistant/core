@@ -50,14 +50,11 @@ from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import patch
 
-from aioabrp import Metric, Telemetry
+from aioabrp import Telemetry
 from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.abetterrouteplanner.const import CONF_VEHICLE_IDS, DOMAIN
-from homeassistant.components.abetterrouteplanner.sensor import (
-    build_seed_from_restored_state,
-)
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
@@ -73,19 +70,11 @@ from .conftest import (
 from tests.common import MockConfigEntry, mock_restore_cache_with_extra_data
 
 VOLTAGE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_voltage"
-VOLTAGE_UNIQUE_ID = f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_voltage"
-SOC_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_soc"
-CHARGING_STATE_ENTITY_ID = "sensor.rivian_r2_2027_standard_long_range_charging_state"
 
 # Provider sentinel for "this restore-state should omit the ``provider``
 # attribute entirely" — distinct from passing the literal ``None`` value
 # (which would land as a present-but-null attribute).
 _PROVIDER_UNSET: Any = object()
-
-# Wire-time sentinel for "this restore-state should omit the ``wire_time``
-# attribute entirely" — distinct from passing a literal value (e.g. ``None``
-# or a malformed string) that lands under the key in ``State.attributes``.
-_WIRE_TIME_UNSET: Any = object()
 
 RESTORED_PROVIDER = "RIVIAN_STREAM"
 
@@ -95,11 +84,6 @@ RESTORED_PROVIDER = "RIVIAN_STREAM"
 RESTORED_VOLTAGE = 410.0
 RESTORED_STAMP_ISO = "2026-05-20T12:00:00+00:00"
 RESTORED_STAMP_DT = datetime(2026, 5, 20, 12, 0, 0, tzinfo=UTC)
-# Wire block ``time`` (``MetricValue.time``) restore anchor — deliberately
-# distinct from the receipt-time ``last_reported_at`` anchor above so a
-# failure trace makes the two slots visibly disjoint.
-RESTORED_WIRE_TIME_ISO = "2026-05-19T08:30:00+00:00"
-RESTORED_WIRE_TIME_DT = datetime(2026, 5, 19, 8, 30, 0, tzinfo=UTC)
 
 
 def _fire_voltage(
@@ -129,7 +113,6 @@ def _voltage_restored_state(
     native_value: float | None = RESTORED_VOLTAGE,
     last_reported_at: str | None = RESTORED_STAMP_ISO,
     provider: Any = _PROVIDER_UNSET,
-    wire_time: Any = _WIRE_TIME_UNSET,
 ) -> tuple[State, dict[str, Any]]:
     """Build a (State, extra_data) tuple for ``mock_restore_cache_with_extra_data``.
 
@@ -144,19 +127,12 @@ def _voltage_restored_state(
     provider slot. Passing any concrete value (string, int, None, empty
     string, etc.) lands it under the ``provider`` key in ``State.attributes``
     so the integration's restore path exercises its type-guard branch.
-
-    ``wire_time`` mirrors ``last_reported_at``: defaults to the sentinel
-    :data:`_WIRE_TIME_UNSET` (key absent); pass an ISO string for the
-    round-trip path or a malformed string for the omit-on-failure path so the
-    restore guard's ``datetime.fromisoformat`` branch is exercised.
     """
     attributes: dict[str, Any] = {}
     if last_reported_at is not None:
         attributes["last_reported_at"] = last_reported_at
     if provider is not _PROVIDER_UNSET:
         attributes["provider"] = provider
-    if wire_time is not _WIRE_TIME_UNSET:
-        attributes["wire_time"] = wire_time
     state = State(
         VOLTAGE_ENTITY_ID,
         str(native_value) if native_value is not None else "unknown",
@@ -846,109 +822,6 @@ async def test_restored_native_value_rejected_when_malformed(
 
 
 # ---------------------------------------------------------------------------
-# wire_time attribute — the wire block MetricValue.time (NOT receipt time)
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_wire_time_attribute_exposed(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    mock_abrp_client: Any,
-    fake_stream: Any,
-) -> None:
-    """A live frame's ``MetricValue.time`` surfaces as ``attributes["wire_time"]``.
-
-    The wire block ``time`` is distinct from the coordinator's receipt-time
-    ``last_reported_at`` stamp: it is the instant the upstream reported the
-    reading, carried on the typed ``MetricValue``. A later task rebuilds a
-    stream seed from this basis (receipt time would be the wrong basis), so the
-    attribute must expose the wire ``time`` verbatim as a typed ``datetime``.
-    """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
-
-    await _restart_setup(hass, config_entry_with_vehicles)
-
-    wire_time = datetime(2026, 6, 12, 10, 0, 0, tzinfo=UTC)
-    fake_stream.fire_frame(
-        MOCK_VEHICLE_ID,
-        Telemetry(soc=build_metric_value(85.0, time=wire_time)),
-    )
-    await hass.async_block_till_done()
-
-    state = hass.states.get(SOC_ENTITY_ID)
-    assert state is not None
-    assert state.attributes["wire_time"] == wire_time
-
-
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_restore_wire_time_round_trips_as_datetime(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
-) -> None:
-    """Restored ISO ``wire_time`` parses back to ``datetime`` before any frame.
-
-    Mirrors :func:`test_restore_last_reported_at_round_trips_as_datetime` for
-    the wire-block ``time`` slot. The recorder serialises the live ``datetime``
-    via HA's ``JSONEncoder`` to an ISO string; the restore path parses it back
-    via ``datetime.fromisoformat`` so a later task can rebuild the stream seed
-    from a typed wire ``time`` (not the receipt-time stamp). Asserts both the
-    runtime type and the value at the pre-frame instant.
-    """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
-
-    await _restart_setup(
-        hass,
-        config_entry_with_vehicles,
-        entity_registry=entity_registry,
-        preseed_registry_keys=["voltage"],
-        restored_states=[_voltage_restored_state(wire_time=RESTORED_WIRE_TIME_ISO)],
-    )
-
-    state = hass.states.get(VOLTAGE_ENTITY_ID)
-    assert state is not None
-    wire = state.attributes.get("wire_time")
-    assert isinstance(wire, datetime)
-    assert wire == RESTORED_WIRE_TIME_DT
-
-
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_malformed_restored_wire_time_omits_attribute(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-    mock_abrp_client: Any,
-) -> None:
-    """Malformed restored ``wire_time`` → attribute ABSENT (not None).
-
-    Mirrors :func:`test_malformed_restored_stamp_omits_attribute` for the
-    wire-block slot: the ``datetime.fromisoformat(...)`` failure in the restore
-    path leaves ``_restored_wire_time`` at ``None`` so the attribute is OMITTED
-    from ``extra_state_attributes`` rather than surfacing as ``wire_time: null``
-    or the raw bad string. The native_value still restores — the malformed
-    wire time affects only its own slot.
-    """
-    mock_abrp_client.seed_responses[MOCK_VEHICLE_ID] = Telemetry()
-
-    await _restart_setup(
-        hass,
-        config_entry_with_vehicles,
-        entity_registry=entity_registry,
-        preseed_registry_keys=["voltage"],
-        restored_states=[_voltage_restored_state(wire_time="not-a-date")],
-    )
-
-    state = hass.states.get(VOLTAGE_ENTITY_ID)
-    assert state is not None
-    # Native value still restores — the malformed wire time doesn't
-    # poison the value slot.
-    assert state.state == str(RESTORED_VOLTAGE)
-    assert "wire_time" not in state.attributes
-
-
-# ---------------------------------------------------------------------------
 # eager-create probe skips registry rows owned by a foreign entry
 # ---------------------------------------------------------------------------
 
@@ -1024,155 +897,60 @@ async def test_foreign_config_entry_voltage_row_skipped_by_eager_probe(
 
 
 # ---------------------------------------------------------------------------
-# build_seed_from_restored_state — rebuild a per-vehicle Telemetry seed
-# ---------------------------------------------------------------------------
-
-
-def _charging_state_restored_state(
-    *,
-    native_value: str = "charging_dc",
-    wire_time: str = RESTORED_WIRE_TIME_ISO,
-) -> tuple[State, dict[str, Any]]:
-    """Build a (State, extra_data) tuple for the charging_state enum sensor.
-
-    Mirrors :func:`_voltage_restored_state` for the categorical ENUM sensor:
-    the restored ``native_value`` is the HA option string (not the library
-    ``ChargingState`` member), and ``wire_time`` is an ISO string the restore
-    path parses back via ``datetime.fromisoformat``. No ``provider`` slot is
-    seeded so the seed helper exercises the provider-absent branch for the enum.
-    """
-    attributes: dict[str, Any] = {"wire_time": wire_time}
-    state = State(
-        CHARGING_STATE_ENTITY_ID,
-        native_value,
-        attributes=attributes,
-    )
-    extra_data: dict[str, Any] = {"native_value": native_value}
-    return state, extra_data
-
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_build_seed_from_restored_state_rebuilds_metric_values(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """The seed helper rebuilds a per-vehicle wire-time mapping from restored state.
-
-    Drives the helper that a later task uses to warm the stream gate BEFORE
-    entities/stream exist: it reads ``restore_state.last_states`` (populated at
-    HA bootstrap), maps each ``(vehicle_id, metric)`` -> sensor ``unique_id`` ->
-    entity_id via the registry, and extracts each restored sensor's persisted
-    ``wire_time`` attribute.
-
-    The library gate only needs the per-``(vehicle, metric)`` wire timestamps, so
-    the helper returns a ``dict[int, dict[Metric, datetime]]`` keyed by the
-    library ``Metric`` enum — no value / provider reconstruction. Seeds both a
-    numeric metric (voltage) and the enum metric (charging_state); asserts each
-    metric's parsed wire ``datetime`` lands under its ``Metric`` key.
-    """
-    # Restore cache must be wired while HA is not running so RestoreStateData
-    # surfaces it; the registry rows give the helper its unique_id -> entity_id
-    # mapping. No entry setup / stream is required — the helper is a pure
-    # in-memory lookup over restore_state + the entity registry.
-    hass.set_state(CoreState.not_running)
-    mock_restore_cache_with_extra_data(
-        hass,
-        [
-            _voltage_restored_state(
-                provider=RESTORED_PROVIDER,
-                wire_time=RESTORED_WIRE_TIME_ISO,
-            ),
-            _charging_state_restored_state(),
-        ],
-    )
-    config_entry_with_vehicles.add_to_hass(hass)
-    for key in ("voltage", "charging_state"):
-        entity_registry.async_get_or_create(
-            domain="sensor",
-            platform=DOMAIN,
-            unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_{key}",
-            config_entry=config_entry_with_vehicles,
-            suggested_object_id=f"rivian_r2_2027_standard_long_range_{key}",
-        )
-
-    seed = build_seed_from_restored_state(
-        hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
-    )
-
-    assert seed == {
-        MOCK_VEHICLE_ID: {
-            Metric.VOLTAGE: RESTORED_WIRE_TIME_DT,
-            Metric.CHARGING_STATE: RESTORED_WIRE_TIME_DT,
-        }
-    }
-
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_build_seed_skips_metrics_failing_restore_guards(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """A malformed restored ``wire_time`` drops the metric (and the lone vehicle).
-
-    Seeds a single voltage slot with a malformed ``wire_time`` (``"not-a-date"``):
-    the helper's ``datetime.fromisoformat`` guard fails, so the metric is dropped.
-    Because it is the ONLY seeded metric, the vehicle is absent from the dict
-    entirely (the "no usable wire time → omitted" contract). The seed is purely
-    wire-time-driven now, so the value / enum-option angle is irrelevant.
-    """
-    hass.set_state(CoreState.not_running)
-    mock_restore_cache_with_extra_data(
-        hass,
-        [_voltage_restored_state(wire_time="not-a-date")],
-    )
-    config_entry_with_vehicles.add_to_hass(hass)
-    entity_registry.async_get_or_create(
-        domain="sensor",
-        platform=DOMAIN,
-        unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_voltage",
-        config_entry=config_entry_with_vehicles,
-        suggested_object_id="rivian_r2_2027_standard_long_range_voltage",
-    )
-
-    seed = build_seed_from_restored_state(
-        hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
-    )
-
-    # No usable wire time for the vehicle → omitted from the seed entirely.
-    assert seed == {}
-
-
-# ---------------------------------------------------------------------------
-# Setup wiring: restored seed warms the stream gate; poll only on first init
+# Setup wiring: poll one-shot only for vehicles with no registered sensors
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_setup_seeds_stream_from_restored_state_and_skips_poll(
+async def test_setup_polls_new_vehicle_without_registered_sensors(
+    hass: HomeAssistant,
+    config_entry_with_vehicles: MockConfigEntry,
+    fake_stream: Any,
+) -> None:
+    """A selected vehicle with NO registry rows is polled once at setup.
+
+    Fresh install / newly-added vehicle: there is no prior sensor entity in the
+    registry, so ``vehicles_without_sensors`` flags it as new and
+    ``async_setup_entry`` runs the one-shot ``async_get_current_telemetry`` poll
+    for it. The stream is constructed WITHOUT a ``seed=`` kwarg (the HA-side
+    gate-seed machinery is gone), so the captured ``seed`` is ``None``.
+    """
+
+    async def _record_poll(vehicle_id: int) -> Telemetry:
+        return Telemetry()
+
+    with patch(
+        "aioabrp.AbrpClient.async_get_current_telemetry",
+        side_effect=_record_poll,
+    ) as mock_poll:
+        await _restart_setup(hass, config_entry_with_vehicles)
+
+    # New vehicle (no registered sensors) → the one-shot poll ran for it.
+    polled_ids = {call.args[0] for call in mock_poll.call_args_list}
+    assert polled_ids == {MOCK_VEHICLE_ID}
+
+    # The stream is constructed without a gate seed.
+    stream = fake_stream.stream
+    assert stream is not None
+    assert stream.seed is None
+
+
+@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
+async def test_setup_skips_poll_for_known_vehicle_with_registered_sensor(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     fake_stream: Any,
 ) -> None:
-    """Restart path: the stream is seeded from restored state and the poll skipped.
+    """A selected vehicle WITH a registered sensor is NOT polled at setup.
 
-    The restore cache + entity registry hold a voltage row with a valid
-    ``wire_time`` for ``MOCK_VEHICLE_ID``, so ``build_seed_from_restored_state``
-    returns a non-empty seed. ``async_setup_entry`` must:
-
-    - construct the ``TelemetryStream`` with ``seed=`` equal to that rebuilt
-      ``dict[int, dict[Metric, datetime]]`` (gate-warming without a network
-      call), and
-    - NOT call the one-shot poll (``async_get_current_telemetry``) — the only
-      selected vehicle is already seeded, so it is not in ``unseeded``.
+    The vehicle already has a voltage sensor row in the entity registry, so the
+    eager-from-registry probe + ``RestoreSensor`` recreate its entities and
+    restore their last values. ``vehicles_without_sensors`` therefore omits it
+    and ``async_setup_entry`` skips the one-shot poll. The stream still carries
+    no gate seed.
     """
 
-    # Patch the one-shot getter so we can assert it is NOT called on the restart
-    # path. Non-autospec (the conftest already patched this attribute); the
-    # integration calls ``client.async_get_current_telemetry(vid)`` so the
-    # vehicle id lands as the sole positional arg.
     async def _record_poll(vehicle_id: int) -> Telemetry:
         return Telemetry()
 
@@ -1185,75 +963,34 @@ async def test_setup_seeds_stream_from_restored_state_and_skips_poll(
             config_entry_with_vehicles,
             entity_registry=entity_registry,
             preseed_registry_keys=["voltage"],
-            restored_states=[_voltage_restored_state(wire_time=RESTORED_WIRE_TIME_ISO)],
         )
 
-    # The vehicle was seeded from restored state → the one-shot poll is skipped.
+    # Known vehicle (a registered sensor exists) → no one-shot poll.
     assert mock_poll.call_count == 0
 
-    # The stream carries the rebuilt times-only seed verbatim.
+    # The stream is constructed without a gate seed.
     stream = fake_stream.stream
     assert stream is not None
-    assert stream.seed == {MOCK_VEHICLE_ID: {Metric.VOLTAGE: RESTORED_WIRE_TIME_DT}}
+    assert stream.seed is None
 
 
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_setup_polls_on_first_init_when_no_restored_state(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    fake_stream: Any,
-) -> None:
-    """First init (empty restore cache): the stream gets an empty seed and polls.
-
-    With no restore cache and no registry rows,
-    ``build_seed_from_restored_state`` returns ``{}``. The only selected vehicle
-    is therefore unseeded, so ``async_setup_entry`` must fall back to the
-    one-shot poll for it, and construct the stream with an empty ``seed``.
-    """
-
-    async def _record_poll(vehicle_id: int) -> Telemetry:
-        return Telemetry()
-
-    with patch(
-        "aioabrp.AbrpClient.async_get_current_telemetry",
-        side_effect=_record_poll,
-    ) as mock_poll:
-        await _restart_setup(hass, config_entry_with_vehicles)
-
-    # Unseeded vehicle → the one-shot poll ran for it.
-    polled_ids = {call.args[0] for call in mock_poll.call_args_list}
-    assert polled_ids == {MOCK_VEHICLE_ID}
-
-    # The stream's seed is empty (nothing restored).
-    stream = fake_stream.stream
-    assert stream is not None
-    assert stream.seed == {}
-
-
-@pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
-async def test_setup_partitions_mixed_seeded_and_unseeded_vehicles(
+async def test_setup_polls_only_new_vehicle_in_mixed_garage(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
     entity_registry: er.EntityRegistry,
     fake_stream: Any,
 ) -> None:
-    """Mixed garage: only the restored vehicle seeds; only the other is polled.
+    """Mixed garage: only the new vehicle is polled; the known one is skipped.
 
-    Exercises the partition that is the heart of B3
-    (``unseeded = [vid for vid in vehicle_ids if vid not in seed]``) at the
-    interesting interior point rather than the all/none boundaries. A
-    two-vehicle entry selects both ``MOCK_VEHICLE_ID`` and ``MOCK_VEHICLE_ID_2``,
-    but only ``MOCK_VEHICLE_ID`` has restored state (the ``_restart_setup``
-    preseed wires restore cache + registry for that vehicle's voltage only).
-
-    Asserts:
-    - ``stream.seed`` keys == ``{MOCK_VEHICLE_ID}`` (only the restored vehicle),
-    - the one-shot poll ran for EXACTLY ``{MOCK_VEHICLE_ID_2}`` (the unseeded
-      vehicle), never the already-seeded one.
+    Two selected vehicles: ``MOCK_VEHICLE_ID`` has a registered voltage sensor
+    (known → restored via the eager probe + ``RestoreSensor``), while
+    ``MOCK_VEHICLE_ID_2`` has none (new). ``async_setup_entry`` must poll
+    EXACTLY the new vehicle, never the known one, and both selected/present
+    vehicles are still streamed without a gate seed.
     """
-    # Two-vehicle entry mirroring ``config_entry_with_vehicles`` (same
-    # SENSOR_TEST_SUB scope so the restore-state unique_id formula matches),
-    # but selecting BOTH garage vehicles.
+    # Two-vehicle entry (same SENSOR_TEST_SUB scope so the registry unique_id
+    # formula matches), selecting BOTH garage vehicles.
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=SENSOR_TEST_SUB,
@@ -1271,24 +1008,21 @@ async def test_setup_partitions_mixed_seeded_and_unseeded_vehicles(
         "aioabrp.AbrpClient.async_get_current_telemetry",
         side_effect=_record_poll,
     ) as mock_poll:
-        # ``_restart_setup`` preseeds restore cache + registry for
-        # MOCK_VEHICLE_ID's voltage only, leaving MOCK_VEHICLE_ID_2 unseeded.
+        # ``_restart_setup`` preseeds a voltage registry row for
+        # MOCK_VEHICLE_ID only, leaving MOCK_VEHICLE_ID_2 with no sensors.
         await _restart_setup(
             hass,
             entry,
             entity_registry=entity_registry,
             preseed_registry_keys=["voltage"],
-            restored_states=[_voltage_restored_state(wire_time=RESTORED_WIRE_TIME_ISO)],
         )
 
-    # The poll ran for EXACTLY the unseeded vehicle — never the seeded one.
+    # The poll ran for EXACTLY the new vehicle — never the known one.
     polled_ids = {call.args[0] for call in mock_poll.call_args_list}
     assert polled_ids == {MOCK_VEHICLE_ID_2}
 
-    # The stream's seed carries only the restored vehicle.
+    # Both selected (and present) vehicles are still streamed, no gate seed.
     stream = fake_stream.stream
     assert stream is not None
-    assert set(stream.seed) == {MOCK_VEHICLE_ID}
-    assert stream.seed[MOCK_VEHICLE_ID] == {Metric.VOLTAGE: RESTORED_WIRE_TIME_DT}
-    # Both selected (and present) vehicles are still streamed.
+    assert stream.seed is None
     assert set(stream.vehicle_ids) == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
