@@ -80,6 +80,28 @@ async def test_sensor_uses_stop_id_name_when_stop_info_missing(
     assert hass.states.get("sensor.entur_nsr_stopplace_548")
 
 
+async def test_sensor_appends_stop_id_when_stop_info_missing(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_entur_client: MagicMock,
+) -> None:
+    """Test sensor appends the stop ID if the entry title does not include it."""
+    mock_entur_client.get_stop_info.return_value = None
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="My Bus Stop",
+        data=mock_config_entry.data,
+        options=mock_config_entry.options,
+        unique_id=mock_config_entry.unique_id,
+    )
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.my_bus_stop_nsr_stopplace_548")
+
+
 @pytest.mark.usefixtures("init_integration")
 async def test_sensor_has_unique_id(
     hass: HomeAssistant,
