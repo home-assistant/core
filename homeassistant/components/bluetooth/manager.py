@@ -4,6 +4,7 @@ from collections.abc import Callable, Iterable
 from functools import partial
 import itertools
 import logging
+from operator import attrgetter
 from typing import override
 
 from bleak_retry_connector import BleakSlotManager
@@ -54,7 +55,12 @@ from .match import (
     IntegrationMatcher,
     ble_device_matches,
 )
-from .models import BluetoothCallback, BluetoothChange, BluetoothServiceInfoBleak
+from .models import (
+    BluetoothCallback,
+    BluetoothCallbackReplay,
+    BluetoothChange,
+    BluetoothServiceInfoBleak,
+)
 from .storage import BluetoothStorage
 from .util import async_load_history_from_system
 
@@ -212,6 +218,7 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         mode: BluetoothScanningMode = BluetoothScanningMode.ACTIVE,
         scan_interval: float | None = None,
         scan_duration: float | None = None,
+        replay: BluetoothCallbackReplay = BluetoothCallbackReplay.OLDEST_FIRST,
     ) -> Callable[[], None]:
         """Register a callback."""
         callback_matcher = BluetoothCallbackMatcherWithCallback(callback=callback)
@@ -250,11 +257,18 @@ class HomeAssistantBluetoothManager(BluetoothManager):
         # device.
         history = self._connectable_history if connectable else self._all_history
         service_infos: Iterable[BluetoothServiceInfoBleak] = []
-        if (address := callback_matcher.get(ADDRESS)) is not None:
-            if service_info := history.get(address):
-                service_infos = [service_info]
-        else:
-            service_infos = history.values()
+        if replay is not BluetoothCallbackReplay.DISABLED:
+            if (address := callback_matcher.get(ADDRESS)) is not None:
+                if service_info := history.get(address):
+                    service_infos = [service_info]
+            elif replay is BluetoothCallbackReplay.NEWEST_FIRST:
+                service_infos = sorted(
+                    history.values(), key=attrgetter("time"), reverse=True
+                )
+            else:
+                # Sort by time explicitly; dict insertion order is not guaranteed
+                # to match advertisement time after history is loaded from storage.
+                service_infos = sorted(history.values(), key=attrgetter("time"))
 
         for service_info in service_infos:
             if ble_device_matches(callback_matcher, service_info):
