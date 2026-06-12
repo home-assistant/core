@@ -81,6 +81,10 @@
       "current_n": { "name": "Current {index}" },
       "forward_active_energy": { "name": "Forward active energy" },
       "forward_active_energy_n": { "name": "Forward active energy {index}" },
+      "forward_reactive_energy": { "name": "Forward reactive energy" },
+      "forward_reactive_energy_n": {
+        "name": "Forward reactive energy {index}"
+      },
       "frequency": { "name": "Frequency" },
       "frequency_n": { "name": "Frequency {index}" },
       "open_status": {
@@ -98,6 +102,10 @@
       "reactive_power_n": { "name": "Reactive power {index}" },
       "reverse_active_energy": { "name": "Reverse active energy" },
       "reverse_active_energy_n": { "name": "Reverse active energy {index}" },
+      "reverse_reactive_energy": { "name": "Reverse reactive energy" },
+      "reverse_reactive_energy_n": {
+        "name": "Reverse reactive energy {index}"
+      },
       "temperature": { "name": "Temperature" },
       "temperature_n": { "name": "Temperature {index}" },
       "voltage": { "name": "Voltage" },
