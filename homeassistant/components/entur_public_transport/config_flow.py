@@ -45,7 +45,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_STOP_IDS): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
         ),
-        vol.Optional(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
         vol.Optional(CONF_SHOW_ON_MAP, default=False): BooleanSelector(),
         vol.Optional(CONF_WHITELIST_LINES, default=[]): TextSelector(
             TextSelectorConfig(type=TextSelectorType.TEXT, multiple=True)
@@ -152,9 +151,8 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(unique_id)
                 self._abort_if_unique_id_configured()
 
-                title = user_input.get(CONF_NAME, DEFAULT_NAME)
                 return self.async_create_entry(
-                    title=title,
+                    title=DEFAULT_NAME,
                     data={CONF_STOP_IDS: stop_ids},
                     options={
                         CONF_SHOW_ON_MAP: user_input.get(CONF_SHOW_ON_MAP, False),

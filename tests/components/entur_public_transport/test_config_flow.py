@@ -36,7 +36,6 @@ async def test_full_user_flow(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
-            CONF_NAME: "My Bus Stop",
             CONF_SHOW_ON_MAP: False,
             CONF_WHITELIST_LINES: [],
             CONF_OMIT_NON_BOARDING: True,
@@ -46,7 +45,7 @@ async def test_full_user_flow(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "My Bus Stop"
+    assert result["title"] == "Entur"
     assert result["data"] == {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
     }
@@ -74,7 +73,6 @@ async def test_user_flow_with_quay(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:Quay:48550"],
-            CONF_NAME: "My Quay",
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -83,7 +81,7 @@ async def test_user_flow_with_quay(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "My Quay"
+    assert result["title"] == "Entur"
 
 
 async def test_user_flow_invalid_stop_id(
@@ -100,7 +98,6 @@ async def test_user_flow_invalid_stop_id(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["invalid_id"],
-            CONF_NAME: "My Bus Stop",
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -118,7 +115,6 @@ async def test_user_flow_invalid_stop_id(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
-            CONF_NAME: "My Bus Stop",
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -143,7 +139,6 @@ async def test_user_flow_mixed_invalid_stop_ids(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["invalid_id", "NSR:StopPlace:548"],
-            CONF_NAME: "My Bus Stop",
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -175,7 +170,6 @@ async def test_user_flow_cannot_connect(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
-            CONF_NAME: "My Bus Stop",
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -191,7 +185,6 @@ async def test_user_flow_cannot_connect(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
-            CONF_NAME: "My Bus Stop",
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -218,7 +211,6 @@ async def test_user_flow_unknown_error(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
-            CONF_NAME: "My Bus Stop",
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -234,7 +226,6 @@ async def test_user_flow_unknown_error(
         result["flow_id"],
         {
             CONF_STOP_IDS: ["NSR:StopPlace:548"],
-            CONF_NAME: "My Bus Stop",
             CONF_SHOW_ON_MAP: False,
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,
@@ -344,7 +335,6 @@ async def test_import_flow_invalid_stop_id(hass: HomeAssistant) -> None:
     """Test import flow with invalid stop ID."""
     yaml_config = {
         CONF_STOP_IDS: ["invalid_id"],
-        CONF_NAME: "My Bus Stop",
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
@@ -366,7 +356,6 @@ async def test_import_flow_mixed_invalid_stop_ids(hass: HomeAssistant) -> None:
     """Test import flow rejects mixed valid and invalid stop IDs."""
     yaml_config = {
         CONF_STOP_IDS: ["invalid_id", "NSR:StopPlace:548"],
-        CONF_NAME: "My Bus Stop",
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
@@ -401,7 +390,6 @@ async def test_import_flow_error(
 
     yaml_config = {
         CONF_STOP_IDS: ["NSR:StopPlace:548"],
-        CONF_NAME: "My Bus Stop",
         CONF_SHOW_ON_MAP: False,
         CONF_WHITELIST_LINES: [],
         CONF_OMIT_NON_BOARDING: True,
