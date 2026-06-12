@@ -227,6 +227,108 @@ async def test_shutdown_flushes_pending_delay_save(
     capsys.readouterr()
 
 
+class _StallableWriter:
+    """Loopback writer that holds writes until a stall event is released.
+
+    Simulates transport backpressure on the shutdown reply: while ``stall``
+    is armed, written frames are buffered (not delivered to the peer) and the
+    write suspends in ``drain`` until the event is set, then the buffer flushes
+    — so a reply write cancelled mid-stall never reaches the peer. This makes
+    the reply-vs-close race deterministic.
+    """
+
+    def __init__(self, target: asyncio.StreamReader) -> None:
+        self._target = target
+        self.stall: asyncio.Event | None = None
+        self._buffer: list[bytes] = []
+
+    def write(self, data: bytes) -> None:
+        if self.stall is not None:
+            self._buffer.append(data)
+        else:
+            self._target.feed_data(data)
+
+    async def drain(self) -> None:
+        if self.stall is not None:
+            await self.stall.wait()
+            for chunk in self._buffer:
+                self._target.feed_data(chunk)
+            self._buffer.clear()
+
+    def close(self) -> None:
+        self._target.feed_eof()
+
+    async def wait_closed(self) -> None:
+        return None
+
+
+async def test_shutdown_reply_flushes_despite_stalled_drain(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """A shutdown reply still reaches main when its write stalls on drain.
+
+    Without ``run()`` draining in-flight handlers before ``close()``, the
+    stalled reply task would be cancelled by close and main would never see
+    the reply. The drain holds close open until the reply flushes.
+    """
+    reader_main = asyncio.StreamReader()
+    reader_sandbox = asyncio.StreamReader()
+    sandbox_writer = _StallableWriter(reader_main)
+    main_channel = Channel(
+        reader_main,
+        _LoopbackWriter(reader_sandbox),
+        name="main",
+        codec=ProtobufCodec(),
+    )  # type: ignore[arg-type]
+    sandbox_channel = Channel(
+        reader_sandbox,
+        sandbox_writer,
+        name="sandbox",
+        codec=ProtobufCodec(),
+    )  # type: ignore[arg-type]
+
+    async def _channel_factory() -> Channel:
+        return sandbox_channel
+
+    runtime = SandboxRuntime(
+        url="ws://x", group="custom", channel_factory=_channel_factory
+    )
+    main_channel.start()
+    run_task = asyncio.create_task(runtime.run())
+    loop = asyncio.get_event_loop()
+    deadline = loop.time() + 2.0
+    while not runtime.started and loop.time() < deadline:
+        await asyncio.sleep(0.01)
+    assert runtime.started
+    await runtime.wait_until_ready(timeout=2.0)
+
+    # Arm the stall: the next sandbox→main write (the shutdown reply) blocks
+    # in drain until released.
+    sandbox_writer.stall = asyncio.Event()
+
+    call_task = asyncio.create_task(main_channel.call(MSG_SHUTDOWN, None))
+
+    # Let the handler run and reach its (now-stalled) reply write. run() has
+    # woken on the shutdown event and is parked in drain_inflight, so neither
+    # the call nor run() has completed.
+    for _ in range(50):
+        await asyncio.sleep(0)
+    assert not call_task.done()
+    assert not run_task.done()
+
+    # Release drain: the reply flushes, main receives it, then run() closes.
+    sandbox_writer.stall.set()
+    reply = await asyncio.wait_for(call_task, timeout=5.0)
+    assert reply.ok is True
+
+    exit_code = await asyncio.wait_for(run_task, timeout=5.0)
+    assert exit_code == 0
+
+    await main_channel.close()
+    await sandbox_channel.close()
+    capsys.readouterr()
+
+
 async def test_run_warm_loads_restore_state_on_startup(
     capsys: pytest.CaptureFixture[str],
 ) -> None:

@@ -224,6 +224,12 @@ class SandboxRuntime:
             if self._entity_bridge is not None:
                 await self._entity_bridge.async_stop()
             if self._channel is not None:
+                # Let in-flight handlers finish first — most importantly the
+                # shutdown handler's reply write, which may still be draining
+                # (write-lock contention from unload pushes, backpressure on a
+                # large restore_state). close() would otherwise cancel it and
+                # main would lose the reply.
+                await self._channel.drain_inflight()
                 await self._channel.close()
             if sandbox_token is not None:
                 # Tidy test isolation; in prod the process exits anyway.
@@ -257,11 +263,13 @@ class SandboxRuntime:
     async def _handle_shutdown(self, _payload: object) -> pb.ShutdownResult:
         """Unload entries, flush restore state, then exit cleanly.
 
-        Runs inside the channel dispatcher so the reply is written before
-        the runtime starts its teardown. The actual shutdown event is set
-        via ``call_soon`` so the reply lands on the wire first; ``run()``
-        then exits on the next loop turn through the existing finally
-        block (which closes the channel, stops mirrors, etc.).
+        Runs inside the channel dispatcher; the channel writes this handler's
+        reply after it returns. The shutdown event is set via ``call_soon`` so
+        ``run()`` only wakes on a later loop turn — but ``call_soon`` alone
+        does not guarantee the reply has *drained* (the write can suspend on
+        backpressure). ``run()``'s finally therefore calls
+        :meth:`Channel.drain_inflight` before ``close()``, so the reply task
+        completes its write rather than being cancelled mid-flush.
         """
         summary = await self._run_graceful_shutdown()
         if self._shutdown is not None:
