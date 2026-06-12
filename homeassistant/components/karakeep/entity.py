@@ -1,7 +1,7 @@
 """Base entity for the Karakeep integration."""
 
 from homeassistant.const import CONF_URL
-from homeassistant.helpers.device_registry import DeviceEntryType
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -16,11 +16,11 @@ class KarakeepEntity(CoordinatorEntity[KarakeepDataUpdateCoordinator]):
     def __init__(self, coordinator: KarakeepDataUpdateCoordinator) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        self._attr_device_info = {
-            "identifiers": {
-                (DOMAIN, coordinator.config_entry.data[CONF_URL]),
-            },
-            "name": "Karakeep",
-            "manufacturer": "Karakeep",
-            "entry_type": DeviceEntryType.SERVICE,
-        }
+        url = coordinator.config_entry.data[CONF_URL]
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, url)},
+            name="Karakeep",
+            manufacturer="Karakeep",
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url=url,
+        )
