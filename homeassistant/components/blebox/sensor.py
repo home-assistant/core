@@ -1,5 +1,6 @@
 """BleBox sensor entities."""
 
+from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -68,6 +69,7 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="temperature",
+        translation_key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
@@ -112,48 +114,56 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
     ),
     BleBoxSensorEntityDescription(
         key="forwardActiveEnergy",
+        translation_key="forward_active_energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     BleBoxSensorEntityDescription(
         key="reverseActiveEnergy",
+        translation_key="reverse_active_energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     BleBoxSensorEntityDescription(
         key="reactivePower",
-        device_class=SensorDeviceClass.POWER,
+        translation_key="reactive_power",
+        device_class=SensorDeviceClass.REACTIVE_POWER,
         native_unit_of_measurement=UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
         key="activePower",
+        translation_key="active_power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
         key="apparentPower",
+        translation_key="apparent_power",
         device_class=SensorDeviceClass.APPARENT_POWER,
         native_unit_of_measurement=UnitOfApparentPower.VOLT_AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
         key="voltage",
+        translation_key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
         key="current",
+        translation_key="current",
         device_class=SensorDeviceClass.CURRENT,
         native_unit_of_measurement=UnitOfElectricCurrent.MILLIAMPERE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     BleBoxSensorEntityDescription(
         key="frequency",
+        translation_key="frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
@@ -187,10 +197,20 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a BleBox entry."""
+
     coordinator = config_entry.runtime_data
+    features = coordinator.box.features.get("sensors", [])
+    counts = Counter(f.device_class for f in features)
     entities = [
-        BleBoxSensorEntity(coordinator, feature, description)
-        for feature in coordinator.box.features.get("sensors", [])
+        BleBoxSensorEntity(
+            coordinator,
+            feature,
+            description,
+            feature.index
+            if counts[feature.device_class] > 1 and feature.index
+            else None,
+        )
+        for feature in features
         for description in SENSOR_TYPES
         if description.key == feature.device_class
     ]
@@ -207,10 +227,16 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
         coordinator: BleBoxCoordinator,
         feature: blebox_uniapi.sensor.BaseSensor,
         description: BleBoxSensorEntityDescription,
+        index: int | None = None,
     ) -> None:
         """Initialize a BleBox sensor feature."""
         super().__init__(coordinator, feature)
         self.entity_description = description
+        if feature.name:
+            self._attr_name = feature.name
+        elif index is not None and description.translation_key:
+            self._attr_translation_key = f"{description.translation_key}_n"
+            self._attr_translation_placeholders = {"index": str(index)}
 
     @property
     def native_value(self) -> StateType:

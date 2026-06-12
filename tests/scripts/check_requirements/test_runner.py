@@ -60,6 +60,7 @@ def test_runner_attestation_recognised(monkeypatch: pytest.MonkeyPatch) -> None:
     assert pkg.checks[CheckKind.REPO_PUBLIC].status == CheckStatus.NEEDS_AGENT
     assert pkg.checks[CheckKind.PR_LINK].status == CheckStatus.NEEDS_AGENT
     assert pkg.checks[CheckKind.ASYNC_BLOCKING].status == CheckStatus.NEEDS_AGENT
+    assert pkg.checks[CheckKind.SECURITY].status == CheckStatus.NEEDS_AGENT
     assert result.needs_agent is True
 
 
@@ -159,10 +160,11 @@ def test_runner_marks_missing_version_as_fail(
     pkg = result.packages[0]
     assert pkg.checks[CheckKind.CI_UPLOAD].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.RELEASE_PIPELINE].status == CheckStatus.FAIL
-    # No repo URL → repo_public, pr_link and async_blocking short-circuit to FAIL
+    # No repo URL → short-circuit to FAIL
     assert pkg.checks[CheckKind.REPO_PUBLIC].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.PR_LINK].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.ASYNC_BLOCKING].status == CheckStatus.FAIL
+    assert pkg.checks[CheckKind.SECURITY].status == CheckStatus.FAIL
     assert result.needs_agent is False
 
 
@@ -198,7 +200,9 @@ def test_runner_pypi_found_but_no_repo_url_fails_repo_checks(
     assert pkg.checks[CheckKind.REPO_PUBLIC].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.PR_LINK].status == CheckStatus.FAIL
     assert pkg.checks[CheckKind.ASYNC_BLOCKING].status == CheckStatus.FAIL
+    assert pkg.checks[CheckKind.SECURITY].status == CheckStatus.FAIL
     assert "does not advertise" in pkg.checks[CheckKind.REPO_PUBLIC].details
+    assert "cannot be inspected" in pkg.checks[CheckKind.SECURITY].details
 
 
 def test_runner_async_blocking_new_package_full_review(
