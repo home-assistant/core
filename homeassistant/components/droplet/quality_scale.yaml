@@ -34,17 +34,14 @@ rules:
     comment: |
       No custom actions are defined.
   config-entry-unloading: done
-  docs-configuration-parameters:
-    status: exempt
-    comment: |
-      There are no configuration options.
+  docs-configuration-parameters: todo
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable: done
-  parallel-updates: done
+  log-when-unavailable: todo
+  parallel-updates: todo
   reauthentication-flow: todo
-  test-coverage: done
+  test-coverage: todo
 
   # Gold
   devices: done
@@ -56,15 +53,12 @@ rules:
   docs-known-limitations: todo
   docs-supported-devices: todo
   docs-supported-functions: done
-  docs-troubleshooting: done
+  docs-troubleshooting: todo
   docs-use-cases: done
-  dynamic-devices:
-    status: exempt
-    comment: |
-      Configured on a per-device basis.
+  dynamic-devices: todo
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: done
+  entity-disabled-by-default: todo
   entity-translations: done
   exception-translations: todo
   icon-translations: done
@@ -73,6 +67,6 @@ rules:
   stale-devices: todo
 
   # Platinum
-  async-dependency: done
+  async-dependency: todo
   inject-websession: done
   strict-typing: done

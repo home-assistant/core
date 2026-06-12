@@ -27,8 +27,6 @@ from .const import (
 )
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
-PARALLEL_UPDATES = 0
-
 ML_L_CONVERSION = 1000
 
 
