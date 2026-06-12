@@ -31,7 +31,7 @@ from aioabrp import (
     ConnectionEvent,
     ConnectionState,
     Metric,
-    MetricValue,
+    Telemetry,
 )
 
 from homeassistant.core import HomeAssistant, callback
@@ -233,13 +233,11 @@ class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]
         ]
 
 
-class AbrpTelemetryCoordinator(
-    TimestampDataUpdateCoordinator[dict[int, dict[Metric, MetricValue]]]
-):
+class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetry]]):
     """Thin push-mode coordinator for the v2 telemetry stream.
 
     Holds the current per-vehicle telemetry snapshot keyed by
-    ``vehicle_id`` then :class:`aioabrp.Metric`. The
+    ``vehicle_id`` as a :class:`aioabrp.Telemetry` struct. The
     :class:`aioabrp.TelemetryStream` (constructed in ``__init__``) calls
     :meth:`on_update` per frame batch and :meth:`on_connection_change` on
     connection-state transitions. ``update_interval`` is ``None`` because the
@@ -337,32 +335,30 @@ class AbrpTelemetryCoordinator(
         self._presence_seen.add((vehicle_id, metric))
 
     @callback
-    def _apply_metrics(
-        self, vehicle_id: int, metrics: dict[Metric, MetricValue]
-    ) -> None:
-        """Apply a typed metric batch to the per-vehicle state (no notify).
+    def _apply_metrics(self, vehicle_id: int, delta: Telemetry) -> None:
+        """Apply a typed Telemetry delta to the per-vehicle state (no notify).
 
         Shared assignment path for :meth:`on_update` (stream) and
-        :meth:`async_seed` (best-effort one-shot poll). For each
-        ``(metric, MetricValue)``: store the value, stamp ``last_reported_at``
-        with the RECEIPT time, and update ``last_provider`` only when the
-        frame carried a provider (sticky-on-omission). Fires
-        ``signal_new_metric`` on the first appearance of each
-        ``(vehicle_id, metric)`` pair.
+        :meth:`async_seed` (best-effort one-shot poll). Merges ``delta``
+        into the stored :class:`aioabrp.Telemetry` for the vehicle, stamps
+        ``last_reported_at`` with the RECEIPT time for each present metric,
+        updates ``last_provider`` only when the delta carried a provider
+        (sticky-on-omission). Fires ``signal_new_metric`` on the first
+        appearance of each ``(vehicle_id, metric)`` pair.
 
         Does NOT notify coordinator listeners — the caller decides (the
         stream path stamps + notifies via :meth:`on_update`; the seed path
         applies silently before the platform is forwarded).
         """
-        if not metrics:
+        if next(delta.items(), None) is None:
             return
         now = dt_util.utcnow()
-        vehicle_data = self.data.setdefault(vehicle_id, {})
+        stored = self.data.get(vehicle_id)
+        self.data[vehicle_id] = delta if stored is None else stored.merge(delta)
         reported = self.last_reported_at.setdefault(vehicle_id, {})
         providers = self.last_provider.setdefault(vehicle_id, {})
         signal = signal_new_metric(self.config_entry.entry_id)
-        for metric, metric_value in metrics.items():
-            vehicle_data[metric] = metric_value
+        for metric, metric_value in delta.items():
             # Receipt time, NOT the wire ``time`` — ``last_reported_at`` is
             # "when did HA last see this field", per today's policy.
             reported[metric] = now
@@ -379,24 +375,21 @@ class AbrpTelemetryCoordinator(
                 async_dispatcher_send(self.hass, signal, vehicle_id, metric)
 
     @callback
-    def on_update(self, vehicle_id: int, metrics: dict[Metric, MetricValue]) -> None:
-        """Apply one stream frame batch and notify coordinator listeners.
+    def on_update(self, vehicle_id: int, telemetry: Telemetry) -> None:
+        """Apply one stream frame and notify coordinator listeners.
 
         Sync callback handed to :class:`aioabrp.TelemetryStream`. Applies the
-        batch through the shared :meth:`_apply_metrics` path, then pushes the
-        new snapshot to entity listeners and stamps the diagnostics
-        ``last_update_success_time`` with the receipt time (the highest-value
-        push-stream triage signal — ``async_set_updated_data`` does not invoke
-        the polling-path ``_async_refresh_finished`` that would otherwise set
-        it).
+        :class:`aioabrp.Telemetry` delta through the shared
+        :meth:`_apply_metrics` path, then pushes the new snapshot to entity
+        listeners and stamps the diagnostics ``last_update_success_time`` with
+        the receipt time (the highest-value push-stream triage signal —
+        ``async_set_updated_data`` does not invoke the polling-path
+        ``_async_refresh_finished`` that would otherwise set it).
         """
-        if not metrics:
+        if next(telemetry.items(), None) is None:
             return
-        self._apply_metrics(vehicle_id, metrics)
+        self._apply_metrics(vehicle_id, telemetry)
         now = dt_util.utcnow()
-        # ``self.data`` is deliberately mutated in place by ``_apply_metrics``;
-        # this call exists purely to fan out the listener notification (push
-        # coordinator — no fresh dict is built per frame).
         self.async_set_updated_data(self.data)
         self.last_update_success_time = now
 
