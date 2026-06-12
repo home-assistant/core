@@ -388,11 +388,14 @@ async def async_setup_entry(
 
     missing = selected_ids - present_ids
     for vehicle_id in missing:
-        # Format with the raw int so a user grepping their logs for the id
-        # they saw in the picker finds it verbatim.
-        _LOGGER.warning(
-            "Selected vehicle %d is not in the ABRP garage; skipping. "
-            "Reconfigure the integration to update the selection",
+        # A selected vehicle missing from the garage is an expected steady state
+        # after it is removed upstream: the stale-device cleanup deletes its
+        # device after the absence threshold, but the selection retains the id
+        # until the user reconfigures. Not actionable per-poll, so debug rather
+        # than warning. Format with the raw int so a user grepping their logs
+        # for the id they saw in the picker finds it verbatim.
+        _LOGGER.debug(
+            "Selected vehicle %d is not in the ABRP garage; skipping",
             vehicle_id,
         )
 
