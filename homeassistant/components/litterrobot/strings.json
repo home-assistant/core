@@ -304,7 +304,7 @@
       "message": "Invalid credentials. Please check your username and password, then try again"
     },
     "update_failed": {
-      "message": "Unable to update {name}"
+      "message": "Unable to update {entity_id}"
     }
   },
   "services": {

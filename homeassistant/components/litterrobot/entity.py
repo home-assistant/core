@@ -38,12 +38,12 @@ def whisker_command[_WhiskerEntityT2: LitterRobotEntity, **_P](
     return handler
 
 
-def raise_update_failed(name: str) -> NoReturn:
+def raise_update_failed(entity_id: str) -> NoReturn:
     """Raise when the robot rejected an update without an error response."""
     raise HomeAssistantError(
         translation_domain=DOMAIN,
         translation_key="update_failed",
-        translation_placeholders={"name": name},
+        translation_placeholders={"entity_id": entity_id},
     )
 
 
