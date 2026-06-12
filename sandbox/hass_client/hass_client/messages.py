@@ -12,11 +12,12 @@ Mirrored verbatim across the no-cross-import boundary, exactly like
 side's own checked-in gencode, so the two copies are byte-identical.
 
 Numbers note: ``google.protobuf.Struct`` stores every number as a double, so
-an ``int`` that crosses inside a dynamic field comes back as a ``float``
-(``255`` → ``255.0``). Python's ``==`` treats the two as equal, so dict
-comparisons still hold; only an ``isinstance(x, int)`` check would notice.
-Everything with integer semantics that matters (``version``, ``minor_version``,
-``supported_features``) is an explicit ``int32`` field, not a Struct value.
+an ``int`` that crosses inside a dynamic field arrives as a ``float``
+(``255`` → ``255.0``). :func:`_value_to_py` restores whole-number floats to
+``int`` so ``isinstance(x, int)`` / ``socket`` / ``range`` callers see the int
+they sent; genuinely fractional values (``0.5``) stay ``float``. Everything
+with integer semantics that matters (``version``, ``minor_version``,
+``supported_features``) is also an explicit ``int32`` field, not a Struct value.
 """
 
 from typing import Any
@@ -70,7 +71,11 @@ def _value_to_py(value: Value) -> Any:
     if kind == "null_value" or kind is None:
         return None
     if kind == "number_value":
-        return value.number_value
+        # Struct stores all numbers as double; restore whole-number floats to
+        # int so int-typed config / service-data / store versions survive the
+        # wire. Fractional values keep their float type.
+        number = value.number_value
+        return int(number) if number.is_integer() else number
     if kind == "string_value":
         return value.string_value
     if kind == "bool_value":
