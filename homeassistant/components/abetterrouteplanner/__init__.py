@@ -488,6 +488,15 @@ async def async_setup_entry(
         # eager-from-registry probe + ``RestoreSensor``. Do not "just seed the
         # coordinator too" — that reintroduces the freshness bug.
         seed = build_seed_from_restored_state(hass, entry, vehicle_ids)
+        # ``unseeded`` is the complement of the seed: vehicles with no restored
+        # wire_time to rebuild from — a brand-new vehicle on this install, a
+        # fresh install (seed is ``{}`` so every vehicle is unseeded), or a
+        # vehicle parked past the restore-state expiry. It does NOT alter the
+        # seed; it only decides who still needs a one-shot poll. ``async_seed``
+        # fills ``coordinator.data`` for those vehicles (initial display +
+        # lazy entity creation), NOT the gate — their gate starts cold and
+        # warms from their first live frames, which is correct since there is
+        # no persisted history to protect.
         unseeded = [vid for vid in vehicle_ids if vid not in seed]
         if unseeded:
             await telemetry_coordinator.async_seed(client, unseeded)
