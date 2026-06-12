@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import KarakeepConfigEntry
 from .entity import KarakeepEntity
@@ -29,7 +29,6 @@ SENSOR_DESCRIPTIONS: tuple[KarakeepSensorEntityDescription, ...] = (
         translation_key="bookmarks",
         icon="mdi:bookmark",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="bookmarks",
         value_key="numBookmarks",
     ),
     KarakeepSensorEntityDescription(
@@ -37,7 +36,6 @@ SENSOR_DESCRIPTIONS: tuple[KarakeepSensorEntityDescription, ...] = (
         translation_key="favorites",
         icon="mdi:star",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="favorites",
         value_key="numFavorites",
     ),
     KarakeepSensorEntityDescription(
@@ -45,7 +43,6 @@ SENSOR_DESCRIPTIONS: tuple[KarakeepSensorEntityDescription, ...] = (
         translation_key="archived",
         icon="mdi:archive",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="items",
         value_key="numArchived",
     ),
     KarakeepSensorEntityDescription(
@@ -53,7 +50,6 @@ SENSOR_DESCRIPTIONS: tuple[KarakeepSensorEntityDescription, ...] = (
         translation_key="highlights",
         icon="mdi:marker",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="highlights",
         value_key="numHighlights",
     ),
     KarakeepSensorEntityDescription(
@@ -61,7 +57,6 @@ SENSOR_DESCRIPTIONS: tuple[KarakeepSensorEntityDescription, ...] = (
         translation_key="lists",
         icon="mdi:format-list-bulleted",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="lists",
         value_key="numLists",
     ),
     KarakeepSensorEntityDescription(
@@ -69,7 +64,6 @@ SENSOR_DESCRIPTIONS: tuple[KarakeepSensorEntityDescription, ...] = (
         translation_key="tags",
         icon="mdi:tag",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement="tags",
         value_key="numTags",
     ),
 )
@@ -78,7 +72,7 @@ SENSOR_DESCRIPTIONS: tuple[KarakeepSensorEntityDescription, ...] = (
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: KarakeepConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Karakeep sensors based on a config entry."""
     async_add_entities(
