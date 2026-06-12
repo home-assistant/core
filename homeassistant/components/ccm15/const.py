@@ -10,8 +10,13 @@ from homeassistant.components.climate import (
 )
 
 DOMAIN = "ccm15"
-DEFAULT_TIMEOUT = 10
+DEFAULT_TIMEOUT = 20
 DEFAULT_INTERVAL = 30
+
+CONF_MIN_TEMP = "min_temp"
+CONF_MAX_TEMP = "max_temp"
+DEFAULT_MIN_TEMP = 18
+DEFAULT_MAX_TEMP = 30
 
 CONST_STATE_CMD_MAP = {
     HVACMode.COOL: 0,

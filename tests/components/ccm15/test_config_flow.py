@@ -5,31 +5,34 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.ccm15.const import DOMAIN
+from homeassistant.components.ccm15.const import (
+    CONF_MAX_TEMP,
+    CONF_MIN_TEMP,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
+    DOMAIN,
+)
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 from tests.common import MockConfigEntry
 
+TEST_CONNECTION = "homeassistant.components.ccm15.config_flow._test_connection"
+
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
-    """Test we get the form."""
+    """Test the user step creates an entry."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection",
-        return_value=True,
-    ):
+    with patch(TEST_CONNECTION, return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
+            {CONF_HOST: "1.1.1.1"},
         )
         await hass.async_block_till_done()
 
@@ -38,6 +41,8 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 80,
+        CONF_MIN_TEMP: DEFAULT_MIN_TEMP,
+        CONF_MAX_TEMP: DEFAULT_MAX_TEMP,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -45,22 +50,17 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 async def test_form_invalid_host(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test we get the form."""
+    """Test the cannot_connect path then recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection",
-        return_value=False,
-    ):
+    with patch(TEST_CONNECTION, return_value=False):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
+            {CONF_HOST: "1.1.1.1"},
         )
         await hass.async_block_till_done()
 
@@ -68,14 +68,10 @@ async def test_form_invalid_host(
     assert result2["errors"] == {"base": "cannot_connect"}
     assert len(mock_setup_entry.mock_calls) == 0
 
-    with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
-    ):
+    with patch(TEST_CONNECTION, return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.0.0.1",
-            },
+            {CONF_HOST: "1.0.0.1"},
         )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
@@ -83,32 +79,24 @@ async def test_form_invalid_host(
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+    """Test we handle cannot_connect."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=False
-    ):
+    with patch(TEST_CONNECTION, return_value=False):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
+            {CONF_HOST: "1.1.1.1"},
         )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
 
-    with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
-    ):
+    with patch(TEST_CONNECTION, return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.0.0.1",
-            },
+            {CONF_HOST: "1.0.0.1"},
         )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
@@ -116,41 +104,53 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_unexpected_error(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+    """Test we surface unknown errors."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection",
-        side_effect=Exception(),
-    ):
+    with patch(TEST_CONNECTION, side_effect=Exception()):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.1.1.1",
-            },
+            {CONF_HOST: "1.1.1.1"},
         )
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "unknown"}
 
-    with patch(
-        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
-    ):
+    with patch(TEST_CONNECTION, return_value=True):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {
-                CONF_HOST: "1.0.0.1",
-            },
+            {CONF_HOST: "1.0.0.1"},
         )
 
     assert result2["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_form_invalid_temp_range(hass: HomeAssistant) -> None:
+    """Test min must be lower than max."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(TEST_CONNECTION, return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_MIN_TEMP: 25,
+                CONF_MAX_TEMP: 20,
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "invalid_temp_range"}
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate_host(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect error."""
+    """Test we abort when the host is already configured."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="1.1.1.1",
@@ -175,3 +175,38 @@ async def test_duplicate_host(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure(hass: HomeAssistant) -> None:
+    """Test the reconfigure flow updates the entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 80,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(TEST_CONNECTION, return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_MIN_TEMP: 17,
+                CONF_MAX_TEMP: 28,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data[CONF_MIN_TEMP] == 17
+    assert entry.data[CONF_MAX_TEMP] == 28
