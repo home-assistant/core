@@ -6,32 +6,32 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "invalid_temp_range": "Minimum temperature must be lower than maximum temperature"
+      "invalid_temp_range": "Minimum temperature must be lower than maximum temperature",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "user": {
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "password": "Device password",
-          "min_temp": "Minimum target temperature",
-          "max_temp": "Maximum target temperature"
-        },
-        "data_description": {
-          "password": "Optional. Only needed if your CCM15 requires a password for control commands. To find it: open the CCM15 web interface, press F12 to open DevTools, switch to the Network tab, change any setting in the web UI, then click the new ctrl.xml request and copy the value of the pwd parameter from the URL (a 6-digit number)."
-        }
-      },
       "reconfigure": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]",
-          "password": "[%key:component::ccm15::config::step::user::data::password%]",
+          "max_temp": "[%key:component::ccm15::config::step::user::data::max_temp%]",
           "min_temp": "[%key:component::ccm15::config::step::user::data::min_temp%]",
-          "max_temp": "[%key:component::ccm15::config::step::user::data::max_temp%]"
+          "password": "[%key:component::ccm15::config::step::user::data::password%]",
+          "port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
           "password": "[%key:component::ccm15::config::step::user::data_description::password%]"
+        }
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "max_temp": "Maximum target temperature",
+          "min_temp": "Minimum target temperature",
+          "password": "Device password",
+          "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "password": "Optional. Only needed if your CCM15 requires a password for control commands. To find it: open the CCM15 web interface, press F12 to open DevTools, switch to the Network tab, change any setting in the web UI, then click the new ctrl.xml request and copy the value of the pwd parameter from the URL (a 6-digit number)."
         }
       }
     }
