@@ -1,4 +1,4 @@
-"""Data update coordinator for Home Assistant."""
+"""Data update coordinator for the my-PV integration."""
 
 from datetime import timedelta
 import functools
@@ -19,9 +19,9 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _my_pv_connection(func):
+def _my_pv_connection[_R](func):
     @functools.wraps(func)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self, *args, **kwargs) -> _R | None:
         if not self._device.connected and not await self._device.connect():
             raise UpdateFailed(
                 translation_domain=DOMAIN,
