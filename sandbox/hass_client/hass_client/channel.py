@@ -10,8 +10,8 @@ dispatch core:
 * :class:`Codec` — turns a :class:`Frame` into bytes and back.
   :class:`~.codec_protobuf.ProtobufCodec` is the production wire (a typed
   protobuf ``Frame`` envelope; the codec owns the ``type → message`` registry
-  so this dispatch core stays codec-agnostic). :class:`JsonCodec` (one JSON
-  object per frame) is retained only as the channel-core test/debug wire.
+  so this dispatch core stays codec-agnostic). A registry-free one-JSON-object-
+  per-frame codec lives in the test helpers as the channel-core test/debug wire.
 * :class:`Transport` — moves whole frame blobs over some byte channel.
   :class:`StreamTransport` length-prefixes each frame (4-byte big-endian
   length + body) over an :class:`asyncio.StreamReader` /
@@ -54,7 +54,6 @@ from collections.abc import Awaitable, Callable, Coroutine
 import contextlib
 from dataclasses import dataclass, field
 from enum import StrEnum
-import json
 import logging
 import struct
 from typing import Any, Protocol
@@ -187,56 +186,6 @@ class Codec(Protocol):
         """Rebuild a :class:`Frame` from wire bytes."""
 
 
-class JsonCodec:
-    """One-JSON-object-per-frame codec.
-
-    The registry-free test/debug wire: it passes frame payloads through as
-    plain JSON (no ``type``-to-proto lookup), so the concurrency-critical
-    channel core can be exercised with synthetic message types and arbitrary
-    dict/int payloads. Production rides :class:`ProtobufCodec`; this stays
-    for the channel-core tests only.
-    """
-
-    def encode(self, frame: Frame) -> bytes:
-        """Encode a frame to a compact JSON object."""
-        message: dict[str, Any]
-        if frame.kind is FrameKind.CALL:
-            message = {"id": frame.id, "type": frame.type, "payload": frame.payload}
-        elif frame.kind is FrameKind.PUSH:
-            message = {"type": frame.type, "payload": frame.payload}
-        elif frame.ok:
-            message = {"id": frame.id, "ok": True, "result": frame.result}
-        else:
-            message = {
-                "id": frame.id,
-                "ok": False,
-                "error": frame.error,
-                "error_type": frame.error_type,
-            }
-            if frame.error_data is not None:
-                message["error_data"] = frame.error_data
-        return json.dumps(message, separators=(",", ":")).encode("utf-8")
-
-    def decode(self, data: bytes) -> Frame:
-        """Decode a JSON object into a frame, inferring the kind from keys."""
-        message = json.loads(data)
-        has_id = "id" in message
-        has_type = "type" in message
-        if has_id and not has_type:
-            # Response to a call we sent out.
-            if message.get("ok"):
-                return Frame.ok_response(message["id"], message.get("result"))
-            return Frame.error_response(
-                message["id"],
-                message.get("error", "unknown error"),
-                message.get("error_type"),
-                message.get("error_data"),
-            )
-        if not has_id:
-            return Frame.push(message.get("type", ""), message.get("payload"))
-        return Frame.call(message["id"], message["type"], message.get("payload"))
-
-
 class Transport(Protocol):
     """Moves whole frame blobs over some byte channel."""
 
@@ -338,7 +287,7 @@ class Channel:
         writer: asyncio.StreamWriter | None = None,
         *,
         transport: Transport | None = None,
-        codec: Codec | None = None,
+        codec: Codec,
         name: str = "channel",
         max_inflight: int = DEFAULT_MAX_INFLIGHT,
         max_queued: int = DEFAULT_MAX_QUEUED,
@@ -350,18 +299,21 @@ class Channel:
         transport (e.g. websockets), pass ``transport=`` instead — see
         :meth:`from_transport`.
 
-        ``codec`` defaults to :class:`JsonCodec`. ``max_inflight`` bounds how
-        many handler tasks may run at once. Once the cap is reached, the read
-        loop keeps draining the wire but newly-spawned handlers wait on the
-        semaphore until a slot frees up — so a misbehaving integration can't
-        starve the reader by fanning out unbounded inbound work.
+        ``codec`` is required — production passes
+        :class:`~.codec_protobuf.ProtobufCodec`; a forgotten codec is a
+        construction-time error rather than a silent wire-format mismatch.
+        ``max_inflight`` bounds how many handler tasks may run at once. Once the
+        cap is reached, the read loop keeps draining the wire but newly-spawned
+        handlers wait on the semaphore until a slot frees up — so a misbehaving
+        integration can't starve the reader by fanning out unbounded inbound
+        work.
         """
         if transport is None:
             if reader is None or writer is None:
                 raise TypeError("Channel needs a reader/writer pair or a transport")
             transport = StreamTransport(reader, writer)
         self._transport: Transport = transport
-        self._codec: Codec = codec if codec is not None else JsonCodec()
+        self._codec: Codec = codec
         self._name = name
         self._next_id = 1
         self._pending: dict[int, asyncio.Future[Any]] = {}
@@ -379,7 +331,7 @@ class Channel:
         cls,
         transport: Transport,
         *,
-        codec: Codec | None = None,
+        codec: Codec,
         name: str = "channel",
         max_inflight: int = DEFAULT_MAX_INFLIGHT,
     ) -> Channel:
@@ -660,7 +612,6 @@ __all__ = [
     "FrameKind",
     "FrameTooLargeError",
     "Handler",
-    "JsonCodec",
     "StreamTransport",
     "Transport",
     "error_data_for",

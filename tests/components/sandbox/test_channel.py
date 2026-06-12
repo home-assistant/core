@@ -10,10 +10,9 @@ from homeassistant.components.sandbox.channel import (
     ChannelClosedError,
     ChannelRemoteError,
     Frame,
-    JsonCodec,
 )
 
-from ._helpers import make_channel_pair
+from ._helpers import JsonCodec, make_channel_pair
 
 
 class _QueueTransport:
@@ -50,8 +49,12 @@ async def test_from_transport_round_trips() -> None:
     """A channel built over an arbitrary Transport dispatches normally."""
     q1: asyncio.Queue[bytes | None] = asyncio.Queue()
     q2: asyncio.Queue[bytes | None] = asyncio.Queue()
-    channel_a = Channel.from_transport(_QueueTransport(q1, q2), name="a")
-    channel_b = Channel.from_transport(_QueueTransport(q2, q1), name="b")
+    channel_a = Channel.from_transport(
+        _QueueTransport(q1, q2), name="a", codec=JsonCodec()
+    )
+    channel_b = Channel.from_transport(
+        _QueueTransport(q2, q1), name="b", codec=JsonCodec()
+    )
     channel_a.start()
     channel_b.start()
 
@@ -300,7 +303,7 @@ async def test_close_after_eof_still_closes_transport() -> None:
     inflight exactly once — otherwise the byte channel leaks every restart.
     """
     transport = _ObservableTransport()
-    channel = Channel.from_transport(transport, name="eof")
+    channel = Channel.from_transport(transport, name="eof", codec=JsonCodec())
 
     started = asyncio.Event()
     cancelled = asyncio.Event()

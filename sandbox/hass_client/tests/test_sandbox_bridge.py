@@ -21,11 +21,12 @@ import tempfile
 from typing import Any
 
 from hass_client._proto import sandbox_pb2 as pb
-from hass_client.channel import Channel, ChannelRemoteError, JsonCodec
+from hass_client.channel import Channel, ChannelRemoteError
 from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.flow_runner import FlowRunner
 from hass_client.messages import struct_to_dict
 from hass_client.sandbox_bridge import ChannelSandboxBridge
+from hass_client.testing._jsoncodec import JsonCodec
 import pytest
 import voluptuous as vol
 
