@@ -19,6 +19,8 @@ from .const import (
     CONST_FAN_CMD_MAP,
     CONST_STATE_CMD_MAP,
     DEFAULT_INTERVAL,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DEFAULT_TIMEOUT,
 )
 
@@ -40,7 +42,14 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Coordinate multiple CCM15 slave devices behind one controller."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: CCM15ConfigEntry, host: str, port: int
+        self,
+        hass: HomeAssistant,
+        entry: CCM15ConfigEntry,
+        host: str,
+        port: int,
+        password: str | None = None,
+        min_temp: int = DEFAULT_MIN_TEMP,
+        max_temp: int = DEFAULT_MAX_TEMP,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -52,6 +61,9 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         )
         self._host = host
         self._port = port
+        self._password = password
+        self._min_temp = min_temp
+        self._max_temp = max_temp
         self._timeout = DEFAULT_TIMEOUT
         self._client = get_async_client(hass)
         self._optimistic: dict[int, tuple[datetime.datetime, CCM15SlaveDevice]] = {}
@@ -59,6 +71,16 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     def get_host(self) -> str:
         """Return the controller host."""
         return self._host
+
+    @property
+    def min_temp(self) -> int:
+        """Return the configured minimum target temperature."""
+        return self._min_temp
+
+    @property
+    def max_temp(self) -> int:
+        """Return the configured maximum target temperature."""
+        return self._max_temp
 
     async def _async_update_data(self) -> CCM15DeviceState:
         """Fetch device state."""
@@ -103,10 +125,11 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     async def async_set_state(self, ac_index: int, data: CCM15SlaveDevice) -> None:
         """Send a new target state for a slave AC."""
         ac_id = 2**ac_index
+        pwd_part = f"pwd={self._password}&" if self._password else ""
         sw = 1 if data.is_swing_on else 0
         url = (
             f"http://{self._host}:{self._port}/{URL_CTRL}"
-            f"?ac0={ac_id}&ac1=0"
+            f"?{pwd_part}ac0={ac_id}&ac1=0"
             f"&mode={data.ac_mode}"
             f"&fan={data.fan_mode}"
             f"&temp={data.temperature_setpoint}"

@@ -131,6 +131,16 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
         return None
 
     @property
+    def min_temp(self) -> float:
+        """Return the configured minimum target temperature."""
+        return self.coordinator.min_temp
+
+    @property
+    def max_temp(self) -> float:
+        """Return the configured maximum target temperature."""
+        return self.coordinator.max_temp
+
+    @property
     def available(self) -> bool:
         """Return the availability of the entity."""
         return self.data is not None
