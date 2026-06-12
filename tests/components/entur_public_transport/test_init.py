@@ -70,7 +70,7 @@ async def test_options_update_triggers_reload(
     hass.config_entries.async_update_entry(
         mock_config_entry,
         options={
-            CONF_SHOW_ON_MAP: True,  # Changed from False to True
+            CONF_SHOW_ON_MAP: True,
             CONF_WHITELIST_LINES: [],
             CONF_OMIT_NON_BOARDING: True,
             CONF_NUMBER_OF_DEPARTURES: 2,

@@ -120,9 +120,7 @@ class EnturConfigFlow(ConfigFlow, domain=DOMAIN):
                 web_session=async_get_clientsession(self.hass),
             )
             await client.update()
-        except TimeoutError:
-            return stops, quays, "cannot_connect", invalid_stop_ids
-        except ClientError:
+        except TimeoutError, ClientError:
             return stops, quays, "cannot_connect", invalid_stop_ids
         except Exception:  # noqa: BLE001
             return stops, quays, "unknown", invalid_stop_ids

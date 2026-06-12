@@ -143,7 +143,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "emulated_kasa": {"sense-energy": {"async-timeout"}},
     "energyid": {"energyid-webhooks": {"backoff"}},
-    "entur_public_transport": {"enturclient": {"async-timeout"}},
     "escea": {"pescea": {"async-timeout"}},
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
     "familyhub": {"python-family-hub-local": {"async-timeout"}},

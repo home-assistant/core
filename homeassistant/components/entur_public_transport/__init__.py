@@ -6,6 +6,7 @@ from random import randint
 
 from aiohttp import ClientError
 from enturclient import EnturPublicTransportData
+from enturclient.dto.place import Place
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SHOW_ON_MAP, Platform
@@ -40,7 +41,7 @@ class EnturProxy:
         """Update data in client."""
         await self._api.update()
 
-    def get_stop_info(self, stop_id: str):
+    def get_stop_info(self, stop_id: str) -> Place | None:
         """Get info about specific stop place."""
         return self._api.get_stop_info(stop_id)
 
