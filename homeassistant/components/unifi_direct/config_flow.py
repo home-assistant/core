@@ -22,10 +22,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 def validate_connection_data(data: dict[str, Any]) -> None:
-    """Validate connection using a config-style dict.
-
-    Kept for config flow compatibility.
-    """
+    """Validate that we can connect to the UniFi AP with the provided configuration."""
     try:
         ap = UniFiAP(
             target=data[CONF_HOST],
