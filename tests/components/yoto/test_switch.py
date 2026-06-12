@@ -1,5 +1,6 @@
 """Tests for the Yoto switch platform."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -41,6 +42,24 @@ async def test_all_entities(
     await _setup(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize("device_family", ["mini", "v2"])
+async def test_no_auto_brightness_without_light_sensor(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_family: str,
+) -> None:
+    """Models without an ambient light sensor get no auto-brightness switches."""
+    player = mock_yoto_client.players[PLAYER_ID]
+    player.device = replace(player.device, device_family=device_family)
+
+    await _setup(hass, mock_config_entry)
+
+    assert hass.states.get("switch.nursery_yoto_day_automatic_brightness") is None
+    assert hass.states.get("switch.nursery_yoto_night_automatic_brightness") is None
+    assert hass.states.get("switch.nursery_yoto_bluetooth") is not None
 
 
 @pytest.mark.parametrize(

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from yoto_api import PlayerConfig, YotoPlayer
+from yoto_api import Capabilities, PlayerConfig, YotoPlayer, caps_for
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
@@ -32,12 +32,14 @@ class YotoSwitchEntityDescription(SwitchEntityDescription):
     """Describes a Yoto switch entity.
 
     The turn_on/turn_off callables return the ``set_player_config`` kwargs
-    that put the player in the requested state.
+    that put the player in the requested state. ``supported_fn`` gates
+    entity creation on the player model's capabilities.
     """
 
     is_on_fn: Callable[[PlayerConfig], bool | None]
     turn_on_fn: Callable[[PlayerConfig], dict[str, Any]]
     turn_off_fn: Callable[[PlayerConfig], dict[str, Any]]
+    supported_fn: Callable[[Capabilities], bool] = lambda caps: True
 
 
 SWITCHES: tuple[YotoSwitchEntityDescription, ...] = (
@@ -107,6 +109,8 @@ SWITCHES: tuple[YotoSwitchEntityDescription, ...] = (
         turn_on_fn=lambda config: {"pause_power_button": True},
         turn_off_fn=lambda config: {"pause_power_button": False},
     ),
+    # Automatic display brightness needs the ambient light sensor, which
+    # only some player models have.
     YotoSwitchEntityDescription(
         key="day_auto_brightness",
         translation_key="day_auto_brightness",
@@ -117,6 +121,7 @@ SWITCHES: tuple[YotoSwitchEntityDescription, ...] = (
             "day_display_brightness": config.day_display_brightness
             or DEFAULT_DISPLAY_BRIGHTNESS
         },
+        supported_fn=lambda caps: caps.has_light_sensor,
     ),
     YotoSwitchEntityDescription(
         key="night_auto_brightness",
@@ -128,6 +133,7 @@ SWITCHES: tuple[YotoSwitchEntityDescription, ...] = (
             "night_display_brightness": config.night_display_brightness
             or DEFAULT_DISPLAY_BRIGHTNESS
         },
+        supported_fn=lambda caps: caps.has_light_sensor,
     ),
 )
 
@@ -143,6 +149,7 @@ async def async_setup_entry(
         YotoSwitch(coordinator, player, description)
         for player in coordinator.client.players.values()
         for description in SWITCHES
+        if description.supported_fn(caps_for(player.device))
     )
 
 
