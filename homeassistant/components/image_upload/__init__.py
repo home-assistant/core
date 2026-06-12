@@ -248,7 +248,10 @@ def _generate_thumbnail_if_file_does_not_exist(
     if not target_file.is_file():
         image = ImageOps.exif_transpose(Image.open(original_path))
         image.thumbnail(target_size)
-        image.save(target_path, format=content_type.partition("/")[-1])
+        save_format = content_type.partition("/")[-1]
+        if save_format == "jpeg" and image.mode not in ("RGB", "L", "CMYK"):
+            image = image.convert("RGB")
+        image.save(target_path, format=save_format)
 
 
 def _validate_size_from_filename(filename: str) -> tuple[int, int]:
