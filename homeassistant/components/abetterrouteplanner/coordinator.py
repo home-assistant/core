@@ -350,6 +350,8 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         stream path stamps + notifies via :meth:`on_update`; the seed path
         applies silently before the platform is forwarded).
         """
+        # ``Telemetry.items()`` yields only present (non-None) fields, so an
+        # empty iterator means this frame carries no metrics — nothing to apply.
         if next(delta.items(), None) is None:
             return
         now = dt_util.utcnow()
@@ -386,6 +388,8 @@ class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetr
         ``async_set_updated_data`` does not invoke the polling-path
         ``_async_refresh_finished`` that would otherwise set it).
         """
+        # ``Telemetry.items()`` yields only present (non-None) fields, so an
+        # empty iterator means an empty frame — skip the notify fan-out.
         if next(telemetry.items(), None) is None:
             return
         self._apply_metrics(vehicle_id, telemetry)

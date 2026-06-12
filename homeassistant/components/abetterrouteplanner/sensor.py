@@ -131,6 +131,7 @@ class AbrpTelemetrySensorEntityDescription[T](SensorEntityDescription):
     value_fn: Callable[[Telemetry], MetricValue[T] | None]
 
 
+@dataclass(frozen=True, kw_only=True)
 class AbrpNumericSensorEntityDescription(AbrpTelemetrySensorEntityDescription[float]):
     """Description for a numeric telemetry sensor (soc / power / voltage / ...)."""
 
