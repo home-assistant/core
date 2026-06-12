@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.karakeep.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, SOURCE_USER
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -32,6 +32,7 @@ async def test_full_flow(hass: HomeAssistant, mock_karakeep_client: AsyncMock) -
         {
             CONF_URL: f"{TEST_URL}/",
             CONF_TOKEN: f" {TEST_TOKEN} ",
+            CONF_VERIFY_SSL: False,
         },
     )
     await hass.async_block_till_done()
@@ -41,6 +42,7 @@ async def test_full_flow(hass: HomeAssistant, mock_karakeep_client: AsyncMock) -
     assert result["data"] == {
         CONF_URL: TEST_URL,
         CONF_TOKEN: TEST_TOKEN,
+        CONF_VERIFY_SSL: False,
     }
     assert result["result"].unique_id == TEST_URL
     mock_karakeep_client.async_get_stats.assert_awaited_once()
