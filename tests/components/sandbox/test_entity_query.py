@@ -63,7 +63,9 @@ async def _wire(hass: HomeAssistant) -> tuple[SandboxBridge, Channel, Channel]:
 @pytest.fixture(name="entry")
 def _entry_fixture(hass: HomeAssistant) -> ConfigEntry:
     """Mock ConfigEntry the synthetic proxy entities attach to."""
-    entry = MockConfigEntry(domain="sandbox_synthetic", title="Synthetic", data={})
+    entry = MockConfigEntry(
+        domain="sandbox_synthetic", title="Synthetic", data={}, sandbox="built-in"
+    )
     entry.add_to_hass(hass)
     return entry
 
