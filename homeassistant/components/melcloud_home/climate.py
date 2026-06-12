@@ -24,6 +24,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import MelCloudHomeConfigEntry, MelCloudHomeCoordinator
 from .entity import MelCloudHomeATAUnitEntity, MelCloudHomeATWZoneEntity
 
+PARALLEL_UPDATES = 1
+
 ATA_HVAC_MODE_TO_OPERATION: dict[HVACMode, ATAOperationMode] = {
     HVACMode.HEAT: ATAOperationMode.HEAT,
     HVACMode.COOL: ATAOperationMode.COOL,
