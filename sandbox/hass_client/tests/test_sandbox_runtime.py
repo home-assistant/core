@@ -8,7 +8,9 @@ public contract: argparser, the constant the manager scans for, and that
 
 import asyncio
 
-from hass_client.channel import Channel
+from hass_client._proto import sandbox_pb2 as pb
+from hass_client.channel import Channel, ChannelRemoteError
+from hass_client.codec_protobuf import ProtobufCodec
 from hass_client.protocol import MSG_READY
 from hass_client.sandbox import SandboxRuntime
 from hass_client.sandbox.__main__ import _build_parser
@@ -18,6 +20,36 @@ import pytest
 async def _noop_channel_factory() -> Channel | None:
     """Channel factory that opens no channel — for in-process shutdown tests."""
     return None
+
+
+class _LoopbackWriter:
+    def __init__(self, target: asyncio.StreamReader) -> None:
+        self._target = target
+
+    def write(self, data: bytes) -> None:
+        self._target.feed_data(data)
+
+    async def drain(self) -> None:
+        return None
+
+    def close(self) -> None:
+        self._target.feed_eof()
+
+    async def wait_closed(self) -> None:
+        return None
+
+
+def _make_channel_pair() -> tuple[Channel, Channel]:
+    reader_a = asyncio.StreamReader()
+    reader_b = asyncio.StreamReader()
+    return (
+        Channel(
+            reader_a, _LoopbackWriter(reader_b), name="main", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+        Channel(
+            reader_b, _LoopbackWriter(reader_a), name="sandbox", codec=ProtobufCodec()
+        ),  # type: ignore[arg-type]
+    )
 
 
 def test_ready_msg_type_is_stable() -> None:
@@ -43,6 +75,54 @@ def test_cli_parser_accepts_name_and_url() -> None:
     # ``--token`` is gone: passing it is now an error.
     with pytest.raises(SystemExit):
         parser.parse_args(["--name", "built-in", "--token", "t"])
+
+
+async def test_handlers_registered_before_ready(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    """Inbound call handlers are live the instant the Ready frame arrives.
+
+    The manager only sends ``entry_setup`` once it sees Ready; if Ready
+    raced ahead of handler registration, an immediate call would come back
+    as ``ChannelUnknownType``. The probe issues a ``sandbox/ping`` call the
+    moment Ready lands and asserts it resolves (handler present), not errors.
+    """
+    main_channel, sandbox_channel = _make_channel_pair()
+    ready_seen = asyncio.Event()
+    probe_result: list[object] = []
+
+    async def _on_ready(_payload: object) -> None:
+        try:
+            probe_result.append(await main_channel.call("sandbox/ping", pb.Ping()))
+        except ChannelRemoteError as err:
+            probe_result.append(err)
+        ready_seen.set()
+
+    main_channel.register(MSG_READY, _on_ready)
+    main_channel.start()
+
+    async def _channel_factory() -> Channel:
+        return sandbox_channel
+
+    runtime = SandboxRuntime(
+        url="ws://x",
+        group="custom",
+        channel_factory=_channel_factory,
+    )
+
+    task = asyncio.create_task(runtime.run())
+    try:
+        await asyncio.wait_for(ready_seen.wait(), timeout=5.0)
+        assert len(probe_result) == 1
+        # The ping handler answered: no ChannelUnknownType, a real PingResult.
+        assert isinstance(probe_result[0], pb.PingResult)
+        assert probe_result[0].pong == "sandbox"
+    finally:
+        runtime.request_shutdown()
+        await asyncio.wait_for(task, timeout=5.0)
+        await main_channel.close()
+        await sandbox_channel.close()
+    capsys.readouterr()
 
 
 async def test_runtime_starts_in_locked_down_sharing_posture(
