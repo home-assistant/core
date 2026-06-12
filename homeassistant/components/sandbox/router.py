@@ -172,12 +172,33 @@ class SandboxFlowRouter:
         async_invalidate_translations(self._hass, {entry.domain})
         sandbox = self._manager.get(group)
         if sandbox is None or sandbox.channel is None:
+            # The sandbox is down. Skip the remote entry_unload RPC (the
+            # process is gone) but still tear down the main-side proxies +
+            # EntityComponent platform registration, or a later re-setup
+            # hits "has already been setup!".
+            await self._async_unload_main_side(group, entry)
             return True
         try:
             result = await sandbox.channel.call(
                 MSG_ENTRY_UNLOAD, pb.EntryUnload(entry_id=entry.entry_id)
             )
-        except ChannelClosedError, ChannelRemoteError:
+        except ChannelClosedError:
+            # The channel died mid-unload — same as "down": the process is
+            # effectively gone, so clean up the main side anyway rather than
+            # leaking the platform.
+            _LOGGER.warning(
+                "Sandbox %r channel closed while unloading entry %s (%s);"
+                " cleaning up main-side proxies",
+                group,
+                entry.title,
+                entry.domain,
+            )
+            await self._async_unload_main_side(group, entry)
+            return True
+        except ChannelRemoteError:
+            # A live sandbox refused the unload — the entry is still loaded
+            # remotely, so leave the main-side proxies in place and report
+            # the failure.
             _LOGGER.exception(
                 "Sandbox %r failed to unload entry %s (%s)",
                 group,
@@ -185,11 +206,23 @@ class SandboxFlowRouter:
                 entry.domain,
             )
             return False
-        if self._data is not None:
-            bridge = self._data.bridges.get(group)
-            if bridge is not None:
-                await bridge.async_unload_entry(entry)
+        await self._async_unload_main_side(group, entry)
         return result.ok
+
+    async def _async_unload_main_side(self, group: str, entry: ConfigEntry) -> None:
+        """Tear down the main-side proxies + platform slot for ``entry``.
+
+        Shared by every :meth:`async_unload_entry` exit that should release
+        main-side state: the remote ``entry_unload`` RPC is optional (it
+        can't run when the sandbox is down) but the proxies and the
+        ``EntityComponent`` platform registration must always be removed or a
+        later re-setup trips the ``"has already been setup!"`` guard.
+        """
+        if self._data is None:
+            return
+        bridge = self._data.bridges.get(group)
+        if bridge is not None:
+            await bridge.async_unload_entry(entry)
 
     async def _assignment_for_new_flow(self, handler_key: str) -> SandboxAssignment:
         """Decide where a new flow for ``handler_key`` should run.
