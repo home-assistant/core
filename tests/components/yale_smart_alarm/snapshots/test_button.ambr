@@ -32,7 +32,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'panic',
-    'unique_id': 'yale_smart_alarm-panic',
+    'unique_id': '1-panic',
     'unit_of_measurement': None,
   })
 # ---
