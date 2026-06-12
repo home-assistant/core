@@ -47,11 +47,10 @@ SSE-consumer pre-queue it relied on no longer exists.
 """
 
 from datetime import UTC, datetime
-from decimal import Decimal
 from typing import Any
 from unittest.mock import patch
 
-from aioabrp import ChargingState, Telemetry
+from aioabrp import Metric, Telemetry
 from freezegun import freeze_time
 import pytest
 
@@ -1058,21 +1057,19 @@ async def test_build_seed_from_restored_state_rebuilds_metric_values(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """The seed helper rebuilds a per-vehicle Telemetry from restored state.
+    """The seed helper rebuilds a per-vehicle wire-time mapping from restored state.
 
     Drives the helper that a later task uses to warm the stream gate BEFORE
     entities/stream exist: it reads ``restore_state.last_states`` (populated at
     HA bootstrap), maps each ``(vehicle_id, metric)`` -> sensor ``unique_id`` ->
-    entity_id via the registry, and rebuilds a ``MetricValue`` from the restored
-    typed ``native_value`` + the ``wire_time`` / ``provider`` attributes.
+    entity_id via the registry, and extracts each restored sensor's persisted
+    ``wire_time`` attribute.
 
-    Seeds both a numeric metric (voltage, with a ``provider`` attribute) and the
-    enum metric (charging_state, no provider). Asserts:
-
-    - numeric ``.value`` is a ``float``, ``.time`` the parsed ``datetime``,
-      ``.provider`` the restored string;
-    - enum ``.value`` is the reverse-mapped ``ChargingState`` member, ``.time``
-      parsed, ``.provider`` ``None``.
+    The library gate only needs the per-``(vehicle, metric)`` wire timestamps, so
+    the helper returns a ``dict[int, dict[Metric, datetime]]`` keyed by the
+    library ``Metric`` enum — no value / provider reconstruction. Seeds both a
+    numeric metric (voltage) and the enum metric (charging_state); asserts each
+    metric's parsed wire ``datetime`` lands under its ``Metric`` key.
     """
     # Restore cache must be wired while HA is not running so RestoreStateData
     # surfaces it; the registry rows give the helper its unique_id -> entity_id
@@ -1103,21 +1100,12 @@ async def test_build_seed_from_restored_state_rebuilds_metric_values(
         hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
     )
 
-    assert MOCK_VEHICLE_ID in seed
-    telemetry = seed[MOCK_VEHICLE_ID]
-
-    voltage = telemetry.voltage
-    assert voltage is not None
-    assert isinstance(voltage.value, float)
-    assert voltage.value == RESTORED_VOLTAGE
-    assert voltage.time == RESTORED_WIRE_TIME_DT
-    assert voltage.provider == RESTORED_PROVIDER
-
-    charging = telemetry.charging_state
-    assert charging is not None
-    assert charging.value is ChargingState.CHARGING_DC
-    assert charging.time == RESTORED_WIRE_TIME_DT
-    assert charging.provider is None
+    assert seed == {
+        MOCK_VEHICLE_ID: {
+            Metric.VOLTAGE: RESTORED_WIRE_TIME_DT,
+            Metric.CHARGING_STATE: RESTORED_WIRE_TIME_DT,
+        }
+    }
 
 
 @pytest.mark.usefixtures("mock_abrp_client")
@@ -1126,65 +1114,18 @@ async def test_build_seed_skips_metrics_failing_restore_guards(
     config_entry_with_vehicles: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Restore-guard failures drop the metric (and the vehicle when it's alone).
+    """A malformed restored ``wire_time`` drops the metric (and the lone vehicle).
 
-    Seeds two vehicle slots whose every rebuild guard fails, so the rebuilt seed
-    must carry neither field — and because they are the ONLY seeded metrics, the
-    vehicle is absent from the dict entirely (the "no rebuildable slot → omitted"
-    contract):
-
-    - voltage with a malformed ``wire_time`` (``"not-a-date"``): the
-      ``datetime.fromisoformat`` guard fails, so the numeric slot is dropped.
-    - charging_state with an out-of-``options`` native_value
-      (``"bogus_state"``): the ``OPTION_TO_CHARGING_STATE`` reverse-map miss
-      drops the enum slot.
-
-    Both have an otherwise-valid restore shape, isolating the single failing
-    guard per metric.
+    Seeds a single voltage slot with a malformed ``wire_time`` (``"not-a-date"``):
+    the helper's ``datetime.fromisoformat`` guard fails, so the metric is dropped.
+    Because it is the ONLY seeded metric, the vehicle is absent from the dict
+    entirely (the "no usable wire time → omitted" contract). The seed is purely
+    wire-time-driven now, so the value / enum-option angle is irrelevant.
     """
     hass.set_state(CoreState.not_running)
     mock_restore_cache_with_extra_data(
         hass,
-        [
-            _voltage_restored_state(wire_time="not-a-date"),
-            _charging_state_restored_state(native_value="bogus_state"),
-        ],
-    )
-    config_entry_with_vehicles.add_to_hass(hass)
-    for key in ("voltage", "charging_state"):
-        entity_registry.async_get_or_create(
-            domain="sensor",
-            platform=DOMAIN,
-            unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_{key}",
-            config_entry=config_entry_with_vehicles,
-            suggested_object_id=f"rivian_r2_2027_standard_long_range_{key}",
-        )
-
-    seed = build_seed_from_restored_state(
-        hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
-    )
-
-    # No rebuildable slot for the vehicle → omitted from the seed entirely.
-    assert seed == {}
-
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_build_seed_rejects_bool_numeric_native_value(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """A bool numeric ``native_value`` is rejected (``bool`` is an ``int`` subclass).
-
-    Guards against a regression that dropped the explicit ``isinstance(_, bool)``
-    exclusion from the numeric arm: ``True`` would otherwise pass the
-    ``isinstance(_, (int, float, Decimal))`` check and coerce to ``1.0``. The
-    only seeded metric fails, so the vehicle is absent from the seed.
-    """
-    hass.set_state(CoreState.not_running)
-    mock_restore_cache_with_extra_data(
-        hass,
-        [_voltage_restored_state(native_value=True, wire_time=RESTORED_WIRE_TIME_ISO)],
+        [_voltage_restored_state(wire_time="not-a-date")],
     )
     config_entry_with_vehicles.add_to_hass(hass)
     entity_registry.async_get_or_create(
@@ -1199,50 +1140,8 @@ async def test_build_seed_rejects_bool_numeric_native_value(
         hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
     )
 
+    # No usable wire time for the vehicle → omitted from the seed entirely.
     assert seed == {}
-
-
-@pytest.mark.usefixtures("mock_abrp_client")
-async def test_build_seed_accepts_decimal_numeric_native_value(
-    hass: HomeAssistant,
-    config_entry_with_vehicles: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """A ``Decimal`` numeric ``native_value`` is accepted and coerced to ``float``.
-
-    The real recorder round-trip can surface a ``Decimal`` (via
-    ``SensorExtraStoredData``); the in-memory test cache surfaces a plain float.
-    This pins the ``Decimal`` accept arm + ``float()`` coercion that the
-    happy-path test (plain float) does not reach: the rebuilt ``MetricValue``
-    carries a real ``float`` equal to the decimal magnitude.
-    """
-    hass.set_state(CoreState.not_running)
-    mock_restore_cache_with_extra_data(
-        hass,
-        [
-            _voltage_restored_state(
-                native_value=Decimal("410.0"), wire_time=RESTORED_WIRE_TIME_ISO
-            )
-        ],
-    )
-    config_entry_with_vehicles.add_to_hass(hass)
-    entity_registry.async_get_or_create(
-        domain="sensor",
-        platform=DOMAIN,
-        unique_id=f"{SENSOR_TEST_SUB}_{MOCK_VEHICLE_ID}_voltage",
-        config_entry=config_entry_with_vehicles,
-        suggested_object_id="rivian_r2_2027_standard_long_range_voltage",
-    )
-
-    seed = build_seed_from_restored_state(
-        hass, config_entry_with_vehicles, [MOCK_VEHICLE_ID]
-    )
-
-    assert MOCK_VEHICLE_ID in seed
-    voltage = seed[MOCK_VEHICLE_ID].voltage
-    assert voltage is not None
-    assert isinstance(voltage.value, float)
-    assert voltage.value == 410.0
 
 
 # ---------------------------------------------------------------------------
@@ -1264,7 +1163,8 @@ async def test_setup_seeds_stream_from_restored_state_and_skips_poll(
     returns a non-empty seed. ``async_setup_entry`` must:
 
     - construct the ``TelemetryStream`` with ``seed=`` equal to that rebuilt
-      ``dict[int, Telemetry]`` (gate-warming without a network call), and
+      ``dict[int, dict[Metric, datetime]]`` (gate-warming without a network
+      call), and
     - NOT call the one-shot poll (``async_get_current_telemetry``) — the only
       selected vehicle is already seeded, so it is not in ``unseeded``.
     """
@@ -1291,15 +1191,10 @@ async def test_setup_seeds_stream_from_restored_state_and_skips_poll(
     # The vehicle was seeded from restored state → the one-shot poll is skipped.
     assert mock_poll.call_count == 0
 
-    # The stream carries the rebuilt seed verbatim.
+    # The stream carries the rebuilt times-only seed verbatim.
     stream = fake_stream.stream
     assert stream is not None
-    assert stream.seed is not None
-    assert MOCK_VEHICLE_ID in stream.seed
-    voltage = stream.seed[MOCK_VEHICLE_ID].voltage
-    assert voltage is not None
-    assert voltage.value == RESTORED_VOLTAGE
-    assert voltage.time == RESTORED_WIRE_TIME_DT
+    assert stream.seed == {MOCK_VEHICLE_ID: {Metric.VOLTAGE: RESTORED_WIRE_TIME_DT}}
 
 
 @pytest.mark.usefixtures("mock_abrp_client", "fake_stream")
@@ -1394,5 +1289,6 @@ async def test_setup_partitions_mixed_seeded_and_unseeded_vehicles(
     stream = fake_stream.stream
     assert stream is not None
     assert set(stream.seed) == {MOCK_VEHICLE_ID}
+    assert stream.seed[MOCK_VEHICLE_ID] == {Metric.VOLTAGE: RESTORED_WIRE_TIME_DT}
     # Both selected (and present) vehicles are still streamed.
     assert set(stream.vehicle_ids) == {MOCK_VEHICLE_ID, MOCK_VEHICLE_ID_2}
