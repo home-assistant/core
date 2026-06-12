@@ -72,6 +72,20 @@
           }
         }
       }
+    },
+    "sensor": {
+      "room_temperature": {
+        "name": "Room temperature"
+      },
+      "room_temperature_zone_1": {
+        "name": "Zone 1 room temperature"
+      },
+      "room_temperature_zone_2": {
+        "name": "Zone 2 room temperature"
+      },
+      "tank_water_temperature": {
+        "name": "Tank water temperature"
+      }
     }
   },
   "exceptions": {
