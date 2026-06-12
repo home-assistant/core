@@ -2120,7 +2120,7 @@ pydrawise==2026.4.0
 pydroid-ipcam==3.0.0
 
 # homeassistant.components.droplet
-pydroplet==2.3.4
+pydroplet==2.4.0
 
 # homeassistant.components.ebox
 pyebox==1.1.4
