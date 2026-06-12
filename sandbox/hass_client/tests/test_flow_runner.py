@@ -78,6 +78,22 @@ class _DemoFlow(ConfigFlow, domain="phase4_demo"):
         )
 
 
+class _VersionedFlow(ConfigFlow, domain="phase4_versioned"):
+    """A one-step flow with a non-default VERSION/MINOR_VERSION and options."""
+
+    VERSION = 2
+    MINOR_VERSION = 3
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        return self.async_create_entry(
+            title="Versioned",
+            data={"host": "1.2.3.4"},
+            options={"poll_interval": 30},
+        )
+
+
 @pytest.fixture(name="channels")
 async def _channels_fixture() -> tuple[Channel, Channel]:
     main, sandbox = _make_channel_pair()
@@ -160,6 +176,40 @@ async def test_flow_step_creates_entry(
     assert step_result.type == "create_entry"
     assert step_result.title == "Demo 1.2.3.4"
     assert struct_to_dict(step_result.data) == {"host": "1.2.3.4"}
+
+
+async def test_create_entry_marshals_version_and_options(
+    channels: tuple[Channel, Channel], runner: FlowRunner
+) -> None:
+    """CREATE_ENTRY carries the flow's VERSION/MINOR_VERSION/options on the wire."""
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+
+    ha_config_entries.HANDLERS["phase4_versioned"] = _VersionedFlow
+    fake_module = ModuleType("homeassistant.components.phase4_versioned")
+    fake_flow_module = ModuleType("homeassistant.components.phase4_versioned.config_flow")
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_versioned"] = fake_module
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["phase4_versioned.config_flow"] = (
+        fake_flow_module
+    )
+    runner.hass.config.components.add("phase4_versioned")
+    try:
+        init_msg = pb.FlowInit(handler="phase4_versioned")
+        init_msg.context.update({"source": "user"})
+        result = await main.call("sandbox/flow_init", init_msg)
+    finally:
+        ha_config_entries.HANDLERS.pop("phase4_versioned", None)
+        runner.hass.data[ha_loader.DATA_COMPONENTS].pop("phase4_versioned", None)
+        runner.hass.data[ha_loader.DATA_COMPONENTS].pop(
+            "phase4_versioned.config_flow", None
+        )
+
+    assert result.type == "create_entry"
+    assert result.version == 2
+    assert result.minor_version == 3
+    assert struct_to_dict(result.options) == {"poll_interval": 30}
 
 
 async def test_flow_step_validation_error_returns_form(

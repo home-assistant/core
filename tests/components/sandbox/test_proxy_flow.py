@@ -12,6 +12,7 @@ from homeassistant.components.sandbox._proto import sandbox_pb2 as pb
 from homeassistant.components.sandbox.channel import Channel
 from homeassistant.components.sandbox.manager import SandboxManager
 from homeassistant.components.sandbox.messages import struct_to_dict
+from homeassistant.components.sandbox.proxy_flow import SandboxFlowProxy
 from homeassistant.components.sandbox.router import SandboxFlowRouter
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -164,6 +165,55 @@ async def test_full_flow_user_to_create_entry(
     assert entries[0].data == {"host": "1.2.3.4"}
     # The setup interception path marked it LOADED.
     assert entries[0].state is ConfigEntryState.LOADED
+
+
+async def test_create_entry_carries_version_and_options(
+    hass: HomeAssistant, manager: FakeSandboxManager
+) -> None:
+    """A sandbox CREATE_ENTRY with VERSION/MINOR_VERSION/options round-trips.
+
+    Pins the framework behaviour the fix relies on: ``async_create_entry``
+    reads ``self.VERSION``/``self.MINOR_VERSION`` off the proxy *instance*,
+    so overriding them before the call lands the integration's real schema
+    version on the entry (instead of the proxy class default ``VERSION=1``,
+    which would trigger a spurious migration on next setup).
+    """
+    mock_integration(hass, MockModule("test_proxy_full"))
+    create_entry = pb.FlowResult(
+        type=FlowResultType.CREATE_ENTRY.value,
+        flow_id="sandbox-flow-ver",
+        handler="test_proxy_full",
+        title="Versioned",
+        version=2,
+        minor_version=3,
+    )
+    create_entry.data.update({"host": "1.2.3.4"})
+    create_entry.options.update({"poll_interval": 30})
+    responses = [create_entry]
+
+    with (
+        _wired_sandbox(manager, group="built-in", responses=responses),
+        patch(
+            "homeassistant.components.sandbox.router.classify",
+            return_value=type("A", (), {"is_main": False, "group": "built-in"})(),
+        ),
+    ):
+        await _install_router(hass, manager)
+        # The proxy class default is VERSION=1 — the entry must NOT inherit it.
+        assert SandboxFlowProxy.VERSION == 1
+        result = await hass.config_entries.flow.async_init(
+            "test_proxy_full", context={"source": SOURCE_USER}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    entries = hass.config_entries.async_entries("test_proxy_full")
+    assert len(entries) == 1
+    entry = entries[0]
+    assert entry.version == 2
+    assert entry.minor_version == 3
+    assert entry.options == {"poll_interval": 30}
+    assert entry.data == {"host": "1.2.3.4"}
 
 
 async def test_form_with_errors_reshows(
