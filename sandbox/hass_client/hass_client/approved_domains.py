@@ -26,10 +26,13 @@ Domain comparison is case-insensitive; everything is normalised to
 lowercase at insertion time so the lookups stay cheap.
 """
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
+import contextlib
 import logging
 
 _LOGGER = logging.getLogger(__name__)
+
+ApproveListener = Callable[[str], None]
 
 
 class ApprovedDomains:
@@ -38,14 +41,38 @@ class ApprovedDomains:
     def __init__(self, initial: Iterable[str] | None = None) -> None:
         """Initialise the gate, optionally seeded with a starter set."""
         self._counts: dict[str, int] = {}
+        self._listeners: list[ApproveListener] = []
         if initial is not None:
             for domain in initial:
                 self.add(domain)
 
+    def add_listener(self, listener: ApproveListener) -> None:
+        """Subscribe ``listener`` to absent→present domain transitions.
+
+        The listener fires (with the lowercased domain) only the first time
+        a domain becomes approved, not on every refcount bump. Used by the
+        :class:`~hass_client.service_mirror.ServiceMirror` to replay services
+        a domain registered before its approval landed.
+        """
+        self._listeners.append(listener)
+
+    def remove_listener(self, listener: ApproveListener) -> None:
+        """Drop a previously-added approve listener (no-op if absent)."""
+        with contextlib.suppress(ValueError):
+            self._listeners.remove(listener)
+
     def add(self, domain: str) -> None:
-        """Approve ``domain``; multiple ``add`` calls bump a refcount."""
+        """Approve ``domain``; multiple ``add`` calls bump a refcount.
+
+        The first ``add`` for a domain (absent→present) notifies any
+        registered approve listeners.
+        """
         key = domain.lower()
+        is_new = key not in self._counts
         self._counts[key] = self._counts.get(key, 0) + 1
+        if is_new:
+            for listener in self._listeners:
+                listener(key)
 
     def remove(self, domain: str) -> None:
         """Drop one ``add`` for ``domain``; harmless when over-removed."""
