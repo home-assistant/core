@@ -23,11 +23,13 @@
       "user": {
         "data": {
           "token": "API token",
-          "url": "URL"
+          "url": "URL",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "token": "The API token used to connect to your Karakeep instance.",
-          "url": "The URL of your Karakeep instance, including http:// or https://."
+          "url": "The URL of your Karakeep instance, including http:// or https://.",
+          "verify_ssl": "Verify the SSL certificate of your Karakeep instance. Disable this option if you are using a self-signed certificate."
         },
         "description": "Connect to your Karakeep instance."
       }

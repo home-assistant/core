@@ -1,6 +1,6 @@
 """Tests for the Karakeep integration setup."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aiokarakeep import KarakeepAuthError, KarakeepConnectionError
 
@@ -19,9 +19,13 @@ async def test_setup_entry(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test setting up the integration."""
-    await setup_integration(hass, mock_config_entry)
+    with patch(
+        "homeassistant.components.karakeep.async_get_clientsession"
+    ) as mock_get_clientsession:
+        await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    mock_get_clientsession.assert_called_once_with(hass, False)
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     mock_karakeep_client.async_get_stats.assert_awaited_once()
 

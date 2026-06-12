@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant.components.karakeep.const import DOMAIN
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
 from .const import TEST_STATS, TEST_TOKEN, TEST_URL
 
@@ -50,6 +50,7 @@ def mock_config_entry() -> MockConfigEntry:
         data={
             CONF_URL: TEST_URL,
             CONF_TOKEN: TEST_TOKEN,
+            CONF_VERIFY_SSL: False,
         },
         unique_id=TEST_URL,
     )

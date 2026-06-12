@@ -15,16 +15,17 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import DEFAULT_VERIFY_SSL, DOMAIN
 
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): str,
         vol.Required(CONF_TOKEN): str,
+        vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
     }
 )
 
@@ -34,11 +35,13 @@ class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
-    async def _async_validate_input(self, url: str, token: str) -> dict[str, str]:
+    async def _async_validate_input(
+        self, url: str, token: str, verify_ssl: bool
+    ) -> dict[str, str]:
         """Validate the user input allows us to connect."""
         errors: dict[str, str] = {}
 
-        session = async_get_clientsession(self.hass)
+        session = async_get_clientsession(self.hass, verify_ssl)
         client = KarakeepClient(url, token, session)
 
         try:
@@ -61,6 +64,7 @@ class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             url = _normalize_url(user_input[CONF_URL])
             token = user_input[CONF_TOKEN].strip()
+            verify_ssl = user_input[CONF_VERIFY_SSL]
 
             if not _is_valid_url(url):
                 errors["base"] = "invalid_url_format"
@@ -68,13 +72,14 @@ class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(url)
                 self._abort_if_unique_id_configured()
 
-                errors = await self._async_validate_input(url, token)
+                errors = await self._async_validate_input(url, token, verify_ssl)
                 if not errors:
                     return self.async_create_entry(
                         title="Karakeep",
                         data={
                             CONF_URL: url,
                             CONF_TOKEN: token,
+                            CONF_VERIFY_SSL: verify_ssl,
                         },
                     )
 
@@ -100,7 +105,9 @@ class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             token = user_input[CONF_TOKEN].strip()
             errors = await self._async_validate_input(
-                reauth_entry.data[CONF_URL], token
+                reauth_entry.data[CONF_URL],
+                token,
+                reauth_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
             )
 
             if not errors:
