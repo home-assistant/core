@@ -138,10 +138,14 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
     async def _async_sync_subscriptions(self) -> None:
         """Subscribe new players to MQTT events and unsubscribe removed ones."""
         current = set(self.client.players)
-        for device_id in current - self._subscribed_players:
-            await self.client.subscribe_player_events(device_id)
-        for device_id in self._subscribed_players - current:
-            await self.client.unsubscribe_player_events(device_id)
+        try:
+            for device_id in current - self._subscribed_players:
+                await self.client.subscribe_player_events(device_id)
+            for device_id in self._subscribed_players - current:
+                await self.client.unsubscribe_player_events(device_id)
+        except YotoError as err:
+            _LOGGER.warning("Could not update Yoto event subscriptions: %s", err)
+            return
         self._subscribed_players = current
 
     def _remove_stale_devices(self) -> None:

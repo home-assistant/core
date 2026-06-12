@@ -354,6 +354,33 @@ async def test_dynamic_device_added(
     mock_yoto_client.subscribe_player_events.assert_called_once_with("player-2")
 
 
+async def test_subscription_failure_does_not_fail_refresh(
+    hass: HomeAssistant,
+    mock_yoto_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A subscription error keeps the refreshed data and retries next cycle."""
+    await setup_integration(hass, mock_config_entry)
+    mock_yoto_client.players["player-2"] = _build_second_player()
+    mock_yoto_client.subscribe_player_events.side_effect = YotoAPIError("boom")
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("media_player.playroom_yoto") is not None
+    assert mock_config_entry.runtime_data.last_update_success is True
+
+    mock_yoto_client.subscribe_player_events.side_effect = None
+    mock_yoto_client.subscribe_player_events.reset_mock()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    mock_yoto_client.subscribe_player_events.assert_called_once_with("player-2")
+
+
 async def test_stale_device_removed(
     hass: HomeAssistant,
     mock_yoto_client: MagicMock,
