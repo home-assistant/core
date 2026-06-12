@@ -1,8 +1,8 @@
 {
-  "minor_version": 0,
+  "key": "persistent",
   "data": {
     "survives": true
   },
-  "key": "persistent",
-  "version": 4
+  "version": 4,
+  "minor_version": 0
 }

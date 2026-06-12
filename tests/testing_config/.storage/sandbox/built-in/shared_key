@@ -1,8 +1,8 @@
 {
-  "minor_version": 1,
+  "key": "shared_key",
   "data": {
     "side": "built-in"
   },
-  "key": "shared_key",
-  "version": 1
+  "version": 1,
+  "minor_version": 1
 }
