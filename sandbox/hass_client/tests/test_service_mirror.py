@@ -153,6 +153,60 @@ async def test_unapproved_domain_is_rejected(
     await mirror.async_stop()
 
 
+async def test_service_registered_before_approval_is_replayed(
+    channels: tuple[Channel, Channel], hass_runtime: Any
+) -> None:
+    """A service registered before its domain is approved is replayed on approval.
+
+    Mirrors the real race: ``EVENT_SERVICE_REGISTERED`` fires synchronously
+    while a service is registered inside ``async_setup_entry``, before the
+    entry runner approves the domain. The early registration is dropped at
+    fire time, then replayed the moment ``ApprovedDomains.add`` approves it.
+    """
+    main, sandbox = channels
+    register_calls: list[pb.RegisterService] = []
+
+    async def _on_register(msg: pb.RegisterService) -> pb.RegisterServiceResult:
+        register_calls.append(msg)
+        return pb.RegisterServiceResult(ok=True, installed=True)
+
+    main.register("sandbox/register_service", _on_register)
+    main.start()
+    sandbox.start()
+
+    # Start with an empty gate — the domain is NOT yet approved.
+    approved = ApprovedDomains()
+    mirror = ServiceMirror(hass_runtime, approved)
+    mirror.register(sandbox)
+
+    async def _svc(_call: Any) -> None:
+        return None
+
+    # Service registers while the domain is still unapproved (the setup race).
+    hass_runtime.services.async_register(
+        "phase1_demo",
+        "do_thing",
+        _svc,
+        supports_response=SupportsResponse.NONE,
+    )
+    # Give the (dropped) registration a few ticks; nothing should reach main.
+    for _ in range(20):
+        await asyncio.sleep(0)
+    assert register_calls == []
+
+    # Domain becomes approved — exactly what the entry runner does after
+    # ``async_setup`` returns — and the dropped service is now replayed.
+    approved.add("phase1_demo")
+
+    await _wait_until(lambda: bool(register_calls))
+
+    assert len(register_calls) == 1
+    assert register_calls[0].domain == "phase1_demo"
+    assert register_calls[0].service == "do_thing"
+
+    await mirror.async_stop()
+
+
 async def test_unregister_service_propagates(
     channels: tuple[Channel, Channel], hass_runtime: Any
 ) -> None:
