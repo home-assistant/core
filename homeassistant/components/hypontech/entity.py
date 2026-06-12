@@ -18,7 +18,7 @@ class HypontechEntity(CoordinatorEntity[HypontechDataCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.account_id)},
             name="Overview",
-            manufacturer="Hypontech",
+            manufacturer=coordinator.oem_name,
         )
 
 
@@ -35,7 +35,7 @@ class HypontechPlantEntity(CoordinatorEntity[HypontechDataCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, plant_id)},
             name=plant.info.plant_name,
-            manufacturer="Hypontech",
+            manufacturer=coordinator.oem_name,
             model=plant.info.plant_type,
         )
 

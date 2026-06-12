@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 
 from hyponcloud import (
+    KNOWN_OEMS,
     HyponCloud,
     OverviewData,
     PlantData,
@@ -16,7 +17,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER
+from .const import CONF_OEM, DEFAULT_OEM, DOMAIN, LOGGER
 
 
 @dataclass
@@ -36,6 +37,8 @@ class HypontechCoordinatorData:
 
 
 type HypontechConfigEntry = ConfigEntry[HypontechDataCoordinator]
+
+OEM_NAMES = {oem.id: oem.name for oem in KNOWN_OEMS}
 
 
 class HypontechDataCoordinator(DataUpdateCoordinator[HypontechCoordinatorData]):
@@ -60,6 +63,7 @@ class HypontechDataCoordinator(DataUpdateCoordinator[HypontechCoordinatorData]):
         )
         self.api = api
         self.account_id = account_id
+        self.oem_name = OEM_NAMES[int(config_entry.data.get(CONF_OEM, DEFAULT_OEM))]
 
     async def _async_update_data(self) -> HypontechCoordinatorData:
         try:
