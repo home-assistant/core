@@ -173,6 +173,87 @@ async def test_entry_setup_reports_failure_reason(
     assert result.HasField("reason")
 
 
+async def test_failed_entry_setup_is_retryable(
+    channels: tuple[Channel, Channel], runner: EntryRunner
+) -> None:
+    """A failed setup frees the entry_id so main can re-send entry_setup.
+
+    The first attempt fails; the entry must not linger in the sandbox's
+    config_entries (else the retry is rejected with "entry already loaded").
+    The second attempt for the same entry_id then succeeds.
+    """
+    main, sandbox = channels
+    runner.register(sandbox)
+    main.start()
+    sandbox.start()
+
+    attempts: list[str] = []
+
+    async def _async_setup_entry(hass: Any, entry: ConfigEntry) -> bool:
+        attempts.append(entry.entry_id)
+        # Fail the first attempt, succeed the second.
+        return len(attempts) >= 2
+
+    async def _async_unload_entry(_hass: Any, _entry: ConfigEntry) -> bool:
+        return True
+
+    class _DemoFlow(ConfigFlow, domain="demo_retry"):
+        VERSION = 1
+
+    assert "demo_retry" in ha_config_entries.HANDLERS
+
+    module = ModuleType("homeassistant.components.demo_retry")
+    module.DOMAIN = "demo_retry"
+    module.async_setup_entry = _async_setup_entry  # type: ignore[attr-defined]
+    module.async_unload_entry = _async_unload_entry  # type: ignore[attr-defined]
+    config_flow_module = ModuleType("homeassistant.components.demo_retry.config_flow")
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["demo_retry"] = module
+    runner.hass.data[ha_loader.DATA_COMPONENTS]["demo_retry.config_flow"] = (
+        config_flow_module
+    )
+
+    integration = ha_loader.Integration(
+        runner.hass,
+        "homeassistant.components.demo_retry",
+        None,
+        {
+            "domain": "demo_retry",
+            "name": "Demo Retry",
+            "config_flow": True,
+            "documentation": "https://example.com",
+            "iot_class": "local_polling",
+            "requirements": [],
+            "dependencies": [],
+            "codeowners": [],
+        },
+        None,
+    )
+    runner.hass.data[ha_loader.DATA_INTEGRATIONS] = runner.hass.data.get(
+        ha_loader.DATA_INTEGRATIONS, {}
+    )
+    runner.hass.data[ha_loader.DATA_INTEGRATIONS]["demo_retry"] = integration
+
+    payload = pb.EntrySetup(
+        entry_id="retry_entry_id",
+        domain="demo_retry",
+        title="Demo Retry",
+        source="user",
+        version=1,
+        minor_version=1,
+    )
+
+    # First attempt fails → ok=False and the entry is dropped.
+    result1 = await main.call("sandbox/entry_setup", payload)
+    assert result1.ok is False
+    assert runner.hass.config_entries.async_get_entry("retry_entry_id") is None
+
+    # Retry with the same entry_id succeeds — no "entry already loaded".
+    result2 = await main.call("sandbox/entry_setup", payload)
+    assert result2.ok is True
+    assert not result2.HasField("reason")
+    assert attempts == ["retry_entry_id", "retry_entry_id"]
+
+
 async def test_call_service_dispatches_through_services(
     channels: tuple[Channel, Channel], runner: EntryRunner
 ) -> None:
