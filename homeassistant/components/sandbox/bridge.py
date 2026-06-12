@@ -364,6 +364,24 @@ class SandboxBridge:
             del contexts[key]
 
     @callback
+    def _store_context(self, key: str, context: Context, now: datetime) -> None:
+        """Insert/refresh a cache entry and enforce the size backstop.
+
+        Shared by :meth:`_remember_context` (real main-issued contexts) and the
+        miss path of :meth:`_resolve_context` (fresh contexts minted for an
+        unknown id). Keeps the cache ordered by expiry (move-to-end) and caps
+        its size so neither path can grow it without bound — a sandbox flooding
+        distinct unknown ``context_id``s is bounded the same as legitimate
+        traffic.
+        """
+        contexts = self._contexts
+        contexts[key] = _CachedContext(context, now + _CONTEXT_TTL)
+        contexts.move_to_end(key)
+        # TTL + low volume keep this tiny; the cap is only a sanity backstop.
+        while len(contexts) > _CONTEXT_CACHE_MAX:
+            contexts.popitem(last=False)
+
+    @callback
     def _remember_context(self, context: Context | None) -> None:
         """Record a Context main is handing down to the sandbox.
 
@@ -378,12 +396,7 @@ class SandboxBridge:
             return
         now = dt_util.utcnow()
         self._prune_contexts(now)
-        contexts = self._contexts
-        contexts[context.id] = _CachedContext(context, now + _CONTEXT_TTL)
-        contexts.move_to_end(context.id)
-        # TTL + low volume keep this tiny; the cap is only a sanity backstop.
-        while len(contexts) > _CONTEXT_CACHE_MAX:
-            contexts.popitem(last=False)
+        self._store_context(context.id, context, now)
 
     @callback
     def _resolve_context(self, context_id: str | None) -> Context:
@@ -413,8 +426,7 @@ class SandboxBridge:
         if cached is not None:
             return cached.context
         context = Context(user_id=None)
-        self._contexts[context_id] = _CachedContext(context, now + _CONTEXT_TTL)
-        self._contexts.move_to_end(context_id)
+        self._store_context(context_id, context, now)
         return context
 
     async def _handle_register_entity(
