@@ -65,7 +65,9 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         try:
             return await self._fetch_data()
         except httpx.RequestError as err:
-            raise UpdateFailed("Error communicating with Device") from err
+            raise UpdateFailed(
+                f"Error communicating with {self._host}: {type(err).__name__}: {err}"
+            ) from err
 
     async def _fetch_data(self) -> CCM15DeviceState:
         """Read status.xml and decode each slave device."""
@@ -116,7 +118,12 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         try:
             response = await self._client.get(url, timeout=self._timeout)
         except httpx.RequestError as err:
-            _LOGGER.error("Error sending state to CCM15: %s", err)
+            _LOGGER.error(
+                "Error sending state to CCM15 (%s): %s: %s",
+                self._host,
+                type(err).__name__,
+                err,
+            )
             return
         if response.status_code in (httpx.codes.OK, httpx.codes.FOUND):
             self._optimistic[ac_index] = (dt_util.utcnow(), deepcopy(data))
