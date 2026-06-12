@@ -1,6 +1,6 @@
 """Tests for Dyson Infrared fan component."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, call, patch
 
 import pytest
 
@@ -112,31 +112,55 @@ async def test_async_set_percentage_zero(fan_entity: DysonInfraredFan) -> None:
         mock_turn_off.assert_called_once()
 
 
-async def test_async_set_percentage_speed_up(fan_entity: DysonInfraredFan) -> None:
-    """Test increasing percentage sends speed_up and updates state."""
-    fan_entity._attr_percentage = 40
+async def test_async_set_percentage_same(fan_entity: DysonInfraredFan) -> None:
+    """Test setting the exact same percentage does nothing."""
+    fan_entity._attr_percentage = 50
     with (
         patch.object(fan_entity, "_async_send_dyson_action") as mock_send_action,
         patch.object(fan_entity, "async_write_ha_state") as mock_write_state,
     ):
+        await fan_entity.async_set_percentage(50)
+
+        mock_send_action.assert_not_called()
+        mock_write_state.assert_not_called()
+
+
+async def test_async_set_percentage_speed_up(fan_entity: DysonInfraredFan) -> None:
+    """Test increasing percentage sends multiple speed_up actions and updates state."""
+    fan_entity._attr_percentage = 40
+    with (
+        patch.object(fan_entity, "_async_send_dyson_action") as mock_send_action,
+        patch(
+            "homeassistant.components.dyson_infrared.fan.asyncio.sleep"
+        ) as mock_sleep,
+        patch.object(fan_entity, "async_write_ha_state") as mock_write_state,
+    ):
         await fan_entity.async_set_percentage(80)
 
-        mock_send_action.assert_called_once_with("speed_up")
+        assert mock_send_action.call_count == 4
+        mock_send_action.assert_has_calls([call("speed_up")] * 4)
+        assert mock_sleep.call_count == 4
+
         assert fan_entity._attr_percentage == 80
         assert fan_entity.is_on is True
         mock_write_state.assert_called_once()
 
 
 async def test_async_set_percentage_speed_down(fan_entity: DysonInfraredFan) -> None:
-    """Test decreasing percentage sends speed_down and updates state."""
+    """Test decreasing percentage sends multiple speed_down actions and updates state."""
     fan_entity._attr_percentage = 90
     with (
         patch.object(fan_entity, "_async_send_dyson_action") as mock_send_action,
+        patch(
+            "homeassistant.components.dyson_infrared.fan.asyncio.sleep"
+        ) as mock_sleep,
         patch.object(fan_entity, "async_write_ha_state") as mock_write_state,
     ):
         await fan_entity.async_set_percentage(30)
+        assert mock_send_action.call_count == 6
+        mock_send_action.assert_has_calls([call("speed_down")] * 6)
+        assert mock_sleep.call_count == 6
 
-        mock_send_action.assert_called_once_with("speed_down")
         assert fan_entity._attr_percentage == 30
         assert fan_entity.is_on is True
         mock_write_state.assert_called_once()

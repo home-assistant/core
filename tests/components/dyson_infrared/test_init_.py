@@ -2,11 +2,7 @@
 
 from unittest.mock import patch
 
-from homeassistant.components.dyson_infrared import (
-    PLATFORMS,
-    async_setup_entry,
-    async_unload_entry,
-)
+from homeassistant.components.dyson_infrared import PLATFORMS, async_unload_entry
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

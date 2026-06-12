@@ -1,5 +1,6 @@
 """Support for Dyson infrared fans."""
 
+import asyncio
 from typing import Any
 
 from infrared_protocols.codes.dyson.cool import DysonCoolStateBuilder
@@ -54,7 +55,7 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
     @property
     def is_on(self) -> bool:
         """Return true if the fan is on."""
-        return self._attr_is_on
+        return self._attr_is_on or False
 
     async def _async_send_dyson_action(self, action: str) -> None:
         builder = DysonCoolStateBuilder(action=action)
@@ -86,13 +87,15 @@ class DysonInfraredFan(InfraredEmitterConsumerEntity, FanEntity):
         if percentage == 0:
             await self.async_turn_off()
             return
-
         current_percentage = self._attr_percentage or 0
-
-        if percentage > current_percentage:
-            await self._async_send_dyson_action("speed_up")
-        elif percentage < current_percentage:
-            await self._async_send_dyson_action("speed_down")
+        if percentage == current_percentage:
+            return
+        step_size = 100 / self._attr_speed_count
+        steps = round(abs(percentage - current_percentage) / step_size)
+        action = "speed_up" if percentage > current_percentage else "speed_down"
+        for _ in range(steps):
+            await self._async_send_dyson_action(action)
+            await asyncio.sleep(0.2)
 
         self._attr_percentage = percentage
         self._attr_is_on = True
