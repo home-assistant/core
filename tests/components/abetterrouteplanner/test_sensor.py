@@ -148,11 +148,11 @@ async def test_selected_vehicle_missing_from_garage_logs_and_skips(
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A selected ``vehicle_id`` missing from the garage emits nothing + warns.
+    """A selected ``vehicle_id`` missing from the garage emits nothing + logs.
 
     Mirrors the user-visible behaviour when a vehicle was removed from
     the ABRP account between picker submission and the first coordinator
-    refresh: no entity, no device, no repair — just a log line.
+    refresh: no entity, no device, no repair — just a debug log line.
     """
     bogus_id = "99999999"
     entry = MockConfigEntry(
@@ -166,7 +166,7 @@ async def test_selected_vehicle_missing_from_garage_logs_and_skips(
     )
 
     with caplog.at_level(
-        logging.WARNING, logger="homeassistant.components.abetterrouteplanner"
+        logging.DEBUG, logger="homeassistant.components.abetterrouteplanner"
     ):
         await _setup_integration(hass, entry)
 
