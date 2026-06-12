@@ -16,12 +16,6 @@
           "day": "mdi:weather-sunny",
           "night": "mdi:weather-night"
         }
-      },
-      "power_source": {
-        "default": "mdi:power-plug"
-      },
-      "ssid": {
-        "default": "mdi:router-wireless"
       }
     },
     "time": {

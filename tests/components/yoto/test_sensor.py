@@ -18,7 +18,7 @@ pytestmark = pytest.mark.usefixtures("setup_credentials")
 ENTITY_ID = "sensor.nursery_yoto_battery"
 
 
-@pytest.mark.usefixtures("mock_yoto_client", "entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("mock_yoto_client")
 async def test_all_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

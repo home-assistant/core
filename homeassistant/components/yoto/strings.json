@@ -53,21 +53,6 @@
           "day": "Day",
           "night": "Night"
         }
-      },
-      "power_source": {
-        "name": "Power source",
-        "state": {
-          "battery": "Battery",
-          "qi_dock": "Wireless dock",
-          "usb_c": "USB-C",
-          "v2_dock": "Dock"
-        }
-      },
-      "ssid": {
-        "name": "SSID"
-      },
-      "wifi_rssi": {
-        "name": "Wi-Fi RSSI"
       }
     },
     "time": {

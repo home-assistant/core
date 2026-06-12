@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from yoto_api import CardInsertionState, DayMode, PowerSource, YotoPlayer
+from yoto_api import CardInsertionState, DayMode, YotoPlayer
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -11,11 +11,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    PERCENTAGE,
-    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-    EntityCategory,
-)
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -26,7 +22,7 @@ from .entity import YotoPlayerEntity
 PARALLEL_UPDATES = 0
 
 
-def _enum_state(value: CardInsertionState | PowerSource | None) -> str | None:
+def _enum_state(value: CardInsertionState | None) -> str | None:
     """Return an enum member as a lowercase string, or None if unset."""
     return value.name.lower() if value is not None else None
 
@@ -66,30 +62,6 @@ SENSORS: tuple[YotoSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ENUM,
         options=["day", "night"],
         value_fn=lambda player: _day_mode_state(player.status.day_mode),
-    ),
-    YotoSensorEntityDescription(
-        key="power_source",
-        translation_key="power_source",
-        device_class=SensorDeviceClass.ENUM,
-        options=[source.name.lower() for source in PowerSource],
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda player: _enum_state(player.extended_status.power_source),
-    ),
-    YotoSensorEntityDescription(
-        key="ssid",
-        translation_key="ssid",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda player: player.extended_status.network_ssid,
-    ),
-    YotoSensorEntityDescription(
-        key="wifi_rssi",
-        translation_key="wifi_rssi",
-        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
-        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda player: player.extended_status.wifi_strength,
     ),
 )
 

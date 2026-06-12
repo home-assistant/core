@@ -150,7 +150,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
             return
         for device_id in list(self.client.players):
             await self.client.request_player_status(device_id)
-            await self.client.request_player_extended_status(device_id)
 
     def _mqtt_event(self, _player: YotoPlayer) -> None:
         """Handle a real-time update pushed by the Yoto MQTT broker."""
