@@ -894,3 +894,90 @@ async def test_entity_domain_change_cleanup(
         )
         is not None
     )
+
+
+async def test_rate_limited_first_refresh_retries(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+) -> None:
+    """Test rate limiting on first refresh causes setup retry."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(client, cls=IaquaSystem)
+    system.online = True
+    system.update = AsyncMock(side_effect=AqualinkServiceThrottledException)
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={system.serial: system},
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_late_first_refresh_fires_callbacks(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    client: AqualinkClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test callbacks fire on first successful refresh after delayed start."""
+    config_entry.add_to_hass(hass)
+
+    system = get_aqualink_system(
+        client,
+        cls=IaquaSystem,
+        data={"home_screen": [{}, {}, {}, {"temp_scale": "F"}]},
+    )
+    system.online = True
+
+    async def update() -> None:
+        system.temp_unit = "F"
+
+    system.update = AsyncMock(side_effect=update)
+
+    light = get_aqualink_device(
+        system,
+        name="aux_2",
+        cls=IaquaLightSwitch,
+        data={"state": "1", "aux": "2", "label": "Pool Light"},
+    )
+    system.devices = {light.name: light}
+    system.get_devices = AsyncMock(return_value={light.name: light})
+    system.set_aux = AsyncMock()
+    system.set_light = AsyncMock()
+
+    with (
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.login",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
+            return_value={system.serial: system},
+        ),
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Simulate that the coordinator hasn't been initialized yet (e.g., recovered
+    # from a rate-limited first refresh via HA's retry mechanism, platforms
+    # already registered callbacks).
+    coordinator = config_entry.runtime_data.coordinators[system.serial]
+    coordinator._initialized = False
+
+    await _advance_coordinator_time(hass, freezer)
+
+    # Entities should still exist (callbacks fired for all devices).
+    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1

@@ -59,12 +59,17 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, AqualinkDevi
             await self.system.update()
         except AqualinkServiceUnauthorizedException as err:
             raise ConfigEntryAuthFailed("Invalid credentials for iAquaLink") from err
-        except AqualinkServiceThrottledException:
+        except AqualinkServiceThrottledException as err:
+            if self.data is None:
+                raise UpdateFailed(
+                    f"Rate limited by iAquaLink system {self.system.serial}"
+                    " during first refresh"
+                ) from err
             _LOGGER.warning(
                 "Rate limited by iAquaLink system %s, will retry later",
                 self.system.serial,
             )
-            return self.data or {}
+            return self.data
         except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as err:
             raise UpdateFailed(
                 "Unable to update iAquaLink system "
@@ -102,6 +107,12 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, AqualinkDevi
                             device_id=device.id,
                             remove_config_entry_id=self.config_entry.entry_id,
                         )
+        elif self.new_device_callbacks:
+            # First successful refresh after platforms registered callbacks.
+            # Fire callbacks for all devices so entities are created.
+            all_devices = list(devices.values())
+            for callback in self.new_device_callbacks:
+                callback(all_devices)
 
         self._initialized = True
         self._previous_devices = current_device_names
