@@ -16,6 +16,7 @@ from homeassistant.config_entries import (
     ConfigSubentryData,
     ConfigSubentryFlow,
     FlowType,
+    OptionsFlow,
     SubentryFlowContext,
     SubentryFlowResult,
 )
@@ -25,12 +26,17 @@ from homeassistant.const import (
     CONF_PORT,
     CONF_RECIPIENT,
     CONF_SENDER,
+    CONF_TIMEOUT,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
+    UnitOfTime,
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -90,6 +96,23 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(
+                    min=1,
+                    max=1800,
+                    step=1,
+                    unit_of_measurement=UnitOfTime.SECONDS,
+                    mode=NumberSelectorMode.BOX,
+                )
+            ),
+            vol.Coerce(int),
+        )
+    }
+)
+
 
 class MailConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMTP."""
@@ -101,6 +124,12 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlowHandler}
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -141,9 +170,41 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return result
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure flow."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_SERVER: user_input[CONF_SERVER],
+                    CONF_SENDER: user_input[CONF_SENDER],
+                    CONF_USERNAME: user_input.get(CONF_USERNAME),
+                }
+            )
+            errors = await self.hass.async_add_executor_job(validate_input, user_input)
+            if not errors:
+                return self.async_update_and_abort(
+                    entry,
+                    data=user_input,
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values=user_input or entry.data,
+            ),
+            errors=errors,
+        )
+
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""
 
+        options = {CONF_TIMEOUT: import_info.pop(CONF_TIMEOUT, DEFAULT_TIMEOUT)}
         self._async_abort_entries_match(import_info)
 
         errors = await self.hass.async_add_executor_job(validate_input, import_info)
@@ -156,6 +217,7 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=title,
                 data=import_info,
+                options=options,
                 subentries=[
                     ConfigSubentryData(
                         subentry_type=SUBENTRY_TYPE_RECIPIENT,
@@ -236,5 +298,23 @@ class RecipientSubentryFlowHandler(ConfigSubentryFlow):
                         ),
                     ),
                 }
+            ),
+        )
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle options flow."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA, self.config_entry.options
             ),
         )
