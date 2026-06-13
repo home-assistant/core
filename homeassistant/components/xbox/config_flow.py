@@ -199,7 +199,11 @@ class GameSubentryFlowHandler(ConfigSubentryFlow):
                 data={},
                 unique_id=user_input[CONF_TITLE_ID],
             )
-
+        subentries = {
+            t.unique_id
+            for t in config_entry.subentries.values()
+            if t.subentry_type == SUBENTRY_TYPE_GAME
+        }
         options = [
             SelectOptionDict(
                 value=game_title.title_id,
@@ -208,12 +212,7 @@ class GameSubentryFlowHandler(ConfigSubentryFlow):
             for game_title in title_history.values()
             if game_title.achievement
             and game_title.achievement.source_version != 0
-            and game_title.title_id
-            not in {
-                t.unique_id
-                for t in config_entry.subentries.values()
-                if t.subentry_type == SUBENTRY_TYPE_GAME
-            }
+            and game_title.title_id not in subentries
         ]
         if not options:
             return self.async_abort(reason="no_game_titles")

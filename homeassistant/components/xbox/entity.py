@@ -180,7 +180,7 @@ class XboxGameBaseEntity(CoordinatorEntity[XboxTitleHistoryCoordinator]):
 
     @property
     def data(self) -> Title:
-        """Return coordinator data for this person."""
+        """Return coordinator data for this game title."""
         return self.coordinator.data[self.title_id]
 
     @property
