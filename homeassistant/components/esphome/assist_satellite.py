@@ -11,7 +11,7 @@ import logging
 from pathlib import Path
 import socket
 from typing import Any, cast
-import wave
+
 
 from aioesphomeapi import (
     MediaPlayerFormatPurpose,
@@ -713,36 +713,49 @@ class EsphomeAssistSatellite(
                 )
                 return
 
-            data = b"".join([chunk async for chunk in tts_result.async_stream_result()])
+            bytes_buffer = bytearray()
+            found_data_chunk = False
+            bytes_per_chunk_payload = samples_per_chunk * sample_width * sample_channels
+            seconds_in_chunk = samples_per_chunk / sample_rate
 
-            with io.BytesIO(data) as wav_io, wave.open(wav_io, "rb") as wav_file:
-                if (
-                    (wav_file.getframerate() != sample_rate)
-                    or (wav_file.getsampwidth() != sample_width)
-                    or (wav_file.getnchannels() != sample_channels)
-                ):
-                    _LOGGER.error("Can only stream 16Khz 16-bit mono WAV")
-                    return
+            async for chunk in tts_result.async_stream_result():
+                if not self._is_running:
+                    break
 
-                _LOGGER.debug("Streaming %s audio samples", wav_file.getnframes())
+                bytes_buffer.extend(chunk)
 
-                while self._is_running:
-                    chunk = wav_file.readframes(samples_per_chunk)
-                    if not chunk:
-                        break
+                if not found_data_chunk:
+                    # Look for 'data' + 4 bytes size
+                    data_idx = bytes_buffer.find(b"data")
+                    if data_idx != -1 and len(bytes_buffer) >= data_idx + 8:
+                        found_data_chunk = True
+                        # Remove everything up to and including the data chunk header
+                        bytes_buffer = bytes_buffer[data_idx + 8:]
+                        _LOGGER.debug("Found WAV data chunk, starting streaming")
 
-                    if self._udp_server is not None:
-                        self._udp_server.send_audio_bytes(chunk)
-                    else:
-                        self.cli.send_voice_assistant_audio(chunk)
+                if found_data_chunk:
+                    while len(bytes_buffer) >= bytes_per_chunk_payload:
+                        payload = bytes(bytes_buffer[:bytes_per_chunk_payload])
+                        del bytes_buffer[:bytes_per_chunk_payload]
 
-                    # Wait for 90% of the duration of the audio that was
-                    # sent for it to be played.  This will overrun the
-                    # device's buffer for very long audio, so using a media
-                    # player is preferred.
-                    samples_in_chunk = len(chunk) // (sample_width * sample_channels)
-                    seconds_in_chunk = samples_in_chunk / sample_rate
-                    await asyncio.sleep(seconds_in_chunk * 0.9)
+                        if self._udp_server is not None:
+                            self._udp_server.send_audio_bytes(payload)
+                        else:
+                            self.cli.send_voice_assistant_audio(payload)
+
+                        # Wait for 90% of the duration of the audio that was
+                        # sent for it to be played.  This will overrun the
+                        # device's buffer for very long audio, so using a media
+                        # player is preferred.
+                        await asyncio.sleep(seconds_in_chunk * 0.9)
+
+            if found_data_chunk and len(bytes_buffer) > 0 and self._is_running:
+                payload = bytes(bytes_buffer)
+                if self._udp_server is not None:
+                    self._udp_server.send_audio_bytes(payload)
+                else:
+                    self.cli.send_voice_assistant_audio(payload)
+
         except asyncio.CancelledError:
             return  # Don't trigger state change
         finally:
