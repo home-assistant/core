@@ -560,8 +560,13 @@ class StateAttributes(Base):
         # None state means the state was removed from the state machine
         if (state := event.data["new_state"]) is None:
             return b"{}"
-        if state_info := state.state_info:
-            unrecorded_attributes = state_info["unrecorded_attributes"]
+        if (state_info := state.state_info) and (
+            unrecorded_attributes := state_info["unrecorded_attributes"]
+        ):
+            # The entity has unrecorded attributes, so a combined exclude set
+            # has to be built. The common case (no unrecorded attributes) falls
+            # through to the shared constant below without allocating a set per
+            # recorded state change.
             exclude_attrs = {
                 *ALL_DOMAIN_EXCLUDE_ATTRS,
                 *unrecorded_attributes,
