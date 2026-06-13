@@ -867,6 +867,21 @@ async def test_parse_result(hass: HomeAssistant) -> None:
         # ("+48100200300", "+48100200300"),  # phone number
         ("010", "010"),
         ("0011101.00100001010001", "0011101.00100001010001"),
+        # Plain string states must be returned unchanged (fast path that
+        # skips ast.literal_eval for results that cannot be a literal).
+        ("on", "on"),
+        ("off", "off"),
+        ("unavailable", "unavailable"),
+        ("home", "home"),
+        ("standby", "standby"),
+        ("True story", "True story"),
+        # Keyword and collection literals must still be parsed.
+        ("True", True),
+        ("False", False),
+        ("None", None),
+        # "set()" is the only call expression literal_eval accepts (empty set)
+        # and is special-cased by the fast path guard.
+        ("set()", set()),
     ):
         assert render(hass, tpl) == result
 
