@@ -334,9 +334,7 @@ async def test_async_setup_entry_creates_expected_entities(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_entries = er.async_entries_for_config_entry(
-        entity_registry, entry.entry_id
-    )
+    entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
     assert len(entity_entries) == 2
     unique_ids = {entity_entry.unique_id for entity_entry in entity_entries}

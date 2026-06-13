@@ -1,6 +1,6 @@
 """Constants for STIPS IRU1 integration."""
 
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import Platform
 
 DOMAIN = "stips_iru1"
 PLATFORMS: list[Platform] = [Platform.CLIMATE]

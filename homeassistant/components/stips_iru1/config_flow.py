@@ -6,6 +6,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -20,7 +21,7 @@ from .api import (
     StipsApiPermissionError,
 )
 from .catalog import async_fetch_catalog_devices
-from .const import CONF_API_HOST, CONF_PASSWORD, CONF_USERNAME, DEFAULT_API_HOST, DOMAIN
+from .const import CONF_API_HOST, DEFAULT_API_HOST, DOMAIN
 
 
 class StipsIru1ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
