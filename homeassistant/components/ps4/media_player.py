@@ -366,6 +366,9 @@ class PS4Device(MediaPlayerEntity):
             _sw_version = _sw_version[1:4]
             sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
             self._attr_device_info = DeviceInfo(
+                connections={
+                    (dr.CONNECTION_NETWORK_MAC, dr.format_mac(status["host-id"]))
+                },
                 identifiers={(DOMAIN, status["host-id"])},
                 manufacturer="Sony Interactive Entertainment Inc.",
                 model="PlayStation 4",
