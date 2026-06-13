@@ -1,7 +1,7 @@
 """Fixtures for the Yoto integration tests."""
 
 from collections.abc import Generator
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time as dt_time
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -14,8 +14,8 @@ from yoto_api import (
     Group,
     PlaybackEvent,
     PlaybackStatus,
+    PlayerConfig,
     PlayerInfo,
-    PlayerStatus,
     Track,
     YotoPlayer,
 )
@@ -80,16 +80,19 @@ def _build_player() -> YotoPlayer:
             device_family="v3",
             generation="gen3",
         ),
+        is_online=True,
         devices_refreshed_at=now,
         info_refreshed_at=now,
         last_event_received_at=now,
     )
     player.info = PlayerInfo(
-        device_id=PLAYER_ID,
         firmware_version="v2.17.5",
         mac="aa:bb:cc:dd:ee:ff",
+        config=PlayerConfig(
+            day_time=dt_time(7, 0),
+            night_time=dt_time(19, 0),
+        ),
     )
-    player.status = PlayerStatus(device_id=PLAYER_ID, is_online=True)
     player.last_event = PlaybackEvent(
         player_id=PLAYER_ID,
         playback_status=PlaybackStatus.PLAYING,

@@ -6,7 +6,7 @@ from typing import Any
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from pyoverkiz.enums import EventName, ExecutionState, OverkizCommandParam, OverkizState
+from pyoverkiz.enums import ExecutionState, OverkizCommandParam, OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -39,7 +39,13 @@ from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
-from .helpers import assert_command_call, async_deliver_events, build_event
+from .helpers import (
+    assert_command_call,
+    async_deliver_events,
+    device_state_changed_event,
+    device_unavailable_event,
+    execution_state_changed_event,
+)
 
 from tests.common import snapshot_platform
 
@@ -640,8 +646,7 @@ async def test_is_closed_falls_back_to_position(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=POSITIONABLE_VENETIAN_BLIND.device_url,
                 device_states=[
                     {
@@ -679,7 +684,7 @@ async def test_cover_tilt_services(
         | CoverEntityFeature.SET_TILT_POSITION
     )
 
-    mock_client.execute_command.reset_mock()
+    mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_OPEN_COVER_TILT,
@@ -699,17 +704,16 @@ async def test_cover_tilt_services(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.EXECUTION_STATE_CHANGED.value,
-                device_url=PERGOLA.device_url,
+            execution_state_changed_event(
                 exec_id="exec-1",
-                new_state=ExecutionState.COMPLETED.value,
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
             )
         ],
     )
     assert hass.states.get(PERGOLA.entity_id).state == CoverState.CLOSED
 
-    mock_client.execute_command.reset_mock()
+    mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
@@ -724,7 +728,7 @@ async def test_cover_tilt_services(
         command_name="closeSlats",
     )
 
-    mock_client.execute_command.reset_mock()
+    mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_STOP_COVER_TILT,
@@ -737,7 +741,7 @@ async def test_cover_tilt_services(
         command_name="stop",
     )
 
-    mock_client.execute_command.reset_mock()
+    mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_TILT_POSITION,
@@ -769,8 +773,7 @@ async def test_cover_state_updates(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=SHUTTER.device_url,
                 device_states=[
                     {
@@ -808,8 +811,7 @@ async def test_cover_state_updates(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=SHUTTER.device_url,
                 device_states=[
                     {
@@ -856,8 +858,7 @@ async def test_cover_state_updates(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=SHUTTER.device_url,
                 device_states=[
                     {
@@ -891,11 +892,10 @@ async def test_cover_state_updates(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.EXECUTION_STATE_CHANGED.value,
-                device_url=SHUTTER.device_url,
+            execution_state_changed_event(
                 exec_id="exec-1",
-                new_state=ExecutionState.COMPLETED.value,
+                new_state=ExecutionState.COMPLETED,
+                old_state=ExecutionState.IN_PROGRESS,
             )
         ],
     )
@@ -906,11 +906,7 @@ async def test_cover_state_updates(
         hass,
         freezer,
         mock_client,
-        [
-            build_event(
-                EventName.DEVICE_UNAVAILABLE.value, device_url=SHUTTER.device_url
-            )
-        ],
+        [device_unavailable_event(device_url=SHUTTER.device_url)],
     )
     assert hass.states.get(SHUTTER.entity_id).state == STATE_UNAVAILABLE
 
@@ -961,8 +957,7 @@ async def test_vertical_cover_moving_direction(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=SHUTTER.device_url,
                 device_states=device_states,
             )
@@ -1026,8 +1021,7 @@ async def test_awning_moving_direction(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=AWNING.device_url,
                 device_states=device_states,
             )
@@ -1048,7 +1042,7 @@ async def test_awning_direct_position_mapping(
 
     assert hass.states.get(AWNING.entity_id).attributes[ATTR_CURRENT_POSITION] == 0
 
-    mock_client.execute_command.reset_mock()
+    mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_SET_COVER_POSITION,
@@ -1067,8 +1061,7 @@ async def test_awning_direct_position_mapping(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=AWNING.device_url,
                 device_states=[
                     {
@@ -1097,8 +1090,7 @@ async def test_moving_offset_missing_closure_states(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=PERGOLA.device_url,
                 device_states=[
                     {
@@ -1129,8 +1121,7 @@ async def test_moving_offset_none_values(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=SHUTTER.device_url,
                 device_states=[
                     {
@@ -1176,8 +1167,7 @@ async def test_tilt_position_none_value(
         freezer,
         mock_client,
         [
-            build_event(
-                EventName.DEVICE_STATE_CHANGED.value,
+            device_state_changed_event(
                 device_url=PERGOLA.device_url,
                 device_states=[
                     {
@@ -1216,7 +1206,7 @@ async def test_low_speed_cover_open_close(
         parameters=[0, OverkizCommandParam.LOWSPEED],
     )
 
-    mock_client.execute_command.reset_mock()
+    mock_client.execute_action_group.reset_mock()
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER,
@@ -1345,4 +1335,4 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
             blocking=True,
         )
 
-    assert mock_client.execute_command.await_count == 0
+    assert mock_client.execute_action_group.await_count == 0
