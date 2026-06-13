@@ -156,7 +156,7 @@ async def test_async_step_user_valid_credentials(hass: HomeAssistant) -> None:
 
 
 # ---------------------------------------------------------------------------
-# USER FORM – token retrieval error paths
+# USER FORM - token retrieval error paths
 # ---------------------------------------------------------------------------
 
 
@@ -221,7 +221,7 @@ async def test_async_step_user_get_token_returns_none(
 
 
 # ---------------------------------------------------------------------------
-# MOSQUES COORDINATES – error paths
+# MOSQUES COORDINATES - error paths
 # ---------------------------------------------------------------------------
 
 
@@ -302,7 +302,7 @@ async def test_async_step_mosques_coordinates_empty_name_servers(
 
 
 # ---------------------------------------------------------------------------
-# SEARCH METHOD – coordinate error paths
+# SEARCH METHOD - coordinate error paths
 # ---------------------------------------------------------------------------
 
 
@@ -350,7 +350,7 @@ async def test_async_step_search_method_coordinate_connection_error(
 
 
 # ---------------------------------------------------------------------------
-# KEYWORD SEARCH – error paths
+# KEYWORD SEARCH - error paths
 # ---------------------------------------------------------------------------
 
 
