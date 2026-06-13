@@ -12,6 +12,19 @@ from homeassistant.components.stips_iru1.local_http import (
 from homeassistant.core import HomeAssistant
 
 
+def test_local_http_auth_returns_none() -> None:
+    """Local HTTP auth is optional and defaults to no credentials."""
+    assert local_http._local_http_auth() is None
+
+
+def test_dedupe_hosts_skips_empty_and_duplicates() -> None:
+    """Host dedupe should ignore blanks and preserve order."""
+    assert local_http._dedupe_hosts(["host1", "", "host1", "host2"]) == [
+        "host1",
+        "host2",
+    ]
+
+
 def test_iter_dns_host_candidates_rejects_invalid_catalog_host() -> None:
     """Invalid cloud-provided unique names should not become request hosts."""
     hosts = local_http.iter_dns_host_candidates("http://evil/path", "10.0.0.42")
@@ -22,6 +35,13 @@ def test_iter_dns_host_candidates_rejects_invalid_catalog_host() -> None:
 def test_iter_dns_host_candidates_accepts_valid_catalog_host() -> None:
     """Valid unique-name host should produce DNS-first candidates."""
     hosts = local_http.iter_dns_host_candidates("stips-iru1-98eea1", "")
+
+    assert hosts == ["stips-iru1-98eea1", "stips-iru1-98eea1.local"]
+
+
+def test_iter_dns_host_candidates_skips_invalid_backend_ip() -> None:
+    """Malformed backend IP values should not become host candidates."""
+    hosts = local_http.iter_dns_host_candidates("stips-iru1-98eea1", "not-an-ip")
 
     assert hosts == ["stips-iru1-98eea1", "stips-iru1-98eea1.local"]
 
@@ -89,15 +109,62 @@ async def test_async_build_control_hosts_appends_discovered_live_ip(
     assert live_ip == "10.0.0.123"
 
 
+async def test_async_build_control_hosts_does_not_duplicate_live_ip(
+    hass: HomeAssistant,
+) -> None:
+    """Discovered live IP already present in candidates should not be duplicated."""
+    local_http._HOST_CACHE.clear()
+
+    with patch(
+        "homeassistant.components.stips_iru1.local_http.async_fetch_device_info_live_ip",
+        new=AsyncMock(return_value="10.0.0.42"),
+    ):
+        hosts, live_ip = await local_http.async_build_control_hosts(
+            hass,
+            device_unique_name="stips-iru1-98eea1",
+            backend_ip="10.0.0.42",
+        )
+
+    assert live_ip == "10.0.0.42"
+    assert hosts == ["stips-iru1-98eea1", "stips-iru1-98eea1.local", "10.0.0.42"]
+
+
 def test_is_valid_catalog_hostname() -> None:
     """Test hostname validation."""
     assert _is_valid_catalog_hostname("stips-iru1-98eea1") is True
     assert _is_valid_catalog_hostname("stips.iru1.local") is True
+    assert _is_valid_catalog_hostname("stips iru1") is False
+    assert _is_valid_catalog_hostname("stips..iru1") is False
+    assert _is_valid_catalog_hostname("-invalid.example") is False
+    assert _is_valid_catalog_hostname("a" * 254) is False
     assert _is_valid_catalog_hostname("http://evil.com") is False
     assert _is_valid_catalog_hostname("host:port") is False
     assert _is_valid_catalog_hostname("10.0.0.1") is False  # IP is invalid
     assert _is_valid_catalog_hostname("") is False
     assert _is_valid_catalog_hostname("   ") is False
+
+
+def test_extract_live_ip_skips_invalid_values() -> None:
+    """Live IP extraction should skip blank and malformed candidate values."""
+    assert (
+        local_http._extract_live_ip(
+            {
+                "ip_address": "   ",
+                "ipAddress": "not-an-ip",
+                "Ip": "10.0.0.126",
+            }
+        )
+        == "10.0.0.126"
+    )
+    assert (
+        local_http._extract_live_ip(
+            {
+                "ip_address": "   ",
+                "ipAddress": "not-an-ip",
+            }
+        )
+        == ""
+    )
 
 
 async def test_async_fetch_device_info_live_ip_success(hass: HomeAssistant) -> None:
@@ -177,6 +244,30 @@ async def test_async_fetch_device_info_live_ip_content_type_fallback(
         assert ip == "10.0.0.124"
 
 
+async def test_async_fetch_device_info_live_ip_content_type_invalid_json(
+    hass: HomeAssistant,
+) -> None:
+    """Invalid JSON text should return an empty live IP."""
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(
+        side_effect=aiohttp.ContentTypeError(request_info=MagicMock(), history=())
+    )
+    mock_response.text = AsyncMock(return_value="not-json")
+    context = AsyncMock()
+    context.__aenter__.return_value = mock_response
+    context.__aexit__.return_value = None
+
+    with patch(
+        "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value.get = MagicMock(return_value=context)
+
+        timeout = aiohttp.ClientTimeout(total=2)
+        ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
+        assert ip == ""
+
+
 async def test_async_fetch_device_info_live_ip_value_error_fallback(
     hass: HomeAssistant,
 ) -> None:
@@ -197,6 +288,49 @@ async def test_async_fetch_device_info_live_ip_value_error_fallback(
         timeout = aiohttp.ClientTimeout(total=2)
         ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
         assert ip == "10.0.0.125"
+
+
+async def test_async_fetch_device_info_live_ip_value_error_invalid_json(
+    hass: HomeAssistant,
+) -> None:
+    """Invalid JSON after a value error should return an empty live IP."""
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(side_effect=ValueError())
+    mock_response.text = AsyncMock(return_value="not-json")
+    context = AsyncMock()
+    context.__aenter__.return_value = mock_response
+    context.__aexit__.return_value = None
+
+    with patch(
+        "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value.get = MagicMock(return_value=context)
+
+        timeout = aiohttp.ClientTimeout(total=2)
+        ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
+        assert ip == ""
+
+
+async def test_async_fetch_device_info_live_ip_rejects_non_dict_payload(
+    hass: HomeAssistant,
+) -> None:
+    """Non-dict JSON payloads should not be accepted as device info."""
+    mock_response = AsyncMock()
+    mock_response.status = 200
+    mock_response.json = AsyncMock(return_value=["10.0.0.123"])
+    context = AsyncMock()
+    context.__aenter__.return_value = mock_response
+    context.__aexit__.return_value = None
+
+    with patch(
+        "homeassistant.components.stips_iru1.local_http.async_get_clientsession"
+    ) as mock_session:
+        mock_session.return_value.get = MagicMock(return_value=context)
+
+        timeout = aiohttp.ClientTimeout(total=2)
+        ip = await async_fetch_device_info_live_ip(hass, host="test", timeout=timeout)
+        assert ip == ""
 
 
 async def test_async_fetch_device_info_live_ip_client_error(
