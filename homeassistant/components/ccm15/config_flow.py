@@ -89,7 +89,7 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=_build_schema(), errors=errors
+            step_id="user", data_schema=_build_schema(user_input), errors=errors
         )
 
     async def async_step_reconfigure(
@@ -117,6 +117,6 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="reconfigure",
-            data_schema=_build_schema(dict(entry.data)),
+            data_schema=_build_schema(user_input or dict(entry.data)),
             errors=errors,
         )

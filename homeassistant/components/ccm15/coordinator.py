@@ -100,6 +100,12 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
                 del self._optimistic[idx]
                 continue
             if idx in ac_data.devices:
+                # Replace the whole slave device with the snapshot we
+                # took at write time. This also masks any live updates
+                # the controller reports for this slot during the window
+                # (e.g. a fresh room-temperature reading), but it keeps
+                # the implementation simple and the staleness bounded by
+                # OPTIMISTIC_WINDOW.
                 ac_data.devices[idx] = set_data
 
         return ac_data
@@ -115,11 +121,15 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
                 type(err).__name__,
                 err,
             )
+            # The caller already mutated `data` in place — refresh so the
+            # next poll overwrites the failed local change with the real
+            # device state instead of leaving it stuck for 30 s.
+            await self.async_request_refresh()
             return
         if ok:
             self._optimistic[ac_index] = (dt_util.utcnow(), deepcopy(data))
             self.async_set_updated_data(self.data)
-            await self.async_request_refresh()
+        await self.async_request_refresh()
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Return the slave device for an index, or None if not present."""
