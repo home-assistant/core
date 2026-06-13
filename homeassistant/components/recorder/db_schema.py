@@ -308,17 +308,17 @@ class Events(Base):
     def from_event(event: Event) -> Events:
         """Create an event database object from a native event."""
         context = event.context
+        # The unused legacy columns (event_type, event_data, time_fired,
+        # context_id, context_user_id, context_parent_id) are nullable with no
+        # default, so they are intentionally left unset here. Assigning them
+        # None would still insert NULL, but each assignment goes through
+        # SQLAlchemy's instrumented attribute machinery, which is a measurable
+        # cost when run for every recorded event.
         return Events(
-            event_type=None,
-            event_data=None,
             origin_idx=event.origin.idx,
-            time_fired=None,
             time_fired_ts=event.time_fired_timestamp,
-            context_id=None,
             context_id_bin=ulid_to_bytes_or_none(context.id),
-            context_user_id=None,
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
-            context_parent_id=None,
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
         )
 
@@ -491,19 +491,18 @@ class States(Base):
             else:
                 last_reported_ts = state.last_reported_timestamp
         context = event.context
+        # The unused legacy columns (entity_id, attributes, context_id,
+        # context_user_id, context_parent_id, last_updated, last_changed) are
+        # nullable with no default, so they are intentionally left unset here.
+        # Assigning them None would still insert NULL, but each assignment goes
+        # through SQLAlchemy's instrumented attribute machinery, which is a
+        # measurable cost when run for every recorded state change.
         return States(
             state=state_value,
-            entity_id=None,
-            attributes=None,
-            context_id=None,
             context_id_bin=ulid_to_bytes_or_none(context.id),
-            context_user_id=None,
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
-            context_parent_id=None,
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
             origin_idx=event.origin.idx,
-            last_updated=None,
-            last_changed=None,
             last_updated_ts=last_updated_ts,
             last_changed_ts=last_changed_ts,
             last_reported_ts=last_reported_ts,
