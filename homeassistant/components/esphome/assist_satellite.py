@@ -10,6 +10,7 @@ import json
 import logging
 from pathlib import Path
 import socket
+import struct
 from typing import Any, cast
 
 
@@ -715,6 +716,10 @@ class EsphomeAssistSatellite(
 
             bytes_buffer = bytearray()
             found_data_chunk = False
+            fmt_validated = False
+            riff_checked = False
+            parsing_headers = True
+
             bytes_per_chunk_payload = samples_per_chunk * sample_width * sample_channels
             seconds_in_chunk = samples_per_chunk / sample_rate
 
@@ -724,14 +729,63 @@ class EsphomeAssistSatellite(
 
                 bytes_buffer.extend(chunk)
 
-                if not found_data_chunk:
-                    # Look for 'data' + 4 bytes size
-                    data_idx = bytes_buffer.find(b"data")
-                    if data_idx != -1 and len(bytes_buffer) >= data_idx + 8:
+                while parsing_headers:
+                    if not riff_checked:
+                        if len(bytes_buffer) < 12:
+                            break  # wait for more data
+                        riff, _, wave_fmt = struct.unpack("<4sI4s", bytes_buffer[:12])
+                        if riff != b"RIFF" or wave_fmt != b"WAVE":
+                            _LOGGER.error("Invalid WAV format: missing RIFF/WAVE header")
+                            return
+                        riff_checked = True
+                        del bytes_buffer[:12]
+
+                    if len(bytes_buffer) < 8:
+                        break  # wait for more data
+
+                    chunk_id, chunk_size = struct.unpack("<4sI", bytes_buffer[:8])
+
+                    if chunk_id == b"fmt ":
+                        if len(bytes_buffer) < 8 + chunk_size:
+                            break  # wait for full fmt chunk
+
+                        # Parse fmt chunk (we only need the first 16 bytes of it)
+                        audio_format, num_channels, chunk_sample_rate, _, _, bits_per_sample = struct.unpack(
+                            "<HHIIHH", bytes_buffer[8:24]
+                        )
+
+                        if audio_format != 1:
+                            _LOGGER.error("Can only stream PCM WAV, got format %s", audio_format)
+                            return
+                        if num_channels != sample_channels:
+                            _LOGGER.error("Expected %s channels, got %s", sample_channels, num_channels)
+                            return
+                        if chunk_sample_rate != sample_rate:
+                            _LOGGER.error("Expected %s Hz, got %s Hz", sample_rate, chunk_sample_rate)
+                            return
+                        if bits_per_sample // 8 != sample_width:
+                            _LOGGER.error("Expected %s bytes per sample, got %s", sample_width, bits_per_sample // 8)
+                            return
+
+                        fmt_validated = True
+                        del bytes_buffer[:8 + chunk_size]
+
+                    elif chunk_id == b"data":
+                        # Found data chunk!
+                        if not fmt_validated:
+                            _LOGGER.error("WAV missing fmt chunk before data chunk")
+                            return
+
                         found_data_chunk = True
-                        # Remove everything up to and including the data chunk header
-                        bytes_buffer = bytes_buffer[data_idx + 8:]
-                        _LOGGER.debug("Found WAV data chunk, starting streaming")
+                        parsing_headers = False
+                        del bytes_buffer[:8]
+                        _LOGGER.debug("Validated WAV header and found data chunk, starting streaming")
+                        break
+                    else:
+                        # Skip other chunks
+                        if len(bytes_buffer) < 8 + chunk_size:
+                            break  # wait for full chunk to skip
+                        del bytes_buffer[:8 + chunk_size]
 
                 if found_data_chunk:
                     while len(bytes_buffer) >= bytes_per_chunk_payload:
