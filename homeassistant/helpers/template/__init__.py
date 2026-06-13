@@ -97,18 +97,6 @@ _HASS_LOADER = "template.hass_loader"
 # Match "simple" ints and floats. -1.0, 1, +5, 5.0
 _IS_NUMERIC = re.compile(r"^[+-]?(?!0\d)\d*(?:\.\d*)?$")
 
-# A stripped render result can only be a Python literal that evaluates to a
-# non-string value we keep (number, bool, None, collection or bytes) when it
-# starts with one of these characters. Plain string states such as "on",
-# "off", "home" or "unavailable" never do, so we can skip the relatively
-# expensive ast.literal_eval (which compiles the string and raises) for them.
-# Any result that does not start with one of these characters would be
-# returned unchanged by _cached_parse_result anyway (literal_eval either
-# raises or yields a string), so this guard does not change behavior.
-# "set()" is the sole exception: it is the only call expression literal_eval
-# accepts (an empty set) and it does not start with one of these characters.
-_PARSE_RESULT_FIRST_CHARS = frozenset("0123456789+-.[({TFNbBrR")
-
 EVAL_CACHE_SIZE = 512
 
 MAX_CUSTOM_TEMPLATE_SIZE = 5 * 1024 * 1024
@@ -244,7 +232,15 @@ RESULT_WRAPPERS[tuple] = TupleWrapper
 @lru_cache(maxsize=EVAL_CACHE_SIZE)
 def _cached_parse_result(render_result: str) -> Any:
     """Parse a result and cache the result."""
-    result = literal_eval(render_result)
+    # lru_cache does not memoize raised exceptions. The most common template
+    # results, plain string states such as "on", "off" or "unavailable", are
+    # not Python literals, so literal_eval compiles and raises for them on
+    # every render. Catching here caches that outcome (return the original
+    # render) so the recompile only happens once per distinct result.
+    try:
+        result = literal_eval(render_result)
+    except ValueError, TypeError, SyntaxError, MemoryError:
+        return render_result
     if type(result) in RESULT_WRAPPERS:
         result = RESULT_WRAPPERS[type(result)](result, render_result=render_result)
 
@@ -411,20 +407,7 @@ class Template:
 
     def _parse_result(self, render_result: str) -> Any:
         """Parse the result."""
-        if not render_result or (
-            render_result[0] not in _PARSE_RESULT_FIRST_CHARS
-            and render_result != "set()"
-        ):
-            # Cannot be a literal that parses to a non-string value, so skip
-            # the relatively expensive ast.literal_eval which would otherwise
-            # recompile and raise on every render for plain string states.
-            return render_result
-        try:
-            return _cached_parse_result(render_result)
-        except ValueError, TypeError, SyntaxError, MemoryError:
-            pass
-
-        return render_result
+        return _cached_parse_result(render_result)
 
     async def async_render_will_timeout(
         self,
