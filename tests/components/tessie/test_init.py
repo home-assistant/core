@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientConnectionError, ClientError
+import pytest
 from tesla_fleet_api.exceptions import (
     InvalidRequest,
     InvalidToken,
@@ -71,6 +73,34 @@ async def test_scopes_error(hass: HomeAssistant) -> None:
 
     with patch(
         "homeassistant.components.tessie.Tessie.scopes", side_effect=TeslaFleetError
+    ):
+        entry = await setup_platform(hass)
+        assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(ClientConnectionError(), id="connection_error"),
+        pytest.param(ClientError(), id="client_error"),
+    ],
+)
+async def test_aiohttp_client_error_retries(
+    hass: HomeAssistant,
+    mock_get_state_of_all_vehicles: AsyncMock,
+    exception: ClientError,
+) -> None:
+    """Test that aiohttp.ClientError during list_vehicles triggers SETUP_RETRY."""
+    mock_get_state_of_all_vehicles.side_effect = exception
+    entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_aiohttp_client_error_on_scopes_retries(hass: HomeAssistant) -> None:
+    """Test that aiohttp.ClientError during scopes() triggers SETUP_RETRY."""
+    with patch(
+        "homeassistant.components.tessie.Tessie.scopes",
+        side_effect=ClientConnectionError(),
     ):
         entry = await setup_platform(hass)
         assert entry.state is ConfigEntryState.SETUP_RETRY
