@@ -1,7 +1,5 @@
 """STIPS IRU1 Home Assistant integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 

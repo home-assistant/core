@@ -1,7 +1,5 @@
 """Local HTTP helpers for DNS-first IRU1 control."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import ipaddress
 import json

@@ -2596,9 +2596,6 @@ pysqueezebox==0.14.0
 # homeassistant.components.stiebel_eltron
 pystiebeleltron==0.2.5
 
-# homeassistant.components.stips_iru1
-stips-api-bridge==0.1.0
-
 # homeassistant.components.suez_water
 pysuezV2==2.0.7
 
@@ -3107,6 +3104,9 @@ steamloop==1.2.0
 
 # homeassistant.components.steam_online
 steamodd==4.21
+
+# homeassistant.components.stips_iru1
+stips-api-bridge==0.1.0
 
 # homeassistant.components.stookwijzer
 stookwijzer==1.6.1

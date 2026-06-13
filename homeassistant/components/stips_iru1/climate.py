@@ -1,7 +1,5 @@
 """Climate platform for STIPS IRU1 protocol AC remotes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import aiohttp
