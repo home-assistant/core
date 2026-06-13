@@ -272,11 +272,12 @@ class MqttCommandTemplate:
 
         if variables is not None:
             values.update(variables)
-        _LOGGER.debug(
-            "Rendering outgoing payload with variables %s and %s",
-            values,
-            self._command_template,
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Rendering outgoing payload with variables %s and %s",
+                values,
+                self._command_template,
+            )
         try:
             return convert_outgoing_mqtt_payload(
                 self._command_template.async_render(values, parse_result=False)
@@ -373,12 +374,13 @@ class MqttValueTemplate:
             values[ATTR_THIS] = self._template_state
 
         if default is PayloadSentinel.NONE:
-            _LOGGER.debug(
-                "Rendering incoming payload '%s' with variables %s and %s",
-                payload,
-                values,
-                self._value_template,
-            )
+            if _LOGGER.isEnabledFor(logging.DEBUG):
+                _LOGGER.debug(
+                    "Rendering incoming payload '%s' with variables %s and %s",
+                    payload,
+                    values,
+                    self._value_template,
+                )
             try:
                 rendered_payload = (
                     self._value_template.async_render_with_possible_json_value(
@@ -395,16 +397,17 @@ class MqttValueTemplate:
                 ) from exc
             return rendered_payload
 
-        _LOGGER.debug(
-            (
-                "Rendering incoming payload '%s' with variables %s with default value"
-                " '%s' and %s"
-            ),
-            payload,
-            values,
-            default,
-            self._value_template,
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                (
+                    "Rendering incoming payload '%s' with variables %s with default value"
+                    " '%s' and %s"
+                ),
+                payload,
+                values,
+                default,
+                self._value_template,
+            )
         try:
             rendered_payload = (
                 self._value_template.async_render_with_possible_json_value(

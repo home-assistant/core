@@ -723,7 +723,8 @@ class MQTT:
     ) -> None:
         """Register the socket for writing."""
         fileno = sock.fileno()
-        _LOGGER.debug("%s: register write %s", self.config_entry.title, fileno)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("%s: register write %s", self.config_entry.title, fileno)
         if fileno > -1:
             self.loop.add_writer(sock, partial(self._async_writer_callback, client))
 
@@ -733,7 +734,8 @@ class MQTT:
     ) -> None:
         """Unregister the socket for writing."""
         fileno = sock.fileno()
-        _LOGGER.debug("%s: unregister write %s", self.config_entry.title, fileno)
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug("%s: unregister write %s", self.config_entry.title, fileno)
         if fileno > -1:
             self.loop.remove_writer(sock)
 
@@ -770,16 +772,17 @@ class MQTT:
                 )
             properties.MessageExpiryInterval = message_expiry_interval
         msg_info = self._mqttc.publish(topic, payload, qos, retain, properties)
-        _LOGGER.debug(
-            "Transmitting%s message on %s: '%s', mid: %s, qos: %s,"
-            " message_expiry_interval: %s",
-            " retained" if retain else "",
-            topic,
-            payload,
-            msg_info.mid,
-            qos,
-            message_expiry_interval,
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            _LOGGER.debug(
+                "Transmitting%s message on %s: '%s', mid: %s, qos: %s,"
+                " message_expiry_interval: %s",
+                " retained" if retain else "",
+                topic,
+                payload,
+                msg_info.mid,
+                qos,
+                message_expiry_interval,
+            )
         await self._async_wait_for_mid_or_raise(msg_info.mid, msg_info.rc)
 
     async def async_connect(self, client_available: asyncio.Future[bool]) -> None:
