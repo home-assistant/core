@@ -1351,6 +1351,12 @@ SENSORS: dict[DeviceCategory, tuple[TuyaSensorEntityDescription, ...]] = {
             state_class=SensorStateClass.MEASUREMENT,
         ),
         TuyaSensorEntityDescription(
+            key=DPCode.EXT_TEMP,
+            translation_key="temperature_external",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+        ),
+        TuyaSensorEntityDescription(
             key=DPCode.TEMP_CURRENT,
             translation_key="temperature",
             device_class=SensorDeviceClass.TEMPERATURE,
