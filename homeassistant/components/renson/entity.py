@@ -8,7 +8,11 @@ from renson_endura_delta.field_enum import (
 )
 from renson_endura_delta.renson import RensonVentilation
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -27,6 +31,12 @@ class RensonEntity(CoordinatorEntity[RensonCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (DOMAIN, api.get_field_value(coordinator.data, MAC_ADDRESS.name))
+            },
+            connections={
+                (
+                    CONNECTION_NETWORK_MAC,
+                    format_mac(api.get_field_value(coordinator.data, MAC_ADDRESS.name)),
+                )
             },
             manufacturer="Renson",
             model=api.get_field_value(coordinator.data, DEVICE_NAME_FIELD.name),
