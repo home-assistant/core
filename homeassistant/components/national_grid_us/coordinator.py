@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for the National Grid US integration."""
 
 from dataclasses import dataclass, field
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, timedelta
 import logging
 
 from py_nationalgrid import NationalGridClient, NationalGridConfig, create_cookie_jar
@@ -19,6 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import CONF_SELECTED_ACCOUNTS, DOMAIN
 
@@ -97,7 +98,7 @@ class NationalGridDataUpdateCoordinator(
         selected_accounts: list[str] = self.config_entry.data[CONF_SELECTED_ACCOUNTS]
         data = NationalGridCoordinatorData()
 
-        today = datetime.now(tz=UTC).date()
+        today = dt_util.utcnow().date()
         from_month = (today.year - 1) * 100 + today.month
 
         errors: list[Exception] = []
