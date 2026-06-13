@@ -86,7 +86,7 @@ class RemoteCalendarEntity(
         return await self.hass.async_add_executor_job(events_in_range)
 
     async def _async_update_timeline(self) -> None:
-        """Refresh the timeline and write state.
+        """Refresh the timeline.
 
         This is called when the coordinator updates. Creating the timeline may
         require walking through the entire calendar and handling recurring
