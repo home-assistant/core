@@ -425,15 +425,8 @@ EVENT_SENSORS: tuple[ProtectBinaryEventEntityDescription, ...] = (
         ufp_enabled="is_animal_detection_on",
         ufp_event_obj="last_animal_detect_event",
     ),
-    ProtectBinaryEventEntityDescription(
-        key="smart_obj_package",
-        translation_key="package_detected",
-        entity_registry_enabled_default=False,
-        ufp_obj_type=SmartDetectObjectType.PACKAGE,
-        ufp_required_field="can_detect_package",
-        ufp_enabled="is_package_detection_on",
-        ufp_event_obj="last_package_detect_event",
-    ),
+    # Package detection is a momentary smart-detect event, not a sustained state:
+    # it is the package event entity (event.py), not a binary sensor.
     ProtectBinaryEventEntityDescription(
         key="smart_audio_any",
         translation_key="audio_object_detected",

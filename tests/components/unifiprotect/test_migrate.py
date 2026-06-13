@@ -223,3 +223,65 @@ async def test_deprecate_entity_script(
         if i["issue_id"] == "deprecate_hdr_switch":
             issue = i
     assert issue is None
+
+
+async def test_deprecate_package_binary_sensor_no_usage(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
+    """Test no repair when the removed package binary sensor is unused."""
+    entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_smart_obj_package",
+        config_entry=ufp.entry,
+    )
+
+    await init_entry(hass, ufp, [doorbell])
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "deprecate_package_binary_sensor":
+            issue = i
+    assert issue is None
+
+
+async def test_deprecate_package_binary_sensor_automation(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    doorbell: Camera,
+) -> None:
+    """Test the removed package binary sensor raises a repair when still used."""
+    entry = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{doorbell.mac}_smart_obj_package",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, entry.entity_id)
+    await init_entry(hass, ufp, [doorbell])
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "deprecate_package_binary_sensor":
+            issue = i
+    assert issue is not None

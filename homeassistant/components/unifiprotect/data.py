@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from uiprotect import ProtectApiClient
+from uiprotect import EventChange, ProtectApiClient, ProtectEvent, ProtectEventChannel
 from uiprotect.data import (
     NVR,
     Camera,
@@ -89,6 +89,9 @@ class ProtectData:
         self._siren_subscriptions: defaultdict[str, set[Callable[[Siren], None]]] = (
             defaultdict(set)
         )
+        self._smart_detect_subscriptions: defaultdict[
+            str, set[Callable[[ProtectEvent], None]]
+        ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
@@ -179,6 +182,26 @@ class ProtectData:
         ]
 
     @callback
+    def async_subscribe_public_events(self) -> None:
+        """Subscribe to the public events websocket.
+
+        Must be called *after* ``update_public()`` has primed the public
+        bootstrap: ``subscribe_events()`` raises if it has not (unlike the
+        devices websocket, which is subscribed before priming). This is the
+        source of truth for smart-detect events (e.g. package) that the private
+        API only surfaces as the unhandled ``smartDetectObject`` model. When the
+        public bootstrap is unavailable (e.g. a transient ``update_public()``
+        failure) these events are simply not delivered for this session.
+        """
+        if not self.api.has_public_bootstrap:
+            _LOGGER.debug(
+                "Public API bootstrap unavailable; smart-detect events such as "
+                "package detection will not be delivered"
+            )
+            return
+        self._unsubs.append(self.api.subscribe_events(self._async_process_public_event))
+
+    @callback
     def _async_process_public_devices_ws_message(
         self, message: WSSubscriptionMessage
     ) -> None:
@@ -211,6 +234,36 @@ class ProtectData:
             return
         if new_obj.model is ModelType.SIREN:
             self._async_signal_siren_update(cast(Siren, new_obj))
+
+    @callback
+    def _async_process_public_event(
+        self, event: ProtectEvent, change: EventChange
+    ) -> None:
+        """Process a smart-detect event from the public events websocket.
+
+        Only the start of a detection (a momentary event) is dispatched; the
+        per-camera smart-detect event entities decide whether their object type
+        matches. The camera is resolved through the private bootstrap by
+        ``device_id`` (the stable cross-API join key) rather than by the public
+        ``device_mac``: the resulting mac then comes from the same store the
+        event entities derive ``self.device.mac`` from, so the dispatch key
+        matches without assuming the public and private mac strings are
+        byte-identical. An event for a device absent from the private bootstrap
+        has no entity to dispatch to anyway.
+        """
+        if (
+            change is not EventChange.STARTED
+            or event.channel is not ProtectEventChannel.DETECTION
+            or not event.smart_detect_types
+        ):
+            return
+        device = self.api.bootstrap.get_device_from_id(event.device_id)
+        if device is None or not (
+            subscriptions := self._smart_detect_subscriptions.get(device.mac)
+        ):
+            return
+        for update_callback in subscriptions:
+            update_callback(event)
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
@@ -452,6 +505,23 @@ class ProtectData:
         self._siren_subscriptions[mac].remove(update_callback)
         if not self._siren_subscriptions[mac]:
             del self._siren_subscriptions[mac]
+
+    @callback
+    def async_subscribe_smart_detect(
+        self, mac: str, update_callback: Callable[[ProtectEvent], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for public smart-detect events by camera mac."""
+        self._smart_detect_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_smart_detect, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_smart_detect(
+        self, mac: str, update_callback: Callable[[ProtectEvent], None]
+    ) -> None:
+        """Remove a smart-detect callback subscriber."""
+        self._smart_detect_subscriptions[mac].remove(update_callback)
+        if not self._smart_detect_subscriptions[mac]:
+            del self._smart_detect_subscriptions[mac]
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:

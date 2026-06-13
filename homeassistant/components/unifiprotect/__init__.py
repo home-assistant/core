@@ -166,6 +166,10 @@ async def _async_setup_entry(
     except Exception:  # noqa: BLE001
         _LOGGER.debug("Public API bootstrap update failed", exc_info=True)
 
+    # Subscribe to the public events websocket now that update_public() has
+    # primed the public bootstrap (subscribe_events() requires it).
+    data_service.async_subscribe_public_events()
+
     # Load PTZ patrol data before loading platforms
     await data_service.async_load_ptz_patrols()
 
