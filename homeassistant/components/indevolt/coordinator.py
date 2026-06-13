@@ -168,12 +168,15 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         match action:
             case IndevoltRealtimeAction.CHARGE:
                 success = await self.api.charge(power, target_soc)
+                state = IndevoltRealtimeState.CHARGING
 
             case IndevoltRealtimeAction.DISCHARGE:
                 success = await self.api.discharge(power, target_soc)
+                state = IndevoltRealtimeState.DISCHARGING
 
             case IndevoltRealtimeAction.STOP:
                 success = await self.api.stop()
+                state = IndevoltRealtimeState.STANDBY
 
         if not success:
             raise HomeAssistantError(
@@ -181,24 +184,6 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="failed_to_execute_realtime_action",
             )
 
-        rt_config: dict[
-            IndevoltRealtimeAction,
-            tuple[IndevoltRealtimeState, int, int],
-        ] = {
-            IndevoltRealtimeAction.CHARGE: (
-                IndevoltRealtimeState.CHARGING,
-                target_soc,
-                power,
-            ),
-            IndevoltRealtimeAction.DISCHARGE: (
-                IndevoltRealtimeState.DISCHARGING,
-                target_soc,
-                power,
-            ),
-            IndevoltRealtimeAction.STOP: (IndevoltRealtimeState.STANDBY, 0, 0),
-        }
-
-        state, target_soc, power = rt_config[action]
         self.async_set_updated_data(
             {
                 **self.data,
