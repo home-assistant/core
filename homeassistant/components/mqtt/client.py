@@ -723,8 +723,7 @@ class MQTT:
     ) -> None:
         """Register the socket for writing."""
         fileno = sock.fileno()
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("%s: register write %s", self.config_entry.title, fileno)
+        _LOGGER.debug("%s: register write %s", self.config_entry.title, fileno)
         if fileno > -1:
             self.loop.add_writer(sock, partial(self._async_writer_callback, client))
 
@@ -734,8 +733,7 @@ class MQTT:
     ) -> None:
         """Unregister the socket for writing."""
         fileno = sock.fileno()
-        if _LOGGER.isEnabledFor(logging.DEBUG):
-            _LOGGER.debug("%s: unregister write %s", self.config_entry.title, fileno)
+        _LOGGER.debug("%s: unregister write %s", self.config_entry.title, fileno)
         if fileno > -1:
             self.loop.remove_writer(sock)
 
