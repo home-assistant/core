@@ -723,6 +723,9 @@ class EsphomeAssistSatellite(
             bytes_per_chunk_payload = samples_per_chunk * sample_width * sample_channels
             seconds_in_chunk = samples_per_chunk / sample_rate
 
+            start_time: float | None = None
+            audio_duration_sent = 0.0
+
             async for chunk in tts_result.async_stream_result():
                 if not self._is_running:
                     break
@@ -803,6 +806,7 @@ class EsphomeAssistSatellite(
                         _LOGGER.debug(
                             "Validated WAV header and found data chunk, starting streaming"
                         )
+                        start_time = asyncio.get_running_loop().time()
                         break
                     else:
                         # Skip other chunks
@@ -820,11 +824,16 @@ class EsphomeAssistSatellite(
                         else:
                             self.cli.send_voice_assistant_audio(payload)
 
+                        audio_duration_sent += seconds_in_chunk
+
                         # Wait for 90% of the duration of the audio that was
                         # sent for it to be played.  This will overrun the
                         # device's buffer for very long audio, so using a media
                         # player is preferred.
-                        await asyncio.sleep(seconds_in_chunk * 0.9)
+                        assert start_time is not None
+                        elapsed = asyncio.get_running_loop().time() - start_time
+                        if (wait_time := (audio_duration_sent * 0.9) - elapsed) > 0:
+                            await asyncio.sleep(wait_time)
 
             if found_data_chunk and len(bytes_buffer) > 0 and self._is_running:
                 payload = bytes(bytes_buffer)
