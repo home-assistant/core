@@ -193,6 +193,9 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
+            connections={
+                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(data[Attribute.MAC_ADDRESS]))
+            },
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
         )
