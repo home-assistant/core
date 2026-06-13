@@ -5,10 +5,13 @@ from unittest.mock import ANY, AsyncMock, patch
 
 from anthemav.device_error import DeviceError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.anthemav.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -32,6 +35,19 @@ async def test_load_unload_config_entry(
     # assert unload and avr is closed
     assert init_integration.state is ConfigEntryState.NOT_LOADED
     mock_anthemav.close.assert_called_once()
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry, including the network MAC connection."""
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:00:00:00:00:01")}
+    )
+    assert device_entry == snapshot
 
 
 @pytest.mark.parametrize("error", [OSError, DeviceError])

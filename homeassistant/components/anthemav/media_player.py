@@ -12,7 +12,11 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -90,6 +94,7 @@ class AnthemAVR(MediaPlayerEntity):
             self._attr_unique_id = mac_address
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, mac_address)},
+                connections={(CONNECTION_NETWORK_MAC, format_mac(mac_address))},
                 name=name,
                 manufacturer=MANUFACTURER,
                 model=model,
