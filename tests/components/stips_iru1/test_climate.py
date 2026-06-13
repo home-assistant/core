@@ -9,6 +9,7 @@ from homeassistant.components.stips_iru1 import climate as stips_climate
 from homeassistant.components.stips_iru1.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 
 from tests.common import MockConfigEntry
@@ -267,6 +268,7 @@ class TestProtocolAcClimate:
 
 async def test_async_setup_entry_creates_expected_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Climate setup should create protocol and learned AC entities only."""
     entry: MockConfigEntry = MockConfigEntry(
@@ -327,13 +329,19 @@ async def test_async_setup_entry_creates_expected_entities(
             ]
         },
     )
-    entities: list[stips_climate.ClimateEntity] = []
+    entry.add_to_hass(hass)
 
-    await stips_climate.async_setup_entry(hass, entry, entities.extend)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert len(entities) == 2
-    assert any(entity.unique_id.endswith("_climate_0") for entity in entities)
-    assert any("learned_ac" in entity.unique_id for entity in entities)
+    entity_entries = er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    )
+
+    assert len(entity_entries) == 2
+    unique_ids = {entity_entry.unique_id for entity_entry in entity_entries}
+    assert any(unique_id.endswith("_climate_0") for unique_id in unique_ids)
+    assert any("learned_ac" in unique_id for unique_id in unique_ids)
 
 
 class TestLearnedAcClimate:

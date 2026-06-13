@@ -8,7 +8,6 @@ from homeassistant.components.stips_iru1 import (
     DOMAIN,
     StipsIru1RuntimeData,
     _register_catalog_devices,
-    async_setup_entry,
     async_unload_entry,
 )
 from homeassistant.components.stips_iru1.const import PLATFORMS
@@ -59,6 +58,8 @@ async def test_async_setup_entry_raises_for_invalid_devices_data(
         domain=DOMAIN, data={"devices": {"invalid": "shape"}}
     )
 
+    entry.add_to_hass(hass)
+
     with (
         patch.object(
             hass.config_entries,
@@ -67,7 +68,7 @@ async def test_async_setup_entry_raises_for_invalid_devices_data(
         ) as mock_forward,
         pytest.raises(ConfigEntryError),
     ):
-        await async_setup_entry(hass, entry)
+        await hass.config_entries.async_setup(entry.entry_id)
 
     mock_forward.assert_not_called()
 
