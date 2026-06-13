@@ -20,6 +20,11 @@
       }
     }
   },
+  "device": {
+    "tracker": {
+      "name": "Tracker {id}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "tracker_power_saving": {

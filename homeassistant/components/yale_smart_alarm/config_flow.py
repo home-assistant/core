@@ -64,7 +64,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
 
     VERSION = 2
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback

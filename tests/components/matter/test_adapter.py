@@ -179,7 +179,7 @@ async def test_bad_node_not_crash_integration(
     del bad_node.endpoints[0].node
     matter_client.get_nodes.return_value = [good_node, bad_node]
     config_entry = MockConfigEntry(
-        domain="matter", data={"url": "http://mock-matter-server-url"}
+        domain=DOMAIN, data={"url": "http://mock-matter-server-url"}
     )
     config_entry.add_to_hass(hass)
 
