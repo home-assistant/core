@@ -2,10 +2,7 @@
 
 from typing import Any
 
-from infrared_protocols.codes.samsung.ac import (
-    SamsungAC0292StateBuilder,
-    SamsungAC2A20StateBuilder,
-)
+from infrared_protocols.codes.samsung.ac import SamsungAC0292StateBuilder
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -55,8 +52,10 @@ async def async_setup_entry(
     infrared_emitter_entity_id = entry.data[CONF_INFRARED_EMITTER_ENTITY_ID]
     device_type = entry.data[CONF_DEVICE_TYPE]
 
-    if device_type in [SamsungDeviceType.AC_2A20, SamsungDeviceType.AC_0292]:
-        async_add_entities([SamsungIrClimate(entry, infrared_emitter_entity_id, device_type)])
+    if device_type == SamsungDeviceType.AC:
+        async_add_entities(
+            [SamsungIrClimate(entry, infrared_emitter_entity_id, device_type)]
+        )
 
 
 class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEntity):
@@ -68,6 +67,14 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
     _attr_hvac_mode = HVACMode.OFF
     _attr_target_temperature = 24.0
     _attr_fan_mode = FAN_AUTO
+    _attr_hvac_modes = [
+        HVACMode.OFF,
+        HVACMode.AUTO,
+        HVACMode.COOL,
+        HVACMode.HEAT,
+        HVACMode.DRY,
+        HVACMode.FAN_ONLY,
+    ]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.FAN_MODE
@@ -75,56 +82,28 @@ class SamsungIrClimate(SamsungIrEntity, InfraredEmitterConsumerEntity, ClimateEn
         | ClimateEntityFeature.TURN_OFF
     )
 
-    def __init__(self, entry: ConfigEntry, infrared_emitter_entity_id: str, device_type: str) -> None:
+    def __init__(
+        self, entry: ConfigEntry, infrared_emitter_entity_id: str, device_type: str
+    ) -> None:
         """Initialize the climate entity."""
         super().__init__(entry, unique_id_suffix="climate", device_name="Samsung AC")
         self._infrared_emitter_entity_id = infrared_emitter_entity_id
         self._device_type = device_type
 
-
         self._last_on_hvac_mode = HVACMode.COOL
-
-
-        if "0292" in str(device_type):
-            self._attr_hvac_modes = [
-                HVACMode.OFF,
-                HVACMode.AUTO,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.DRY,
-                HVACMode.FAN_ONLY,
-            ]
-        else:
-            self._attr_hvac_modes = [
-                HVACMode.OFF,
-                HVACMode.COOL,
-                HVACMode.HEAT,
-                HVACMode.DRY,
-                HVACMode.FAN_ONLY,
-            ]
 
     async def _async_send_command(self) -> None:
         """Generate the logical state and delegate transmission to the infrared platform."""
-
         hvac_str = HA_TO_LIB_HVAC.get(self._attr_hvac_mode, "off")
         fan_str = HA_TO_LIB_FAN.get(self._attr_fan_mode, "auto")
         temp_int = int(self._attr_target_temperature)
 
-
-        if hasattr(SamsungDeviceType, "AC_0292") and self._device_type == SamsungDeviceType.AC_0292:
-            builder = SamsungAC0292StateBuilder(
-                hvac_mode=hvac_str,
-                target_temperature=temp_int,
-                fan_mode=fan_str,
-                swing_mode="off"
-            )
-        else:
-            builder = SamsungAC2A20StateBuilder(
-                hvac_mode=hvac_str,
-                target_temperature=temp_int,
-                fan_mode=fan_str,
-            )
-
+        builder = SamsungAC0292StateBuilder(
+            hvac_mode=hvac_str,
+            target_temperature=temp_int,
+            fan_mode=fan_str,
+            swing_mode="off",
+        )
 
         await self._send_command(builder.to_command())
 

@@ -17,6 +17,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
+from homeassistant.helpers import translation
 
 from .const import (
     CONF_DEVICE_TYPE,
@@ -27,8 +28,7 @@ from .const import (
 
 DEVICE_TYPE_NAMES: dict[SamsungDeviceType, str] = {
     SamsungDeviceType.TV: "TV",
-    SamsungDeviceType.AC_2A20: "Air Conditioner",
-    SamsungDeviceType.AC_0292: "Air Conditioner",
+    SamsungDeviceType.AC: "Air Conditioner",
 }
 
 
@@ -53,14 +53,19 @@ class SamsungIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 f"samsung_infrared_{device_type}_{entity_id}"
             )
             self._abort_if_unique_id_configured()
-
-            # Get entity name for the title
             ent_reg = er.async_get(self.hass)
             entry = ent_reg.async_get(entity_id)
             entity_name = (
                 entry.name or entry.original_name or entity_id if entry else entity_id
             )
-            device_type_name = DEVICE_TYPE_NAMES[SamsungDeviceType(device_type)]
+            device_type_key = SamsungDeviceType(device_type).value
+            translations = await translation.async_get_translations(
+                self.hass, self.hass.config.language, "selector", {DOMAIN}
+            )
+            device_type_name = translations.get(
+                f"component.{DOMAIN}.selector.device_type.options.{device_type_key}",
+                device_type_key,
+            )
             title = f"Samsung {device_type_name} via {entity_name}"
 
             return self.async_create_entry(title=title, data=user_input)
