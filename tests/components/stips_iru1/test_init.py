@@ -2,8 +2,6 @@
 
 from unittest.mock import patch
 
-import pytest
-
 from homeassistant.components.stips_iru1 import (
     DOMAIN,
     StipsIru1RuntimeData,
@@ -11,9 +9,9 @@ from homeassistant.components.stips_iru1 import (
     async_unload_entry,
 )
 from homeassistant.components.stips_iru1.const import PLATFORMS
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
@@ -53,23 +51,22 @@ async def test_async_setup_entry_forwards_only_climate(
 async def test_async_setup_entry_raises_for_invalid_devices_data(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup raises a config entry error when devices data is invalid."""
+    """Test setup fails when devices data is invalid."""
     entry: MockConfigEntry = MockConfigEntry(
         domain=DOMAIN, data={"devices": {"invalid": "shape"}}
     )
 
     entry.add_to_hass(hass)
 
-    with (
-        patch.object(
-            hass.config_entries,
-            "async_forward_entry_setups",
-            return_value=True,
-        ) as mock_forward,
-        pytest.raises(ConfigEntryError),
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
+    with patch.object(
+        hass.config_entries,
+        "async_forward_entry_setups",
+        return_value=True,
+    ) as mock_forward:
+        assert not await hass.config_entries.async_setup(entry.entry_id)
 
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.SETUP_ERROR
     mock_forward.assert_not_called()
 
 
