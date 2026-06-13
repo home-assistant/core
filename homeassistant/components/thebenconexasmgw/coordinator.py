@@ -48,7 +48,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
         """Asynchronous Initialization and registering the update schedule."""
         # config_entry is set in __init__ but mypy seems not to understand...
         if self.config_entry is None:
-            raise ValueError("This should never happen...")
+            raise ValueError("config_entry set in __init__ mysteriously disappeared")
 
         self.__api = await ConexaSMGW.create(
             async_get_clientsession(self.hass),
@@ -98,7 +98,9 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
             age = (now_utc - meter_datetime).total_seconds()
             _LOGGER.debug("Data age in seconds: %s", age)
 
-            if age > MAX_MEASUREMENT_AGE and self.retries < MAX_RETRIES:
+            if age < MAX_MEASUREMENT_AGE:
+                self.retries = 0
+            elif self.retries < MAX_RETRIES:
                 _LOGGER.debug(
                     "Data is quite old (age: %s seconds). Likely because the SMGW was busy, retrying in 60 seconds",
                     age,
@@ -109,7 +111,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
                     dt_util.utcnow() + timedelta(seconds=60),
                 )
                 self.retries += 1
-            elif self.retries >= MAX_RETRIES:
+            else:
                 _LOGGER.debug(
                     "Giving up on retrying, next update will be according to schedule"
                 )
@@ -118,7 +120,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
         return vals
 
     async def _scheduled_update(self, now: datetime) -> None:
-        """Triggered exactly at the in __init__ specified time pattern."""
+        """Triggered exactly at the in async_init specified time pattern."""
         _LOGGER.debug("Starting scheduled poll at %s", now)
         if self._unscheduled_updates:
             _LOGGER.debug(
