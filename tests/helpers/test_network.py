@@ -1002,7 +1002,8 @@ async def test_get_current_request_url_with_known_host(
     Mock(return_value={"hostname": "hellohost"}),
 )
 async def test_is_internal_request(
-    hass: HomeAssistant, mock_current_request: MagicMock
+    hass: HomeAssistant,
+    mock_current_request: Mock,
 ) -> None:
     """Test if accessing an instance on its internal URL."""
     # Test with internal URL: http://example.local:8123
