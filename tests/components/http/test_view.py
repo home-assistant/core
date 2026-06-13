@@ -163,8 +163,7 @@ def mock_current_request(
     mock_request.get = Mock(return_value=False)
     mock_request.headers = {hdrs.HOST: request_host}
     mock_request.app = {KEY_HASS: hass}
-    mock_request.url = Mock(return_value=False)
-    mock_request.url.scheme = request_scheme or "http"
+    mock_request.url = Mock(scheme=request_scheme or "http")
 
     token = current_request.set(mock_request)
     yield mock_request
