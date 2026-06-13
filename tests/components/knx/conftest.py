@@ -1,9 +1,12 @@
 """Conftest for the KNX integration."""
 
+from __future__ import annotations
+
 import asyncio
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
+from knx_telegram_store import BufferedSqliteStore
 import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState, XknxConnectionType
@@ -29,8 +32,12 @@ from homeassistant.components.knx.const import (
     CONF_KNX_MCAST_PORT,
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DEFAULT_ROUTING_IA,
     DOMAIN,
+    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
+    KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.storage.config_store import (
@@ -83,6 +90,7 @@ class KNXTestKit:
         state_updater: bool = True,
     ) -> None:
         """Create the KNX integration."""
+        # Force an in-memory telegram store will be done via autouse fixture.
 
         async def patch_xknx_start():
             """Patch `xknx.start` for unittests."""
@@ -344,17 +352,18 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="KNX",
         domain=DOMAIN,
+        version=2,
         data={
-            # homeassistant.components.knx.config_flow.DEFAULT_ENTRY_DATA
-            # has additional keys - there are installations out there
-            # without these keys so we test with legacy data
-            # to ensure backwards compatibility (local_ip, telegram_log_size)
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
-            CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
-            CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
             CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
             CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
+        },
+        options={
+            CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
+            CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
+            CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: KNX_TELEGRAM_DB_RETENTION_DEFAULT,
+            CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
         },
     )
 
@@ -430,3 +439,15 @@ async def create_ui_entity(
         return entity
 
     return _create_ui_entity
+
+
+@pytest.fixture(autouse=True)
+def mock_knx_telegram_store():
+    """Mock knx-telegram-store to always use an in-memory database."""
+    original_init = BufferedSqliteStore.__init__
+
+    def mocked_init(self, db_path: str, *args: Any, **kwargs: Any) -> None:
+        original_init(self, ":memory:", *args, **kwargs)
+
+    with patch.object(BufferedSqliteStore, "__init__", mocked_init):
+        yield
