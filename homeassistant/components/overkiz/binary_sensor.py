@@ -96,7 +96,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     # DomesticHotWaterProduction/WaterHeatingSystem
     OverkizBinarySensorDescription(
         key=OverkizState.IO_OPERATING_MODE_CAPABILITIES,
-        name="Energy Demand Status",
+        name="Energy demand status",
         device_class=BinarySensorDeviceClass.HEAT,
         value_fn=lambda state: (
             cast(dict, state).get(OverkizCommandParam.ENERGY_DEMAND_STATUS) == 1
@@ -165,7 +165,7 @@ async def async_setup_entry(
                 description,
             )
             for state in device.definition.states
-            if (description := SUPPORTED_STATES.get(state.qualified_name))
+            if (description := SUPPORTED_STATES.get(state))
         )
 
     async_add_entities(entities)

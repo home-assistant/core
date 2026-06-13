@@ -58,7 +58,6 @@ def _get_hass_service_info_mock(
             "external_url": None,
             "internal_url": "http://10.0.0.1:8123",
             "location_name": "Home",
-            "requires_api_password": "True",
             "uuid": instance_id,
             "version": "2025.9.0.dev0",
         },
