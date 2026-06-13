@@ -84,20 +84,35 @@ async def test_remove_entry_clears_statistics(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
 ) -> None:
-    """Test remove entry clears external statistics for energy sites."""
+    """Test remove entry clears external statistics for energy sites only."""
     await setup_platform(hass, normal_config_entry)
     assert normal_config_entry.state is ConfigEntryState.LOADED
 
-    # Get the energy site serial numbers from the device registry before unload
+    # Energy sites are identified by a numeric identifier (the energy_site_id).
+    # Vehicles (VIN) and wall connectors (DIN) are not. A wall connector's
+    # serial_number is derived from its DIN (e.g. "abd-123" -> "123") and can be
+    # numeric, so filtering on serial_number alone would wrongly clear its IDs.
     device_registry = dr.async_get(hass)
     devices = dr.async_entries_for_config_entry(
         device_registry, normal_config_entry.entry_id
     )
-    site_serial_numbers = {
-        d.serial_number
-        for d in devices
-        if d.serial_number is not None and d.serial_number.isdigit()
+    energy_site_ids = {
+        identifier
+        for device in devices
+        for domain, identifier in device.identifiers
+        if domain == DOMAIN and identifier.isdigit()
     }
+    wall_connector_serials = {
+        device.serial_number
+        for device in devices
+        if device.serial_number
+        and device.serial_number.isdigit()
+        and (DOMAIN, device.serial_number) not in device.identifiers
+    }
+    # Guard the test's premise: the fixtures must include an energy site and a
+    # wall connector with a numeric serial, otherwise the bug can't be detected.
+    assert energy_site_ids
+    assert wall_connector_serials
 
     # Unload first (like real removal flow), which deletes runtime_data
     await hass.config_entries.async_unload(normal_config_entry.entry_id)
@@ -113,11 +128,17 @@ async def test_remove_entry_clears_statistics(
         mock_get_recorder.return_value.async_clear_statistics.call_args.args[0]
     )
     expected_ids = {
-        f"tesla_fleet:{serial}_{field}"
-        for serial in site_serial_numbers
+        f"tesla_fleet:{site_id}_{field}"
+        for site_id in energy_site_ids
         for field in ENERGY_HISTORY_FIELDS
     }
     assert cleared_ids == expected_ids
+    # Wall connector serials must never be turned into statistic IDs.
+    assert not any(
+        cleared_id.startswith(f"tesla_fleet:{serial}_")
+        for serial in wall_connector_serials
+        for cleared_id in cleared_ids
+    )
 
 
 @pytest.mark.parametrize(("side_effect", "state"), SETUP_ERRORS)
