@@ -7,19 +7,19 @@ rules:
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency:
-    status: exempt
+    status: todo
     comment: "Will do after first review of draft PR"
   docs-actions:
-    status: exempt
+    status: todo
     comment: "Will do after first review of draft PR"
   docs-high-level-description:
-    status: exempt
+    status: todo
     comment: "Will do after first review of draft PR"
   docs-installation-instructions:
-    status: exempt
+    status: todo
     comment: "Will do after first review of draft PR"
   docs-removal-instructions:
-    status: exempt
+    status: todo
     comment: "Will do after first review of draft PR"
   entity-event-setup: done
   entity-unique-id: done

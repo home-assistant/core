@@ -9,10 +9,9 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, OBIS_IN, OBIS_OUT
+from .const import OBIS_IN, OBIS_OUT
 from .coordinator import SmgwSensorCoordinator, ThebenConfigEntry
 from .entity import ConexaSMGWEntity
 
@@ -38,7 +37,6 @@ async def async_setup_entry(
 class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
     """Represents total Meter readings."""
 
-    _attr_has_entity_name = True
     _attr_native_unit_of_measurement = UnitOfEnergy.WATT_HOUR
     _attr_device_class = SensorDeviceClass.ENERGY
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
@@ -67,16 +65,6 @@ class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
         if coordinator.data[key].unit.upper() == "J":
             self._attr_native_unit_of_measurement = UnitOfEnergy.JOULE
         self._attr_unique_id = f"{coordinator.gateway_info.smgwID}-{key}"
-        # TODO: Where to put the Device Info?
-        self._attr_device_info = DeviceInfo(
-            name=coordinator.gateway_info.smgwID,
-            identifiers={(DOMAIN, coordinator.gateway_info.smgwID)},
-            manufacturer="Theben AG",
-            model="CONEXA 3.0 Smart Meter Gateway",
-            sw_version=coordinator.gateway_info.firmwareVersion,
-            serial_number=coordinator.gateway_info.smgwID,
-            # configuration_url=f"https://{data.host}", TODO: Should I add it? Is it useful?
-        )
 
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""

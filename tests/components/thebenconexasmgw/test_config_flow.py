@@ -173,7 +173,7 @@ async def test_form_cannot_connect(
 async def test_form_already_configured(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test we abort if the user tries to configure the same smgw twice."""
+    """Test if integration aborts if the user tries to configure the same smgw twice."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -233,7 +233,7 @@ async def test_form_already_configured(
 async def test_form_unknown_err(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test we handle invalid auth."""
+    """Test recovery from an 'unexpected' exception."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )

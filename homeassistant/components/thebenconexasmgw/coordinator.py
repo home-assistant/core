@@ -44,8 +44,12 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
         self._unscheduled_updates: CALLBACK_TYPE | None = None
         self.retries = 0
 
-    async def async_init(self):
+    async def async_init(self) -> None:
         """Asynchronous Initialization and registering the update schedule."""
+        # config_entry is set in __init__ but mypy seems not to understand...
+        if self.config_entry is None:
+            raise ValueError("This should never happen...")
+
         self.__api = await ConexaSMGW.create(
             async_get_clientsession(self.hass),
             self.config_entry.data[CONF_HOST],
