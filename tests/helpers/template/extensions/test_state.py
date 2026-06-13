@@ -880,6 +880,7 @@ async def test_expand(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person1",
         "test",
+        {"in_zones": ["zone.test"]},
     )
     await hass.async_block_till_done()
 
@@ -900,6 +901,7 @@ async def test_expand(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "person.person2",
         "test",
+        {"in_zones": ["zone.test"]},
     )
     await hass.async_block_till_done()
 

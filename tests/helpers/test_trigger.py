@@ -53,6 +53,7 @@ from homeassistant.helpers.trigger import (
     BEHAVIOR_EACH,
     BEHAVIOR_FIRST,
     DATA_PLUGGABLE_ACTIONS,
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     TRIGGERS,
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
@@ -4787,3 +4788,48 @@ def test_async_extract_devices(
 ) -> None:
     """Test extracting devices from various trigger config shapes."""
     assert trigger.async_extract_devices(trigger_conf) == expected
+
+
+@pytest.mark.parametrize(
+    ("behavior", "expected"),
+    [
+        # Legacy values are converted to their new equivalents
+        ("any", BEHAVIOR_EACH),
+        ("last", BEHAVIOR_ALL),
+        # New values pass through unchanged
+        (BEHAVIOR_FIRST, BEHAVIOR_FIRST),
+        (BEHAVIOR_ALL, BEHAVIOR_ALL),
+        (BEHAVIOR_EACH, BEHAVIOR_EACH),
+    ],
+)
+def test_entity_state_trigger_schema_behavior_backwards_compatible(
+    behavior: str, expected: str
+) -> None:
+    """Test legacy behavior values are converted to their new equivalents."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+    assert validated[CONF_OPTIONS][ATTR_BEHAVIOR] == expected
+
+
+def test_entity_state_trigger_schema_behavior_default() -> None:
+    """Test the behavior defaults to 'each' when omitted."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {},
+    }
+    validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+    assert validated[CONF_OPTIONS][ATTR_BEHAVIOR] == BEHAVIOR_EACH
+
+
+@pytest.mark.parametrize("behavior", ["invalid", "anything", ""])
+def test_entity_state_trigger_schema_behavior_invalid(behavior: str) -> None:
+    """Test invalid behavior values are rejected."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    with pytest.raises(vol.Invalid):
+        ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
