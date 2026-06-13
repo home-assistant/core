@@ -3,11 +3,13 @@
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.snooz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS, CONF_TOKEN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import TEST_ADDRESS, TEST_PAIRING_TOKEN, SnoozFixture
 
@@ -44,6 +46,19 @@ async def test_setup_retries_when_device_not_found(
         f"Could not find Snooz with address {TEST_ADDRESS}: mock reachability reason"
         in caplog.text
     )
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    mock_connected_snooz: SnoozFixture,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry, including the Bluetooth connection."""
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, TEST_ADDRESS)}
+    )
+    assert device_entry == snapshot
 
 
 async def test_removing_entry_cleans_up_connections(
