@@ -86,7 +86,7 @@ SENSORS: Final = (
     ),
     # Real-time control state
     IndevoltSensorEntityDescription(
-        key=IndevoltConfig.READ_REALTIME_COMMAND,
+        key=IndevoltConfig.READ_REALTIME_STATE,
         translation_key="realtime_command",
         state_mapping={1000: "standby", 1001: "charging", 1002: "discharging"},
         device_class=SensorDeviceClass.ENUM,

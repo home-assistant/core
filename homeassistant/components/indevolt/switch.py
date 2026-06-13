@@ -126,7 +126,14 @@ class IndevoltSwitchEntity(IndevoltEntity, SwitchEntity):
         )
 
         if success:
-            await self.coordinator.async_request_refresh()
+            read_value = (
+                self.entity_description.read_on_value
+                if value
+                else self.entity_description.read_off_value
+            )
+            self.coordinator.async_optimistic_update(
+                self.entity_description.read_key, read_value
+            )
 
         else:
             raise HomeAssistantError(

@@ -11,6 +11,7 @@ from indevolt_api import (
     IndevoltConfig,
     IndevoltEnergyMode,
     IndevoltRealtimeAction,
+    IndevoltRealtimeState,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -109,6 +110,10 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Push/write data values to given key on the device."""
         return await self.api.set_data(sensor_key, value)
 
+    def async_optimistic_update(self, read_key: str, value: Any) -> None:
+        """Optimistically update coordinator data without fetching from device."""
+        self.async_set_updated_data({**self.data, read_key: value})
+
     async def async_switch_energy_mode(
         self, target_mode: IndevoltEnergyMode, refresh: bool = True
     ) -> None:
@@ -142,7 +147,9 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
 
             if refresh:
-                await self.async_request_refresh()
+                self.async_optimistic_update(
+                    IndevoltConfig.READ_ENERGY_MODE, target_mode
+                )
 
     async def async_realtime_action(
         self,
@@ -161,10 +168,15 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         match action:
             case IndevoltRealtimeAction.CHARGE:
                 success = await self.api.charge(power, target_soc)
+                state = IndevoltRealtimeState.CHARGING
+
             case IndevoltRealtimeAction.DISCHARGE:
                 success = await self.api.discharge(power, target_soc)
+                state = IndevoltRealtimeState.DISCHARGING
+
             case IndevoltRealtimeAction.STOP:
                 success = await self.api.stop()
+                state = IndevoltRealtimeState.STANDBY
 
         if not success:
             raise HomeAssistantError(
@@ -172,7 +184,15 @@ class IndevoltCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="failed_to_execute_realtime_action",
             )
 
-        await self.async_request_refresh()
+        self.async_set_updated_data(
+            {
+                **self.data,
+                IndevoltConfig.READ_ENERGY_MODE: IndevoltEnergyMode.REAL_TIME_CONTROL,
+                IndevoltConfig.READ_REALTIME_STATE: state,
+                IndevoltConfig.READ_REALTIME_TARGET_SOC: target_soc,
+                IndevoltConfig.READ_REALTIME_POWER_LIMIT: power,
+            }
+        )
 
     def get_emergency_soc(self) -> int:
         """Get the emergency SOC value."""

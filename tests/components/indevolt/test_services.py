@@ -73,6 +73,25 @@ async def test_service_charge_discharge(
     else:
         mock_indevolt.discharge.assert_called_once_with(power, target_soc)
 
+    # Verify sensor states were updated optimistically
+    expected_rt_command = "charging" if service_name == "charge" else "discharging"
+
+    assert (state := hass.states.get("sensor.cms_sf2000_energy_mode")) is not None
+    assert state.state == "real_time_control"
+
+    assert (state := hass.states.get("sensor.cms_sf2000_real_time_mode")) is not None
+    assert state.state == expected_rt_command
+
+    assert (
+        state := hass.states.get("sensor.cms_sf2000_real_time_target_soc")
+    ) is not None
+    assert int(float(state.state)) == target_soc
+
+    assert (
+        state := hass.states.get("sensor.cms_sf2000_real_time_power_limit")
+    ) is not None
+    assert int(float(state.state)) == power
+
 
 @pytest.mark.parametrize("generation", [1], indirect=True)
 @pytest.mark.parametrize(
