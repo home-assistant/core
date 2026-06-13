@@ -9,7 +9,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VilfoConfigEntry
@@ -78,6 +82,10 @@ class VilfoRouterSensor(SensorEntity):
             model=ROUTER_DEFAULT_MODEL,
             sw_version=api.firmware_version,
         )
+        if api.mac_address:
+            self._attr_device_info["connections"] = {
+                (CONNECTION_NETWORK_MAC, format_mac(api.mac_address))
+            }
         self._attr_unique_id = f"{api.unique_id}_{description.key}"
 
     @property
