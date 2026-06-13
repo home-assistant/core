@@ -1,5 +1,6 @@
 """Support for Yardian integration."""
 
+import asyncio
 from typing import Any
 
 import voluptuous as vol
@@ -77,9 +78,11 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
             self._zone_id,
             kwargs.get("duration", DEFAULT_WATERING_DURATION),
         )
+        await asyncio.sleep(2)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.controller.stop_irrigation()
+        await asyncio.sleep(2)
         await self.coordinator.async_request_refresh()

@@ -35,11 +35,6 @@
         "name": "Enabled"
       }
     },
-    "button": {
-      "stop_irrigation": {
-        "name": "Stop irrigation"
-      }
-    },
     "sensor": {
       "active_zone_count": {
         "name": "Active zones",
