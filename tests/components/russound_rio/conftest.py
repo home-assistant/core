@@ -3,17 +3,14 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
-from aiorussound import RussoundTcpConnectionHandler
 from aiorussound.rio import Source
 from aiorussound.rio.client import Controller, ZoneControlSurface
 from aiorussound.util import controller_device_str, zone_device_str
 import pytest
 
 from homeassistant.components.russound_rio.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
 
-from .const import API_VERSION, HARDWARE_MAC, MOCK_CONFIG, MODEL
+from .const import API_VERSION, HARDWARE_MAC, MOCK_SERIAL_CONFIG, MOCK_TCP_CONFIG, MODEL
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -28,10 +25,24 @@ def mock_setup_entry():
 
 
 @pytest.fixture
-def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Mock a Russound RIO config entry."""
+def mock_config_entry() -> MockConfigEntry:
+    """Mock a TCP config entry."""
     return MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG, unique_id=HARDWARE_MAC, title=MODEL
+        domain=DOMAIN,
+        data=MOCK_TCP_CONFIG,
+        unique_id=HARDWARE_MAC,
+        title=MODEL,
+    )
+
+
+@pytest.fixture
+def mock_serial_config_entry() -> MockConfigEntry:
+    """Mock a serial config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_SERIAL_CONFIG,
+        unique_id=HARDWARE_MAC,
+        title=MODEL,
     )
 
 
@@ -48,6 +59,13 @@ def mock_russound_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
+
+        def _init(handler):
+            client.connection_handler = handler
+            return client
+
+        mock_client.side_effect = _init
+
         controller_zones = {
             int(controller_id): {
                 int(zone_id): ZoneControlSurface.from_dict(zone)
@@ -108,11 +126,27 @@ def mock_russound_client() -> Generator[AsyncMock]:
                 controller_zones[2],
             ),
         }
-        client.connection_handler = RussoundTcpConnectionHandler(
-            MOCK_CONFIG[CONF_HOST], MOCK_CONFIG[CONF_PORT]
-        )
         client.is_connected = Mock(return_value=True)
-        client.unregister_state_update_callbacks.return_value = True
+        client.register_state_update_callbacks = AsyncMock()
+        client.unregister_state_update_callbacks = Mock(return_value=True)
         client.rio_version = API_VERSION
 
         yield client
+
+
+@pytest.fixture
+def mock_tcp_handler() -> Generator[Mock]:
+    """Mock the TCP connection handler."""
+    with patch(
+        "homeassistant.components.russound_rio.RussoundTcpConnectionHandler"
+    ) as mock_handler:
+        yield mock_handler
+
+
+@pytest.fixture
+def mock_serial_handler() -> Generator[Mock]:
+    """Mock the serial connection handler."""
+    with patch(
+        "homeassistant.components.russound_rio.RussoundSerialConnectionHandler"
+    ) as mock_handler:
+        yield mock_handler

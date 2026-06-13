@@ -29,7 +29,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_aquacell_api() -> Generator[MagicMock]:
-    """Build a fixture for the Aquacell API that authenticates successfully and returns a single softener."""
+    """Build a fixture for the Aquacell API that returns a softener."""
     with (
         patch(
             "homeassistant.components.aquacell.AquacellApi",
@@ -47,7 +47,7 @@ def mock_aquacell_api() -> Generator[MagicMock]:
             "aquacell/get_all_softeners_one_softener.json"
         )
 
-        softeners = [Softener(softener) for softener in softeners_dict]
+        softeners = [Softener.from_dict(softener) for softener in softeners_dict]
         mock_aquacell_api.get_all_softeners.return_value = softeners
 
         yield mock_aquacell_api

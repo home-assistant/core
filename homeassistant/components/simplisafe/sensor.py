@@ -1,7 +1,5 @@
 """Support for SimpliSafe freeze sensor."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, cast
 
 from simplipy.device import DeviceTypes
@@ -41,7 +39,7 @@ async def async_setup_entry(
         sensors.extend(
             SimplisafeFreezeSensor(simplisafe, system, cast(SensorV3, sensor))
             for sensor in system.sensors.values()
-            if sensor.type == DeviceTypes.TEMPERATURE
+            if sensor.type is DeviceTypes.TEMPERATURE
         )
 
     async_add_entities(sensors)

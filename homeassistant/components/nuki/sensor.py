@@ -1,7 +1,5 @@
 """Battery sensor for the Nuki Lock."""
 
-from __future__ import annotations
-
 from pynuki.device import NukiDevice
 
 from homeassistant.components.sensor import (

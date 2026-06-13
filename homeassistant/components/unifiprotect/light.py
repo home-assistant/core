@@ -1,7 +1,5 @@
 """Component providing Lights for UniFi Protect."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

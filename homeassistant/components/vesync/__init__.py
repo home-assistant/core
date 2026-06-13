@@ -64,14 +64,17 @@ async def async_setup_entry(
     try:
         await manager.login()
     except VeSyncLoginError as err:
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
     except VeSyncServerError as err:
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="server_error"
         ) from err
     except VeSyncAPIResponseError as err:
+        # pylint: disable-next=home-assistant-exception-translation-key-missing
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN, translation_key="api_response_error"
         ) from err
@@ -120,7 +123,8 @@ async def async_migrate_entry(
                 Platform.SWITCH
             ):
                 _LOGGER.debug(
-                    "Migrating switch/outlet entity from unique_id: %s to unique_id: %s",
+                    "Migrating switch/outlet entity"
+                    " from unique_id: %s to unique_id: %s",
                     reg_entry.unique_id,
                     reg_entry.unique_id + "-device_status",
                 )

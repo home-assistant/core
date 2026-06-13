@@ -1,7 +1,5 @@
 """Support for Xeoma Cameras."""
 
-from __future__ import annotations
-
 import logging
 
 from pyxeoma.xeoma import Xeoma, XeomaError
@@ -133,6 +131,7 @@ class XeomaCamera(Camera):
                 self._image, self._username, self._password
             )
             self._last_image = image
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except XeomaError as err:
             _LOGGER.error("Error fetching image: %s", err.message)
 

@@ -1,7 +1,5 @@
 """Weather component that handles meteorological data for your location."""
 
-from __future__ import annotations
-
 import abc
 from collections.abc import Callable, Iterable
 from contextlib import suppress
@@ -988,7 +986,8 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 for fc_twice_daily in native_forecast_list:
                     if fc_twice_daily.get(ATTR_FORECAST_IS_DAYTIME) is None:
                         raise ValueError(
-                            "is_daytime mandatory attribute for forecast_twice_daily is missing"
+                            "is_daytime mandatory attribute"
+                            " for forecast_twice_daily is missing"
                         )
 
             converted_forecast_list = self._convert_forecast(native_forecast_list)

@@ -33,14 +33,13 @@ from .conftest import (
     setup_entity,
 )
 
-from tests.common import MockConfigEntry, assert_setup_component
+from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_AVAILABILITY_ENTITY_ID = "availability_state.state"
 TEST_LOCK = TemplatePlatformSetup(
     lock.DOMAIN,
-    None,
     "test_template_lock",
     make_test_trigger(
         TEST_AVAILABILITY_ENTITY_ID,
@@ -58,20 +57,6 @@ OPEN_ACTION = make_test_action("open")
 
 
 OPTIMISTIC_LOCK = {
-    **LOCK_ACTION,
-    **UNLOCK_ACTION,
-}
-
-
-OPTIMISTIC_LOCK_CONFIG = {
-    "platform": "template",
-    **LOCK_ACTION,
-    **UNLOCK_ACTION,
-    **OPEN_ACTION,
-}
-
-OPTIMISTIC_CODED_LOCK_CONFIG = {
-    "platform": "template",
     **LOCK_ACTION,
     **UNLOCK_ACTION,
 }
@@ -151,7 +136,7 @@ async def setup_state_lock_with_attribute(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_state(hass: HomeAssistant) -> None:
@@ -184,7 +169,7 @@ async def test_template_state(hass: HomeAssistant) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_extra_config")
 async def test_open_lock_optimistic(
@@ -214,7 +199,7 @@ async def test_open_lock_optimistic(
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1 == 1 }}")])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_state_boolean_on(hass: HomeAssistant) -> None:
@@ -229,7 +214,7 @@ async def test_template_state_boolean_on(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1 == 2 }}")])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_state_boolean_off(hass: HomeAssistant) -> None:
@@ -244,7 +229,7 @@ async def test_template_state_boolean_off(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("count", [0])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("state_template", "extra_config"),
@@ -272,7 +257,6 @@ async def test_template_syntax_error(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
         (ConfigurationStyle.TRIGGER, "code_format"),
     ],
@@ -286,7 +270,7 @@ async def test_template_code_template_syntax_error(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(("count", "state_template"), [(1, "{{ 1 + 1 }}")])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_template_static(hass: HomeAssistant) -> None:
@@ -300,7 +284,7 @@ async def test_template_static(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize("count", [1])
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     ("state_template", "expected"),
@@ -378,7 +362,7 @@ async def test_icon_template(hass: HomeAssistant, initial_state: str) -> None:
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_lock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -405,7 +389,7 @@ async def test_lock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock")
 async def test_unlock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -433,7 +417,7 @@ async def test_unlock_action(hass: HomeAssistant, calls: list[ServiceCall]) -> N
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.usefixtures("setup_state_lock_with_extra_config")
 async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> None:
@@ -468,7 +452,6 @@ async def test_open_action(hass: HomeAssistant, calls: list[ServiceCall]) -> Non
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
         (ConfigurationStyle.TRIGGER, "code_format"),
     ],
@@ -509,7 +492,6 @@ async def test_lock_action_with_code(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
         (ConfigurationStyle.TRIGGER, "code_format"),
     ],
@@ -551,7 +533,6 @@ async def test_unlock_action_with_code(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
         (ConfigurationStyle.TRIGGER, "code_format"),
     ],
@@ -599,7 +580,6 @@ async def test_lock_actions_fail_with_invalid_code(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
         (ConfigurationStyle.TRIGGER, "code_format"),
     ],
@@ -641,7 +621,6 @@ async def test_lock_actions_dont_execute_with_code_template_rendering_error(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
         (ConfigurationStyle.TRIGGER, "code_format"),
     ],
@@ -683,7 +662,6 @@ async def test_actions_with_none_as_codeformat_ignores_code(
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "code_format_template"),
         (ConfigurationStyle.MODERN, "code_format"),
         (ConfigurationStyle.TRIGGER, "code_format"),
     ],
@@ -724,7 +702,7 @@ async def test_actions_with_invalid_regexp_as_codeformat_never_execute(
 )
 @pytest.mark.parametrize(
     "style",
-    [ConfigurationStyle.LEGACY, ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
+    [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
 @pytest.mark.parametrize(
     "test_state",
@@ -760,7 +738,6 @@ async def test_lock_state(hass: HomeAssistant, test_state) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -796,7 +773,6 @@ async def test_available_template_with_entities(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("style", "attribute"),
     [
-        (ConfigurationStyle.LEGACY, "availability_template"),
         (ConfigurationStyle.MODERN, "availability"),
         (ConfigurationStyle.TRIGGER, "availability"),
     ],
@@ -811,43 +787,6 @@ async def test_invalid_availability_template_keeps_component_available(
     assert hass.states.get(TEST_LOCK.entity_id).state != STATE_UNAVAILABLE
     err = "'x' is undefined"
     assert err in caplog_setup_text or err in caplog.text
-
-
-@pytest.mark.parametrize(("count", "domain"), [(1, lock.DOMAIN)])
-@pytest.mark.parametrize(
-    "config",
-    [
-        {
-            lock.DOMAIN: {
-                **OPTIMISTIC_LOCK_CONFIG,
-                "name": "test_template_lock_01",
-                "unique_id": "not-so-unique-anymore",
-                "value_template": "{{ true }}",
-            }
-        },
-    ],
-)
-@pytest.mark.usefixtures("start_ha")
-async def test_legacy_unique_id(hass: HomeAssistant) -> None:
-    """Test unique_id option only creates one lock per id."""
-    await setup.async_setup_component(
-        hass,
-        lock.DOMAIN,
-        {
-            "lock": {
-                **OPTIMISTIC_LOCK_CONFIG,
-                "name": "test_template_lock_02",
-                "unique_id": "not-so-unique-anymore",
-                "value_template": "{{ false }}",
-            },
-        },
-    )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    assert len(hass.states.async_all("lock")) == 1
 
 
 @pytest.mark.parametrize("config", [OPTIMISTIC_LOCK])
@@ -878,30 +817,28 @@ async def test_nested_unique_id(
     )
 
 
-async def test_emtpy_action_config(hass: HomeAssistant) -> None:
-    """Test configuration with empty script."""
-    with assert_setup_component(1, lock.DOMAIN):
-        assert await setup.async_setup_component(
-            hass,
-            lock.DOMAIN,
+@pytest.mark.parametrize(
+    ("count", "config"),
+    [
+        (
+            1,
             {
-                lock.DOMAIN: {
-                    "platform": "template",
-                    "value_template": "{{ 0 == 1 }}",
-                    "lock": [],
-                    "unlock": [],
-                    "open": [],
-                    "name": "test_template_lock",
-                    "optimistic": True,
-                },
+                "state": "{{ 0 == 1 }}",
+                "lock": [],
+                "unlock": [],
+                "open": [],
+                "optimistic": True,
             },
         )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-    state = hass.states.get("lock.test_template_lock")
+    ],
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.usefixtures("setup_lock")
+async def test_empty_action_config(hass: HomeAssistant) -> None:
+    """Test configuration with empty script."""
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.attributes["supported_features"] == LockEntityFeature.OPEN
 
     await hass.services.async_call(
@@ -911,7 +848,7 @@ async def test_emtpy_action_config(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("lock.test_template_lock")
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.UNLOCKED
 
     await hass.services.async_call(
@@ -921,7 +858,7 @@ async def test_emtpy_action_config(hass: HomeAssistant) -> None:
     )
     await hass.async_block_till_done()
 
-    state = hass.states.get("lock.test_template_lock")
+    state = hass.states.get(TEST_LOCK.entity_id)
     assert state.state == LockState.LOCKED
 
 

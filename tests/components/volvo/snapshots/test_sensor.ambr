@@ -307,6 +307,7 @@
     'capabilities': dict({
       'options': list([
         'fault',
+        'initialization',
         'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
@@ -349,6 +350,7 @@
       'friendly_name': 'Volvo EX30 Charging power status',
       'options': list([
         'fault',
+        'initialization',
         'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
@@ -2574,6 +2576,7 @@
     'capabilities': dict({
       'options': list([
         'fault',
+        'initialization',
         'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
@@ -2616,6 +2619,7 @@
       'friendly_name': 'Volvo XC40 Charging power status',
       'options': list([
         'fault',
+        'initialization',
         'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
@@ -5857,6 +5861,7 @@
     'capabilities': dict({
       'options': list([
         'fault',
+        'initialization',
         'power_available_but_not_activated',
         'providing_power',
         'no_power_available',
@@ -5899,6 +5904,7 @@
       'friendly_name': 'Volvo XC90 Charging power status',
       'options': list([
         'fault',
+        'initialization',
         'power_available_but_not_activated',
         'providing_power',
         'no_power_available',

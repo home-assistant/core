@@ -62,6 +62,7 @@ async def test_async_setup_entry_connection_error(
     )
 
     with pytest.raises(ConfigEntryNotReady):
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         await async_setup_entry(hass, mock_config_entry)
 
     assert mock_iometer_client.get_current_status.await_count == 1

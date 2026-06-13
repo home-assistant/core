@@ -1,7 +1,5 @@
 """Base entity for Withings."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiowithings import Device
@@ -31,7 +29,6 @@ class WithingsEntity[_T: WithingsDataUpdateCoordinator[Any]](CoordinatorEntity[_
         self._attr_unique_id = f"withings_{coordinator.config_entry.unique_id}_{key}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(coordinator.config_entry.unique_id))},
-            manufacturer="Withings",
         )
 
 

@@ -1,7 +1,5 @@
 """Provide a way to assign areas to floors in one's home."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses

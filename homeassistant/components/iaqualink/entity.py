@@ -1,7 +1,5 @@
 """Component to embed Aqualink devices."""
 
-from __future__ import annotations
-
 from iaqualink.device import AqualinkDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -21,6 +19,9 @@ class AqualinkEntity[AqualinkDeviceT: AqualinkDevice](
     library are propagated back to Home Assistant through the coordinator-aware
     entity update flow.
     """
+
+    _attr_has_entity_name = True
+    _attr_name = None
 
     def __init__(
         self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkDeviceT

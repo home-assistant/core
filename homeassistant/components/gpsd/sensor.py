@@ -1,7 +1,5 @@
 """Sensor platform for GPSD integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -16,6 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
+    ATTR_ELEVATION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     ATTR_MODE,
@@ -36,7 +35,6 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 ATTR_CLIMB = "climb"
-ATTR_ELEVATION = "elevation"
 ATTR_SPEED = "speed"
 ATTR_TOTAL_SATELLITES = "total_satellites"
 ATTR_USED_SATELLITES = "used_satellites"

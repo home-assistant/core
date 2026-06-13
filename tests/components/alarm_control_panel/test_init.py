@@ -221,6 +221,6 @@ async def test_alarm_control_panel_not_log_deprecated_state_warning(
     state = hass.states.get(mock_alarm_control_panel_entity.entity_id)
     assert state is not None
     assert (
-        "the 'alarm_state' property and return its state using the AlarmControlPanelState enum"
-        not in caplog.text
+        "the 'alarm_state' property and return its state"
+        " using the AlarmControlPanelState enum" not in caplog.text
     )

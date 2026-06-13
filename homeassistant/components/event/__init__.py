@@ -1,7 +1,5 @@
 """Component for handling incoming events as a platform."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum

@@ -1,7 +1,5 @@
 """Device tracker for Synology SRM routers."""
 
-from __future__ import annotations
-
 import logging
 
 import synology_srm

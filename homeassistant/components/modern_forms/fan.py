@@ -1,7 +1,5 @@
 """Support for Modern Forms Fan Fans."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiomodernforms.const import FAN_POWER_OFF, FAN_POWER_ON
@@ -110,11 +108,13 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         """Return the state of the fan."""
         return bool(self.coordinator.data.state.fan_on)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.coordinator.modern_forms.fan(direction=direction)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
@@ -123,6 +123,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         else:
             await self.async_turn_off()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_turn_on(
         self,
@@ -139,11 +140,13 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
             )
         await self.coordinator.modern_forms.fan(**data)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.coordinator.modern_forms.fan(on=FAN_POWER_OFF)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_set_fan_sleep_timer(
         self,
@@ -152,6 +155,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         """Set a Modern Forms light sleep timer."""
         await self.coordinator.modern_forms.fan(sleep=sleep_time * 60)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @modernforms_exception_handler
     async def async_clear_fan_sleep_timer(
         self,

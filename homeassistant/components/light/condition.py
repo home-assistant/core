@@ -26,7 +26,7 @@ class BrightnessCondition(EntityNumericalConditionBase):
     _valid_unit = "%"
 
     def _get_tracked_value(self, entity_state: State) -> Any:
-        """Get the brightness value converted from uint8 (0-255) to percentage (0-100)."""
+        """Get brightness converted from uint8 (0-255) to percentage."""
         raw = super()._get_tracked_value(entity_state)
         if raw is None:
             return None

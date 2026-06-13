@@ -3,12 +3,12 @@
 from typing import Any
 
 from homeassistant.components.scene import Scene
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN, UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
+from . import UpbConfigEntry
+from .const import UPB_BLINK_RATE_SCHEMA, UPB_BRIGHTNESS_RATE_SCHEMA
 from .entity import UpbEntity
 
 SERVICE_LINK_DEACTIVATE = "link_deactivate"
@@ -20,11 +20,11 @@ SERVICE_LINK_BLINK = "link_blink"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: UpbConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the UPB link based on a config entry."""
-    upb = hass.data[DOMAIN][config_entry.entry_id]["upb"]
+    upb = config_entry.runtime_data
     unique_id = config_entry.entry_id
     async_add_entities(UpbLink(upb.links[link], unique_id, upb) for link in upb.links)
 

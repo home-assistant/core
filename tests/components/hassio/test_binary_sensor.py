@@ -109,7 +109,7 @@ async def test_binary_sensor(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -140,7 +140,7 @@ async def test_mount_binary_sensor(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -210,9 +210,9 @@ async def test_mount_refresh_after_issue(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     supervisor_client: AsyncMock,
-    hass_ws_client: WebSocketGenerator,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test hassio mount state is refreshed after an issue was send by the supervisor."""
+    """Test hassio mount state is refreshed after an issue was sent by supervisor."""
     # Add a mount.
     mock_mounts: list[CIFSMountResponse | NFSMountResponse] = [
         CIFSMountResponse(
@@ -236,7 +236,7 @@ async def test_mount_refresh_after_issue(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -255,7 +255,7 @@ async def test_mount_refresh_after_issue(
 
     # Change mount state to failed, issue a repair, and verify entity's state.
     mock_mounts[0] = replace(mock_mounts[0], state=MountState.FAILED)
-    client = await hass_ws_client(hass)
+    client = await hass_supervisor_ws_client()
     issue_uuid = uuid4().hex
     await client.send_json(
         {

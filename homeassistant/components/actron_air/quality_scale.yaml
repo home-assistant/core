@@ -57,10 +57,10 @@ rules:
   entity-category: done
   entity-device-class: todo
   entity-disabled-by-default: todo
-  entity-translations: todo
+  entity-translations: done
   exception-translations: done
-  icon-translations: todo
-  reconfiguration-flow: todo
+  icon-translations: done
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration does not have any known issues that require repair.
@@ -69,4 +69,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: todo
-  strict-typing: todo
+  strict-typing: done

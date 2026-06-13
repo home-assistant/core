@@ -297,6 +297,9 @@
     "timestamp": {
       "name": "Timestamp"
     },
+    "uptime": {
+      "name": "Uptime"
+    },
     "volatile_organic_compounds": {
       "name": "Volatile organic compounds"
     },

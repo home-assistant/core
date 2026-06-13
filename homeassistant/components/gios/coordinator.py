@@ -1,7 +1,5 @@
 """The GIOS component."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import TYPE_CHECKING
@@ -50,7 +48,8 @@ class GiosDataUpdateCoordinator(DataUpdateCoordinator[GiosSensors]):
         if TYPE_CHECKING:
             # Station ID is Optional in the library, but here we know it is set for sure
             # so we can safely assert it is not None for type checking purposes
-            # Gios instance is created only with a valid station ID in the async_setup_entry.
+            # Gios instance is created only with a valid station
+            # ID in the async_setup_entry.
             assert station_id is not None
 
         self.device_info = DeviceInfo(

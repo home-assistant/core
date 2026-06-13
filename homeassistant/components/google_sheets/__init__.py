@@ -1,7 +1,5 @@
 """Support for Google Sheets."""
 
-from __future__ import annotations
-
 import aiohttp
 
 from homeassistant.config_entries import ConfigEntry

@@ -1,7 +1,5 @@
 """Support for Amcrest IP cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable
 from contextlib import asynccontextmanager, suppress
@@ -39,7 +37,6 @@ from homeassistant.helpers.typing import ConfigType
 from .binary_sensor import BINARY_SENSOR_KEYS, BINARY_SENSORS, check_binary_sensors
 from .camera import STREAM_SOURCE_LIST
 from .const import (
-    CAMERAS,
     COMM_RETRIES,
     COMM_TIMEOUT,
     DATA_AMCREST,
@@ -359,7 +356,7 @@ def _start_event_monitor(
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Amcrest IP Camera component."""
-    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}, CAMERAS: []})
+    hass.data.setdefault(DATA_AMCREST, {DEVICES: {}})
 
     for device in config[DOMAIN]:
         name: str = device[CONF_NAME]

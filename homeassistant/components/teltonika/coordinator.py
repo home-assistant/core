@@ -1,19 +1,21 @@
 """DataUpdateCoordinator for Teltonika."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientResponseError, ContentTypeError
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
 from teltasync.error_codes import TeltonikaErrorCode
-from teltasync.modems import Modems
+from teltasync.modems import Modems, ModemStatusFull
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -33,7 +35,7 @@ AUTH_ERROR_CODES = frozenset(
 )
 
 
-class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatusFull]]):
     """Class to manage fetching Teltonika data."""
 
     device_info: DeviceInfo
@@ -75,6 +77,14 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # Store device info for use by entities
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, system_info_response.mnf_info.serial)},
+            connections={
+                (CONNECTION_NETWORK_MAC, format_mac(mac))
+                for mac in (
+                    system_info_response.mnf_info.mac_eth,
+                    system_info_response.mnf_info.mac,
+                )
+                if mac
+            },
             name=system_info_response.static.device_name,
             manufacturer="Teltonika",
             model=system_info_response.static.model,
@@ -83,7 +93,7 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             configuration_url=self.base_url,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> dict[str, ModemStatusFull]:
         """Fetch data from Teltonika device."""
         modems = Modems(self.client.auth)
         try:
@@ -116,14 +126,10 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(f"Error communicating with device: {error_message}")
 
         # Return only modems which are online
-        modem_data: dict[str, Any] = {}
-        if modems_response.data:
-            modem_data.update(
-                {
-                    modem.id: modem
-                    for modem in modems_response.data
-                    if Modems.is_online(modem)
-                }
-            )
-
-        return modem_data
+        if not modems_response.data:
+            return {}
+        return {
+            modem.id: modem
+            for modem in modems_response.data
+            if isinstance(modem, ModemStatusFull)
+        }

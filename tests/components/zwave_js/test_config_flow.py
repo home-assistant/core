@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Generator
+import dataclasses
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -93,6 +94,13 @@ CP2652_ZIGBEE_DISCOVERY_INFO = UsbServiceInfo(
     description="cp2652",
     manufacturer="generic",
 )
+
+
+def _set_home_id(get_server_version: AsyncMock, home_id: int) -> None:
+    """Update the mocked server version's home_id (frozen dataclass)."""
+    get_server_version.return_value = dataclasses.replace(
+        get_server_version.return_value, home_id=home_id
+    )
 
 
 @pytest.fixture
@@ -1016,8 +1024,7 @@ async def test_usb_discovery_migration(
 
     assert restart_addon.call_args == call("core_zwave_js")
 
-    version_info = get_server_version.return_value
-    version_info.home_id = 3245146787
+    _set_home_id(get_server_version, 3245146787)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -1435,7 +1442,7 @@ async def test_esphome_discovery_already_configured_unmanaged_addon(
     addon_options: dict[str, Any],
     stop_addon: AsyncMock,
 ) -> None:
-    """Test ESPHome discovery aborts when home ID already configured with unmanaged add-on."""
+    """Test ESPHome discovery aborts when home ID already configured."""
     addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
     addon_options["another_key"] = "should_not_be_touched"
 
@@ -3405,7 +3412,7 @@ async def test_reconfigure_addon_running_no_changes(
     form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
 ) -> None:
-    """Test reconfigure flow without changes, and add-on already running on Supervisor."""
+    """Test reconfigure flow without changes, add-on running."""
     addon_options.update(old_addon_options)
     entry = integration
     data = {**entry.data, **entry_data}
@@ -4211,7 +4218,6 @@ async def test_reconfigure_migrate_with_addon(
     device_entry_count: int,
 ) -> None:
     """Test migration flow with add-on."""
-    version_info = get_server_version.return_value
     entry = integration
     assert client.connect.call_count == 1
     assert client.driver.controller.home_id == 3245146787
@@ -4322,7 +4328,7 @@ async def test_reconfigure_migrate_with_addon(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
 
-    version_info.home_id = 5678
+    _set_home_id(get_server_version, 5678)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], form_data
@@ -4355,7 +4361,7 @@ async def test_reconfigure_migrate_with_addon(
 
         assert entry.unique_id == "5678"
         get_server_version.side_effect = restore_server_version_side_effect
-        version_info.home_id = 3245146787
+        _set_home_id(get_server_version, 3245146787)
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "restore_nvm"
@@ -4893,7 +4899,7 @@ async def test_configure_addon_usb_ports_failure(
 
 
 async def test_get_usb_ports_filtering(hass: HomeAssistant) -> None:
-    """Test that get_usb_ports filters out 'n/a' descriptions when other ports are available."""
+    """Test get_usb_ports filters out 'n/a' when others exist."""
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
@@ -4945,7 +4951,7 @@ async def test_get_usb_ports_filtering(hass: HomeAssistant) -> None:
 
 
 async def test_get_usb_ports_all_na(hass: HomeAssistant) -> None:
-    """Test that get_usb_ports returns all ports as-is when only 'n/a' descriptions exist."""
+    """Test get_usb_ports returns all when only 'n/a' descriptions."""
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
@@ -4993,7 +4999,7 @@ async def test_get_usb_ports_all_na(hass: HomeAssistant) -> None:
 
 
 async def test_get_usb_ports_mixed_case_filtering(hass: HomeAssistant) -> None:
-    """Test that get_usb_ports filters out 'n/a' descriptions with different case variations."""
+    """Test get_usb_ports filters 'n/a' case-insensitively."""
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
@@ -5045,7 +5051,8 @@ async def test_get_usb_ports_mixed_case_filtering(hass: HomeAssistant) -> None:
 
         descriptions = list(result.values())
 
-        # Verify that only non-"n/a" descriptions are returned (case-insensitive filtering)
+        # Verify only non-"n/a" descriptions are returned
+        # (case-insensitive filtering)
         assert descriptions == [
             "Device A - /dev/ttyUSB1, s/n: n/a - 1234:5678",
             "Device B - /dev/ttyUSB4, s/n: n/a - 1234:5678",
@@ -5065,7 +5072,7 @@ async def test_get_usb_ports_empty_list(hass: HomeAssistant) -> None:
 
 
 async def test_get_usb_ports_single_na_port(hass: HomeAssistant) -> None:
-    """Test that get_usb_ports returns single 'n/a' port when it's the only one available."""
+    """Test get_usb_ports returns single 'n/a' port when alone."""
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
@@ -5184,7 +5191,8 @@ async def test_get_usb_ports_ignored_devices(hass: HomeAssistant) -> None:
 
         assert descriptions == [
             "ZWA-2 - /dev/ttyUSB3, s/n: n/a - Nabu Casa - 10C4:EA60",
-            "Z-Wave USB Adapter - /dev/ttyUSB4, s/n: n/a - Another Manufacturer - 10C4:EA60",
+            "Z-Wave USB Adapter - /dev/ttyUSB4, s/n: n/a"
+            " - Another Manufacturer - 10C4:EA60",
             "/dev/ttyUSB5, s/n: n/a - 10C4:EA60",
         ]
 
@@ -5503,7 +5511,6 @@ async def test_addon_rf_region_migrate_network(
 ) -> None:
     """Test migration flow with add-on."""
     hass.config.country = None
-    version_info = get_server_version.return_value
     entry = integration
     assert client.connect.call_count == 1
     assert client.driver.controller.home_id == 3245146787
@@ -5587,7 +5594,7 @@ async def test_addon_rf_region_migrate_network(
     with pytest.raises(InInvalid):
         data_schema.schema[CONF_USB_PATH](addon_options["device"])
 
-    version_info.home_id = 5678
+    _set_home_id(get_server_version, 5678)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -5622,7 +5629,7 @@ async def test_addon_rf_region_migrate_network(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
     assert entry.unique_id == "5678"
-    version_info.home_id = 3245146787
+    _set_home_id(get_server_version, 3245146787)
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"

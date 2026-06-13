@@ -1,7 +1,5 @@
 """Provide common test tools."""
 
-from __future__ import annotations
-
 from functools import cache
 import json
 from typing import Any
@@ -12,6 +10,7 @@ from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import EventType, MatterNodeData
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.matter import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -22,6 +21,7 @@ FIXTURES = [
     "air_quality_sensor",
     "aqara_door_window_p2",
     "aqara_motion_p2",
+    "aqara_multi_state_p100",
     "aqara_presence_fp300",
     "aqara_sensor_w100",
     "aqara_thermostat_w500",
@@ -79,6 +79,7 @@ FIXTURES = [
     "mock_pressure_sensor",
     "mock_pump",
     "mock_room_airconditioner",
+    "mock_soil_sensor",
     "mock_solar_inverter",
     "mock_speaker",
     "mock_switch_unit",
@@ -137,7 +138,7 @@ async def _setup_integration_with_nodes(
 
     client.get_node.side_effect = _get_node
     config_entry = MockConfigEntry(
-        domain="matter", data={"url": "http://mock-matter-server-url"}
+        domain=DOMAIN, data={"url": "http://mock-matter-server-url"}
     )
     config_entry.add_to_hass(hass)
 

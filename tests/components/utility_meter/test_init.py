@@ -1,7 +1,5 @@
 """The tests for the utility_meter component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from unittest.mock import patch
 
@@ -30,12 +28,20 @@ from homeassistant.const import (
     UnitOfEnergy,
 )
 from homeassistant.core import Event, HomeAssistant, State, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, mock_restore_cache
+from tests.common import (
+    MockConfigEntry,
+    assert_platform_setup_creates_issue,
+    mock_restore_cache,
+)
 
 
 @pytest.fixture
@@ -116,6 +122,26 @@ def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[s
     async_track_entity_registry_updated_event(hass, entity_id, add_event)
 
     return events
+
+
+@pytest.mark.parametrize(
+    "platform_domain",
+    ["select", "sensor"],
+)
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    platform_domain: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        platform_domain,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
 
 
 async def test_restore_state(hass: HomeAssistant) -> None:
@@ -555,7 +581,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     sensor_entity_entry: er.RegistryEntry,
     expected_entities: set[str],
 ) -> None:
-    """Test the utility_meter config entry is removed when the source entity is removed."""
+    """Test config entry is removed when the source entity is removed."""
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -630,7 +656,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     sensor_entity_entry: er.RegistryEntry,
     expected_entities: set[str],
 ) -> None:
-    """Test the utility_meter config entry is removed when the source entity is removed."""
+    """Test config entry is removed when the source entity is removed."""
     # Add another config entry to the sensor device
     other_config_entry = MockConfigEntry()
     other_config_entry.add_to_hass(hass)

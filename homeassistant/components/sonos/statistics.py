@@ -1,7 +1,5 @@
 """Class to track subscription event statistics."""
 
-from __future__ import annotations
-
 import logging
 
 from soco.data_structures_entry import from_didl_string

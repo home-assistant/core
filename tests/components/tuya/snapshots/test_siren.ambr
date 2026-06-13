@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_platform_setup_and_discovery[siren.aqi-entry]
+# name: test_platform_setup_and_discovery[siren.aqi_siren-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'siren.aqi',
+    'entity_id': 'siren.aqi_siren',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,36 +21,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Siren',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Siren',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 3>,
-    'translation_key': None,
+    'translation_key': 'siren',
     'unique_id': 'tuya.iks13mcaiyie3rryjb2ocalarm_switch',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[siren.aqi-state]
+# name: test_platform_setup_and_discovery[siren.aqi_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'AQI',
+      'friendly_name': 'AQI Siren',
       'supported_features': <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.aqi',
+    'entity_id': 'siren.aqi_siren',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[siren.burocam-entry]
+# name: test_platform_setup_and_discovery[siren.burocam_siren-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
-    'entity_id': 'siren.burocam',
+    'entity_id': 'siren.burocam_siren',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -72,36 +72,36 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Siren',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Siren',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 3>,
-    'translation_key': None,
+    'translation_key': 'siren',
     'unique_id': 'tuya.svjjuwykgijjedurpssiren_switch',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[siren.burocam-state]
+# name: test_platform_setup_and_discovery[siren.burocam_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Bürocam',
+      'friendly_name': 'Bürocam Siren',
       'supported_features': <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.burocam',
+    'entity_id': 'siren.burocam_siren',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_platform_setup_and_discovery[siren.c9-entry]
+# name: test_platform_setup_and_discovery[siren.c9_siren-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -115,7 +115,7 @@
     'disabled_by': None,
     'domain': 'siren',
     'entity_category': None,
-    'entity_id': 'siren.c9',
+    'entity_id': 'siren.c9_siren',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,29 +123,80 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Siren',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Siren',
     'platform': 'tuya',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <SirenEntityFeature: 3>,
-    'translation_key': None,
+    'translation_key': 'siren',
     'unique_id': 'tuya.fjdyw5ld2f5f5ddspssiren_switch',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_platform_setup_and_discovery[siren.c9-state]
+# name: test_platform_setup_and_discovery[siren.c9_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'C9',
+      'friendly_name': 'C9 Siren',
       'supported_features': <SirenEntityFeature: 3>,
     }),
     'context': <ANY>,
-    'entity_id': 'siren.c9',
+    'entity_id': 'siren.c9_siren',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_platform_setup_and_discovery[siren.security_camera_siren-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'siren',
+    'entity_category': None,
+    'entity_id': 'siren.security_camera_siren',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Siren',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Siren',
+    'platform': 'tuya',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <SirenEntityFeature: 3>,
+    'translation_key': 'siren',
+    'unique_id': 'tuya.xihygtyd0d1faknkpssiren_switch',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_platform_setup_and_discovery[siren.security_camera_siren-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Security Camera Siren',
+      'supported_features': <SirenEntityFeature: 3>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'siren.security_camera_siren',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

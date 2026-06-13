@@ -1,9 +1,6 @@
 """Sensor for the zamg integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.weather import WeatherEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfPrecipitationDepth,
     UnitOfPressure,
@@ -16,16 +13,16 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION, CONF_STATION_ID, DOMAIN, MANUFACTURER_URL
-from .coordinator import ZamgDataUpdateCoordinator
+from .coordinator import ZamgConfigEntry, ZamgDataUpdateCoordinator
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ZamgConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the ZAMG weather platform."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         [ZamgWeather(coordinator, entry.title, entry.data[CONF_STATION_ID])]
     )

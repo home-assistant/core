@@ -1,7 +1,5 @@
 """Alexa entity adapters."""
 
-from __future__ import annotations
-
 from collections.abc import Generator, Iterable
 import logging
 from typing import TYPE_CHECKING, Any
@@ -41,7 +39,6 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
     ATTR_UNIT_OF_MEASUREMENT,
-    CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_DESCRIPTION,
     CONF_NAME,
     UnitOfTemperature,
@@ -375,9 +372,6 @@ def async_get_entities(
     """Return all entities that are supported by Alexa."""
     entities: list[AlexaEntity] = []
     for state in hass.states.async_all():
-        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            continue
-
         if state.domain not in ENTITY_ADAPTERS:
             continue
 

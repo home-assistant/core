@@ -1,7 +1,5 @@
 """deconz conftest."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator
 from types import MappingProxyType
 from typing import Any, Protocol

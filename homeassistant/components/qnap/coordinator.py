@@ -1,7 +1,5 @@
 """Data coordinator for the qnap integration."""
 
-from __future__ import annotations
-
 from contextlib import contextmanager, nullcontext
 from datetime import timedelta
 import logging

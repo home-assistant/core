@@ -1,7 +1,5 @@
 """Support for myStrom Wifi bulbs."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -91,6 +89,7 @@ class MyStromLight(LightEntity):
                 await self._bulb.set_sunrise(30)
             if effect == EFFECT_RAINBOW:
                 await self._bulb.set_rainbow(30)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MyStromConnectionError:
             _LOGGER.warning("No route to myStrom bulb")
 
@@ -98,6 +97,7 @@ class MyStromLight(LightEntity):
         """Turn off the bulb."""
         try:
             await self._bulb.set_off()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MyStromConnectionError:
             _LOGGER.warning("The myStrom bulb not online")
 

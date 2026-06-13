@@ -1,7 +1,5 @@
 """Support ezviz camera devices."""
 
-from __future__ import annotations
-
 import logging
 
 from pyezvizapi.exceptions import HTTPError, InvalidHost, PyEzvizError

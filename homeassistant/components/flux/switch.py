@@ -3,8 +3,6 @@
 The idea was taken from https://github.com/KpaBap/hue-flux/
 """
 
-from __future__ import annotations
-
 import datetime
 import logging
 from typing import Any

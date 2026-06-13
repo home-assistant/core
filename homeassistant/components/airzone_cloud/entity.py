@@ -1,7 +1,5 @@
 """Entity classes for the Airzone Cloud integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import logging
 from typing import Any

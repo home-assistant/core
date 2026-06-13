@@ -1,7 +1,5 @@
 """Support for SwitchBee switch."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from switchbee.api.central_unit import SwitchBeeDeviceOfflineError, SwitchBeeError
@@ -79,8 +77,9 @@ class SwitchBeeSwitchEntity[
 
         self._check_if_became_online()
 
-        # timed power switch state is an integer representing the number of minutes left until it goes off
-        # regulare switches state is ON/OFF (1/0 respectively)
+        # timed power switch state is an integer representing
+        # the number of minutes left until it goes off;
+        # regular switches state is ON/OFF (1/0 respectively)
         self._attr_is_on = coordinator_device.state != ApiStateCommand.OFF
 
     async def async_turn_on(self, **kwargs: Any) -> None:

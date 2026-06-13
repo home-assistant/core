@@ -1,7 +1,5 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -37,7 +35,11 @@ PARALLEL_UPDATES = 0
 
 
 def _last_restart(runtime: int) -> datetime:
-    """Calculate uptime. As fetching the data might also take some time, let's floor to the nearest 5 seconds."""
+    """Calculate uptime.
+
+    As fetching the data might also take some time,
+    let's floor to the nearest 5 seconds.
+    """
     now = utcnow()
     return (
         now
@@ -117,7 +119,7 @@ SENSOR_TYPES: dict[str, DevoloSensorEntityDescription[Any, Any]] = {
         key=LAST_RESTART,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
-        device_class=SensorDeviceClass.TIMESTAMP,
+        device_class=SensorDeviceClass.UPTIME,
         value_func=_last_restart,
     ),
 }

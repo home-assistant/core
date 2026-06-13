@@ -5,7 +5,7 @@ from collections.abc import Generator
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from actron_neo_api.models.auth import ActronAirDeviceCode
+from actron_neo_api.models.auth import ActronAirDeviceCode, ActronAirUserInfo
 from actron_neo_api.models.settings import ActronAirUserAirconSettings
 from actron_neo_api.models.status import ActronAirStatus
 from actron_neo_api.models.system import ActronAirACSystem, ActronAirSystemInfo
@@ -78,7 +78,7 @@ def mock_actron_api() -> Generator[AsyncMock]:
 
         # Mock user info
         api.get_user_info = AsyncMock(
-            return_value={"id": "test_user_id", "email": "test@example.com"}
+            return_value=ActronAirUserInfo(id="test_user_id", email="test@example.com")
         )
 
         # Mock refresh token property
@@ -122,7 +122,7 @@ def mock_zone() -> MagicMock:
     zone.zone_name = "Test Zone"
     zone.title = "Living Room"
     zone.live_temp_c = 22.0
-    zone.temperature_setpoint_cool_c = 24.0
+    zone.current_setpoint = 24.0
     zone.is_active = True
     zone.hvac_mode = "COOL"
     zone.humidity = 50.0

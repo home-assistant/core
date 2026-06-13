@@ -1,4 +1,5 @@
 """Config flow for the Bayesian integration."""
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 from collections.abc import Mapping
 from enum import StrEnum
@@ -33,11 +34,13 @@ from homeassistant.components.update import DOMAIN as UPDATE_DOMAIN
 from homeassistant.components.weather import DOMAIN as WEATHER_DOMAIN
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import (
+    SOURCE_USER,
     ConfigEntry,
     ConfigFlowResult,
     ConfigSubentry,
-    ConfigSubentryData,
     ConfigSubentryFlow,
+    FlowType,
+    SubentryFlowContext,
     SubentryFlowResult,
 )
 from homeassistant.const import (
@@ -62,7 +65,6 @@ from homeassistant.helpers.schema_config_entry_flow import (
 
 from .binary_sensor import above_greater_than_below, no_overlapping
 from .const import (
-    CONF_OBSERVATIONS,
     CONF_P_GIVEN_F,
     CONF_P_GIVEN_T,
     CONF_PRIOR,
@@ -232,7 +234,8 @@ STATE_SUBSCHEMA = vol.Schema(
         vol.Required(CONF_TO_STATE): selector.TextSelector(
             selector.TextSelectorConfig(
                 multiline=False, type=selector.TextSelectorType.TEXT, multiple=False
-            )  # ideally this would be a state selector context-linked to the above entity.
+            )  # ideally this would be a state selector
+            # context-linked to the above entity.
         ),
     },
 ).extend(OBSERVATION_BOILERPLATE.schema)
@@ -268,7 +271,7 @@ TEMPLATE_SUBSCHEMA = vol.Schema(
 def _convert_percentages_to_fractions(
     data: dict[str, str | float | int],
 ) -> dict[str, str | float]:
-    """Convert percentage probability values in a dictionary to fractions for storing in the config entry."""
+    """Convert percentage probability values to fractions for storage."""
     probabilities = [
         CONF_P_GIVEN_T,
         CONF_P_GIVEN_F,
@@ -288,7 +291,7 @@ def _convert_percentages_to_fractions(
 def _convert_fractions_to_percentages(
     data: dict[str, str | float],
 ) -> dict[str, str | float]:
-    """Convert fraction probability values in a dictionary to percentages for loading into the UI."""
+    """Convert fraction probability values to percentages for the UI."""
     probabilities = [
         CONF_P_GIVEN_T,
         CONF_P_GIVEN_F,
@@ -336,7 +339,10 @@ def _get_observation_values_for_editing(
 async def _validate_user(
     handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
 ) -> dict[str, Any]:
-    """Modify user input to convert to fractions for storage. Validation is done entirely by the schemas."""
+    """Convert user input to fractions for storage.
+
+    Validation is done entirely by the schemas.
+    """
     user_input = _convert_percentages_to_fractions(user_input)
     return {**user_input}
 
@@ -346,7 +352,10 @@ def _validate_observation_subentry(
     user_input: dict[str, Any],
     other_subentries: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
-    """Validate an observation input and manually update options with observations as they are nested items."""
+    """Validate an observation input and update options.
+
+    Observations are nested items and need manual updates.
+    """
 
     if user_input[CONF_P_GIVEN_T] == user_input[CONF_P_GIVEN_F]:
         raise SchemaFlowError("equal_probabilities")
@@ -371,26 +380,6 @@ def _validate_observation_subentry(
 
     _LOGGER.debug("Processed observation with settings: %s", user_input)
     return user_input
-
-
-async def _validate_subentry_from_config_entry(
-    handler: SchemaCommonFlowHandler, user_input: dict[str, Any]
-) -> dict[str, Any]:
-    # Standard behavior is to merge the result with the options.
-    # In this case, we want to add a subentry so we update the options directly.
-    observations: list[dict[str, Any]] = handler.options.setdefault(
-        CONF_OBSERVATIONS, []
-    )
-
-    if handler.parent_handler.cur_step is not None:
-        user_input[CONF_PLATFORM] = handler.parent_handler.cur_step["step_id"]
-        user_input = _validate_observation_subentry(
-            user_input[CONF_PLATFORM],
-            user_input,
-            other_subentries=handler.options[CONF_OBSERVATIONS],
-        )
-    observations.append(user_input)
-    return {}
 
 
 async def _get_description_placeholders(
@@ -420,48 +409,12 @@ async def _get_description_placeholders(
     }
 
 
-async def _get_observation_menu_options(handler: SchemaCommonFlowHandler) -> list[str]:
-    """Return the menu options for the observation selector."""
-    options = [typ.value for typ in ObservationTypes]
-    if handler.options.get(CONF_OBSERVATIONS):
-        options.append("finish")
-    return options
-
-
 CONFIG_FLOW: dict[str, SchemaFlowMenuStep | SchemaFlowFormStep] = {
     str(USER): SchemaFlowFormStep(
         CONFIG_SCHEMA,
         validate_user_input=_validate_user,
-        next_step=str(OBSERVATION_SELECTOR),
         description_placeholders=_get_description_placeholders,
-    ),
-    str(OBSERVATION_SELECTOR): SchemaFlowMenuStep(
-        _get_observation_menu_options,
-    ),
-    str(ObservationTypes.STATE): SchemaFlowFormStep(
-        STATE_SUBSCHEMA,
-        next_step=str(OBSERVATION_SELECTOR),
-        validate_user_input=_validate_subentry_from_config_entry,
-        # Prevent the name of the bayesian sensor from being used as the suggested
-        # name of the observations
-        suggested_values=None,
-        description_placeholders=_get_description_placeholders,
-    ),
-    str(ObservationTypes.NUMERIC_STATE): SchemaFlowFormStep(
-        NUMERIC_STATE_SUBSCHEMA,
-        next_step=str(OBSERVATION_SELECTOR),
-        validate_user_input=_validate_subentry_from_config_entry,
-        suggested_values=None,
-        description_placeholders=_get_description_placeholders,
-    ),
-    str(ObservationTypes.TEMPLATE): SchemaFlowFormStep(
-        TEMPLATE_SUBSCHEMA,
-        next_step=str(OBSERVATION_SELECTOR),
-        validate_user_input=_validate_subentry_from_config_entry,
-        suggested_values=None,
-        description_placeholders=_get_description_placeholders,
-    ),
-    "finish": SchemaFlowFormStep(),
+    )
 }
 
 
@@ -497,27 +450,17 @@ class BayesianConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
         name: str = options[CONF_NAME]
         return name
 
-    @callback
-    def async_create_entry(
-        self,
-        data: Mapping[str, Any],
-        **kwargs: Any,
-    ) -> ConfigFlowResult:
-        """Finish config flow and create a config entry."""
-        data = dict(data)
-        observations = data.pop(CONF_OBSERVATIONS)
-        subentries: list[ConfigSubentryData] = [
-            ConfigSubentryData(
-                data=observation,
-                title=observation[CONF_NAME],
-                subentry_type="observation",
-                unique_id=None,
-            )
-            for observation in observations
-        ]
-
-        self.async_config_flow_finished(data)
-        return super().async_create_entry(data=data, subentries=subentries, **kwargs)
+    async def async_on_create_entry(self, result: ConfigFlowResult) -> ConfigFlowResult:
+        """Start subentry flow when config entry has been created."""
+        subentry_result = await self.hass.config_entries.subentries.async_init(
+            (result["result"].entry_id, "observation"),
+            context=SubentryFlowContext(source=SOURCE_USER),
+        )
+        result["next_flow"] = (
+            FlowType.CONFIG_SUBENTRIES_FLOW,
+            subentry_result["flow_id"],
+        )
+        return result
 
 
 class ObservationSubentryFlowHandler(ConfigSubentryFlow):
@@ -608,7 +551,10 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_state(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a state observation. Function name must be in the format async_step_{observation_type}."""
+        """User flow to add a state observation.
+
+        Function name must be async_step_{observation_type}.
+        """
 
         return await self.step_common(
             user_input=user_input, obs_type=ObservationTypes.STATE
@@ -617,7 +563,10 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_numeric_state(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a new numeric state observation, (a numeric range). Function name must be in the format async_step_{observation_type}."""
+        """User flow to add a new numeric state observation.
+
+        Function name must be async_step_{observation_type}.
+        """
 
         return await self.step_common(
             user_input=user_input, obs_type=ObservationTypes.NUMERIC_STATE
@@ -626,7 +575,10 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_template(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """User flow to add a new template observation. Function name must be in the format async_step_{observation_type}."""
+        """User flow to add a new template observation.
+
+        Function name must be async_step_{observation_type}.
+        """
 
         return await self.step_common(
             user_input=user_input, obs_type=ObservationTypes.TEMPLATE
@@ -635,7 +587,10 @@ class ObservationSubentryFlowHandler(ConfigSubentryFlow):
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> SubentryFlowResult:
-        """Enable the reconfigure button for observations. Function name must be async_step_reconfigure to be recognised by hass."""
+        """Enable the reconfigure button for observations.
+
+        Function name must be async_step_reconfigure.
+        """
 
         sub_entry = self._get_reconfigure_subentry()
 

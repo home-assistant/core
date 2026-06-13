@@ -8,6 +8,7 @@ from airgradient import (
     AirGradientParseError,
     ConfigurationControl,
 )
+import pytest
 
 from homeassistant.components.airgradient.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, SOURCE_ZEROCONF
@@ -49,10 +50,9 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
 )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow(
-    hass: HomeAssistant,
-    mock_new_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_new_airgradient_client: AsyncMock
 ) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
@@ -79,10 +79,9 @@ async def test_full_flow(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_with_registered_device(
-    hass: HomeAssistant,
-    mock_cloud_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_cloud_airgradient_client: AsyncMock
 ) -> None:
     """Test we don't revert the cloud setting."""
     result = await hass.config_entries.flow.async_init(
@@ -101,10 +100,9 @@ async def test_flow_with_registered_device(
     mock_cloud_airgradient_client.set_configuration_control.assert_not_called()
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_errors(
-    hass: HomeAssistant,
-    mock_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_airgradient_client: AsyncMock
 ) -> None:
     """Test flow errors."""
     mock_airgradient_client.get_current_measures.side_effect = (
@@ -138,10 +136,9 @@ async def test_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_flow_old_firmware_version(
-    hass: HomeAssistant,
-    mock_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_airgradient_client: AsyncMock
 ) -> None:
     """Test flow with old firmware version."""
     mock_airgradient_client.get_current_measures.side_effect = AirGradientParseError
@@ -164,10 +161,10 @@ async def test_flow_old_firmware_version(
     assert result["reason"] == "invalid_version"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_duplicate(
     hass: HomeAssistant,
     mock_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test duplicate flow."""
@@ -191,10 +188,9 @@ async def test_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow(
-    hass: HomeAssistant,
-    mock_new_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_new_airgradient_client: AsyncMock
 ) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -222,10 +218,9 @@ async def test_zeroconf_flow(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_flow_cloud_device(
-    hass: HomeAssistant,
-    mock_cloud_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_cloud_airgradient_client: AsyncMock
 ) -> None:
     """Test zeroconf flow doesn't revert the cloud setting."""
     result = await hass.config_entries.flow.async_init(
@@ -269,10 +264,9 @@ async def test_zeroconf_flow_abort_duplicate(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_works_discovery(
-    hass: HomeAssistant,
-    mock_new_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_new_airgradient_client: AsyncMock
 ) -> None:
     """Test user flow can continue after discovery happened."""
     await hass.config_entries.flow.async_init(
@@ -298,10 +292,10 @@ async def test_user_flow_works_discovery(
     assert not hass.config_entries.flow.async_progress(DOMAIN)
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
     hass: HomeAssistant,
     mock_new_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -324,10 +318,10 @@ async def test_reconfigure_flow(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_new_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow."""
@@ -364,10 +358,10 @@ async def test_reconfigure_flow_errors(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_unique_id_mismatch(
     hass: HomeAssistant,
     mock_new_airgradient_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test reconfigure flow aborts with unique id mismatch."""

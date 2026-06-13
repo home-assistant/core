@@ -1,7 +1,5 @@
 """Manage the history_stats data."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import datetime
 import logging
@@ -94,10 +92,12 @@ class HistoryStats:
         utc_now = dt_util.utcnow()
         now_timestamp = floored_timestamp(utc_now)
 
-        # If we end up querying data from the recorder when we get triggered by a new state
-        # change event, it is possible this function could be reentered a second time before
-        # the first recorder query returns. In that case a second recorder query will be done
-        # and we need to hold the new event so that we can append it after the second query.
+        # If we end up querying data from the recorder when we
+        # get triggered by a new state change event, it is possible
+        # this function could be reentered a second time before the
+        # first recorder query returns. In that case a second
+        # recorder query will be done and we need to hold the new
+        # event so that we can append it after the second query.
         # Otherwise the event will be dropped.
         if event:
             self._pending_events.append(event)
@@ -219,7 +219,7 @@ class HistoryStats:
     def _async_compute_seconds_and_changes(
         self, now_timestamp: float, start_timestamp: float, end_timestamp: float
     ) -> tuple[float, int]:
-        """Compute the seconds matched and changes from the history list and first state."""
+        """Compute seconds matched and changes from history list."""
         # state_changes_during_period is called with include_start_time_state=True
         # which is the default and always provides the state at the start
         # of the period
@@ -285,7 +285,8 @@ class HistoryStats:
     def _prune_history_cache(self, start_timestamp: float) -> None:
         """Remove unnecessary old data from the history state cache from previous runs.
 
-        Update the timestamp of the last record from before the start to the current start time.
+        Update the timestamp of the last record from before the
+        start to the current start time.
         """
         trim_count = 0
         for i, history_state in enumerate(self._history_current_period):

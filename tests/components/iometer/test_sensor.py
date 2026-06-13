@@ -1,7 +1,5 @@
 """Test the sensors provided by the Powerfox integration."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

@@ -3,8 +3,6 @@
 Support for QR code for guest WLANs.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -27,6 +25,8 @@ from .entity import (
     async_wlan_device_info_fn,
 )
 from .hub import UnifiHub
+
+PARALLEL_UPDATES = 0
 
 
 @callback
@@ -54,7 +54,6 @@ ENTITY_DESCRIPTIONS: tuple[UnifiImageEntityDescription, ...] = (
         api_handler_fn=lambda api: api.wlans,
         available_fn=async_wlan_available_fn,
         device_info_fn=async_wlan_device_info_fn,
-        name_fn=lambda wlan: "QR Code",
         object_fn=lambda api, obj_id: api.wlans[obj_id],
         unique_id_fn=lambda hub, obj_id: f"qr_code-{obj_id}",
         image_fn=async_wlan_qr_code_image_fn,

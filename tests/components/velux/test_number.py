@@ -1,7 +1,5 @@
 """Test Velux number entities."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 import pytest
@@ -117,7 +115,7 @@ async def test_set_invalid_value_fails(
     hass: HomeAssistant,
     mock_exterior_heating: AsyncMock,
 ) -> None:
-    """Values outside the valid range raise ServiceValidationError and do not call set_intensity."""
+    """Values outside valid range raise ServiceValidationError."""
     entity_id = get_number_entity_id(mock_exterior_heating)
 
     with pytest.raises(ServiceValidationError):

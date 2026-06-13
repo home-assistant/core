@@ -1,7 +1,5 @@
 """Definition of Picnic shopping cart."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 
@@ -69,7 +67,8 @@ class PicnicCart(TodoListEntity, CoordinatorEntity[PicnicUpdateCoordinator]):
             TodoItem(
                 summary=f"{article['name']} ({article['unit_quantity']})",
                 uid=f"{item['id']}-{article['id']}",
-                status=TodoItemStatus.NEEDS_ACTION,  # We set 'NEEDS_ACTION' so they count as state
+                # We set 'NEEDS_ACTION' so they count as state
+                status=TodoItemStatus.NEEDS_ACTION,
             )
             for item in self.coordinator.data["cart_data"]["items"]
             for article in item["items"]

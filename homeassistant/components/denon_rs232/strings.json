@@ -1,0 +1,84 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device": "[%key:common::config_flow::data::port%]",
+          "model": "Receiver model"
+        },
+        "data_description": {
+          "device": "Serial port path to connect to",
+          "model": "Determines available features"
+        }
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "receiver": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "aux1": "Aux 1",
+              "aux2": "Aux 2",
+              "bd": "BD Player",
+              "bt": "Bluetooth",
+              "cd": "CD",
+              "cdr_tape1": "CDR/Tape 1",
+              "dab": "DAB",
+              "dbs_sat": "DBS/Sat",
+              "dock": "Dock",
+              "dvd": "DVD",
+              "dvr": "DVR",
+              "eight_k": "8K",
+              "favorites": "Favorites",
+              "flickr": "Flickr",
+              "game": "Game",
+              "hdp": "HDP",
+              "hdradio": "HD Radio",
+              "ipod": "iPod",
+              "iradio": "Internet Radio",
+              "lastfm": "Last.fm",
+              "md_tape2": "MD/Tape 2",
+              "mplay": "Media Player",
+              "net": "HEOS Music",
+              "net_usb": "Network/USB",
+              "pandora": "Pandora",
+              "phono": "Phono",
+              "sat": "Sat",
+              "sat_cbl": "Satellite/Cable",
+              "server": "Server",
+              "sirius": "Sirius",
+              "siriusxm": "SiriusXM",
+              "spotify": "Spotify",
+              "tuner": "Tuner",
+              "tv": "TV Audio",
+              "tv_cbl": "TV/Cable",
+              "usb_ipod": "USB/iPod",
+              "v_aux": "V. Aux",
+              "vcr_1": "VCR 1",
+              "vcr_2": "VCR 2",
+              "vcr_3": "VCR 3",
+              "vdp": "VDP",
+              "xm": "XM"
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "model": {
+      "options": {
+        "other": "Other"
+      }
+    }
+  }
+}

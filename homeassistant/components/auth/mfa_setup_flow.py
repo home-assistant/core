@@ -1,7 +1,5 @@
 """Helpers to setup multi-factor auth module."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -14,24 +12,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import FlowContext
 from homeassistant.helpers import config_validation as cv
 from homeassistant.util.hass_dict import HassKey
-
-WS_TYPE_SETUP_MFA = "auth/setup_mfa"
-SCHEMA_WS_SETUP_MFA = vol.All(
-    websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-        {
-            vol.Required("type"): WS_TYPE_SETUP_MFA,
-            vol.Exclusive("mfa_module_id", "module_or_flow_id"): str,
-            vol.Exclusive("flow_id", "module_or_flow_id"): str,
-            vol.Optional("user_input"): object,
-        }
-    ),
-    cv.has_at_least_one_key("mfa_module_id", "flow_id"),
-)
-
-WS_TYPE_DEPOSE_MFA = "auth/depose_mfa"
-SCHEMA_WS_DEPOSE_MFA = websocket_api.BASE_COMMAND_MESSAGE_SCHEMA.extend(
-    {vol.Required("type"): WS_TYPE_DEPOSE_MFA, vol.Required("mfa_module_id"): str}
-)
 
 DATA_SETUP_FLOW_MGR: HassKey[MfaFlowManager] = HassKey("auth_mfa_setup_flow_manager")
 
@@ -73,16 +53,24 @@ def async_setup(hass: HomeAssistant) -> None:
     """Init mfa setup flow manager."""
     hass.data[DATA_SETUP_FLOW_MGR] = MfaFlowManager(hass)
 
-    websocket_api.async_register_command(
-        hass, WS_TYPE_SETUP_MFA, websocket_setup_mfa, SCHEMA_WS_SETUP_MFA
-    )
-
-    websocket_api.async_register_command(
-        hass, WS_TYPE_DEPOSE_MFA, websocket_depose_mfa, SCHEMA_WS_DEPOSE_MFA
-    )
+    websocket_api.async_register_command(hass, websocket_setup_mfa)
+    websocket_api.async_register_command(hass, websocket_depose_mfa)
 
 
 @callback
+@websocket_api.websocket_command(
+    vol.All(
+        vol.Schema(
+            {
+                vol.Required("type"): "auth/setup_mfa",
+                vol.Exclusive("mfa_module_id", "module_or_flow_id"): str,
+                vol.Exclusive("flow_id", "module_or_flow_id"): str,
+                vol.Optional("user_input"): object,
+            }
+        ),
+        cv.has_at_least_one_key("mfa_module_id", "flow_id"),
+    )
+)
 @websocket_api.ws_require_user(allow_system_user=False)
 def websocket_setup_mfa(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
@@ -121,6 +109,9 @@ def websocket_setup_mfa(
 
 
 @callback
+@websocket_api.websocket_command(
+    {vol.Required("type"): "auth/depose_mfa", vol.Required("mfa_module_id"): str}
+)
 @websocket_api.ws_require_user(allow_system_user=False)
 def websocket_depose_mfa(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
@@ -151,9 +142,9 @@ def websocket_depose_mfa(
 
 def _prepare_result_json(result: data_entry_flow.FlowResult) -> dict[str, Any]:
     """Convert result to JSON serializable dict."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
         return dict(result)
-    if result["type"] != data_entry_flow.FlowResultType.FORM:
+    if result["type"] is not data_entry_flow.FlowResultType.FORM:
         return result  # type: ignore[return-value]
 
     data = dict(result)

@@ -1,7 +1,5 @@
 """API for iotty bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohttp import ClientSession

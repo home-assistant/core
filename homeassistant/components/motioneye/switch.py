@@ -1,7 +1,5 @@
 """Switch platform for motionEye."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -29,7 +27,6 @@ MOTIONEYE_SWITCHES = [
     SwitchEntityDescription(
         key=KEY_MOTION_DETECTION,
         translation_key="motion_detection",
-        entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
@@ -47,13 +44,11 @@ MOTIONEYE_SWITCHES = [
     SwitchEntityDescription(
         key=KEY_STILL_IMAGES,
         translation_key="still_images",
-        entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(
         key=KEY_MOVIES,
         translation_key="movies",
-        entity_registry_enabled_default=True,
         entity_category=EntityCategory.CONFIG,
     ),
     SwitchEntityDescription(

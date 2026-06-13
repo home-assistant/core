@@ -1,7 +1,5 @@
 """Dormakaba dKey integration lock platform."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from py_dormakaba_dkey.commands import UnlockStatus

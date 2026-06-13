@@ -108,7 +108,9 @@ async def test_image_entity(
     access_token = state.attributes["access_token"]
     assert state.attributes == {
         "access_token": access_token,
-        "entity_picture": f"/api/image_proxy/image.mock_title_guestwifi?token={access_token}",
+        "entity_picture": (
+            f"/api/image_proxy/image.mock_title_guestwifi?token={access_token}"
+        ),
         "friendly_name": "Mock Title GuestWifi",
     }
 

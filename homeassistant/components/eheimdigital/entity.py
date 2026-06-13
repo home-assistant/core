@@ -30,7 +30,8 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
         """Initialize a EHEIM Digital entity."""
         super().__init__(coordinator)
         if TYPE_CHECKING:
-            # At this point at least one device is found and so there is always a main device set
+            # At this point at least one device is found
+            # and so there is always a main device set
             assert isinstance(coordinator.hub.main, EheimDigitalDevice)
         self._attr_device_info = DeviceInfo(
             configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",

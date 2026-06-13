@@ -34,7 +34,7 @@ _PAYLOAD_LIGHT_SET_STATE_OFF = '{"id": "UL15", "type": "action", "action": "off"
 _TOPIC_LIGHT_STATE = "cloudapp/QBUSMQTTGW/UL1/UL15/state"
 _TOPIC_LIGHT_SET_STATE = "cloudapp/QBUSMQTTGW/UL1/UL15/setState"
 
-_LIGHT_ENTITY_ID = "light.media_room"
+_LIGHT_ENTITY_ID = "light.media_room_media_room"
 
 
 async def test_light(
@@ -54,7 +54,11 @@ async def test_light(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_LIGHT_SET_STATE, _PAYLOAD_LIGHT_SET_STATE_ON, 0, False
+        _TOPIC_LIGHT_SET_STATE,
+        _PAYLOAD_LIGHT_SET_STATE_ON,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response
@@ -76,7 +80,11 @@ async def test_light(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_LIGHT_SET_STATE, _PAYLOAD_LIGHT_SET_STATE_BRIGHTNESS, 0, False
+        _TOPIC_LIGHT_SET_STATE,
+        _PAYLOAD_LIGHT_SET_STATE_BRIGHTNESS,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response
@@ -97,7 +105,11 @@ async def test_light(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        _TOPIC_LIGHT_SET_STATE, _PAYLOAD_LIGHT_SET_STATE_OFF, 0, False
+        _TOPIC_LIGHT_SET_STATE,
+        _PAYLOAD_LIGHT_SET_STATE_OFF,
+        0,
+        False,
+        message_expiry_interval=None,
     )
 
     # Simulate response

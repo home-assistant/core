@@ -95,7 +95,8 @@ def _get_ha_mode(vs_mode: str) -> str | None:
 class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
     """Representation of a VeSync humidifier."""
 
-    # The base VeSyncBaseEntity has _attr_has_entity_name and this is to follow the device name
+    # The base VeSyncBaseEntity has _attr_has_entity_name
+    # and this is to follow the device name
     _attr_name = None
 
     _attr_supported_features = HumidifierEntityFeature.MODES
@@ -181,7 +182,8 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
             raise HomeAssistantError("Failed to set mode.")
 
         if mode == MODE_SLEEP:
-            # We successfully changed the mode. Consider it a success even if display operation fails.
+            # We successfully changed the mode. Consider it
+            # a success even if display operation fails.
             await self.device.toggle_display(False)
 
         self.async_write_ha_state()

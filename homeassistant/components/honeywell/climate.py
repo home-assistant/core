@@ -1,7 +1,5 @@
 """Support for Honeywell (US) Total Connect Comfort climate systems."""
 
-from __future__ import annotations
-
 import datetime
 from typing import Any
 
@@ -151,8 +149,9 @@ def remove_stale_devices(
                 break
 
         if device_id is None or device_id not in all_device_ids:
-            # If device_id is None an invalid device entry was found for this config entry.
-            # If the device_id is not in existing device ids it's a stale device entry.
+            # If device_id is None an invalid device entry was
+            # found for this config entry. If the device_id is not
+            # in existing device ids it's a stale device entry.
             # Remove config entry from this device entry in either case.
             device_registry.async_update_device(
                 device_entry.id, remove_config_entry_id=config_entry.entry_id
@@ -473,7 +472,9 @@ class HoneywellUSThermostat(ClimateEntity):
 
         except SomeComfortError as err:
             _LOGGER.error(
-                "Temperature out of range. Mode: %s, Heat Temperature:  %.1f, Cool Temperature: %.1f",
+                "Temperature out of range. Mode: %s,"
+                " Heat Temperature:  %.1f,"
+                " Cool Temperature: %.1f",
                 mode,
                 self._heat_away_temp,
                 self._cool_away_temp,

@@ -43,12 +43,12 @@ _LOGGER = logging.getLogger(__name__)
 
 STATE_CODE_TO_STATE = {
     RoborockStateCode.starting: VacuumActivity.IDLE,  # "Starting"
-    RoborockStateCode.attaching_the_mop: VacuumActivity.DOCKED,  # "Attaching the mop"
-    RoborockStateCode.charger_disconnected: VacuumActivity.IDLE,  # "Charger disconnected"
+    RoborockStateCode.attaching_the_mop: VacuumActivity.DOCKED,
+    RoborockStateCode.charger_disconnected: VacuumActivity.IDLE,
     RoborockStateCode.idle: VacuumActivity.IDLE,  # "Idle"
-    RoborockStateCode.remote_control_active: VacuumActivity.CLEANING,  # "Remote control active"
+    RoborockStateCode.remote_control_active: VacuumActivity.CLEANING,
     RoborockStateCode.cleaning: VacuumActivity.CLEANING,  # "Cleaning"
-    RoborockStateCode.detaching_the_mop: VacuumActivity.DOCKED,  # "Detaching the mop"
+    RoborockStateCode.detaching_the_mop: VacuumActivity.DOCKED,
     RoborockStateCode.returning_home: VacuumActivity.RETURNING,  # "Returning home"
     RoborockStateCode.manual_mode: VacuumActivity.CLEANING,  # "Manual mode"
     RoborockStateCode.charging: VacuumActivity.DOCKED,  # "Charging"
@@ -62,9 +62,9 @@ STATE_CODE_TO_STATE = {
     RoborockStateCode.going_to_target: VacuumActivity.CLEANING,  # "Going to target"
     RoborockStateCode.zoned_cleaning: VacuumActivity.CLEANING,  # "Zoned cleaning"
     RoborockStateCode.segment_cleaning: VacuumActivity.CLEANING,  # "Segment cleaning"
-    RoborockStateCode.emptying_the_bin: VacuumActivity.DOCKED,  # "Emptying the bin" on s7+
-    RoborockStateCode.washing_the_mop: VacuumActivity.DOCKED,  # "Washing the mop" on s7maxV
-    RoborockStateCode.going_to_wash_the_mop: VacuumActivity.RETURNING,  # "Going to wash the mop" on s7maxV
+    RoborockStateCode.emptying_the_bin: VacuumActivity.DOCKED,
+    RoborockStateCode.washing_the_mop: VacuumActivity.DOCKED,
+    RoborockStateCode.going_to_wash_the_mop: VacuumActivity.RETURNING,
     RoborockStateCode.charging_complete: VacuumActivity.DOCKED,  # "Charging complete"
     RoborockStateCode.device_offline: VacuumActivity.ERROR,  # "Device offline"
 }
@@ -240,14 +240,16 @@ class RoborockVacuum(RoborockCoordinatedEntityV1, StateVacuumEntity):
                 translation_domain=DOMAIN,
                 translation_key="update_options_failed",
             )
-        await self.send(
-            RoborockCommand.SET_CUSTOM_MODE,
-            [
-                {v: k for k, v in self._status_trait.fan_speed_mapping.items()}[
-                    fan_speed
-                ]
-            ],
-        )
+        code_mapping = {v: k for k, v in self._status_trait.fan_speed_mapping.items()}
+        if (fan_speed_code := code_mapping.get(fan_speed)) is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                },
+            )
+        await self.send(RoborockCommand.SET_CUSTOM_MODE, [fan_speed_code])
 
     async def async_set_vacuum_goto_position(self, x: int, y: int) -> None:
         """Send vacuum to a specific target point."""
@@ -458,9 +460,17 @@ class RoborockQ7Vacuum(RoborockCoordinatedEntityB01Q7, StateVacuumEntity):
     async def async_set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set vacuum fan speed."""
         try:
-            await self.coordinator.api.set_fan_speed(
-                SCWindMapping.from_value(fan_speed)
-            )
+            fan_speed_code = SCWindMapping.from_value(fan_speed)
+        except ValueError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_fan_speed",
+                translation_placeholders={
+                    "fan_speed": fan_speed,
+                },
+            ) from err
+        try:
+            await self.coordinator.api.set_fan_speed(fan_speed_code)
         except RoborockException as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

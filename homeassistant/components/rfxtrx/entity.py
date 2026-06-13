@@ -1,7 +1,5 @@
 """Support for RFXtrx devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from typing import cast
 
@@ -52,7 +50,8 @@ class RfxtrxEntity(RestoreEntity):
         self._device = device
         self._event = event
         self._device_id = device_id
-        # If id_string is 213c7f2:1, the group_id is 213c7f2, and the device will respond to
+        # If id_string is 213c7f2:1, the group_id is 213c7f2,
+        # and the device will respond to
         # group events regardless of their group indices.
         (self._group_id, _, _) = device_id.id_string.partition(":")
 
@@ -119,5 +118,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     async def _async_send[*_Ts](
         self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
     ) -> None:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]
         await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

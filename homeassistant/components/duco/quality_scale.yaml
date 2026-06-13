@@ -45,19 +45,9 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
-  discovery-update-info:
-    status: todo
-    comment: >-
-      DHCP host updating to be implemented in a follow-up PR.
-      The device hostname follows the pattern duco_<last 6 chars of MAC>
-      (e.g. duco_061293), which can be used for DHCP hostname matching.
-  discovery:
-    status: todo
-    comment: >-
-      Device can be discovered via DHCP. The hostname follows the pattern
-      duco_<last 6 chars of MAC> (e.g. duco_061293). To be implemented
-      in a follow-up PR together with discovery-update-info.
+  diagnostics: done
+  discovery-update-info: done
+  discovery: done
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
@@ -65,25 +55,23 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices:
-    status: todo
-    comment: >-
-      Users can pair new modules (CO2 sensors, humidity sensors, zone valves)
-      to their Duco box. Dynamic device support to be added in a follow-up PR.
-  entity-category: todo
-  entity-device-class: todo
-  entity-disabled-by-default: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
-  stale-devices:
-    status: todo
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
     comment: >-
-      To be implemented together with dynamic device support in a follow-up PR.
-
+      The integration has no actionable repair scenarios. Connection failures are
+      handled by the coordinator (unavailable entities) and resolve automatically.
+      There are no credentials to expire and no versioned API to become
+      incompatible with.
+  stale-devices: done
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

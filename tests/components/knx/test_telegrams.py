@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.knx.const import (
     CONF_KNX_TELEGRAM_LOG_SIZE,
+    DOMAIN,
     KNX_MODULE_KEY,
 )
 from homeassistant.components.knx.telegrams import TelegramDict
@@ -18,7 +19,9 @@ from .conftest import KNXTestKit
 MOCK_TIMESTAMP = "2023-07-02T14:51:24.045162-07:00"
 MOCK_TELEGRAMS = [
     {
-        "data_secure": None,  # None since CEMIHandler is mocked away and doesn't set it to False
+        # None since CEMIHandler is mocked away and doesn't
+        # set it to False
+        "data_secure": None,
         "destination": "1/3/4",
         "destination_name": "",
         "direction": "Incoming",
@@ -53,7 +56,7 @@ MOCK_TELEGRAMS = [
 
 
 def assert_telegram_history(telegrams: list[TelegramDict]) -> bool:
-    """Assert that the mock telegrams are equal to the given telegrams. Omitting timestamp."""
+    """Assert mock telegrams equal the given telegrams, omitting timestamp."""
     assert len(telegrams) == len(MOCK_TELEGRAMS)
     for index, value in enumerate(telegrams):
         test_telegram = copy(value)  # don't modify the original
@@ -76,7 +79,7 @@ async def test_store_telegam_history(
 
     await knx.receive_write("1/3/4", True)
     await hass.services.async_call(
-        "knx", "send", {"address": "2/2/2", "payload": [1, 2, 3, 4]}, blocking=True
+        DOMAIN, "send", {"address": "2/2/2", "payload": [1, 2, 3, 4]}, blocking=True
     )
     await knx.assert_write("2/2/2", (1, 2, 3, 4))
 

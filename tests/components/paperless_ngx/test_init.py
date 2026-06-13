@@ -79,5 +79,5 @@ async def test_setup_config_error_handling(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert mock_config_entry.state == expected_state
+    assert mock_config_entry.state is expected_state
     assert mock_config_entry.error_reason_translation_key == expected_error_key

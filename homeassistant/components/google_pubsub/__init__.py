@@ -1,7 +1,5 @@
 """Support for Google Cloud Pub/Sub."""
 
-from __future__ import annotations
-
 import datetime
 import json
 import logging
