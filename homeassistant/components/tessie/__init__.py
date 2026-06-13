@@ -156,7 +156,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                     live_status = (await api.live_status())["response"]
                 except (InvalidToken, Forbidden, SubscriptionRequired) as e:
                     raise ConfigEntryAuthFailed from e
-                except (TeslaFleetError, ClientError) as e:
+                except TeslaFleetError as e:
+                    raise ConfigEntryNotReady(getattr(e, "message", str(e))) from e
+                except ClientError as e:
                     raise ConfigEntryNotReady from e
 
                 powerwall = (

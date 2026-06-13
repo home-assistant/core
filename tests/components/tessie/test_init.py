@@ -79,28 +79,75 @@ async def test_scopes_error(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
+    ("patch_target", "exception"),
+    [
+        pytest.param(
+            None,
+            ClientConnectionError(),
+            id="list_vehicles-connection_error",
+        ),
+        pytest.param(
+            None,
+            ClientError(),
+            id="list_vehicles-client_error",
+        ),
+        pytest.param(
+            "homeassistant.components.tessie.Tessie.scopes",
+            ClientConnectionError(),
+            id="scopes-connection_error",
+        ),
+        pytest.param(
+            "homeassistant.components.tessie.Tessie.scopes",
+            ClientError(),
+            id="scopes-client_error",
+        ),
+        pytest.param(
+            "homeassistant.components.tessie.Tessie.products",
+            ClientConnectionError(),
+            id="products-connection_error",
+        ),
+        pytest.param(
+            "homeassistant.components.tessie.Tessie.products",
+            ClientError(),
+            id="products-client_error",
+        ),
+    ],
+)
+async def test_aiohttp_client_error_retries(
+    hass: HomeAssistant,
+    mock_get_state_of_all_vehicles: AsyncMock,
+    patch_target: str | None,
+    exception: ClientError,
+) -> None:
+    """Test that aiohttp.ClientError on any setup call triggers SETUP_RETRY.
+
+    Covers list_vehicles(), scopes(), and products() — all network calls that
+    tesla_fleet_api does not wrap in TeslaFleetError.
+    """
+    if patch_target is None:
+        mock_get_state_of_all_vehicles.side_effect = exception
+        entry = await setup_platform(hass)
+    else:
+        with patch(patch_target, side_effect=exception):
+            entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.parametrize(
     "exception",
     [
         pytest.param(ClientConnectionError(), id="connection_error"),
         pytest.param(ClientError(), id="client_error"),
     ],
 )
-async def test_aiohttp_client_error_retries(
+async def test_aiohttp_client_error_on_live_status_retries(
     hass: HomeAssistant,
-    mock_get_state_of_all_vehicles: AsyncMock,
     exception: ClientError,
 ) -> None:
-    """Test that aiohttp.ClientError during list_vehicles triggers SETUP_RETRY."""
-    mock_get_state_of_all_vehicles.side_effect = exception
-    entry = await setup_platform(hass)
-    assert entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_aiohttp_client_error_on_scopes_retries(hass: HomeAssistant) -> None:
-    """Test that aiohttp.ClientError during scopes() triggers SETUP_RETRY."""
+    """Test that aiohttp.ClientError during live_status() triggers SETUP_RETRY."""
     with patch(
-        "homeassistant.components.tessie.Tessie.scopes",
-        side_effect=ClientConnectionError(),
+        "tesla_fleet_api.tessie.EnergySite.live_status",
+        side_effect=exception,
     ):
         entry = await setup_platform(hass)
-        assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert entry.state is ConfigEntryState.SETUP_RETRY
