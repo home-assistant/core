@@ -179,7 +179,9 @@ def get_url(
     ):
         scheme = "https" if hass.config.api.use_ssl else "http"
         current_url = yarl.URL.build(
-            scheme=scheme, host=request_host, port=hass.config.api.port,
+            scheme=scheme,
+            host=request_host,
+            port=hass.config.api.port,
         )
 
         known_hostnames = ["localhost"]
