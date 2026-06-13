@@ -1,7 +1,5 @@
 """Support for the AndroidTV remote."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import logging
 from typing import Any

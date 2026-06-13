@@ -1,5 +1,6 @@
 {
   "common": {
+    "condition_for_name": "For at least",
     "trigger_behavior_name": "Trigger when",
     "trigger_for_name": "For at least"
   },
@@ -9,6 +10,9 @@
       "fields": {
         "behavior": {
           "name": "Condition passes if"
+        },
+        "for": {
+          "name": "[%key:component::counter::common::condition_for_name%]"
         },
         "threshold": {
           "name": "Threshold type"
@@ -40,21 +44,6 @@
         "step": {
           "name": "Step"
         }
-      }
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
       }
     }
   },

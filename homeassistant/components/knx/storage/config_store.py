@@ -14,7 +14,7 @@ from homeassistant.util.ulid import ulid_now
 from ..const import DOMAIN, KNX_MODULE_KEY
 from . import migration
 from .const import CONF_DATA
-from .expose_controller import KNXExposeStoreModel, KNXExposeStoreOptionModel
+from .expose_controller import KNXExposeStoreConfigModel, KNXExposeStoreModel
 from .time_server import KNXTimeServerStoreModel
 
 _LOGGER = logging.getLogger(__name__)
@@ -201,20 +201,26 @@ class KNXConfigStore:
     def get_expose_groups(self) -> dict[str, list[str]]:
         """Return KNX entity state exposes and their group addresses."""
         return {
-            entity_id: [option["ga"]["write"] for option in config]
+            entity_id: [option["ga"]["write"] for option in config["options"]]
             for entity_id, config in self.data["expose"].items()
         }
 
-    def get_expose_config(self, entity_id: str) -> list[KNXExposeStoreOptionModel]:
-        """Return KNX entity state expose configuration for an entity."""
-        return self.data["expose"].get(entity_id, [])
+    def get_expose_config(self, entity_id: str) -> KNXExposeStoreConfigModel:
+        """Return KNX entity state expose configuration and notes for an entity."""
+        return self.data["expose"].get(entity_id, KNXExposeStoreConfigModel(options=[]))
 
     async def update_expose(
-        self, entity_id: str, expose_config: list[KNXExposeStoreOptionModel]
+        self, entity_id: str, expose_config: KNXExposeStoreConfigModel
     ) -> None:
-        """Update KNX expose configuration for an entity."""
+        """Update KNX expose configuration for an entity.
+
+        Args:
+            entity_id: The entity ID to configure.
+            expose_config: Expose configuration with options and optional notes.
+        """
         knx_module = self.hass.data[KNX_MODULE_KEY]
         expose_controller = knx_module.ui_expose_controller
+
         expose_controller.update_entity_expose(
             self.hass, knx_module.xknx, entity_id, expose_config
         )

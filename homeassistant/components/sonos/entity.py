@@ -1,7 +1,5 @@
 """Entity representing a Sonos player."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 import datetime
 import logging
@@ -109,11 +107,14 @@ class SonosEntity(Entity):
 
 
 class SonosPollingEntity(SonosEntity):
-    """Representation of a Sonos entity which may not support updating by subscriptions."""
+    """Representation of a Sonos entity without subscription support."""
 
     @abstractmethod
     def poll_state(self) -> None:
         """Poll the device for the current state."""
+
+    async def _async_fallback_poll(self) -> None:
+        """No-op: polling entities are already handled by HA's built-in poller."""
 
     def update(self) -> None:
         """Update the state using the built-in entity poller."""

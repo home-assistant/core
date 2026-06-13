@@ -1,4 +1,4 @@
-"""Support for Xiaomi Mi Air Purifier and Xiaomi Mi Air Humidifier with humidifier entity."""
+"""Support for Xiaomi Mi Air Purifier and Humidifier."""
 
 import logging
 import math
@@ -253,7 +253,7 @@ class XiaomiAirHumidifier(XiaomiGenericHumidifier, HumidifierEntity):
         if (
             self.supported_features & HumidifierEntityFeature.MODES == 0
             or AirhumidifierOperationMode(self._attributes[ATTR_MODE])
-            == AirhumidifierOperationMode.Auto
+            is AirhumidifierOperationMode.Auto
             or AirhumidifierOperationMode.Auto.name not in self.available_modes
         ):
             self.async_write_ha_state()
@@ -310,7 +310,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
             return (
                 self._target_humidity
                 if AirhumidifierMiotOperationMode(self._mode)
-                == AirhumidifierMiotOperationMode.Auto
+                is AirhumidifierMiotOperationMode.Auto
                 else None
             )
         return None
@@ -331,7 +331,7 @@ class XiaomiAirHumidifierMiot(XiaomiAirHumidifier):
         if (
             self.supported_features & HumidifierEntityFeature.MODES == 0
             or AirhumidifierMiotOperationMode(self._attributes[ATTR_MODE])
-            == AirhumidifierMiotOperationMode.Auto
+            is AirhumidifierMiotOperationMode.Auto
         ):
             self.async_write_ha_state()
             return
@@ -385,7 +385,7 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
         if self.is_on:
             if (
                 AirhumidifierMjjsqOperationMode(self._mode)
-                == AirhumidifierMjjsqOperationMode.Humidity
+                is AirhumidifierMjjsqOperationMode.Humidity
             ):
                 return self._target_humidity
         return None
@@ -406,7 +406,7 @@ class XiaomiAirHumidifierMjjsq(XiaomiAirHumidifier):
         if (
             self.supported_features & HumidifierEntityFeature.MODES == 0
             or AirhumidifierMjjsqOperationMode(self._attributes[ATTR_MODE])
-            == AirhumidifierMjjsqOperationMode.Humidity
+            is AirhumidifierMjjsqOperationMode.Humidity
         ):
             self.async_write_ha_state()
             return

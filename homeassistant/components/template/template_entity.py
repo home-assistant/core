@@ -1,7 +1,5 @@
 """TemplateEntity utility class."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import contextlib
 import logging
@@ -209,8 +207,10 @@ class TemplateEntity(AbstractTemplateEntity):
             CONF_AVAILABILITY, "_attr_available", on_update=self._update_available
         )
 
-        # Render name, icon, and picture early. name is rendered early because it influences
-        # the entity_id.  icon and picture are rendered early to ensure they are populated even
+        # Render name, icon, and picture early. name is
+        # rendered early because it influences the
+        # entity_id. icon and picture are rendered early
+        # to ensure they are populated even
         # if the entity renders unavailable.
         self._attr_name = None
         for option, attribute, validator in (
@@ -268,9 +268,11 @@ class TemplateEntity(AbstractTemplateEntity):
         """Create a this variable for the entity."""
         entity_id = self.entity_id
         if self._preview_callback:
-            # During config flow, the registry entry and entity_id will be None. In this scenario,
+            # During config flow, the registry entry and
+            # entity_id will be None. In this scenario,
             # a temporary entity_id is created.
-            # During option flow, the preview entity_id will be None, however the registry entry
+            # During option flow, the preview entity_id
+            # will be None, however the registry entry
             # will contain the target entity_id.
             if self.registry_entry:
                 entity_id = self.registry_entry.entity_id
@@ -298,9 +300,11 @@ class TemplateEntity(AbstractTemplateEntity):
     ) -> None:
         """Set up a template that manages the main state of the entity.
 
-        Requires _state_option to be set on the inheriting class. _state_option represents
-        the configuration option that derives the state. E.g. Template weather entities main state option
-        is 'condition', where switch is 'state'.
+        Requires _state_option to be set on the inheriting
+        class. _state_option represents the configuration
+        option that derives the state. E.g. Template weather
+        entities main state option is 'condition', where
+        switch is 'state'.
         """
 
         @callback
@@ -326,7 +330,8 @@ class TemplateEntity(AbstractTemplateEntity):
 
         if self._state_option is None:
             raise NotImplementedError(
-                f"{self.__class__.__name__} does not implement '_state_option' for 'setup_state_template'."
+                f"{self.__class__.__name__} does not implement"
+                " '_state_option' for 'setup_state_template'."
             )
 
         self.add_template(
@@ -545,7 +550,8 @@ class TemplateEntity(AbstractTemplateEntity):
             """Suppress redundant template render errors.
 
             Preview entities render templates at least 3 times before the preview entity
-            is created. If template contains an error, each render will produce an error.
+            is created. If template contains an error,
+            each render will produce an error.
             Instead of overwhelming the client with errors, suppress them and raise
             a single error through the self._handle_results method.
             """

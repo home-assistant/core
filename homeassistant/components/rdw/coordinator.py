@@ -1,7 +1,5 @@
 """Data update coordinator for RDW."""
 
-from __future__ import annotations
-
 from vehicle import RDW, RDWConnectionError, RDWError, Vehicle
 
 from homeassistant.config_entries import ConfigEntry

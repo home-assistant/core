@@ -59,6 +59,9 @@
     }
   },
   "exceptions": {
+    "error_communicating": {
+      "message": "Error communicating with Daikin device: {error}"
+    },
     "zone_hvac_mode_unsupported": {
       "message": "Zone temperature can only be changed when the main climate mode is heat or cool."
     },

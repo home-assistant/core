@@ -1,7 +1,5 @@
 """Support for OVO Energy sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 from datetime import datetime, timedelta

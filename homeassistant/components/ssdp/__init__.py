@@ -1,7 +1,5 @@
 """The SSDP integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import partial
 from typing import Any

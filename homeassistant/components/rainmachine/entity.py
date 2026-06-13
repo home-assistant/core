@@ -1,7 +1,5 @@
 """Support for RainMachine devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
@@ -56,7 +54,7 @@ class RainMachineEntity(CoordinatorEntity[RainMachineDataUpdateCoordinator]):
             connections={(dr.CONNECTION_NETWORK_MAC, self._data.controller.mac)},
             name=self._data.controller.name.capitalize(),
             manufacturer="RainMachine",
-            hw_version=self._version_coordinator.data["hwVer"],
+            hw_version=str(self._version_coordinator.data["hwVer"]),
             sw_version=f"{self._version_coordinator.data['swVer']} "
             f"(API: {self._version_coordinator.data['apiVer']})",
         )

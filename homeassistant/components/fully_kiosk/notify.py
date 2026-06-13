@@ -1,7 +1,5 @@
 """Support for Fully Kiosk Browser notifications."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from fullykiosk import FullyKioskError

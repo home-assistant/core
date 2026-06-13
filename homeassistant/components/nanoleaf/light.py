@@ -1,7 +1,5 @@
 """Support for Nanoleaf Lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.light import (

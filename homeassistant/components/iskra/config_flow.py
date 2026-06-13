@@ -1,7 +1,5 @@
 """Config flow for iskra integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -59,7 +57,8 @@ STEP_AUTHENTICATION_DATA_SCHEMA = vol.Schema(
     }
 )
 
-# CONF_ADDRESS validation is done later in code, as if ranges are set in voluptuous it turns into a slider
+# CONF_ADDRESS validation is done later in code, as if
+# ranges are set in voluptuous it turns into a slider
 STEP_MODBUS_TCP_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PORT, default=10001): vol.All(
@@ -184,7 +183,8 @@ class IskraConfigFlowFlow(ConfigFlow, domain=DOMAIN):
                     user_input=user_input,
                 )
 
-        # If there's no user_input or there was an error, show the authentication form again.
+        # If there's no user_input or there was an error,
+        # show the authentication form again.
         return self.async_show_form(
             step_id="authentication",
             data_schema=STEP_AUTHENTICATION_DATA_SCHEMA,

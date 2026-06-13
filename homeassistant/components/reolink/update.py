@@ -1,7 +1,5 @@
 """Update entities for Reolink devices."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -214,12 +212,12 @@ class ReolinkUpdateBaseEntity(CoordinatorEntity[ReolinkCoordinator], UpdateEntit
             self._installing = False
 
     async def _pause_update_coordinator(self) -> None:
-        """Pause updating the states using the data update coordinator (during reboots)."""
+        """Pause updating states using the data update coordinator."""
         self._reolink_data.device_coordinator.update_interval = None
         self._reolink_data.device_coordinator.async_set_updated_data(None)
 
     async def _resume_update_coordinator(self, *args: Any) -> None:
-        """Resume updating the states using the data update coordinator (after reboots)."""
+        """Resume updating states using the data update coordinator."""
         self._reolink_data.device_coordinator.update_interval = max(
             DEVICE_UPDATE_INTERVAL_MIN,
             DEVICE_UPDATE_INTERVAL_PER_CAM * self._host.api.num_cameras,

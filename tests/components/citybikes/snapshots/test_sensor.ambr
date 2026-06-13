@@ -1,0 +1,45 @@
+# serializer version: 1
+# name: test_sensor_state[with_ebikes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Information provided by the CityBikes Project (https://citybik.es/#about)',
+      'empty_slots': 8,
+      'free_ebikes': 2,
+      'friendly_name': 'Station 1',
+      'icon': 'mdi:bike',
+      'latitude': 40.0,
+      'longitude': -73.0,
+      'timestamp': '2026-03-22T00:00:00Z',
+      'uid': 'uid-1',
+      'unit_of_measurement': 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_network_station_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---
+# name: test_sensor_state[without_ebikes]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'attribution': 'Information provided by the CityBikes Project (https://citybik.es/#about)',
+      'empty_slots': 8,
+      'free_ebikes': None,
+      'friendly_name': 'Station 1',
+      'icon': 'mdi:bike',
+      'latitude': 40.0,
+      'longitude': -73.0,
+      'timestamp': '2026-03-22T00:00:00Z',
+      'uid': 'uid-1',
+      'unit_of_measurement': 'bikes',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_network_station_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5',
+  })
+# ---

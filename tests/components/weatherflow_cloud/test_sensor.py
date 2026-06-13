@@ -1,5 +1,6 @@
 """Tests for the WeatherFlow Cloud sensor platform."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -8,7 +9,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from weatherflow4py.models.rest.observation import ObservationStationREST
 
-from homeassistant.components.weatherflow_cloud import DOMAIN
+from homeassistant.components.weatherflow_cloud.const import DOMAIN
 from homeassistant.components.weatherflow_cloud.coordinator import (
     WeatherFlowObservationCoordinator,
     WeatherFlowWindCoordinator,
@@ -17,7 +18,7 @@ from homeassistant.components.weatherflow_cloud.sensor import (
     WeatherFlowWebsocketSensorObservation,
     WeatherFlowWebsocketSensorWind,
 )
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -88,6 +89,34 @@ async def test_all_entities_with_lightning_error(
             hass.states.get("sensor.my_home_station_lightning_last_strike").state
             == STATE_UNKNOWN
         )
+
+
+async def test_rest_sensor_unavailable_with_empty_observation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_rest_api: AsyncMock,
+    mock_websocket_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test REST sensors are unavailable when no current observation is returned."""
+    with patch(
+        "homeassistant.components.weatherflow_cloud.PLATFORMS", [Platform.SENSOR]
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("sensor.my_home_station_temperature").state == "10.5"
+
+    all_data = await mock_rest_api.get_all_data()
+    all_data[24432].observation = replace(all_data[24432].observation, obs=[])
+    mock_rest_api.get_all_data.return_value = all_data
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.my_home_station_temperature").state == STATE_UNAVAILABLE
+    )
 
 
 async def test_websocket_sensor_observation(

@@ -1,7 +1,5 @@
 """The motionEye integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from contextlib import suppress
 from typing import Any
@@ -31,6 +29,7 @@ from homeassistant.components.mjpeg import (
     MjpegCamera,
 )
 from homeassistant.const import (
+    CONF_ACTION,
     CONF_AUTHENTICATION,
     CONF_NAME,
     CONF_PASSWORD,
@@ -45,7 +44,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import get_camera_from_cameras, is_acceptable_camera, listen_for_new_cameras
 from .const import (
-    CONF_ACTION,
     CONF_STREAM_URL_TEMPLATE,
     CONF_SURVEILLANCE_PASSWORD,
     CONF_SURVEILLANCE_USERNAME,

@@ -1,7 +1,5 @@
 """Test the Dropbox backup platform."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator
 from io import StringIO
 import json

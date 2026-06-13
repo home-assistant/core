@@ -1,7 +1,5 @@
 """Support for sending data to an Influx database."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
@@ -425,7 +423,7 @@ def get_influx_connection(  # noqa: C901
     if CONF_HOST in conf:
         kwargs[CONF_HOST] = conf[CONF_HOST]
 
-    if (path := conf.get(CONF_PATH)) is not None:
+    if (path := conf.get(CONF_PATH)) is not None and path != "/":
         kwargs[CONF_PATH] = path
 
     if (port := conf.get(CONF_PORT)) is not None:

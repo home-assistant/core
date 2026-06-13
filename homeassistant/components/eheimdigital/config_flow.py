@@ -1,7 +1,5 @@
 """Config flow for EHEIM Digital."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import TYPE_CHECKING, Any
 

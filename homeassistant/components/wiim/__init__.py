@@ -1,7 +1,5 @@
 """The WiiM integration."""
 
-from __future__ import annotations
-
 from wiim.controller import WiimController
 from wiim.discovery import async_create_wiim_device
 from wiim.exceptions import WiimDeviceException, WiimRequestException
@@ -72,7 +70,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: WiimConfigEntry) -> bool
 
     entry.runtime_data = wiim_device
     LOGGER.info(
-        "WiiM device %s (UDN: %s) linked to HASS. Name: '%s', HTTP: %s, UPnP Location: %s",
+        "WiiM device %s (UDN: %s) linked to HASS."
+        " Name: '%s', HTTP: %s, UPnP Location: %s",
         entry.entry_id,
         wiim_device.udn,
         wiim_device.name,

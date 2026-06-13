@@ -37,7 +37,8 @@ async def test_unsupported_utility_fix_flow(
     )
     mock_config_entry.add_to_hass(hass)
 
-    # Setting up the component with an unsupported utility should fail and create an issue
+    # Setting up the component with an unsupported utility should
+    # fail and create an issue
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR

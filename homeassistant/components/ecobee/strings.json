@@ -1,17 +1,32 @@
 {
   "config": {
     "abort": {
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "error": {
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_mfa_code": "The MFA code was not accepted by ecobee; please try again.",
       "login_failed": "Error authenticating with ecobee; please verify your credentials are correct.",
       "pin_request_failed": "Error requesting PIN from ecobee; please verify API key is correct.",
-      "token_request_failed": "Error requesting tokens from ecobee; please try again."
+      "token_request_failed": "Error requesting tokens from ecobee; please try again.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "authorize": {
         "description": "Please authorize this app at {auth_url} with PIN code:\n\n{pin}\n\nThen, select **Submit**."
+      },
+      "mfa": {
+        "data": {
+          "code": "MFA code"
+        },
+        "description": "ecobee requires multi-factor authentication. Enter the {mfa_type} code from your authenticator app."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Reauthenticate the ecobee account for **{username}**."
       },
       "user": {
         "data": {
@@ -36,6 +51,9 @@
     "number": {
       "compressor_protection_min_temp": {
         "name": "Compressor minimum temperature"
+      },
+      "fan_min_on_time": {
+        "name": "Fan minimum on time"
       },
       "ventilator_min_type_away": {
         "name": "Ventilator minimum time away"

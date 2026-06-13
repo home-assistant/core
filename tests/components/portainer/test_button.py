@@ -1,7 +1,5 @@
 """Tests for the Portainer button platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from pyportainer.exceptions import (
@@ -56,7 +54,7 @@ async def test_buttons_containers(
     action: str,
     client_method: str,
 ) -> None:
-    """Test pressing a Portainer container action button triggers client call. Click, click!"""
+    """Test pressing a Portainer container button triggers call."""
     await setup_integration(hass, mock_config_entry)
 
     entity_id = f"button.practical_morse_{action}_container"
@@ -119,7 +117,7 @@ async def test_buttons_endpoint(
     action: str,
     client_method: str,
 ) -> None:
-    """Test pressing a Portainer endpoint action button triggers client call. Click, click!"""
+    """Test pressing a Portainer endpoint button triggers call."""
     await setup_integration(hass, mock_config_entry)
 
     entity_id = f"button.my_environment_{action}_unused_images"

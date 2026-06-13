@@ -31,6 +31,7 @@ class EkeyEvent(EventEntity):
 
     _attr_device_class = EventDeviceClass.BUTTON
     _attr_event_types = ["event happened"]
+    _attr_has_entity_name = True
 
     def __init__(
         self,

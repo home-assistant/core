@@ -7,6 +7,7 @@ from pyportainer.models.docker import (
     DockerContainer,
     DockerContainerStats,
     DockerSystemDF,
+    DockerVolume,
 )
 from pyportainer.models.docker_inspect import DockerInfo, DockerVersion
 from pyportainer.models.portainer import Endpoint, PortainerSystemStatus
@@ -30,6 +31,8 @@ MOCK_TEST_CONFIG = {
 
 TEST_ENTRY = "portainer_test_entry_123"
 TEST_INSTANCE_ID = "299ab403-70a8-4c05-92f7-bf7a994d50df"
+TEST_CONTAINER_NAME = "practical_morse"
+TEST_CONTAINER_ID = "ee20facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf"
 
 
 @pytest.fixture
@@ -81,6 +84,10 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         client.portainer_system_status.return_value = PortainerSystemStatus.from_dict(
             load_json_value_fixture("portainer_system_status.json", DOMAIN)
         )
+        client.get_volumes.return_value = [
+            DockerVolume.from_dict(volume)
+            for volume in load_json_array_fixture("volumes.json", DOMAIN)
+        ]
 
         client.restart_container = AsyncMock(return_value=None)
         client.images_prune = AsyncMock(return_value=None)
@@ -88,6 +95,7 @@ def mock_portainer_client() -> Generator[AsyncMock]:
         client.stop_container = AsyncMock(return_value=None)
         client.start_stack = AsyncMock(return_value=None)
         client.stop_stack = AsyncMock(return_value=None)
+        client.container_recreate = AsyncMock(return_value=None)
 
         yield client
 

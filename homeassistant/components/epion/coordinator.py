@@ -34,7 +34,7 @@ class EpionCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.epion_api = epion_api
 
     async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch data from Epion API and construct a dictionary with device IDs as keys."""
+        """Fetch data from Epion API, construct a dict with device IDs as keys."""
         try:
             response = await self.hass.async_add_executor_job(
                 self.epion_api.get_current

@@ -1,7 +1,5 @@
 """Config flow for Xiaomi Bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import dataclasses
 import logging
@@ -16,7 +14,7 @@ from xiaomi_ble import (
 )
 from xiaomi_ble.parser import EncryptionScheme
 
-from homeassistant.components import onboarding
+from homeassistant.components import bluetooth, onboarding
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfo,
@@ -111,9 +109,9 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             # encryption later, we can do a reauth
             return await self.async_step_confirm_slow()
 
-        if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+        if device.encryption_scheme is EncryptionScheme.MIBEACON_LEGACY:
             return await self.async_step_get_encryption_key_legacy()
-        if device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+        if device.encryption_scheme is EncryptionScheme.MIBEACON_4_5:
             return await self.async_step_get_encryption_key_4_5_choose_method()
         return await self.async_step_bluetooth_confirm()
 
@@ -298,14 +296,15 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
             self._discovered_device = discovery.device
 
-            if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+            if discovery.device.encryption_scheme is EncryptionScheme.MIBEACON_LEGACY:
                 return await self.async_step_get_encryption_key_legacy()
 
-            if discovery.device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+            if discovery.device.encryption_scheme is EncryptionScheme.MIBEACON_4_5:
                 return await self.async_step_get_encryption_key_4_5_choose_method()
 
             return self._async_get_or_create_entry()
 
+        await bluetooth.async_request_active_scan(self.hass)
         current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
@@ -340,10 +339,10 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovery_info = device.last_service_info
 
-        if device.encryption_scheme == EncryptionScheme.MIBEACON_LEGACY:
+        if device.encryption_scheme is EncryptionScheme.MIBEACON_LEGACY:
             return await self.async_step_get_encryption_key_legacy()
 
-        if device.encryption_scheme == EncryptionScheme.MIBEACON_4_5:
+        if device.encryption_scheme is EncryptionScheme.MIBEACON_4_5:
             return await self.async_step_get_encryption_key_4_5_choose_method()
 
         # Otherwise there wasn't actually encryption so abort

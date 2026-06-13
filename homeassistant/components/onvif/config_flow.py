@@ -1,7 +1,5 @@
 """Config flow for ONVIF."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from pprint import pformat
@@ -37,7 +35,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import AbortFlow
+from homeassistant.data_entry_flow import AbortFlow, SectionConfig, section
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -45,6 +43,7 @@ from .const import (
     CONF_DEVICE_ID,
     CONF_ENABLE_WEBHOOKS,
     CONF_HARDWARE,
+    CONF_MORE_OPTIONS,
     DEFAULT_ARGUMENTS,
     DEFAULT_ENABLE_WEBHOOKS,
     DEFAULT_PORT,
@@ -276,6 +275,8 @@ class OnvifFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="configure",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(CONF_NAME, default=conf(CONF_NAME)): str,
                     vol.Required(CONF_HOST, default=conf(CONF_HOST)): str,
                     vol.Required(CONF_PORT, default=conf(CONF_PORT, DEFAULT_PORT)): int,
@@ -409,30 +410,16 @@ class OnvifOptionsFlowHandler(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the ONVIF devices options."""
         if user_input is not None:
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
             self.options[CONF_EXTRA_ARGUMENTS] = user_input[CONF_EXTRA_ARGUMENTS]
             self.options[CONF_RTSP_TRANSPORT] = user_input[CONF_RTSP_TRANSPORT]
-            self.options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = user_input.get(
+            self.options[CONF_ENABLE_WEBHOOKS] = user_input[CONF_ENABLE_WEBHOOKS]
+            self.options[CONF_USE_WALLCLOCK_AS_TIMESTAMPS] = more_options.get(
                 CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
                 self.config_entry.options.get(CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False),
             )
-            self.options[CONF_ENABLE_WEBHOOKS] = user_input.get(
-                CONF_ENABLE_WEBHOOKS,
-                self.config_entry.options.get(
-                    CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
-                ),
-            )
             return self.async_create_entry(title="", data=self.options)
 
-        advanced_options = {}
-        if self.show_advanced_options:
-            advanced_options[
-                vol.Optional(
-                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
-                    default=self.config_entry.options.get(
-                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
-                    ),
-                )
-            ] = bool
         return self.async_show_form(
             step_id="onvif_devices",
             data_schema=vol.Schema(
@@ -455,7 +442,19 @@ class OnvifOptionsFlowHandler(OptionsFlow):
                             CONF_ENABLE_WEBHOOKS, DEFAULT_ENABLE_WEBHOOKS
                         ),
                     ): bool,
-                    **advanced_options,
+                    vol.Required(CONF_MORE_OPTIONS): section(
+                        vol.Schema(
+                            {
+                                vol.Optional(
+                                    CONF_USE_WALLCLOCK_AS_TIMESTAMPS,
+                                    default=self.config_entry.options.get(
+                                        CONF_USE_WALLCLOCK_AS_TIMESTAMPS, False
+                                    ),
+                                ): bool,
+                            }
+                        ),
+                        SectionConfig(collapsed=True),
+                    ),
                 }
             ),
         )

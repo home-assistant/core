@@ -1,7 +1,5 @@
 """Identify support for WMS WebControl pro."""
 
-from __future__ import annotations
-
 from wmspro.const import WMS_WebControl_pro_API_actionDescription
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity

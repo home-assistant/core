@@ -1,7 +1,5 @@
 """Support for Aqualink pool feature switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from iaqualink.device import AqualinkSwitch
@@ -58,9 +56,13 @@ class HassAqualinkSwitch(AqualinkEntity[AqualinkSwitch], SwitchEntity):
     @refresh_system
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
-        await await_or_reraise(self.dev.turn_on())
+        await await_or_reraise(
+            self.hass, self.coordinator.config_entry, self.dev.turn_on()
+        )
 
     @refresh_system
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
-        await await_or_reraise(self.dev.turn_off())
+        await await_or_reraise(
+            self.hass, self.coordinator.config_entry, self.dev.turn_off()
+        )

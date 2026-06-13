@@ -1,7 +1,5 @@
 """Sensor to monitor incoming/outgoing phone calls on a Fritz!Box router."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 from enum import StrEnum

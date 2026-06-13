@@ -1,7 +1,5 @@
 """Configure select in a device through MQTT topic."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 
@@ -10,7 +8,12 @@ import voluptuous as vol
 from homeassistant.components import select
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_OPTIMISTIC,
+    CONF_OPTIONS,
+    CONF_VALUE_TEMPLATE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -20,12 +23,7 @@ from homeassistant.helpers.typing import ConfigType, VolSchemaType
 
 from . import subscription
 from .config import MQTT_RW_SCHEMA
-from .const import (
-    CONF_COMMAND_TEMPLATE,
-    CONF_COMMAND_TOPIC,
-    CONF_OPTIONS,
-    CONF_STATE_TOPIC,
-)
+from .const import CONF_COMMAND_TEMPLATE, CONF_COMMAND_TOPIC, CONF_STATE_TOPIC
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
     MqttCommandTemplate,

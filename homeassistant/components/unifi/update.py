@@ -1,7 +1,5 @@
 """Update entities for Ubiquiti network devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
@@ -19,9 +17,11 @@ from homeassistant.components.update import (
     UpdateEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import UnifiConfigEntry
+from .const import DOMAIN
 from .entity import (
     UnifiEntity,
     UnifiEntityDescription,
@@ -30,6 +30,7 @@ from .entity import (
 )
 
 LOGGER = logging.getLogger(__name__)
+PARALLEL_UPDATES = 1
 
 
 async def async_device_control_fn(api: aiounifi.Controller, obj_id: str) -> None:
@@ -95,7 +96,13 @@ class UnifiDeviceUpdateEntity[_HandlerT: Devices, _DataT: Device](
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        await self.entity_description.control_fn(self.api, self._obj_id)
+        try:
+            await self.entity_description.control_fn(self.api, self._obj_id)
+        except aiounifi.AiounifiException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="action_request_failed",
+            ) from err
 
     @callback
     def async_update_state(self, event: ItemEvent, obj_id: str) -> None:

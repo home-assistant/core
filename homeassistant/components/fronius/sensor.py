@@ -1,7 +1,5 @@
 """Support for Fronius devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, Final
@@ -774,7 +772,10 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
         return self.coordinator.data[self.solar_net_id]
 
     def _get_entity_value(self) -> Any:
-        """Extract entity value from coordinator. Raises KeyError if not included in latest update."""
+        """Extract entity value from coordinator.
+
+        Raises KeyError if not included in latest update.
+        """
         new_value = self.coordinator.data[self.solar_net_id][self.response_key]["value"]
         if new_value is None:
             return self.entity_description.default_value
@@ -792,8 +793,10 @@ class _FroniusSensorEntity(CoordinatorEntity["FroniusCoordinatorBase"], SensorEn
         try:
             self._attr_native_value = self._get_entity_value()
         except KeyError:
-            # sets state to `None` if no default_value is defined in entity description
-            # KeyError: raised when omitted in response - eg. at night when no production
+            # sets state to `None` if no default_value is defined
+            # in entity description
+            # KeyError: raised when omitted in response
+            # eg. at night when no production
             self._attr_native_value = self.entity_description.default_value
         self.async_write_ha_state()
 

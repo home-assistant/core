@@ -1,7 +1,5 @@
 """The tests for the Command line switch platform."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import json
@@ -35,24 +33,6 @@ from homeassistant.util import dt as dt_util
 from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
-
-
-async def test_setup_platform_yaml(hass: HomeAssistant) -> None:
-    """Test setting up the platform with platform yaml."""
-    await setup.async_setup_component(
-        hass,
-        "switch",
-        {
-            "switch": {
-                "platform": "command_line",
-                "command": "echo 1",
-                "payload_on": "1",
-                "payload_off": "0",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
 
 
 async def test_state_integration_yaml(hass: HomeAssistant) -> None:
@@ -119,7 +99,8 @@ async def test_state_value(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if value=="1" %} mdi:on {% else %} mdi:off {% endif %}'
+                                '{% if value=="1" %} mdi:on'
+                                " {% else %} mdi:off {% endif %}"
                             ),
                             "name": "Test",
                         }
@@ -552,7 +533,10 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if this.attributes.icon=="mdi:icon2" %} mdi:icon1 {% else %} mdi:icon2 {% endif %}'
+                                "{% if this.attributes.icon=="
+                                '"mdi:icon2" %} mdi:icon1'
+                                " {% else %} mdi:icon2"
+                                " {% endif %}"
                             ),
                             "name": "Test",
                         }
@@ -564,7 +548,10 @@ async def test_templating(hass: HomeAssistant) -> None:
                             "command_off": f"echo 0 > {path}",
                             "value_template": '{{ value=="1" }}',
                             "icon": (
-                                '{% if states("switch.test")=="off" %} mdi:off {% else %} mdi:on {% endif %}'
+                                '{% if states("switch.test")=='
+                                '"off" %} mdi:off'
+                                " {% else %} mdi:on"
+                                " {% endif %}"
                             ),
                             "name": "Test2",
                         },
@@ -643,8 +630,8 @@ async def test_updating_to_often(
 
     assert not called
     assert (
-        "Updating Command Line Switch Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Switch Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
     async_fire_time_changed(hass, dt_util.now() + timedelta(seconds=11))
     await hass.async_block_till_done()
@@ -652,8 +639,8 @@ async def test_updating_to_often(
     called.clear()
 
     assert (
-        "Updating Command Line Switch Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Switch Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
@@ -667,8 +654,8 @@ async def test_updating_to_often(
     await hass.async_block_till_done()
     assert called
     assert (
-        "Updating Command Line Switch Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Switch Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 

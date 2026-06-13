@@ -1,9 +1,7 @@
 """Tests for the UniFi Access config flow."""
 
-from __future__ import annotations
-
 import ssl
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from unifi_access_api import ApiAuthError, ApiConnectionError
@@ -23,11 +21,8 @@ from .conftest import MOCK_API_TOKEN, MOCK_HOST
 from tests.common import MockConfigEntry
 
 
-async def test_user_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_user_flow(hass: HomeAssistant, mock_client: MagicMock) -> None:
     """Test successful user config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -63,12 +58,9 @@ async def test_user_flow(
         (RuntimeError("boom"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_client: MagicMock, exception: Exception, error: str
 ) -> None:
     """Test user config flow errors and recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -105,11 +97,9 @@ async def test_user_flow_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test user config flow aborts when already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -130,11 +120,9 @@ async def test_user_flow_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_different_host(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test user config flow allows different host."""
     mock_config_entry.add_to_hass(hass)
@@ -154,11 +142,9 @@ async def test_user_flow_different_host(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test successful reauthentication flow."""
     mock_config_entry.add_to_hass(hass)
@@ -187,9 +173,9 @@ async def test_reauth_flow(
         (RuntimeError("boom"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
@@ -223,11 +209,9 @@ async def test_reauth_flow_errors(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test successful reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
@@ -252,11 +236,9 @@ async def test_reconfigure_flow(
     assert mock_config_entry.data[CONF_VERIFY_SSL] is True
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_same_host_new_token(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfiguration flow with same host and new API token."""
     mock_config_entry.add_to_hass(hass)
@@ -280,11 +262,9 @@ async def test_reconfigure_flow_same_host_new_token(
     assert mock_config_entry.data[CONF_API_TOKEN] == "new-api-token"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_already_configured(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfiguration flow aborts when host already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -324,9 +304,9 @@ async def test_reconfigure_flow_already_configured(
         (RuntimeError("boom"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     exception: Exception,
@@ -375,14 +355,14 @@ async def test_reconfigure_flow_errors(
         (True, type(None)),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_ssl_context(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_client: MagicMock,
     verify_ssl: bool,
     expected_ssl_context_type: type,
 ) -> None:
-    """Test that a pre-warmed no-verify SSL context is passed when verify_ssl is False."""
+    """Test no-verify SSL context is passed when verify_ssl is False."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -404,10 +384,9 @@ async def test_user_flow_ssl_context(
     assert isinstance(call_kwargs["ssl_context"], expected_ssl_context_type)
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_protect_api_key(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test user config flow shows specific error when a Protect API key is used."""
     result = await hass.config_entries.flow.async_init(
@@ -446,10 +425,9 @@ async def test_user_flow_protect_api_key(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_protect_api_key_unreachable(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test user config flow falls back to invalid_auth when Protect is unreachable."""
     result = await hass.config_entries.flow.async_init(
@@ -472,10 +450,9 @@ async def test_user_flow_protect_api_key_unreachable(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_protect_api_key_check_raises(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test user config flow falls back to invalid_auth when protect check raises."""
     result = await hass.config_entries.flow.async_init(
@@ -498,11 +475,9 @@ async def test_user_flow_protect_api_key_check_raises(
     assert result["errors"] == {"base": "invalid_auth"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reauth_flow_protect_api_key(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reauth flow shows specific error when a Protect API key is used."""
     mock_config_entry.add_to_hass(hass)
@@ -534,11 +509,9 @@ async def test_reauth_flow_protect_api_key(
     assert result["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_flow_protect_api_key(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow shows specific error when a Protect API key is used."""
     mock_config_entry.add_to_hass(hass)
@@ -588,10 +561,9 @@ DISCOVERY_INFO = {
 }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_new_device(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test integration discovery shows confirm form for new device."""
     result = await hass.config_entries.flow.async_init(
@@ -604,10 +576,9 @@ async def test_discovery_new_device(
     assert result["step_id"] == "discovery_confirm"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_confirm_success(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test successful discovery confirm creates entry."""
     result = await hass.config_entries.flow.async_init(
@@ -636,10 +607,9 @@ async def test_discovery_confirm_success(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_confirm_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test discovery confirm handles errors and recovery."""
     result = await hass.config_entries.flow.async_init(
@@ -700,10 +670,9 @@ async def test_discovery_confirm_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_already_configured_by_host(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test discovery aborts when host is already configured."""
     entry = MockConfigEntry(
@@ -726,10 +695,9 @@ async def test_discovery_already_configured_by_host(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_updates_host_for_known_mac(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test discovery updates host when MAC matches but IP changed."""
     entry = MockConfigEntry(
@@ -754,10 +722,9 @@ async def test_discovery_updates_host_for_known_mac(
     assert entry.data[CONF_HOST] == "10.0.0.5"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_sets_unique_id_on_manual_entry(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test discovery adds unique_id (MAC) to manually configured entry."""
     entry = MockConfigEntry(
@@ -782,10 +749,9 @@ async def test_discovery_sets_unique_id_on_manual_entry(
     assert entry.unique_id == "AABBCCDDEEFF"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_already_configured_by_host_with_unique_id(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test discovery is a no-op when entry already has unique_id and matching IP."""
     entry = MockConfigEntry(
@@ -811,10 +777,9 @@ async def test_discovery_already_configured_by_host_with_unique_id(
     assert entry.data[CONF_HOST] == "10.0.0.5"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_ignored_entry(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
     """Test discovery aborts when ignored entry with same unique_id exists."""
     entry = MockConfigEntry(
@@ -834,12 +799,11 @@ async def test_discovery_ignored_entry(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_discovery_fallback_name_from_mac(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_client: MagicMock,
+    hass: HomeAssistant, mock_client: MagicMock
 ) -> None:
-    """Test discovery confirm uses MAC-based name when hostname and platform are absent."""
+    """Test discovery uses MAC-based name when hostname and platform are absent."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_INTEGRATION_DISCOVERY},

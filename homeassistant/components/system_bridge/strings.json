@@ -54,6 +54,9 @@
       "boot_time": {
         "name": "Boot time"
       },
+      "cpu_power_core": {
+        "name": "CPU core {cpu_id} power"
+      },
       "cpu_power_package": {
         "name": "CPU package power"
       },
@@ -66,8 +69,44 @@
       "cpu_voltage": {
         "name": "CPU voltage"
       },
+      "display_refresh_rate": {
+        "name": "Display {display_id} refresh rate"
+      },
+      "display_resolution_x": {
+        "name": "Display {display_id} resolution x"
+      },
+      "display_resolution_y": {
+        "name": "Display {display_id} resolution y"
+      },
       "displays_connected": {
         "name": "Displays connected"
+      },
+      "gpu_core_clock_speed": {
+        "name": "{gpu_name} clock speed"
+      },
+      "gpu_fan_speed": {
+        "name": "{gpu_name} fan speed"
+      },
+      "gpu_memory_clock_speed": {
+        "name": "{gpu_name} memory clock speed"
+      },
+      "gpu_memory_free": {
+        "name": "{gpu_name} memory free"
+      },
+      "gpu_memory_used": {
+        "name": "{gpu_name} memory used"
+      },
+      "gpu_memory_used_percentage": {
+        "name": "{gpu_name} memory used %"
+      },
+      "gpu_power_usage": {
+        "name": "{gpu_name} power usage"
+      },
+      "gpu_temperature": {
+        "name": "{gpu_name} temperature"
+      },
+      "gpu_usage_percentage": {
+        "name": "{gpu_name} usage %"
       },
       "kernel": {
         "name": "Kernel"
@@ -81,6 +120,9 @@
       "memory_used": {
         "name": "Memory used"
       },
+      "memory_used_percentage": {
+        "name": "Memory used %"
+      },
       "os": {
         "name": "Operating system"
       },
@@ -89,6 +131,12 @@
       },
       "processes": {
         "name": "Processes"
+      },
+      "processes_load_cpu": {
+        "name": "Load CPU {cpu_id}"
+      },
+      "space_used": {
+        "name": "{partition} space used"
       },
       "version": {
         "name": "Version"
@@ -114,6 +162,9 @@
     "process_not_found": {
       "message": "Could not find process with ID {id}."
     },
+    "send_message_failed": {
+      "message": "Failed to send message to {title} ({host}) due to a connection error"
+    },
     "timeout": {
       "message": "A timeout occurred for {title} ({host})"
     },
@@ -125,6 +176,82 @@
     "unsupported_version": {
       "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version.",
       "title": "System Bridge upgrade required"
+    }
+  },
+  "selector": {
+    "key": {
+      "options": {
+        "alt": "Alt",
+        "audio_forward": "Fast-Forward track",
+        "audio_mute": "Mute",
+        "audio_next": "Next track",
+        "audio_pause": "Pause media",
+        "audio_play": "Play media",
+        "audio_prev": "Previous track",
+        "audio_random": "Random track",
+        "audio_repeat": "Repeat track",
+        "audio_rewind": "Rewind track",
+        "audio_stop": "Stop media",
+        "audio_vol_down": "Volume down",
+        "audio_vol_up": "Volume up",
+        "backspace": "Backspace",
+        "command": "Command",
+        "control": "Control",
+        "delete": "Delete",
+        "down": "[%key:common::entity::button::down::name%]",
+        "end": "End",
+        "enter": "Enter",
+        "escape": "Escape",
+        "f1": "F1",
+        "f10": "F10",
+        "f11": "F11",
+        "f12": "F12",
+        "f2": "F2",
+        "f3": "F3",
+        "f4": "F4",
+        "f5": "F5",
+        "f6": "F6",
+        "f7": "F7",
+        "f8": "F8",
+        "f9": "F9",
+        "home": "[%key:common::entity::button::home::name%]",
+        "insert": "Insert",
+        "left": "[%key:common::entity::button::left::name%]",
+        "lights_kbd_down": "Keyboard backlight brightness down",
+        "lights_kbd_toggle": "Toggle keyboard backlight",
+        "lights_kbd_up": "Keyboard backlight brightness up",
+        "lights_mon_down": "Display brightness down",
+        "lights_mon_up": "Display brightness up",
+        "numpad_0": "NumPad 0",
+        "numpad_1": "NumPad 1",
+        "numpad_2": "NumPad 2",
+        "numpad_3": "NumPad 3",
+        "numpad_4": "NumPad 4",
+        "numpad_5": "NumPad 5",
+        "numpad_6": "NumPad 6",
+        "numpad_7": "NumPad 7",
+        "numpad_8": "NumPad 8",
+        "numpad_9": "NumPad 9",
+        "pagedown": "Page down",
+        "pageup": "Page up",
+        "printscreen": "Print screen",
+        "right": "[%key:common::entity::button::right::name%]",
+        "right_shift": "Shift right",
+        "shift": "Shift",
+        "space": "Space",
+        "tab": "Tab",
+        "up": "[%key:common::entity::button::up::name%]"
+      }
+    },
+    "power_command": {
+      "options": {
+        "hibernate": "Hibernate",
+        "lock": "Lock",
+        "logout": "Logout",
+        "restart": "[%key:common::action::restart%]",
+        "shutdown": "Shutdown",
+        "sleep": "Sleep"
+      }
     }
   },
   "services": {

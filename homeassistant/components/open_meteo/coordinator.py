@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Open-Meteo integration."""
 
-from __future__ import annotations
-
 from open_meteo import (
     DailyParameters,
     Forecast,

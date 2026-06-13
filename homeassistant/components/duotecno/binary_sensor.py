@@ -1,7 +1,5 @@
 """Support for Duotecno binary sensors."""
 
-from __future__ import annotations
-
 from duotecno.unit import ControlUnit, VirtualUnit
 
 from homeassistant.components.binary_sensor import BinarySensorEntity

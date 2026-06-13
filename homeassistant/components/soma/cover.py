@@ -1,7 +1,5 @@
 """Support for Soma Covers."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.cover import (
@@ -32,7 +30,8 @@ async def async_setup_entry(
     entities: list[SomaTilt | SomaShade] = []
 
     for device in data.devices:
-        # Assume a shade device if the type is not present in the api response (Connect <2.2.6)
+        # Assume a shade device if the type is not present
+        # in the api response (Connect <2.2.6)
         if "type" in device and device["type"].lower() == "tilt":
             entities.append(SomaTilt(device, api))
         else:

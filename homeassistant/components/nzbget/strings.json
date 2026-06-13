@@ -15,8 +15,15 @@
           "password": "[%key:common::config_flow::data::password%]",
           "port": "[%key:common::config_flow::data::port%]",
           "ssl": "[%key:common::config_flow::data::ssl%]",
-          "username": "[%key:common::config_flow::data::username%]",
-          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+            },
+            "name": "More options"
+          }
         },
         "title": "Connect to NZBGet"
       }

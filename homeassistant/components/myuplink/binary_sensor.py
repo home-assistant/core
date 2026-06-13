@@ -144,7 +144,7 @@ class MyUplinkDevicePointBinarySensor(MyUplinkEntity, BinarySensorEntity):
         """Return device data availability."""
         return super().available and (
             self.coordinator.data.devices[self.device_id].connectionState
-            == DeviceConnectionState.Connected
+            is DeviceConnectionState.Connected
         )
 
 
@@ -172,7 +172,7 @@ class MyUplinkDeviceBinarySensor(MyUplinkEntity, BinarySensorEntity):
         """Binary sensor state value."""
         return (
             self.coordinator.data.devices[self.device_id].connectionState
-            == DeviceConnectionState.Connected
+            is DeviceConnectionState.Connected
         )
 
 

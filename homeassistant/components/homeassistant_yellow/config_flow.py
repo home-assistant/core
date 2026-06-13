@@ -1,7 +1,5 @@
 """Config flow for the Home Assistant Yellow integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 import logging
@@ -320,6 +318,19 @@ class HomeAssistantYellowMultiPanOptionsFlowHandler(
     def _hardware_name(self) -> str:
         """Return the name of the hardware."""
         return BOARD_NAME
+
+    def _firmware_update_url(self) -> str:
+        """Return the firmware update manifest URL."""
+        return NABU_CASA_FIRMWARE_RELEASES_URL
+
+    def _zigbee_firmware_type(self) -> str:
+        """Return the zigbee firmware type identifier."""
+        return "yellow_zigbee_ncp"
+
+    @property
+    def _flasher_cls(self) -> type:
+        """Return the hardware-specific flasher class."""
+        return YellowFlasher  # type: ignore[no-any-return]
 
     async def async_step_flashing_complete(
         self, user_input: dict[str, Any] | None = None

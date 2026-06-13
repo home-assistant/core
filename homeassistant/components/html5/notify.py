@@ -1,7 +1,5 @@
 """HTML5 Push Messaging notification service."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from datetime import datetime, timedelta
 from http import HTTPStatus
@@ -11,10 +9,12 @@ import time
 from typing import TYPE_CHECKING, Any, cast
 from urllib.parse import urlparse
 import uuid
+import warnings
 
 from aiohttp import ClientError, ClientResponse, ClientSession, web
 from aiohttp.hdrs import AUTHORIZATION
 import jwt
+from jwt.warnings import InsecureKeyLengthWarning
 from py_vapid import Vapid
 from pywebpush import WebPusher, WebPushException, webpush_async
 import voluptuous as vol
@@ -327,7 +327,8 @@ class HTML5PushCallbackView(HomeAssistantView):
         if target_check.get(ATTR_TARGET) in self.registrations:
             possible_target = self.registrations[target_check[ATTR_TARGET]]
             key = possible_target["subscription"]["keys"]["auth"]
-            with suppress(jwt.exceptions.DecodeError):
+            with suppress(jwt.exceptions.DecodeError), warnings.catch_warnings():
+                warnings.simplefilter("ignore", InsecureKeyLengthWarning)
                 return jwt.decode(token, key, algorithms=["ES256", "HS256"])
 
         return self.json_message(
@@ -587,7 +588,9 @@ def add_jwt(timestamp: int, target: str, tag: str, jwt_secret: str) -> str:
         ATTR_TARGET: target,
         ATTR_TAG: tag,
     }
-    return jwt.encode(jwt_claims, jwt_secret)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", InsecureKeyLengthWarning)
+        return jwt.encode(jwt_claims, jwt_secret)
 
 
 async def async_setup_entry(

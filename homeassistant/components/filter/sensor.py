@@ -1,7 +1,5 @@
 """Allows the creation of a sensor that filters state property."""
 
-from __future__ import annotations
-
 from collections import Counter, deque
 from copy import copy
 from dataclasses import dataclass

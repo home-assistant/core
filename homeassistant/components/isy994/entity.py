@@ -1,7 +1,5 @@
 """Representation of ISYEntity Types."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyisy.constants import (
@@ -151,7 +149,7 @@ class ISYNodeEntity(ISYEntity):
         await self._node.send_cmd(command, value, unit_of_measurement, parameters)
 
     async def async_get_zwave_parameter(self, parameter: Any) -> None:
-        """Respond to an entity service command to request a Z-Wave device parameter from the ISY."""
+        """Respond to a service command to request a Z-Wave parameter."""
         if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot request Z-Wave Parameter for non-Z-Wave"
@@ -162,7 +160,7 @@ class ISYNodeEntity(ISYEntity):
     async def async_set_zwave_parameter(
         self, parameter: Any, value: Any | None, size: int | None
     ) -> None:
-        """Respond to an entity service command to set a Z-Wave device parameter via the ISY."""
+        """Respond to a service command to set a Z-Wave parameter."""
         if self._node.protocol != PROTO_ZWAVE:
             raise HomeAssistantError(
                 "Invalid service call: cannot set Z-Wave Parameter for non-Z-Wave"

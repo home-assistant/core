@@ -1,7 +1,5 @@
 """Support for Twente Milieu Calendar."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent

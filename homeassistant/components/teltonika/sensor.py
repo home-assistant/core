@@ -1,12 +1,10 @@
 """Teltonika sensor platform."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
-from teltasync.modems import ModemStatus
+from teltasync.modems import ModemStatusFull
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -36,7 +34,7 @@ PARALLEL_UPDATES = 0
 class TeltonikaSensorEntityDescription(SensorEntityDescription):
     """Describes Teltonika sensor entity."""
 
-    value_fn: Callable[[ModemStatus], StateType]
+    value_fn: Callable[[ModemStatusFull], StateType]
 
 
 SENSOR_DESCRIPTIONS: tuple[TeltonikaSensorEntityDescription, ...] = (
@@ -155,7 +153,7 @@ class TeltonikaSensorEntity(
         device_info: DeviceInfo,
         description: TeltonikaSensorEntityDescription,
         modem_id: str,
-        modem: ModemStatus,
+        modem: ModemStatusFull,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

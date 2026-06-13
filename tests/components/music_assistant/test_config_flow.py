@@ -22,7 +22,6 @@ from homeassistant.components.music_assistant.config_flow import (
 )
 from homeassistant.components.music_assistant.const import (
     AUTH_SCHEMA_VERSION,
-    CONF_TOKEN,
     DEFAULT_NAME,
     DOMAIN,
 )
@@ -34,6 +33,7 @@ from homeassistant.config_entries import (
     SOURCE_ZEROCONF,
     ConfigEntryState,
 )
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -569,7 +569,7 @@ async def test_zeroconf_old_schema_addon_not_ignored(
     hass: HomeAssistant,
     mock_get_server_info: AsyncMock,
 ) -> None:
-    """Test zeroconf discovery does NOT ignore add-on servers with old schema version."""
+    """Test zeroconf discovery does NOT ignore old schema add-ons."""
     old_schema_addon_data = deepcopy(ZEROCONF_DATA)
     old_schema_version = AUTH_SCHEMA_VERSION - 1
     old_schema_addon_data.properties["schema_version"] = str(old_schema_version)
