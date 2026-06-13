@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from iaqualink.device import AqualinkThermostat
+from iaqualink.device import AqualinkDevice, AqualinkThermostat
 from iaqualink.systems.iaqua.device import AqualinkState
 
 from homeassistant.components.climate import (
@@ -31,13 +31,21 @@ async def async_setup_entry(
     config_entry: AqualinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up discovered switches."""
-    async_add_entities(
-        HassAqualinkThermostat(
-            config_entry.runtime_data.coordinators[dev.system.serial], dev
-        )
-        for dev in config_entry.runtime_data.thermostats
-    )
+    """Set up discovered thermostats."""
+    for coordinator in config_entry.runtime_data.coordinators.values():
+
+        def _async_add_new_devices(
+            devices: list[AqualinkDevice],
+            _coordinator: AqualinkDataUpdateCoordinator = coordinator,
+        ) -> None:
+            async_add_entities(
+                HassAqualinkThermostat(_coordinator, dev)
+                for dev in devices
+                if isinstance(dev, AqualinkThermostat)
+            )
+
+        coordinator.new_device_callbacks.append(_async_add_new_devices)
+        _async_add_new_devices(list(coordinator.data.values()))
 
 
 class HassAqualinkThermostat(AqualinkEntity[AqualinkThermostat], ClimateEntity):

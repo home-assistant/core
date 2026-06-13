@@ -1,6 +1,6 @@
 """Support for Aqualink temperature sensors."""
 
-from iaqualink.device import AqualinkSensor
+from iaqualink.device import AqualinkBinarySensor, AqualinkDevice, AqualinkSensor
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.const import UnitOfTemperature
@@ -20,12 +20,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered sensors."""
-    async_add_entities(
-        HassAqualinkSensor(
-            config_entry.runtime_data.coordinators[dev.system.serial], dev
-        )
-        for dev in config_entry.runtime_data.sensors
-    )
+    for coordinator in config_entry.runtime_data.coordinators.values():
+
+        def _async_add_new_devices(
+            devices: list[AqualinkDevice],
+            _coordinator: AqualinkDataUpdateCoordinator = coordinator,
+        ) -> None:
+            async_add_entities(
+                HassAqualinkSensor(_coordinator, dev)
+                for dev in devices
+                if isinstance(dev, AqualinkSensor)
+                and not isinstance(dev, AqualinkBinarySensor)
+            )
+
+        coordinator.new_device_callbacks.append(_async_add_new_devices)
+        _async_add_new_devices(list(coordinator.data.values()))
 
 
 class HassAqualinkSensor(AqualinkEntity[AqualinkSensor], SensorEntity):

@@ -10,6 +10,7 @@ import httpx
 from iaqualink.client import AqualinkClient
 from iaqualink.device import (
     AqualinkBinarySensor,
+    AqualinkDevice,
     AqualinkLight,
     AqualinkSensor,
     AqualinkSwitch,
@@ -28,7 +29,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
@@ -59,12 +60,6 @@ class AqualinkRuntimeData:
 
     client: AqualinkClient
     coordinators: dict[str, AqualinkDataUpdateCoordinator]
-    # These will contain the initialized devices
-    binary_sensors: list[AqualinkBinarySensor]
-    lights: list[AqualinkLight]
-    sensors: list[AqualinkSensor]
-    switches: list[AqualinkSwitch]
-    thermostats: list[AqualinkThermostat]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> bool:
@@ -112,40 +107,49 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     runtime_data = AqualinkRuntimeData(
         aqualink,
         coordinators={},
-        binary_sensors=[],
-        lights=[],
-        sensors=[],
-        switches=[],
-        thermostats=[],
     )
+    device_registry = dr.async_get(hass)
+
+    # Remove devices belonging to systems no longer in the account.
+    current_serials = set(systems)
+    for device_entry in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        for domain, identifier in device_entry.identifiers:
+            if domain != DOMAIN:
+                continue
+            # System-level device: identifier is just the serial.
+            # Child device: identifier is "{serial}_{name}".
+            belongs_to_current = any(
+                identifier == s or identifier.startswith(f"{s}_")
+                for s in current_serials
+            )
+            if not belongs_to_current:
+                device_registry.async_update_device(
+                    device_id=device_entry.id,
+                    remove_config_entry_id=entry.entry_id,
+                )
+            break
+
     for system in systems_list:
         coordinator = AqualinkDataUpdateCoordinator(hass, entry, system)
         runtime_data.coordinators[system.serial] = coordinator
+
+        prefix = f"{system.serial}_"
+        known_devices: set[str] = set()
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, entry.entry_id
+        ):
+            for domain, identifier in device_entry.identifiers:
+                if domain == DOMAIN and identifier.startswith(prefix):
+                    known_devices.add(identifier.removeprefix(prefix))
+        coordinator.seed_previous_devices(known_devices)
+
         try:
             await coordinator.async_config_entry_first_refresh()
         except ConfigEntryAuthFailed:
             await aqualink.close()
             raise
-
-        try:
-            devices = await system.get_devices()
-        except AqualinkServiceUnauthorizedException as auth_exception:
-            await aqualink.close()
-            raise ConfigEntryAuthFailed(
-                "Invalid credentials for iAquaLink"
-            ) from auth_exception
-        except (
-            AqualinkServiceException,
-            TimeoutError,
-            httpx.HTTPError,
-        ) as svc_exception:
-            await aqualink.close()
-            raise ConfigEntryNotReady(
-                "Error while attempting to retrieve devices list: "
-                f"{error_detail(svc_exception)}"
-            ) from svc_exception
-
-        device_registry = dr.async_get(hass)
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             name=system.name,
@@ -154,39 +158,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
             serial_number=system.serial,
         )
 
-        for dev in devices.values():
-            if isinstance(dev, AqualinkThermostat):
-                runtime_data.thermostats += [dev]
-            elif isinstance(dev, AqualinkLight):
-                runtime_data.lights += [dev]
-            elif isinstance(dev, AqualinkSwitch):
-                runtime_data.switches += [dev]
-            elif isinstance(dev, AqualinkBinarySensor):
-                runtime_data.binary_sensors += [dev]
-            elif isinstance(dev, AqualinkSensor):
-                runtime_data.sensors += [dev]
-
-    _LOGGER.debug(
-        "Got %s binary sensors: %s",
-        len(runtime_data.binary_sensors),
-        runtime_data.binary_sensors,
-    )
-    _LOGGER.debug("Got %s lights: %s", len(runtime_data.lights), runtime_data.lights)
-    _LOGGER.debug("Got %s sensors: %s", len(runtime_data.sensors), runtime_data.sensors)
-    _LOGGER.debug(
-        "Got %s switches: %s", len(runtime_data.switches), runtime_data.switches
-    )
-    _LOGGER.debug(
-        "Got %s thermostats: %s",
-        len(runtime_data.thermostats),
-        runtime_data.thermostats,
-    )
-
     entry.runtime_data = runtime_data
+
+    _async_cleanup_stale_entities(hass, entry)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+def _expected_platform(dev: AqualinkDevice) -> Platform | None:
+    """Return the expected platform for a device based on its type."""
+    if isinstance(dev, AqualinkThermostat):
+        return Platform.CLIMATE
+    if isinstance(dev, AqualinkLight):
+        return Platform.LIGHT
+    if isinstance(dev, AqualinkSwitch):
+        return Platform.SWITCH
+    if isinstance(dev, AqualinkBinarySensor):
+        return Platform.BINARY_SENSOR
+    if isinstance(dev, AqualinkSensor):
+        return Platform.SENSOR
+    return None
+
+
+def _async_cleanup_stale_entities(
+    hass: HomeAssistant, entry: AqualinkConfigEntry
+) -> None:
+    """Remove entities whose platform no longer matches the device type."""
+    entity_registry = er.async_get(hass)
+
+    # Build mapping of unique_id -> expected platform from current devices.
+    expected: dict[str, Platform] = {}
+    for coordinator in entry.runtime_data.coordinators.values():
+        for dev in coordinator.data.values():
+            unique_id = f"{dev.system.serial}_{dev.name}"
+            if platform := _expected_platform(dev):
+                expected[unique_id] = platform
+
+    for entity_entry in er.async_entries_for_config_entry(
+        entity_registry, entry.entry_id
+    ):
+        if entity_entry.unique_id not in expected:
+            continue
+        if entity_entry.domain != expected[entity_entry.unique_id]:
+            entity_registry.async_remove(entity_entry.entity_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> bool:

@@ -1,6 +1,6 @@
 """Support for Aqualink temperature sensors."""
 
-from iaqualink.device import AqualinkBinarySensor
+from iaqualink.device import AqualinkBinarySensor, AqualinkDevice, AqualinkSwitch
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -22,12 +22,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered binary sensors."""
-    async_add_entities(
-        HassAqualinkBinarySensor(
-            config_entry.runtime_data.coordinators[dev.system.serial], dev
-        )
-        for dev in config_entry.runtime_data.binary_sensors
-    )
+    for coordinator in config_entry.runtime_data.coordinators.values():
+
+        def _async_add_new_devices(
+            devices: list[AqualinkDevice],
+            _coordinator: AqualinkDataUpdateCoordinator = coordinator,
+        ) -> None:
+            async_add_entities(
+                HassAqualinkBinarySensor(_coordinator, dev)
+                for dev in devices
+                if isinstance(dev, AqualinkBinarySensor)
+                and not isinstance(dev, AqualinkSwitch)
+            )
+
+        coordinator.new_device_callbacks.append(_async_add_new_devices)
+        _async_add_new_devices(list(coordinator.data.values()))
 
 
 class HassAqualinkBinarySensor(
