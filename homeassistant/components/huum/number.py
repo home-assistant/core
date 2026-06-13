@@ -4,7 +4,7 @@ import logging
 
 from huum.const import SaunaStatus
 
-from homeassistant.components.number import NumberEntity
+from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -34,7 +34,9 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
     """Representation of a steamer."""
 
     _attr_translation_key = "humidity"
-    _attr_native_max_value = 10
+    _attr_device_class = NumberDeviceClass.HUMIDITY
+    _attr_native_unit_of_measurement = "%"
+    _attr_native_max_value = 40
     _attr_native_min_value = 0
     _attr_native_step = 1
 
