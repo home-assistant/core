@@ -38,7 +38,6 @@ class XboxBaseEntityDescription(EntityDescription):
     attributes_fn: Callable[[Person, Title | None], Mapping[str, Any] | None] | None = (
         None
     )
-    deprecated: bool | None = None
 
 
 class XboxBaseEntity(CoordinatorEntity[XboxPresenceCoordinator]):
