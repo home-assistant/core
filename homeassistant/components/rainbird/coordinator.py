@@ -15,7 +15,7 @@ from pyrainbird.data import ModelAndVersion, Schedule
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, MANUFACTURER, TIMEOUT_SECONDS
@@ -107,6 +107,7 @@ class RainbirdUpdateCoordinator(DataUpdateCoordinator[RainbirdDeviceState]):
         return DeviceInfo(
             name=self.device_name,
             identifiers={(DOMAIN, self._unique_id)},
+            connections={(CONNECTION_NETWORK_MAC, self._unique_id)},
             manufacturer=MANUFACTURER,
             model=self._model_info.model_name,
             sw_version=f"{self._model_info.major}.{self._model_info.minor}",
