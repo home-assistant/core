@@ -214,6 +214,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
+        if not _LOGGER.isEnabledFor(level):
+            # Avoid building the prefixed message and args tuple for disabled
+            # levels; this runs for every entity event via _handle_entity_events.
+            return
         msg = f"%s: {msg}"
         args = (self.entity_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)
