@@ -212,6 +212,41 @@ async def test_reconfigure_invalid_temp_range(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_duplicate_host(hass: HomeAssistant) -> None:
+    """Reconfigure must reject changing host/port to match another entry."""
+    other = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    other.add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="2.2.2.2",
+        data={CONF_HOST: "2.2.2.2", CONF_PORT: 80},
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    with patch(TEST_CONNECTION, return_value=True):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_MIN_TEMP: 18,
+                CONF_MAX_TEMP: 30,
+            },
+        )
+
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure(hass: HomeAssistant) -> None:
     """Test the reconfigure flow updates the entry."""
     entry = MockConfigEntry(

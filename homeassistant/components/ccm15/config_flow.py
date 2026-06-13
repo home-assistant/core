@@ -100,6 +100,14 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            for other in self._async_current_entries(include_ignore=False):
+                if (
+                    other.entry_id != entry.entry_id
+                    and other.data.get(CONF_HOST) == user_input[CONF_HOST]
+                    and other.data.get(CONF_PORT) == user_input[CONF_PORT]
+                ):
+                    return self.async_abort(reason="already_configured")
+
             if (err := _validate_temps(user_input)) is not None:
                 errors["base"] = err
             else:

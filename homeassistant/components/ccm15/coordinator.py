@@ -100,13 +100,17 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
                 del self._optimistic[idx]
                 continue
             if idx in ac_data.devices:
-                # Replace the whole slave device with the snapshot we
-                # took at write time. This also masks any live updates
-                # the controller reports for this slot during the window
-                # (e.g. a fresh room-temperature reading), but it keeps
-                # the implementation simple and the staleness bounded by
-                # OPTIMISTIC_WINDOW.
-                ac_data.devices[idx] = set_data
+                # Replace the whole slave device with a fresh copy of the
+                # snapshot we took at write time. The deepcopy isolates
+                # the stored snapshot from any in-place mutations a
+                # follow-up service call may perform on the slave device
+                # returned by get_ac_data, which would otherwise corrupt
+                # the optimistic entry if that call later failed. This
+                # also masks any live updates the controller reports for
+                # the slot during the window (e.g. a fresh
+                # room-temperature reading), but the staleness is
+                # bounded by OPTIMISTIC_WINDOW.
+                ac_data.devices[idx] = deepcopy(set_data)
 
         return ac_data
 
