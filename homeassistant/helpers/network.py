@@ -238,7 +238,7 @@ def _get_request_host_port() -> tuple[str | None, int | None]:
     # use same logic as yarl and urllib to extract the host
     if "[" in host:
         host_part, _, port_part = host.partition("[")[2].partition("]")
-        port_str = port_part.lstrip(":")
+        port_str = port_part[1:] if port_part.startswith(":") else ""
     # partition the host to remove the port
     # because the raw host header can contain the port
     elif ":" in host:
@@ -246,12 +246,8 @@ def _get_request_host_port() -> tuple[str | None, int | None]:
     else:
         host_part, port_str = host, ""
 
-    if port_str:
-        try:
-            port = int(port_str)
-        except ValueError:
-            return None, None
-    else:
+    port = int(port_str) if port_str.isdigit() else None
+    if port is None:
         port = 443 if request.url.scheme == "https" else 80
 
     return host_part, port
