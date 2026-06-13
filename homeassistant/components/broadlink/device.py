@@ -118,7 +118,9 @@ class BroadlinkDevice[_ApiT: blk.Device = blk.Device]:
             return False
 
         except (NetworkTimeoutError, OSError) as err:
-            raise ConfigEntryNotReady from err
+            raise ConfigEntryNotReady(
+                f"Failed to connect to the device at {api.host[0]}: {err}"
+            ) from err
 
         except BroadlinkException as err:
             _LOGGER.error(
