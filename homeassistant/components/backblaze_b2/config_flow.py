@@ -1,7 +1,5 @@
 """Config flow for the Backblaze B2 integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -10,6 +8,7 @@ from b2sdk.v2 import exception
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PREFIX
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -24,7 +23,6 @@ from .const import (
     CONF_APPLICATION_KEY,
     CONF_BUCKET,
     CONF_KEY_ID,
-    CONF_PREFIX,
     DOMAIN,
 )
 
@@ -136,7 +134,8 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not REQUIRED_CAPABILITIES.issubset(current_caps):
                     missing_caps = REQUIRED_CAPABILITIES - current_caps
                     _LOGGER.warning(
-                        "Missing required Backblaze B2 capabilities for Key ID '%s': %s",
+                        "Missing required Backblaze B2 capabilities"
+                        " for Key ID '%s': %s",
                         user_input[CONF_KEY_ID],
                         ", ".join(sorted(missing_caps)),
                     )
@@ -174,6 +173,14 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
                 "Backblaze B2 bucket '%s' does not exist", user_input[CONF_BUCKET]
             )
             errors[CONF_BUCKET] = "invalid_bucket_name"
+        except exception.BadRequest as err:
+            _LOGGER.error(
+                "Backblaze B2 API rejected the request for Key ID '%s': %s",
+                user_input[CONF_KEY_ID],
+                err,
+            )
+            errors["base"] = "bad_request"
+            placeholders["error_message"] = str(err)
         except (
             exception.B2ConnectionError,
             exception.B2RequestTimeout,
@@ -184,13 +191,15 @@ class BackblazeConfigFlow(ConfigFlow, domain=DOMAIN):
         except exception.MissingAccountData:
             # This generally indicates an issue with how InMemoryAccountInfo is used
             _LOGGER.error(
-                "Missing account data during Backblaze B2 authorization for Key ID '%s'",
+                "Missing account data during Backblaze B2"
+                " authorization for Key ID '%s'",
                 user_input[CONF_KEY_ID],
             )
             errors["base"] = "invalid_credentials"
         except Exception:
             _LOGGER.exception(
-                "An unexpected error occurred during Backblaze B2 configuration for Key ID '%s'",
+                "An unexpected error occurred during Backblaze B2"
+                " configuration for Key ID '%s'",
                 user_input[CONF_KEY_ID],
             )
             errors["base"] = "unknown"

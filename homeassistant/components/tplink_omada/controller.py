@@ -1,7 +1,5 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from typing import TYPE_CHECKING
 
@@ -71,7 +69,8 @@ class OmadaSiteController:
 
         Args:
             device_filter: Function that returns True if a device should be processed.
-            entity_callback: Given a discovered Omada device, creates entities for that device.
+            entity_callback: Given a discovered Omada device,
+                creates entities for that device.
         """
         # Track which devices have been processed already
         processed_devices: set[str] = set()

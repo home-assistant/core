@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Met.no integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from datetime import timedelta
 import logging

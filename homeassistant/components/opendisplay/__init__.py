@@ -1,13 +1,13 @@
 """Integration for OpenDisplay BLE e-paper displays."""
 
-from __future__ import annotations
-
 import asyncio
 import contextlib
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from opendisplay import (
+    AuthenticationFailedError,
+    AuthenticationRequiredError,
     BLEConnectionError,
     BLETimeoutError,
     GlobalConfig,
@@ -15,11 +15,15 @@ from opendisplay import (
     OpenDisplayError,
 )
 
-from homeassistant.components.bluetooth import async_ble_device_from_address
+from homeassistant.components.bluetooth import (
+    BluetoothReachabilityIntent,
+    async_address_reachability_diagnostics,
+    async_ble_device_from_address,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.typing import ConfigType
@@ -27,14 +31,14 @@ from homeassistant.helpers.typing import ConfigType
 if TYPE_CHECKING:
     from opendisplay.models import FirmwareVersion
 
-from .const import DOMAIN
+from .const import CONF_ENCRYPTION_KEY, DOMAIN
 from .coordinator import OpenDisplayCoordinator
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 _BASE_PLATFORMS: list[Platform] = []
-_FLEX_PLATFORMS = [Platform.SENSOR]
+_FLEX_PLATFORMS = [Platform.EVENT, Platform.SENSOR]
 
 
 @dataclass
@@ -49,6 +53,25 @@ class OpenDisplayRuntimeData:
 
 
 type OpenDisplayConfigEntry = ConfigEntry[OpenDisplayRuntimeData]
+
+
+def _get_encryption_key(entry: OpenDisplayConfigEntry) -> bytes | None:
+    """Return the encryption key bytes from entry data, or None."""
+    raw = entry.data.get(CONF_ENCRYPTION_KEY)
+    if raw is None:
+        return None
+    if len(raw) != 32:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
+        )
+    try:
+        return bytes.fromhex(raw)
+    except ValueError as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
+        ) from err
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -66,18 +89,34 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenDisplayConfigEntry) 
     ble_device = async_ble_device_from_address(hass, address, connectable=True)
     if ble_device is None:
         raise ConfigEntryNotReady(
-            f"Could not find OpenDisplay device with address {address}"
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+            translation_placeholders={
+                "address": address,
+                "reason": async_address_reachability_diagnostics(
+                    hass,
+                    address.upper(),
+                    BluetoothReachabilityIntent.CONNECTION,
+                ),
+            },
         )
+    encryption_key = _get_encryption_key(entry)
 
     try:
         async with OpenDisplayDevice(
-            mac_address=address, ble_device=ble_device
+            mac_address=address, ble_device=ble_device, encryption_key=encryption_key
         ) as device:
             fw = await device.read_firmware_version()
             is_flex = device.is_flex
+    except (AuthenticationFailedError, AuthenticationRequiredError) as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="authentication_error",
+        ) from err
     except (BLEConnectionError, BLETimeoutError, OpenDisplayError) as err:
         raise ConfigEntryNotReady(
-            f"Failed to connect to OpenDisplay device: {err}"
+            translation_domain=DOMAIN,
+            translation_key="setup_connection_error",
         ) from err
     device_config = device.config
     if TYPE_CHECKING:

@@ -1,7 +1,5 @@
 """Support for number entities through the SmartThings cloud API."""
 
-from __future__ import annotations
-
 from pysmartthings import Attribute, Capability, Command, SmartThings
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
@@ -62,7 +60,12 @@ class SmartThingsWasherRinseCyclesNumberEntity(SmartThingsEntity, NumberEntity):
     def __init__(self, client: SmartThings, device: FullDevice) -> None:
         """Initialize the instance."""
         super().__init__(client, device, {Capability.CUSTOM_WASHER_RINSE_CYCLES})
-        self._attr_unique_id = f"{device.device.device_id}_{MAIN}_{Capability.CUSTOM_WASHER_RINSE_CYCLES}_{Attribute.WASHER_RINSE_CYCLES}_{Attribute.WASHER_RINSE_CYCLES}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{MAIN}"
+            f"_{Capability.CUSTOM_WASHER_RINSE_CYCLES}"
+            f"_{Attribute.WASHER_RINSE_CYCLES}"
+            f"_{Attribute.WASHER_RINSE_CYCLES}"
+        )
 
     @property
     def options(self) -> list[int]:
@@ -114,7 +117,12 @@ class SmartThingsHoodNumberEntity(SmartThingsEntity, NumberEntity):
         super().__init__(
             client, device, {Capability.SAMSUNG_CE_HOOD_FAN_SPEED}, component="hood"
         )
-        self._attr_unique_id = f"{device.device.device_id}_hood_{Capability.SAMSUNG_CE_HOOD_FAN_SPEED}_{Attribute.HOOD_FAN_SPEED}_{Attribute.HOOD_FAN_SPEED}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_hood"
+            f"_{Capability.SAMSUNG_CE_HOOD_FAN_SPEED}"
+            f"_{Attribute.HOOD_FAN_SPEED}"
+            f"_{Attribute.HOOD_FAN_SPEED}"
+        )
 
     @property
     def options(self) -> list[int]:
@@ -171,7 +179,12 @@ class SmartThingsRefrigeratorTemperatureNumberEntity(SmartThingsEntity, NumberEn
             {Capability.THERMOSTAT_COOLING_SETPOINT},
             component=component,
         )
-        self._attr_unique_id = f"{device.device.device_id}_{component}_{Capability.THERMOSTAT_COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}_{Attribute.COOLING_SETPOINT}"
+        self._attr_unique_id = (
+            f"{device.device.device_id}_{component}"
+            f"_{Capability.THERMOSTAT_COOLING_SETPOINT}"
+            f"_{Attribute.COOLING_SETPOINT}"
+            f"_{Attribute.COOLING_SETPOINT}"
+        )
         unit = self._internal_state[Capability.THERMOSTAT_COOLING_SETPOINT][
             Attribute.COOLING_SETPOINT
         ].unit

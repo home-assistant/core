@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -41,9 +43,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo EX30 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 57.72537482589284,
       'longitude': 11.849843629550225,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.volvo_ex30_location',
@@ -59,7 +64,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -95,9 +102,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo S90 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 57.72537482589284,
       'longitude': 11.849843629550225,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.volvo_s90_location',
@@ -113,7 +123,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -149,9 +161,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC40 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 57.72537482589284,
       'longitude': 11.849843629550225,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.volvo_xc40_location',
@@ -167,7 +182,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -203,9 +220,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Volvo XC90 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 57.72537482589284,
       'longitude': 11.849843629550225,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.volvo_xc90_location',

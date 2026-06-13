@@ -1,7 +1,5 @@
 """System Bridge Media Source Implementation."""
 
-from __future__ import annotations
-
 from systembridgeconnector.models.media_directories import MediaDirectory
 from systembridgeconnector.models.media_files import MediaFile, MediaFiles
 from systembridgeconnector.models.media_get_files import MediaGetFiles
@@ -15,12 +13,22 @@ from homeassistant.components.media_source import (
     MediaSourceItem,
     PlayMedia,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT, CONF_TOKEN
 from homeassistant.core import HomeAssistant
 
 from .const import DOMAIN
-from .coordinator import SystemBridgeDataUpdateCoordinator
+from .coordinator import SystemBridgeConfigEntry
+
+
+def _get_loaded_entry(hass: HomeAssistant, entry_id: str) -> SystemBridgeConfigEntry:
+    """Return a loaded System Bridge config entry by id."""
+    entry: SystemBridgeConfigEntry | None = hass.config_entries.async_get_entry(
+        entry_id
+    )
+    if entry is None or entry.state is not ConfigEntryState.LOADED:
+        raise ValueError("Invalid entry")
+    return entry
 
 
 async def async_get_media_source(hass: HomeAssistant) -> MediaSource:
@@ -46,9 +54,7 @@ class SystemBridgeSource(MediaSource):
     ) -> PlayMedia:
         """Resolve media to a url."""
         entry_id, path, mime_type = item.identifier.split("~~", 2)
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            raise ValueError("Invalid entry")
+        entry = _get_loaded_entry(self.hass, entry_id)
         path_split = path.split("/", 1)
         return PlayMedia(
             f"{_build_base_url(entry)}&base={path_split[0]}&path={path_split[1]}",
@@ -64,21 +70,14 @@ class SystemBridgeSource(MediaSource):
             return self._build_bridges()
 
         if "~~" not in item.identifier:
-            entry = self.hass.config_entries.async_get_entry(item.identifier)
-            if entry is None:
-                raise ValueError("Invalid entry")
-            coordinator: SystemBridgeDataUpdateCoordinator = self.hass.data[DOMAIN].get(
-                entry.entry_id
-            )
+            entry = _get_loaded_entry(self.hass, item.identifier)
+            coordinator = entry.runtime_data
             directories = await coordinator.websocket_client.get_directories()
             return _build_root_paths(entry, directories)
 
         entry_id, path = item.identifier.split("~~", 1)
-        entry = self.hass.config_entries.async_get_entry(entry_id)
-        if entry is None:
-            raise ValueError("Invalid entry")
-
-        coordinator = self.hass.data[DOMAIN].get(entry.entry_id)
+        entry = _get_loaded_entry(self.hass, entry_id)
+        coordinator = entry.runtime_data
 
         path_split = path.split("/", 1)
 
@@ -123,7 +122,7 @@ class SystemBridgeSource(MediaSource):
 
 
 def _build_base_url(
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
 ) -> str:
     """Build base url for System Bridge media."""
     return (
@@ -133,7 +132,7 @@ def _build_base_url(
 
 
 def _build_root_paths(
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     media_directories: list[MediaDirectory],
 ) -> BrowseMediaSource:
     """Build base categories for System Bridge media."""
@@ -164,7 +163,7 @@ def _build_root_paths(
 
 
 def _build_media_items(
-    entry: ConfigEntry,
+    entry: SystemBridgeConfigEntry,
     media_files: MediaFiles,
     path: str,
     identifier: str,

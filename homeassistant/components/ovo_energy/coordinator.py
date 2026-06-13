@@ -1,7 +1,5 @@
 """Coordinator for the OVO Energy integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -21,16 +19,18 @@ from .const import CONF_ACCOUNT
 
 _LOGGER = logging.getLogger(__name__)
 
+type OVOEnergyConfigEntry = ConfigEntry[OVOEnergyDataUpdateCoordinator]
+
 
 class OVOEnergyDataUpdateCoordinator(DataUpdateCoordinator[OVODailyUsage]):
     """Class to manage fetching OVO Energy data."""
 
-    config_entry: ConfigEntry
+    config_entry: OVOEnergyConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OVOEnergyConfigEntry,
         client: OVOEnergy,
     ) -> None:
         """Initialize."""

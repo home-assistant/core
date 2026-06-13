@@ -1,7 +1,5 @@
 """Provides conditions for power."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.const import UnitOfPower
 from homeassistant.core import HomeAssistant

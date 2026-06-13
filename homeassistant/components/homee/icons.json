@@ -39,6 +39,9 @@
       }
     },
     "switch": {
+      "homeegram": {
+        "default": "mdi:robot"
+      },
       "manual_operation": {
         "default": "mdi:hand-back-left"
       },

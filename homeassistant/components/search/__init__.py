@@ -1,7 +1,5 @@
 """The Search integration."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Iterable
 from enum import StrEnum
@@ -137,7 +135,8 @@ class Searcher:
         # Scripts referencing this area
         self._add(ItemType.SCRIPT, script.scripts_with_area(self.hass, area_id))
 
-        # Entity in this area, will extend this with the entities of the devices in this area
+        # Entity in this area, will extend this with
+        # the entities of the devices in this area
         entity_entries = er.async_entries_for_area(self._entity_registry, area_id)
 
         # Devices in this area

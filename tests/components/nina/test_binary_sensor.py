@@ -1,7 +1,5 @@
 """Test the Nina binary sensor."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from pynina import Warning
@@ -39,7 +37,7 @@ async def test_binary_sensors_without_corona_filter(
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
 ) -> None:
-    """Test the creation and values of the NINA binary sensors without the corona filter."""
+    """Test NINA binary sensors values without the corona filter."""
 
     await setup_single_platform(
         hass,
@@ -54,7 +52,8 @@ async def test_binary_sensors_without_corona_filter(
     assert state_w1.state == STATE_ON
     assert (
         state_w1.attributes.get(ATTR_HEADLINE)
-        == "Corona-Verordnung des Landes: Warnstufe durch Landesgesundheitsamt ausgerufen"
+        == "Corona-Verordnung des Landes: Warnstufe durch"
+        " Landesgesundheitsamt ausgerufen"
     )
 
     state_w2 = hass.states.get("binary_sensor.aach_stadt_warning_2")
@@ -82,7 +81,7 @@ async def test_binary_sensors_with_area_filter(
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
 ) -> None:
-    """Test the creation and values of the NINA binary sensors with a restrictive area filter."""
+    """Test NINA binary sensors with a restrictive area filter."""
 
     await setup_single_platform(
         hass,

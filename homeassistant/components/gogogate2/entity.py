@@ -1,7 +1,5 @@
 """Common code for GogoGate2 component."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from ismartgate.common import AbstractDoor, get_door_by_id

@@ -1,7 +1,5 @@
 """Coordinator for the Immich integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -121,7 +119,7 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_error",
-                translation_placeholders={"error": repr(err)},
+                translation_placeholders={"error": str(err)},
             ) from err
 
         return ImmichData(

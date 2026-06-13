@@ -52,6 +52,10 @@ DEVICES_THAT_ADOPT = {
 DEVICES_WITH_ENTITIES = DEVICES_THAT_ADOPT | {ModelType.NVR}
 DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 
+# Public API devices WebSocket: NVR (for arm_mode updates), Relay
+# (for relay output state updates), and Siren (for siren active-state updates).
+DEVICES_WS_SUBSCRIBED_MODELS = {ModelType.NVR, ModelType.RELAY, ModelType.SIREN}
+
 MIN_REQUIRED_PROTECT_V = Version("6.0.0")
 OUTDATED_LOG_MESSAGE = (
     "You are running v%s of UniFi Protect. Minimum required version is v%s. Please"
@@ -61,6 +65,7 @@ OUTDATED_LOG_MESSAGE = (
 TYPE_EMPTY_VALUE = ""
 
 PLATFORMS = [
+    Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.CAMERA,
@@ -71,6 +76,7 @@ PLATFORMS = [
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SENSOR,
+    Platform.SIREN,
     Platform.SWITCH,
     Platform.TEXT,
 ]
@@ -82,7 +88,6 @@ DISPATCH_CHANNELS = "new_camera_channels"
 EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"
 EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"
 EVENT_TYPE_NFC_SCANNED: Final = "scanned"
-EVENT_TYPE_DOORBELL_RING: Final = "ring"
 EVENT_TYPE_VEHICLE_DETECTED: Final = "detected"
 
 # Delay in seconds before firing vehicle event after last thumbnail

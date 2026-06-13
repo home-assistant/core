@@ -1,7 +1,5 @@
 """Home Assistant Hardware base beta firmware switch entity."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

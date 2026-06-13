@@ -1,7 +1,5 @@
 """Weather component that handles meteorological data for your location."""
 
-from __future__ import annotations
-
 import abc
 from collections.abc import Callable, Iterable
 from contextlib import suppress
@@ -988,7 +986,8 @@ class WeatherEntity(Entity, PostInit, cached_properties=CACHED_PROPERTIES_WITH_A
                 for fc_twice_daily in native_forecast_list:
                     if fc_twice_daily.get(ATTR_FORECAST_IS_DAYTIME) is None:
                         raise ValueError(
-                            "is_daytime mandatory attribute for forecast_twice_daily is missing"
+                            "is_daytime mandatory attribute"
+                            " for forecast_twice_daily is missing"
                         )
 
             converted_forecast_list = self._convert_forecast(native_forecast_list)
@@ -1223,7 +1222,9 @@ class SingleCoordinatorWeatherEntity(
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         super()._handle_coordinator_update()
-        assert self.coordinator.config_entry
-        self.coordinator.config_entry.async_create_task(
-            self.hass, self.async_update_listeners(None)
+        if entry := self.coordinator.config_entry:
+            entry.async_create_task(self.hass, self.async_update_listeners(None))
+            return
+        self.hass.async_create_task(
+            self.async_update_listeners(None), f"{self.coordinator.name}"
         )

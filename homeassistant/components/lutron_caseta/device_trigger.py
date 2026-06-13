@@ -1,7 +1,5 @@
 """Provides device triggers for lutron caseta."""
 
-from __future__ import annotations
-
 import logging
 from typing import cast
 
@@ -379,7 +377,8 @@ async def async_validate_trigger_config(
         )
         return config
 
-    # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
+    # Retrieve list of valid buttons, preferring
+    # hard-coded triggers from device_trigger.py
     device_type = keypad["type"]
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
         device_type,
@@ -408,7 +407,8 @@ async def async_get_triggers(
 
     keypad_button_names_to_leap = data.keypad_data.button_names_to_leap
 
-    # Retrieve list of valid buttons, preferring hard-coded triggers from device_trigger.py
+    # Retrieve list of valid buttons, preferring
+    # hard-coded triggers from device_trigger.py
     valid_buttons = DEVICE_TYPE_SUBTYPE_MAP_TO_LEAP.get(
         keypad["type"],
         keypad_button_names_to_leap[keypad["lutron_device_id"]],

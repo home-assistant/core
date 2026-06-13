@@ -1,7 +1,5 @@
 """Automation related helper methods for the Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
@@ -10,7 +8,7 @@ from typing import Any, Self
 
 from homeassistant.const import CONF_TARGET
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import target as target_helpers
+from homeassistant.helpers import entity_registry as er, target as target_helpers
 from homeassistant.helpers.condition import (
     async_get_all_descriptions as async_get_all_condition_descriptions,
 )
@@ -92,12 +90,14 @@ class _AutomationComponentLookupData:
 
     component: str
     filters: list[_EntityFilter]
+    primary_entities_only: bool = True
 
     @classmethod
     def create(cls, component: str, target_description: dict[str, Any]) -> Self:
         """Build automation component lookup data from target description."""
         filters: list[_EntityFilter] = []
 
+        primary_entities_only = target_description.get("primary_entities_only", True)
         entity_filters_config = target_description.get("entity", [])
         for entity_filter_config in entity_filters_config:
             entity_filter = _EntityFilter(
@@ -110,14 +110,29 @@ class _AutomationComponentLookupData:
             )
             filters.append(entity_filter)
 
-        return cls(component=component, filters=filters)
+        return cls(
+            component=component,
+            filters=filters,
+            primary_entities_only=primary_entities_only,
+        )
 
     def matches(
-        self, hass: HomeAssistant, entity_id: str, domain: str, integration: str
+        self,
+        hass: HomeAssistant,
+        entity_id: str,
+        domain: str,
+        integration: str,
+        check_entity_category: bool,
     ) -> bool:
         """Return if entity matches ANY of the filters."""
+        if check_entity_category and self.primary_entities_only:
+            entry = er.async_get(hass).async_get(entity_id)
+            if entry is not None and entry.entity_category is not None:
+                return False
+
         if not self.filters:
             return True
+
         return any(
             f.matches(hass, entity_id, domain, integration) for f in self.filters
         )
@@ -167,7 +182,7 @@ def _get_automation_component_lookup_table(
     component_type: AutomationComponentType,
     component_descriptions: Mapping[str, Mapping[str, Any] | None],
 ) -> _AutomationComponentLookupTable:
-    """Get a dict of automation components keyed by domain, along with the total number of components.
+    """Get automation components keyed by domain with total count.
 
     Returns a cached object if available.
     """
@@ -214,12 +229,14 @@ def _async_get_automation_components_for_target(
 ) -> set[str]:
     """Get automation components (triggers/conditions/services) for a target.
 
-    Returns all components that can be used on any entity that are currently part of a target.
+    Returns all components that can be used on any entity
+    that are currently part of a target.
     """
     extracted = target_helpers.async_extract_referenced_entity_ids(
         hass,
         target_helpers.TargetSelection(target_selection),
         expand_group=expand_group,
+        primary_entities_only=False,
     )
     _LOGGER.debug("Extracted entities for lookup: %s", extracted)
 
@@ -232,30 +249,40 @@ def _async_get_automation_components_for_target(
 
     entity_infos = entity_sources(hass)
     matched_components: set[str] = set()
-    for entity_id in extracted.referenced | extracted.indirectly_referenced:
-        if lookup_table.component_count == len(matched_components):
-            # All automation components matched already, so we don't need to iterate further
-            break
 
-        entity_info = entity_infos.get(entity_id)
-        if entity_info is None:
-            _LOGGER.debug("No entity source found for %s", entity_id)
-            continue
+    def _match_components(entities: set[str], check_entity_category: bool) -> None:
+        for entity_id in entities:
+            if lookup_table.component_count == len(matched_components):
+                # All automation components matched already,
+                # so we don't need to iterate further
+                break
 
-        entity_domain = entity_id.split(".")[0]
-        entity_integration = entity_info["domain"]
-        for domain in (entity_domain, entity_integration, None):
-            if not (
-                domain_component_data := lookup_table.domain_components.get(domain)
-            ):
+            entity_info = entity_infos.get(entity_id)
+            if entity_info is None:
+                _LOGGER.debug("No entity source found for %s", entity_id)
                 continue
-            for component_data in domain_component_data:
-                if component_data.component in matched_components:
-                    continue
-                if component_data.matches(
-                    hass, entity_id, entity_domain, entity_integration
+
+            entity_domain = entity_id.split(".")[0]
+            entity_integration = entity_info["domain"]
+            for domain in (entity_domain, entity_integration, None):
+                if not (
+                    domain_component_data := lookup_table.domain_components.get(domain)
                 ):
-                    matched_components.add(component_data.component)
+                    continue
+                for component_data in domain_component_data:
+                    if component_data.component in matched_components:
+                        continue
+                    if component_data.matches(
+                        hass,
+                        entity_id,
+                        entity_domain,
+                        entity_integration,
+                        check_entity_category,
+                    ):
+                        matched_components.add(component_data.component)
+
+    _match_components(extracted.referenced, check_entity_category=False)
+    _match_components(extracted.indirectly_referenced, check_entity_category=True)
 
     return matched_components
 

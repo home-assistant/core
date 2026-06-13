@@ -1,0 +1,168 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      No custom service actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow-test-coverage:
+    status: todo
+    comment: |
+      - `test_form` has a stale name/docstring.
+      - Use a `mock_setup_entry` fixture instead of patching inline.
+      - Typo `resultn` should reuse `result`.
+      - Merge `test_form_invalid_auth` and `test_form_unknown` with
+        `pytest.mark.parametrize`, and have every flow test end in
+        `CREATE_ENTRY` by repatching the mock to verify recovery.
+  config-flow:
+    status: todo
+    comment: |
+      Add `data_description` in `strings.json` for the host/username/
+      password fields on the user step.
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      No custom service actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: todo
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Coordinator-polled; no library events to subscribe to.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry:
+    status: todo
+    comment: |
+      Config flow does not call `set_unique_id`. Use the serial number
+      from `/api/v1/info` (already fetched during validation) — and
+      reuse it as the device identifier and entity unique_id prefix in
+      place of `entry_id`.
+
+  # Silver
+  action-exceptions:
+    status: todo
+    comment: |
+      Button presses raise `HomeAssistantError("Action conflicts with
+      current printer state")` with a hard-coded English string when
+      the printer rejects the action. We don't register custom service
+      actions, but button presses are user-triggered actions in spirit
+      so this rule applies. Switch to `translation_key` (tracked
+      alongside `exception-translations`).
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      No options flow; host/username/password are captured at setup.
+  docs-installation-parameters:
+    status: todo
+    comment: |
+      Same gap as `config-flow`: needs `data_description`.
+  entity-unavailable: done
+  integration-owner:
+    status: todo
+    comment: |
+      Assign a codeowner in `manifest.json`.
+  log-when-unavailable: done
+  parallel-updates:
+    status: todo
+    comment: |
+      Declare `PARALLEL_UPDATES` on each platform module.
+  reauthentication-flow:
+    status: todo
+    comment: |
+      `InvalidAuth` currently surfaces as `UpdateFailed`; should trigger
+      `async_step_reauth` instead so the user can re-enter credentials
+      without removing the entry.
+  test-coverage:
+    status: todo
+    comment: |
+      - Use `snapshot_platform` to fixate entities instead of asserting
+        manually.
+      - Replace per-method `patch(...)` calls with a single `PrusaLink`
+        patch (see `mealie` for the pattern).
+      - Use `freezegun`/`freezer` in `test_failed_update` rather than
+        firing time changes directly.
+      - Introduce `CONF_HOST`-style constants for fixture values rather
+        than literal strings.
+      - Set up the config entry via
+        `hass.config_entries.async_setup(entry.entry_id)` instead of
+        `async_setup_component(hass, "prusalink", {})`.
+
+  # Gold
+  devices: done
+  diagnostics:
+    status: todo
+    comment: |
+      Add `diagnostics.py` returning the latest coordinator data with
+      sensitive fields redacted.
+  discovery-update-info:
+    status: todo
+    comment: |
+      Once `async_step_dhcp` lands (`discovery`), also update the
+      stored host on rediscovery so dynamic-IP printers don't drift.
+  discovery:
+    status: todo
+    comment: |
+      `manifest.json` declares a DHCP MAC-prefix matcher but the config
+      flow has no `async_step_dhcp` — DHCP-discovered printers should
+      onboard without prompting for an IP.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices:
+    status: todo
+    comment: |
+      Existing device list needs a refresh against the current
+      Buddy-firmware lineup (Core One/Core One L/Core One+/MK4/MK4S/
+      MK3.9(S)/MK3.5(S)) and the firmware-field caveats (XL 6.4.x,
+      MINI 6.4.0 lack the `printer.firmware` field).
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: |
+      One printer per config entry; sub-resources are entities on that
+      device.
+  entity-category:
+    status: todo
+    comment: |
+      Mark static-config sensors (nozzle diameter, min extrusion temp)
+      as `EntityCategory.DIAGNOSTIC`. Operational sensors stay primary.
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations:
+    status: todo
+    comment: |
+      Buttons raise `HomeAssistantError("Action conflicts with current
+      printer state")` with a hard-coded English string; switch to
+      `translation_key`.
+  icon-translations: done
+  reconfiguration-flow:
+    status: todo
+    comment: |
+      Add `async_step_reconfigure` so host/credentials can change
+      without re-adding the entry.
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: |
+      One printer per config entry; sub-resources are entities.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing:
+    status: todo
+    comment: |
+      Claimable once HA pins `pyprusalink>=3.0.0` (ships `py.typed` and
+      `mypy --strict` in CI).

@@ -1,7 +1,5 @@
 """Base class for IKEA TRADFRI."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import wraps

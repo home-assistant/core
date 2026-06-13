@@ -1,9 +1,7 @@
 """Support for Tuya cameras."""
 
-from __future__ import annotations
-
 from tuya_device_handlers.definition.camera import (
-    TuyaCameraDefinition,
+    CameraDefinition,
     get_default_definition,
 )
 from tuya_sharing import CustomerDevice, Manager
@@ -18,8 +16,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import TuyaConfigEntry
 from .const import TUYA_DISCOVERY_NEW, DeviceCategory
+from .coordinator import TuyaConfigEntry
 from .entity import TuyaEntity
 
 CAMERAS: dict[DeviceCategory, CameraEntityDescription] = {
@@ -70,7 +68,7 @@ class TuyaCameraEntity(TuyaEntity, CameraEntity):
         device: CustomerDevice,
         device_manager: Manager,
         description: CameraEntityDescription,
-        definition: TuyaCameraDefinition,
+        definition: CameraDefinition,
     ) -> None:
         """Init Tuya Camera."""
         super().__init__(device, device_manager, description)

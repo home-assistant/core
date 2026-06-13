@@ -8,6 +8,7 @@ import uuid
 import pytest
 
 from homeassistant.components.lovelace import dashboard, resources
+from homeassistant.components.lovelace.const import DOMAIN, LOVELACE_DATA
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -25,7 +26,7 @@ async def test_yaml_resources(
 ) -> None:
     """Test defining resources in configuration.yaml."""
     assert await async_setup_component(
-        hass, "lovelace", {"lovelace": {"mode": "yaml", "resources": RESOURCE_EXAMPLES}}
+        hass, DOMAIN, {"lovelace": {"mode": "yaml", "resources": RESOURCE_EXAMPLES}}
     )
 
     client = await hass_ws_client(hass)
@@ -46,9 +47,7 @@ async def test_yaml_resources_backwards(
         "homeassistant.components.lovelace.dashboard.load_yaml_dict",
         return_value={"resources": RESOURCE_EXAMPLES},
     ):
-        assert await async_setup_component(
-            hass, "lovelace", {"lovelace": {"mode": "yaml"}}
-        )
+        assert await async_setup_component(hass, DOMAIN, {"lovelace": {"mode": "yaml"}})
 
     client = await hass_ws_client(hass)
 
@@ -73,7 +72,7 @@ async def test_storage_resources(
         "version": 1,
         "data": {"items": resource_config},
     }
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
 
@@ -92,7 +91,7 @@ async def test_storage_resources_import(
     list_cmd: str,
 ) -> None:
     """Test importing resources from storage config."""
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
         "key": "lovelace",
         "version": 1,
@@ -258,7 +257,7 @@ async def test_storage_resources_import_invalid(
     list_cmd: str,
 ) -> None:
     """Test importing resources from storage config."""
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     hass_storage[dashboard.CONFIG_STORAGE_KEY_DEFAULT] = {
         "key": "lovelace",
         "version": 1,
@@ -278,6 +277,41 @@ async def test_storage_resources_import_invalid(
     )
 
 
+async def test_storage_resources_create_preserves_existing(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test async_create_item lazy-loads before writing.
+
+    Custom integrations may call async_create_item() during startup before the
+    frontend triggers a resource listing. Without a lazy-load guard, the
+    collection is empty and async_create_item() overwrites all existing
+    resources on disk.
+    """
+    resource_config = [{**item, "id": uuid.uuid4().hex} for item in RESOURCE_EXAMPLES]
+    hass_storage[resources.RESOURCE_STORAGE_KEY] = {
+        "key": resources.RESOURCE_STORAGE_KEY,
+        "version": 1,
+        "data": {"items": resource_config},
+    }
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    resource_collection = hass.data[LOVELACE_DATA].resources
+
+    # Directly call async_create_item before any websocket listing
+    await resource_collection.async_create_item(
+        {"res_type": "module", "url": "/local/new.js"}
+    )
+
+    # Existing resources must still be present
+    items = resource_collection.async_items()
+    assert len(items) == len(resource_config) + 1
+    urls = [item["url"] for item in items]
+    for original in resource_config:
+        assert original["url"] in urls
+    assert "/local/new.js" in urls
+
+
 @pytest.mark.parametrize("list_cmd", ["lovelace/resources", "lovelace/resources/list"])
 async def test_storage_resources_safe_mode(
     hass: HomeAssistant,
@@ -293,7 +327,7 @@ async def test_storage_resources_safe_mode(
         "version": 1,
         "data": {"items": resource_config},
     }
-    assert await async_setup_component(hass, "lovelace", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     hass.config.safe_mode = True

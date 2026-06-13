@@ -1,7 +1,5 @@
 """Demo platform that has two fake remotes."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import Any
 

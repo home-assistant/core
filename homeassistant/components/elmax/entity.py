@@ -1,7 +1,5 @@
 """Elmax integration common classes and utilities."""
 
-from __future__ import annotations
-
 from elmax_api.model.endpoint import DeviceEndpoint
 
 from homeassistant.helpers.device_registry import DeviceInfo

@@ -1,7 +1,5 @@
 """Support for Epson projector."""
 
-from __future__ import annotations
-
 import logging
 
 from epson_projector import Projector, ProjectorUnavailableError
@@ -29,6 +27,7 @@ from epson_projector.const import (
 )
 
 from homeassistant.components.media_player import (
+    MediaPlayerDeviceClass,
     MediaPlayerEntity,
     MediaPlayerEntityFeature,
     MediaPlayerState,
@@ -64,6 +63,7 @@ class EpsonProjectorMediaPlayer(MediaPlayerEntity):
 
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_device_class = MediaPlayerDeviceClass.PROJECTOR
 
     _attr_supported_features = (
         MediaPlayerEntityFeature.TURN_ON

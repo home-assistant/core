@@ -1,7 +1,5 @@
 """Binary sensor entity platform for Tailwind."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -18,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import TailwindConfigEntry
 from .entity import TailwindDoorEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(kw_only=True, frozen=True)

@@ -1,7 +1,5 @@
 """Todo platform for the Bring! integration."""
 
-from __future__ import annotations
-
 from itertools import chain
 from typing import TYPE_CHECKING
 import uuid
@@ -127,7 +125,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         await self.coordinator.async_refresh()
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list.
+        """Update an item in the To-do list.
 
         Bring has an internal 'recent' list which we want to use instead of a todo list
         status, therefore completed todo list items are matched to the recent list and

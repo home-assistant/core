@@ -17,7 +17,6 @@ from homeassistant.components.media_player import (
     MediaClass,
     MediaPlayerEnqueue,
     MediaPlayerEntity,
-    MediaPlayerState,
     SearchMedia,
     SearchMediaQuery,
 )
@@ -26,11 +25,11 @@ from homeassistant.components.media_player.const import (
     SERVICE_SEARCH_MEDIA,
 )
 from homeassistant.components.websocket_api import TYPE_RESULT
-from homeassistant.const import ATTR_ENTITY_ID, CONF_PLATFORM, STATE_OFF
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockEntityPlatform, setup_test_component_platform
+from tests.common import MockEntityPlatform
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
@@ -95,9 +94,7 @@ async def test_get_image_http(
     hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
 ) -> None:
     """Test get image via http command."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     state = hass.states.get("media_player.bedroom")
@@ -125,7 +122,7 @@ async def test_get_image_http_remote(
         return_value=True,
     ):
         await async_setup_component(
-            hass, "media_player", {"media_player": {"platform": "demo"}}
+            hass, DOMAIN, {"media_player": {"platform": "demo"}}
         )
         await hass.async_block_till_done()
 
@@ -145,6 +142,37 @@ async def test_get_image_http_remote(
         assert content == b"image"
 
 
+async def test_get_image_http_missing_image(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test advertised local image with missing bytes returns not found."""
+    with (
+        patch(
+            "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+            None,
+        ),
+        patch(
+            "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_hash",
+            "missing-image",
+        ),
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+
+        state = hass.states.get("media_player.bedroom")
+        client = await hass_client_no_auth()
+
+        with patch(
+            "homeassistant.components.media_player.MediaPlayerEntity.async_get_media_image",
+            return_value=(None, None),
+        ):
+            resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+
+
 async def test_get_image_http_log_credentials_redacted(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -158,7 +186,7 @@ async def test_get_image_http_log_credentials_redacted(
         url,
     ):
         await async_setup_component(
-            hass, "media_player", {"media_player": {"platform": "demo"}}
+            hass, DOMAIN, {"media_player": {"platform": "demo"}}
         )
         await hass.async_block_till_done()
 
@@ -171,7 +199,7 @@ async def test_get_image_http_log_credentials_redacted(
 
         resp = await client.get(state.attributes["entity_picture"])
 
-    assert resp.status == HTTPStatus.INTERNAL_SERVER_ERROR
+    assert resp.status == HTTPStatus.NOT_FOUND
     assert f"Error retrieving proxied image from {url}" not in caplog.text
     assert (
         "Error retrieving proxied image from "
@@ -185,9 +213,7 @@ async def test_get_async_get_browse_image(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test get browse image."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     entity_comp = hass.data.get("entity_components", {}).get("media_player")
@@ -214,9 +240,7 @@ async def test_media_browse(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test browsing media."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -284,9 +308,7 @@ async def test_media_browse(
 
 async def test_media_browse_service(hass: HomeAssistant) -> None:
     """Test browsing media using service call."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     with patch(
@@ -355,9 +377,7 @@ async def test_media_search(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test browsing media."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     client = await hass_ws_client(hass)
@@ -419,9 +439,7 @@ async def test_media_search(
 
 async def test_media_search_service(hass: HomeAssistant) -> None:
     """Test browsing media."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
     expected = [
         BrowseMedia(
@@ -466,9 +484,7 @@ async def test_media_search_service(hass: HomeAssistant) -> None:
 
 async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
     """Test that group_members are still available when media_player is off."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -497,9 +513,7 @@ async def test_group_members_available_when_off(hass: HomeAssistant) -> None:
 )
 async def test_enqueue_rewrite(hass: HomeAssistant, input, expected) -> None:
     """Test that group_members are still available when media_player is off."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     # Fake group support for DemoYoutubePlayer
@@ -524,9 +538,7 @@ async def test_enqueue_rewrite(hass: HomeAssistant, input, expected) -> None:
 
 async def test_enqueue_alert_exclusive(hass: HomeAssistant) -> None:
     """Test that alert and enqueue cannot be used together."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     with pytest.raises(vol.Invalid):
@@ -564,9 +576,7 @@ async def test_get_async_get_browse_image_quoting(
     async_get_browse_image() should get called with the same string that is
     passed into get_browse_image_url().
     """
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     entity_comp = hass.data.get("entity_components", {}).get("media_player")
@@ -587,10 +597,8 @@ async def test_get_async_get_browse_image_quoting(
 
 
 async def test_play_media_via_selector(hass: HomeAssistant) -> None:
-    """Test that play_media data under 'media' is remapped to top level keys for backward compatibility."""
-    await async_setup_component(
-        hass, "media_player", {"media_player": {"platform": "demo"}}
-    )
+    """Test play_media data under 'media' is remapped for backward compat."""
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
     await hass.async_block_till_done()
 
     # Fake group support for DemoYoutubePlayer
@@ -637,62 +645,3 @@ async def test_play_media_via_selector(hass: HomeAssistant) -> None:
             },
             blocking=True,
         )
-
-
-async def test_media_player_state(hass: HomeAssistant) -> None:
-    """Test that media player state includes last_non_buffering_state."""
-    entity1 = MediaPlayerEntity()
-    entity1._attr_name = "test1"
-
-    setup_test_component_platform(hass, DOMAIN, [entity1])
-    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
-    await hass.async_block_till_done()
-
-    state = hass.states.get("media_player.test1")
-    assert state.state == "unknown"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "last_non_buffering_state": None,
-        "supported_features": 0,
-    }
-
-    entity1._attr_state = MediaPlayerState.PLAYING
-    entity1.async_write_ha_state()
-    state = hass.states.get("media_player.test1")
-    assert state.state == "playing"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "last_non_buffering_state": "playing",
-        "supported_features": 0,
-    }
-
-    # last_non_buffering_state not updated when state is buffering
-    entity1._attr_state = MediaPlayerState.BUFFERING
-    entity1.async_write_ha_state()
-    state = hass.states.get("media_player.test1")
-    assert state.state == "buffering"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "last_non_buffering_state": "playing",
-        "supported_features": 0,
-    }
-
-    entity1._attr_state = MediaPlayerState.PAUSED
-    entity1.async_write_ha_state()
-    state = hass.states.get("media_player.test1")
-    assert state.state == "paused"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "last_non_buffering_state": "paused",
-        "supported_features": 0,
-    }
-
-    # last_non_buffering_state not present when unavailable
-    entity1._attr_available = False
-    entity1.async_write_ha_state()
-    state = hass.states.get("media_player.test1")
-    assert state.state == "unavailable"
-    assert state.attributes == {
-        "friendly_name": "test1",
-        "supported_features": 0,
-    }

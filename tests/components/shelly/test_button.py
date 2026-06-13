@@ -1,7 +1,7 @@
 """Tests for Shelly button platform."""
 
 from copy import deepcopy
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.const import MODEL_BLU_GATEWAY_G3, MODEL_PLUS_SMOKE, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
@@ -95,11 +95,13 @@ async def test_rpc_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for button.test_name_restart of Test name",
+            "Device communication error occurred while calling action"
+            " for button.test_name_restart of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for button.test_name_restart of Test name",
+            "RPC call error occurred while calling action"
+            " for button.test_name_restart of Test name",
         ),
     ],
 )
@@ -233,11 +235,13 @@ async def test_rpc_blu_trv_button(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while calling action for button.trv_name_calibrate of Test name",
+            "Device communication error occurred while calling action"
+            " for button.trv_name_calibrate of Test name",
         ),
         (
             RpcCallError(999),
-            "RPC call error occurred while calling action for button.trv_name_calibrate of Test name",
+            "RPC call error occurred while calling action"
+            " for button.trv_name_calibrate of Test name",
         ),
     ],
 )
@@ -344,7 +348,7 @@ async def test_rpc_remove_virtual_button_when_orphaned(
     device_registry: DeviceRegistry,
     mock_rpc_device: Mock,
 ) -> None:
-    """Check whether the virtual button will be removed if it has been removed from the device configuration."""
+    """Test virtual button removal from device configuration."""
     config_entry = await init_integration(hass, 3, skip_setup=True)
     device_entry = register_device(device_registry, config_entry)
     entity_id = register_entity(
@@ -494,7 +498,13 @@ async def test_rpc_smoke_mute_alarm_button(
     monkeypatch.setitem(mock_rpc_device.status["sys"], "wakeup_period", 1000)
     monkeypatch.setattr(mock_rpc_device, "config", {"smoke:0": {"id": 0, "name": None}})
     monkeypatch.setattr(mock_rpc_device, "connected", False)
-    await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
+        await init_integration(hass, 2, sleep_period=1000, model=MODEL_PLUS_SMOKE)
 
     # Sensor should be created when device is online
     assert hass.states.get(entity_id) is None

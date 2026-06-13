@@ -42,6 +42,7 @@ async def test_setup_demo_platform(hass: HomeAssistant) -> None:
     """Test setup."""
     mock = MagicMock()
     add_entities = mock.MagicMock()
+    # pylint: disable-next=home-assistant-tests-direct-platform-async-setup-entry
     await demo.async_setup_entry(hass, {}, add_entities)
     assert add_entities.call_count == 1
 
@@ -239,7 +240,7 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
 
-    with pytest.raises(ServiceValidationError, match=r"^Invalid alarm code provided$"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
@@ -249,6 +250,7 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
             },
             blocking=True,
         )
+    assert err.value.translation_key == "invalid_code"
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
 
@@ -1107,8 +1109,9 @@ async def test_disarm_during_trigger_with_invalid_code(hass: HomeAssistant) -> N
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.PENDING
 
-    with pytest.raises(ServiceValidationError, match=r"^Invalid alarm code provided$"):
+    with pytest.raises(ServiceValidationError) as err:
         await common.async_alarm_disarm(hass, entity_id=entity_id)
+    assert err.value.translation_key == "invalid_code"
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.PENDING
 
@@ -1225,8 +1228,9 @@ async def test_disarm_with_template_code(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == AlarmControlPanelState.ARMED_HOME
 
-    with pytest.raises(ServiceValidationError, match=r"^Invalid alarm code provided$"):
+    with pytest.raises(ServiceValidationError) as err:
         await common.async_alarm_disarm(hass, "def")
+    assert err.value.translation_key == "invalid_code"
 
     state = hass.states.get(entity_id)
     assert state.state == AlarmControlPanelState.ARMED_HOME
@@ -1336,6 +1340,33 @@ async def test_restore_state(hass: HomeAssistant, expected_state) -> None:
     state = hass.states.get("alarm_control_panel.test")
     assert state
     assert state.state == expected_state
+
+
+async def test_restore_state_invalid(hass: HomeAssistant) -> None:
+    """Ensure invalid restored state does not crash entity setup."""
+    mock_restore_cache(hass, (State("alarm_control_panel.test", "unknown"),))
+
+    hass.set_state(CoreState.starting)
+    mock_component(hass, "recorder")
+
+    assert await async_setup_component(
+        hass,
+        alarm_control_panel.DOMAIN,
+        {
+            "alarm_control_panel": {
+                "platform": "manual",
+                "name": "test",
+                "arming_time": 0,
+                "trigger_time": 0,
+                "disarm_after_trigger": False,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("alarm_control_panel.test")
+    assert state
+    assert state.state == AlarmControlPanelState.DISARMED
 
 
 @pytest.mark.parametrize(

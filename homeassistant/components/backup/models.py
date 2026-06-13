@@ -1,7 +1,5 @@
 """Models for the backup integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict, dataclass
 from enum import StrEnum
 from typing import Any, Self
@@ -93,6 +91,12 @@ class BackupReaderWriterError(BackupError):
     """Backup reader/writer error."""
 
     error_code = "backup_reader_writer_error"
+
+
+class InvalidBackupFilename(BackupManagerError):
+    """Raised when a backup filename is invalid."""
+
+    error_code = "invalid_backup_filename"
 
 
 class BackupNotFound(BackupAgentError, BackupManagerError):

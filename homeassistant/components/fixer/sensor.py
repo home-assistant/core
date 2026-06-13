@@ -1,7 +1,5 @@
 """Currency exchange rate support that comes from fixer.io."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any

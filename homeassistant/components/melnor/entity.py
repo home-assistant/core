@@ -87,7 +87,8 @@ def get_entities_for_valves[_T: EntityDescription](
     """Get descriptions for valves."""
     entities: list[CoordinatorEntity[MelnorDataUpdateCoordinator]] = []
 
-    # This device may not have 4 valves total, but the library will only expose the right number of valves
+    # This device may not have 4 valves total, but the library
+    # will only expose the right number of valves
     for i in range(1, 5):
         valve = coordinator.data[f"zone{i}"]
 

@@ -1,7 +1,5 @@
 """The Netio switch component."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 from datetime import timedelta
 import logging

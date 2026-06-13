@@ -1,14 +1,12 @@
 """Common fixtures for the Yardian tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
 from pyyardian import OperationInfo, YardianDeviceState
 
-from homeassistant.components.yardian import DOMAIN
+from homeassistant.components.yardian.const import DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_HOST, CONF_NAME, Platform
 
 from tests.common import MockConfigEntry
@@ -34,7 +32,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_ACCESS_TOKEN: "abc",
             CONF_NAME: "Yardian",
             "yid": "yid123",
-            "model": "PRO1902",
+            "model": "PRO1902C1",
             "serialNumber": "SN1",
         },
         title="Yardian Smart Sprinkler",
@@ -50,12 +48,17 @@ def mock_yardian_client() -> Generator[AsyncMock]:
         ) as client_cls,
         patch(
             "homeassistant.components.yardian.config_flow.AsyncYardianClient",
-            autospec=True,
-        ) as flow_client_cls,
+            new=client_cls,
+        ),
     ):
         client = client_cls.return_value
-        flow_client_cls.return_value = client
 
+        client_cls.create.return_value = client
+
+        client.fetch_device_info.return_value = {
+            "name": "fake_name",
+            "yid": "fake_yid",
+        }
         client.fetch_device_state.return_value = YardianDeviceState(
             zones=[["Zone 1", 1], ["Zone 2", 0]],
             active_zones={0},

@@ -1,7 +1,5 @@
 """Support for interfacing with the XBMC/Kodi JSON-RPC API."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps

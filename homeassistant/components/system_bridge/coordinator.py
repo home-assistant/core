@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for System Bridge."""
 
-from __future__ import annotations
-
 from asyncio import Task
 from collections.abc import Callable
 from datetime import timedelta
@@ -36,18 +34,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
 from .data import SystemBridgeData
 
+type SystemBridgeConfigEntry = ConfigEntry[SystemBridgeDataUpdateCoordinator]
+
 
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
     """Class to manage fetching System Bridge data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: SystemBridgeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         LOGGER: logging.Logger,
         *,
-        entry: ConfigEntry,
+        entry: SystemBridgeConfigEntry,
     ) -> None:
         """Initialize global System Bridge data updater."""
         self.title = entry.title

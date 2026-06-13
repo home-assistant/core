@@ -1,7 +1,5 @@
 """Entity for the opengarage.io component."""
 
-from __future__ import annotations
-
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -54,5 +52,5 @@ class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
             manufacturer="Open Garage",
             name=self.coordinator.data["name"],
             suggested_area="Garage",
-            sw_version=self.coordinator.data["fwv"],
+            sw_version=str(self.coordinator.data["fwv"]),
         )

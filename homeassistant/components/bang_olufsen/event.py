@@ -1,7 +1,5 @@
 """Event entities for the Bang & Olufsen integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from mozart_api.models import PairedRemote
@@ -20,7 +18,6 @@ from .const import (
     CONNECTION_STATUS,
     DEVICE_BUTTON_EVENTS,
     DOMAIN,
-    MANUFACTURER,
     BeoModel,
     WebsocketNotification,
 )
@@ -53,7 +50,8 @@ async def async_setup_entry(
         )
 
     # If the remote is no longer available, then delete the device.
-    # The remote may appear as being available to the device after it has been unpaired on the remote
+    # The remote may appear as being available to the device
+    # after it has been unpaired on the remote
     # As it has to be removed from the device on the app.
 
     device_registry = dr.async_get(hass)
@@ -142,12 +140,6 @@ class BeoRemoteKeyEvent(BeoEvent):
         self._attr_unique_id = f"{remote.serial_number}_{self._unique_id}_{key_type}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{remote.serial_number}_{self._unique_id}")},
-            name=f"{BeoModel.BEOREMOTE_ONE}-{remote.serial_number}-{self._unique_id}",
-            model=BeoModel.BEOREMOTE_ONE,
-            serial_number=remote.serial_number,
-            sw_version=remote.app_version,
-            manufacturer=MANUFACTURER,
-            via_device=(DOMAIN, self._unique_id),
         )
 
         # Make the native key name Home Assistant compatible

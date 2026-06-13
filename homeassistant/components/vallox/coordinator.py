@@ -1,7 +1,5 @@
 """Coordinator for Vallox ventilation units."""
 
-from __future__ import annotations
-
 import logging
 
 from vallox_websocket_api import MetricData, Vallox, ValloxApiException
@@ -15,16 +13,18 @@ from .const import STATE_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
+type ValloxConfigEntry = ConfigEntry[ValloxDataUpdateCoordinator]
+
 
 class ValloxDataUpdateCoordinator(DataUpdateCoordinator[MetricData]):
     """The DataUpdateCoordinator for Vallox."""
 
-    config_entry: ConfigEntry
+    config_entry: ValloxConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: ValloxConfigEntry,
         client: Vallox,
     ) -> None:
         """Initialize Vallox data coordinator."""

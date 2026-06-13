@@ -1,7 +1,5 @@
 """Sensor platform for Sleep as Android integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from enum import StrEnum
 

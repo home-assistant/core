@@ -1,9 +1,8 @@
 """The IntelliFire integration."""
 
-from __future__ import annotations
-
 import asyncio
 
+import aiohttp
 from intellifire4py import UnifiedFireplace
 from intellifire4py.cloud_interface import IntelliFireCloudInterface
 from intellifire4py.const import IntelliFireApiMode
@@ -143,7 +142,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
     try:
         fireplace: UnifiedFireplace = (
             await UnifiedFireplace.build_fireplace_from_common(
-                _construct_common_data(entry)
+                _construct_common_data(entry),
+                polling_enabled=False,
             )
         )
         LOGGER.debug("Waiting for Fireplace to Initialize")
@@ -153,6 +153,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IntellifireConfigEntry) 
     except TimeoutError as err:
         raise ConfigEntryNotReady(
             "Initialization of fireplace timed out after 10 minutes"
+        ) from err
+    except (aiohttp.ClientConnectionError, ConnectionError) as err:
+        raise ConfigEntryNotReady(
+            "Error communicating with fireplace during initialization"
         ) from err
 
     # Construct coordinator
@@ -188,11 +192,11 @@ async def async_update_options(
     current_control_mode = fireplace.control_mode
 
     # Only update modes that actually changed
-    if new_read_mode != current_read_mode:
+    if new_read_mode is not current_read_mode:
         LOGGER.debug("Updating read mode: %s -> %s", current_read_mode, new_read_mode)
         await fireplace.set_read_mode(new_read_mode)
 
-    if new_control_mode != current_control_mode:
+    if new_control_mode is not current_control_mode:
         LOGGER.debug(
             "Updating control mode: %s -> %s", current_control_mode, new_control_mode
         )

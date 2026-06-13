@@ -1,7 +1,5 @@
 """Common libraries for test setup."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Generator
 import copy
 from dataclasses import dataclass

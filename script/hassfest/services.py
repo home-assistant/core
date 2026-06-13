@@ -1,7 +1,5 @@
 """Validate dependencies."""
 
-from __future__ import annotations
-
 import contextlib
 import json
 import pathlib
@@ -191,7 +189,9 @@ def check_extraneous_translation_fields(
         for field in translation_fields - section_fields:
             integration.add_error(
                 "services",
-                f"Service {service_name} has a field {field} in the translations file that is not in the schema",
+                f"Service {service_name} has a field"
+                f" {field} in the translations file"
+                " that is not in the schema",
             )
 
 
@@ -315,7 +315,9 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                 except KeyError:
                     integration.add_error(
                         "services",
-                        f"Service {service_name} has a field {field_name} with no name {error_msg_suffix}",
+                        f"Service {service_name} has a"
+                        f" field {field_name} with"
+                        f" no name {error_msg_suffix}",
                     )
 
             if "selector" in field_schema:
@@ -328,7 +330,14 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                     except KeyError:
                         integration.add_error(
                             "services",
-                            f"Service {service_name} has a field {field_name} with a selector with a translation key {translation_key} that is not in the translations file",
+                            f"Service {service_name}"
+                            f" has a field"
+                            f" {field_name} with a"
+                            " selector with a"
+                            " translation key"
+                            f" {translation_key}"
+                            " that is not in the"
+                            " translations file",
                         )
 
         # The same check is done for the description in each of the sections of the
@@ -343,7 +352,10 @@ def validate_services(config: Config, integration: Integration) -> None:  # noqa
                 except KeyError:
                     integration.add_error(
                         "services",
-                        f"Service {service_name} has a section {section_name} with no name {error_msg_suffix}",
+                        f"Service {service_name}"
+                        f" has a section"
+                        f" {section_name} with no"
+                        f" name {error_msg_suffix}",
                     )
 
 

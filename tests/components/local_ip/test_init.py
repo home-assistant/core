@@ -1,7 +1,5 @@
 """Tests for the local_ip component."""
 
-from __future__ import annotations
-
 from homeassistant.components.local_ip.const import DOMAIN
 from homeassistant.components.network import MDNS_TARGET_IP, async_get_source_ip
 from homeassistant.config_entries import ConfigEntryState

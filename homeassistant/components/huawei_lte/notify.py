@@ -1,7 +1,5 @@
 """Support for Huawei LTE router notifications."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -12,8 +10,7 @@ from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import Router
-from .const import DOMAIN
+from . import HuaweiLteConfigEntry, Router
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +24,11 @@ async def async_get_service(
     if discovery_info is None:
         return None
 
-    router = hass.data[DOMAIN].routers[discovery_info[ATTR_CONFIG_ENTRY_ID]]
+    entry: HuaweiLteConfigEntry | None = hass.config_entries.async_get_entry(
+        discovery_info[ATTR_CONFIG_ENTRY_ID]
+    )
+    assert entry is not None
+    router = entry.runtime_data
     default_targets = discovery_info[CONF_RECIPIENT] or []
 
     return HuaweiLteSmsNotificationService(router, default_targets)
@@ -59,5 +60,6 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
                 phone_numbers=targets, message=message
             )
             _LOGGER.debug("Sent to %s: %s", targets, resp)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ResponseErrorException as ex:
             _LOGGER.error("Could not send to %s: %s", targets, ex)

@@ -17,7 +17,13 @@
           "longitude": "[%key:common::config_flow::data::longitude%]",
           "radius": "Station radius (miles; optional)"
         },
-        "description": "To generate API key go to {api_key_url}"
+        "data_description": {
+          "api_key": "To generate an API key, go to {api_key_url}.",
+          "latitude": "The latitude of your location.",
+          "longitude": "The longitude of your location.",
+          "radius": "The radius in miles around your location to search for reporting stations."
+        },
+        "description": "To generate an API key, go to {api_key_url}."
       }
     }
   },
@@ -40,6 +46,9 @@
       "init": {
         "data": {
           "radius": "Station radius (miles)"
+        },
+        "data_description": {
+          "radius": "The radius in miles around your location to search for reporting stations."
         }
       }
     }

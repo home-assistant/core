@@ -41,7 +41,8 @@ from tests.components.bluetooth import inject_bluetooth_service_info
     [
         (
             ValueError("wrong model"),
-            "Switchbot device initialization failed because of incorrect configuration parameters: wrong model",
+            "Switchbot device initialization failed because of"
+            " incorrect configuration parameters: wrong model",
         ),
     ],
 )
@@ -279,7 +280,7 @@ async def test_migrate_deprecated_air_purifier_sensor_type(
     service_info: BluetoothServiceInfoBleak,
     expected_sensor_type: str,
 ) -> None:
-    """Test that deprecated air_purifier sensor types are migrated via BLE advertisement."""
+    """Test deprecated air_purifier types are migrated via BLE."""
     inject_bluetooth_service_info(hass, service_info)
 
     entry = MockConfigEntry(
@@ -305,7 +306,7 @@ async def test_migrate_deprecated_air_purifier_sensor_type(
 async def test_migrate_deprecated_air_purifier_sensor_type_device_not_in_range(
     hass: HomeAssistant,
 ) -> None:
-    """Test deprecated air_purifier type entry is not loaded when device is out of range."""
+    """Test deprecated air_purifier entry not loaded when out of range."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={

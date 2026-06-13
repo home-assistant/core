@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant.components.accuweather.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -16,7 +16,6 @@ from . import init_integration
 from tests.common import MockConfigEntry
 
 VALID_CONFIG = {
-    CONF_NAME: "abcd",
     CONF_API_KEY: "32-character-string-1234567890qw",
     CONF_LATITUDE: 55.55,
     CONF_LONGITUDE: 122.12,
@@ -115,8 +114,7 @@ async def test_create_entry(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "abcd"
-    assert result["data"][CONF_NAME] == "abcd"
+    assert result["title"] == "Test location"
     assert result["data"][CONF_LATITUDE] == 55.55
     assert result["data"][CONF_LONGITUDE] == 122.12
     assert result["data"][CONF_API_KEY] == "32-character-string-1234567890qw"

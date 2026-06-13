@@ -1,7 +1,5 @@
 """Repairs for KNX integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import partial
 from typing import TYPE_CHECKING, Any, Final
@@ -10,8 +8,7 @@ import voluptuous as vol
 from xknx.exceptions.exception import InvalidSecureConfiguration
 from xknx.telegram import GroupAddress, IndividualAddress, Telegram
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir, selector
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -112,13 +109,13 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_secure_knxkeys()
 
     async def async_step_secure_knxkeys(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Manage upload of new KNX Keyring file."""
         errors: dict[str, str] = {}
 
@@ -154,9 +151,7 @@ class DataSecureGroupIssueRepairFlow(RepairsFlow):
         )
 
     @callback
-    def finish_flow(
-        self, new_entry_data: KNXConfigEntryData
-    ) -> data_entry_flow.FlowResult:
+    def finish_flow(self, new_entry_data: KNXConfigEntryData) -> RepairsFlowResult:
         """Finish the repair flow. Reload the config entry."""
         knx_config_entries = self.hass.config_entries.async_entries(DOMAIN)
         if knx_config_entries:

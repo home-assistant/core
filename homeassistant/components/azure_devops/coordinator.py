@@ -134,7 +134,8 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
             work_item_ids := await self.client.get_work_item_ids(
                 self.organization,
                 project_name,
-                # Filter out completed and removed work items so we only get active work items
+                # Filter out completed and removed work items
+                # so we only get active work items
                 states=work_item_types_states_filter(
                     work_item_types,
                     ignored_categories=IGNORED_CATEGORIES,

@@ -83,6 +83,7 @@ async def test_setup_entry_successful(hass: HomeAssistant) -> None:
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ) as instantiate:
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         assert await emulated_roku.async_setup_entry(hass, entry) is True
 
     assert len(instantiate.mock_calls) == 1
@@ -101,6 +102,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         "homeassistant.components.emulated_roku.binding.EmulatedRokuServer",
         return_value=Mock(start=AsyncMock(), close=AsyncMock()),
     ):
+        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
         assert await emulated_roku.async_setup_entry(hass, entry) is True
 
     await hass.async_block_till_done()

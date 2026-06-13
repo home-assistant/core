@@ -1,7 +1,5 @@
 """Tesla Fleet Data Coordinator."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -170,7 +168,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.endpoints = (
             ENDPOINTS
             if location
-            else [ep for ep in ENDPOINTS if ep != VehicleDataEndpoint.LOCATION_DATA]
+            else [ep for ep in ENDPOINTS if ep is not VehicleDataEndpoint.LOCATION_DATA]
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -302,7 +300,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
 
 
 class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
-    """Class to manage fetching energy site history import and export from the Tesla Fleet API."""
+    """Manage fetching energy site history from the Tesla Fleet API."""
 
     config_entry: TeslaFleetConfigEntry
 

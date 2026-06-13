@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the YouTube integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from typing import Any
 
@@ -14,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import AsyncConfigEntryAuth
+from .api import AsyncConfigEntryAuth
 from .const import (
     ATTR_DESCRIPTION,
     ATTR_LATEST_VIDEO,
@@ -23,20 +21,26 @@ from .const import (
     ATTR_THUMBNAIL,
     ATTR_TITLE,
     ATTR_TOTAL_VIEWS,
+    ATTR_VIDEO_COUNT,
     ATTR_VIDEO_ID,
     CONF_CHANNELS,
     DOMAIN,
     LOGGER,
 )
 
+type YouTubeConfigEntry = ConfigEntry[YouTubeDataUpdateCoordinator]
+
 
 class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """A YouTube Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: YouTubeConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, auth: AsyncConfigEntryAuth
+        self,
+        hass: HomeAssistant,
+        config_entry: YouTubeConfigEntry,
+        auth: AsyncConfigEntryAuth,
     ) -> None:
         """Initialize the YouTube data coordinator."""
         self._auth = auth
@@ -63,7 +67,9 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         ATTR_PUBLISHED_AT: video.snippet.added_at,
                         ATTR_TITLE: video.snippet.title,
                         ATTR_DESCRIPTION: video.snippet.description,
-                        ATTR_THUMBNAIL: video.snippet.thumbnails.get_highest_quality().url,
+                        ATTR_THUMBNAIL: (
+                            video.snippet.thumbnails.get_highest_quality().url
+                        ),
                         ATTR_VIDEO_ID: video.content_details.video_id,
                     }
                 res[channel.channel_id] = {
@@ -73,6 +79,7 @@ class YouTubeDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     ATTR_LATEST_VIDEO: latest_video,
                     ATTR_SUBSCRIBER_COUNT: channel.statistics.subscriber_count,
                     ATTR_TOTAL_VIEWS: channel.statistics.view_count,
+                    ATTR_VIDEO_COUNT: channel.statistics.video_count,
                 }
         except UnauthorizedError as err:
             raise ConfigEntryAuthFailed from err

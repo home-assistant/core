@@ -1,7 +1,5 @@
 """Support for the KIWI.KI lock platform."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -113,6 +111,7 @@ class KiwiLock(LockEntity):
 
         try:
             self._client.open_door(self.lock_id)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except KiwiException:
             _LOGGER.error("Failed to open door")
         else:

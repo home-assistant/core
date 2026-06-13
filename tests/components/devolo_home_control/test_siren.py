@@ -27,20 +27,20 @@ async def test_siren(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SIREN_DOMAIN}.test")
+    state = hass.states.get(f"{SIREN_DOMAIN}.test_test")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test") == snapshot
+    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test_test") == snapshot
 
     # Emulate websocket message: sensor turned on
     test_gateway.publisher.dispatch("Test", ("devolo.SirenMultiLevelSwitch:Test", 1))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{SIREN_DOMAIN}.test").state == STATE_ON
+    assert hass.states.get(f"{SIREN_DOMAIN}.test_test").state == STATE_ON
 
     # Emulate websocket message: device went offline
     test_gateway.devices["Test"].status = 1
     test_gateway.publisher.dispatch("Test", ("Status", False, "status"))
     await hass.async_block_till_done()
-    assert hass.states.get(f"{SIREN_DOMAIN}.test").state == STATE_UNAVAILABLE
+    assert hass.states.get(f"{SIREN_DOMAIN}.test_test").state == STATE_UNAVAILABLE
 
 
 async def test_siren_switching(
@@ -57,9 +57,9 @@ async def test_siren_switching(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SIREN_DOMAIN}.test")
+    state = hass.states.get(f"{SIREN_DOMAIN}.test_test")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test") == snapshot
+    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test_test") == snapshot
 
     with patch(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
@@ -67,7 +67,7 @@ async def test_siren_switching(
         await hass.services.async_call(
             "siren",
             "turn_on",
-            {"entity_id": f"{SIREN_DOMAIN}.test"},
+            {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
         # The real device state is changed by a websocket message
@@ -83,7 +83,7 @@ async def test_siren_switching(
         await hass.services.async_call(
             "siren",
             "turn_off",
-            {"entity_id": f"{SIREN_DOMAIN}.test"},
+            {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
         # The real device state is changed by a websocket message
@@ -91,7 +91,7 @@ async def test_siren_switching(
             "Test", ("devolo.SirenMultiLevelSwitch:Test", 0)
         )
         await hass.async_block_till_done()
-        assert hass.states.get(f"{SIREN_DOMAIN}.test").state == STATE_OFF
+        assert hass.states.get(f"{SIREN_DOMAIN}.test_test").state == STATE_OFF
         property_set.assert_called_once_with(0)
 
 
@@ -109,9 +109,9 @@ async def test_siren_change_default_tone(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SIREN_DOMAIN}.test")
+    state = hass.states.get(f"{SIREN_DOMAIN}.test_test")
     assert state == snapshot
-    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test") == snapshot
+    assert entity_registry.async_get(f"{SIREN_DOMAIN}.test_test") == snapshot
 
     with patch(
         "devolo_home_control_api.properties.multi_level_switch_property.MultiLevelSwitchProperty.set"
@@ -120,7 +120,7 @@ async def test_siren_change_default_tone(
         await hass.services.async_call(
             "siren",
             "turn_on",
-            {"entity_id": f"{SIREN_DOMAIN}.test"},
+            {"entity_id": f"{SIREN_DOMAIN}.test_test"},
             blocking=True,
         )
         property_set.assert_called_once_with(2)
@@ -137,7 +137,7 @@ async def test_remove_from_hass(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    state = hass.states.get(f"{SIREN_DOMAIN}.test")
+    state = hass.states.get(f"{SIREN_DOMAIN}.test_test")
     assert state is not None
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
