@@ -735,7 +735,9 @@ class EsphomeAssistSatellite(
                             break  # wait for more data
                         riff, _, wave_fmt = struct.unpack("<4sI4s", bytes_buffer[:12])
                         if riff != b"RIFF" or wave_fmt != b"WAVE":
-                            _LOGGER.error("Invalid WAV format: missing RIFF/WAVE header")
+                            _LOGGER.error(
+                                "Invalid WAV format: missing RIFF/WAVE header"
+                            )
                             return
                         riff_checked = True
                         del bytes_buffer[:12]
@@ -750,25 +752,44 @@ class EsphomeAssistSatellite(
                             break  # wait for full fmt chunk
 
                         # Parse fmt chunk (we only need the first 16 bytes of it)
-                        audio_format, num_channels, chunk_sample_rate, _, _, bits_per_sample = struct.unpack(
-                            "<HHIIHH", bytes_buffer[8:24]
-                        )
+                        (
+                            audio_format,
+                            num_channels,
+                            chunk_sample_rate,
+                            _,
+                            _,
+                            bits_per_sample,
+                        ) = struct.unpack("<HHIIHH", bytes_buffer[8:24])
 
                         if audio_format != 1:
-                            _LOGGER.error("Can only stream PCM WAV, got format %s", audio_format)
+                            _LOGGER.error(
+                                "Can only stream PCM WAV, got format %s", audio_format
+                            )
                             return
                         if num_channels != sample_channels:
-                            _LOGGER.error("Expected %s channels, got %s", sample_channels, num_channels)
+                            _LOGGER.error(
+                                "Expected %s channels, got %s",
+                                sample_channels,
+                                num_channels,
+                            )
                             return
                         if chunk_sample_rate != sample_rate:
-                            _LOGGER.error("Expected %s Hz, got %s Hz", sample_rate, chunk_sample_rate)
+                            _LOGGER.error(
+                                "Expected %s Hz, got %s Hz",
+                                sample_rate,
+                                chunk_sample_rate,
+                            )
                             return
                         if bits_per_sample // 8 != sample_width:
-                            _LOGGER.error("Expected %s bytes per sample, got %s", sample_width, bits_per_sample // 8)
+                            _LOGGER.error(
+                                "Expected %s bytes per sample, got %s",
+                                sample_width,
+                                bits_per_sample // 8,
+                            )
                             return
 
                         fmt_validated = True
-                        del bytes_buffer[:8 + chunk_size]
+                        del bytes_buffer[: 8 + chunk_size]
 
                     elif chunk_id == b"data":
                         # Found data chunk!
@@ -779,13 +800,15 @@ class EsphomeAssistSatellite(
                         found_data_chunk = True
                         parsing_headers = False
                         del bytes_buffer[:8]
-                        _LOGGER.debug("Validated WAV header and found data chunk, starting streaming")
+                        _LOGGER.debug(
+                            "Validated WAV header and found data chunk, starting streaming"
+                        )
                         break
                     else:
                         # Skip other chunks
                         if len(bytes_buffer) < 8 + chunk_size:
                             break  # wait for full chunk to skip
-                        del bytes_buffer[:8 + chunk_size]
+                        del bytes_buffer[: 8 + chunk_size]
 
                 if found_data_chunk:
                     while len(bytes_buffer) >= bytes_per_chunk_payload:
