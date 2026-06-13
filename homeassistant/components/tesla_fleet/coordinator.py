@@ -27,7 +27,7 @@ from homeassistant.components.recorder.statistics import (
 )
 from homeassistant.const import CONF_TOKEN, UnitOfEnergy
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import EnergyConverter
@@ -387,19 +387,11 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         statistic_ids = [f"{DOMAIN}:{site_id}_{key}" for key in ENERGY_HISTORY_FIELDS]
 
         # Fetch all existing last statistics in a single executor call.
-        try:
-            last_stats = await recorder.async_add_executor_job(
-                _get_last_statistics_for_statistic_ids,
-                self.hass,
-                statistic_ids,
-            )
-        except HomeAssistantError as err:
-            LOGGER.warning(
-                "Unable to fetch existing statistics for energy site %s: %s",
-                site_id,
-                err,
-            )
-            return
+        last_stats = await recorder.async_add_executor_job(
+            _get_last_statistics_for_statistic_ids,
+            self.hass,
+            statistic_ids,
+        )
 
         for key in ENERGY_HISTORY_FIELDS:
             statistic_id = f"{DOMAIN}:{site_id}_{key}"
@@ -458,14 +450,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
                     len(statistics),
                     statistic_id,
                 )
-                try:
-                    async_add_external_statistics(self.hass, metadata, statistics)
-                except HomeAssistantError as err:
-                    LOGGER.warning(
-                        "Unable to add external statistics for %s: %s",
-                        statistic_id,
-                        err,
-                    )
+                async_add_external_statistics(self.hass, metadata, statistics)
 
 
 class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]]):
