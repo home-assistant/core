@@ -6,7 +6,11 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import (
+    CONNECTION_NETWORK_MAC,
+    DeviceInfo,
+    format_mac,
+)
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -41,6 +45,7 @@ class IAlarmPanel(
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.mac)},
+            connections={(CONNECTION_NETWORK_MAC, format_mac(coordinator.mac))},
             manufacturer="Antifurto365 - Meian",
             name="iAlarm",
         )
