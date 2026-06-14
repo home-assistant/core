@@ -185,9 +185,18 @@ async def test_duplicate_host(hass: HomeAssistant) -> None:
     assert result2["reason"] == "already_configured"
 
 
+@pytest.mark.parametrize(
+    ("min_temp", "max_temp"),
+    [
+        pytest.param(25, 20, id="min_greater_than_max"),
+        pytest.param(25, 25, id="min_equal_to_max"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_form_invalid_temp_range(hass: HomeAssistant) -> None:
-    """Test the user step rejects min >= max."""
+async def test_form_invalid_temp_range(
+    hass: HomeAssistant, min_temp: int, max_temp: int
+) -> None:
+    """The user step rejects both min > max and min == max."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -199,8 +208,8 @@ async def test_form_invalid_temp_range(hass: HomeAssistant) -> None:
             result["flow_id"],
             {
                 CONF_HOST: "1.1.1.1",
-                CONF_MIN_TEMP: 25,
-                CONF_MAX_TEMP: 20,
+                CONF_MIN_TEMP: min_temp,
+                CONF_MAX_TEMP: max_temp,
             },
         )
 
@@ -245,9 +254,18 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     assert entry.data[CONF_MAX_TEMP] == 28
 
 
+@pytest.mark.parametrize(
+    ("min_temp", "max_temp"),
+    [
+        pytest.param(28, 20, id="min_greater_than_max"),
+        pytest.param(28, 28, id="min_equal_to_max"),
+    ],
+)
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_reconfigure_invalid_temp_range(hass: HomeAssistant) -> None:
-    """The reconfigure step must reject min >= max with the same error code."""
+async def test_reconfigure_invalid_temp_range(
+    hass: HomeAssistant, min_temp: int, max_temp: int
+) -> None:
+    """The reconfigure step rejects both min > max and min == max."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="1.1.1.1",
@@ -268,8 +286,8 @@ async def test_reconfigure_invalid_temp_range(hass: HomeAssistant) -> None:
             {
                 CONF_HOST: "1.1.1.1",
                 CONF_PORT: 80,
-                CONF_MIN_TEMP: 28,
-                CONF_MAX_TEMP: 20,
+                CONF_MIN_TEMP: min_temp,
+                CONF_MAX_TEMP: max_temp,
             },
         )
 

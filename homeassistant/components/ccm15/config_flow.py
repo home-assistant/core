@@ -92,6 +92,9 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            # _async_abort_entries_match has no built-in way to exclude the
+            # entry being reconfigured, so do the host/port collision check
+            # manually here. The user step uses _async_abort_entries_match.
             for other in self._async_current_entries(include_ignore=False):
                 if (
                     other.entry_id != entry.entry_id
