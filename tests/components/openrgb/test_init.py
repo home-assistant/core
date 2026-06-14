@@ -428,13 +428,13 @@ async def test_device_key_includes_location_for_i2c(
         pytest.param(
             "none",
             "HID: DevSrvsID:4295213270",
-            "none",
+            "hid",
             id="hid_without_serial",
         ),
         pytest.param(
             "ABC123",
             "HID: DevSrvsID:111",
-            "none",
+            "hid",
             id="hid_with_serial",
         ),
     ],
@@ -528,7 +528,7 @@ async def test_unique_id_migration_already_migrated(
     mock_config_entry.add_to_hass(hass)
     entry_id = mock_config_entry.entry_id
 
-    uid = UID_SEPARATOR.join([entry_id, "KEYBOARD", "Corsair", "K70", "none", "none"])
+    uid = UID_SEPARATOR.join([entry_id, "KEYBOARD", "Corsair", "K70", "none", "hid"])
 
     entity_registry.async_get_or_create(
         "light",

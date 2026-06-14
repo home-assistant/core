@@ -65,11 +65,8 @@ def _migrate_uid(unique_id: str) -> str | None:
 
     location = parts[5]
 
-    if location == "none":
-        return None
-
     if location.startswith("HID:"):
-        parts[5] = "none"
+        parts[5] = "hid"
         return UID_SEPARATOR.join(parts)
 
     return None

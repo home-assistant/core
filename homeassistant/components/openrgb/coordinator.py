@@ -118,7 +118,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         # HID location paths change on reconnect, so only include location
         # for non-HID devices
         if location.startswith("HID:"):
-            location = "none"
+            location = "hid"
 
         parts = (
             self.entry_id,
