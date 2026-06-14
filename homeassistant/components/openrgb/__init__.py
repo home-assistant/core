@@ -1,5 +1,6 @@
 """The OpenRGB integration."""
 
+from collections import defaultdict
 import logging
 
 from homeassistant.const import CONF_NAME, Platform
@@ -51,33 +52,46 @@ async def async_setup_entry(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> b
     return True
 
 
-def _migrate_uid(unique_id: str) -> str | None:
-    """Migrate an old-format unique ID to the new format.
+def _build_hid_index_map(old_uids: list[str]) -> dict[str, str]:
+    """Map old HID unique IDs to new indexed ones.
 
-    Old format included raw location for all devices. New format drops location
-    for HID devices.
+    Groups UIDs that share the same base key (first 5 parts), sorts each group
+    by old location for deterministic ordering, and assigns indices 0, 1, 2, …
 
-    Returns the new unique ID, or None if no migration is needed.
+    Only UIDs with a 6-part format whose location starts with ``HID:`` are
+    considered; all others are ignored.
     """
-    parts = unique_id.split(UID_SEPARATOR)
-    if len(parts) != 6:
-        return None
+    groups: dict[str, list[str]] = defaultdict(list)
+    for uid in old_uids:
+        parts = uid.split(UID_SEPARATOR)
+        if len(parts) == 6 and parts[5].startswith("HID:"):
+            base_key = UID_SEPARATOR.join(parts[:5])
+            groups[base_key].append(uid)
 
-    location = parts[5]
-
-    if location.startswith("HID:"):
-        parts[5] = "hid"
-        return UID_SEPARATOR.join(parts)
-
-    return None
+    mapping: dict[str, str] = {}
+    for base_key, uids in groups.items():
+        uids.sort(key=lambda u: u.split(UID_SEPARATOR)[5])
+        for idx, uid in enumerate(uids):
+            new_uid = f"{base_key}{UID_SEPARATOR}hid_{idx}"
+            if uid != new_uid:
+                mapping[uid] = new_uid
+    return mapping
 
 
 def _async_migrate_unique_ids(hass: HomeAssistant, entry: OpenRGBConfigEntry) -> None:
-    """Migrate entity and device unique IDs to the new format."""
-    # Migrate entity unique IDs
+    """Migrate entity and device unique IDs to the new indexed HID format.
+
+    Old format: ...||HID: DevSrvsID:xxx  (raw location)
+    New format: ...||hid_N              (indexed)
+    """
     ent_reg = er.async_get(hass)
-    for entity in ent_reg.entities.get_entries_for_config_entry_id(entry.entry_id):
-        if new_uid := _migrate_uid(entity.unique_id):
+    dev_reg = dr.async_get(hass)
+
+    # --- Entity migration ---
+    entities = ent_reg.entities.get_entries_for_config_entry_id(entry.entry_id)
+    ent_map = _build_hid_index_map([e.unique_id for e in entities])
+    for entity in entities:
+        if new_uid := ent_map.get(entity.unique_id):
             _LOGGER.debug(
                 "Migrating entity unique ID from %s to %s",
                 entity.unique_id,
@@ -85,18 +99,21 @@ def _async_migrate_unique_ids(hass: HomeAssistant, entry: OpenRGBConfigEntry) ->
             )
             ent_reg.async_update_entity(entity.entity_id, new_unique_id=new_uid)
 
-    # Migrate device identifiers
-    dev_reg = dr.async_get(hass)
-    for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id):
-        new_identifiers: set[tuple[str, str]] = set()
-        changed = False
-        for domain, identifier in device.identifiers:
-            if domain == DOMAIN and (new_uid := _migrate_uid(identifier)):
-                new_identifiers.add((domain, new_uid))
-                changed = True
-            else:
-                new_identifiers.add((domain, identifier))
-        if changed:
+    # --- Device migration ---
+    devices = dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
+    dev_ids = [
+        identifier
+        for device in devices
+        for domain, identifier in device.identifiers
+        if domain == DOMAIN
+    ]
+    dev_map = _build_hid_index_map(dev_ids)
+    for device in devices:
+        new_identifiers = {
+            (d, dev_map.get(i, i)) if d == DOMAIN else (d, i)
+            for d, i in device.identifiers
+        }
+        if new_identifiers != device.identifiers:
             _LOGGER.debug(
                 "Migrating device identifiers from %s to %s",
                 device.identifiers,

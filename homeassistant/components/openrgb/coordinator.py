@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for OpenRGB."""
 
 import asyncio
+from collections import defaultdict
 import logging
 
 from openrgb import OpenRGBClient
@@ -89,8 +90,31 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                     },
                 ) from err
 
-        # Return devices indexed by their key
-        return {self._get_device_key(device): device for device in self.client.devices}
+        return self._index_devices(self.client.devices)
+
+    def _index_devices(self, devices: list[Device]) -> dict[str, Device]:
+        """Build a dict of devices keyed by their stable unique key.
+
+        HID devices that share the same base key (identical model, no serial)
+        are sorted by their raw location string and then assigned incrementing
+        suffixes (hid_0, hid_1, …).  This matches the ordering used by the
+        unique-ID migration so indices stay consistent.
+        """
+        result: dict[str, Device] = {}
+        hid_groups: dict[str, list[Device]] = defaultdict(list)
+        for device in devices:
+            base_key = self._get_device_key(device)
+            if base_key.endswith(f"{UID_SEPARATOR}hid"):
+                hid_groups[base_key].append(device)
+            else:
+                result[base_key] = device
+
+        for base_key, group in hid_groups.items():
+            group.sort(key=lambda d: d.metadata.location or "")
+            for idx, device in enumerate(group):
+                result[f"{base_key}_{idx}"] = device
+
+        return result
 
     def _client_update(self) -> None:
         try:
