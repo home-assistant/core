@@ -62,6 +62,7 @@ class SynologyDSMFanSpeedMode(
 
     @override
     async def async_select_option(self, option: str) -> None:
+        """Set the fan speed mode."""
         await self._api.dsm.hardware.set_fan_speed(FanSpeed(option))
         await self._api.dsm.hardware.update()
         self.async_write_ha_state()

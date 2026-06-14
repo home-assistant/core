@@ -54,7 +54,7 @@ async def test_fan_speed(
     snapshot: SnapshotAssertion,
     mock_dsm: MagicMock,
 ) -> None:
-    """Test Synology DSM without USB."""
+    """Test Synology DSM fan speed mode select entity."""
     with (
         patch(
             "homeassistant.components.synology_dsm.common.SynologyDSM",
@@ -87,7 +87,7 @@ async def test_fan_speed_select_option(
     mock_dsm: MagicMock,
     fan_speed: str,
 ) -> None:
-    """Test Synology DSM without USB."""
+    """Test selecting a fan speed mode option."""
     with (
         patch(
             "homeassistant.components.synology_dsm.common.SynologyDSM",
