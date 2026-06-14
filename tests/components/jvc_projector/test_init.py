@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from jvcprojector import JvcProjectorAuthError, JvcProjectorTimeoutError
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.jvc_projector.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -28,6 +29,20 @@ async def test_init(
     device = device_registry.async_get_device(identifiers={(DOMAIN, mac)})
     assert device is not None
     assert device.identifiers == {(DOMAIN, mac)}
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_device: AsyncMock,
+    mock_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry, including the network MAC connection."""
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, format_mac(MOCK_MAC))}
+    )
+    assert device_entry == snapshot
 
 
 async def test_unload_config_entry(
