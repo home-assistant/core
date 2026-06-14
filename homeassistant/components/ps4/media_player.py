@@ -352,6 +352,8 @@ class PS4Device(MediaPlayerEntity):
             for device in d_registry.devices.get_devices_for_config_entry_id(
                 self._entry_id
             ):
+                # Rebuilt from the existing device entry, which already carries
+                # the network MAC connection added by the live-status branch.
                 self._attr_device_info = DeviceInfo(
                     identifiers=device.identifiers,
                     manufacturer=device.manufacturer,
@@ -365,6 +367,7 @@ class PS4Device(MediaPlayerEntity):
             _sw_version = status["system-version"]
             _sw_version = _sw_version[1:4]
             sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
+            # status["host-id"] is the console's network MAC address.
             self._attr_device_info = DeviceInfo(
                 connections={
                     (dr.CONNECTION_NETWORK_MAC, dr.format_mac(status["host-id"]))
