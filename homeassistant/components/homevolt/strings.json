@@ -172,10 +172,10 @@
       "message": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "communication_error": {
-      "message": "[%key:common::config_flow::error::cannot_connect%]"
+      "message": "Error communicating with Homevolt battery: {error}"
     },
     "unknown_error": {
-      "message": "[%key:common::config_flow::error::unknown%]"
+      "message": "Unexpected Homevolt error: {error}"
     }
   }
 }
