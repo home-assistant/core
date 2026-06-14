@@ -722,9 +722,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 self._devices.pop(entry_mac, None)
 
         device_reg = dr.async_get(self.hass)
-        valid_connections = {
-            (CONNECTION_NETWORK_MAC, dr.format_mac(mac)) for mac in device_hosts
-        }
+        valid_connections = {(CONNECTION_NETWORK_MAC, mac) for mac in device_hosts}
         for device in dr.async_entries_for_config_entry(
             device_reg, config_entry.entry_id
         ):
