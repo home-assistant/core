@@ -65,5 +65,10 @@
         "name": "Trains +2"
       }
     }
+  },
+  "exceptions": {
+    "request_timeout": {
+      "message": "Timeout connecting to the Israel Rail API for {config_title}: {error}"
+    }
   }
 }
