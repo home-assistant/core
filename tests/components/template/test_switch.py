@@ -9,6 +9,7 @@ from homeassistant.components import switch, template
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_START,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
@@ -581,7 +582,7 @@ async def test_off_action_optimistic(
 async def test_restore_state(
     hass: HomeAssistant, style: ConfigurationStyle, test_state: str
 ) -> None:
-    """Test state restoration."""
+    """Test state restoration persists through startup for optimistic switches."""
     mock_restore_cache(
         hass,
         (State(TEST_SWITCH.entity_id, test_state),),
@@ -591,6 +592,13 @@ async def test_restore_state(
     mock_component(hass, "recorder")
 
     await setup_entity(hass, TEST_SWITCH, style, 1, SWITCH_ACTIONS)
+
+    state = hass.states.get(TEST_SWITCH.entity_id)
+    assert state
+    assert state.state == test_state
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
+    await hass.async_block_till_done()
 
     state = hass.states.get(TEST_SWITCH.entity_id)
     assert state

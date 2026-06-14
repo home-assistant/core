@@ -181,11 +181,12 @@ class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):
 
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
-        if CONF_STATE not in self._templates:
-            # restore state after startup
-            await super().async_added_to_hass()
-            if state := await self.async_get_last_state():
-                self._attr_is_on = state.state == STATE_ON
+        if (
+            CONF_STATE not in self._templates
+            and (state := await self.async_get_last_state()) is not None
+            and state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
+        ):
+            self._attr_is_on = state.state == STATE_ON
         await super().async_added_to_hass()
 
 
