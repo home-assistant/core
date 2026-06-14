@@ -236,7 +236,7 @@ aiocomelit==2.0.3
 aiodhcpwatcher==1.2.7
 
 # homeassistant.components.dhcp
-aiodiscover==3.3.1
+aiodiscover==3.3.2
 
 # homeassistant.components.dnsip
 aiodns==4.0.4
@@ -1232,7 +1232,7 @@ hass-splunk==0.1.4
 
 # homeassistant.components.assist_satellite
 # homeassistant.components.conversation
-hassil==3.7.0
+hassil==3.8.0
 
 # homeassistant.components.jewish_calendar
 hdate[astral]==1.2.1
@@ -1377,7 +1377,7 @@ insteon-frontend-home-assistant==0.6.2
 intellifire4py==4.4.0
 
 # homeassistant.components.iometer
-iometer==1.0.1
+iometer==1.0.2
 
 # homeassistant.components.iotty
 iottycloud==0.3.0
@@ -1430,6 +1430,9 @@ knocki==0.4.2
 
 # homeassistant.components.knx
 knx-frontend==2026.6.1.213802
+
+# homeassistant.components.knx
+knx-telegram-store[sqlite]==0.3.2
 
 # homeassistant.components.kraken
 krakenex==2.2.2
@@ -2902,7 +2905,7 @@ renson-endura-delta==1.7.2
 reolink-aio==0.21.0
 
 # homeassistant.components.radio_frequency
-rf-protocols==4.1.0
+rf-protocols==4.2.0
 
 # homeassistant.components.idteck_prox
 rfk101py==0.0.1
@@ -3252,7 +3255,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==12.0.0
+uiprotect==13.1.1
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3436,7 +3439,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.6.5
 
 # homeassistant.components.yoto
-yoto-api==4.2.0
+yoto-api==4.2.1
 
 # homeassistant.components.youless
 youless-api==2.2.0
