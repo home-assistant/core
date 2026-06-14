@@ -13,6 +13,7 @@ from reolink_aio.exceptions import NotSupportedError, ReolinkError, Subscription
 from homeassistant.components.reolink.const import CONF_BC_CONNECT, DOMAIN
 from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.reolink.host import (
+    BC,
     FIRST_ONVIF_LONG_POLL_TIMEOUT,
     FIRST_ONVIF_TIMEOUT,
     FIRST_TCP_PUSH_TIMEOUT,
@@ -187,6 +188,27 @@ async def test_webhook_callback(
     with pytest.raises(CancelledError):
         await async_handle_webhook(hass, webhook_id, request)
     signal_all.assert_not_called()
+
+
+async def test_bc_webhook_callback(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+) -> None:
+    """Test BC webhook callback for battery camera."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    webhook_id = config_entry.runtime_data.host._webhook_ids[BC]
+    client = await hass_client_no_auth()
+
+    reolink_host.baichuan.webhook_push_callback.assert_not_called()
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
+    await hass.async_block_till_done()
+    reolink_host.baichuan.webhook_push_callback.assert_called_once()
 
 
 async def test_no_mac(
