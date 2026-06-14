@@ -1594,10 +1594,12 @@ class ViCareSensor(CoordinatorEntity[ViCareCoordinator], ViCareEntity, SensorEnt
     @property
     def device_class(self) -> SensorDeviceClass | None:
         """Return the device class of the sensor."""
-        if self.entity_description.unit_getter is None:
-            return self.entity_description.device_class
-        with suppress(PyViCareNotSupportedFeatureError):
-            vicare_unit = self.entity_description.unit_getter(self._api)
-            if vicare_unit is not None and vicare_unit in VICARE_UNIT_TO_DEVICE_CLASS:
-                return VICARE_UNIT_TO_DEVICE_CLASS[vicare_unit]
+        if self.entity_description.unit_getter is not None:
+            with suppress(PyViCareNotSupportedFeatureError):
+                vicare_unit = self.entity_description.unit_getter(self._api)
+                if (
+                    vicare_unit is not None
+                    and vicare_unit in VICARE_UNIT_TO_DEVICE_CLASS
+                ):
+                    return VICARE_UNIT_TO_DEVICE_CLASS[vicare_unit]
         return self.entity_description.device_class
