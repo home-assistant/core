@@ -7,5 +7,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_push",
   "loggers": ["anova_wifi"],
-  "requirements": ["anova-wifi==0.17.0"]
+  "requirements": ["anova-wifi==0.17.1"]
 }
