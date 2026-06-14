@@ -1,6 +1,6 @@
 """Test the Antifurto365 iAlarm init."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 from uuid import uuid4
 
 import pytest
@@ -58,7 +58,7 @@ async def test_setup_not_ready(
 
 async def test_device_registry(
     hass: HomeAssistant,
-    ialarm_api,
+    ialarm_api: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
