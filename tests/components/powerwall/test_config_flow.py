@@ -321,6 +321,54 @@ async def test_dhcp_discovery_manual_configure(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+async def test_dhcp_discovery_restricted_clears_unique_id(hass: HomeAssistant) -> None:
+    """Test DHCP discovery of a restricted PW3 stores no unique id.
+
+    A PW3 advertises a ``TeslaPW_*`` hostname that is not the DIN, so the
+    default password fails and we fall back to the user form. Once the user
+    provides a password the gateway is detected as restricted (no DIN over
+    HTTP), and the entry must be stored without a unique id rather than pinning
+    to the discovery hostname.
+    """
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall.login",
+        side_effect=AccessDeniedError("xyz"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="aabbcceeddff",
+                hostname="TeslaPW_BLGZUP",
+            ),
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            VALID_CONFIG,
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == VALID_CONFIG
+    assert result2["result"].unique_id is None
+
+
 async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
     """Test we can process the discovery from dhcp and auto configure."""
     mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")

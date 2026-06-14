@@ -119,6 +119,7 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the powerwall flow."""
         self.ip_address: str | None = None
         self.title: str | None = None
+        self.password: str | None = None
 
     async def _async_powerwall_is_offline(self, entry: ConfigEntry) -> bool:
         """Check if the power wall is offline.
@@ -185,6 +186,13 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="cannot_connect")
         assert info is not None
         self.title = info["title"]
+        self.password = gateway_din[-5:]
+        if info["unique_id"] is None:
+            # Restricted gateway reached via DHCP. The hostname we stored as the
+            # flow unique id is not a real DIN (e.g. PW3 advertises a TeslaPW_*
+            # name unrelated to the DIN), so drop it and store the entry without
+            # a unique id, consistent with the manual restricted path.
+            await self.async_set_unique_id(None)
         return await self.async_step_confirm_discovery()
 
     async def _async_try_connect(
@@ -220,13 +228,13 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
         """Confirm a discovered powerwall."""
         assert self.ip_address is not None
         assert self.title is not None
-        assert self.unique_id is not None
+        assert self.password is not None
         if user_input is not None:
             return self.async_create_entry(
                 title=self.title,
                 data={
                     CONF_IP_ADDRESS: self.ip_address,
-                    CONF_PASSWORD: self.unique_id[-5:],
+                    CONF_PASSWORD: self.password,
                 },
             )
 
@@ -263,6 +271,11 @@ class PowerwallConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._abort_if_unique_id_configured(
                         updates={CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]}
                     )
+                else:
+                    # Restricted gateway: a DHCP discovery may have pre-set the
+                    # flow unique id from the hostname, which is not a real DIN.
+                    # Clear it so the entry is stored without a unique id.
+                    await self.async_set_unique_id(None)
                 self._async_abort_entries_match({CONF_IP_ADDRESS: self.ip_address})
                 return self.async_create_entry(title=info["title"], data=user_input)
 
