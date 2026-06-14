@@ -251,15 +251,23 @@ async def test_select_auto_option_allows_cnt1_readback(
 
 
 @pytest.mark.parametrize(
-    "node_actions",
+    ("node_actions", "creates_entity"),
     [
         pytest.param(
             NodeListActionItemList(nodes=[NodeActionItemList(node_id=1, actions=[])]),
+            False,
             id="missing-action",
         ),
-        pytest.param(_build_node_actions(options=None), id="missing-enum-values"),
         pytest.param(
-            _build_node_actions(options=None, val_type=ActionValueType.UNKNOWN),
+            _build_node_actions(options=None),
+            False,
+            id="missing-enum-values",
+        ),
+        pytest.param(
+            _build_node_actions(
+                options=["AUTO", "MAN1"], val_type=ActionValueType.UNKNOWN
+            ),
+            True,
             id="unknown-metadata",
         ),
     ],
@@ -269,13 +277,19 @@ async def test_select_missing_or_unknown_action_metadata_does_not_crash(
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     node_actions: NodeListActionItemList,
+    creates_entity: bool,
 ) -> None:
     """Test incomplete action discovery data does not create broken entities."""
     mock_duco_client.async_get_node_actions.return_value = node_actions
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
 
-    assert hass.states.get(_SELECT_ENTITY) is None
+    state = hass.states.get(_SELECT_ENTITY)
+    if creates_entity:
+        assert state is not None
+        assert state.attributes[ATTR_OPTIONS] == ["AUTO", "MAN1"]
+    else:
+        assert state is None
 
 
 @pytest.mark.parametrize(
