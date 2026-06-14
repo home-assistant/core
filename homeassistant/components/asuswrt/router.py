@@ -396,6 +396,8 @@ class AsusWrtRouter:
             serial_number=self._api.serial_number,
             manufacturer="Asus",
         )
+        # The config entry unique id is the router's label MAC (the only MAC the
+        # integration persists); a single configured router may have none.
         if self._entry.unique_id:
             info["connections"] = {
                 (CONNECTION_NETWORK_MAC, format_mac(self._entry.unique_id))
