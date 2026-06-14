@@ -66,6 +66,7 @@ def mock_aqvify_client(
         client.async_get_device_latest_data.return_value = AqvifyDeviceData(
             device_data_fixture
         )
+        client.async_get_hour_aggregation.return_value = device_aggregated_data_fixture
         yield client
 
 
@@ -85,6 +86,12 @@ def load_device_data_file() -> str:
 def load_account_file() -> str:
     """Fixture for loading account file."""
     return "default_account.json"
+
+
+@pytest.fixture(scope="package")
+def load_aggr_data_file() -> str:
+    """Fixture for loading account file."""
+    return "default_aggregated.json"
 
 
 @pytest.fixture
@@ -109,3 +116,11 @@ async def account_fixture(
 ) -> dict[str, Any]:
     """Fixture for account data."""
     return await async_load_json_object_fixture(hass, load_account_file, DOMAIN)
+
+
+@pytest.fixture
+async def device_aggregated_data_fixture(
+    hass: HomeAssistant, load_aggr_data_file: str
+) -> list[dict[str, Any]]:
+    """Fixture for account data."""
+    return await async_load_json_array_fixture(hass, load_aggr_data_file, DOMAIN)

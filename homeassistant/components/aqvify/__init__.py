@@ -5,7 +5,12 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .coordinator import AqvifyConfigEntry, AqvifyCoordinator
+from .coordinator import (
+    AqvifyAggrDataCoordinator,
+    AqvifyConfigEntry,
+    AqvifyCoordinator,
+    AqvifyRuntimeData,
+)
 
 _LOGGER = logging.getLogger(__name__)
 PLATFORMS: list[Platform] = [Platform.SENSOR]
@@ -16,7 +21,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> bo
 
     coordinator = AqvifyCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+    aggr_coordinator = AqvifyAggrDataCoordinator(hass, entry)
+    await aggr_coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = AqvifyRuntimeData(
+        coordinator=coordinator, aggr_data_coordinator=aggr_coordinator
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

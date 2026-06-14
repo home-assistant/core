@@ -34,8 +34,14 @@
   },
   "entity": {
     "sensor": {
+      "in_flow": {
+        "name": "Inflow"
+      },
       "meter_value": {
         "name": "Meter value"
+      },
+      "out_volume": {
+        "name": "Output last hour"
       },
       "water_level": {
         "name": "Water level"
