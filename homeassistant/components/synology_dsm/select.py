@@ -15,7 +15,7 @@ from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 
 @dataclass(frozen=True, kw_only=True)
-class SynologyDSMSensorEntityDescription(
+class SynologyDSMSelectEntityDescription(
     SynologyDSMEntityDescription, SelectEntityDescription
 ):
     """Describes Synology DSM select entity."""
@@ -40,7 +40,7 @@ class SynologyDSMFanSpeedMode(
     """Represent a Synology DSM fan speed mode select entity."""
 
     _attr_options = [e.value for e in FanSpeed]
-    entity_description: SynologyDSMSensorEntityDescription
+    entity_description: SynologyDSMSelectEntityDescription
 
     def __init__(
         self,
@@ -48,7 +48,7 @@ class SynologyDSMFanSpeedMode(
         coordinator: SynologyDSMCentralUpdateCoordinator,
     ) -> None:
         """Initialize a Synology DSM select entity."""
-        description = SynologyDSMSensorEntityDescription(
+        description = SynologyDSMSelectEntityDescription(
             api_key=SynoCoreHardware.API_KEY,
             key="fan_speed_mode",
             translation_key="fan_speed_mode",
