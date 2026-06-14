@@ -889,7 +889,7 @@ ecoaliface==0.4.0
 egauge-async==0.4.0
 
 # homeassistant.components.eheimdigital
-eheimdigital==1.6.0
+eheimdigital==1.7.0
 
 # homeassistant.components.ekeybionyx
 ekey-bionyxpy==1.0.1
@@ -2860,7 +2860,7 @@ pyzerproc==0.4.8
 qbittorrent-api==2026.5.1
 
 # homeassistant.components.qbus
-qbusmqttapi==1.5.0
+qbusmqttapi==1.5.1
 
 # homeassistant.components.qingping
 qingping-ble==1.1.5
