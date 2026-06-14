@@ -29,7 +29,6 @@ async def async_get_config_entry_diagnostics(
             "ram": dsm_info.ram,
             "uptime": dsm_info.uptime,
             "temperature": dsm_info.temperature,
-            "fan_speed_mode": syno_api.dsm.hardware.fan_speed.value,
         },
         "external_usb": {"devices": {}, "partitions": {}},
         "network": {"interfaces": {}},
@@ -63,6 +62,11 @@ async def async_get_config_entry_diagnostics(
                             "size_used": partition.partition_size_used(False),
                             "size_total": partition.partition_size_total(False),
                         }
+
+    if syno_api.hardware is not None:
+        diag_data["device_info"]["fan_speed_mode"] = (
+            syno_api.dsm.hardware.fan_speed.value
+        )
 
     if syno_api.network is not None:
         for intf in syno_api.network.interfaces:
