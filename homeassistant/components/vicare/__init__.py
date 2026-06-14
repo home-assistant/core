@@ -171,15 +171,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
         raise ConfigEntryAuthFailed("Authentication failed") from err
 
     device_count = len(entry.runtime_data.devices)
+    coordinators: list[ViCareCoordinator] = []
     for device in entry.runtime_data.devices:
-        device.coordinator = ViCareCoordinator(hass, entry, device.api, device_count)
+        coordinator = ViCareCoordinator(hass, entry, device.api, device_count)
+        device.coordinator = coordinator
+        coordinators.append(coordinator)
 
     for device in entry.runtime_data.devices:
         # Migration can be removed in 2025.4.0
         await async_migrate_devices_and_entities(hass, entry, device)
 
-    for device in entry.runtime_data.devices:
-        await device.coordinator.async_config_entry_first_refresh()
+    for coordinator in coordinators:
+        await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
