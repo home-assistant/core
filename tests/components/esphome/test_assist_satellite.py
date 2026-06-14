@@ -5,6 +5,7 @@ from dataclasses import replace
 from http import HTTPStatus
 import io
 import socket
+import struct
 from unittest.mock import ANY, AsyncMock, Mock, patch
 import wave
 
@@ -2433,7 +2434,6 @@ async def test_stream_tts_audio_edge_cases(
     mock_esphome_device: MockESPHomeDeviceType,
 ) -> None:
     """Test all edge cases and error handling in _stream_tts_audio."""
-    import struct
 
     mock_device = await mock_esphome_device(
         mock_client=mock_client,
