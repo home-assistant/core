@@ -178,7 +178,7 @@ aio-georss-gdacs==0.10
 aio-ownet==0.0.5
 
 # homeassistant.components.acaia
-aioacaia==0.1.17
+aioacaia==0.1.18
 
 # homeassistant.components.airq
 aioairq==0.4.7
