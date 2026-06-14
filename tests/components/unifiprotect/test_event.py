@@ -2,7 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
-from unittest.mock import Mock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 from uiprotect import EventChange, ProtectEvent, ProtectEventChannel
@@ -15,6 +15,7 @@ from uiprotect.data import (
     PublicBootstrap,
     SmartDetectObjectType,
 )
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
@@ -309,6 +310,45 @@ async def test_package_detected(
     assert len(events) == 2
 
     unsub()
+
+
+async def test_public_events_resubscribe_on_reconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+) -> None:
+    """Public events subscription self-heals on websocket reconnect.
+
+    A transient update_public() failure at setup leaves the public bootstrap
+    unprimed, so the events websocket is not subscribed. On the next reconnect
+    the integration re-primes and subscribes instead of staying dead until the
+    entry is reloaded.
+    """
+    # Not primed at setup: the public events websocket is not subscribed.
+    ufp.api.has_public_bootstrap = False
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+    assert ufp.events_subscription is None
+
+    # A later update_public() succeeds and primes the bootstrap; the reconnect
+    # handler must then subscribe.
+    def _prime() -> None:
+        ufp.api.has_public_bootstrap = True
+        ufp.api.public_bootstrap = Mock(
+            spec=PublicBootstrap,
+            relays={},
+            sirens={},
+            arm_mode=None,
+            arm_profiles={},
+        )
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime)
+    assert ufp.ws_state_subscription is not None
+    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    ufp.api.update_public.assert_awaited()
+    assert ufp.events_subscription is not None
 
 
 async def test_doorbell_nfc_scanned(

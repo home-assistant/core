@@ -94,6 +94,7 @@ class ProtectData:
         ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
+        self._public_events_subscribed = False
         self._auth_failures = 0
         self.auth_retries = 0
         self.last_update_success = False
@@ -183,23 +184,47 @@ class ProtectData:
 
     @callback
     def async_subscribe_public_events(self) -> None:
-        """Subscribe to the public events websocket.
+        """Subscribe to the public events websocket if the bootstrap is primed.
 
         Must be called *after* ``update_public()`` has primed the public
         bootstrap: ``subscribe_events()`` raises if it has not (unlike the
         devices websocket, which is subscribed before priming). This is the
         source of truth for smart-detect events (e.g. package) that the private
-        API only surfaces as the unhandled ``smartDetectObject`` model. When the
-        public bootstrap is unavailable (e.g. a transient ``update_public()``
-        failure) these events are simply not delivered for this session.
+        API only surfaces as the unhandled ``smartDetectObject`` model.
+
+        Idempotent: a no-op once subscribed, and a no-op (debug log only) while
+        the bootstrap is unprimed. If priming failed at setup the subscription
+        is retried on the next websocket reconnect via
+        ``_async_resubscribe_public_events``, so package detection self-heals
+        instead of staying dead until the entry is reloaded.
         """
+        if self._public_events_subscribed:
+            return
         if not self.api.has_public_bootstrap:
             _LOGGER.debug(
                 "Public API bootstrap unavailable; smart-detect events such as "
-                "package detection will not be delivered"
+                "package detection will not be delivered until it is primed"
             )
             return
         self._unsubs.append(self.api.subscribe_events(self._async_process_public_event))
+        self._public_events_subscribed = True
+
+    async def _async_resubscribe_public_events(self) -> None:
+        """Re-prime the public bootstrap and subscribe to public events.
+
+        Runs on websocket reconnect to recover from a transient
+        ``update_public()`` failure at setup. ``has_public_bootstrap`` latches
+        true once primed, so this is skipped entirely once subscribed.
+        """
+        if self._public_events_subscribed:
+            return
+        if not self.api.has_public_bootstrap:
+            try:
+                await self.api.update_public()
+            except Exception:  # noqa: BLE001
+                _LOGGER.debug("Public API bootstrap retry failed", exc_info=True)
+                return
+        self.async_subscribe_public_events()
 
     @callback
     def _async_process_public_devices_ws_message(
@@ -268,7 +293,14 @@ class ProtectData:
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the websocket state."""
-        self._async_update_change(state is WebsocketState.CONNECTED)
+        connected = state is WebsocketState.CONNECTED
+        self._async_update_change(connected)
+        if connected and not self._public_events_subscribed:
+            self._entry.async_create_background_task(
+                self._hass,
+                self._async_resubscribe_public_events(),
+                "unifiprotect-resubscribe-public-events",
+            )
 
     def _async_update_change(
         self,
@@ -299,6 +331,7 @@ class ProtectData:
         for unsub in self._unsubs:
             unsub()
         self._unsubs.clear()
+        self._public_events_subscribed = False
         await self.api.async_disconnect_ws()
 
     async def async_refresh(self) -> None:
