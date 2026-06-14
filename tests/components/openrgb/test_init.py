@@ -12,7 +12,7 @@ from homeassistant.components.openrgb.const import DOMAIN, SCAN_INTERVAL, UID_SE
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_ON, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -420,3 +420,131 @@ async def test_device_key_includes_location_for_i2c(
     key = coordinator._get_device_key(mock_openrgb_device)
 
     assert "I2C: PIIX4, address 0x70" in key
+
+
+@pytest.mark.parametrize(
+    ("old_serial", "old_location", "expected_location"),
+    [
+        pytest.param(
+            "none",
+            "HID: DevSrvsID:4295213270",
+            "none",
+            id="hid_without_serial",
+        ),
+        pytest.param(
+            "ABC123",
+            "HID: DevSrvsID:111",
+            "none",
+            id="hid_with_serial",
+        ),
+        pytest.param(
+            "ABC123",
+            "I2C: PIIX4, address 0x70",
+            "none",
+            id="non_hid_with_serial",
+        ),
+    ],
+)
+async def test_unique_id_migration(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    old_serial: str,
+    old_location: str,
+    expected_location: str,
+) -> None:
+    """Test that old-format unique IDs are migrated on setup."""
+    mock_config_entry.add_to_hass(hass)
+    entry_id = mock_config_entry.entry_id
+
+    old_uid = UID_SEPARATOR.join(
+        [entry_id, "DRAM", "ENE", "ENE DRAM", old_serial, old_location]
+    )
+    new_uid = UID_SEPARATOR.join(
+        [entry_id, "DRAM", "ENE", "ENE DRAM", old_serial, expected_location]
+    )
+
+    # Pre-create device and entity with old-format unique IDs
+    device_registry.async_get_or_create(
+        config_entry_id=entry_id,
+        identifiers={(DOMAIN, old_uid)},
+        name="ENE DRAM",
+    )
+    entity_registry.async_get_or_create(
+        "light",
+        DOMAIN,
+        old_uid,
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    # Entity should be migrated
+    migrated = entity_registry.async_get_entity_id("light", DOMAIN, new_uid)
+    assert migrated is not None
+
+    # Old unique ID should no longer exist
+    assert entity_registry.async_get_entity_id("light", DOMAIN, old_uid) is None
+
+    # Device identifier should be migrated
+    assert device_registry.async_get_device(identifiers={(DOMAIN, new_uid)}) is not None
+    assert device_registry.async_get_device(identifiers={(DOMAIN, old_uid)}) is None
+
+
+async def test_unique_id_migration_no_change_for_i2c(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that I2C devices without serial keep their location in the unique ID."""
+    mock_config_entry.add_to_hass(hass)
+    entry_id = mock_config_entry.entry_id
+
+    uid = UID_SEPARATOR.join(
+        [entry_id, "DRAM", "ENE", "ENE DRAM", "none", "I2C: PIIX4, address 0x70"]
+    )
+
+    # Pre-create entity with I2C location (should not be migrated)
+    entity_registry.async_get_or_create(
+        "light",
+        DOMAIN,
+        uid,
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    # Entity should remain unchanged
+    assert entity_registry.async_get_entity_id("light", DOMAIN, uid) is not None
+
+
+async def test_unique_id_migration_already_migrated(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openrgb_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that already-migrated unique IDs are not changed again."""
+    mock_config_entry.add_to_hass(hass)
+    entry_id = mock_config_entry.entry_id
+
+    uid = UID_SEPARATOR.join([entry_id, "KEYBOARD", "Corsair", "K70", "none", "none"])
+
+    entity_registry.async_get_or_create(
+        "light",
+        DOMAIN,
+        uid,
+        config_entry=mock_config_entry,
+    )
+
+    await hass.config_entries.async_setup(entry_id)
+    await hass.async_block_till_done()
+
+    # Entity should remain unchanged
+    assert entity_registry.async_get_entity_id("light", DOMAIN, uid) is not None
