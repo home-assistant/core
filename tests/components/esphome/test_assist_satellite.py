@@ -2425,3 +2425,150 @@ async def test_multichannel_audio_fallback_channel_0(
             await satellite.handle_audio(b"channel 0", b"channel 1")
             await satellite.handle_pipeline_stop(abort=False)
             await pipeline_finished.wait()
+
+
+async def test_stream_tts_audio_edge_cases(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Test all edge cases and error handling in _stream_tts_audio."""
+    import struct
+
+    mock_device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "voice_assistant_feature_flags": VoiceAssistantFeature.VOICE_ASSISTANT
+        },
+    )
+    await hass.async_block_till_done()
+
+    satellite = get_satellite_entity(hass, mock_device.device_info.mac_address)
+    assert satellite is not None
+
+    def make_wav_header(
+        riff: bytes = b"RIFF",
+        wave_fmt: bytes = b"WAVE",
+        chunk_id: bytes = b"fmt ",
+        chunk_size: int = 16,
+        audio_format: int = 1,
+        num_channels: int = 1,
+        sample_rate: int = 16000,
+        bits_per_sample: int = 16,
+        data_chunk_id: bytes = b"data",
+        data_chunk_size: int = 0,
+    ) -> bytes:
+        header = struct.pack("<4sI4s", riff, 36 + data_chunk_size, wave_fmt)
+        header += struct.pack("<4sI", chunk_id, chunk_size)
+        if chunk_size >= 16:
+            block_align = num_channels * (bits_per_sample // 8)
+            byte_rate = sample_rate * block_align
+            header += struct.pack(
+                "<HHIIHH",
+                audio_format,
+                num_channels,
+                sample_rate,
+                byte_rate,
+                block_align,
+                bits_per_sample,
+            )
+        if chunk_size > 16:
+            header += b"\x00" * (chunk_size - 16)
+        header += struct.pack("<4sI", data_chunk_id, data_chunk_size)
+        return header
+
+    class ChunkedMockResultStream(MockResultStream):
+        def __init__(self, hass: HomeAssistant, extension: str, chunks: list[bytes]) -> None:
+            super().__init__(hass, extension, b"")
+            self.chunks = chunks
+
+        async def async_stream_result(self):
+            for chunk in self.chunks:
+                yield chunk
+
+    # Invalid RIFF/WAVE header
+    mock_client.send_voice_assistant_audio.reset_mock()
+    stream = ChunkedMockResultStream(hass, "wav", [make_wav_header(riff=b"RIF_")])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
+    # Unsupported audio format (not PCM)
+    mock_client.send_voice_assistant_audio.reset_mock()
+    stream = ChunkedMockResultStream(hass, "wav", [make_wav_header(audio_format=2)])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
+    # Incorrect channels
+    mock_client.send_voice_assistant_audio.reset_mock()
+    stream = ChunkedMockResultStream(hass, "wav", [make_wav_header(num_channels=2)])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
+    # Incorrect sample rate
+    mock_client.send_voice_assistant_audio.reset_mock()
+    stream = ChunkedMockResultStream(hass, "wav", [make_wav_header(sample_rate=22050)])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
+    # Incorrect bits per sample
+    mock_client.send_voice_assistant_audio.reset_mock()
+    stream = ChunkedMockResultStream(hass, "wav", [make_wav_header(bits_per_sample=8)])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
+    # WAV missing fmt chunk before data chunk
+    mock_client.send_voice_assistant_audio.reset_mock()
+    missing_fmt_header = (
+        struct.pack("<4sI4s", b"RIFF", 20, b"WAVE")
+        + struct.pack("<4sI", b"data", 0)
+    )
+    stream = ChunkedMockResultStream(hass, "wav", [missing_fmt_header])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
+    # Skipping unknown chunks
+    mock_client.send_voice_assistant_audio.reset_mock()
+    junk_chunk = struct.pack("<4sI", b"JUNK", 4) + b"junk"
+    header_with_junk = (
+        struct.pack("<4sI4s", b"RIFF", 100, b"WAVE")
+        + junk_chunk
+        + struct.pack("<4sI", b"fmt ", 16)
+        + struct.pack("<HHIIHH", 1, 1, 16000, 32000, 2, 16)
+        + struct.pack("<4sI", b"data", 8)
+        + b"\x00" * 8
+    )
+    stream = ChunkedMockResultStream(hass, "wav", [header_with_junk])
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_called_once_with(b"\x00" * 8)
+
+    # Fragmentation of incoming stream bytes (headers split across multiple chunks)
+    mock_client.send_voice_assistant_audio.reset_mock()
+    full_wav = make_wav_header(data_chunk_size=4) + b"\x01\x02\x03\x04"
+    byte_chunks = [bytes([b]) for b in full_wav]
+    stream = ChunkedMockResultStream(hass, "wav", byte_chunks)
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_called_once_with(b"\x01\x02\x03\x04")
+
+    # Multi-chunk streaming with sleep/wait logic
+    mock_client.send_voice_assistant_audio.reset_mock()
+    wav_with_16bytes = make_wav_header(data_chunk_size=16) + b"\x00" * 16
+    stream = ChunkedMockResultStream(hass, "wav", [wav_with_16bytes])
+    await satellite._stream_tts_audio(stream, samples_per_chunk=4)
+    assert mock_client.send_voice_assistant_audio.call_count == 2
+    assert mock_client.send_voice_assistant_audio.call_args_list[0].args == (b"\x00" * 8,)
+    assert mock_client.send_voice_assistant_audio.call_args_list[1].args == (b"\x00" * 8,)
+
+    # Cancel/abort when self._is_running becomes False
+    mock_client.send_voice_assistant_audio.reset_mock()
+    header_chunk = make_wav_header(data_chunk_size=8)
+
+    async def async_stream_cancel():
+        yield header_chunk
+        satellite._is_running = False
+        yield b"\x00" * 8
+
+    stream = ChunkedMockResultStream(hass, "wav", [])
+    stream.async_stream_result = async_stream_cancel
+    await satellite._stream_tts_audio(stream)
+    mock_client.send_voice_assistant_audio.assert_not_called()
+
