@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_device_registry
+# name: test_device_registry_bulb
   DeviceRegistryEntrySnapshot({
     'area_id': None,
     'config_entries': <ANY>,

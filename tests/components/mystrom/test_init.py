@@ -70,7 +70,7 @@ async def test_init_pir_and_unload(
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_device_registry(
+async def test_device_registry_bulb(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
