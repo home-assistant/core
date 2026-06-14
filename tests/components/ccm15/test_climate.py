@@ -140,12 +140,12 @@ async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
     Byte 0 bit 0 of the status flags the unit; this device reports it set, so
     the entity must expose Fahrenheit rather than the hardcoded Celsius. Under
     the US unit system the device's native values then pass through unconverted
-    (target 86 °F, current 26 °F); were the entity still reporting Celsius they
+    (target 86 °F, current 75 °F); were the entity still reporting Celsius they
     would be converted and differ.
     """
     hass.config.units = US_CUSTOMARY_SYSTEM
     device_state = CCM15DeviceState(
-        devices={0: CCM15SlaveDevice(bytes.fromhex("01000041c0001a"))}
+        devices={0: CCM15SlaveDevice(bytes.fromhex("01000041c0004b"))}
     )
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -163,5 +163,5 @@ async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
 
     state = hass.states.get("climate.midea_0")
     assert state is not None
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 26
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 75
     assert state.attributes[ATTR_TEMPERATURE] == 86
