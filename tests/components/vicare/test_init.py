@@ -13,7 +13,7 @@ from PyViCare.PyViCareUtils import (
 )
 
 from homeassistant.components.vicare.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import (
     CONF_CLIENT_ID,
     CONF_PASSWORD,
@@ -485,16 +485,16 @@ async def test_coordinator_recovers_after_transient_failure(
             }
         )
         freezer.tick(timedelta(seconds=120))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, fire_all=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(sensor_id)
         assert state.state == STATE_UNAVAILABLE
 
         service.fetch_all_features.side_effect = None
         freezer.tick(timedelta(seconds=120))
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        async_fire_time_changed(hass, fire_all=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
         state = hass.states.get(sensor_id)
         assert state.state != STATE_UNAVAILABLE
@@ -546,8 +546,53 @@ async def test_per_device_failure_isolation(
 
     # Coordinator interval scales by device count (60 * 2 = 120s); tick past it.
     freezer.tick(timedelta(seconds=300))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(sensor_device0).state == STATE_UNAVAILABLE
     assert hass.states.get(sensor_device1).state != STATE_UNAVAILABLE
+
+
+async def test_coordinator_auth_failure_triggers_reauth(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An auth error during coordinator refresh starts a reauth flow."""
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert not [
+            flow
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+            if flow["context"]["source"] == SOURCE_REAUTH
+        ]
+
+        service.fetch_all_features.side_effect = PyViCareInvalidCredentialsError(
+            "invalid_grant"
+        )
+        freezer.tick(timedelta(seconds=120))
+        async_fire_time_changed(hass, fire_all=True)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        reauth_flows = [
+            flow
+            for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+            if flow["context"]["source"] == SOURCE_REAUTH
+        ]
+        assert len(reauth_flows) == 1
