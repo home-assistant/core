@@ -49,7 +49,7 @@ class HuumSteamer(HuumBaseEntity, NumberEntity):
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
-        return self.coordinator.data.target_humidity
+        return self.coordinator.data.humidity
 
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
