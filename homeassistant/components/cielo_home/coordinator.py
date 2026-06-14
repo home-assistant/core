@@ -51,7 +51,9 @@ class CieloDataUpdateCoordinator(DataUpdateCoordinator[CieloData]):
             name=DOMAIN,
             config_entry=entry,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-            # The debouncer prevents multiple rapid refresh requests from triggering repeated full data fetches from the backend.
+            # The debouncer prevents multiple rapid refresh
+            # requests from triggering repeated full data
+            # fetches from the backend.
             request_refresh_debouncer=Debouncer(
                 hass, LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
             ),

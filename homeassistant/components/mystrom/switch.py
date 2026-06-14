@@ -51,6 +51,7 @@ class MyStromSwitch(SwitchEntity):
         """Turn the switch on."""
         try:
             await self.plug.turn_on()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MyStromConnectionError:
             _LOGGER.error("No route to myStrom plug")
 
@@ -58,6 +59,7 @@ class MyStromSwitch(SwitchEntity):
         """Turn the switch off."""
         try:
             await self.plug.turn_off()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MyStromConnectionError:
             _LOGGER.error("No route to myStrom plug")
 

@@ -73,7 +73,10 @@ BINARY_SENSOR_OPTIONS = {
         (
             "binary_sensor",
             {
-                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " or states('binary_sensor.two') == 'on' }}"
+                )
             },
             "on",
             {"one": "on", "two": "off"},
@@ -85,7 +88,9 @@ BINARY_SENSOR_OPTIONS = {
         (
             "sensor",
             {
-                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                "state": (
+                    "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                )
             },
             "50.0",
             {"one": "30.0", "two": "20.0"},
@@ -570,10 +575,16 @@ async def test_config_flow_device(
         (
             "binary_sensor",
             {
-                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " or states('binary_sensor.two') == 'on' }}"
+                )
             },
             {
-                "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " and states('binary_sensor.two') == 'on' }}"
+                )
             },
             ["on", "off"],
             {"one": "on", "two": "off"},
@@ -585,10 +596,14 @@ async def test_config_flow_device(
         (
             "sensor",
             {
-                "state": "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                "state": (
+                    "{{ float(states('sensor.one')) + float(states('sensor.two')) }}"
+                )
             },
             {
-                "state": "{{ float(states('sensor.one')) - float(states('sensor.two')) }}"
+                "state": (
+                    "{{ float(states('sensor.one')) - float(states('sensor.two')) }}"
+                )
             },
             ["50.0", "10.0"],
             {"one": "30.0", "two": "20.0"},
@@ -916,10 +931,16 @@ async def test_options(
         (
             "binary_sensor",
             {
-                "state": "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " or states('binary_sensor.two') == 'on' }}"
+                )
             },
             {
-                "state": "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}"
+                "state": (
+                    "{{ states('binary_sensor.one') == 'on'"
+                    " and states('binary_sensor.two') == 'on' }}"
+                )
             },
             {"one": "on", "two": "off"},
             {"device_class": "motion"},
@@ -1026,7 +1047,10 @@ async def test_options_remove_device_class(
     [
         (
             "binary_sensor",
-            "{{ states.binary_sensor.one.state == 'on' or states.binary_sensor.two.state == 'on' }}",
+            (
+                "{{ states.binary_sensor.one.state == 'on'"
+                " or states.binary_sensor.two.state == 'on' }}"
+            ),
             {},
             {"one": "on", "two": "off"},
             ["off", "on"],
@@ -1107,6 +1131,7 @@ async def test_config_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes[0],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1131,6 +1156,7 @@ async def test_config_flow_preview(
             "attributes": {"friendly_name": "My template"}
             | extra_attributes[0]
             | extra_attributes[1],
+            "domain": template_type,
             "listeners": {
                 "all": False,
                 "domains": [],
@@ -1150,6 +1176,7 @@ async def test_config_flow_preview(
         "attributes": {"friendly_name": "My template"}
         | extra_attributes[0]
         | extra_attributes[1],
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],
@@ -1225,7 +1252,9 @@ EARLY_END_ERROR = "invalid template (TemplateSyntaxError: unexpected 'end of tem
                 ),
                 "unit_of_measurement": (
                     "'None' is not a valid unit for device class 'energy'; "
-                    "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J', 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh', 'mWh', 'TWh', 'Wh'"
+                    "expected one of 'cal', 'Gcal', 'GJ', 'GWh', 'J',"
+                    " 'kcal', 'kJ', 'kWh', 'Mcal', 'MJ', 'MWh',"
+                    " 'mWh', 'TWh', 'Wh'"
                 ),
             },
         ),
@@ -1504,8 +1533,14 @@ async def test_config_flow_preview_bad_state(
     [
         (
             "binary_sensor",
-            "{{ states('binary_sensor.one') == 'on' or states('binary_sensor.two') == 'on' }}",
-            "{{ states('binary_sensor.one') == 'on' and states('binary_sensor.two') == 'on' }}",
+            (
+                "{{ states('binary_sensor.one') == 'on'"
+                " or states('binary_sensor.two') == 'on' }}"
+            ),
+            (
+                "{{ states('binary_sensor.one') == 'on'"
+                " and states('binary_sensor.two') == 'on' }}"
+            ),
             {},
             {},
             {"one": "on", "two": "off"},
@@ -1585,6 +1620,7 @@ async def test_option_flow_preview(
     msg = await client.receive_json()
     assert msg["event"] == {
         "attributes": {"friendly_name": "My template"} | extra_attributes,
+        "domain": template_type,
         "listeners": {
             "all": False,
             "domains": [],

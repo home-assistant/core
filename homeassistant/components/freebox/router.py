@@ -125,6 +125,7 @@ class FreeboxRouter:
         self.supports_raid = True
         self.raids: dict[int, dict[str, Any]] = {}
         self.sensors_temperature: dict[str, int] = {}
+        self.sensors_temperature_names: dict[str, str] = {}
         self.sensors_connection: dict[str, float] = {}
         self.call_list: list[dict[str, Any]] = []
         self.home_granted = True
@@ -143,7 +144,8 @@ class FreeboxRouter:
 
         fbx_devices: list[dict[str, Any]] = []
 
-        # Access to Host list not available in bridge mode, API return error_code 'nodev'
+        # Access to Host list not available in bridge mode,
+        # API return error_code 'nodev'
         if self.supports_hosts:
             self.supports_hosts, fbx_devices = await get_hosts_list_if_supported(
                 self._api
@@ -180,10 +182,13 @@ class FreeboxRouter:
         # System sensors
         syst_datas: dict[str, Any] = await self._api.system.get_config()
 
-        # According to the doc `syst_datas["sensors"]` is temperature sensors in celsius degree.
+        # According to the doc `syst_datas["sensors"]` is
+        # temperature sensors in celsius degree.
         # Name and id of sensors may vary under Freebox devices.
         for sensor in syst_datas["sensors"]:
-            self.sensors_temperature[sensor["name"]] = sensor.get("value")
+            sensor_id = sensor["id"]
+            self.sensors_temperature[sensor_id] = sensor.get("value")
+            self.sensors_temperature_names[sensor_id] = sensor["name"]
 
         # Connection sensors
         connection_datas: dict[str, Any] = await self._api.connection.get_status()

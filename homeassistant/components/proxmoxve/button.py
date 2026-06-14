@@ -302,7 +302,10 @@ async def async_setup_entry(
 
 
 class ProxmoxBaseButton(ButtonEntity):
-    """Common base for Proxmox buttons. Basically to ensure the async_press logic isn't duplicated."""
+    """Common base for Proxmox buttons.
+
+    Ensures the async_press logic isn't duplicated.
+    """
 
     entity_description: ButtonEntityDescription
     coordinator: ProxmoxCoordinator

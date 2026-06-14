@@ -68,20 +68,24 @@ TRIGGERS: dict[str, type[Trigger]] = {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         CarbonMonoxideConcentrationConverter,
     ),
-    "co_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.CO)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        CarbonMonoxideConcentrationConverter,
+    "co_crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.CO)},
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            CarbonMonoxideConcentrationConverter,
+        )
     ),
     "ozone_changed": make_entity_numerical_state_changed_with_unit_trigger(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.OZONE)},
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         OzoneConcentrationConverter,
     ),
-    "ozone_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.OZONE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        OzoneConcentrationConverter,
+    "ozone_crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.OZONE)},
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            OzoneConcentrationConverter,
+        )
     ),
     "voc_changed": make_entity_numerical_state_changed_with_unit_trigger(
         {
@@ -92,14 +96,16 @@ TRIGGERS: dict[str, type[Trigger]] = {
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         MassVolumeConcentrationConverter,
     ),
-    "voc_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        {
-            SENSOR_DOMAIN: DomainSpec(
-                device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
-            )
-        },
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        MassVolumeConcentrationConverter,
+    "voc_crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            {
+                SENSOR_DOMAIN: DomainSpec(
+                    device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
+                )
+            },
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            MassVolumeConcentrationConverter,
+        )
     ),
     "voc_ratio_changed": make_entity_numerical_state_changed_with_unit_trigger(
         {
@@ -110,44 +116,60 @@ TRIGGERS: dict[str, type[Trigger]] = {
         CONCENTRATION_PARTS_PER_BILLION,
         UnitlessRatioConverter,
     ),
-    "voc_ratio_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        {
-            SENSOR_DOMAIN: DomainSpec(
-                device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
-            )
-        },
-        CONCENTRATION_PARTS_PER_BILLION,
-        UnitlessRatioConverter,
+    "voc_ratio_crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            {
+                SENSOR_DOMAIN: DomainSpec(
+                    device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
+                )
+            },
+            CONCENTRATION_PARTS_PER_BILLION,
+            UnitlessRatioConverter,
+        )
     ),
     "no_changed": make_entity_numerical_state_changed_with_unit_trigger(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROGEN_MONOXIDE)},
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         NitrogenMonoxideConcentrationConverter,
     ),
-    "no_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROGEN_MONOXIDE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        NitrogenMonoxideConcentrationConverter,
+    "no_crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            {
+                SENSOR_DOMAIN: DomainSpec(
+                    device_class=SensorDeviceClass.NITROGEN_MONOXIDE
+                )
+            },
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            NitrogenMonoxideConcentrationConverter,
+        )
     ),
     "no2_changed": make_entity_numerical_state_changed_with_unit_trigger(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROGEN_DIOXIDE)},
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         NitrogenDioxideConcentrationConverter,
     ),
-    "no2_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROGEN_DIOXIDE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        NitrogenDioxideConcentrationConverter,
+    "no2_crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            {
+                SENSOR_DOMAIN: DomainSpec(
+                    device_class=SensorDeviceClass.NITROGEN_DIOXIDE
+                )
+            },
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            NitrogenDioxideConcentrationConverter,
+        )
     ),
     "so2_changed": make_entity_numerical_state_changed_with_unit_trigger(
         {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.SULPHUR_DIOXIDE)},
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
         SulphurDioxideConcentrationConverter,
     ),
-    "so2_crossed_threshold": make_entity_numerical_state_crossed_threshold_with_unit_trigger(
-        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.SULPHUR_DIOXIDE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-        SulphurDioxideConcentrationConverter,
+    "so2_crossed_threshold": (
+        make_entity_numerical_state_crossed_threshold_with_unit_trigger(
+            {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.SULPHUR_DIOXIDE)},
+            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            SulphurDioxideConcentrationConverter,
+        )
     ),
     # Numerical sensor triggers without unit conversion (single-unit device classes)
     "co2_changed": make_entity_numerical_state_changed_trigger(

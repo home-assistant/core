@@ -22,7 +22,7 @@ from tests.common import async_fire_time_changed
 async def test_hold_switch(hass: HomeAssistant) -> None:
     """Test creation of the hold switch."""
     await async_init_integration(hass)
-    assert hass.states.get("switch.nick_office_hold").state == STATE_ON
+    assert hass.states.get("switch.nick_office_nick_office_hold").state == STATE_ON
 
 
 async def test_nexia_sensor_switch(
@@ -30,9 +30,9 @@ async def test_nexia_sensor_switch(
 ) -> None:
     """Test NexiaRoomIQSensorSwitch."""
     await async_init_integration(hass, house_fixture="sensors_xl1050_house.json")
-    sw1_id = f"{Platform.SWITCH}.center_nativezone_include_center"
+    sw1_id = f"{Platform.SWITCH}.center_nativezone_center_nativezone_include_center"
     sw1 = {ATTR_ENTITY_ID: sw1_id}
-    sw2_id = f"{Platform.SWITCH}.center_nativezone_include_upstairs"
+    sw2_id = f"{Platform.SWITCH}.center_nativezone_center_nativezone_include_upstairs"
     sw2 = {ATTR_ENTITY_ID: sw2_id}
 
     # Switch starts out on.

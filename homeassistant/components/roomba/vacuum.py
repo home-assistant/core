@@ -130,7 +130,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state = STATE_MAP[phase]
         except KeyError:
             return VacuumActivity.ERROR
-        if cycle != "none" and state in (VacuumActivity.IDLE, VacuumActivity.DOCKED):
+        # A robot stopped in the middle of a mission is paused, but one that is
+        # docked to recharge mid-mission stays docked (the charging binary
+        # sensor distinguishes it from a user-initiated pause on the floor).
+        if cycle != "none" and state is VacuumActivity.IDLE:
             state = VacuumActivity.PAUSED
         return state
 
@@ -304,13 +307,13 @@ class RoombaVacuumCarpetBoost(RoombaVacuum):
         else:
             _LOGGER.error("No such fan speed available: %s", fan_speed)
             return
+
         # The set_preference method does only accept string values
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "carpetBoost", str(carpet_boost)
-        )
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "vacHigh", str(high_perf)
-        )
+        def _set_fan_speed_preferences() -> None:
+            self.vacuum.set_preference("carpetBoost", str(carpet_boost))
+            self.vacuum.set_preference("vacHigh", str(high_perf))
+
+        await self.hass.async_add_executor_job(_set_fan_speed_preferences)
 
 
 class BraavaJet(IRobotVacuum):
@@ -354,6 +357,7 @@ class BraavaJet(IRobotVacuum):
             spray = int(split[1])
             if behavior.capitalize() in BRAAVA_MOP_BEHAVIORS:
                 behavior = behavior.capitalize()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except IndexError:
             _LOGGER.error(
                 "Fan speed error: expected {behavior}-{spray_amount}, got '%s'",
@@ -385,14 +389,14 @@ class BraavaJet(IRobotVacuum):
             overlap = OVERLAP_DEEP
         else:
             overlap = OVERLAP_EXTENDED
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference, "rankOverlap", overlap
-        )
-        await self.hass.async_add_executor_job(
-            self.vacuum.set_preference,
-            "padWetness",
-            {"disposable": spray, "reusable": spray},
-        )
+
+        def _set_mop_preferences() -> None:
+            self.vacuum.set_preference("rankOverlap", overlap)
+            self.vacuum.set_preference(
+                "padWetness", {"disposable": spray, "reusable": spray}
+            )
+
+        await self.hass.async_add_executor_job(_set_mop_preferences)
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

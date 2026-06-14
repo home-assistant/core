@@ -80,6 +80,7 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
                 True,
             )
         except SnooCommandException as err:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_on_failed",
@@ -96,6 +97,7 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
                 False,
             )
         except SnooCommandException as err:
+            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_off_failed",

@@ -129,7 +129,10 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
             )
 
     async def async_added_to_hass(self) -> None:
-        """Restore ATTR_CHANGED_BY on startup since it is likely no longer in the activity log."""
+        """Restore ATTR_CHANGED_BY on startup.
+
+        It is likely no longer in the activity log.
+        """
         await super().async_added_to_hass()
 
         if not (last_state := await self.async_get_last_state()):

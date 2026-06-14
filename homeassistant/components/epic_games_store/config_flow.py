@@ -85,7 +85,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(
-                title=f"Epic Games Store - Free Games ({user_input[CONF_LANGUAGE]}-{user_input[CONF_COUNTRY]})",
+                title=(
+                    "Epic Games Store - Free Games"
+                    f" ({user_input[CONF_LANGUAGE]}"
+                    f"-{user_input[CONF_COUNTRY]})"
+                ),
                 data=user_input,
             )
 

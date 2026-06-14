@@ -105,7 +105,11 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_AZIMUTH: user_input[CONF_AZIMUTH],
                             CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
                         },
-                        "title": f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                        "title": (
+                            f"{user_input[CONF_DECLINATION]}°"
+                            f" / {user_input[CONF_AZIMUTH]}°"
+                            f" / {user_input[CONF_MODULES_POWER]}W"
+                        ),
                         "unique_id": None,
                     },
                 ],
@@ -240,7 +244,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
 
         if user_input is not None:
             return self.async_create_entry(
-                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                title=(
+                    f"{user_input[CONF_DECLINATION]}°"
+                    f" / {user_input[CONF_AZIMUTH]}°"
+                    f" / {user_input[CONF_MODULES_POWER]}W"
+                ),
                 data={
                     CONF_DECLINATION: user_input[CONF_DECLINATION],
                     CONF_AZIMUTH: user_input[CONF_AZIMUTH],
@@ -276,7 +284,11 @@ class PlaneSubentryFlowHandler(ConfigSubentryFlow):
                     CONF_AZIMUTH: user_input[CONF_AZIMUTH],
                     CONF_MODULES_POWER: user_input[CONF_MODULES_POWER],
                 },
-                title=f"{user_input[CONF_DECLINATION]}° / {user_input[CONF_AZIMUTH]}° / {user_input[CONF_MODULES_POWER]}W",
+                title=(
+                    f"{user_input[CONF_DECLINATION]}°"
+                    f" / {user_input[CONF_AZIMUTH]}°"
+                    f" / {user_input[CONF_MODULES_POWER]}W"
+                ),
             ):
                 if not entry.update_listeners:
                     self.hass.config_entries.async_schedule_reload(entry.entry_id)

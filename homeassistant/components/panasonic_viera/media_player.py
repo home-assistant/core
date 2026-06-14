@@ -15,7 +15,7 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import ATTR_MANUFACTURER, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,7 +23,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from . import PanasonicVieraConfigEntry
 from .const import (
     ATTR_DEVICE_INFO,
-    ATTR_MANUFACTURER,
     ATTR_MODEL_NUMBER,
     ATTR_UDN,
     DEFAULT_MANUFACTURER,

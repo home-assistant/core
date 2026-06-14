@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar, cast
+from typing import Any, cast
 
 from pyprusalink import JobInfo, LegacyPrinterStatus, PrinterStatus, PrusaLink
 from pyprusalink.types import Conflict, PrinterState
@@ -15,14 +15,13 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import PrusaLinkConfigEntry, PrusaLinkUpdateCoordinator
 from .entity import PrusaLinkEntity, PrusaLinkEntityDescription
 
-T = TypeVar("T", PrinterStatus, LegacyPrinterStatus, JobInfo)
-
 
 @dataclass(frozen=True, kw_only=True)
-class PrusaLinkButtonEntityDescription(
+class PrusaLinkButtonEntityDescription[
+    T: (PrinterStatus, LegacyPrinterStatus, JobInfo)
+](
     ButtonEntityDescription,
     PrusaLinkEntityDescription,
-    Generic[T],
 ):
     """Describes PrusaLink button entity."""
 

@@ -91,7 +91,7 @@ class RepairsFlowManager(
         This method is called when a flow step returns FlowResultType.ABORT or
         FlowResultType.CREATE_ENTRY.
         """
-        if result.get("type") != data_entry_flow.FlowResultType.ABORT:
+        if result.get("type") is not data_entry_flow.FlowResultType.ABORT:
             ir.async_delete_issue(self.hass, flow.handler, flow.init_data["issue_id"])
         return result
 

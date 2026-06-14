@@ -26,7 +26,7 @@ from homeassistant.components.light import (
     filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EFFECT, CONF_NAME, CONF_RGB, CONF_STATE
+from homeassistant.const import CONF_EFFECT, CONF_HS, CONF_NAME, CONF_RGB, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -57,7 +57,6 @@ _LOGGER = logging.getLogger(__name__)
 # Legacy
 ATTR_COLOR_TEMP = "color_temp"
 
-CONF_HS = "hs"
 CONF_HS_ACTION = "set_hs"
 CONF_RGB_ACTION = "set_rgb"
 CONF_RGBW = "rgbw"
@@ -268,8 +267,11 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(  # pylint: disable=super-init-not-called
         self, name: str, config: dict[str, Any]
     ) -> None:

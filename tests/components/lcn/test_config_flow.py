@@ -58,7 +58,7 @@ async def test_show_form(hass: HomeAssistant) -> None:
 
     result = await flow.async_step_user(user_input=None)
 
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "user"
 
 
@@ -73,7 +73,7 @@ async def test_step_user(hass: HomeAssistant) -> None:
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=data
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+        assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
         assert result["title"] == CONNECTION_DATA[CONF_HOST]
         assert result["data"] == {
             **CONNECTION_DATA,
@@ -94,7 +94,7 @@ async def test_step_user_existing_host(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=config_data
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "already_configured"
 
 
@@ -121,7 +121,7 @@ async def test_step_user_error(
             DOMAIN, context={"source": config_entries.SOURCE_USER}, data=data
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert result["errors"] == errors
 
 
@@ -131,7 +131,7 @@ async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> 
     old_entry_data = entry.data.copy()
 
     result = await entry.start_reconfigure_flow(hass)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     with (
@@ -142,7 +142,7 @@ async def test_step_reconfigure(hass: HomeAssistant, entry: MockConfigEntry) -> 
             result["flow_id"],
             CONFIG_DATA.copy(),
         )
-        assert result["type"] == data_entry_flow.FlowResultType.ABORT
+        assert result["type"] is data_entry_flow.FlowResultType.ABORT
         assert result["reason"] == "reconfigure_successful"
 
         entry = hass.config_entries.async_get_entry(entry.entry_id)
@@ -169,7 +169,7 @@ async def test_step_reconfigure_error(
     entry.add_to_hass(hass)
 
     result = await entry.start_reconfigure_flow(hass)
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
 
     with patch(
@@ -181,7 +181,7 @@ async def test_step_reconfigure_error(
             CONFIG_DATA.copy(),
         )
 
-        assert result["type"] == data_entry_flow.FlowResultType.FORM
+        assert result["type"] is data_entry_flow.FlowResultType.FORM
         assert result["errors"] == errors
 
 

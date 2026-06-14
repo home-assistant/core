@@ -25,6 +25,7 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         unique_id=TEST_GATEWAY_ID,
         data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=1,
     )
 
     mock_entry.add_to_hass(hass)
@@ -53,7 +54,9 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
                 platform=DOMAIN,
                 config_entry_id=mock_entry.entry_id,
             ),
-            # This entity will be removed since "io://1234-5678-1234/3541212-core:TargetClosureState" already exists
+            # This entity will be removed since
+            # "io://1234-5678-1234/3541212-core:TargetClosureState"
+            # already exists
             ENTITY_SENSOR_TARGET_CLOSURE_STATE: RegistryEntryWithDefaults(
                 entity_id=ENTITY_SENSOR_TARGET_CLOSURE_STATE,
                 unique_id="io://1234-5678-1234/3541212-OverkizState.CORE_TARGET_CLOSURE",
@@ -88,3 +91,6 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
     for entity_id, unique_id in unique_id_map.items():
         entry = ent_reg.async_get(entity_id)
         assert entry.unique_id == unique_id
+
+    # Test if the config entry is migrated to the latest minor version
+    assert mock_entry.minor_version == 2

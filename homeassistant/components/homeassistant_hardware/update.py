@@ -71,7 +71,8 @@ class FirmwareUpdateExtraStoredData(ExtraStoredData):
         return cls(
             FirmwareManifest.from_json(
                 data["firmware_manifest"],
-                # This data is not technically part of the manifest and is loaded externally
+                # This data is not technically part of the manifest
+                # and is loaded externally
                 url=URL(data["firmware_manifest"]["url"]),
                 html_url=URL(data["firmware_manifest"]["html_url"]),
             )

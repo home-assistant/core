@@ -97,7 +97,7 @@ class SignalNotificationService(BaseNotificationService):
         self._signal_cli_rest_api = signal_cli_rest_api
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message to one or more recipients. Additionally a file can be attached."""
+        """Send a message to one or more recipients."""
 
         _LOGGER.debug("Sending signal message")
 

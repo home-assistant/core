@@ -94,12 +94,12 @@ class ComfoConnectFan(FanEntity):
                 self._handle_mode_update,
             )
         )
-        await self.hass.async_add_executor_job(
-            self._ccb.comfoconnect.register_sensor, SENSOR_FAN_SPEED_MODE
-        )
-        await self.hass.async_add_executor_job(
-            self._ccb.comfoconnect.register_sensor, SENSOR_OPERATING_MODE_BIS
-        )
+
+        def _register_sensors() -> None:
+            self._ccb.comfoconnect.register_sensor(SENSOR_FAN_SPEED_MODE)
+            self._ccb.comfoconnect.register_sensor(SENSOR_OPERATING_MODE_BIS)
+
+        await self.hass.async_add_executor_job(_register_sensors)
 
     def _handle_speed_update(self, value: float) -> None:
         """Handle update callbacks."""

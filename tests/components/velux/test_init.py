@@ -65,7 +65,7 @@ async def test_setup_retry_on_oserror_during_scenes(
 async def test_setup_auth_error(
     mock_config_entry: ConfigEntry, hass: HomeAssistant, mock_pyvlx: AsyncMock
 ) -> None:
-    """Test that PyVLXException with auth message raises ConfigEntryAuthFailed and starts reauth flow."""
+    """Test PyVLXException with auth message raises ConfigEntryAuthFailed."""
 
     mock_pyvlx.load_scenes.side_effect = PyVLXException(
         "Login to KLF 200 failed, check credentials"

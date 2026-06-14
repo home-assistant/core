@@ -433,7 +433,10 @@ async def test_local_push_only(
     """Test a local only push registration."""
     with pytest.raises(
         HomeAssistantError,
-        match=r"Device.*websocket-push-webhook-id.*not connected to local push notifications",
+        match=(
+            r"Device.*websocket-push-webhook-id"
+            r".*not connected to local push notifications"
+        ),
     ):
         await hass.services.async_call(
             "notify",
@@ -489,9 +492,11 @@ async def test_notify_multiple_targets(
 ) -> None:
     """Test notify to multiple targets.
 
-    Messages will be sent to three targerts, one (with webhook id `webhook_id_2`) will be remote target
-    and will send the notification via HTTP request, the other two (`mock-webhook_id` and`websocket-push-webhook-id`)
-    will be local push only and will be sent via websocket.
+    Messages will be sent to three targets, one (with webhook id
+    `webhook_id_2`) will be remote target and will send the notification
+    via HTTP request, the other two (`mock-webhook_id` and
+    `websocket-push-webhook-id`) will be local push only and will be
+    sent via websocket.
     """
 
     # Setup mock for non-local push notification target
@@ -538,7 +543,7 @@ async def test_notify_multiple_targets(
         blocking=True,
     )
 
-    # Assert that the notification has been sent to the non-local push notification target
+    # Assert notification sent to non-local push notification target
     assert len(aioclient_mock.mock_calls) == 1
     call = aioclient_mock.mock_calls
     call_json = call[0][2]
@@ -548,7 +553,7 @@ async def test_notify_multiple_targets(
     assert call_json["registration_info"]["app_version"] == "1.0"
     assert call_json["registration_info"]["webhook_id"] == "webhook_id_2"
 
-    # Assert that the notification has been sent to the two local push notification targets
+    # Assert notification sent to the two local push targets
     for sub_id in local_push_sub_ids:
         msg_result = await client.receive_json()
         assert msg_result["event"] == {"message": "Hello world"}
@@ -618,7 +623,7 @@ async def test_notify_multiple_targets_if_any_disconnected(
             blocking=True,
         )
 
-    # Assert that the notification has been sent to the non-local push notification target
+    # Assert notification sent to non-local push notification target
     assert len(aioclient_mock.mock_calls) == 1
     call = aioclient_mock.mock_calls
     call_json = call[0][2]
@@ -836,7 +841,7 @@ async def test_send_message_exceptions(
 
 @pytest.mark.usefixtures("setup_websocket_channel_only_push")
 async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
-    """Test sending message via notify.send_message action through local push with exceptions."""
+    """Test send_message via local push with exceptions."""
     with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             NOTIFY_DOMAIN,

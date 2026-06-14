@@ -66,5 +66,6 @@ class TwilioCallNotificationService(BaseNotificationService):
                 self.client.calls.create(
                     to=target, url=twimlet_url, from_=self.from_number
                 )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except TwilioRestException as exc:
                 _LOGGER.error(exc)

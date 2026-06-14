@@ -33,7 +33,6 @@ CONF_ENDPOINT = "endpoint"
 CONF_TERMINAL_ID = "terminal_id"
 CONF_TOKEN_INFO = "token_info"
 CONF_USER_CODE = "user_code"
-CONF_USERNAME = "username"
 
 TUYA_CLIENT_ID = "HA_3y9q4ak7g4ephrvke"
 TUYA_SCHEMA = "haauthorize"
@@ -658,6 +657,7 @@ class DPCode(StrEnum):
     COLOUR_DATA = "colour_data"  # Colored light mode
     COLOUR_DATA_HSV = "colour_data_hsv"  # Colored light mode
     COLOUR_DATA_V2 = "colour_data_v2"  # Colored light mode
+    COMPRESSOR_STRENGTH = "compressor_strength"
     CONCENTRATION_SET = "concentration_set"  # Concentration setting
     CONTROL = "control"
     CONTROL_2 = "control_2"
@@ -711,6 +711,7 @@ class DPCode(StrEnum):
     ELECTRICITY_LEFT = "electricity_left"
     EXCRETION_TIME_DAY = "excretion_time_day"
     EXCRETION_TIMES_DAY = "excretion_times_day"
+    EXT_TEMP = "ext_temp"
     FACTORY_RESET = "factory_reset"
     FAN_BEEP = "fan_beep"  # Sound
     FAN_COOL = "fan_cool"  # Cool wind
@@ -911,8 +912,10 @@ class DPCode(StrEnum):
     TARGET_DIS_CLOSEST = "target_dis_closest"  # Closest target distance
     TDS_IN = "tds_in"  # Total dissolved solids
     TEMP = "temp"  # Temperature setting
+    TEMP_AROUND = "temp_around"  # Current around (outside) temperature
     TEMP_BOILING_C = "temp_boiling_c"
     TEMP_BOILING_F = "temp_boiling_f"
+    TEMP_COILER = "temp_coiler"  # Current coil temperature
     TEMP_CONTROLLER = "temp_controller"
     TEMP_CORRECTION = "temp_correction"
     TEMP_CURRENT = "temp_current"  # Current temperature in °C
@@ -933,12 +936,15 @@ class DPCode(StrEnum):
         "temp_current_external_f"  # Current external temperature in Fahrenheit
     )
     TEMP_CURRENT_F = "temp_current_f"  # Current temperature in °F
+    TEMP_EFFLUENT = "temp_effluent"  # Current flow temperature
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
+    TEMP_SETTING_QUICK_C = "temp_setting_quick_c"
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
+    TEMP_VENTING = "temp_venting"  # Current heat plate temperature
     TEMPER_ALARM = "temper_alarm"  # Tamper alarm
     TIME_TOTAL = "time_total"
     TIME_USE = "time_use"  # Total seconds of irrigation
@@ -988,6 +994,7 @@ class DPCode(StrEnum):
     WORK_POWER = "work_power"
     WORK_STATE = "work_state"
     WORK_STATE_E = "work_state_e"
+    WORK_TYPE = "work_type"
 
 
 @dataclass

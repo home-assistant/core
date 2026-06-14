@@ -31,7 +31,8 @@ async def async_setup_entry(
 
     def _discover_new_devices():
         panel_status: PanelStatus = coordinator.data
-        # In case the panel is offline, its status will be None. In that case, simply do nothing
+        # In case the panel is offline, its status will be
+        # None. In that case, simply do nothing
         if panel_status is None:
             return
 
@@ -135,7 +136,8 @@ class ElmaxArea(ElmaxEntity, AlarmControlPanelEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        # Just reset the local pending_state so that it no longer overrides the one from coordinator.
+        # Just reset the local pending_state so that it no
+        # longer overrides the one from coordinator.
         self._pending_state = None
         super()._handle_coordinator_update()
 

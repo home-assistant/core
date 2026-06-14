@@ -24,6 +24,11 @@
       }
     }
   },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find Snooz with address {address}: {reason}"
+    }
+  },
   "services": {
     "transition_off": {
       "description": "Transitions the volume level to the lowest setting over a specified duration, then powers off the device.",

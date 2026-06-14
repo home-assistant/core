@@ -59,7 +59,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: IskraConfigEntry) -> boo
     # Initialize the device
     await base_device.init()
 
-    # if the device is a gateway, add all child devices, otherwise add the device itself.
+    # If the device is a gateway, add all child devices,
+    # otherwise add the device itself.
     if base_device.is_gateway:
         # Add the gateway device to the device registry
         device_registry = dr.async_get(hass)

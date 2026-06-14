@@ -229,7 +229,7 @@ async def async_setup_entry(
         gateway_id = discovery_info[ATTR_GATEWAY_ID]
         node_id = discovery_info[ATTR_NODE_ID]
         # Uses legacy hass.data[DOMAIN] pattern
-        # pylint: disable-next=hass-use-runtime-data
+        # pylint: disable-next=home-assistant-use-runtime-data
         gateway: BaseAsyncGateway = hass.data[DOMAIN][MYSENSORS_GATEWAYS][gateway_id]
         async_add_entities([MyBatterySensor(gateway_id, gateway, node_id)])
 

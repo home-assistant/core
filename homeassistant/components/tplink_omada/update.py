@@ -86,7 +86,8 @@ class OmadaDeviceUpdate(
             raise HomeAssistantError("Firmware update request rejected") from ex
         except OmadaClientException as ex:
             raise HomeAssistantError(
-                "Unable to send Firmware update request. Check the controller is online."
+                "Unable to send Firmware update request."
+                " Check the controller is online."
             ) from ex
         finally:
             await self.coordinator.async_request_refresh()

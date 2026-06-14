@@ -347,10 +347,7 @@ class RpcUpdateEntity(ShellyRpcAttributeEntity, UpdateEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="ota_update_rpc_error",
-                translation_placeholders={
-                    "entity": self.entity_id,
-                    "device": self.coordinator.name,
-                },
+                translation_placeholders={"device": self.coordinator.name},
             ) from err
         except InvalidAuthError:
             await self.coordinator.async_shutdown_device_and_start_reauth()

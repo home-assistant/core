@@ -23,6 +23,7 @@ from homeassistant.const import (
     CONF_USERNAME,
 )
 from homeassistant.core import callback
+from homeassistant.data_entry_flow import SectionConfig, section
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
@@ -35,6 +36,7 @@ from .bridge import AsusWrtBridge
 from .const import (
     CONF_DNSMASQ,
     CONF_INTERFACE,
+    CONF_MORE_OPTIONS,
     CONF_REQUIRE_IP,
     CONF_SSH_KEY,
     CONF_TRACK_UNKNOWN,
@@ -56,9 +58,6 @@ ALLOWED_PROTOCOL = [
     PROTOCOL_HTTP,
     PROTOCOL_TELNET,
 ]
-
-PASS_KEY = "pass_key"
-PASS_KEY_MSG = "Only provide password or SSH key file"
 
 RESULT_CONN_ERROR = "cannot_connect"
 RESULT_SUCCESS = "success"
@@ -144,9 +143,7 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         schema = {
             vol.Required(CONF_HOST, default=user_input.get(CONF_HOST, "")): str,
             vol.Required(CONF_USERNAME, default=user_input.get(CONF_USERNAME, "")): str,
-            vol.Exclusive(CONF_PASSWORD, PASS_KEY, PASS_KEY_MSG): str,
-            vol.Optional(CONF_PORT): cv.port,
-            vol.Exclusive(CONF_SSH_KEY, PASS_KEY, PASS_KEY_MSG): str,
+            vol.Optional(CONF_PASSWORD): str,
             vol.Required(
                 CONF_PROTOCOL,
                 default=user_input.get(CONF_PROTOCOL, PROTOCOL_HTTPS),
@@ -154,6 +151,15 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
                 SelectSelectorConfig(
                     options=ALLOWED_PROTOCOL, translation_key="protocols"
                 )
+            ),
+            vol.Required(CONF_MORE_OPTIONS): section(
+                vol.Schema(
+                    {
+                        vol.Optional(CONF_PORT): cv.port,
+                        vol.Optional(CONF_SSH_KEY): str,
+                    }
+                ),
+                SectionConfig(collapsed=True),
             ),
         }
 
@@ -229,6 +235,10 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is None:
             return self._show_setup_form()
 
+        user_input = user_input.copy()
+        more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+        user_input.update(more_options)
+
         self._config_data = user_input
         pwd: str | None = user_input.get(CONF_PASSWORD)
         ssh: str | None = user_input.get(CONF_SSH_KEY)
@@ -238,6 +248,8 @@ class AsusWrtFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(error="pwd_required")
         if not (pwd or ssh):
             return self._show_setup_form(error="pwd_or_ssh")
+        if pwd and ssh:
+            return self._show_setup_form(error="pwd_and_ssh")
         if ssh and not await self.hass.async_add_executor_job(_is_file, ssh):
             return self._show_setup_form(error="ssh_not_file")
 

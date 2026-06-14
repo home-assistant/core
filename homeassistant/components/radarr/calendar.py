@@ -46,7 +46,7 @@ class RadarrCalendarEntity(RadarrEntity, CalendarEntity):
             description=self.coordinator.event.description,
         )
 
-    # pylint: disable-next=hass-return-type
+    # pylint: disable-next=home-assistant-return-type
     async def async_get_events(  # type: ignore[override]
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[RadarrEvent]:
