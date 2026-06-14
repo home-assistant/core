@@ -38,7 +38,10 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
             ccm15 = CCM15Device(
-                user_input[CONF_HOST], user_input[CONF_PORT], DEFAULT_TIMEOUT
+                user_input[CONF_HOST],
+                user_input[CONF_PORT],
+                DEFAULT_TIMEOUT,
+                password=user_input.get(CONF_PASSWORD) or None,
             )
             try:
                 if not await ccm15.async_test_connection():
