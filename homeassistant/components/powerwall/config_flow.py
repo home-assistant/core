@@ -98,8 +98,9 @@ async def validate_input(
         if gateway_din is None:
             # PW3-style restricted gateway — no DIN exposed via HTTP. We have no
             # stable hardware identifier to use as a unique id, so leave it unset
-            # and rely on IP-based dedup. DHCP discovery (which carries the real
-            # DIN as the hostname) can later assign a unique id to the entry.
+            # and rely on IP-based dedup. Because the entry has no unique id, DHCP
+            # discovery cannot match it and instead aborts (see async_step_dhcp)
+            # to avoid setting up a duplicate.
             return {
                 "title": f"Powerwall {ip_address}",
                 "unique_id": None,
