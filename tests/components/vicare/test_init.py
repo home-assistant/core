@@ -4,8 +4,8 @@ from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
-import pytest
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from PyViCare.PyViCareUtils import (
     PyViCareInternalServerError,
     PyViCareInvalidConfigurationError,
@@ -14,8 +14,13 @@ from PyViCare.PyViCareUtils import (
 
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import (
+    CONF_CLIENT_ID,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
@@ -493,3 +498,56 @@ async def test_coordinator_recovers_after_transient_failure(
 
         state = hass.states.get(sensor_id)
         assert state.state != STATE_UNAVAILABLE
+
+
+async def test_per_device_failure_isolation(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A transient failure on one device must not affect the other device's sensors."""
+    fixtures: list[Fixture] = [
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json"),
+        Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
+    ]
+    mock_vicare = MockPyViCare(fixtures)
+    service0 = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    sensor_device0 = "sensor.model0_temperature"
+    sensor_device1 = "sensor.model1_temperature"
+
+    assert hass.states.get(sensor_device0) is not None, f"{sensor_device0} not found"
+    assert hass.states.get(sensor_device1) is not None, f"{sensor_device1} not found"
+    assert hass.states.get(sensor_device0).state != STATE_UNAVAILABLE
+    assert hass.states.get(sensor_device1).state != STATE_UNAVAILABLE
+
+    service0.fetch_all_features.side_effect = PyViCareInternalServerError(
+        {
+            "statusCode": 500,
+            "errorType": "INTERNAL_SERVER_ERROR",
+            "message": "Internal Server Error",
+            "viErrorId": "0",
+        }
+    )
+
+    # Coordinator interval scales by device count (60 * 2 = 120s); tick past it.
+    freezer.tick(timedelta(seconds=300))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(sensor_device0).state == STATE_UNAVAILABLE
+    assert hass.states.get(sensor_device1).state != STATE_UNAVAILABLE
