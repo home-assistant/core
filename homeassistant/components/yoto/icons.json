@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "time": {
+      "day_mode_start": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_mode_start": {
+        "default": "mdi:weather-night"
+      }
+    }
+  }
+}
