@@ -14,8 +14,6 @@ from pylint.lint import PyLinter
 
 from pylint_home_assistant.helpers.module_info import is_integration_module
 
-_CONNECTION_NETWORK_MAC_NAMES = frozenset({"CONNECTION_NETWORK_MAC"})
-
 
 def _is_connection_network_mac(node: nodes.NodeNG) -> bool:
     """Check if a node refers to CONNECTION_NETWORK_MAC."""
