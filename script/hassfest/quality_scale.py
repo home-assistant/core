@@ -736,7 +736,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "prosegur",
     "prowl",
     "proximity",
-    "prusalink",
     "proxmoxve",
     "ps4",
     "pulseaudio_loopback",
