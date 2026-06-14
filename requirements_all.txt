@@ -3064,7 +3064,7 @@ solarlog_cli==0.7.1
 solarman-opendata==0.0.3
 
 # homeassistant.components.solax
-solax==3.2.3
+solax==3.2.4
 
 # homeassistant.components.somfy_mylink
 somfy-mylink-synergy==1.0.6
