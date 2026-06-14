@@ -56,9 +56,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
         gps_accuracy_threshold,
         entry,
     )
-    await hass.async_add_executor_job(account.setup)
 
     entry.runtime_data = account
+
+    await hass.async_add_executor_job(account.setup)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

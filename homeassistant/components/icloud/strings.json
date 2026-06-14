@@ -37,6 +37,7 @@
       },
       "verification_code": {
         "data": {
+          "request_new_code": "Request a new verification code",
           "verification_code": "Verification code"
         },
         "description": "Please enter the verification code you just received from Apple",

@@ -32,6 +32,7 @@ from .const import (
 
 CONF_TRUSTED_DEVICE = "trusted_device"
 CONF_VERIFICATION_CODE = "verification_code"
+CONF_REQUEST_NEW_CODE = "request_new_code"
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,7 +130,6 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _validate_and_create_entry(self, user_input, step_id):
         """Check if config is valid and create entry if so."""
-        self._password = user_input[CONF_PASSWORD]
 
         extra_inputs = user_input
 
@@ -138,7 +138,11 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._existing_entry_data:
             extra_inputs = self._existing_entry_data
 
+        if user_input is not None:
+            extra_inputs[CONF_PASSWORD] = user_input[CONF_PASSWORD]
+
         self._username = extra_inputs[CONF_USERNAME]
+        self._password = extra_inputs[CONF_PASSWORD]
         self._with_family = extra_inputs.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY)
         self._max_interval = extra_inputs.get(CONF_MAX_INTERVAL, DEFAULT_MAX_INTERVAL)
         self._gps_accuracy_threshold = extra_inputs.get(
@@ -150,16 +154,17 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(self._username)
             self._abort_if_unique_id_configured()
 
-        try:
-            self.api = await self._create_icloud_api()
-        except PyiCloudFailedLoginException as error:
-            _LOGGER.error("Error logging into iCloud service: %s", error)
-            self.api = None
-            errors = {CONF_PASSWORD: "invalid_auth"}
-            return self._show_setup_form(user_input, errors, step_id)
+        if self.api is None:
+            try:
+                self.api = await self._create_icloud_api()
+            except PyiCloudFailedLoginException as error:
+                _LOGGER.error("Error logging into iCloud service: %s", error)
+                self.api = None
+                errors = {CONF_PASSWORD: "invalid_auth"}
+                return self._show_setup_form(user_input, errors, step_id)
 
         if self.api.requires_2fa:
-            return await self.async_step_verification_code(request_code=True)
+            return await self.async_step_verification_code(request_code=False)
 
         if self.api.requires_2sa:
             return await self.async_step_trusted_device()
@@ -217,15 +222,17 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.context["unique_id"])
         self._existing_entry_data = {**entry_data}
         self._description_placeholders = {"username": entry_data[CONF_USERNAME]}
+        self.api = (
+            self._get_reauth_entry().runtime_data.api
+            if hasattr(self._get_reauth_entry(), "runtime_data")
+            else None
+        )
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Update password for a config entry that can't authenticate."""
-        if user_input is None:
-            return self._show_setup_form(step_id="reauth_confirm")
-
         return await self._validate_and_create_entry(user_input, "reauth_confirm")
 
     async def async_step_trusted_device(
@@ -295,8 +302,14 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors is None:
             errors = {}
 
-        if user_input is None:
-            if request_code:
+        if (
+            user_input is None
+            or user_input.get(CONF_REQUEST_NEW_CODE, False)
+            or user_input.get(CONF_VERIFICATION_CODE, None) is None
+        ):
+            if request_code or (
+                user_input and user_input.get(CONF_REQUEST_NEW_CODE, False)
+            ):
                 errors = await self._request_2fa_code(errors)
             return await self._show_verification_code_form(errors)
 
@@ -351,6 +364,11 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="verification_code",
-            data_schema=vol.Schema({vol.Required(CONF_VERIFICATION_CODE): str}),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_VERIFICATION_CODE): str,
+                    vol.Optional(CONF_REQUEST_NEW_CODE, default=False): bool,
+                }
+            ),
             errors=errors or {},
         )

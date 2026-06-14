@@ -110,7 +110,6 @@ class IcloudAccount:
                 raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
 
         except PyiCloudFailedLoginException:
-            self.api = None
             # Login failed which means credentials need to be updated.
             _LOGGER.error(
                 (

@@ -44,3 +44,20 @@ async def test_setup_2fa(hass: HomeAssistant) -> None:
     in_progress_flows = hass.config_entries.flow.async_progress()
     assert len(in_progress_flows) == 1
     assert in_progress_flows[0]["context"]["unique_id"] == config_entry.unique_id
+
+
+@pytest.mark.usefixtures("service_2fa")
+async def test_unique_id_set_on_setup(hass: HomeAssistant) -> None:
+    """Test that unique_id is set on setup."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=None
+    )
+    config_entry.add_to_hass(hass)
+
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.unique_id == USERNAME
+    assert config_entry.state is ConfigEntryState.LOADED

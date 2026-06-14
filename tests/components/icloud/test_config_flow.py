@@ -9,6 +9,7 @@ from pyicloud.exceptions import (
 import pytest
 
 from homeassistant.components.icloud.config_flow import (
+    CONF_REQUEST_NEW_CODE,
     CONF_TRUSTED_DEVICE,
     CONF_VERIFICATION_CODE,
 )
@@ -100,6 +101,32 @@ def mock_controller_service_authenticated():
         yield service_mock
 
 
+@pytest.fixture(name="service_password_update")
+def mock_controller_service_password_authenticated(service_authenticated: MagicMock):
+    """Mock a service that needs a password update."""
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[
+            PyiCloudFailedLoginException(msg="Password updated"),
+            service_authenticated(),
+        ],
+    ) as service_mock:
+        yield service_mock
+
+
+@pytest.fixture(name="service_password_update_failed")
+def mock_controller_service_password_failed():
+    """Mock a service that needs a password update but fails."""
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService",
+        side_effect=[
+            PyiCloudFailedLoginException(msg="Password updated"),
+            PyiCloudFailedLoginException(msg="Password updated"),
+        ],
+    ) as service_mock:
+        yield service_mock
+
+
 @pytest.fixture(name="service_authenticated_no_device")
 def mock_controller_service_authenticated_no_device():
     """Mock a successful service while already authenticate, but without device."""
@@ -169,7 +196,8 @@ def mock_controller_service_validate_verification_code_failed():
         yield service_mock
 
 
-async def test_user(hass: HomeAssistant, service: MagicMock) -> None:
+@pytest.mark.usefixtures("service")
+async def test_user(hass: HomeAssistant) -> None:
     """Test user config."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}, data=None
@@ -187,9 +215,8 @@ async def test_user(hass: HomeAssistant, service: MagicMock) -> None:
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
-async def test_user_with_cookie(
-    hass: HomeAssistant, service_authenticated: MagicMock
-) -> None:
+@pytest.mark.usefixtures("service_authenticated")
+async def test_user_with_cookie(hass: HomeAssistant) -> None:
     """Test user config with presence of a cookie."""
     # test with all provided
     result = await hass.config_entries.flow.async_init(
@@ -226,9 +253,8 @@ async def test_login_failed(hass: HomeAssistant) -> None:
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
-async def test_no_device(
-    hass: HomeAssistant, service_authenticated_no_device: MagicMock
-) -> None:
+@pytest.mark.usefixtures("service_authenticated_no_device")
+async def test_no_device(hass: HomeAssistant) -> None:
     """Test when we have no devices."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -239,7 +265,8 @@ async def test_no_device(
     assert result["reason"] == "no_device"
 
 
-async def test_trusted_device(hass: HomeAssistant, service: MagicMock) -> None:
+@pytest.mark.usefixtures("service")
+async def test_trusted_device(hass: HomeAssistant) -> None:
     """Test trusted_device step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -252,7 +279,8 @@ async def test_trusted_device(hass: HomeAssistant, service: MagicMock) -> None:
     assert result["step_id"] == CONF_TRUSTED_DEVICE
 
 
-async def test_trusted_device_success(hass: HomeAssistant, service: MagicMock) -> None:
+@pytest.mark.usefixtures("service")
+async def test_trusted_device_success(hass: HomeAssistant) -> None:
     """Test trusted_device step success."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -267,9 +295,8 @@ async def test_trusted_device_success(hass: HomeAssistant, service: MagicMock) -
     assert result["step_id"] == CONF_VERIFICATION_CODE
 
 
-async def test_send_verification_code_failed(
-    hass: HomeAssistant, service_send_verification_code_failed: MagicMock
-) -> None:
+@pytest.mark.usefixtures("service_send_verification_code_failed")
+async def test_send_verification_code_failed(hass: HomeAssistant) -> None:
     """Test when we have errors during send_verification_code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -285,7 +312,8 @@ async def test_send_verification_code_failed(
     assert result["errors"] == {CONF_TRUSTED_DEVICE: "send_verification_code"}
 
 
-async def test_verification_code(hass: HomeAssistant, service: MagicMock) -> None:
+@pytest.mark.usefixtures("service")
+async def test_verification_code(hass: HomeAssistant) -> None:
     """Test verification_code step."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -328,9 +356,8 @@ async def test_verification_code_success(
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
-async def test_validate_verification_code_failed(
-    hass: HomeAssistant, service_validate_verification_code_failed: MagicMock
-) -> None:
+@pytest.mark.usefixtures("service_validate_verification_code_failed")
+async def test_validate_verification_code_failed(hass: HomeAssistant) -> None:
     """Test when we have errors during validate_verification_code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -373,9 +400,29 @@ async def test_2fa_code_success(hass: HomeAssistant, service_2fa: MagicMock) -> 
     assert result["data"][CONF_GPS_ACCURACY_THRESHOLD] == DEFAULT_GPS_ACCURACY_THRESHOLD
 
 
-async def test_validate_2fa_code_failed(
-    hass: HomeAssistant, service_validate_2fa_code_failed: MagicMock
+async def test_2fa_new_code_success(
+    hass: HomeAssistant, service_2fa: MagicMock
 ) -> None:
+    """Test 2fa step success."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+    service_2fa.return_value.requires_2fa = False
+    service_2fa.return_value.requires_2sa = False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_REQUEST_NEW_CODE: True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {}
+
+
+@pytest.mark.usefixtures("service_validate_2fa_code_failed")
+async def test_validate_2fa_code_failed(hass: HomeAssistant) -> None:
     """Test when we have errors during validate_verification_code."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -407,7 +454,7 @@ async def test_2fa_code_failed_request(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+        result["flow_id"], {CONF_REQUEST_NEW_CODE: True}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -430,7 +477,7 @@ async def test_2fa_code_non_pyicloud_error(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+        result["flow_id"], {CONF_REQUEST_NEW_CODE: True}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -451,7 +498,7 @@ async def test_2fa_code_returned_false(
     service_2fa_failed_request.return_value.request_2fa_code.return_value = False
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+        result["flow_id"], {CONF_REQUEST_NEW_CODE: True}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -459,9 +506,8 @@ async def test_2fa_code_returned_false(
     assert result["errors"] == {"base": "send_verification_code"}
 
 
-async def test_password_update(
-    hass: HomeAssistant, service_authenticated: MagicMock
-) -> None:
+@pytest.mark.usefixtures("service_password_update")
+async def test_password_update(hass: HomeAssistant) -> None:
     """Test that password reauthentication works successfully."""
     config_entry = MockConfigEntry(
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
@@ -480,6 +526,7 @@ async def test_password_update(
     assert config_entry.data[CONF_PASSWORD] == PASSWORD_2
 
 
+@pytest.mark.usefixtures("service_password_update_failed")
 async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
     """Test password reauthentication with wrong password returns error."""
     config_entry = MockConfigEntry(
@@ -490,16 +537,12 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
 
-    with patch(
-        "homeassistant.components.icloud.config_flow.PyiCloudService",
-        side_effect=PyiCloudFailedLoginException(msg="Invalid login"),
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {CONF_PASSWORD: PASSWORD_2}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: PASSWORD_2}
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
 async def test_create_icloud_storage_dir(
