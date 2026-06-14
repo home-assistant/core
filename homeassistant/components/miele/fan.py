@@ -135,6 +135,8 @@ class MieleFan(MieleEntity, FanEntity):
         _LOGGER.debug("Calc ventilation_step: %s", ventilation_step)
         if ventilation_step == 0:
             await self.async_turn_off()
+        elif ventilation_step == self.device.state_ventilation_step:
+            return
         else:
             try:
                 await self.api.send_action(
