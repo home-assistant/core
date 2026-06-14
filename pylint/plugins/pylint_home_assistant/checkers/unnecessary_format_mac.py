@@ -3,7 +3,13 @@
 The device registry normalizes ``CONNECTION_NETWORK_MAC`` connections
 through ``format_mac()`` in ``_normalize_connections()`` before storing
 them. Calling ``format_mac()`` in integration code when constructing
-connection tuples is therefore redundant.
+connection tuples passed to device registry API methods is therefore
+redundant.
+
+Only tuples inside a ``connections=`` keyword argument are flagged.
+Tuples used for direct comparison against ``device.connections``
+(e.g. ``in``, set intersection) legitimately need ``format_mac()``
+because those comparisons bypass the device registry normalization.
 
 ``W7429`` (``home-assistant-unnecessary-format-mac``)
 """
@@ -37,6 +43,18 @@ def _is_format_mac_call(node: nodes.NodeNG) -> bool:
     return False
 
 
+def _is_inside_connections_kwarg(node: nodes.NodeNG) -> bool:
+    """Check if a node is inside a ``connections=`` keyword argument."""
+    current = node.parent
+    while current is not None:
+        if isinstance(current, nodes.Keyword) and current.arg == "connections":
+            return True
+        if isinstance(current, (nodes.FunctionDef, nodes.ClassDef, nodes.Module)):
+            break
+        current = current.parent
+    return False
+
+
 class UnnecessaryFormatMacChecker(BaseChecker):
     """Checker for unnecessary format_mac in CONNECTION_NETWORK_MAC tuples."""
 
@@ -48,9 +66,10 @@ class UnnecessaryFormatMacChecker(BaseChecker):
             "the device registry normalizes MAC addresses automatically",
             "home-assistant-unnecessary-format-mac",
             "Used when format_mac() is called inside a connection tuple "
-            "with CONNECTION_NETWORK_MAC. The device registry already "
-            "normalizes MAC addresses via _normalize_connections(), so "
-            "the call is redundant.",
+            "with CONNECTION_NETWORK_MAC that is passed to a device "
+            "registry API method via connections=. The device registry "
+            "already normalizes MAC addresses via "
+            "_normalize_connections(), so the call is redundant.",
         ),
     }
     options = ()
@@ -74,11 +93,16 @@ class UnnecessaryFormatMacChecker(BaseChecker):
         if not _is_connection_network_mac(key):
             return
 
-        if _is_format_mac_call(value):
-            self.add_message(
-                "home-assistant-unnecessary-format-mac",
-                node=value,
-            )
+        if not _is_format_mac_call(value):
+            return
+
+        if not _is_inside_connections_kwarg(node):
+            return
+
+        self.add_message(
+            "home-assistant-unnecessary-format-mac",
+            node=value,
+        )
 
 
 def register(linter: PyLinter) -> None:

@@ -138,7 +138,8 @@ async def async_setup_entry(
         # linked by a MAC server is not all info lost
         if (
             server_device
-            and (CONNECTION_NETWORK_MAC, player.player_id) in server_device.connections
+            and (CONNECTION_NETWORK_MAC, format_mac(player.player_id))
+            in server_device.connections
         ):
             _LOGGER.debug("Shared server & player device %s", server_device)
             name = server_device.name

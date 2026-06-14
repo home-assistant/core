@@ -33,7 +33,9 @@ def format_mac_checker_fixture(
         pytest.param(
             f"""
 {_IMPORTS}
-connections={{(CONNECTION_NETWORK_MAC, mac)}}
+device = DeviceInfo(
+    connections={{(CONNECTION_NETWORK_MAC, mac)}},
+)
 """,
             id="raw_mac_no_format",
         ),
@@ -47,7 +49,9 @@ unique_id = format_mac(mac)
         pytest.param(
             f"""
 {_IMPORTS}
-connections={{("other_type", format_mac(mac))}}
+device = DeviceInfo(
+    connections={{("other_type", format_mac(mac))}},
+)
 """,
             id="format_mac_with_non_mac_connection_type",
         ),
@@ -57,6 +61,29 @@ connections={{("other_type", format_mac(mac))}}
 result = (CONNECTION_NETWORK_MAC, mac, extra)
 """,
             id="three_element_tuple",
+        ),
+        pytest.param(
+            f"""
+{_IMPORTS}
+if (CONNECTION_NETWORK_MAC, format_mac(mac)) in device.connections:
+    pass
+""",
+            id="direct_comparison_in_operator",
+        ),
+        pytest.param(
+            f"""
+{_IMPORTS}
+valid = {{(CONNECTION_NETWORK_MAC, format_mac(mac))}}
+result = device.connections & valid
+""",
+            id="set_intersection_comparison",
+        ),
+        pytest.param(
+            f"""
+{_IMPORTS}
+conn = (CONNECTION_NETWORK_MAC, format_mac(mac))
+""",
+            id="standalone_tuple_not_in_connections_kwarg",
         ),
     ],
 )
@@ -81,23 +108,39 @@ def test_no_warning(
         pytest.param(
             f"""
 {_IMPORTS}
-connections={{(CONNECTION_NETWORK_MAC, format_mac(mac))}}
+device = DeviceInfo(
+    connections={{(CONNECTION_NETWORK_MAC, format_mac(mac))}},
+)
 """,
-            id="set_literal",
-        ),
-        pytest.param(
-            f"""
-{_IMPORTS}
-conn = (CONNECTION_NETWORK_MAC, format_mac(mac))
-""",
-            id="standalone_tuple",
+            id="device_info_connections_kwarg",
         ),
         pytest.param(
             """
 import homeassistant.helpers.device_registry as dr
-conn = (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
+device = dr.DeviceInfo(
+    connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))},
+)
 """,
             id="module_qualified",
+        ),
+        pytest.param(
+            f"""
+{_IMPORTS}
+device_registry.async_get_or_create(
+    config_entry_id=entry.entry_id,
+    connections={{(CONNECTION_NETWORK_MAC, format_mac(mac))}},
+)
+""",
+            id="async_get_or_create_connections",
+        ),
+        pytest.param(
+            f"""
+{_IMPORTS}
+device_registry.async_get_device(
+    connections={{(CONNECTION_NETWORK_MAC, format_mac(mac))}},
+)
+""",
+            id="async_get_device_connections",
         ),
     ],
 )
@@ -106,7 +149,7 @@ def test_format_mac_flagged(
     format_mac_checker: UnnecessaryFormatMacChecker,
     code: str,
 ) -> None:
-    """Warning when format_mac is used inside a CONNECTION_NETWORK_MAC tuple."""
+    """Warning when format_mac is used in connections= keyword argument."""
     root_node = astroid.parse(code, "homeassistant.components.test_integration.sensor")
 
     walker = ASTWalker(linter)
@@ -125,7 +168,9 @@ def test_non_integration_module_ignored(
     """No warning for code outside integration modules."""
     code = f"""
 {_IMPORTS}
-connections = {{(CONNECTION_NETWORK_MAC, format_mac(mac))}}
+device = DeviceInfo(
+    connections={{(CONNECTION_NETWORK_MAC, format_mac(mac))}},
+)
 """
     root_node = astroid.parse(code, "some_other.module")
 
