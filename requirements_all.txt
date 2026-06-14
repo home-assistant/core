@@ -1782,7 +1782,7 @@ openwebifpy==4.3.1
 openwrt-luci-rpc==1.1.17
 
 # homeassistant.components.ubus
-openwrt-ubus-rpc==0.0.2
+openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
 opower==0.18.4
