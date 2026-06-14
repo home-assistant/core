@@ -372,7 +372,7 @@ aiopnsense==1.0.8
 aioptdevices==2026.03.2
 
 # homeassistant.components.acmeda
-aiopulse==0.4.6
+aiopulse==0.4.7
 
 # homeassistant.components.purpleair
 aiopurpleair==2025.08.1
