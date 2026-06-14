@@ -80,7 +80,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: todo
-    comment: Sharing HA's httpx client is added in home-assistant/core#173652.
+  inject-websession: done
   strict-typing: todo
