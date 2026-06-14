@@ -2478,7 +2478,9 @@ async def test_stream_tts_audio_edge_cases(
         return header
 
     class ChunkedMockResultStream(MockResultStream):
-        def __init__(self, hass: HomeAssistant, extension: str, chunks: list[bytes]) -> None:
+        def __init__(
+            self, hass: HomeAssistant, extension: str, chunks: list[bytes]
+        ) -> None:
             super().__init__(hass, extension, b"")
             self.chunks = chunks
 
@@ -2518,9 +2520,8 @@ async def test_stream_tts_audio_edge_cases(
 
     # WAV missing fmt chunk before data chunk
     mock_client.send_voice_assistant_audio.reset_mock()
-    missing_fmt_header = (
-        struct.pack("<4sI4s", b"RIFF", 20, b"WAVE")
-        + struct.pack("<4sI", b"data", 0)
+    missing_fmt_header = struct.pack("<4sI4s", b"RIFF", 20, b"WAVE") + struct.pack(
+        "<4sI", b"data", 0
     )
     stream = ChunkedMockResultStream(hass, "wav", [missing_fmt_header])
     await satellite._stream_tts_audio(stream)
@@ -2555,8 +2556,12 @@ async def test_stream_tts_audio_edge_cases(
     stream = ChunkedMockResultStream(hass, "wav", [wav_with_16bytes])
     await satellite._stream_tts_audio(stream, samples_per_chunk=4)
     assert mock_client.send_voice_assistant_audio.call_count == 2
-    assert mock_client.send_voice_assistant_audio.call_args_list[0].args == (b"\x00" * 8,)
-    assert mock_client.send_voice_assistant_audio.call_args_list[1].args == (b"\x00" * 8,)
+    assert mock_client.send_voice_assistant_audio.call_args_list[0].args == (
+        b"\x00" * 8,
+    )
+    assert mock_client.send_voice_assistant_audio.call_args_list[1].args == (
+        b"\x00" * 8,
+    )
 
     # Cancel/abort when self._is_running becomes False
     mock_client.send_voice_assistant_audio.reset_mock()
@@ -2571,4 +2576,3 @@ async def test_stream_tts_audio_edge_cases(
     stream.async_stream_result = async_stream_cancel
     await satellite._stream_tts_audio(stream)
     mock_client.send_voice_assistant_audio.assert_not_called()
-
