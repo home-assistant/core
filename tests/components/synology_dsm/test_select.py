@@ -5,8 +5,14 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
 from homeassistant.components.synology_dsm.const import DOMAIN
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_OPTION,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -73,3 +79,45 @@ async def test_fan_speed(
         await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+
+@pytest.mark.parametrize("fan_speed", ["fullfan", "coolfan", "quietfan"])
+async def test_fan_speed_select_option(
+    hass: HomeAssistant,
+    mock_dsm: MagicMock,
+    fan_speed: str,
+) -> None:
+    """Test Synology DSM without USB."""
+    with (
+        patch(
+            "homeassistant.components.synology_dsm.common.SynologyDSM",
+            return_value=mock_dsm,
+        ),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", ["select"]),
+    ):
+        entry = MockConfigEntry(
+            domain=DOMAIN,
+            data={
+                CONF_HOST: HOST,
+                CONF_PORT: PORT,
+                CONF_SSL: USE_SSL,
+                CONF_USERNAME: USERNAME,
+                CONF_PASSWORD: PASSWORD,
+                CONF_MAC: MACS[0],
+            },
+            unique_id=SERIAL,
+        )
+        entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: "select.nas_meontheinternet_com_fan_speed_mode",
+            ATTR_OPTION: fan_speed,
+        },
+        blocking=True,
+    )
+    assert mock_dsm.hardware.set_fan_speed.call_args[0][0] == fan_speed

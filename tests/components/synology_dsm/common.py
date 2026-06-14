@@ -12,7 +12,7 @@ from .consts import SERIAL
 
 def mock_dsm_hardware(fan_speed: FanSpeed = FanSpeed.COOL) -> Mock:
     """Mock SynologyDSM hardware information."""
-    return Mock(fan_speed=fan_speed)
+    return AsyncMock(update=AsyncMock(), fan_speed=fan_speed)
 
 
 def mock_dsm_information(
