@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
@@ -55,6 +56,9 @@ _PAYLOAD_COLOR_STATE_COLOR = (
     + '},"type":"state"}'
 )
 _PAYLOAD_COLOR_STATE_EFFECT = '{"id": "UL100", "properties":{ "presetMovie": 1, "currRegime": "MovieSelect" },"type":"state"}'
+_PAYLOAD_COLOR_STATE_EFFECT_OFF = (
+    '{"id": "UL100", "properties":{ "currRegime": "ColorWheel" },"type":"state"}'
+)
 _PAYLOAD_COLOR_STATE_OFF = '{"id":"UL100","properties":{"brightness":0},"type":"state"}'
 
 _PAYLOAD_COLOR_SET_STATE_ON = (
@@ -74,6 +78,9 @@ _PAYLOAD_COLOR_SET_STATE_COLOR = (
 )
 _PAYLOAD_COLOR_SET_STATE_EFFECT = (
     '{"id": "UL100", "type": "state", "properties": {"presetMovie": 1}}'
+)
+_PAYLOAD_COLOR_SET_STATE_EFFECT_OFF = (
+    '{"id": "UL100", "type": "state", "properties": {"currRegime": "ColorWheel"}}'
 )
 _PAYLOAD_COLOR_SET_STATE_OFF = (
     '{"id": "UL100", "type": "state", "properties": {"on": false}}'
@@ -96,7 +103,7 @@ async def test_light(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test select."""
+    """Test light."""
 
     with patch("homeassistant.components.qbus.PLATFORMS", [Platform.LIGHT]):
         await setup_integration_deferred()
@@ -268,6 +275,29 @@ async def test_color(
     entity = hass.states.get(_COLOR_ENTITY_ID)
     assert entity.state == STATE_ON
     assert entity.attributes.get(ATTR_EFFECT) == _EFFECT
+
+    # Stop effect
+    mqtt_mock.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: _COLOR_ENTITY_ID,
+            ATTR_EFFECT: EFFECT_OFF,
+        },
+        blocking=True,
+    )
+
+    _assert_set_state(
+        mqtt_mock, _TOPIC_COLOR_SET_STATE, _PAYLOAD_COLOR_SET_STATE_EFFECT_OFF
+    )
+    await _async_simulate_qbus_response(
+        hass, _TOPIC_COLOR_STATE, _PAYLOAD_COLOR_STATE_EFFECT_OFF
+    )
+
+    entity = hass.states.get(_COLOR_ENTITY_ID)
+    assert entity.state == STATE_ON
+    assert entity.attributes.get(ATTR_EFFECT) == EFFECT_OFF
 
     # Set color
     mqtt_mock.reset_mock()

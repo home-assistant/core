@@ -187,6 +187,7 @@ class QbusMultiColor(QbusEntity, LightEntity):
 
     async def _handle_state_received(self, state: QbusMqttMultiColorState) -> None:
         if state.type == StateType.EVENT:
+            # An event doesn't contain all properties, request full state
             await self._async_request_state()
             return
 
@@ -199,8 +200,10 @@ class QbusMultiColor(QbusEntity, LightEntity):
         regime = state.read_current_regime()
 
         if regime == MultiColorRegime.MOVIE_SELECT:
-            movie = state.read_preset_movie() or -1
-            effect = self._effect_value_to_name.get(movie)
+            movie = state.read_preset_movie()
+            if movie is None:
+                movie = -1
+            effect = self._effect_value_to_name.get(movie, EFFECT_OFF)
         else:
             hue = state.read_hue()
             saturation = state.read_saturation()
@@ -209,6 +212,7 @@ class QbusMultiColor(QbusEntity, LightEntity):
                 if hue is not None and saturation is not None
                 else None
             )
+            effect = EFFECT_OFF
 
         self._set_state(brightness=brightness, hs=hs, effect=effect)
 
@@ -225,7 +229,7 @@ class QbusMultiColor(QbusEntity, LightEntity):
         if hs is not None:
             self._attr_hs_color = hs
 
-        self._attr_effect = effect or EFFECT_OFF
+        self._attr_effect = effect
 
     async def _async_request_state(self) -> None:
         request = self._message_factory.create_state_request([self._mqtt_output.id])
