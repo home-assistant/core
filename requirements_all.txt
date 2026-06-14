@@ -2911,7 +2911,7 @@ rf-protocols==4.2.0
 rfk101py==0.0.1
 
 # homeassistant.components.rflink
-rflink==0.0.67
+rflink==0.0.68
 
 # homeassistant.components.ring
 ring-doorbell==0.9.14
