@@ -16,6 +16,7 @@ from collections.abc import Generator
 import datetime as dt
 from unittest.mock import patch
 
+from hdate.translator import set_language
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -29,7 +30,6 @@ from homeassistant.components.jewish_calendar.const import (
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.translation import async_get_translations
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -172,20 +172,20 @@ async def test_event_strings_use_configured_language(
     config_entry: MockConfigEntry,
 ) -> None:
     """Test event strings are translated in the configured, not the system, language."""
-    # Pick a system language that differs from the configured one, so a call
-    # using the system language instead would be caught.
+    # Pick a system language that differs from the configured one, so rendering
+    # with the system language instead would be caught.
     hass.config.language = "en"
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.jewish_calendar.calendar.async_get_translations",
-        wraps=async_get_translations,
-    ) as mock_get_translations:
+        "homeassistant.components.jewish_calendar.calendar.set_language",
+        wraps=set_language,
+    ) as mock_set_language:
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert mock_get_translations.call_args_list
-    assert all(call.args[1] == "he" for call in mock_get_translations.call_args_list)
+    assert mock_set_language.call_args_list
+    assert all(call.args[0] == "he" for call in mock_set_language.call_args_list)
     # The integration language must not leak back into the system language.
     assert hass.config.language == "en"
 

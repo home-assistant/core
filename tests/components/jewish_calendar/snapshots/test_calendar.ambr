@@ -416,7 +416,7 @@
     dict({
       'description': '''
         Jewish Holiday: Shushan Purim
-        Holiday type: HolidayTypes.MELACHA_PERMITTED_HOLIDAY
+        Holiday type: Work-permitted holiday
       ''',
       'end': '2024-03-26',
       'start': '2024-03-25',
@@ -481,7 +481,7 @@
     dict({
       'description': '''
         Jewish Holiday: Simchat Torah
-        Holiday type: HolidayTypes.YOM_TOV
+        Holiday type: Yom Tov
       ''',
       'end': '2024-10-26',
       'start': '2024-10-25',
@@ -506,7 +506,7 @@
     dict({
       'description': '''
         Jewish Holiday: Shmini Atzeret
-        Holiday type: HolidayTypes.YOM_TOV
+        Holiday type: Yom Tov
       ''',
       'end': '2024-10-25',
       'start': '2024-10-24',
@@ -515,7 +515,7 @@
     dict({
       'description': '''
         Jewish Holiday: Simchat Torah
-        Holiday type: HolidayTypes.YOM_TOV
+        Holiday type: Yom Tov
       ''',
       'end': '2024-10-25',
       'start': '2024-10-24',

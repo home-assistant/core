@@ -25,8 +25,9 @@ DEFAULT_LANGUAGE = "en"
 class DailyCalendarEventType(StrEnum):
     """Daily Calendar event types.
 
-    The summary and description for each event are translated at runtime using
-    the ``common`` strings of the integration (see ``calendar.py``).
+    The summary and description for each event are rendered at runtime by the
+    ``hdate`` library objects (see ``calendar.py``), using the language
+    configured for the integration.
     """
 
     DATE = "date"
