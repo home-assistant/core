@@ -140,10 +140,6 @@ async def test_webhook_callback(
     signal_all.assert_called_once()
     assert hass.states.get(entity_id).state == STATE_ON
 
-    freezer.tick(timedelta(seconds=FIRST_ONVIF_TIMEOUT))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     # test webhook callback all channels with failure to read motion_state
     signal_all.reset_mock()
     reolink_host.get_motion_state_all_ch.return_value = False
@@ -160,6 +156,10 @@ async def test_webhook_callback(
     await hass.async_block_till_done()
     signal_ch.assert_called_once()
     assert hass.states.get(entity_id).state == STATE_OFF
+
+    freezer.tick(timedelta(seconds=FIRST_ONVIF_TIMEOUT))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
     # test webhook callback single channel with error in event callback
     signal_ch.reset_mock()
