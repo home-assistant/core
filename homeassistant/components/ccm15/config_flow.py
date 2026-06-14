@@ -7,7 +7,7 @@ from ccm15 import CCM15Device
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers import config_validation as cv
 
 from .const import DEFAULT_TIMEOUT, DOMAIN
@@ -18,6 +18,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Optional(CONF_PORT, default=80): cv.port,
+        vol.Optional(CONF_PASSWORD, default=""): str,
     }
 )
 
@@ -33,7 +34,9 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(user_input)
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            )
             ccm15 = CCM15Device(
                 user_input[CONF_HOST], user_input[CONF_PORT], DEFAULT_TIMEOUT
             )

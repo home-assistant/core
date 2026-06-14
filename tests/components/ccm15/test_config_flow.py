@@ -6,7 +6,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.ccm15.const import DOMAIN
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -38,6 +38,38 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result2["data"] == {
         CONF_HOST: "1.1.1.1",
         CONF_PORT: 80,
+        CONF_PASSWORD: "",
+    }
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_form_with_password(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """An entered password lands on the entry data verbatim."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "ccm15.CCM15Device.CCM15Device.async_test_connection",
+        return_value=True,
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_PASSWORD: "296393",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {
+        CONF_HOST: "1.1.1.1",
+        CONF_PORT: 80,
+        CONF_PASSWORD: "296393",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 

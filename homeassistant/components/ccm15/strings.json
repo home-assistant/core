@@ -11,7 +11,11 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "password": "Device password",
           "port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "password": "Optional. Only needed if your CCM15 firmware rejects control commands without a 'pwd' query parameter. The value to enter here is the obfuscated number the controller's web UI sends, not the password you typed into its settings page. To find it: open the CCM15 web interface, press F12 to open browser DevTools, switch to the Network tab, change any setting in the web UI, then select the new ctrl.xml request and copy the value of the 'pwd' parameter from the URL."
         }
       }
     }

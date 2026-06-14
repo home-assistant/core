@@ -27,7 +27,12 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Class to coordinate multiple CCM15Climate devices."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: CCM15ConfigEntry, host: str, port: int
+        self,
+        hass: HomeAssistant,
+        entry: CCM15ConfigEntry,
+        host: str,
+        port: int,
+        password: str | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -37,7 +42,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             name=host,
             update_interval=datetime.timedelta(seconds=DEFAULT_INTERVAL),
         )
-        self._ccm15 = CCM15Device(host, port, DEFAULT_TIMEOUT)
+        self._ccm15 = CCM15Device(host, port, DEFAULT_TIMEOUT, password=password)
         self._host = host
 
     def get_host(self) -> str:
