@@ -326,7 +326,7 @@ async def test_device_info_is_set_from_status_correctly(
 
 async def test_device_registry(
     hass: HomeAssistant,
-    patch_get_status,
+    patch_get_status: MagicMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
