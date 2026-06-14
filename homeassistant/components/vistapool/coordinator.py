@@ -81,3 +81,22 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def get_value(self, path: str, default: Any = None) -> Any:
         """Get nested data using dot-notation path."""
         return AquariteClient.get_value(self.data, path, default)
+
+    def apply_optimistic(self, value_path: str, value: Any) -> None:
+        """Reflect a just-written value before the Firestore push round-trips.
+
+        Hayward's cloud takes several seconds to acknowledge a write back
+        through Firestore, which would make the UI feel laggy. Writing into
+        coordinator.data after a successful REST call gives entities instant
+        feedback; the next snapshot from Firestore overwrites it harmlessly.
+        """
+        keys = value_path.split(".")
+        target: dict[str, Any] = self.data
+        for key in keys[:-1]:
+            child = target.get(key)
+            if not isinstance(child, dict):
+                child = {}
+                target[key] = child
+            target = child
+        target[keys[-1]] = value
+        self.async_set_updated_data(self.data)

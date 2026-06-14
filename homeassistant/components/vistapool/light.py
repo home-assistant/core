@@ -71,3 +71,4 @@ class VistapoolLight(VistapoolEntity, LightEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
+        self.coordinator.apply_optimistic(_VALUE_PATH, value)
