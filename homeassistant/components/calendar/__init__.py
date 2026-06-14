@@ -24,7 +24,7 @@ from homeassistant.components.websocket_api import (
     ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_OFF, STATE_ON
+from homeassistant.const import CONF_EVENT, STATE_OFF, STATE_ON
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -45,7 +45,6 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import (
-    CONF_EVENT,
     DATA_COMPONENT,
     DOMAIN,
     EVENT_DESCRIPTION,
