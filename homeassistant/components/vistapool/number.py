@@ -233,3 +233,4 @@ class VistapoolNumber(VistapoolEntity, NumberEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
+        self.coordinator.apply_optimistic(self.entity_description.value_path, raw)

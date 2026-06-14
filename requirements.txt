@@ -25,7 +25,7 @@ cryptography==48.0.0
 fnv-hash-fast==2.0.3
 ha-ffmpeg==3.2.2
 hass-nabucasa==2.2.0
-hassil==3.6.0
+hassil==3.8.0
 home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.6.1
 httpx==0.28.1
@@ -47,7 +47,7 @@ python-slugify==8.0.4
 PyTurboJPEG==1.8.3
 PyYAML==6.0.3
 requests==2.34.2
-rf-protocols==4.1.0
+rf-protocols==4.2.0
 securetar==2026.4.1
 SQLAlchemy==2.0.50
 standard-aifc==3.13.0
@@ -55,7 +55,7 @@ standard-telnetlib==3.13.0
 typing-extensions>=4.15.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.11.18
+uv==0.11.19
 voluptuous-openapi==0.3.0
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2
