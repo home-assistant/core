@@ -40,9 +40,7 @@ rules:
   parallel-updates: todo
   reauthentication-flow:
     status: exempt
-    comment: >-
-      The device connection is unauthenticated. Optional password (pwd=) support
-      is planned; this rule must be revisited when it lands.
+    comment: The device connection is unauthenticated; revisit when optional password (pwd=) support lands.
   test-coverage: todo
 
   # Gold
