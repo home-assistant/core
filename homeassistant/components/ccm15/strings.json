@@ -1,16 +1,28 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_temp_range": "Minimum temperature must be lower than maximum temperature",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "max_temp": "[%key:component::ccm15::config::step::user::data::max_temp%]",
+          "min_temp": "[%key:component::ccm15::config::step::user::data::min_temp%]",
+          "port": "[%key:common::config_flow::data::port%]"
+        }
+      },
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
+          "max_temp": "Maximum target temperature",
+          "min_temp": "Minimum target temperature",
           "port": "[%key:common::config_flow::data::port%]"
         }
       }
