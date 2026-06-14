@@ -89,7 +89,4 @@ def mock_luci_client() -> Generator[MagicMock]:
         client = mock_client_class.return_value
         client.is_logged_in.return_value = True
         client.get_all_connected_devices.return_value = [MOCK_DEVICE_1, MOCK_DEVICE_2]
-        client.router = MagicMock()
-        client.router.owrt_version = MagicMock()
-        client.router.owrt_version.release = None
         yield client

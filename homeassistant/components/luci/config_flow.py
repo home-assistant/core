@@ -1,6 +1,5 @@
 """Config flow for the OpenWrt (luci) integration."""
 
-import logging
 from typing import Any
 
 from openwrt_luci_rpc import OpenWrtRpc
@@ -17,8 +16,6 @@ from homeassistant.const import (
 )
 
 from .const import DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
-
-_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
