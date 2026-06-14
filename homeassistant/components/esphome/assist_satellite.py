@@ -824,10 +824,9 @@ class EsphomeAssistSatellite(
 
                         audio_duration_sent += seconds_in_chunk
 
-                        # Wait for 90% of the duration of the audio that was
-                        # sent for it to be played.  This will overrun the
-                        # device's buffer for very long audio, so using a media
-                        # player is preferred.
+                        # Wait for 90% of the duration of the audio chunk that
+                        # was just sent to be played. This prevents the media
+                        # player's buffer from overflowing.
                         assert start_time is not None
                         elapsed = asyncio.get_running_loop().time() - start_time
                         if (wait_time := (audio_duration_sent * 0.9) - elapsed) > 0:
