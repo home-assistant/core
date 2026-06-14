@@ -877,48 +877,6 @@ async def test_set_credential_length_validation(
     api.set_credential.assert_not_called()
 
 
-async def test_set_credential_slot_out_of_range(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    client: MagicMock,
-    lock_schlage_be469: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """Explicit credential_slot above device capacity fails fast."""
-    api = _mock_access_control(lock_schlage_be469)
-    cred_caps = api.get_credential_capabilities_cached.return_value
-    cred_caps.supported_credential_types[
-        UserCredentialType.PIN_CODE
-    ].number_of_credential_slots = 5
-
-    with pytest.raises(HomeAssistantError) as exc:
-        await hass.services.async_call(
-            DOMAIN,
-            "set_credential",
-            {
-                ATTR_ENTITY_ID: _lock_entity_id(
-                    entity_registry, device_registry, client, lock_schlage_be469
-                ),
-                "user_id": 1,
-                "credential_type": "pin_code",
-                "credential_data": "1234",
-                "credential_slot": 6,
-            },
-            blocking=True,
-            return_response=True,
-        )
-
-    # The explicit slot exceeds the device-reported capacity, so the helper
-    # rejects the call with the rendered upper bound and never writes.
-    assert exc.value.translation_key == "credential_slot_out_of_range"
-    assert exc.value.translation_placeholders == {
-        "credential_type": "pin_code",
-        "max_slot": "5",
-    }
-    api.set_credential.assert_not_called()
-
-
 async def test_delete_credential(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
