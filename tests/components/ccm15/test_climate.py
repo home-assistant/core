@@ -25,7 +25,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_UNITS
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -143,7 +143,7 @@ async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
     (target 86 °F, current 26 °F); were the entity still reporting Celsius they
     would be converted and differ.
     """
-    hass.config.units = US_CUSTOMARY_UNITS
+    hass.config.units = US_CUSTOMARY_SYSTEM
     device_state = CCM15DeviceState(
         devices={0: CCM15SlaveDevice(bytes.fromhex("01000041c0001a"))}
     )
