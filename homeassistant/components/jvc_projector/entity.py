@@ -27,6 +27,9 @@ class JvcProjectorEntity(CoordinatorEntity[JvcProjectorDataUpdateCoordinator]):
         super().__init__(coordinator, command)
 
         self._attr_unique_id = coordinator.unique_id
+        # The config entry unique id is the device's formatted MAC address (set
+        # from the projector's MAC in the config flow), so it doubles as the
+        # network MAC connection.
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._attr_unique_id)},
             connections={(CONNECTION_NETWORK_MAC, self._attr_unique_id)},
