@@ -726,11 +726,10 @@ class EsphomeAssistSatellite(
 
             async for chunk in tts_result.async_stream_result():
                 # mypy incorrectly assumes self._is_running is always True,
-                # however, a seperate task can set this to False because we
-                # yeild in the "async for" above.
-                # type: ignore[unreachable]
+                # however, a separate task can set this to False because we
+                # yield in the "async for" above.
                 if not self._is_running:
-                    break
+                    break  # type: ignore[unreachable]
 
                 bytes_buffer.extend(chunk)
 
