@@ -115,6 +115,9 @@
     "coordinator_connection_error": {
       "message": "Error while establishing connection with BSB-LAN device at {host}"
     },
+    "coordinator_state_error": {
+      "message": "Error while fetching state data for heating circuit {circuit} from the BSB-LAN device at {host}"
+    },
     "end_time_before_start_time": {
       "message": "End time ({end_time}) must be after start time ({start_time})"
     },
