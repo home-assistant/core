@@ -10,7 +10,6 @@ import pytest
 from homeassistant.components.keyboard_remote import (
     KeyboardRemoteManager,
     _async_import_yaml_device,
-    async_setup,
 )
 from homeassistant.components.keyboard_remote.const import (
     CONF_DEVICE_DESCRIPTOR,
@@ -33,6 +32,7 @@ from homeassistant.components.keyboard_remote.const import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from .conftest import (
     EV_KEY,
@@ -204,19 +204,20 @@ async def test_yaml_import_failure_creates_issue(
 
 
 async def test_async_setup_no_yaml_config(hass: HomeAssistant) -> None:
-    """Test async_setup returns True when DOMAIN not in config."""
-    result = await async_setup(hass, {})
-    assert result is True
+    """Test setup succeeds when DOMAIN not in config."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    await hass.async_block_till_done()
 
 
 async def test_async_setup_with_yaml_config(hass: HomeAssistant) -> None:
-    """Test async_setup creates import tasks for YAML device blocks."""
+    """Test setup creates import tasks for YAML device blocks."""
     with patch(
         "homeassistant.components.keyboard_remote._async_import_yaml_device",
         new_callable=AsyncMock,
     ) as mock_import:
-        result = await async_setup(
+        assert await async_setup_component(
             hass,
+            DOMAIN,
             {
                 DOMAIN: [
                     {"device_descriptor": "/dev/input/event5"},
@@ -226,7 +227,6 @@ async def test_async_setup_with_yaml_config(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    assert result is True
     assert mock_import.call_count == 2
 
 
