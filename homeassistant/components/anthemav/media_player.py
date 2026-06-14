@@ -91,6 +91,8 @@ class AnthemAVR(MediaPlayerEntity):
                 via_device=(DOMAIN, mac_address),
             )
         else:
+            # Zone 1 is the physical receiver that owns the network MAC; higher
+            # zones are via_device children and carry no connection.
             self._attr_unique_id = mac_address
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, mac_address)},
