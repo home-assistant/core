@@ -548,7 +548,7 @@ def test_get_iqama_time_invalid_localization() -> None:
 
 
 # ---------------------------------------------------------------------------
-# extract_time_from_calendar – error branches
+# extract_time_from_calendar - error branches
 # ---------------------------------------------------------------------------
 
 
