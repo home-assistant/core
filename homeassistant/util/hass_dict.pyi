@@ -11,7 +11,7 @@ __all__ = [
 
 _T = TypeVar("_T")  # needs to be invariant
 
-class _Key(Generic[_T]):
+class _Key(Generic[_T]):  # noqa: UP046
     """Base class for Hass key types. At runtime delegated to str."""
 
     def __init__(self, value: str, /) -> None: ...

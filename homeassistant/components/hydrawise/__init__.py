@@ -46,6 +46,11 @@ async def async_setup_entry(
     water_use_coordinator = HydrawiseWaterUseDataUpdateCoordinator(
         hass, config_entry, hydrawise, main_coordinator
     )
+    # async_track_zones is registered first on water_use_coordinator,
+    # so the water-use coordinator's data is in sync before
+    # callbacks below construct entities for newly added zones.
+    water_use_coordinator.async_track_zones()
+    main_coordinator.async_track_zones()
     await water_use_coordinator.async_config_entry_first_refresh()
     config_entry.runtime_data = HydrawiseUpdateCoordinators(
         main=main_coordinator,

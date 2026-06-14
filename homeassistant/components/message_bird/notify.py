@@ -65,6 +65,7 @@ class MessageBirdNotificationService(BaseNotificationService):
                 self.client.message_create(
                     self.sender, target, message, {"reference": "HA"}
                 )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ErrorException as exception:
                 _LOGGER.error("Failed to notify %s: %s", target, exception)
                 continue

@@ -68,9 +68,20 @@ class ActiveBluetoothProcessorCoordinator[_DataT](
         | None = None,
         poll_debouncer: Debouncer[Coroutine[Any, Any, None]] | None = None,
         connectable: bool = True,
+        scan_interval: float | None = None,
+        scan_duration: float | None = None,
     ) -> None:
         """Initialize the processor."""
-        super().__init__(hass, logger, address, mode, update_method, connectable)
+        super().__init__(
+            hass,
+            logger,
+            address,
+            mode,
+            update_method,
+            connectable,
+            scan_interval,
+            scan_duration,
+        )
 
         self._needs_poll_method = needs_poll_method
         self._poll_method = poll_method

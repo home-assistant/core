@@ -13,7 +13,7 @@ from hass_nabucasa.voice_data import TTS_VOICES
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     STORAGE_KEY,
 )
 from homeassistant.components.cloud.const import DEFAULT_TTS_DEFAULT_VOICE, DOMAIN

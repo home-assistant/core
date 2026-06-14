@@ -27,7 +27,7 @@ from tests.components.common import (
 
 @pytest.fixture
 async def target_alarm_control_panels(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple alarm_control_panel entities associated with different targets."""
+    """Create alarm_control_panel entities for different targets."""
     return await target_entities(hass, "alarm_control_panel")
 
 

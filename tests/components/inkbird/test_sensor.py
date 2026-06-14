@@ -14,8 +14,10 @@ from inkbird_ble import (
     Units,
 )
 from inkbird_ble.parser import Model
+import pytest
 from sensor_state_data import SensorDeviceClass
 
+from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.inkbird.const import (
     CONF_DEVICE_DATA,
     CONF_DEVICE_TYPE,
@@ -175,7 +177,43 @@ async def test_polling_sensor(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
 
-async def test_notify_sensor_no_advertisement(hass: HomeAssistant) -> None:
+async def test_fallback_poll_queries_latest_service_info(hass: HomeAssistant) -> None:
+    """Fallback timer queries the bluetooth manager for the latest service info.
+
+    Regression test for the case where HA dedupes repeat advertisements with the
+    same payload; ``_last_service_info`` then goes stale even though the device
+    is still broadcasting, so the fallback recency check must consult the
+    bluetooth manager's freshest observation instead of the dispatched event.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="AA:BB:CC:DD:EE:FF",
+        data={CONF_DEVICE_TYPE: "IBS-TH"},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    inject_bluetooth_service_info(hass, SPS_PASSIVE_SERVICE_INFO)
+    await hass.async_block_till_done()
+
+    with patch(
+        "homeassistant.components.inkbird.coordinator.async_last_service_info",
+        wraps=async_last_service_info,
+    ) as mock_async_last_service_info:
+        async_fire_time_changed(hass, dt_util.utcnow() + FALLBACK_POLL_INTERVAL)
+        await hass.async_block_till_done()
+
+    mock_async_last_service_info.assert_called_once_with(
+        hass, "AA:BB:CC:DD:EE:FF", connectable=False
+    )
+
+    assert await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+
+async def test_notify_sensor_no_advertisement(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """Test setting up a notify sensor that has no advertisement."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -184,10 +222,18 @@ async def test_notify_sensor_no_advertisement(hass: HomeAssistant) -> None:
     )
     entry.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.inkbird.coordinator."
+        "async_address_reachability_diagnostics",
+        return_value="mock reachability reason",
+    ):
+        assert not await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        "62:00:A1:3C:AE:7B is not advertising: mock reachability reason" in caplog.text
+    )
 
 
 async def test_notify_sensor(hass: HomeAssistant) -> None:

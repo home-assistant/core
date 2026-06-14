@@ -5,6 +5,7 @@ from typing import Any
 from govee_ble import GoveeBluetoothDeviceData as DeviceData
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -76,6 +77,7 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=title, data={CONF_DEVICE_TYPE: device.device_type}
             )
 
+        await bluetooth.async_request_active_scan(self.hass)
         current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
@@ -94,7 +96,10 @@ class GoveeConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_ADDRESS): vol.In(
                         {
-                            address: f"{device.get_device_name(None) or discovery_info.name} ({address})"
+                            address: (
+                                f"{device.get_device_name(None) or discovery_info.name}"
+                                f" ({address})"
+                            )
                             for address, (
                                 device,
                                 discovery_info,

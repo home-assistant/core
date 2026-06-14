@@ -135,6 +135,7 @@ class GenericCamera(Camera):
             return None
         try:
             url = self._still_image_url.async_render(parse_result=False)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image

@@ -16,6 +16,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import ArcamFmjConfigEntry
 from .entity import ArcamFmjEntity
 
+# Read-only, coordinator-driven entities; no per-entity I/O to bound.
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class ArcamFmjBinarySensorEntityDescription(BinarySensorEntityDescription):

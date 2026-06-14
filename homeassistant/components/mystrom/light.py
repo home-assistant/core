@@ -14,7 +14,7 @@ from homeassistant.components.light import (
     LightEntityFeature,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN, MANUFACTURER
@@ -57,6 +57,7 @@ class MyStromLight(LightEntity):
         self._attr_hs_color = 0, 0
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, mac)},
+            connections={(CONNECTION_NETWORK_MAC, mac)},
             name=name,
             manufacturer=MANUFACTURER,
             sw_version=self._bulb.firmware,
@@ -89,6 +90,7 @@ class MyStromLight(LightEntity):
                 await self._bulb.set_sunrise(30)
             if effect == EFFECT_RAINBOW:
                 await self._bulb.set_rainbow(30)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MyStromConnectionError:
             _LOGGER.warning("No route to myStrom bulb")
 
@@ -96,6 +98,7 @@ class MyStromLight(LightEntity):
         """Turn off the bulb."""
         try:
             await self._bulb.set_off()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except MyStromConnectionError:
             _LOGGER.warning("The myStrom bulb not online")
 

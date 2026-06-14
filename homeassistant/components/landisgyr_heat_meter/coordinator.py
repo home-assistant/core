@@ -3,7 +3,7 @@
 import asyncio
 import logging
 
-import serial
+import serialx
 from ultraheat_api.response import HeatMeterResponse
 from ultraheat_api.service import HeatMeterService
 
@@ -44,5 +44,5 @@ class UltraheatCoordinator(DataUpdateCoordinator[HeatMeterResponse]):
         try:
             async with asyncio.timeout(ULTRAHEAT_TIMEOUT):
                 return await self.hass.async_add_executor_job(self.api.read)
-        except (FileNotFoundError, serial.SerialException) as err:
+        except (OSError, TimeoutError, serialx.SerialException) as err:
             raise UpdateFailed(f"Error communicating with API: {err}") from err

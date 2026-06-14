@@ -64,5 +64,7 @@ class BroadlinkEntity(Entity):
             manufacturer=device.api.manufacturer,
             model=device.api.model,
             name=device.name,
-            sw_version=device.fw_version,
+            sw_version=str(device.fw_version)
+            if device.fw_version is not None
+            else None,
         )

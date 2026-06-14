@@ -56,13 +56,25 @@ from tests.components.bluetooth import (
 # These are real encrypted payloads using VICTRON_SOLAR_CHARGER_TOKEN.
 SOLAR_CHARGER_ERROR_PAYLOADS = {
     # ChargerError.NO_ERROR -> state "no_error"
-    "no_error": "100242a0016207adceb37b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
+    "no_error": (
+        "100242a0016207adceb37b605d7e0ee21b24df5c"
+        "0404040410951e81ea42b0492e356ad5ed8f7eb7"
+    ),
     # ChargerError.INTERNAL_SUPPLY_A -> mapped to state "internal_supply"
-    "internal_supply": "100242a0016207adce787b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
+    "internal_supply": (
+        "100242a0016207adce787b605d7e0ee21b24df5c"
+        "0404040410951e81ea42b0492e356ad5ed8f7eb7"
+    ),
     # ChargerError.VOLTAGE_HIGH -> state "voltage_high"
-    "voltage_high": "100242a0016207adceb17b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
+    "voltage_high": (
+        "100242a0016207adceb17b605d7e0ee21b24df5c"
+        "0404040410951e81ea42b0492e356ad5ed8f7eb7"
+    ),
     # ChargerError.NETWORK_A -> mapped to state "network"
-    "network": "100242a0016207adcef77b605d7e0ee21b24df5c0404040410951e81ea42b0492e356ad5ed8f7eb7",
+    "network": (
+        "100242a0016207adcef77b605d7e0ee21b24df5c"
+        "0404040410951e81ea42b0492e356ad5ed8f7eb7"
+    ),
 }
 
 

@@ -207,7 +207,7 @@ def validate_state(state: str) -> str:
 
 def callback[_CallableT: Callable[..., Any]](func: _CallableT) -> _CallableT:
     """Annotation to mark method as safe to call from within the event loop."""
-    setattr(func, "_hass_callback", True)
+    setattr(func, "_hass_callback", True)  # noqa: B010
     return func
 
 
@@ -558,7 +558,8 @@ class HomeAssistant:
             return
         # For @callback targets, schedule directly via call_soon_threadsafe
         # to avoid the extra deferral through _async_add_hass_job + call_soon.
-        # Check iscoroutinefunction to gracefully handle incorrectly labeled @callback functions.
+        # Check iscoroutinefunction to gracefully handle
+        # incorrectly labeled @callback functions.
         if is_callback_check_partial(target) and not inspect.iscoroutinefunction(
             target
         ):
@@ -2733,7 +2734,8 @@ class ServiceRegistry:
 
         If return_response=True, indicates that the caller can consume return values
         from the service, if any. Return values are a dict that can be returned by the
-        standard JSON serialization process. Return values can only be used with blocking=True.
+        standard JSON serialization process. Return values can only
+        be used with blocking=True.
 
         This method will fire an event to indicate the service has been called.
 

@@ -51,9 +51,6 @@ def _async_add_entities(
     """Add new tracker entities from the AVM device."""
 
     new_tracked = []
-    if avm_wrapper.unique_id not in data_fritz.tracked:
-        data_fritz.tracked[avm_wrapper.unique_id] = set()
-
     for mac, device in avm_wrapper.devices.items():
         if device_filter_out_from_trackers(mac, device, data_fritz.tracked.values()):
             continue

@@ -29,7 +29,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_aquacell_api() -> Generator[MagicMock]:
-    """Build a fixture for the Aquacell API that authenticates successfully and returns a single softener."""
+    """Build a fixture for the Aquacell API that returns a softener."""
     with (
         patch(
             "homeassistant.components.aquacell.AquacellApi",

@@ -29,7 +29,7 @@ from .entity import SonarrEntity
 
 
 @dataclass(frozen=True)
-class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):
+class SonarrSensorEntityDescriptionMixIn(Generic[SonarrDataT]):  # noqa: UP046
     """Mixin for Sonarr sensor."""
 
     attributes_fn: Callable[[SonarrDataT], dict[str, str]]

@@ -1,9 +1,11 @@
 """Provides triggers for media players."""
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
+    EntityNumericalStateChangedTriggerBase,
+    EntityNumericalStateCrossedThresholdTriggerBase,
+    EntityNumericalStateTriggerBase,
     EntityTriggerBase,
     Trigger,
     make_entity_transition_trigger,
@@ -11,6 +13,10 @@ from homeassistant.helpers.trigger import (
 
 from . import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, MediaPlayerState
 from .const import DOMAIN
+
+VOLUME_DOMAIN_SPECS = {
+    DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL),
+}
 
 
 class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
@@ -33,27 +39,7 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
         excluded from the check - otherwise an "all" check would never
         pass when there are media players without volume support.
         """
-        return state.state not in self._excluded_states and self._has_volume_attributes(
-            state
-        )
-
-    def check_all_match(self, entity_ids: set[str]) -> bool:
-        """Check if all mutable entity states match."""
-        return all(
-            self.is_valid_state(state)
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-            and self._should_include(state)
-        )
-
-    def count_matches(self, entity_ids: set[str]) -> int:
-        """Count matching mutable entities."""
-        return sum(
-            self.is_valid_state(state)
-            for entity_id in entity_ids
-            if (state := self._hass.states.get(entity_id)) is not None
-            and self._should_include(state)
-        )
+        return super()._should_include(state) and self._has_volume_attributes(state)
 
     def is_muted(self, state: State) -> bool:
         """Check if the media player is muted."""
@@ -63,10 +49,7 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
         )
 
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
-        """Check if the origin state is valid and the state has changed."""
-        if from_state.state in (STATE_UNAVAILABLE, STATE_UNKNOWN):
-            return False
-
+        """Check that the muted-state changed."""
         if not self._has_volume_attributes(to_state):
             return False
 
@@ -91,9 +74,48 @@ class MediaPlayerUnmutedTrigger(_MediaPlayerMutedStateTriggerBase):
     _target_muted = False
 
 
+class VolumeTriggerMixin(EntityNumericalStateTriggerBase):
+    """Mixin for volume triggers."""
+
+    _domain_specs = VOLUME_DOMAIN_SPECS
+    _valid_unit = "%"
+
+    def _get_tracked_value(self, state: State) -> float | None:
+        """Get tracked volume as a percentage."""
+        value = super()._get_tracked_value(state)
+        if value is None:
+            return None
+        # Convert 0.0-1.0 range to percentage (0-100)
+        return value * 100.0
+
+    def _should_include(self, state: State) -> bool:
+        """Check if an entity should participate in all/count checks.
+
+        Entities without a volume level cannot have their volume tracked,
+        so they are excluded - otherwise an "all" check would never pass
+        when there are media players without volume support.
+        """
+        return (
+            super()._should_include(state)
+            and state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
+        )
+
+
+class VolumeChangedTrigger(EntityNumericalStateChangedTriggerBase, VolumeTriggerMixin):
+    """Trigger for media player volume changes."""
+
+
+class VolumeCrossedThresholdTrigger(
+    EntityNumericalStateCrossedThresholdTriggerBase, VolumeTriggerMixin
+):
+    """Trigger for media player volume crossing a threshold."""
+
+
 TRIGGERS: dict[str, type[Trigger]] = {
     "muted": MediaPlayerMutedTrigger,
     "unmuted": MediaPlayerUnmutedTrigger,
+    "volume_changed": VolumeChangedTrigger,
+    "volume_crossed_threshold": VolumeCrossedThresholdTrigger,
     "paused_playing": make_entity_transition_trigger(
         DOMAIN,
         from_states={

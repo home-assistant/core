@@ -31,7 +31,7 @@ _BPUP_ALIVE_SCAN_INTERVAL = 60
 
 
 class BondEntity(Entity):
-    """Generic Bond entity encapsulating common features of any Bond controlled device."""
+    """Generic Bond entity encapsulating common features of any Bond device."""
 
     _attr_should_poll = False
 

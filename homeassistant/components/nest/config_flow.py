@@ -321,7 +321,7 @@ class NestFlowHandler(
     async def async_step_pubsub_topic_confirm(
         self, user_input: dict | None = None
     ) -> ConfigFlowResult:
-        """Have the user confirm the Pub/Sub topic is set correctly in Device Access Console."""
+        """Confirm the Pub/Sub topic is set correctly in Device Access Console."""
         if user_input is not None:
             return await self.async_step_pubsub_subscription()
         return self.async_show_form(
@@ -365,7 +365,8 @@ class NestFlowHandler(
                 else:
                     user_input[CONF_SUBSCRIPTION_NAME] = subscription_name
             else:
-                # The user created this subscription themselves so do not delete when removing the integration.
+                # The user created this subscription themselves so
+                # do not delete when removing the integration.
                 user_input[CONF_SUBSCRIBER_ID_IMPORTED] = True
 
             if not errors:

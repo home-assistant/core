@@ -50,7 +50,8 @@ async def async_setup_entry(
         )
 
     # If the remote is no longer available, then delete the device.
-    # The remote may appear as being available to the device after it has been unpaired on the remote
+    # The remote may appear as being available to the device
+    # after it has been unpaired on the remote
     # As it has to be removed from the device on the app.
 
     device_registry = dr.async_get(hass)

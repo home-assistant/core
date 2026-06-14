@@ -87,7 +87,7 @@ async def _async_clear_session_if_credentials_changed(
     entry: UFPConfigEntry,
     new_data: Mapping[str, Any],
 ) -> None:
-    """Clear stored session if credentials have changed to force fresh authentication."""
+    """Clear stored session if credentials changed."""
     existing_data = entry.data
     if existing_data.get(CONF_USERNAME) != new_data.get(
         CONF_USERNAME
@@ -296,8 +296,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             description_placeholders={
                 **placeholders,
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(
@@ -431,8 +431,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(REAUTH_SCHEMA, form_data),
@@ -481,8 +481,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             description_placeholders={
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(
@@ -509,8 +509,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             description_placeholders={
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 )
             },
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),

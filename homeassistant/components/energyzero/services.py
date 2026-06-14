@@ -96,7 +96,7 @@ def __get_coordinator(call: ServiceCall) -> EnergyZeroDataUpdateCoordinator:
                 "config_entry": entry_id,
             },
         )
-    if entry.state != ConfigEntryState.LOADED:
+    if entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="unloaded_config_entry",
@@ -125,7 +125,7 @@ async def __get_prices(
 
     data: Electricity | Gas
 
-    if price_type == PriceType.GAS:
+    if price_type is PriceType.GAS:
         data = await coordinator.energyzero.get_gas_prices_legacy(
             start_date=start,
             end_date=end,

@@ -516,7 +516,10 @@ async def test_squeezebox_play_media_with_announce_volume_invalid(
     """Test play service call with announce and volume zero."""
     with pytest.raises(
         ServiceValidationError,
-        match="announce_volume must be a number greater than 0 and less than or equal to 1",
+        match=(
+            "announce_volume must be a number greater than 0"
+            " and less than or equal to 1"
+        ),
     ):
         await hass.services.async_call(
             MEDIA_PLAYER_DOMAIN,

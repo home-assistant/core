@@ -98,7 +98,10 @@ class ZWaveMeRGB(ZWaveMeEntity, LightEntity):
 
         cmd = command_id
         if command_args:
-            cmd = f"{command_id}?{'&'.join(f'{argId}={argVal}' for argId, argVal in command_args.items())}"
+            args = "&".join(
+                f"{argId}={argVal}" for argId, argVal in command_args.items()
+            )
+            cmd = f"{command_id}?{args}"
         self.controller.zwave_api.send_command(self.device.id, cmd)
 
     @property

@@ -55,7 +55,7 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
     """A class to describe a Radarr calendar event."""
 
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):  # noqa: UP046
     """Data update coordinator for the Radarr integration."""
 
     config_entry: RadarrConfigEntry

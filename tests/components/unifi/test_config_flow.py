@@ -15,6 +15,7 @@ from homeassistant.components.unifi.const import (
     CONF_DETECTION_TIME,
     CONF_DPI_RESTRICTIONS,
     CONF_IGNORE_WIRED_BUG,
+    CONF_MORE_OPTIONS,
     CONF_SITE_ID,
     CONF_SSID_FILTER,
     CONF_TRACK_CLIENTS,
@@ -377,70 +378,33 @@ async def test_reauth_flow_update_configuration_on_not_loaded_entry(
 @pytest.mark.parametrize("device_payload", [DEVICES])
 @pytest.mark.parametrize("wlan_payload", [WLANS])
 @pytest.mark.parametrize("dpi_group_payload", [DPI_GROUPS])
-async def test_advanced_option_flow(
+async def test_option_flow(
     hass: HomeAssistant, config_entry_setup: MockConfigEntry
 ) -> None:
-    """Test advanced config flow options."""
+    """Test config flow options."""
     config_entry = config_entry_setup
 
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": True}
-    )
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "configure_entity_sources"
-    assert not result["last_step"]
-    assert list(result["data_schema"].schema[CONF_CLIENT_SOURCE].options.keys()) == [
-        "00:00:00:00:00:01"
-    ]
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"]},
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "device_tracker"
-    assert not result["last_step"]
-    assert list(result["data_schema"].schema[CONF_SSID_FILTER].options.keys()) == [
-        "",
-        "SSID 1",
-        "SSID 2",
-        "SSID 2_IOT",
-        "SSID 3",
-        "SSID 4",
-    ]
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRACK_CLIENTS: False,
-            CONF_TRACK_WIRED_CLIENTS: False,
-            CONF_TRACK_DEVICES: False,
-            CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
-            CONF_DETECTION_TIME: 100,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "client_control"
-    assert not result["last_step"]
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
-            CONF_DPI_RESTRICTIONS: False,
-        },
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "statistics_sensors"
+    assert result["step_id"] == "init"
     assert result["last_step"]
 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
-            CONF_ALLOW_BANDWIDTH_SENSORS: True,
-            CONF_ALLOW_UPTIME_SENSORS: True,
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+            CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
+            CONF_MORE_OPTIONS: {
+                CONF_CLIENT_SOURCE: ["00:00:00:00:00:01"],
+                CONF_TRACK_WIRED_CLIENTS: False,
+                CONF_SSID_FILTER: ["SSID 1", "SSID 2_IOT", "SSID 3", "SSID 4"],
+                CONF_DETECTION_TIME: 100,
+                CONF_DPI_RESTRICTIONS: False,
+                CONF_ALLOW_BANDWIDTH_SENSORS: True,
+                CONF_ALLOW_UPTIME_SENSORS: True,
+            },
         },
     )
 
@@ -457,38 +421,6 @@ async def test_advanced_option_flow(
         CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
         CONF_ALLOW_BANDWIDTH_SENSORS: True,
         CONF_ALLOW_UPTIME_SENSORS: True,
-    }
-
-
-@pytest.mark.parametrize("client_payload", [CLIENTS])
-async def test_simple_option_flow(
-    hass: HomeAssistant, config_entry_setup: MockConfigEntry
-) -> None:
-    """Test simple config flow options."""
-    config_entry = config_entry_setup
-
-    result = await hass.config_entries.options.async_init(
-        config_entry.entry_id, context={"show_advanced_options": False}
-    )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "simple_options"
-    assert result["last_step"]
-
-    result = await hass.config_entries.options.async_configure(
-        result["flow_id"],
-        user_input={
-            CONF_TRACK_CLIENTS: False,
-            CONF_TRACK_DEVICES: False,
-            CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
-        },
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {
-        CONF_TRACK_CLIENTS: False,
-        CONF_TRACK_DEVICES: False,
-        CONF_BLOCK_CLIENT: [CLIENTS[0]["mac"]],
     }
 
 
@@ -605,7 +537,7 @@ async def test_flow_integration_discovery_aborts_on_direct_connect_host(
 async def test_flow_integration_discovery_updates_existing_entry_on_rediscovery(
     hass: HomeAssistant,
 ) -> None:
-    """Test that an existing entry's host is refreshed when rediscovered with the same MAC."""
+    """Test existing entry's host is refreshed when rediscovered with same MAC."""
     old_entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id=format_mac(INTEGRATION_DISCOVERY_INFO["hw_addr"]),

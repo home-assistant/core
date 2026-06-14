@@ -129,7 +129,8 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_step_device_config_if_needed(self) -> ConfigFlowResult:
         """Most users will not have changed the default PIN on their radio.
 
-        We try to use this default PIN, and only if this fails ask for it via `async_step_device_config`
+        We try to use this default PIN, and only if this fails
+        ask for it via `async_step_device_config`
         """
 
         try:
@@ -155,7 +156,10 @@ class FrontierSiliconConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Allow the user to confirm adding the device. Used when the default PIN could successfully be used."""
+        """Allow the user to confirm adding the device.
+
+        Used when the default PIN could successfully be used.
+        """
 
         if user_input is not None:
             return await self._async_create_entry()

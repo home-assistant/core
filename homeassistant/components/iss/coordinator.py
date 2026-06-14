@@ -61,7 +61,9 @@ class IssDataUpdateCoordinator(DataUpdateCoordinator[IssData]):
                 raise UpdateFailed("Unable to retrieve data") from err
             if self._consecutive_failures >= MAX_CONSECUTIVE_FAILURES:
                 raise UpdateFailed(
-                    f"Unable to retrieve data after {self._consecutive_failures} consecutive update failures"
+                    "Unable to retrieve data after"
+                    f" {self._consecutive_failures}"
+                    " consecutive update failures"
                 ) from err
             _LOGGER.debug(
                 "Transient API error (%s/%s), using cached data: %s",

@@ -127,7 +127,9 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
         self._attr_device_class = config.get(
             CONF_DEVICE_CLASS,
             try_parse_enum(
-                # sensor device classes should, with some exceptions ("enum" etc.), align with number device classes
+                # sensor device classes should, with some
+                # exceptions ("enum" etc.), align with
+                # number device classes
                 NumberDeviceClass,
                 dpt_info["sensor_device_class"],
             ),
@@ -191,7 +193,9 @@ class KnxUiNumber(_KnxNumber, KnxUiEntity):
             )
         else:
             self._attr_device_class = try_parse_enum(
-                # sensor device classes should, with some exceptions ("enum" etc.), align with number device classes
+                # sensor device classes should, with some
+                # exceptions ("enum" etc.), align with
+                # number device classes
                 NumberDeviceClass,
                 dpt_info["sensor_device_class"],
             )

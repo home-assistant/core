@@ -161,6 +161,7 @@ class DecoraWifiLight(LightEntity):
 
         try:
             self._switch.update_attributes(attribs)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError:
             _LOGGER.error("Failed to turn on myLeviton switch")
 
@@ -169,6 +170,7 @@ class DecoraWifiLight(LightEntity):
         attribs = {"power": "OFF"}
         try:
             self._switch.update_attributes(attribs)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError:
             _LOGGER.error("Failed to turn off myLeviton switch")
 

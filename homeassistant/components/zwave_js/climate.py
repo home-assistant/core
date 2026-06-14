@@ -565,7 +565,7 @@ class ZWaveClimate(ZWaveBaseEntity, ClimateEntity):
 
 
 class DynamicCurrentTempClimate(ZWaveClimate):
-    """Representation of a thermostat that can dynamically use a different Zwave Value for current temp."""
+    """Thermostat that dynamically uses a different Zwave Value for current temp."""
 
     def __init__(
         self, config_entry: ZwaveJSConfigEntry, driver: Driver, info: ZwaveDiscoveryInfo

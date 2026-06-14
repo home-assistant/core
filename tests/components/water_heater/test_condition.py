@@ -72,12 +72,27 @@ async def test_water_heater_conditions_gated_by_labs_flag(
     await assert_condition_gated_by_labs_flag(hass, caplog, condition)
 
 
+_TEMPERATURE_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
+    }
+}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("water_heater.is_off", {}, True, True),
         ("water_heater.is_on", {}, True, True),
+        (
+            "water_heater.is_operation_mode",
+            {"operation_mode": [STATE_ECO]},
+            True,
+            True,
+        ),
+        ("water_heater.is_target_temperature", _TEMPERATURE_THRESHOLD, True, True),
     ],
 )
 async def test_water_heater_condition_options_validation(
@@ -228,6 +243,7 @@ async def test_water_heater_state_condition_behavior_all(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )
@@ -267,6 +283,7 @@ async def test_water_heater_numerical_condition_behavior_any(
             "eco",
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
+            attribute_required=True,
         ),
     ],
 )

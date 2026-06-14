@@ -91,9 +91,16 @@
       "init": {
         "data": {
           "code_arm_required": "Require PIN to arm",
-          "code_disarm_required": "Require PIN to disarm",
-          "concurrency": "Maximum concurrent requests in Risco local",
-          "scan_interval": "How often to poll Risco Cloud (in seconds)"
+          "code_disarm_required": "Require PIN to disarm"
+        },
+        "sections": {
+          "more_options": {
+            "data": {
+              "concurrency": "Maximum concurrent requests in Risco local",
+              "scan_interval": "How often to poll Risco Cloud (in seconds)"
+            },
+            "name": "More options"
+          }
         },
         "title": "Configure options"
       },
