@@ -36,8 +36,7 @@ def mock_huum_client() -> Generator[AsyncMock]:
             target_temperature=80,
             config=3,
             light=1,
-            humidity=0,
-            target_humidity=5,
+            humidity=5,
             sauna_config=SaunaConfig(
                 child_lock="OFF",
                 max_heating_time=3,
