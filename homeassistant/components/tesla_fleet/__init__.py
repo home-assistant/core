@@ -41,6 +41,7 @@ from .coordinator import (
     TeslaFleetVehicleDataCoordinator,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
+from .services import async_setup_services
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -264,6 +265,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
     # Setup Platforms
     entry.runtime_data = TeslaFleetData(vehicles, energysites, scopes)
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+    # Setup services
+    async_setup_services(hass)
+
     return True
 
 
