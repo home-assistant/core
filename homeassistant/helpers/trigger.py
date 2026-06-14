@@ -327,8 +327,18 @@ class Trigger(abc.ABC):
 
 ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_FIRST: Final = "first"
-BEHAVIOR_LAST: Final = "last"
-BEHAVIOR_ANY: Final = "any"
+BEHAVIOR_ALL: Final = "all"
+BEHAVIOR_EACH: Final = "each"
+
+
+def _backwards_compatible_behavior(value: Any) -> Any:
+    """Convert legacy behavior values to new ones."""
+    if value == "any":
+        return BEHAVIOR_EACH
+    if value == "last":
+        return BEHAVIOR_ALL
+    return value
+
 
 ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     {
@@ -337,11 +347,12 @@ ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
-ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): vol.All(
+                _backwards_compatible_behavior,
+                vol.In([BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]),
             ),
             vol.Optional(CONF_FOR): cv.positive_time_period,
         },
@@ -361,7 +372,7 @@ class EntityTriggerBase(Trigger):
     # `_excluded_states`. Subclasses can override to relax the origin
     # check.
     _excluded_from_states: ClassVar[frozenset[str]] = _excluded_states
-    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
     _primary_entities_only: ClassVar[bool] = True
@@ -454,7 +465,7 @@ class EntityTriggerBase(Trigger):
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
-        behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_ANY)
+        behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_EACH)
         unsub_track_same: dict[str, Callable[[], None]] = {}
 
         @callback
@@ -474,10 +485,10 @@ class EntityTriggerBase(Trigger):
 
                 Called by async_track_same_state on each state change to
                 determine whether to cancel the timer.
-                For behavior any, checks the individual entity's state.
-                For behavior first/last, checks the combined state.
+                For behavior each, checks the individual entity's state.
+                For behavior first/all, checks the combined state.
                 """
-                if behavior == BEHAVIOR_LAST:
+                if behavior == BEHAVIOR_ALL:
                     matches, included = self.count_matches(
                         target_state_change_data.targeted_entity_ids
                     )
@@ -492,7 +503,7 @@ class EntityTriggerBase(Trigger):
                         target_state_change_data.targeted_entity_ids
                     )
                     return matches >= 1
-                # Behavior any: check the individual entity's state
+                # Behavior each: check the individual entity's state
                 if not to_state or to_state.state in self._excluded_states:
                     return False
                 return self.is_valid_state(to_state)
@@ -515,7 +526,7 @@ class EntityTriggerBase(Trigger):
             ):
                 return
 
-            if behavior == BEHAVIOR_LAST:
+            if behavior == BEHAVIOR_ALL:
                 matches, included = self.count_matches(
                     target_state_change_data.targeted_entity_ids
                 )
@@ -553,7 +564,7 @@ class EntityTriggerBase(Trigger):
                 call_action()
                 return
 
-            subscription_key = entity_id if behavior == BEHAVIOR_ANY else behavior
+            subscription_key = entity_id if behavior == BEHAVIOR_EACH else behavior
             if subscription_key in unsub_track_same:
                 unsub_track_same.pop(subscription_key)()
             unsub_track_same[subscription_key] = async_track_same_state(
@@ -563,7 +574,7 @@ class EntityTriggerBase(Trigger):
                 state_still_valid,
                 entity_ids=(
                     entity_id
-                    if behavior == BEHAVIOR_ANY
+                    if behavior == BEHAVIOR_EACH
                     else target_state_change_data.targeted_entity_ids
                 ),
             )
@@ -760,7 +771,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         if lower_limit is None or upper_limit is None:
             # Entity not found or invalid number, don't trigger
             return False
-        between = lower_limit < current_value < upper_limit
+        between = lower_limit <= current_value <= upper_limit
         if self._threshold_type == NumericThresholdType.BETWEEN:
             return between
         return not between
@@ -871,7 +882,7 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
 
 
 NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
             vol.Required(CONF_OPTIONS): {
                 vol.Required("threshold"): NumericThresholdSelector(
@@ -905,7 +916,7 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
     This trigger only fires when the observed attribute
     changes from not within to within the defined threshold.
     """
-    return ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    return ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
             vol.Required(CONF_OPTIONS, default={}): {
                 vol.Required("threshold"): NumericThresholdSelector(
@@ -1714,7 +1725,14 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
         return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
 
     if trigger_conf[CONF_PLATFORM] == "zone":
-        return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]
+        options = trigger_conf[CONF_OPTIONS]
+        return [*options[CONF_ENTITY_ID], options[CONF_ZONE]]
+
+    if trigger_conf[CONF_PLATFORM] in ("zone.entered", "zone.left"):
+        return [
+            *async_extract_targets(trigger_conf, CONF_ENTITY_ID),
+            trigger_conf[CONF_OPTIONS][CONF_ZONE],
+        ]
 
     if trigger_conf[CONF_PLATFORM] == "geo_location":
         return [trigger_conf[CONF_ZONE]]

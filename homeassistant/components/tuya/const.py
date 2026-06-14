@@ -711,6 +711,7 @@ class DPCode(StrEnum):
     ELECTRICITY_LEFT = "electricity_left"
     EXCRETION_TIME_DAY = "excretion_time_day"
     EXCRETION_TIMES_DAY = "excretion_times_day"
+    EXT_TEMP = "ext_temp"
     FACTORY_RESET = "factory_reset"
     FAN_BEEP = "fan_beep"  # Sound
     FAN_COOL = "fan_cool"  # Cool wind
@@ -939,6 +940,7 @@ class DPCode(StrEnum):
     TEMP_INDOOR = "temp_indoor"  # Indoor temperature in °C
     TEMP_SET = "temp_set"  # Set the temperature in °C
     TEMP_SET_F = "temp_set_f"  # Set the temperature in °F
+    TEMP_SETTING_QUICK_C = "temp_setting_quick_c"
     TEMP_UNIT_CONVERT = "temp_unit_convert"  # Temperature unit switching
     TEMP_VALUE = "temp_value"  # Color temperature
     TEMP_VALUE_V2 = "temp_value_v2"
@@ -992,6 +994,7 @@ class DPCode(StrEnum):
     WORK_POWER = "work_power"
     WORK_STATE = "work_state"
     WORK_STATE_E = "work_state_e"
+    WORK_TYPE = "work_type"
 
 
 @dataclass

@@ -46,7 +46,7 @@ class SwitchBotLock(SwitchbotEntity, LockEntity):
     def _async_update_attrs(self) -> None:
         """Update the entity attributes."""
         status = self._device.get_lock_status()
-        self._attr_is_locked = status is LockStatus.LOCKED
+        self._attr_is_locked = status in {LockStatus.LOCKED, LockStatus.HALF_LOCKED}
         self._attr_is_locking = status is LockStatus.LOCKING
         self._attr_is_unlocking = status is LockStatus.UNLOCKING
         self._attr_is_jammed = status in {

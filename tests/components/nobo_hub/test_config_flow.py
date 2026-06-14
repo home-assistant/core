@@ -679,7 +679,7 @@ async def test_options_flow(
 ) -> None:
     """Test the options flow."""
     config_entry = MockConfigEntry(
-        domain="nobo_hub",
+        domain=DOMAIN,
         unique_id="123456789012",
         data={
             CONF_SERIAL: "123456789012",

@@ -51,7 +51,7 @@ def get_models_pager():
     model_25_flash = Mock(
         supported_actions=["generateContent"],
     )
-    model_25_flash.name = "models/gemini-2.5-flash"
+    model_25_flash.name = "models/gemini-3.1-flash-lite"
 
     model_20_flash = Mock(
         supported_actions=["generateContent"],

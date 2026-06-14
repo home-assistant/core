@@ -313,7 +313,7 @@ async def _manage_quests(call: ServiceCall) -> ServiceResponse:
     )
     coordinator = entry.runtime_data
 
-    FUNC_MAP = {
+    func_map = {
         SERVICE_ABORT_QUEST: coordinator.habitica.abort_quest,
         SERVICE_ACCEPT_QUEST: coordinator.habitica.accept_quest,
         SERVICE_CANCEL_QUEST: coordinator.habitica.cancel_quest,
@@ -322,7 +322,7 @@ async def _manage_quests(call: ServiceCall) -> ServiceResponse:
         SERVICE_START_QUEST: coordinator.habitica.start_quest,
     }
 
-    func = FUNC_MAP[call.service]
+    func = func_map[call.service]
 
     try:
         response = await func()

@@ -118,7 +118,7 @@ async def test_config_options(hass: HomeAssistant) -> None:
         }
     }
 
-    assert await async_setup_component(hass, "timer", config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
     assert count_start + 3 == len(hass.states.async_entity_ids())
@@ -682,7 +682,7 @@ async def test_config_reload(
         }
     }
 
-    assert await async_setup_component(hass, "timer", config)
+    assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
     assert count_start + 2 == len(hass.states.async_entity_ids())

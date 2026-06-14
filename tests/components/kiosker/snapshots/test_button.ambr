@@ -1,4 +1,54 @@
 # serializer version: 1
+# name: test_all_entities[button.kiosker_a98be1ce_clear_blackout-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': None,
+    'entity_id': 'button.kiosker_a98be1ce_clear_blackout',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Clear blackout',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Clear blackout',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_clear',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutClear',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[button.kiosker_a98be1ce_clear_blackout-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Kiosker A98BE1CE Clear blackout',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.kiosker_a98be1ce_clear_blackout',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_all_entities[button.kiosker_a98be1ce_clear_cache-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

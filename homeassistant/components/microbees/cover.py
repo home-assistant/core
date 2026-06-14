@@ -84,12 +84,12 @@ class MBCover(MicroBeesEntity, CoverEntity):
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
-        sendCommand = await self.coordinator.microbees.sendCommand(
+        send_command = await self.coordinator.microbees.sendCommand(
             self.actuator_up_id,
             self.actuator_up.configuration.actuator_timing * 1000,
         )
 
-        if not sendCommand:
+        if not send_command:
             raise HomeAssistantError(f"Failed to open {self.name}")
 
         self._attr_is_opening = True
@@ -101,11 +101,11 @@ class MBCover(MicroBeesEntity, CoverEntity):
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
-        sendCommand = await self.coordinator.microbees.sendCommand(
+        send_command = await self.coordinator.microbees.sendCommand(
             self.actuator_down_id,
             self.actuator_down.configuration.actuator_timing * 1000,
         )
-        if not sendCommand:
+        if not send_command:
             raise HomeAssistantError(f"Failed to close {self.name}")
 
         self._attr_is_closing = True

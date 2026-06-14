@@ -224,8 +224,8 @@ async def test_full_user_flow_multiple_installations_with_mfa(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (VerisureLoginError, "invalid_auth"),
-        (VerisureError, "unknown"),
+        (VerisureLoginError("Login failed"), "invalid_auth"),
+        (VerisureError("Unknown error"), "unknown"),
     ],
 )
 async def test_verisure_errors(
@@ -433,8 +433,8 @@ async def test_reauth_flow_with_mfa(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (VerisureLoginError, "invalid_auth"),
-        (VerisureError, "unknown"),
+        (VerisureLoginError("Login failed"), "invalid_auth"),
+        (VerisureError("Unknown error"), "unknown"),
     ],
 )
 async def test_reauth_flow_errors(

@@ -35,9 +35,9 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_target_entities,
@@ -134,7 +134,7 @@ async def test_timer_trigger_options_validation(
         ),
     ],
 )
-async def test_timer_trigger_behavior_any(
+async def test_timer_trigger_behavior_each(
     hass: HomeAssistant,
     target_timers: dict[str, list[str]],
     trigger_target_config: dict[str, Any],
@@ -145,7 +145,7 @@ async def test_timer_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test timer trigger fires on any timer last_transition change."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_timers,
         trigger_target_config=trigger_target_config,
@@ -250,7 +250,7 @@ async def test_timer_trigger_behavior_first(
         ),
     ],
 )
-async def test_timer_trigger_behavior_last(
+async def test_timer_trigger_behavior_all(
     hass: HomeAssistant,
     target_timers: dict[str, list[str]],
     trigger_target_config: dict[str, Any],
@@ -260,8 +260,8 @@ async def test_timer_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test timer trigger fires on last timer last_transition change."""
-    await assert_trigger_behavior_last(
+    """Test timer trigger fires when all timers have transitioned."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_timers,
         trigger_target_config=trigger_target_config,
