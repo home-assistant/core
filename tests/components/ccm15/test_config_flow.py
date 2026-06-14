@@ -254,6 +254,90 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
     assert entry.data[CONF_MAX_TEMP] == 28
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_cannot_connect(hass: HomeAssistant) -> None:
+    """Reconfigure surfaces cannot_connect when the probe returns False, then recovers."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 80,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=False
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_MIN_TEMP: 18,
+                CONF_MAX_TEMP: 30,
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reconfigure"
+    assert result2["errors"] == {"base": "cannot_connect"}
+
+    with patch(
+        "ccm15.CCM15Device.CCM15Device.async_test_connection", return_value=True
+    ):
+        result3 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_MIN_TEMP: 18,
+                CONF_MAX_TEMP: 30,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result3["type"] is FlowResultType.ABORT
+    assert result3["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_unknown_error(hass: HomeAssistant) -> None:
+    """Reconfigure surfaces an unknown error when the probe raises."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 80,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    with patch(
+        "ccm15.CCM15Device.CCM15Device.async_test_connection",
+        side_effect=Exception(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "1.1.1.1",
+                CONF_PORT: 80,
+                CONF_MIN_TEMP: 18,
+                CONF_MAX_TEMP: 30,
+            },
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reconfigure"
+    assert result2["errors"] == {"base": "unknown"}
+
+
 @pytest.mark.parametrize(
     ("min_temp", "max_temp"),
     [
