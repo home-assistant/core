@@ -18,6 +18,7 @@ from homeassistant.components.reolink.host import (
     FIRST_TCP_PUSH_TIMEOUT,
     LONG_POLL_COOLDOWN,
     LONG_POLL_ERROR_COOLDOWN,
+    ONVIF,
     POLL_INTERVAL_NO_PUSH,
 )
 from homeassistant.components.webhook import async_handle_webhook
@@ -118,7 +119,7 @@ async def test_webhook_callback(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.BINARY_SENSOR}.{TEST_CAM_NAME}_motion"
-    webhook_id = config_entry.runtime_data.host.webhook_id
+    webhook_id = config_entry.runtime_data.host._webhook_ids[ONVIF]
     unique_id = config_entry.runtime_data.host.unique_id
 
     signal_all = MagicMock()
@@ -155,7 +156,7 @@ async def test_webhook_callback(
     # test webhook callback success single channel
     reolink_host.motion_detected.return_value = False
     reolink_host.ONVIF_event_callback.return_value = [0]
-    await client.post(f"/api/webhook/{webhook_id}", data="test_data")
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
     await hass.async_block_till_done()
     signal_ch.assert_called_once()
     assert hass.states.get(entity_id).state == STATE_OFF
@@ -163,7 +164,7 @@ async def test_webhook_callback(
     # test webhook callback single channel with error in event callback
     signal_ch.reset_mock()
     reolink_host.ONVIF_event_callback.side_effect = Exception("Test error")
-    await client.post(f"/api/webhook/{webhook_id}", data="test_data")
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
     await hass.async_block_till_done()
     signal_ch.assert_not_called()
 
@@ -442,8 +443,8 @@ async def test_long_poll_stop_when_push(
     # simulate ONVIF push callback
     client = await hass_client_no_auth()
     reolink_host.ONVIF_event_callback.return_value = None
-    webhook_id = config_entry.runtime_data.host.webhook_id
-    await client.post(f"/api/webhook/{webhook_id}")
+    webhook_id = config_entry.runtime_data.host._webhook_ids[ONVIF]
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
 
     freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
@@ -545,8 +546,8 @@ async def test_diagnostics_event_connection(
     # simulate ONVIF push callback
     client = await hass_client_no_auth()
     reolink_host.ONVIF_event_callback.return_value = None
-    webhook_id = config_entry.runtime_data.host.webhook_id
-    await client.post(f"/api/webhook/{webhook_id}")
+    webhook_id = config_entry.runtime_data.host._webhook_ids[ONVIF]
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag["event connection"] == "ONVIF push"
