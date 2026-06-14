@@ -1174,7 +1174,7 @@
       "message": "Token data malformed, try reauthenticating"
     },
     "update_failed": {
-      "message": "Error fetching data from Teslemetry API"
+      "message": "Error fetching data from Teslemetry API: {message}"
     },
     "update_failed_invalid_data": {
       "message": "Received invalid data from API"
