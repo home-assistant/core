@@ -369,6 +369,51 @@ async def test_dhcp_discovery_restricted_clears_unique_id(hass: HomeAssistant) -
     assert result2["result"].unique_id is None
 
 
+async def test_dhcp_discovery_auto_configure_restricted(hass: HomeAssistant) -> None:
+    """Test DHCP auto-configure of a restricted gateway stores no unique id.
+
+    When the default password is accepted but the gateway is restricted (no DIN
+    over HTTP), the discovery hostname must not be persisted as the unique id.
+    """
+    mock_powerwall = await _mock_powerwall_restricted(hass)
+
+    with patch(
+        "homeassistant.components.powerwall.config_flow.Powerwall",
+        return_value=mock_powerwall,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_DHCP},
+            data=DhcpServiceInfo(
+                ip="1.1.1.1",
+                macaddress="aabbcceeddff",
+                hostname="00GGX",
+            ),
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] is None
+
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["data"] == {"ip_address": "1.1.1.1", "password": "00GGX"}
+    assert result2["result"].unique_id is None
+
+
 async def test_dhcp_discovery_auto_configure(hass: HomeAssistant) -> None:
     """Test we can process the discovery from dhcp and auto configure."""
     mock_powerwall = await _mock_powerwall_site_name(hass, "Some site")
