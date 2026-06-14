@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock
 from duco_connectivity import (
     ActionItem,
     ActionValueType,
+    DucoError,
+    DucoRateLimitError,
     KnownActionName,
     Node,
     NodeActionItemList,
@@ -22,6 +24,7 @@ from homeassistant.components.select import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from . import setup_platform_integration
 
@@ -151,6 +154,32 @@ async def test_select_option_calls_ventilation_state_library_method(
     )
 
     mock_duco_client.async_set_ventilation_state.assert_called_once_with(1, "CNT2")
+
+
+@pytest.mark.usefixtures("init_integration")
+@pytest.mark.parametrize(
+    ("exception", "match"),
+    [
+        pytest.param(DucoError("Unexpected error"), "Failed to set ventilation state"),
+        pytest.param(DucoRateLimitError(), "daily write limit"),
+    ],
+)
+async def test_select_option_error(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    exception: Exception,
+    match: str,
+) -> None:
+    """Test that a HomeAssistantError is raised on select write failure."""
+    mock_duco_client.async_set_ventilation_state = AsyncMock(side_effect=exception)
+
+    with pytest.raises(HomeAssistantError, match=match):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: _SELECT_ENTITY, ATTR_OPTION: "CNT2"},
+            blocking=True,
+        )
 
 
 async def test_select_extended_manual_options_allow_normalized_readback(
