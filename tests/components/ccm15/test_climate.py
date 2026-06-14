@@ -3,13 +3,14 @@
 from datetime import timedelta
 from unittest.mock import patch
 
-from ccm15 import CCM15DeviceState
+from ccm15 import CCM15DeviceState, CCM15SlaveDevice
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
     ATTR_FAN_MODE,
     ATTR_HVAC_MODE,
     ATTR_TEMPERATURE,
@@ -24,6 +25,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, SERVICE_TURN_OFF
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_system import US_CUSTOMARY_UNITS
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -130,3 +132,36 @@ async def test_climate_state(
 
     assert hass.states.get("climate.midea_0") == snapshot
     assert hass.states.get("climate.midea_1") == snapshot
+
+
+async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
+    """A controller set to Fahrenheit is reported in Fahrenheit.
+
+    Byte 0 bit 0 of the status flags the unit; this device reports it set, so
+    the entity must expose Fahrenheit rather than the hardcoded Celsius. Under
+    the US unit system the device's native values then pass through unconverted
+    (target 86 °F, current 26 °F); were the entity still reporting Celsius they
+    would be converted and differ.
+    """
+    hass.config.units = US_CUSTOMARY_UNITS
+    device_state = CCM15DeviceState(
+        devices={0: CCM15SlaveDevice(bytes.fromhex("01000041c0001a"))}
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ccm15.coordinator.CCM15Device.get_status_async",
+        return_value=device_state,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("climate.midea_0")
+    assert state is not None
+    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 26
+    assert state.attributes[ATTR_TEMPERATURE] == 86
