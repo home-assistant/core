@@ -28,7 +28,10 @@ async def async_setup_entry(
 ) -> None:
     """Set select entities for device."""
     data = entry.runtime_data
-    async_add_entities([SynologyDSMFanSpeedMode(data.api, data.coordinator_central)])
+    if data.api.hardware is not None:
+        async_add_entities(
+            [SynologyDSMFanSpeedMode(data.api, data.coordinator_central)]
+        )
 
 
 class SynologyDSMFanSpeedMode(

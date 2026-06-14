@@ -208,6 +208,14 @@ class SynoApi:
             self._with_file_station,
         )
 
+        # check if hardware info is available
+        try:
+            await self.dsm.hardware.update()
+        except SYNOLOGY_CONNECTION_EXCEPTIONS as ex:
+            self._with_hardware = False
+            self.dsm.reset(SynoCoreHardware.API_KEY)
+            LOGGER.debug("Disabled fetching hardware data during setup: %s", ex)
+
         await self._fetch_device_configuration()
 
         try:

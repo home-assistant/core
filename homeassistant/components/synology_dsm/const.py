@@ -6,6 +6,7 @@ from aiohttp import ClientTimeout
 from synology_dsm.api.surveillance_station.const import SNAPSHOT_PROFILE_BALANCED
 from synology_dsm.exceptions import (
     SynologyDSMAPIErrorException,
+    SynologyDSMAPINoDataException,
     SynologyDSMLogin2SARequiredException,
     SynologyDSMLoginDisabledAccountException,
     SynologyDSMLoginFailedException,
@@ -77,6 +78,7 @@ SYNOLOGY_AUTH_FAILED_EXCEPTIONS = (
 
 SYNOLOGY_CONNECTION_EXCEPTIONS = (
     SynologyDSMAPIErrorException,
+    SynologyDSMAPINoDataException,
     SynologyDSMLoginFailedException,
     SynologyDSMRequestException,
 )
