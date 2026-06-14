@@ -157,17 +157,13 @@ async def validate_input(
 
     Data has the keys from CONFIG_SCHEMA with values provided by the user.
     """
-    options_kwargs: dict[str, Any] = {}
-    if port == DEFAULT_HTTPS_PORT:
-        options_kwargs["verify_ssl"] = verify_ssl
-
     options = ConnectionOptions(
         ip_address=host,
         username=data.get(CONF_USERNAME),
         password=data.get(CONF_PASSWORD),
         device_mac=info[CONF_MAC],
         port=port,
-        **options_kwargs,
+        verify_ssl=verify_ssl,
     )
 
     gen = get_info_gen(info)
@@ -1352,15 +1348,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self, host: str, port: int, verify_ssl: bool = False
     ) -> dict[str, Any]:
         """Get info from shelly device."""
-        if port == DEFAULT_HTTPS_PORT:
-            return await get_info(
-                async_get_clientsession(self.hass),
-                host,
-                port=port,
-                verify_ssl=verify_ssl,
-            )
-
-        return await get_info(async_get_clientsession(self.hass), host, port=port)
+        return await get_info(
+            async_get_clientsession(self.hass), host, port=port, verify_ssl=verify_ssl
+        )
 
     @callback
     @override
