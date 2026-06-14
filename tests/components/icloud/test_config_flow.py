@@ -2,7 +2,10 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
-from pyicloud.exceptions import PyiCloudFailedLoginException
+from pyicloud.exceptions import (
+    PyiCloudAPIResponseException,
+    PyiCloudFailedLoginException,
+)
 import pytest
 
 from homeassistant.components.icloud.config_flow import (
@@ -65,6 +68,18 @@ def mock_controller_2fa_service():
         service_mock.return_value.requires_2fa = True
         service_mock.return_value.requires_2sa = True
         service_mock.return_value.validate_2fa_code = Mock(return_value=True)
+        service_mock.return_value.is_trusted_session = False
+        yield service_mock
+
+
+@pytest.fixture(name="service_2fa_failed_request")
+def mock_controller_2fa_failed_request_service():
+    """Mock a request failure 2fa service."""
+    with patch(
+        "homeassistant.components.icloud.config_flow.PyiCloudService"
+    ) as service_mock:
+        service_mock.return_value.requires_2fa = True
+        service_mock.return_value.requires_2sa = True
         service_mock.return_value.is_trusted_session = False
         yield service_mock
 
@@ -377,6 +392,73 @@ async def test_validate_2fa_code_failed(
     assert result["errors"] == {"base": "validate_verification_code"}
 
 
+async def test_2fa_code_failed_request(
+    hass: HomeAssistant, service_2fa_failed_request: MagicMock
+) -> None:
+    """Test 2fa step failed request."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+
+    service_2fa_failed_request.return_value.request_2fa_code.side_effect = (
+        PyiCloudAPIResponseException(reason="PyiCloud error")
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {"base": "send_verification_code"}
+
+
+async def test_2fa_code_non_pyicloud_error(
+    hass: HomeAssistant, service_2fa_failed_request: MagicMock
+) -> None:
+    """Test 2fa step failed request (non-PyiCloud error)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+
+    service_2fa_failed_request.return_value.request_2fa_code.side_effect = Exception(
+        "Non-PyiCloud error"
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {"base": "send_verification_code"}
+
+
+async def test_2fa_code_returned_false(
+    hass: HomeAssistant, service_2fa_failed_request: MagicMock
+) -> None:
+    """Test 2fa step failed API response (returned False)."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+
+    service_2fa_failed_request.return_value.request_2fa_code.return_value = False
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_VERIFICATION_CODE: "0"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {"base": "send_verification_code"}
+
+
 async def test_password_update(
     hass: HomeAssistant, service_authenticated: MagicMock
 ) -> None:
@@ -418,3 +500,26 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
 
         assert result["type"] is FlowResultType.FORM
         assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
+
+
+async def test_create_icloud_storage_dir(
+    hass: HomeAssistant, service: MagicMock
+) -> None:
+    """Test that the iCloud storage directory is created if it does not exist."""
+    with (
+        patch(
+            "homeassistant.components.icloud.config_flow.os.path.exists",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.icloud.config_flow.os.makedirs"
+        ) as makedirs_mock,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == CONF_TRUSTED_DEVICE
+        makedirs_mock.assert_called_once()
