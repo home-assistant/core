@@ -20,12 +20,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqvifyConfigEntry) -> bo
     """Set up Aqvify from a config entry."""
 
     coordinator = AqvifyCoordinator(hass, entry)
-    await coordinator.async_config_entry_first_refresh()
     aggr_coordinator = AqvifyAggrDataCoordinator(hass, entry)
-    await aggr_coordinator.async_config_entry_first_refresh()
     entry.runtime_data = AqvifyRuntimeData(
         coordinator=coordinator, aggr_data_coordinator=aggr_coordinator
     )
+    await coordinator.async_config_entry_first_refresh()
+    await aggr_coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

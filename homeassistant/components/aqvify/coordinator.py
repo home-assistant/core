@@ -187,57 +187,9 @@ class AqvifyAggrDataCoordinator(DataUpdateCoordinator):
         )
         return beg_time, end_time
 
-    async def _async_setup(self) -> None:
-        """Set up the aggr data coordinator."""
-        try:
-            await self.api_client.async_get_account_id()
-        except AqvifyAuthException:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_api_key",
-            ) from None
-        except ClientResponseError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={
-                    "entry": self.config_entry.title,
-                },
-            ) from err
-        except TimeoutError as err:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="api_timeout",
-                translation_placeholders={
-                    "entry": self.config_entry.title,
-                },
-            ) from err
-
     async def _async_update_data(self) -> dict[str, AqvifyHourAggregatedValues]:
         """Fetch device state."""
-        try:
-            devices = await self.api_client.async_get_devices()
-        except AqvifyAuthException:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_api_key",
-            ) from None
-        except ClientResponseError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="api_error",
-                translation_placeholders={
-                    "entry": self.config_entry.title,
-                },
-            ) from err
-        except TimeoutError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="api_timeout",
-                translation_placeholders={
-                    "entry": self.config_entry.title,
-                },
-            ) from err
+        devices = self.config_entry.runtime_data.coordinator.data.devices
 
         device_data: dict[str, AqvifyHourAggregatedValues] = {}
         for device in devices.devices.values():
@@ -249,7 +201,7 @@ class AqvifyAggrDataCoordinator(DataUpdateCoordinator):
                     beg_time,
                     end_time,
                 )
-                device_data[device_key] = aggr_data[0]
+                device_data[device_key] = aggr_data.aggr_list[0]
             except AqvifyAuthException:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,

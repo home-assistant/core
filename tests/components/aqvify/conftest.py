@@ -4,7 +4,12 @@ from collections.abc import Generator
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyaqvify import AqvifyAccount, AqvifyDeviceData, AqvifyDevices
+from pyaqvify import (
+    AqvifyAccount,
+    AqvifyDeviceData,
+    AqvifyDevices,
+    AqvifyHourAggregatedValueList,
+)
 import pytest
 
 from homeassistant.components.aqvify.const import DOMAIN
@@ -45,6 +50,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
 def mock_aqvify_client(
     device_fixture: list[dict[str, Any]],
     device_data_fixture: dict[str, Any],
+    device_aggregated_data_fixture: list[dict[str, Any]],
     account_fixture: dict[str, Any],
 ) -> Generator[MagicMock]:
     """Mock an Aqvify client."""
@@ -66,7 +72,9 @@ def mock_aqvify_client(
         client.async_get_device_latest_data.return_value = AqvifyDeviceData(
             device_data_fixture
         )
-        client.async_get_hour_aggregation.return_value = device_aggregated_data_fixture
+        client.async_get_hour_aggregation.return_value = AqvifyHourAggregatedValueList(
+            device_aggregated_data_fixture
+        )
         yield client
 
 
@@ -122,5 +130,5 @@ async def account_fixture(
 async def device_aggregated_data_fixture(
     hass: HomeAssistant, load_aggr_data_file: str
 ) -> list[dict[str, Any]]:
-    """Fixture for account data."""
+    """Fixture for aggregated datapoint."""
     return await async_load_json_array_fixture(hass, load_aggr_data_file, DOMAIN)
