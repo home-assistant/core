@@ -8,6 +8,7 @@ from bsblan import (
     BSBLANConnectionError,
     BSBLANError,
     BSBLANVersionError,
+    State,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -72,6 +73,36 @@ async def test_setup_minimal_mode_creates_outdated_firmware_issue(
     assert issue is not None
     assert issue.severity is ir.IssueSeverity.WARNING
     assert issue.translation_key == "outdated_firmware"
+
+
+async def test_setup_minimal_mode_restricts_to_single_circuit(
+    hass: HomeAssistant,
+    mock_config_entry_dual_circuit: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test a dual-circuit entry restricts to circuit 1 on a reduced-mode device.
+
+    A device previously configured with circuit 2 may later report a JSON-API
+    version below v2 (reduced single-circuit mode). Setup must restrict to
+    circuit 1 instead of failing on the now-unsupported circuit.
+    """
+    mock_bsblan.json_api_version = "1.0"
+
+    def _state(include: list[str] | None = None, circuit: int = 1) -> State:
+        if circuit != 1:
+            raise BSBLANError(
+                "None of the requested parameters are valid for this section"
+            )
+        return mock_bsblan.state.return_value
+
+    mock_bsblan.state.side_effect = _state
+
+    mock_config_entry_dual_circuit.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_dual_circuit.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry_dual_circuit.state is ConfigEntryState.LOADED
+    assert mock_config_entry_dual_circuit.runtime_data.available_circuits == [1]
 
 
 async def test_setup_full_mode_no_outdated_firmware_issue(

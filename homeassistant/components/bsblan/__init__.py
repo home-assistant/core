@@ -173,6 +173,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
             DEFAULT_HEATING_CIRCUITS
         )
 
+        # Devices reporting a JSON-API version below v2 operate in a reduced
+        # single-circuit mode. A previously configured entry may still list
+        # additional circuits from when the device ran newer firmware, which
+        # would make setup fail when fetching those now-unsupported circuits.
+        # Restrict to the default single circuit so the integration still loads.
+        if (
+            bsblan.json_api_version is not None
+            and AwesomeVersion(bsblan.json_api_version) < MINIMUM_FULL_API_VERSION
+        ):
+            circuits = list(DEFAULT_HEATING_CIRCUITS)
+
         # Fetch device metadata
         device = await bsblan.device()
         info = await bsblan.info()
