@@ -1,10 +1,13 @@
 """Test ViCare initialization and migration."""
 
+from datetime import timedelta
 from unittest.mock import Mock, patch
 
 from aiohttp import ClientError
 import pytest
+from freezegun.api import FrozenDateTimeFactory
 from PyViCare.PyViCareUtils import (
+    PyViCareInternalServerError,
     PyViCareInvalidConfigurationError,
     PyViCareInvalidCredentialsError,
 )
@@ -12,6 +15,7 @@ from PyViCare.PyViCareUtils import (
 from homeassistant.components.vicare.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_CLIENT_ID, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
@@ -26,7 +30,7 @@ from homeassistant.helpers import (
 from . import MODULE
 from .conftest import Fixture, MockPyViCare
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -436,3 +440,56 @@ async def test_device_and_entity_migration(
         == "gateway1_deviceId1-heating-0"
     )
     assert entity_registry.async_get(entry3.entity_id).unique_id == "gateway2-0"
+
+
+async def test_coordinator_recovers_after_transient_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """A transient fetch failure flips sensors unavailable, recovery restores them."""
+    fixtures: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+    mock_vicare = MockPyViCare(fixtures)
+    service = mock_vicare.devices[0].service
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=mock_vicare.as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.SENSOR]),
+    ):
+        mock_config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        sensor_id = "sensor.model0_outside_temperature"
+        state = hass.states.get(sensor_id)
+        assert state is not None, f"{sensor_id} not found in states"
+        assert state.state != STATE_UNAVAILABLE
+
+        service.fetch_all_features.side_effect = PyViCareInternalServerError(
+            {
+                "statusCode": 500,
+                "errorType": "INTERNAL_SERVER_ERROR",
+                "message": "Internal Server Error",
+                "viErrorId": "0",
+            }
+        )
+        freezer.tick(timedelta(seconds=120))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(sensor_id)
+        assert state.state == STATE_UNAVAILABLE
+
+        service.fetch_all_features.side_effect = None
+        freezer.tick(timedelta(seconds=120))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+        state = hass.states.get(sensor_id)
+        assert state.state != STATE_UNAVAILABLE
