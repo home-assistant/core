@@ -107,18 +107,17 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         Note: the OpenRGB device.id is intentionally not used because it is just
         a positional index that can change when devices are added or removed.
 
-        For HID devices without a serial number, the location string is excluded
-        because it contains a platform-specific path (e.g. DevSrvsID on macOS)
-        that changes every time the device is reconnected. For devices with a
-        serial number, location is not needed since serial is already unique.
+        For HID devices, the location string is excluded because it contains a
+        platform-specific path (e.g. DevSrvsID on macOS) that changes every time
+        the device is reconnected.
         For non-HID devices (e.g. I2C), location is more stable and is included.
         """
         location = device.metadata.location or "none"
         serial = device.metadata.serial or "none"
 
         # HID location paths change on reconnect, so only include location
-        # for non-HID devices without a serial number
-        if location.startswith("HID:") or serial != "none":
+        # for non-HID devices
+        if location.startswith("HID:"):
             location = "none"
 
         parts = (

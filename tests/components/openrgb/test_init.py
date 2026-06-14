@@ -375,13 +375,13 @@ async def test_device_key_stable_across_hid_reconnect(
     assert key_before == key_after
 
 
-async def test_device_key_uses_serial_ignores_location(
+async def test_device_key_ignores_hid_location_with_serial(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openrgb_client: MagicMock,
     mock_openrgb_device: MagicMock,
 ) -> None:
-    """Test that device key uses serial and ignores location when serial is present."""
+    """Test that device key ignores HID location even when serial is present."""
     mock_config_entry.add_to_hass(hass)
 
     mock_openrgb_device.metadata.serial = "ABC123"
@@ -436,12 +436,6 @@ async def test_device_key_includes_location_for_i2c(
             "HID: DevSrvsID:111",
             "none",
             id="hid_with_serial",
-        ),
-        pytest.param(
-            "ABC123",
-            "I2C: PIIX4, address 0x70",
-            "none",
-            id="non_hid_with_serial",
         ),
     ],
 )

@@ -55,7 +55,7 @@ def _migrate_uid(unique_id: str) -> str | None:
     """Migrate an old-format unique ID to the new format.
 
     Old format included raw location for all devices. New format drops location
-    for HID devices and for devices that have a serial number.
+    for HID devices.
 
     Returns the new unique ID, or None if no migration is needed.
     """
@@ -63,13 +63,12 @@ def _migrate_uid(unique_id: str) -> str | None:
     if len(parts) != 6:
         return None
 
-    serial = parts[4]
     location = parts[5]
 
     if location == "none":
         return None
 
-    if location.startswith("HID:") or serial != "none":
+    if location.startswith("HID:"):
         parts[5] = "none"
         return UID_SEPARATOR.join(parts)
 
