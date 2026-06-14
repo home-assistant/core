@@ -727,6 +727,10 @@ class EsphomeAssistSatellite(
             audio_duration_sent = 0.0
 
             async for chunk in tts_result.async_stream_result():
+                # mypy incorrectly assumes self._is_running is always True,
+                # however, a seperate task can set this to False because we
+                # yeild in the "async for" above.
+                # type: ignore[unreachable]
                 if not self._is_running:
                     break
 
