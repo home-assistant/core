@@ -6,6 +6,7 @@ from typing import override
 from synology_dsm.api.core.hardware import FanSpeed, SynoCoreHardware
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -52,6 +53,7 @@ class SynologyDSMFanSpeedMode(
             api_key=SynoCoreHardware.API_KEY,
             key="fan_speed_mode",
             translation_key="fan_speed_mode",
+            entity_category=EntityCategory.CONFIG,
         )
         super().__init__(api, coordinator, description)
 
