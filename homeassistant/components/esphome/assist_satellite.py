@@ -4,7 +4,6 @@ import asyncio
 from collections.abc import AsyncIterable
 from functools import partial
 import hashlib
-import io
 from itertools import chain
 import json
 import logging
@@ -12,7 +11,6 @@ from pathlib import Path
 import socket
 import struct
 from typing import Any, cast
-
 
 from aioesphomeapi import (
     MediaPlayerFormatPurpose,
@@ -823,10 +821,7 @@ class EsphomeAssistSatellite(
                         payload = bytes(bytes_buffer[:bytes_per_chunk_payload])
                         del bytes_buffer[:bytes_per_chunk_payload]
 
-                        if self._udp_server is not None:
-                            self._udp_server.send_audio_bytes(payload)
-                        else:
-                            self.cli.send_voice_assistant_audio(payload)
+                        self._send_tts_audio(payload)
 
                         audio_duration_sent += seconds_in_chunk
 
@@ -840,11 +835,7 @@ class EsphomeAssistSatellite(
                             await asyncio.sleep(wait_time)
 
             if found_data_chunk and len(bytes_buffer) > 0 and self._is_running:
-                payload = bytes(bytes_buffer)
-                if self._udp_server is not None:
-                    self._udp_server.send_audio_bytes(payload)
-                else:
-                    self.cli.send_voice_assistant_audio(payload)
+                self._send_tts_audio(bytes(bytes_buffer))
 
         except asyncio.CancelledError:
             return  # Don't trigger state change
@@ -856,6 +847,13 @@ class EsphomeAssistSatellite(
         # State change
         self.tts_response_finished()
         self._entry_data.async_set_assist_pipeline_state(False)
+
+    def _send_tts_audio(self, payload: bytes) -> None:
+        """Send TTS audio via API or UDP."""
+        if self._udp_server is not None:
+            self._udp_server.send_audio_bytes(payload)
+        else:
+            self.cli.send_voice_assistant_audio(payload)
 
     async def _wrap_audio_stream(self) -> AsyncIterable[bytes]:
         """Yield audio chunks from the queue until None."""
