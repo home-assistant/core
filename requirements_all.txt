@@ -519,7 +519,7 @@ anel-pwrctrl-homeassistant==0.0.1.dev2
 anova-wifi==0.17.1
 
 # homeassistant.components.anthemav
-anthemav==1.4.1
+anthemav==1.4.2
 
 # homeassistant.components.anthropic
 anthropic==0.108.0
