@@ -54,11 +54,14 @@ class SynologyDSMFanSpeedMode(
             translation_key="fan_speed_mode",
         )
         super().__init__(api, coordinator, description)
-        self._attr_current_option = self._api.dsm.hardware.fan_speed.value
+
+    @property
+    def current_option(self) -> str | None:
+        """Return the selected entity option to represent the entity state."""
+        return self._api.dsm.hardware.fan_speed.value
 
     @override
     async def async_select_option(self, option: str) -> None:
         await self._api.dsm.hardware.set_fan_speed(FanSpeed(option))
         await self._api.dsm.hardware.update()
-        self._attr_current_option = self._api.dsm.hardware.fan_speed.value
         self.async_write_ha_state()
