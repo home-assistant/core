@@ -2552,15 +2552,16 @@ async def test_stream_tts_audio_edge_cases(
 
     # Multi-chunk streaming with sleep/wait logic
     mock_client.send_voice_assistant_audio.reset_mock()
-    wav_with_16bytes = make_wav_header(data_chunk_size=16) + b"\x00" * 16
-    stream = ChunkedMockResultStream(hass, "wav", [wav_with_16bytes])
-    await satellite._stream_tts_audio(stream, samples_per_chunk=4)
-    assert mock_client.send_voice_assistant_audio.call_count == 2
-    assert mock_client.send_voice_assistant_audio.call_args_list[0].args == (
-        b"\x00" * 8,
-    )
-    assert mock_client.send_voice_assistant_audio.call_args_list[1].args == (
-        b"\x00" * 8,
+    wav_with_16000bytes = make_wav_header(data_chunk_size=16000) + b"\x00" * 16000
+    stream = ChunkedMockResultStream(hass, "wav", [wav_with_16000bytes])
+    await satellite._stream_tts_audio(stream, samples_per_chunk=512)
+    assert mock_client.send_voice_assistant_audio.call_count == 16
+    for i in range(15):
+        assert mock_client.send_voice_assistant_audio.call_args_list[i].args == (
+            b"\x00" * 1024,
+        )
+    assert mock_client.send_voice_assistant_audio.call_args_list[15].args == (
+        b"\x00" * 640,
     )
 
     # Cancel/abort when self._is_running becomes False

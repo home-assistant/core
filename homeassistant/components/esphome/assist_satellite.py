@@ -824,12 +824,12 @@ class EsphomeAssistSatellite(
 
                         audio_duration_sent += seconds_in_chunk
 
-                        # Wait for 90% of the duration of the audio chunk that
-                        # was just sent to be played. This prevents the media
-                        # player's buffer from overflowing.
+                        # The ring buffer in the remote device is fixed at 512ms.
+                        # We want to keep it at around 384ms (75% full) to prevent
+                        # the buffer from overflowing or underflowing.
                         assert start_time is not None
                         elapsed = asyncio.get_running_loop().time() - start_time
-                        if (wait_time := (audio_duration_sent * 0.9) - elapsed) > 0:
+                        if (wait_time := (audio_duration_sent - 0.384) - elapsed) > 0:
                             await asyncio.sleep(wait_time)
 
             if found_data_chunk and len(bytes_buffer) > 0 and self._is_running:
