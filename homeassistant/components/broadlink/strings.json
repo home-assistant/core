@@ -89,6 +89,9 @@
     }
   },
   "exceptions": {
+    "connect_failed": {
+      "message": "Failed to connect to the device at {host}: {error}"
+    },
     "frequency_not_supported": {
       "message": "Broadlink devices cannot transmit on {frequency} MHz"
     },
