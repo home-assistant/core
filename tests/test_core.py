@@ -1384,8 +1384,11 @@ async def test_eventbus_nested_fire_endless_loop_guard(
 ) -> None:
     """Test that event listeners firing events in an endless loop are stopped.
 
-    Without the guard, a listener which unconditionally fires an event it
-    also listens to would keep the dispatch drain loop running forever.
+    A listener which unconditionally fires an event it also listens to would
+    keep the dispatch drain loop running forever. Once the per-dispatch queue
+    limit is reached, the bus stops queuing further events and raises in the
+    firing listener; the raise is caught and logged by the per-listener error
+    handling.
     """
     calls: list[ha.Event] = []
 
@@ -1399,11 +1402,12 @@ async def test_eventbus_nested_fire_endless_loop_guard(
     with patch.object(ha, "_MAX_QUEUED_EVENT_DISPATCHES", 10):
         hass.bus.async_fire("test_loop")
 
-    # The top-level dispatch plus 10 queued dispatches, then the loop is
-    # aborted and the queued event dropped.
+    # The top-level dispatch plus 10 queued dispatches; the next fire is
+    # rejected once the queue limit is reached. The firing listener raises,
+    # which the per-listener error handling catches and logs.
     assert len(calls) == 11
-    assert "listeners are likely firing events in an endless loop" in caplog.text
-    assert "test_loop" in caplog.text
+    assert "Error running job" in caplog.text
+    assert "are likely firing events in an endless loop" in caplog.text
 
     unsub()
 
@@ -1411,6 +1415,27 @@ async def test_eventbus_nested_fire_endless_loop_guard(
     events = async_capture_events(hass, "test_after")
     hass.bus.async_fire("test_after")
     assert len(events) == 1
+
+
+async def test_eventbus_fire_raises_when_queue_limit_reached(
+    hass: HomeAssistant,
+) -> None:
+    """Test a nested fire raises once the per-dispatch queue limit is reached.
+
+    A fire issued while an event is being dispatched is queued, but once the
+    limit is reached it is rejected with an error instead of being queued.
+    """
+    # Simulate being in the middle of dispatching with the queue limit reached
+    hass.bus._dispatching = True
+    hass.bus._queued_event_count = ha._MAX_QUEUED_EVENT_DISPATCHES
+    try:
+        with pytest.raises(HomeAssistantError, match="endless loop"):
+            hass.bus.async_fire("test")
+        # The rejected event is not queued
+        assert len(hass.bus._fire_queue) == 0
+    finally:
+        hass.bus._dispatching = False
+        hass.bus._queued_event_count = 0
 
 
 async def test_eventbus_unsubscribe_listener(hass: HomeAssistant) -> None:

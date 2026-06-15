@@ -1428,9 +1428,9 @@ def _verify_event_type_length_or_raise(event_type: EventType[_DataT] | str) -> N
         raise MaxLengthExceeded(event_type, "event_type", MAX_LENGTH_EVENT_EVENT_TYPE)
 
 
-# Maximum number of events fired by event listeners which will be dispatched
-# from a single top-level fire, to guard against event listeners firing
-# events in an endless loop.
+# Maximum number of events event listeners may queue while a single top-level
+# event is being dispatched, to guard against event listeners firing events in
+# an endless loop.
 _MAX_QUEUED_EVENT_DISPATCHES: Final = 10_000
 
 
@@ -1444,6 +1444,7 @@ class EventBus:
         "_hass",
         "_listeners",
         "_match_all_listeners",
+        "_queued_event_count",
     )
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -1458,6 +1459,7 @@ class EventBus:
             tuple[EventType[Any] | str, Any, EventOrigin, Context | None, float]
         ] = deque()
         self._dispatching = False
+        self._queued_event_count = 0
         self._async_logging_changed()
         self.async_listen(EVENT_LOGGING_CHANGED, self._async_logging_changed)
 
@@ -1542,38 +1544,32 @@ class EventBus:
             # listener is queued and dispatched after the current dispatch
             # completes, so all listeners observe events in fire order. The
             # fire time is captured now since dispatch is deferred.
+            if self._queued_event_count >= _MAX_QUEUED_EVENT_DISPATCHES:
+                # Guard against event listeners firing events in an endless
+                # loop: stop queuing further events and raise so the firing
+                # listener's error handling kicks in. Events already queued
+                # are still dispatched.
+                raise HomeAssistantError(
+                    f"Event {event_type} not fired: more than"
+                    f" {_MAX_QUEUED_EVENT_DISPATCHES} events were queued by event"
+                    " listeners while dispatching a single event; event listeners"
+                    " are likely firing events in an endless loop"
+                )
+            self._queued_event_count += 1
             self._fire_queue.append(
                 (event_type, event_data, origin, context, time_fired or time.time())
             )
             return
 
         self._dispatching = True
+        self._queued_event_count = 0
         try:
             self._async_dispatch(event_type, event_data, origin, context, time_fired)
-            if self._fire_queue:
-                self._async_drain_fire_queue()
+            fire_queue = self._fire_queue
+            while fire_queue:
+                self._async_dispatch(*fire_queue.popleft())
         finally:
             self._dispatching = False
-
-    @callback
-    def _async_drain_fire_queue(self) -> None:
-        """Dispatch events queued by event listeners, in fire order."""
-        fire_queue = self._fire_queue
-        dispatched = 0
-        while fire_queue:
-            if dispatched >= _MAX_QUEUED_EVENT_DISPATCHES:
-                _LOGGER.error(
-                    "Aborting event dispatch: %d events were fired by event"
-                    " listeners while dispatching a single event; event"
-                    " listeners are likely firing events in an endless loop."
-                    " Dropping queued events: %s",
-                    dispatched,
-                    ", ".join(sorted({str(item[0]) for item in fire_queue})),
-                )
-                fire_queue.clear()
-                return
-            self._async_dispatch(*fire_queue.popleft())
-            dispatched += 1
 
     @callback
     def _async_dispatch(
