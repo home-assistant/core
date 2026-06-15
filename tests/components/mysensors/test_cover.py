@@ -4,6 +4,7 @@ from collections.abc import Callable
 from unittest.mock import MagicMock, call
 
 from mysensors.sensor import Sensor
+import pytest
 
 from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
@@ -283,6 +284,7 @@ async def test_cover_node_binary(
     assert state.state == CoverState.CLOSED
 
 
+@pytest.mark.parametrize("config_entry", ["2.4"], indirect=True)
 async def test_cover_node_tilt(
     hass: HomeAssistant,
     cover_node_tilt: Sensor,

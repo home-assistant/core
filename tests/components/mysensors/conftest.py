@@ -118,7 +118,7 @@ async def serial_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_GATEWAY_TYPE: CONF_GATEWAY_TYPE_SERIAL,
-            CONF_VERSION: "2.4",
+            CONF_VERSION: "2.3",
             CONF_DEVICE: "/test/device",
             CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
         },
@@ -126,8 +126,15 @@ async def serial_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
 
 
 @pytest.fixture(name="config_entry")
-def config_entry_fixture(serial_entry: MockConfigEntry) -> MockConfigEntry:
+def config_entry_fixture(
+    serial_entry: MockConfigEntry, request: pytest.FixtureRequest
+) -> MockConfigEntry:
     """Provide the config entry used for integration set up."""
+    if hasattr(request, "param"):
+        return MockConfigEntry(
+            domain=DOMAIN,
+            data={**serial_entry.data, CONF_VERSION: request.param},
+        )
     return serial_entry
 
 
