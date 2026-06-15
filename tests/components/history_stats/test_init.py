@@ -157,8 +157,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
         history_stats_config_entry.entry_id not in hass.config_entries.async_entry_ids()
     )
 
-    # Check we got the expected events
-    assert events == ["remove"]
+    # Check we got the expected events: the helper entity's device link is
+    # cleared when the source device is removed (the helper entity belongs to
+    # the history_stats config entry, not the removed source config entry),
+    # then the helper entity is removed when the history_stats config entry is
+    # removed. Both registry actions are observed in fire order.
+    assert events == ["update", "remove"]
 
 
 @pytest.mark.usefixtures("recorder_mock")
