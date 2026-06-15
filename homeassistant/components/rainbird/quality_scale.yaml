@@ -34,11 +34,7 @@ rules:
   docs-removal-instructions: todo
   test-before-setup: done
   docs-high-level-description: done
-  config-flow-test-coverage:
-    status: todo
-    comment: |
-      All config flow tests should finish with CREATE_ENTRY and ABORT to
-      test they are able to recover from errors
+  config-flow-test-coverage: done
   docs-actions: done
   runtime-data: done
 

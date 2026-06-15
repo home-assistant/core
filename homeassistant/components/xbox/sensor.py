@@ -11,7 +11,6 @@ from pythonxbox.api.provider.smartglass.models import SmartglassConsole, Storage
 from pythonxbox.api.provider.titlehub.models import Title
 
 from homeassistant.components.sensor import (
-    DOMAIN as SENSOR_DOMAIN,
     EntityCategory,
     SensorDeviceClass,
     SensorEntity,
@@ -27,13 +26,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import XboxConfigEntry, XboxConsolesCoordinator
-from .entity import (
-    MAP_MODEL,
-    XboxBaseEntity,
-    XboxBaseEntityDescription,
-    check_deprecated_entity,
-    to_https,
-)
+from .entity import MAP_MODEL, XboxBaseEntity, XboxBaseEntityDescription, to_https
 
 PARALLEL_UPDATES = 0
 
@@ -58,8 +51,6 @@ class XboxSensor(StrEnum):
 
     STATUS = "status"
     GAMER_SCORE = "gamer_score"
-    ACCOUNT_TIER = "account_tier"
-    GOLD_TENURE = "gold_tenure"
     LAST_ONLINE = "last_online"
     FOLLOWING = "following"
     FOLLOWER = "follower"
@@ -201,16 +192,6 @@ SENSOR_DESCRIPTIONS: tuple[XboxSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     XboxSensorEntityDescription(
-        key=XboxSensor.ACCOUNT_TIER,
-        value_fn=lambda _, __: None,
-        deprecated=True,
-    ),
-    XboxSensorEntityDescription(
-        key=XboxSensor.GOLD_TENURE,
-        value_fn=lambda _, __: None,
-        deprecated=True,
-    ),
-    XboxSensorEntityDescription(
         key=XboxSensor.LAST_ONLINE,
         translation_key=XboxSensor.LAST_ONLINE,
         value_fn=(
@@ -304,9 +285,6 @@ async def async_setup_entry(
         [
             XboxSensorEntity(presence, config_entry.unique_id, description)
             for description in SENSOR_DESCRIPTIONS
-            if check_deprecated_entity(
-                hass, config_entry.unique_id, description, SENSOR_DOMAIN
-            )
         ]
     )
     for subentry_id, subentry in config_entry.subentries.items():
@@ -315,9 +293,6 @@ async def async_setup_entry(
                 XboxSensorEntity(presence, subentry.unique_id, description)
                 for description in SENSOR_DESCRIPTIONS
                 if subentry.unique_id
-                and check_deprecated_entity(
-                    hass, subentry.unique_id, description, SENSOR_DOMAIN
-                )
                 and subentry.unique_id in presence.data.presence
                 and subentry.subentry_type == "friend"
             ],

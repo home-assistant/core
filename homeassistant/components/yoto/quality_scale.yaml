@@ -57,20 +57,14 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: Only the media_player entity ships in this PR; no diagnostic entities yet.
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
     status: exempt
-    comment: Only the media_player entity ships in this PR; no entities are disabled by default.
-  entity-translations:
-    status: exempt
-    comment: The media_player uses the device name; no translatable strings yet.
+    comment: No noisy or less popular entities; nothing is disabled by default.
+  entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: No custom icon translations are needed yet.
+  icon-translations: done
   reconfiguration-flow:
     status: exempt
     comment: Authorization is the only configuration; reauth covers re-linking the account.
