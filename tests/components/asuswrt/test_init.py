@@ -40,6 +40,7 @@ async def test_disconnect_on_stop(hass: HomeAssistant, connect_legacy) -> None:
 async def test_device_registry(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the router device registry entry, including the network MAC connection."""
@@ -52,7 +53,6 @@ async def test_device_registry(
 
     # Router sensors are disabled by default; pre-enable one so the router
     # device is registered in the device registry.
-    entity_registry = er.async_get(hass)
     unique_id_prefix = slugify(ROUTER_MAC_ADDR)
     sensor_id = slugify("sensor_rx_bytes")
     entity_registry.async_get_or_create(
