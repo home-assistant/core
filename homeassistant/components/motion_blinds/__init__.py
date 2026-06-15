@@ -3,7 +3,6 @@
 
 import asyncio
 import logging
-import socket
 
 from motionblinds import AsyncMotionMulticast
 
