@@ -277,6 +277,37 @@ async def test_form_entity_disabled(
     assert result2["errors"] == {"base": "entity_disabled"}
 
 
+async def test_form_entity_unknown_error(
+    hass: HomeAssistant,
+    mock_simple_nws_config,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test we handle unknown error in entity path."""
+    mock_instance = mock_simple_nws_config.return_value
+    mock_instance.set_station.side_effect = ValueError
+
+    entry = entity_registry.async_get_or_create("person", "person", "test_user")
+    entity_registry.async_get_or_create("person", "person", "other_user")
+    hass.states.async_set(
+        entry.entity_id,
+        "home",
+        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await _select_menu_option(hass, result["flow_id"], "entity")
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entry.entity_id},
+    )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_form_entity_cannot_connect(
     hass: HomeAssistant,
     mock_simple_nws_config,

@@ -181,7 +181,6 @@ async def test_location_change_updates_coordinates(
         "away",
         {ATTR_LATITUDE: 41.0, ATTR_LONGITUDE: -81.0},
     )
-    await config_entry.runtime_data.coordinator_observation.async_refresh()
     await hass.async_block_till_done()
 
     assert mock_simple_nws.call_count == 2
@@ -224,7 +223,6 @@ async def test_location_change_resets_api_success_time(
         "away",
         {ATTR_LATITUDE: 41.0, ATTR_LONGITUDE: -81.0},
     )
-    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
     assert coordinator.last_update_success is False
@@ -320,7 +318,6 @@ async def test_location_entity_becomes_unavailable_no_update(
     await hass.async_block_till_done()
 
     hass.states.async_set(entity.entity_id, "unknown", {})
-    await config_entry.runtime_data.coordinator_observation.async_refresh()
     await hass.async_block_till_done()
 
     assert mock_simple_nws.call_count == 1
@@ -328,11 +325,22 @@ async def test_location_entity_becomes_unavailable_no_update(
     assert config_entry.runtime_data.longitude == -80.0
 
 
-async def test_entity_removed_triggers_reload(
-    hass: HomeAssistant, mock_simple_nws, entity_registry: er.EntityRegistry
+@pytest.mark.parametrize(
+    ("action", "expected_state"),
+    [
+        pytest.param("remove", ConfigEntryState.SETUP_ERROR, id="removed"),
+        pytest.param("rename", ConfigEntryState.SETUP_RETRY, id="renamed"),
+    ],
+)
+async def test_entity_registry_change_triggers_reload(
+    hass: HomeAssistant,
+    mock_simple_nws,
+    entity_registry: er.EntityRegistry,
+    action: str,
+    expected_state: ConfigEntryState,
 ) -> None:
-    """Test that removing the tracked entity triggers a config entry reload."""
-    entry = entity_registry.async_get_or_create("person", "person", "removable")
+    """Test that removing or renaming the tracked entity triggers a config entry reload."""
+    entry = entity_registry.async_get_or_create("person", "person", "test_user")
     entity_registry.async_get_or_create("person", "person", "other_user")
     hass.states.async_set(
         entry.entity_id,
@@ -350,40 +358,15 @@ async def test_entity_removed_triggers_reload(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_registry.async_remove(entry.entity_id)
+    if action == "remove":
+        entity_registry.async_remove(entry.entity_id)
+    else:
+        entity_registry.async_update_entity(
+            entry.entity_id, new_entity_id="person.renamed_person"
+        )
     await hass.async_block_till_done()
 
-    assert config_entry.state is ConfigEntryState.SETUP_ERROR
-
-
-async def test_entity_renamed_triggers_reload(
-    hass: HomeAssistant, mock_simple_nws, entity_registry: er.EntityRegistry
-) -> None:
-    """Test that renaming the tracked entity triggers a config entry reload."""
-    entry = entity_registry.async_get_or_create("person", "person", "renamable")
-    entity_registry.async_get_or_create("person", "person", "other_user")
-    hass.states.async_set(
-        entry.entity_id,
-        "home",
-        {ATTR_LATITUDE: 40.0, ATTR_LONGITUDE: -80.0},
-    )
-
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_API_KEY: "test", CONF_LOCATION_ENTITY: entry.id},
-    )
-    config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    entity_registry.async_update_entity(
-        entry.entity_id, new_entity_id="person.renamed_person"
-    )
-    await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is expected_state
 
 
 async def test_unload_with_location_entity(

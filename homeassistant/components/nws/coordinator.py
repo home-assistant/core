@@ -77,14 +77,19 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         if state is None:
             if not self._location_state_warned:
                 _LOGGER.warning(
-                    "Location entity %s is unavailable",
+                    "Location entity %s is unavailable; skipping location update",
                     self._location_entity_id,
                 )
                 self._location_state_warned = True
             return
-        if not has_location(state):
-            return
         self._location_state_warned = False
+
+        if not has_location(state):
+            _LOGGER.debug(
+                "Location entity %s has no location attributes; skipping location update",
+                self._location_entity_id,
+            )
+            return
         new_lat = state.attributes[ATTR_LATITUDE]
         new_lon = state.attributes[ATTR_LONGITUDE]
         if self._previous_position is not None:
@@ -94,11 +99,18 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             dist = location_util.distance(prev_lat, prev_lon, new_lat, new_lon)
             if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
                 return
-        client_session = async_get_clientsession(self.hass)
-        api_key = self.config_entry.data[CONF_API_KEY]
-        station = self.config_entry.data.get(CONF_STATION)
-        new_nws = SimpleNWS(new_lat, new_lon, api_key, client_session)
-        await new_nws.set_station(station)
+        try:
+            client_session = async_get_clientsession(self.hass)
+            api_key = self.config_entry.data[CONF_API_KEY]
+            station = self.config_entry.data.get(CONF_STATION)
+            new_nws = SimpleNWS(new_lat, new_lon, api_key, client_session)
+            await new_nws.set_station(station)
+        except aiohttp.ClientError, NwsError:
+            _LOGGER.exception(
+                "Failed to update location for %s, continuing with previous station",
+                self._location_entity_id,
+            )
+            return
         _LOGGER.info(
             "NWS API updated: station %s at (%.4f, %.4f)",
             new_nws.station,
@@ -114,19 +126,19 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         self._previous_position = (new_lat, new_lon)
         self.initialized = False
         self.last_api_success_time = None
+        runtime_data.coordinator_forecast.name = (
+            f"NWS forecast station {new_nws.station}"
+        )
+        runtime_data.coordinator_forecast_hourly.name = (
+            f"NWS forecast hourly station {new_nws.station}"
+        )
         await runtime_data.coordinator_forecast.async_refresh()
         await runtime_data.coordinator_forecast_hourly.async_refresh()
 
     async def _async_update_data(self) -> None:
         """Update data via library."""
         if self._location_entity_id:
-            try:
-                await self._async_check_location_change()
-            except aiohttp.ClientError, NwsError:
-                _LOGGER.exception(
-                    "Failed to update location for %s, continuing with previous station",
-                    self._location_entity_id,
-                )
+            await self._async_check_location_change()
         if not self.initialized:
             await self._async_first_update_data()
         else:

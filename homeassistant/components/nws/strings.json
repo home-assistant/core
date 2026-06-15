@@ -7,7 +7,7 @@
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "entity_disabled": "The selected entity is disabled. Please enable it first.",
       "entity_no_coordinates": "The selected entity does not have location coordinates.",
-      "entity_not_found": "The selected entity was not found in the entity registry.",
+      "entity_not_found": "The selected entity could not be found. Please choose a different entity.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -43,10 +43,10 @@
   },
   "exceptions": {
     "entity_disabled": {
-      "message": "The location entity is disabled. Please enable it or reconfigure the integration."
+      "message": "The location entity is disabled. Please enable it or remove this integration entry and set it up again."
     },
     "entity_not_found": {
-      "message": "The location entity was not found in the entity registry. Please reconfigure the integration."
+      "message": "The location entity could not be found. Please remove this integration entry and set it up again."
     },
     "entity_unavailable": {
       "message": "The location entity {entity_id} is not available or does not have location coordinates. Setup will be retried."

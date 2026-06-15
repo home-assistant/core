@@ -25,6 +25,8 @@ from homeassistant.components.weather import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     UnitOfLength,
     UnitOfPressure,
     UnitOfSpeed,
@@ -98,7 +100,7 @@ async def async_setup_entry(
         entity_id := entity_registry.async_get_entity_id(
             WEATHER_DOMAIN,
             DOMAIN,
-            f"{base_unique_id(entry.data['latitude'], entry.data['longitude'])}_{HOURLY}",
+            f"{base_unique_id(entry.data[CONF_LATITUDE], entry.data[CONF_LONGITUDE])}_{HOURLY}",
         )
     ):
         entity_registry.async_remove(entity_id)
@@ -124,11 +126,6 @@ class ExtraForecast(TypedDict, total=False):
     # extra attributes
     detailed_description: str | None
     short_description: str | None
-
-
-def _calculate_unique_id(entry: ConfigEntry, mode: str) -> str:
-    """Calculate unique ID."""
-    return f"{get_base_unique_id(entry)}_{mode}"
 
 
 class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]]):
@@ -159,7 +156,7 @@ class NWSWeather(CoordinatorWeatherEntity[TimestampDataUpdateCoordinator[None]])
         )
         self._nws_data = nws_data
 
-        self._attr_unique_id = _calculate_unique_id(entry, DAYNIGHT)
+        self._attr_unique_id = f"{get_base_unique_id(entry)}_{DAYNIGHT}"
         self._attr_device_info = device_info(entry, nws_data)
 
     async def async_added_to_hass(self) -> None:

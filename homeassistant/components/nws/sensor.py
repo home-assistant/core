@@ -153,7 +153,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the NWS weather platform."""
     nws_data = entry.runtime_data
-    station = nws_data.api.station
 
     async_add_entities(
         NWSSensor(
@@ -161,7 +160,6 @@ async def async_setup_entry(
             entry=entry,
             nws_data=nws_data,
             description=description,
-            station=station,
         )
         for description in SENSOR_TYPES
     )
@@ -180,15 +178,12 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
         entry: ConfigEntry,
         nws_data: NWSData,
         description: NWSSensorEntityDescription,
-        station: str,
     ) -> None:
         """Initialise the platform with a data instance."""
         super().__init__(nws_data.coordinator_observation)
         self._nws_data = nws_data
         self.entity_description = description
 
-        if not nws_data.location_entity_id:
-            self._attr_name = f"{station} {description.name}"
         if hass.config.units is US_CUSTOMARY_SYSTEM:
             self._attr_native_unit_of_measurement = description.unit_convert
         self._attr_device_info = device_info(entry, nws_data)
@@ -200,11 +195,9 @@ class NWSSensor(CoordinatorEntity[TimestampDataUpdateCoordinator[None]], SensorE
         return self._nws_data.api
 
     @property
-    def name(self) -> str | None:
+    def name(self) -> str:
         """Return the sensor name with current station."""
-        if self._nws_data.location_entity_id:
-            return f"{self._nws.station} {self.entity_description.name}"
-        return self._attr_name
+        return f"{self._nws.station} {self.entity_description.name}"
 
     @property
     def native_value(self) -> float | datetime | None:
