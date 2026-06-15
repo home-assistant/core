@@ -852,7 +852,7 @@ class DefaultAgent(ConversationEntity):
                 )
 
         # Build filtered slot list
-        text_lower = text.strip().lower()
+        text_lower = remove_punctuation(text).strip().lower()
         return TextSlotList(
             name="name",
             values=[
@@ -889,7 +889,11 @@ class DefaultAgent(ConversationEntity):
             for name in intent.async_get_entity_aliases(
                 self.hass, entity_entry, state=state
             ):
-                yield (name, name, context)
+                # The input text is matched with punctuation removed (see
+                # remove_punctuation usage below), so the name must be stripped
+                # too or punctuated aliases never match. The original name is
+                # kept as the output value for matching against the registry.
+                yield (remove_punctuation(name).strip(), name, context)
 
     def _recognize_strict(
         self,
@@ -1162,7 +1166,7 @@ class DefaultAgent(ConversationEntity):
         areas = ar.async_get(self.hass)
         area_names = []
         for area in areas.async_list_areas():
-            area_names.append((area.name, area.name))
+            area_names.append((remove_punctuation(area.name).strip(), area.name))
             if not area.aliases:
                 continue
 
@@ -1171,13 +1175,13 @@ class DefaultAgent(ConversationEntity):
                 if not alias:
                     continue
 
-                area_names.append((alias, alias))
+                area_names.append((remove_punctuation(alias).strip(), alias))
 
         # Expose all floors.
         floors = fr.async_get(self.hass)
         floor_names = []
         for floor in floors.async_list_floors():
-            floor_names.append((floor.name, floor.name))
+            floor_names.append((remove_punctuation(floor.name).strip(), floor.name))
             if not floor.aliases:
                 continue
 
@@ -1186,7 +1190,7 @@ class DefaultAgent(ConversationEntity):
                 if not alias:
                     continue
 
-                floor_names.append((alias, floor.name))
+                floor_names.append((remove_punctuation(alias).strip(), floor.name))
 
         # Build trie
         self._exposed_names_trie = Trie()
