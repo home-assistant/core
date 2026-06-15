@@ -41,7 +41,7 @@
         "name": "Meter value"
       },
       "out_volume": {
-        "name": "Output last hour"
+        "name": "Outflow"
       },
       "water_level": {
         "name": "Water level"

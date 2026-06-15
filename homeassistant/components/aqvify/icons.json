@@ -1,8 +1,14 @@
 {
   "entity": {
     "sensor": {
+      "in_flow": {
+        "default": "mdi:water-plus-outline"
+      },
       "meter_value": {
         "default": "mdi:waves-arrow-up"
+      },
+      "out_volume": {
+        "default": "mdi:water-pump"
       },
       "water_level": {
         "default": "mdi:waves"

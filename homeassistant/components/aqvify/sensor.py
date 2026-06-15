@@ -16,7 +16,6 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfLength, UnitOfVolume, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.util import dt as dt_util
 
 from .coordinator import AqvifyConfigEntry
 from .entity import AqvifyAggrEntity, AqvifyEntity
@@ -70,8 +69,8 @@ ENTITIES_AGGR: tuple[AqvifySensorEntityDescription, ...] = (
         key="out_volume",
         translation_key="out_volume",
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        state_class=SensorStateClass.TOTAL,
-        device_class=SensorDeviceClass.VOLUME,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        device_class=SensorDeviceClass.WATER,
         suggested_display_precision=1,
         value_fn=lambda value: value.out_volume,  # type: ignore[union-attr]
     ),
@@ -121,11 +120,11 @@ class AqvifyAggrSensor(AqvifyAggrEntity, SensorEntity):
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.device_key])
 
-    @property
-    def last_reset(self) -> datetime | None:
-        """These values reset every update."""
-        if self.entity_description.key == "out_volume":
-            return dt_util.parse_datetime(
-                self.coordinator.data[self.device_key].date_time
-            )
-        return None
+    # @property
+    # def last_reset(self) -> datetime | None:
+    #     """These values reset every update."""
+    #     if self.entity_description.key == "out_volume":
+    #         return dt_util.parse_datetime(
+    #             self.coordinator.data[self.device_key].date_time
+    #         )
+    #     return None
