@@ -330,6 +330,16 @@ BEHAVIOR_FIRST: Final = "first"
 BEHAVIOR_ALL: Final = "all"
 BEHAVIOR_EACH: Final = "each"
 
+
+def _backwards_compatible_behavior(value: Any) -> Any:
+    """Convert legacy behavior values to new ones."""
+    if value == "any":
+        return BEHAVIOR_EACH
+    if value == "last":
+        return BEHAVIOR_ALL
+    return value
+
+
 ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_TARGET): cv.TARGET_FIELDS,
@@ -340,8 +350,9 @@ ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
 ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): vol.In(
-                [BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): vol.All(
+                _backwards_compatible_behavior,
+                vol.In([BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]),
             ),
             vol.Optional(CONF_FOR): cv.positive_time_period,
         },
