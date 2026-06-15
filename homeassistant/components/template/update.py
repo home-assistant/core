@@ -138,6 +138,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
     """Representation of a template update features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _restore_state_properties = ("_attr_installed_version", "_attr_latest_version")
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -241,14 +242,8 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
 
     def restore_last_state_state(self, last_state: State) -> None:
         """Restore the state from the last state."""
-        self._attr_installed_version = last_state.attributes[ATTR_INSTALLED_VERSION]
-        self._attr_latest_version = last_state.attributes[ATTR_LATEST_VERSION]
-
-    def additional_restore_state_conditions(self) -> bool:
-        """Check if additional restore state conditions are met."""
-        return (
-            self._attr_installed_version is None and self._attr_latest_version is None
-        )
+        self._attr_installed_version = last_state.attributes.get(ATTR_INSTALLED_VERSION)
+        self._attr_latest_version = last_state.attributes.get(ATTR_LATEST_VERSION)
 
 
 class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):

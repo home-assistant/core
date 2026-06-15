@@ -165,6 +165,7 @@ class AbstractTemplateAlarmControlPanel(
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_properties = ("_attr_alarm_state",)
 
     # The super init is not called because
     # TemplateEntity calls AbstractTemplateEntity.__init__.
@@ -265,10 +266,6 @@ class AbstractTemplateAlarmControlPanel(
             script=self._action_scripts.get(CONF_TRIGGER_ACTION),
             code=code,
         )
-
-    def additional_restore_state_conditions(self) -> bool:
-        """Check if additional restore state conditions are met."""
-        return self._attr_alarm_state is None
 
     def restore_last_state_state(self, last_state: State) -> None:
         """Restore the state from the last state."""

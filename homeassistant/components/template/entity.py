@@ -19,7 +19,6 @@ from homeassistant.const import (
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
-from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.script import Script, _VarsType
 from homeassistant.helpers.template import Template, TemplateStateFromEntityId
 from homeassistant.helpers.typing import ConfigType
@@ -47,7 +46,11 @@ class AbstractTemplateEntity(Entity):
     _optimistic_entity: bool = False
     _extra_optimistic_options: tuple[str, ...] | None = None
     _state_option: str | None = None
-    _extra_restore_data: bool = False
+    _restore_state_extra_data: Any | None = None
+
+    # Restore state properties.  The state will be restored if set None.
+    # If a tuple is supplied, all properties must be None for the state to restore.
+    _restore_state_properties: tuple[str, ...] | None = None
 
     def __init__(
         self,
@@ -218,26 +221,49 @@ class AbstractTemplateEntity(Entity):
             context=context,
         )
 
-    async def async_get_last_template_data(self) -> ExtraStoredData | None:
+    async def async_get_last_template_data(
+        self,
+    ) -> Any | None:
         """Get the last template data."""
-
-    async def _async_get_last_template_data(self) -> ExtraStoredData | object | None:
-        """Get the last template data."""
-        if not self._extra_restore_data:
+        if self._restore_state_extra_data is None or not hasattr(
+            self, "async_get_last_extra_data"
+        ):
             return _SENTINEL
-        return await self.async_get_last_template_data()
+
+        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
+            return None
+
+        return self._restore_state_extra_data.from_dict(
+            restored_last_extra_data.as_dict()
+        )
+
+    def restore_extra_data(self, extra_data: Any) -> None:
+        """Restore extra data from the last state."""
 
     async def async_restore_last_state(self) -> None:
         """Restore the state from the last state."""
         if not hasattr(self, "async_get_last_state"):
             return
 
-        last_state: State | None
+        last_state: State | None = await self.async_get_last_state()
+        if last_state is None:
+            return
+
+        # Handle extra data.
+        extra_data = _SENTINEL
+        if self._restore_state_extra_data is not None:
+            extra_data = await self.async_get_last_template_data()
+
         if (
-            (last_state := await self.async_get_last_state()) is None
-            or (extra_data := await self._async_get_last_template_data()) is None
+            extra_data is None
             or last_state.state in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            or not self.additional_restore_state_conditions()
+            or (
+                self._restore_state_properties is not None
+                and any(
+                    getattr(self, attr) is not None
+                    for attr in self._restore_state_properties
+                )
+            )
         ):
             return
 
@@ -248,15 +274,8 @@ class AbstractTemplateEntity(Entity):
         if extra_data is not _SENTINEL:
             self.restore_extra_data(extra_data)
 
-    def additional_restore_state_conditions(self) -> bool:
-        """Check if additional restore state conditions are met."""
-        return False
-
     def restore_last_state_state(self, last_state: State) -> None:
         """Restore the state from the last state."""
-
-    def restore_extra_data(self, extra_data: Any) -> None:
-        """Restore extra data from the last state."""
 
     @abstractmethod
     def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
@@ -279,7 +298,7 @@ class AbstractTemplateEntity(Entity):
             self.restore_attribute(conf_key, _attr, value)
             self._attr_extra_state_attributes[attr] = value
 
-        # Restore attributes from templates
+        # Restore attributes from template attributes
         if self._attribute_templates:
             for attr in self._config[CONF_ATTRIBUTES]:
                 if attr not in last_state.attributes:

@@ -181,7 +181,8 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
-    _extra_restore_data = True
+    _restore_state_extra_data = SensorExtraStoredData
+    _restore_state_properties = ("_attr_native_value",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -229,14 +230,6 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     def restore_extra_data(self, extra_data: SensorExtraStoredData) -> None:
         """Restore the extra data."""
         self._attr_native_value = extra_data.native_value
-
-    def additional_restore_state_conditions(self) -> bool:
-        """Check if additional restore state conditions are met."""
-        return self._attr_native_value is None
-
-    async def async_get_last_template_data(self) -> SensorExtraStoredData | None:
-        """Get the last template data."""
-        return await self.async_get_last_sensor_data()
 
 
 class StateSensorEntity(TemplateEntity, AbstractTemplateSensor):

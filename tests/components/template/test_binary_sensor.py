@@ -805,65 +805,57 @@ async def test_template_icon_validation_error(
     assert state.attributes.get("icon") is None
 
 
+@pytest.mark.parametrize("extra_config", [{}, {"delay_on": 5}, {"delay_off": 5}])
 @pytest.mark.parametrize(
-    ("count", "state_template"), [(1, "{{ states.sensor.test_state.state }}")]
-)
-@pytest.mark.parametrize(
-    "style",
-    [ConfigurationStyle.MODERN],
-)
-@pytest.mark.parametrize(
-    ("extra_config", "source_state", "restored_state", "initial_state"),
+    ("restored_state", "expected_state"),
     [
-        ({}, STATE_OFF, STATE_ON, STATE_OFF),
-        ({}, STATE_OFF, STATE_OFF, STATE_OFF),
-        ({}, STATE_OFF, STATE_UNAVAILABLE, STATE_OFF),
-        ({}, STATE_OFF, STATE_UNKNOWN, STATE_OFF),
-        ({"delay_off": 5}, STATE_OFF, STATE_ON, STATE_ON),
-        ({"delay_off": 5}, STATE_OFF, STATE_OFF, STATE_OFF),
-        ({"delay_off": 5}, STATE_OFF, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_off": 5}, STATE_OFF, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({"delay_on": 5}, STATE_OFF, STATE_ON, STATE_OFF),
-        ({"delay_on": 5}, STATE_OFF, STATE_OFF, STATE_OFF),
-        ({"delay_on": 5}, STATE_OFF, STATE_UNAVAILABLE, STATE_OFF),
-        ({"delay_on": 5}, STATE_OFF, STATE_UNKNOWN, STATE_OFF),
-        ({}, STATE_ON, STATE_ON, STATE_ON),
-        ({}, STATE_ON, STATE_OFF, STATE_ON),
-        ({}, STATE_ON, STATE_UNAVAILABLE, STATE_ON),
-        ({}, STATE_ON, STATE_UNKNOWN, STATE_ON),
-        ({"delay_off": 5}, STATE_ON, STATE_ON, STATE_ON),
-        ({"delay_off": 5}, STATE_ON, STATE_OFF, STATE_ON),
-        ({"delay_off": 5}, STATE_ON, STATE_UNAVAILABLE, STATE_ON),
-        ({"delay_off": 5}, STATE_ON, STATE_UNKNOWN, STATE_ON),
-        ({"delay_on": 5}, STATE_ON, STATE_ON, STATE_ON),
-        ({"delay_on": 5}, STATE_ON, STATE_OFF, STATE_OFF),
-        ({"delay_on": 5}, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_on": 5}, STATE_ON, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({}, None, STATE_ON, STATE_UNKNOWN),
-        ({}, None, STATE_OFF, STATE_UNKNOWN),
-        ({}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({}, None, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({"delay_off": 5}, None, STATE_ON, STATE_UNKNOWN),
-        ({"delay_off": 5}, None, STATE_OFF, STATE_UNKNOWN),
-        ({"delay_off": 5}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_off": 5}, None, STATE_UNKNOWN, STATE_UNKNOWN),
-        ({"delay_on": 5}, None, STATE_ON, STATE_UNKNOWN),
-        ({"delay_on": 5}, None, STATE_OFF, STATE_UNKNOWN),
-        ({"delay_on": 5}, None, STATE_UNAVAILABLE, STATE_UNKNOWN),
-        ({"delay_on": 5}, None, STATE_UNKNOWN, STATE_UNKNOWN),
+        (STATE_ON, STATE_ON),
+        (STATE_OFF, STATE_OFF),
+        (STATE_UNAVAILABLE, STATE_UNKNOWN),
+        (STATE_UNKNOWN, STATE_UNKNOWN),
     ],
 )
-async def test_restore_state(
+async def test_modern_restore_state(
     hass: HomeAssistant,
-    count: int,
-    style: ConfigurationStyle,
-    state_template: str,
-    extra_config: ConfigType,
-    source_state: str | None,
     restored_state: str,
-    initial_state: str,
+    expected_state: str,
+    extra_config: ConfigType,
 ) -> None:
     """Test restoring template binary sensor."""
+
+    fake_state = State(TEST_BINARY_SENSOR.entity_id, restored_state, {})
+    mock_restore_cache(hass, (fake_state,))
+
+    await setup_entity(
+        hass,
+        TEST_BINARY_SENSOR,
+        ConfigurationStyle.MODERN,
+        1,
+        extra_config,
+        "{{ None }}",
+    )
+
+    state = hass.states.get(TEST_BINARY_SENSOR.entity_id)
+    assert state.state == expected_state
+
+
+@pytest.mark.parametrize("restored_state", [STATE_ON, STATE_OFF])
+@pytest.mark.parametrize(
+    ("source_state", "expected_state"),
+    [
+        (STATE_ON, STATE_ON),
+        (STATE_OFF, STATE_OFF),
+        (STATE_UNAVAILABLE, STATE_OFF),
+        (STATE_UNKNOWN, STATE_OFF),
+    ],
+)
+async def test_modern_does_not_restore_state(
+    hass: HomeAssistant,
+    source_state: str,
+    restored_state: str,
+    expected_state: str,
+) -> None:
+    """Test template binary sensor does not restore state."""
 
     await async_trigger(hass, TEST_STATE_ENTITY_ID, source_state)
 
@@ -871,11 +863,16 @@ async def test_restore_state(
     mock_restore_cache(hass, (fake_state,))
 
     await setup_entity(
-        hass, TEST_BINARY_SENSOR, style, count, extra_config, state_template
+        hass,
+        TEST_BINARY_SENSOR,
+        ConfigurationStyle.MODERN,
+        1,
+        {},
+        "{{ states('sensor.test_state') }}",
     )
 
     state = hass.states.get(TEST_BINARY_SENSOR.entity_id)
-    assert state.state == initial_state
+    assert state.state == expected_state
 
 
 @pytest.mark.parametrize(

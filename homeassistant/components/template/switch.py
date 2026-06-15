@@ -118,6 +118,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_STATE
+    _restore_state_properties = ("is_on",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -157,10 +158,6 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     def restore_last_state_state(self, last_state: State) -> None:
         """Restore the state from the last state."""
         self._attr_is_on = last_state.state == STATE_ON
-
-    def additional_restore_state_conditions(self) -> bool:
-        """Check if additional restore state conditions are met."""
-        return self.is_on is None
 
 
 class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):

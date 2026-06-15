@@ -469,7 +469,8 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_CONDITION
     _optimistic_entity = True
-    _extra_restore_data = True
+    _restore_state_extra_data = WeatherExtraStoredData
+    _restore_state_properties = ("_attr_condition",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -646,16 +647,6 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
         self._attr_wind_bearing = extra_data.last_wind_bearing
         self._attr_native_wind_gust_speed = extra_data.last_wind_gust_speed
         self._attr_native_wind_speed = extra_data.last_wind_speed
-
-    def additional_restore_state_conditions(self) -> bool:
-        """Check if additional restore state conditions are met."""
-        return self._attr_condition is None
-
-    async def async_get_last_template_data(self) -> WeatherExtraStoredData | None:
-        """Get the last template data."""
-        if (restored_last_extra_data := await self.async_get_last_extra_data()) is None:
-            return None
-        return WeatherExtraStoredData.from_dict(restored_last_extra_data.as_dict())
 
 
 class StateWeatherEntity(TemplateEntity, AbstractTemplateWeather):
