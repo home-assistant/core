@@ -24,6 +24,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -192,7 +193,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {
             CONF_HOST: reauth_entry.data[CONF_HOST],
-            CONF_SITE_ID: reauth_entry.title,
+            CONF_NAME: reauth_entry.title,
         }
 
         self.reauth_schema = {
@@ -230,9 +231,22 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=self.config, reload_on_update=False)
 
+        # Build a recognizable discovery title, e.g. "Dream Machine Pro
+        # (192.168.1.1)", instead of "default (<direct-connect domain>)":
+        # - show the console's own name, falling back to hostname then
+        #   product_name (model is omitted on purpose: it is None in the
+        #   discovery payload for current consoles);
+        # - show the LAN IP rather than the opaque direct-connect domain,
+        #   which is more recognizable on the discovery card (the connection
+        #   host in CONF_HOST is unchanged and still prefers direct-connect).
         self.context["title_placeholders"] = {
-            CONF_HOST: host,
-            CONF_SITE_ID: DEFAULT_SITE_ID,
+            CONF_NAME: (
+                discovery_info.get("name")
+                or discovery_info.get("hostname")
+                or discovery_info.get("product_name")
+                or "UniFi Network"
+            ),
+            CONF_HOST: source_ip,
         }
         self.context["configuration_url"] = f"https://{host}"
 
