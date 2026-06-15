@@ -20,7 +20,7 @@ from .udp import PowerShadesConnection, PowerShadesTimeoutError
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.BUTTON, Platform.COVER, Platform.SENSOR]
+PLATFORMS = [Platform.COVER]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
