@@ -102,6 +102,25 @@ async def test_rpi_firmware_entity_absent_on_unsupported_board(
     supervisor_client.os.raspberry_pi_firmware_info.assert_not_called()
 
 
+async def test_rpi_firmware_entity_absent_when_update_blocked(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """No entity when the update is blocked on this boot device."""
+    supervisor_client.os.raspberry_pi_firmware_info.return_value = (
+        RaspberryPiFirmwareInfo(
+            current_version="1765222194",
+            latest_version="1778498402",
+            update_available=True,
+            update_blocked=True,
+            update_pending=False,
+            blocked_reason="unsupported_boot_device",
+        )
+    )
+    await _setup_rpi(hass, "rpi5-64")
+
+    assert hass.states.get(RPI_FIRMWARE_ENTITY_ID) is None
+
+
 async def test_rpi_firmware_platform_retries_when_os_info_unavailable(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
