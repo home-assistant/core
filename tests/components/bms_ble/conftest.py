@@ -276,7 +276,7 @@ class MockBleakClient(BleakClient):
         char_specifier: BleakGATTCharacteristic | int | str | UUID,
         **kwargs,
     ) -> bytearray:
-        """Mock write GATT characteristics."""
+        """Mock read GATT characteristics."""
         LOGGER.debug("MockBleakClient read_gatt_char %s", char_specifier)
         assert self._connected, "read_gatt_char called, but client not connected."
         return bytearray()

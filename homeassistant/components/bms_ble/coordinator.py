@@ -2,6 +2,7 @@
 
 from collections import deque
 from datetime import timedelta
+from itertools import islice
 from time import monotonic
 from typing import Final
 
@@ -93,7 +94,7 @@ class BTBmsCoordinator(DataUpdateCoordinator[BMSSample]):
         elif (
             not self._stale
             and self.link_quality <= 10
-            and list(self._link_q)[-10:] == [False] * 10
+            and list(islice(reversed(self._link_q), 10)) == [False] * 10
         ):
             rssi: Final = self.rssi
             LOGGER.error(

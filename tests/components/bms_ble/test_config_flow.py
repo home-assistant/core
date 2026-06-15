@@ -41,7 +41,7 @@ from tests.components.bluetooth import (
     ids=lambda param: param[2],
 )
 def bms_adv(request: pytest.FixtureRequest) -> BluetoothServiceInfoBleak:
-    """Return faulty response frame."""
+    """Return BMS advertisement data for discovery testing."""
     dev: Final[AdvertisementData] = request.param[0]
     address: Final[str] = request.param[1]
     return BluetoothServiceInfoBleak(
