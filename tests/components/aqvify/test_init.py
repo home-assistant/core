@@ -1,18 +1,22 @@
 """Test the Aqvify init."""
 
-from unittest.mock import MagicMock
+from datetime import timedelta
+from unittest.mock import MagicMock, Mock
 
+from aiohttp import ClientResponseError
+from freezegun.api import FrozenDateTimeFactory
 from pyaqvify import AqvifyAuthException
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 import homeassistant.helpers.device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_load_unload_entry(
@@ -38,8 +42,9 @@ async def test_load_unload_entry(
         (None, ConfigEntryState.LOADED),
         (AqvifyAuthException, ConfigEntryState.SETUP_ERROR),
         (TimeoutError, ConfigEntryState.SETUP_RETRY),
+        (ClientResponseError(Mock(), Mock(), status=500), ConfigEntryState.SETUP_RETRY),
     ],
-    ids=["no_error", "auth_error", "timeout_error"],
+    ids=["no_error", "auth_error", "timeout_error", "communications_error"],
 )
 async def test_setup_entry_with_error(
     hass: HomeAssistant,
@@ -73,3 +78,124 @@ async def test_device_registry_integration(
 
     # Snapshot the devices to ensure they have the correct structure
     assert device_entries == snapshot
+
+
+async def test_setup_entry_auth_error_triggers_reauth(
+    hass: HomeAssistant,
+    mock_aqvify_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setup with auth error triggers reauth flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_aqvify_client.async_get_account_id.side_effect = AqvifyAuthException(
+        "Authentication failed"
+    )
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["step_id"] == "reauth_confirm"
+
+
+WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
+EXPECTED_WATER_LEVEL = "-0.136786005"
+
+
+@pytest.mark.parametrize(
+    ("exception", "log_message", "expected_state"),
+    [
+        (
+            TimeoutError,
+            "Timeout occurred while communicating",
+            EXPECTED_WATER_LEVEL,
+        ),
+        (
+            ClientResponseError(Mock(), Mock(), status=500),
+            "An error occurred while communicating",
+            EXPECTED_WATER_LEVEL,
+        ),
+        (
+            AqvifyAuthException,
+            "Authentication failed",
+            "unavailable",
+        ),
+    ],
+    ids=["timeout_error", "communications_error", "auth_error"],
+)
+async def test_coordinator_get_devices_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aqvify_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    log_message: str,
+    expected_state: str,
+) -> None:
+    """Tests that the coordinator handles errors from async_get_devices."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_aqvify_client.async_get_devices.side_effect = exception
+
+    caplog.clear()
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == STATE_UNAVAILABLE
+    assert log_message in caplog.text
+
+    mock_aqvify_client.async_get_devices.side_effect = None
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("exception", "log_message", "expected_state"),
+    [
+        (TimeoutError, "Timeout occurred while communicating", EXPECTED_WATER_LEVEL),
+        (
+            ClientResponseError(Mock(), Mock(), status=500),
+            "An error occurred while communicating",
+            EXPECTED_WATER_LEVEL,
+        ),
+        (AqvifyAuthException, "Invalid API key.", "unavailable"),
+    ],
+    ids=["timeout_error", "communications_error", "auth_error"],
+)
+async def test_coordinator_get_device_data_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aqvify_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    exception: Exception,
+    log_message: str,
+    expected_state: str,
+) -> None:
+    """Tests that the coordinator handles errors from async_get_device_latest_data."""
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_aqvify_client.async_get_device_latest_data.side_effect = exception
+
+    caplog.clear()
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == STATE_UNAVAILABLE
+    assert log_message in caplog.text
+    mock_aqvify_client.async_get_device_latest_data.side_effect = None
+    freezer.tick(delta=timedelta(hours=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(WATER_LEVEL_SENSOR).state == expected_state

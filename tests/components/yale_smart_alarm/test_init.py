@@ -27,7 +27,7 @@ async def test_setup_entry(
         entry_id="1",
         unique_id="username",
         version=2,
-        minor_version=2,
+        minor_version=3,
     )
     entry.add_to_hass(hass)
 
@@ -87,7 +87,7 @@ async def test_migrate_entry(
 
     assert entry.state is ConfigEntryState.LOADED
     assert entry.version == 2
-    assert entry.minor_version == 2
+    assert entry.minor_version == 3
     assert entry.data == ENTRY_CONFIG
     assert entry.options == OPTIONS_CONFIG
 
@@ -95,3 +95,47 @@ async def test_migrate_entry(
     lock = entity_registry.async_get(lock_entity_id)
 
     assert lock.options == {"lock": {"default_code": "123456"}}
+
+
+async def test_migrate_panic_button_unique_id(
+    hass: HomeAssistant,
+    get_client: Mock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test migration of panic button unique_id from v2.2 to v2.3."""
+    entry = MockConfigEntry(
+        title=ENTRY_CONFIG["username"],
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data=ENTRY_CONFIG,
+        options=OPTIONS_CONFIG,
+        entry_id="1",
+        unique_id="username",
+        version=2,
+        minor_version=2,
+    )
+    entry.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "button",
+        DOMAIN,
+        "yale_smart_alarm-panic",
+        config_entry=entry,
+    )
+
+    with patch(
+        "homeassistant.components.yale_smart_alarm.coordinator.YaleSmartAlarmClient",
+        return_value=get_client,
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 2
+    assert entry.minor_version == 3
+
+    migrated = entity_registry.async_get_entity_id("button", DOMAIN, "1-panic")
+    assert migrated is not None
+    old = entity_registry.async_get_entity_id(
+        "button", DOMAIN, "yale_smart_alarm-panic"
+    )
+    assert old is None
