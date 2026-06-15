@@ -5,10 +5,11 @@ from unittest.mock import MagicMock, Mock
 
 from aiohttp import ClientResponseError
 from freezegun.api import FrozenDateTimeFactory
-from pyaqvify import AqvifyAuthException
+from pyaqvify import AqvifyAuthException, AqvifyDevices
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.aqvify.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -16,7 +17,14 @@ import homeassistant.helpers.device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
+
+WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
+EXPECTED_WATER_LEVEL = "-0.136786005"
 
 
 async def test_load_unload_entry(
@@ -100,8 +108,28 @@ async def test_setup_entry_auth_error_triggers_reauth(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
-WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
-EXPECTED_WATER_LEVEL = "-0.136786005"
+async def test_autoremove_stale_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aqvify_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test stale devices are removed."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert len(device_registry.devices) == 2
+
+    mock_aqvify_client.async_get_devices.return_value = AqvifyDevices(
+        await async_load_json_array_fixture(hass, "removed_devices.json", DOMAIN)
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(device_registry.devices) == 1
+    assert hass.states.get("sensor.device_2_water_level") is None
 
 
 @pytest.mark.parametrize(
