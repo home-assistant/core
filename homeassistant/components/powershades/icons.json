@@ -1,0 +1,31 @@
+{
+  "services": {
+    "toggle_shade": {
+      "service": "mdi:swap-vertical"
+    },
+    "set_upper_limit": {
+      "service": "mdi:arrow-up-bold-circle"
+    },
+    "set_lower_limit": {
+      "service": "mdi:arrow-down-bold-circle"
+    },
+    "clear_limits": {
+      "service": "mdi:eraser"
+    },
+    "step_up": {
+      "service": "mdi:arrow-up"
+    },
+    "step_down": {
+      "service": "mdi:arrow-down"
+    },
+    "jog_up": {
+      "service": "mdi:chevron-double-up"
+    },
+    "jog_down": {
+      "service": "mdi:chevron-double-down"
+    },
+    "set_shade_name": {
+      "service": "mdi:rename-box"
+    }
+  }
+}
