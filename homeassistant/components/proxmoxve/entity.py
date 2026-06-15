@@ -168,7 +168,11 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         """Resolve current node from coordinator's centralized map."""
         node = self.coordinator.vmid_node_map.get(self.device_id)
         if node is None:
-            raise HomeAssistantError(f"VM {self.device_id} not found on any node")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="entity_not_found",
+                translation_placeholders={"kind": "VM", "id": str(self.device_id)},
+            )
         return node
 
     @property
@@ -228,7 +232,12 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         node = self.coordinator.ctid_node_map.get(self.device_id)
         if node is None:
             raise HomeAssistantError(
-                f"Container {self.device_id} not found on any node"
+                translation_domain=DOMAIN,
+                translation_key="entity_not_found",
+                translation_placeholders={
+                    "kind": "Container",
+                    "id": str(self.device_id),
+                },
             )
         return node
 

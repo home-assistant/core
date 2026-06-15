@@ -197,8 +197,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 backups=resources.backups,
             )
 
-        self._async_add_remove_nodes(data)
         self._build_id_node_maps(data)
+        self._async_add_remove_nodes(data)
         return data
 
     def _build_id_node_maps(self, data: dict[str, ProxmoxNodeData]) -> None:
@@ -247,10 +247,11 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             for vmid, nodes in candidates.items()
         }
 
+    @override
     def async_set_updated_data(self, data: dict[str, ProxmoxNodeData]) -> None:
         """Update data, track new nodes/VMs and rebuild ID-to-node maps."""
-        self._async_add_remove_nodes(data)
         self._build_id_node_maps(data)
+        self._async_add_remove_nodes(data)
         super().async_set_updated_data(data)
 
     def _init_proxmox(self) -> None:
@@ -343,12 +344,9 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             _LOGGER.debug("New VMs found: %s", new_vms)
             self.known_vms.update(new_vms)
             new_vm_data: list[tuple[ProxmoxNodeData, dict[str, Any]]] = []
-            seen_vmids: set[int] = set()
-            for node_data in data.values():
-                for vmid in node_data.vms:
-                    if vmid in new_vms and vmid not in seen_vmids:
-                        seen_vmids.add(vmid)
-                        new_vm_data.append((node_data, node_data.vms[vmid]))
+            for vmid in new_vms:
+                node_name = self.vmid_node_map[vmid]
+                new_vm_data.append((data[node_name], data[node_name].vms[vmid]))
             for vms_callback in self.new_vms_callbacks:
                 vms_callback(new_vm_data)
 
@@ -362,14 +360,11 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             _LOGGER.debug("New containers found: %s", new_containers)
             self.known_containers.update(new_containers)
             new_container_data: list[tuple[ProxmoxNodeData, dict[str, Any]]] = []
-            seen_container_ids: set[int] = set()
-            for node_data in data.values():
-                for vmid in node_data.containers:
-                    if vmid in new_containers and vmid not in seen_container_ids:
-                        seen_container_ids.add(vmid)
-                        new_container_data.append(
-                            (node_data, node_data.containers[vmid])
-                        )
+            for vmid in new_containers:
+                node_name = self.ctid_node_map[vmid]
+                new_container_data.append(
+                    (data[node_name], data[node_name].containers[vmid])
+                )
             for containers_callback in self.new_containers_callbacks:
                 containers_callback(new_container_data)
 

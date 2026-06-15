@@ -4,10 +4,11 @@ from __future__ import annotations
 
 from unittest.mock import MagicMock, patch
 
+from homeassistant.components.proxmoxve.const import DOMAIN
 from homeassistant.components.proxmoxve.coordinator import ProxmoxNodeData
 from homeassistant.const import STATE_ON, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -334,3 +335,57 @@ async def test_id_node_map_is_deterministic_on_first_resolution(
 
     assert choice_a_vm == choice_b_vm == "pve1"
     assert choice_a_ct == choice_b_ct == "pve1"
+
+
+async def test_new_dual_node_entities_use_canonical_node(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that newly discovered dual-node VMIDs use the canonical node."""
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    coordinator = mock_config_entry.runtime_data
+
+    new_vm = {**_VM_100, "vmid": 999, "name": "vm-new"}
+    new_ct = {**_CT_200, "vmid": 888, "name": "ct-new"}
+    data = {
+        "pve2": ProxmoxNodeData(
+            node=_full_node("pve2", "node/pve2"),
+            vms={999: new_vm},
+            containers={888: new_ct},
+        ),
+        "pve1": ProxmoxNodeData(
+            node=_full_node("pve1", "node/pve1"),
+            vms={100: _VM_100, 101: _VM_101, 999: new_vm},
+            containers={200: _CT_200, 201: _CT_201, 888: new_ct},
+        ),
+    }
+
+    coordinator.async_set_updated_data(data)
+    await hass.async_block_till_done()
+
+    assert coordinator.vmid_node_map[999] == "pve1"
+    assert coordinator.ctid_node_map[888] == "pve1"
+
+    pve1_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_node_node/pve1")}
+    )
+    assert pve1_device is not None
+
+    vm_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_vm_999")}
+    )
+    assert vm_device is not None
+    assert vm_device.via_device_id == pve1_device.id
+
+    container_device = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_container_888")}
+    )
+    assert container_device is not None
+    assert container_device.via_device_id == pve1_device.id
