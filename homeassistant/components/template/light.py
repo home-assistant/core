@@ -519,7 +519,9 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         common_params = {}
 
         if ATTR_BRIGHTNESS in kwargs:
-            common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            common_params["brightness"] = brightness
+            common_params["brightness_pct"] = round(brightness / 255 * 100)
 
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
             common_params["transition"] = kwargs[ATTR_TRANSITION]
