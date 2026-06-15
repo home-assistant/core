@@ -150,7 +150,9 @@ class TTSMediaSource(MediaSource):
         if stream is None:
             raise Unresolvable("Stream not found")
 
-        return PlayMedia(stream.url, stream.content_type)
+        return PlayMedia(
+            stream.url, stream.content_type, path=stream.async_get_media_path()
+        )
 
     async def async_browse_media(
         self,
