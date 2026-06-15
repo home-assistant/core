@@ -19,6 +19,7 @@ from .const import (
     MANUFACTURER,
     UPDATE_INTERVAL_MOVING,
     UPDATE_INTERVAL_MOVING_WIFI,
+    UPDATE_TRIGGER_RESPONSE_DELAY,
 )
 from .coordinator import DataUpdateCoordinatorMotionBlinds
 from .gateway import device_name
@@ -114,7 +115,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
         async with self._api_lock:
             await self.hass.async_add_executor_job(self._blind.Update_trigger)
 
-        await asyncio.sleep(2)
+        await asyncio.sleep(UPDATE_TRIGGER_RESPONSE_DELAY)
 
         # add the last position to the list and keep the list at max 2 items
         self._previous_positions.append(self._blind.position)
