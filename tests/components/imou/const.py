@@ -40,6 +40,8 @@ def create_online_device(
     *,
     channel_id: str | None = None,
     button_keys: tuple[str, ...] = (),
+    switches: dict[str, dict] | None = None,
+    sensors: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an online ImouHaDevice for tests."""
     return create_device(
@@ -48,6 +50,8 @@ def create_online_device(
         channel_id=channel_id,
         button_keys=button_keys,
         status=DeviceStatus.ONLINE,
+        switches=switches,
+        sensors=sensors,
     )
 
 
@@ -75,6 +79,8 @@ def create_device(
     channel_id: str | None = None,
     button_keys: tuple[str, ...] = (),
     status: DeviceStatus = DeviceStatus.ONLINE,
+    switches: dict[str, dict] | None = None,
+    sensors: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an ImouHaDevice for tests."""
     device = ImouHaDevice(device_id, name, "Imou", "m1", "1.0")
@@ -83,6 +89,10 @@ def create_device(
     for key in button_keys:
         device._buttons[key] = {}
     device._sensors[PARAM_STATUS] = {PARAM_STATE: status.value}
+    if switches:
+        device._switches.update(switches)
+    if sensors:
+        device._sensors.update(sensors)
     return device
 
 

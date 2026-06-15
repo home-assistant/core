@@ -1,5 +1,6 @@
 """Test the Gardena Bluetooth config flow."""
 
+import asyncio
 from unittest.mock import Mock
 
 from gardena_bluetooth.exceptions import CharacteristicNotFound
@@ -197,3 +198,26 @@ async def test_bluetooth_invalid(
         data=UNSUPPORTED_GROUP_SERVICE_INFO,
     )
     assert result == snapshot
+
+
+async def test_already_configured_discovery(
+    hass: HomeAssistant, get_product_event: asyncio.Event
+) -> None:
+    """Ensure we can't add the same device twice."""
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WATER_TIMER_SERVICE_INFO.address,
+    )
+    entry.source = config_entries.SOURCE_USER
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=WATER_TIMER_SERVICE_INFO,
+    )
+
+    assert get_product_event.is_set() is False
+    assert result.get("type") is FlowResultType.ABORT
+    assert result.get("reason") == "already_configured"
