@@ -485,7 +485,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
             old_timestamp: datetime,
         ) -> None:
             """Handle the sensor state changes."""
-            if not _is_decimal_state(old_value):
+            recovered_from_invalid = not _is_decimal_state(old_value)
+            if recovered_from_invalid:
                 if self._last_valid_state_time:
                     old_value = self._last_valid_state_time[0]
                     old_timestamp = self._last_valid_state_time[1]
@@ -546,6 +547,16 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     "%s: Dropping sample as source total_increasing sensor decreased",
                     self.entity_id,
                 )
+                if recovered_from_invalid:
+                    # The source reset (e.g. a daily total_increasing sensor at
+                    # midnight) while recovering from an unavailable/unknown
+                    # state. The pre-reset window no longer applies to the new
+                    # baseline, so discard it and report a zero rate of change;
+                    # otherwise the sensor stays stuck in the unavailable/unknown
+                    # state until the next state change.
+                    self._state_list = []
+                    self._last_valid_state_time = (new_state.state, new_timestamp)
+                    self._write_native_value(Decimal(0))
                 return
 
             # add latest derivative to the window list
