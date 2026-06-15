@@ -3,6 +3,7 @@
 
 import asyncio
 import logging
+import socket
 
 from motionblinds import AsyncMotionMulticast
 
@@ -41,12 +42,21 @@ async def async_setup_entry(
     async with setup_lock:
         if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
             if multicast_interface not in (DEFAULT_INTERFACE, None):
-                # Validate stored interface is still usable
                 test_multicast = AsyncMotionMulticast(interface=multicast_interface)
+                working_interface = None
                 try:
                     await test_multicast.Start_listen()
-                except OSError:
-                    # Stored interface no longer works, do full probe
+                    test_multicast.Stop_listen()
+                    working_interface = multicast_interface
+                    _LOGGER.debug(
+                        "Stored Motionblinds interface '%s' validated for host %s",
+                        multicast_interface,
+                        host,
+                    )
+                except (socket.gaierror, OSError):
+                    pass
+
+                if working_interface is None:
                     _LOGGER.debug(
                         "Stored Motionblinds interface '%s' unavailable, reprobing for host %s",
                         multicast_interface,
@@ -57,14 +67,6 @@ async def async_setup_entry(
                     )
                     working_interface = (
                         await check_multicast_class.async_check_interface(host, key)
-                    )
-                else:
-                    test_multicast.Stop_listen()
-                    working_interface = multicast_interface
-                    _LOGGER.debug(
-                        "Stored Motionblinds interface '%s' validated for host %s",
-                        multicast_interface,
-                        host,
                     )
             else:
                 check_multicast_class = ConnectMotionGateway(
