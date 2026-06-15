@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import HA_INELS_PATH
-from .common import DOMAIN, inels
+from .common import DOMAIN
 
 from tests.common import MockConfigEntry
 from tests.typing import MqttMockHAClient
@@ -21,10 +21,7 @@ async def test_ha_mqtt_publish(
 
     with (
         patch(f"{HA_INELS_PATH}.InelsDiscovery") as mock_discovery_class,
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=None,
-        ),
+        patch("homeassistant.components.inels.PLATFORMS", []),
     ):
         mock_discovery = AsyncMock()
         mock_discovery.start.return_value = []
@@ -49,10 +46,7 @@ async def test_ha_mqtt_subscribe(
 
     with (
         patch(f"{HA_INELS_PATH}.InelsDiscovery") as mock_discovery_class,
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=None,
-        ),
+        patch("homeassistant.components.inels.PLATFORMS", []),
     ):
         mock_discovery = AsyncMock()
         mock_discovery.start.return_value = []
@@ -82,20 +76,25 @@ async def test_ha_mqtt_not_available(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_unload_entry(hass: HomeAssistant, mock_mqtt) -> None:
+async def test_unload_entry(
+    hass: HomeAssistant, mqtt_mock: MqttMockHAClient, mock_mqtt
+) -> None:
     """Test unload entry."""
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
 
-    config_entry.runtime_data = inels.InelsData(mqtt=mock_mqtt, devices=[])
+    with (
+        patch(f"{HA_INELS_PATH}.InelsDiscovery") as mock_discovery_class,
+        patch("homeassistant.components.inels.PLATFORMS", []),
+    ):
+        mock_discovery = AsyncMock()
+        mock_discovery.start.return_value = []
+        mock_discovery_class.return_value = mock_discovery
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
-        return_value=True,
-    ) as mock_unload_platforms:
-        result = await inels.async_unload_entry(hass, config_entry)
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        result = await hass.config_entries.async_unload(config_entry.entry_id)
 
         assert result is True
         mock_mqtt.unsubscribe_topics.assert_called_once()
         mock_mqtt.unsubscribe_listeners.assert_called_once()
-        mock_unload_platforms.assert_called_once()
