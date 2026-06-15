@@ -87,7 +87,6 @@ class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -95,7 +94,6 @@ class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
@@ -143,12 +141,14 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
 
         return flatten(data)
@@ -193,12 +193,14 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
         # Convert Wall Connectors from array to dict
         data["wall_connectors"] = {
@@ -240,12 +242,14 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
 
         return flatten(
@@ -286,12 +290,14 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
 
         if not data or not isinstance(data.get("time_series"), list):
