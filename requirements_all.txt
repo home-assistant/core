@@ -1173,6 +1173,9 @@ gps3==0.33.3
 # homeassistant.components.gree
 greeclimate==2.1.1
 
+# homeassistant.components.greencell
+greencell_client==1.0.3
+
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
 
@@ -1972,7 +1975,7 @@ pyElectra==1.2.4
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.2
+pyHik==0.4.3
 
 # homeassistant.components.homee
 pyHomee==1.4.0
@@ -2365,9 +2368,6 @@ pymodbus==3.11.2
 
 # homeassistant.components.monoprice
 pymonoprice==0.5
-
-# homeassistant.components.msteams
-pymsteams==0.1.12
 
 # homeassistant.components.mysensors
 pymysensors==0.26.0
@@ -2812,7 +2812,7 @@ pyversasense==0.0.6
 pyvesync==3.4.2
 
 # homeassistant.components.vizio
-pyvizio==0.1.61
+pyvizio==0.1.64
 
 # homeassistant.components.velux
 pyvlx==0.2.35
@@ -3390,7 +3390,7 @@ wirelesstagpy==0.8.1
 wled==0.23.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.48
+wolf-comm==0.0.52
 
 # homeassistant.components.wsdot
 wsdot==0.0.1
