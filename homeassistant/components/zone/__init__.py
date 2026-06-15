@@ -22,10 +22,7 @@ from homeassistant.const import (
     CONF_RADIUS,
     EVENT_CORE_CONFIG_UPDATE,
     SERVICE_RELOAD,
-    STATE_HOME,
-    STATE_NOT_HOME,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
 )
 from homeassistant.core import (
     Event,
@@ -432,7 +429,6 @@ class Zone(collection.CollectionEntity):
         config = self._config
         name: str = config[CONF_NAME]
         self._attr_name = name
-        self._case_folded_name = name.casefold()
         self._attr_unique_id = config.get(CONF_ID)
         self._attr_icon = config.get(CONF_ICON)
 
@@ -514,16 +510,13 @@ class Zone(collection.CollectionEntity):
     @callback
     def _state_is_in_zone(self, state: State | None) -> bool:
         """Return if given state is in zone."""
+
+        from homeassistant.components.device_tracker import (  # noqa: PLC0415
+            ATTR_IN_ZONES,
+        )
+
         return (
             state is not None
-            and state.state
-            not in (
-                STATE_NOT_HOME,
-                STATE_UNKNOWN,
-                STATE_UNAVAILABLE,
-            )
-            and (
-                state.state.casefold() == self._case_folded_name
-                or (state.state == STATE_HOME and self.entity_id == ENTITY_ID_HOME)
-            )
+            and ATTR_IN_ZONES in state.attributes
+            and self.entity_id in state.attributes[ATTR_IN_ZONES]
         )

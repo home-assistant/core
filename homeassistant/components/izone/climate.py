@@ -43,7 +43,7 @@ from .const import (
     DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
     DISPATCH_ZONE_UPDATE,
-    IZONE,
+    DOMAIN,
 )
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
@@ -188,7 +188,7 @@ class ControllerDevice(ClimateEntity):
 
         self._attr_unique_id = controller.device_uid
         self._attr_device_info = DeviceInfo(
-            identifiers={(IZONE, controller.device_uid)},
+            identifiers={(DOMAIN, controller.device_uid)},
             manufacturer="IZone",
             model=controller.sys_type,
             name=f"iZone Controller {controller.device_uid}",
@@ -484,12 +484,12 @@ class ZoneDevice(ClimateEntity):
         assert controller.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (IZONE, controller.unique_id, zone.index)  # type:ignore[arg-type]
+                (DOMAIN, controller.unique_id, zone.index)  # type:ignore[arg-type]
             },
             manufacturer="IZone",
             model=zone.type.name.title(),
             name=zone.name.title(),
-            via_device=(IZONE, controller.unique_id),
+            via_device=(DOMAIN, controller.unique_id),
         )
 
     async def async_added_to_hass(self) -> None:
