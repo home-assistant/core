@@ -31,6 +31,7 @@ class TedeeBinarySensorEntityDescription(
     is_on_fn: Callable[[TedeeLock], bool | None]
     supported_fn: Callable[[TedeeLock], bool] = lambda _: True
     available_fn: Callable[[TedeeLock], bool] = lambda _: True
+    always_available: bool = False
 
 
 ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
@@ -75,6 +76,13 @@ ENTITIES: tuple[TedeeBinarySensorEntityDescription, ...] = (
             not in [TedeeDoorState.UNCALIBRATED, TedeeDoorState.DISCONNECTED]
         ),
     ),
+    TedeeBinarySensorEntityDescription(
+        key="connectivity",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        is_on_fn=lambda lock: lock.is_connected,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        always_available=True,
+    ),
 )
 
 
@@ -111,4 +119,6 @@ class TedeeBinarySensorEntity(TedeeDescriptionEntity, BinarySensorEntity):
     @property
     def available(self) -> bool:
         """Return true if the binary sensor is available."""
+        if self.entity_description.always_available:
+            return True
         return self.entity_description.available_fn(self._lock) and super().available

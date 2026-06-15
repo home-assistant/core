@@ -46,6 +46,7 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Jellyfin."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize the Jellyfin config flow."""
@@ -58,6 +59,8 @@ class JellyfinConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            user_input[CONF_URL] = user_input[CONF_URL].rstrip("/")
+
             if self.client_device_id is None:
                 self.client_device_id = _generate_client_device_id()
 

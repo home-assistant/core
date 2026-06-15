@@ -1414,7 +1414,10 @@ def _make_entity_service_schema(schema: dict, extra: int) -> VolSchemaType:
         _HAS_ENTITY_SERVICE_FIELD,
     )
     setattr(validator, "_entity_service_schema", True)  # noqa: B010
-    return validator
+    # Wrap in a vol.Schema so the vol.All compiles its sub-validators once,
+    # instead of re-wrapping them in a new vol.Schema on every validation as a
+    # top-level vol.All does.
+    return vol.Schema(validator)
 
 
 BASE_ENTITY_SCHEMA = _make_entity_service_schema({}, vol.PREVENT_EXTRA)
@@ -1953,6 +1956,7 @@ _SCRIPT_CHOOSE_SCHEMA = vol.Schema(
             [
                 {
                     vol.Optional(CONF_ALIAS): string,
+                    vol.Remove(CONF_NOTE): str,  # Is only used in frontend
                     vol.Required(CONF_CONDITIONS): CONDITIONS_SCHEMA,
                     vol.Required(CONF_SEQUENCE): SCRIPT_SCHEMA,
                 }

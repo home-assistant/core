@@ -8,7 +8,6 @@ from dataclasses import dataclass
 from enum import IntEnum
 import json
 import logging
-import queue
 from ssl import PROTOCOL_TLS_CLIENT, SSLContext, SSLError
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Any, cast
@@ -22,7 +21,6 @@ from cryptography.hazmat.primitives.serialization import (
     load_pem_private_key,
 )
 from cryptography.x509 import load_der_x509_certificate, load_pem_x509_certificate
-import paho.mqtt.client as mqtt
 import voluptuous as vol
 import yaml
 
@@ -72,13 +70,6 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    ATTR_CONFIGURATION_URL,
-    ATTR_HW_VERSION,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_MODEL_ID,
-    ATTR_NAME,
-    ATTR_SW_VERSION,
     CONF_BRIGHTNESS,
     CONF_CLIENT_ID,
     CONF_CODE,
@@ -89,6 +80,8 @@ from homeassistant.const import (
     CONF_ENTITY_CATEGORY,
     CONF_HOST,
     CONF_MODE,
+    CONF_MODEL,
+    CONF_MODEL_ID,
     CONF_NAME,
     CONF_OPTIMISTIC,
     CONF_OPTIONS,
@@ -143,7 +136,7 @@ from homeassistant.util.json import JSON_DECODE_EXCEPTIONS, json_loads
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .addon import get_addon_manager
-from .client import MqttClientSetup
+from .client import try_connection
 from .const import (
     ALARM_CONTROL_PANEL_SUPPORTED_FEATURES,
     ATTR_PAYLOAD,
@@ -183,6 +176,7 @@ from .const import (
     CONF_COMMAND_ON_TEMPLATE,
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_CONFIGURATION_URL,
     CONF_CONTENT_TYPE,
     CONF_CURRENT_HUMIDITY_TEMPLATE,
     CONF_CURRENT_HUMIDITY_TOPIC,
@@ -223,10 +217,12 @@ from .const import (
     CONF_HUMIDITY_MIN,
     CONF_HUMIDITY_STATE_TEMPLATE,
     CONF_HUMIDITY_STATE_TOPIC,
+    CONF_HW_VERSION,
     CONF_IMAGE_ENCODING,
     CONF_IMAGE_TOPIC,
     CONF_KEEPALIVE,
     CONF_LAST_RESET_VALUE_TEMPLATE,
+    CONF_MANUFACTURER,
     CONF_MAX,
     CONF_MAX_KELVIN,
     CONF_MESSAGE_EXPIRY_INTERVAL,
@@ -319,6 +315,7 @@ from .const import (
     CONF_SUPPORT_VOLUME_SET,
     CONF_SUPPORTED_COLOR_MODES,
     CONF_SUPPORTED_FEATURES,
+    CONF_SW_VERSION,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TEMPLATE,
     CONF_SWING_HORIZONTAL_MODE_COMMAND_TOPIC,
     CONF_SWING_HORIZONTAL_MODE_LIST,
@@ -443,8 +440,6 @@ ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 5
 
 CONF_CLIENT_KEY_PASSWORD = "client_key_password"
-
-MQTT_TIMEOUT = 5
 
 ADVANCED_OPTIONS = "advanced_options"
 SET_CA_CERT = "set_ca_cert"
@@ -2455,7 +2450,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=valid_subscribe_topic,
             error="invalid_subscribe_topic",
         ),
-        CONF_VALUE_TEMPLATE: PlatformField(
+        CONF_STATE_VALUE_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
             validator=validate(cv.template),
@@ -3399,7 +3394,7 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
             validator=valid_subscribe_topic,
             error="invalid_subscribe_topic",
         ),
-        CONF_VALUE_TEMPLATE: PlatformField(
+        CONF_STATE_VALUE_TEMPLATE: PlatformField(
             selector=TEMPLATE_SELECTOR,
             required=False,
             validator=validate(cv.template),
@@ -3801,17 +3796,17 @@ PLATFORM_MQTT_FIELDS: dict[Platform, dict[str, PlatformField]] = {
     },
 }
 MQTT_DEVICE_PLATFORM_FIELDS = {
-    ATTR_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
-    ATTR_SW_VERSION: PlatformField(
+    CONF_NAME: PlatformField(selector=TEXT_SELECTOR, required=True),
+    CONF_SW_VERSION: PlatformField(
         selector=TEXT_SELECTOR, required=False, section="advanced_settings"
     ),
-    ATTR_HW_VERSION: PlatformField(
+    CONF_HW_VERSION: PlatformField(
         selector=TEXT_SELECTOR, required=False, section="advanced_settings"
     ),
-    ATTR_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_MANUFACTURER: PlatformField(selector=TEXT_SELECTOR, required=False),
-    ATTR_CONFIGURATION_URL: PlatformField(
+    CONF_MODEL: PlatformField(selector=TEXT_SELECTOR, required=False),
+    CONF_MODEL_ID: PlatformField(selector=TEXT_SELECTOR, required=False),
+    CONF_MANUFACTURER: PlatformField(selector=TEXT_SELECTOR, required=False),
+    CONF_CONFIGURATION_URL: PlatformField(
         selector=TEXT_SELECTOR, required=False, validator=cv.url, error="invalid_url"
     ),
     CONF_QOS: PlatformField(
@@ -5579,40 +5574,6 @@ async def async_get_broker_settings(
 
     # Show form
     return False
-
-
-def try_connection(
-    user_input: dict[str, Any],
-) -> bool:
-    """Test if we can connect to an MQTT broker."""
-    mqtt_client_setup = MqttClientSetup(user_input)
-    mqtt_client_setup.setup()
-    client = mqtt_client_setup.client
-
-    result: queue.Queue[bool] = queue.Queue(maxsize=1)
-
-    def on_connect(
-        _mqttc: mqtt.Client,
-        _userdata: None,
-        _connect_flags: mqtt.ConnectFlags,
-        reason_code: mqtt.ReasonCode,
-        _properties: mqtt.Properties | None = None,
-    ) -> None:
-        """Handle connection result."""
-        result.put(not reason_code.is_failure)
-
-    client.on_connect = on_connect
-
-    client.connect_async(user_input[CONF_BROKER], user_input[CONF_PORT])
-    client.loop_start()
-
-    try:
-        return result.get(timeout=MQTT_TIMEOUT)
-    except queue.Empty:
-        return False
-    finally:
-        client.disconnect()
-        client.loop_stop()
 
 
 def check_certicate_chain() -> str | None:
