@@ -101,3 +101,51 @@ async def test_webhook_post(
     await hass.async_block_till_done()
 
     assert resp.status == expected_code
+
+
+async def test_webhook_registration_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ccl: MagicMock,
+) -> None:
+    """Test that ConfigEntryNotReady is raised when webhook registration fails."""
+    hass.config.external_url = "http://example.com"
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.ccl.register_webhook",
+        side_effect=ValueError("Webhook registration failed"),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Config entry should not be loaded due to webhook registration failure
+        assert mock_config_entry.state is not ConfigEntryState.LOADED
+
+
+async def test_device_update_callback_registered(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_ccl: MagicMock,
+) -> None:
+    """Test that the update callback is registered with the device."""
+    hass.config.external_url = "http://example.com"
+    mock_config_entry.add_to_hass(hass)
+
+    # Create a mock device with set_update_callback method
+    mock_device = MagicMock()
+    mock_device.device_id = "dev123"
+    mock_device.name = "Test Device"
+    mock_device.model = "HA100"
+    mock_device.fw_ver = "1.0"
+    mock_device.set_update_callback = MagicMock()
+
+    with patch(
+        "homeassistant.components.ccl.CCLDevice",
+        return_value=mock_device,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Verify that set_update_callback was called
+        assert mock_device.set_update_callback.called
