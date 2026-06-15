@@ -8,7 +8,9 @@ from homeassistant.core import HomeAssistant
 from .conftest import setup_integration
 
 
-async def test_climate_zones(hass: HomeAssistant, mock_nexia_home: NexiaHome) -> None:
+async def test_climate_zones(
+    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
+) -> None:
     """Test creation climate zones."""
 
     await setup_integration(hass, mock_nexia_home)

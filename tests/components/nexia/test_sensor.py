@@ -8,7 +8,9 @@ from homeassistant.core import HomeAssistant
 from .conftest import setup_integration
 
 
-async def test_create_sensors(hass: HomeAssistant, mock_nexia_home: NexiaHome) -> None:
+async def test_create_sensors(
+    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
+) -> None:
     """Test creation of sensors."""
 
     await setup_integration(hass, mock_nexia_home)

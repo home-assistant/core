@@ -20,7 +20,9 @@ from .conftest import setup_integration
 from tests.common import async_fire_time_changed
 
 
-async def test_hold_switch(hass: HomeAssistant, mock_nexia_home: NexiaHome) -> None:
+async def test_hold_switch(
+    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
+) -> None:
     """Test creation of the hold switch."""
 
     await setup_integration(hass, mock_nexia_home)
@@ -31,7 +33,10 @@ async def test_hold_switch(hass: HomeAssistant, mock_nexia_home: NexiaHome) -> N
 
 
 async def test_nexia_sensor_switch(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    mock_nexia_home: NexiaHome,
+    patch_nexia_home,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test NexiaRoomIQSensorSwitch."""
 

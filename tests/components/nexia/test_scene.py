@@ -8,7 +8,7 @@ from .conftest import setup_integration
 
 
 async def test_automation_scenes(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome
+    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
 ) -> None:
     """Test creation automation scenes."""
 
