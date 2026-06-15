@@ -65,14 +65,16 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the bluetooth discovery step."""
         _LOGGER.debug("Discovered device: %s", discovery_info)
+
+        await self.async_set_unique_id(discovery_info.address)
+        self._abort_if_unique_id_configured()
+
         mfg = await async_get_product(self.hass, discovery_info.address)
         self.devices[discovery_info.address] = mfg
         if mfg.product_type not in _SUPPORTED_PRODUCT_TYPES:
             return self.async_abort(reason="no_devices_found")
 
         self.address = discovery_info.address
-        await self.async_set_unique_id(self.address)
-        self._abort_if_unique_id_configured()
         return await self.async_step_confirm()
 
     async def async_step_confirm(

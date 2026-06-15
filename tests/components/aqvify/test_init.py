@@ -110,6 +110,30 @@ async def test_setup_entry_auth_error_triggers_reauth(
     assert flows[0]["step_id"] == "reauth_confirm"
 
 
+async def test_autoremove_stale_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aqvify_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test stale devices are removed."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert len(device_registry.devices) == 2
+
+    mock_aqvify_client.async_get_devices.return_value = AqvifyDevices(
+        await async_load_json_array_fixture(hass, "removed_devices.json", DOMAIN)
+    )
+
+    freezer.tick(timedelta(minutes=5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(device_registry.devices) == 1
+    assert hass.states.get("sensor.device_2_water_level") is None
+
+
 async def test_devices_multiple_created_count(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
