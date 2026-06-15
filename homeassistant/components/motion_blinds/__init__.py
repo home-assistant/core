@@ -3,7 +3,6 @@
 
 import asyncio
 import logging
-import socket
 
 from motionblinds import AsyncMotionMulticast
 
@@ -53,7 +52,7 @@ async def async_setup_entry(
                         multicast_interface,
                         host,
                     )
-                except (socket.gaierror, OSError):
+                except OSError:
                     pass
 
                 if working_interface is None:
