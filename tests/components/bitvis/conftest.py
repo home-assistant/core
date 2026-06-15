@@ -11,6 +11,8 @@ from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
+TEST_DEVICE_MAC = "aa:bb:cc:dd:ee:ff"
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -18,7 +20,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.100", CONF_PORT: 5000},
-        unique_id="192.168.1.100:5000",
+        unique_id=TEST_DEVICE_MAC,
         title=MODEL_NAME,
     )
 

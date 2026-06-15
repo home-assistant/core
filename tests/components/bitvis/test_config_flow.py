@@ -2,7 +2,6 @@
 
 import asyncio
 from ipaddress import ip_address
-import socket
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -20,6 +19,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from .conftest import TEST_DEVICE_MAC
+
 from tests.common import MockConfigEntry
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
@@ -31,6 +32,16 @@ ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
     properties={},
     type="_powerhub._udp.local.",
 )
+
+
+@pytest.fixture(autouse=True)
+def mock_get_mac_address_for_host() -> None:
+    """Mock MAC address lookup for config flow tests."""
+    with patch(
+        "homeassistant.components.bitvis.config_flow.get_mac_address_for_host",
+        return_value=TEST_DEVICE_MAC,
+    ):
+        yield
 
 
 async def test_user_form(hass: HomeAssistant) -> None:
@@ -72,6 +83,7 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
         CONF_HOST: "192.168.1.100",
         CONF_PORT: 5000,
     }
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == TEST_DEVICE_MAC
 
 
 @pytest.mark.parametrize("recover", [False, True])
@@ -131,7 +143,7 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 5000,
         },
-        unique_id="192.168.1.100:5000",
+        unique_id=TEST_DEVICE_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -241,7 +253,7 @@ async def test_zeroconf_duplicate(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.200", CONF_PORT: DEFAULT_PORT},
-        unique_id=f"192.168.1.200:{DEFAULT_PORT}",
+        unique_id=TEST_DEVICE_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -322,22 +334,18 @@ async def test_user_form_create_entry_ipv6_host(hass: HomeAssistant) -> None:
         CONF_PORT: 5000,
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert (
-        hass.config_entries.async_entries(DOMAIN)[0].unique_id == "[2001:db8::10]:5000"
-    )
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == TEST_DEVICE_MAC
 
 
-async def test_user_form_duplicate_ipv6_bracketed_unique_id(
-    hass: HomeAssistant,
-) -> None:
-    """Test duplicate detection for IPv6 hosts with bracketed unique IDs."""
+async def test_user_form_duplicate_mac(hass: HomeAssistant) -> None:
+    """Test duplicate detection uses the device MAC address."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: "2001:db8::10",
             CONF_PORT: 5000,
         },
-        unique_id="[2001:db8::10]:5000",
+        unique_id=TEST_DEVICE_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -353,7 +361,7 @@ async def test_user_form_duplicate_ipv6_bracketed_unique_id(
             result["flow_id"],
             {
                 CONF_HOST: "2001:db8::10",
-                CONF_PORT: 5000,
+                CONF_PORT: 5001,
             },
         )
 
@@ -361,7 +369,7 @@ async def test_user_form_duplicate_ipv6_bracketed_unique_id(
     assert result["reason"] == "already_configured"
 
 
-async def test_user_form_resolve_host_gaierror_fallback(
+async def test_user_form_resolve_host_failure_uses_host_for_mac_lookup(
     hass: HomeAssistant,
 ) -> None:
     """Test that user flow falls back to raw host when DNS resolution fails."""
@@ -373,10 +381,6 @@ async def test_user_form_resolve_host_gaierror_fallback(
         patch(
             "homeassistant.components.bitvis.config_flow._async_test_port",
             new_callable=AsyncMock,
-        ),
-        patch(
-            "homeassistant.components.bitvis.config_flow._resolve_host",
-            side_effect=socket.gaierror,
         ),
         patch(
             "homeassistant.components.bitvis.async_setup_entry",
@@ -394,6 +398,7 @@ async def test_user_form_resolve_host_gaierror_fallback(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == MODEL_NAME
     assert result["data"][CONF_HOST] == "my-powerhub.local"
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == TEST_DEVICE_MAC
 
 
 async def test_user_form_normalize_bracketed_ipv6(
@@ -425,24 +430,6 @@ async def test_user_form_normalize_bracketed_ipv6(
     assert result["type"] == FlowResultType.CREATE_ENTRY
     assert result["title"] == MODEL_NAME
     assert result["data"][CONF_HOST] == "2001:db8::10"
-
-
-async def test_zeroconf_resolve_host_gaierror_fallback(
-    hass: HomeAssistant,
-) -> None:
-    """Test that zeroconf flow falls back to raw host when DNS resolution fails."""
-    with patch(
-        "homeassistant.components.bitvis.config_flow._resolve_host",
-        side_effect=socket.gaierror,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=ZEROCONF_DISCOVERY,
-        )
-
-    assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "zeroconf_confirm"
 
 
 async def test_zeroconf_confirm_uses_friendly_name(hass: HomeAssistant) -> None:

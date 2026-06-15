@@ -7,7 +7,7 @@ import logging
 
 from bitvis_protobuf.listener import SharedListener
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
-from bitvis_protobuf.utils import async_resolve_host, format_mac_address
+from bitvis_protobuf.utils import async_resolve_host
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -165,7 +165,7 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         diagnostic = payload.diagnostic
         if diagnostic.HasField("device_info"):
             device_info = diagnostic.device_info
-            self.data.mac_address = format_mac_address(device_info.mac_address)
+            self.data.mac_address = device_info.mac_address.hex(sep=":")
             self.data.model_name = device_info.model_name
             self.data.sw_version = device_info.sw_version
         else:

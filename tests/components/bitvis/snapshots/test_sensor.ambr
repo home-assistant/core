@@ -37,7 +37,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_active_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_energy_active_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_energy_active_delivered_by_client',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -95,7 +95,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_active_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_energy_active_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_energy_active_delivered_to_client',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -153,7 +153,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_active_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_power_active_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_delivered_by_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -211,7 +211,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_active_l1_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_power_active_l1_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l1_delivered_by_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -269,7 +269,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_active_l2_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_power_active_l2_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l2_delivered_by_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -327,7 +327,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_active_l3_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_power_active_l3_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l3_delivered_by_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -385,7 +385,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_active_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_power_active_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_delivered_to_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -443,7 +443,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_active_l1_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_power_active_l1_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l1_delivered_to_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -501,7 +501,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_active_l2_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_power_active_l2_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l2_delivered_to_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -559,7 +559,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_active_l3_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_power_active_l3_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_active_l3_delivered_to_client',
     'unit_of_measurement': <UnitOfPower.KILO_WATT: 'kW'>,
   })
 # ---
@@ -617,7 +617,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_current_l1',
-    'unique_id': '192.168.1.100:5000_phase_current_l1',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_phase_current_l1',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -675,7 +675,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_current_l2',
-    'unique_id': '192.168.1.100:5000_phase_current_l2',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_phase_current_l2',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -733,7 +733,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_current_l3',
-    'unique_id': '192.168.1.100:5000_phase_current_l3',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_phase_current_l3',
     'unit_of_measurement': <UnitOfElectricCurrent.AMPERE: 'A'>,
   })
 # ---
@@ -788,7 +788,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'han_msg_buffer_overflow',
-    'unique_id': '192.168.1.100:5000_han_msg_buffer_overflow',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_han_msg_buffer_overflow',
     'unit_of_measurement': None,
   })
 # ---
@@ -841,7 +841,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'han_msg_successfully_parsed',
-    'unique_id': '192.168.1.100:5000_han_msg_successfully_parsed',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_han_msg_successfully_parsed',
     'unit_of_measurement': None,
   })
 # ---
@@ -897,7 +897,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_energy_reactive_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_energy_reactive_delivered_by_client',
     'unit_of_measurement': <UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 'kvarh'>,
   })
 # ---
@@ -955,7 +955,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'energy_reactive_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_energy_reactive_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_energy_reactive_delivered_to_client',
     'unit_of_measurement': <UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR: 'kvarh'>,
   })
 # ---
@@ -1013,7 +1013,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_power_reactive_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_delivered_by_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -1071,7 +1071,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_l1_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_power_reactive_l1_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l1_delivered_by_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -1129,7 +1129,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_l2_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_power_reactive_l2_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l2_delivered_by_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -1187,7 +1187,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_l3_delivered_by_client',
-    'unique_id': '192.168.1.100:5000_power_reactive_l3_delivered_by_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l3_delivered_by_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -1245,7 +1245,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_power_reactive_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_delivered_to_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -1303,7 +1303,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_l1_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_power_reactive_l1_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l1_delivered_to_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -1361,7 +1361,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_l2_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_power_reactive_l2_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l2_delivered_to_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -1419,7 +1419,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'power_reactive_l3_delivered_to_client',
-    'unique_id': '192.168.1.100:5000_power_reactive_l3_delivered_to_client',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_power_reactive_l3_delivered_to_client',
     'unit_of_measurement': <UnitOfReactivePower.KILO_VOLT_AMPERE_REACTIVE: 'kvar'>,
   })
 # ---
@@ -1472,7 +1472,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'uptime',
-    'unique_id': '192.168.1.100:5000_uptime',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_uptime',
     'unit_of_measurement': None,
   })
 # ---
@@ -1528,7 +1528,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_voltage_l1',
-    'unique_id': '192.168.1.100:5000_phase_voltage_l1',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_phase_voltage_l1',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1586,7 +1586,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_voltage_l2',
-    'unique_id': '192.168.1.100:5000_phase_voltage_l2',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_phase_voltage_l2',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1644,7 +1644,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'phase_voltage_l3',
-    'unique_id': '192.168.1.100:5000_phase_voltage_l3',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_phase_voltage_l3',
     'unit_of_measurement': <UnitOfElectricPotential.VOLT: 'V'>,
   })
 # ---
@@ -1699,7 +1699,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'wifi_rssi',
-    'unique_id': '192.168.1.100:5000_wifi_rssi',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_wifi_rssi',
     'unit_of_measurement': 'dBm',
   })
 # ---

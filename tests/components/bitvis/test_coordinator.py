@@ -16,6 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
+from .conftest import TEST_DEVICE_MAC
+
 from tests.common import MockConfigEntry
 
 
@@ -25,7 +27,7 @@ def config_entry(hass: HomeAssistant) -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         data={"host": "192.168.1.100", "port": 5000},
-        unique_id="192.168.1.100:5000",
+        unique_id=TEST_DEVICE_MAC,
         title=MODEL_NAME,
     )
 
@@ -106,7 +108,7 @@ async def test_coordinator_async_setup_reuses_existing_listener(
     config_entry2 = MockConfigEntry(
         domain=DOMAIN,
         data={"host": "192.168.1.101", "port": 5000},
-        unique_id="192.168.1.101:5000",
+        unique_id="11:22:33:44:55:66",
     )
     config_entry2.add_to_hass(hass)
     coordinator2 = BitvisDataUpdateCoordinator(

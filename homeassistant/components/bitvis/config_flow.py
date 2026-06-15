@@ -1,12 +1,11 @@
 """Config flow for the Bitvis Power Hub integration."""
 
 import logging
-import socket
 from typing import Any
 
 from bitvis_protobuf.utils import (
     async_verify_udp_port_bindable,
-    format_unique_id,
+    get_mac_address_for_host,
     normalize_host,
 )
 import voluptuous as vol
@@ -32,16 +31,9 @@ async def _async_test_port(hass: HomeAssistant, port: int) -> None:
     await async_verify_udp_port_bindable(port)
 
 
-def _resolve_host(host: str) -> str:
-    """Resolve a host to an IP address (IPv4 or IPv6)."""
-    # Use AF_UNSPEC to allow both IPv4 and IPv6, and pick the first result.
-    info = socket.getaddrinfo(
-        host,
-        None,
-        family=socket.AF_UNSPEC,
-        type=socket.SOCK_STREAM,
-    )
-    return str(info[0][4][0])
+async def _async_get_device_unique_id(hass: HomeAssistant, host: str) -> str:
+    """Resolve *host* and look up a MAC address for the config entry unique ID."""
+    return await hass.async_add_executor_job(get_mac_address_for_host, host)
 
 
 class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -73,18 +65,9 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
             except OSError:
                 errors["base"] = "cannot_connect"
             else:
-                # Normalize the host for unique_id to match zeroconf behavior.
-                try:
-                    resolved_host = await self.hass.async_add_executor_job(
-                        _resolve_host, host
-                    )
-                except socket.gaierror:
-                    _LOGGER.warning(
-                        "Could not resolve host %s, using it as-is for unique_id", host
-                    )
-                    resolved_host = host
-
-                await self.async_set_unique_id(format_unique_id(resolved_host, port))
+                await self.async_set_unique_id(
+                    await _async_get_device_unique_id(self.hass, host)
+                )
                 self._abort_if_unique_id_configured()
 
                 return self.async_create_entry(
@@ -115,10 +98,10 @@ class BitvisConfigFlow(ConfigFlow, domain=DOMAIN):
         _LOGGER.debug("Discovered Bitvis Power Hub via Zeroconf: %s", discovery_info)
 
         host = discovery_info.host
-        port = discovery_info.port or DEFAULT_PORT
 
-        # Set unique ID to prevent duplicates
-        await self.async_set_unique_id(format_unique_id(host, port))
+        await self.async_set_unique_id(
+            await _async_get_device_unique_id(self.hass, host)
+        )
         self._abort_if_unique_id_configured()
 
         self._discovery_info = discovery_info
