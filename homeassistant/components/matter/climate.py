@@ -178,10 +178,11 @@ SUPPORT_FAN_MODE_DEVICES: set[tuple[int, int]] = {
 }
 
 SUPPORT_HEAT_COOL_MODE_DEVICES: set[tuple[int, int]] = {
-    # The Matter spec is missing the AutoMode feature flag for these devices even
-    # though they physically support heat_cool (auto) mode via SystemMode = kAuto.
+    # These devices do not report the AutoMode feature flag even though
+    # they physically support heat_cool (auto) mode via SystemMode = kAuto.
+    #
     # In the list below specify tuples of (vendorid, productid) of devices that
-    # support heat_cool mode.
+    # support heat_cool mode, but don't report it.
     (0x1334, 0x0A84),
 }
 
