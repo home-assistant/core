@@ -8,6 +8,7 @@ from pygeosphere_warnings import (
     GeoSphereMunicipalityNotFoundError,
     GeoSphereWarningsClient,
     LocationWarnings,
+    WeatherWarning,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -15,6 +16,7 @@ from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 
@@ -42,11 +44,7 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[LocationWarnings]):
         )
         self.client = GeoSphereWarningsClient(async_get_clientsession(hass))
         self._last_modified: datetime | None = None
-
-    @property
-    def _language(self) -> str:
-        """Return the warning text language based on the user's language."""
-        return "de" if self.hass.config.language.partition("-")[0] == "de" else "en"
+        self.active_warnings: list[WeatherWarning] = []
 
     async def _async_update_data(self) -> LocationWarnings:
         """Fetch warnings, skipping the full fetch when nothing changed."""
@@ -61,7 +59,6 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[LocationWarnings]):
                 location_warnings = await self.client.get_warnings_for_coords(
                     self.config_entry.data[CONF_LATITUDE],
                     self.config_entry.data[CONF_LONGITUDE],
-                    self._language,
                 )
             else:
                 location_warnings = self.data
@@ -83,4 +80,8 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[LocationWarnings]):
                 translation_placeholders={"error": str(err)},
             ) from err
         self._last_modified = last_modified
+        now = dt_util.utcnow()
+        self.active_warnings = [
+            warning for warning in location_warnings.warnings if warning.is_active(now)
+        ]
         return location_warnings

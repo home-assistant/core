@@ -14,7 +14,6 @@ from homeassistant.components.sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util import dt as dt_util
 
 from .coordinator import GeoSphereConfigEntry
 from .entity import GeoSphereEntity
@@ -75,10 +74,4 @@ class GeoSphereSensor(GeoSphereEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        now = dt_util.utcnow()
-        active_warnings = [
-            warning
-            for warning in self.coordinator.data.warnings
-            if warning.is_active(now)
-        ]
-        return self.entity_description.value_fn(active_warnings)
+        return self.entity_description.value_fn(self.coordinator.active_warnings)

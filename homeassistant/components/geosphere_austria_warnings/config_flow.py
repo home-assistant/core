@@ -83,26 +83,3 @@ class GeoSphereConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
-
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration of the selected zone."""
-        errors: dict[str, str] = {}
-        if user_input is not None and (
-            result := await self._async_validate_zone(user_input[CONF_ZONE], errors)
-        ):
-            municipality, data = result
-            await self.async_set_unique_id(municipality.municipality_id)
-            self._abort_if_unique_id_mismatch()
-            return self.async_update_reload_and_abort(
-                self._get_reconfigure_entry(),
-                title=municipality.name,
-                data=data,
-            )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=STEP_USER_DATA_SCHEMA,
-            errors=errors,
-        )

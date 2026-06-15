@@ -19,7 +19,6 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
-from .conftest import TEST_LATITUDE, TEST_LONGITUDE
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -103,27 +102,3 @@ async def test_entities_unavailable_on_error(
     await hass.async_block_till_done()
     assert (state := hass.states.get("sensor.schwechat_active_warnings"))
     assert state.state == STATE_UNAVAILABLE
-
-
-@pytest.mark.parametrize(
-    ("config_language", "api_language"),
-    [
-        pytest.param("en", "en", id="english"),
-        pytest.param("de", "de", id="german"),
-        pytest.param("de-AT", "de", id="austrian_german"),
-        pytest.param("fr", "en", id="unsupported_language"),
-    ],
-)
-async def test_warning_language(
-    hass: HomeAssistant,
-    mock_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    config_language: str,
-    api_language: str,
-) -> None:
-    """Test that warnings are fetched in the user's language."""
-    hass.config.language = config_language
-    await setup_integration(hass, mock_config_entry)
-    mock_client.get_warnings_for_coords.assert_called_once_with(
-        TEST_LATITUDE, TEST_LONGITUDE, api_language
-    )
