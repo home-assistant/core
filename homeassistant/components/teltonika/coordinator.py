@@ -11,11 +11,7 @@ from teltasync.modems import Modems, ModemStatusFull
 
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -78,7 +74,7 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, system_info_response.mnf_info.serial)},
             connections={
-                (CONNECTION_NETWORK_MAC, format_mac(mac))
+                (CONNECTION_NETWORK_MAC, mac)
                 for mac in (
                     system_info_response.mnf_info.mac_eth,
                     system_info_response.mnf_info.mac,

@@ -127,6 +127,7 @@ Every check has a code following the
 | `W7413` | [`home-assistant-missing-config-entry-unloading`](#w7413-home-assistant-missing-config-entry-unloading) | Integration should implement `async_unload_entry` |
 | `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
+| `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
 
 
 ## `home_assistant_logger` checker
@@ -722,3 +723,24 @@ Entity class should statically guarantee `_attr_has_entity_name = True`:
 either set at class level, set unconditionally at the top of a method, or
 supplied by an `entity_description` whose class sets `has_entity_name = True`.
 Conditional patterns are rejected.
+
+
+## `home_assistant_unnecessary_format_mac` checker
+
+Detects redundant `format_mac()` calls inside `CONNECTION_NETWORK_MAC`
+connection tuples that are passed to device registry API methods via
+`connections=` keyword arguments.
+
+### `W7429`: `home-assistant-unnecessary-format-mac`
+
+`format_mac()` is unnecessary when constructing a `CONNECTION_NETWORK_MAC`
+connection tuple for a device registry API call (`DeviceInfo`,
+`async_get_or_create`, `async_get_device`). The device registry already
+normalizes MAC addresses through `_normalize_connections()` before
+storing them, so the call is redundant.
+
+This rule only flags tuples inside a `connections=` keyword argument.
+Tuples used for direct comparison against `device.connections` (e.g.
+the `in` operator, set intersection) are not flagged because those
+comparisons bypass the device registry normalization and genuinely
+need `format_mac()` to match the stored normalized format.

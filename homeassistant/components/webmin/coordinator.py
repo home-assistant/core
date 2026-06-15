@@ -49,8 +49,7 @@ class WebminUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.mac_address = mac_addresses[0]
             self.unique_id = self.mac_address
             self.device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, format_mac(mac_address))
-                for mac_address in mac_addresses
+                (CONNECTION_NETWORK_MAC, mac_address) for mac_address in mac_addresses
             }
             self.device_info[ATTR_IDENTIFIERS] = {
                 (DOMAIN, format_mac(mac_address)) for mac_address in mac_addresses

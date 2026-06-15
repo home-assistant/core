@@ -81,7 +81,7 @@ async def async_setup_entry(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, serial)},
-            connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(info.mac))},
+            connections={(dr.CONNECTION_NETWORK_MAC, info.mac)},
             manufacturer="Mitsubishi",
             name=info.label,
             serial_number=serial,

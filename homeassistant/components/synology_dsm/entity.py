@@ -3,11 +3,7 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -58,9 +54,7 @@ class SynologyDSMBaseEntity[_CoordinatorT: SynologyDSMUpdateCoordinator[Any]](
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, information.serial)},
-            connections={
-                (CONNECTION_NETWORK_MAC, format_mac(mac)) for mac in network.macs
-            },
+            connections={(CONNECTION_NETWORK_MAC, mac) for mac in network.macs},
             name=network.hostname,
             manufacturer="Synology",
             model=information.model,

@@ -1,10 +1,6 @@
 """The AirVisual Pro integration."""
 
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -32,7 +28,7 @@ class AirVisualProEntity(CoordinatorEntity[AirVisualProCoordinator]):
             connections={
                 (
                     CONNECTION_NETWORK_MAC,
-                    format_mac(self.coordinator.data["status"]["mac_address"]),
+                    self.coordinator.data["status"]["mac_address"],
                 )
             },
             manufacturer="AirVisual",

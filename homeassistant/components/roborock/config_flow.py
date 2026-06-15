@@ -217,9 +217,7 @@ class RoborockFlowHandler(ConfigFlow, domain=DOMAIN):
         await self._async_handle_discovery_without_unique_id()
         device_registry = dr.async_get(self.hass)
         device = device_registry.async_get_device(
-            connections={
-                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(discovery_info.macaddress))
-            }
+            connections={(dr.CONNECTION_NETWORK_MAC, discovery_info.macaddress)}
         )
         if device is not None and any(
             identifier[0] == DOMAIN for identifier in device.identifiers

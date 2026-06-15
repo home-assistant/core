@@ -47,7 +47,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     hub_data = devices["parent"][0]
     connections: set[tuple[str, str]] = set()
     if mac := hub_data.get("macAddress"):
-        connections.add((dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac)))
+        connections.add((dr.CONNECTION_NETWORK_MAC, mac))
 
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(

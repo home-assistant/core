@@ -31,11 +31,7 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -75,7 +71,7 @@ def get_bsblan_device_info(
     """Build DeviceInfo for the main BSB-LAN controller device."""
     return DeviceInfo(
         identifiers={(DOMAIN, device.MAC)},
-        connections={(CONNECTION_NETWORK_MAC, format_mac(device.MAC))},
+        connections={(CONNECTION_NETWORK_MAC, device.MAC)},
         name=device.name,
         manufacturer="BSBLAN Inc.",
         model=(
