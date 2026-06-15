@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Literal
 
 import aiodns
 from aiodns.error import DNSError
+import pycares
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import CONF_NAME, CONF_PORT
@@ -148,7 +149,7 @@ class WanIpSensor(SensorEntity):
         response = None
         try:
             async with asyncio.timeout(10):
-                response = await self._resolver.query(self.hostname, self.querytype)
+                response = await self._resolver.query_dns(self.hostname, self.querytype)
         except TimeoutError as err:
             _LOGGER.debug("Timeout while resolving host: %s", err)
             await self._resolver.close()
@@ -157,9 +158,19 @@ class WanIpSensor(SensorEntity):
             await self._resolver.close()
 
         if response:
-            sorted_ips = sort_ips(
-                [res.host for res in response], querytype=self.querytype
-            )
+            if TYPE_CHECKING:
+                assert all(
+                    isinstance(res.data, (pycares.ARecordData, pycares.AAAARecordData))
+                    for res in response.answer
+                )
+            _ips = []
+            for res in response.answer:
+                if TYPE_CHECKING:
+                    assert isinstance(
+                        res.data, (pycares.ARecordData, pycares.AAAARecordData)
+                    )
+                _ips.append(res.data.addr)
+            sorted_ips = sort_ips(_ips, querytype=self.querytype)
             self._attr_native_value = sorted_ips[0]
             self._attr_extra_state_attributes["ip_addresses"] = sorted_ips
             self._attr_available = True
