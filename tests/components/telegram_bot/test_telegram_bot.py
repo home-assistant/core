@@ -1511,7 +1511,7 @@ async def test_send_video(
         patch(
             "homeassistant.components.telegram_bot.bot.httpx.AsyncClient.get"
         ) as mock_get,
-        patch("homeassistant.components.telegram_bot.bot.asyncio.sleep"),
+        patch("homeassistant.components.telegram_bot.bot._RETRY_DELAY", 0),
     ):
         mock_get.return_value = AsyncMock(status_code=404, text="Success")
 
