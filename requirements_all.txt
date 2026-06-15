@@ -1153,7 +1153,7 @@ google_air_quality_api==3.0.1
 
 # homeassistant.components.slide
 # homeassistant.components.slide_local
-goslide-api==0.7.0
+goslide-api==0.7.4
 
 # homeassistant.components.tailwind
 gotailwind==0.4.0
