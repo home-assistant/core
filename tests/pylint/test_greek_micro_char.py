@@ -20,7 +20,8 @@ from . import assert_no_messages
             id="good_const_with_annotation",
         ),
         pytest.param(
-            # Test using the correct μ-sign \u03bc with annotation using unicode encoding
+            # Test using the correct μ-sign \u03bc with annotation
+            # using unicode encoding
             """
         CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "\u03bcg/m³"
         """,

@@ -194,7 +194,10 @@ async def test_state_standby_is_set(hass: HomeAssistant) -> None:
 async def test_state_playing_is_set(hass: HomeAssistant) -> None:
     """Test that state is set to playing."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "homeassistant.components.ps4.media_player.pyps4.Ps4Async.async_get_ps_store_data"
+    mock_func = (
+        "homeassistant.components.ps4.media_player"
+        ".pyps4.Ps4Async.async_get_ps_store_data"
+    )
 
     with patch(mock_func, return_value=None):
         await mock_ddp_response(hass, MOCK_STATUS_PLAYING)
@@ -221,7 +224,10 @@ async def test_state_none_is_set(hass: HomeAssistant) -> None:
 async def test_media_attributes_are_fetched(hass: HomeAssistant) -> None:
     """Test that media attributes are fetched."""
     mock_entity_id = await setup_mock_component(hass)
-    mock_func = "homeassistant.components.ps4.media_player.pyps4.Ps4Async.async_get_ps_store_data"
+    mock_func = (
+        "homeassistant.components.ps4.media_player"
+        ".pyps4.Ps4Async.async_get_ps_store_data"
+    )
 
     # Mock result from fetching data.
     mock_result = MagicMock()
@@ -538,7 +544,7 @@ async def test_entry_is_unloaded(hass: HomeAssistant) -> None:
         domain=ps4.DOMAIN, data=MOCK_DATA, version=VERSION, entry_id=MOCK_ENTRY_ID
     )
     mock_entity_id = await setup_mock_component(hass, mock_entry)
-    mock_unload = await ps4.async_unload_entry(hass, mock_entry)
+    mock_unload = await hass.config_entries.async_unload(mock_entry.entry_id)
 
     assert mock_unload is True
     assert not hass.data[PS4_DATA].devices

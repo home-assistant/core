@@ -88,7 +88,10 @@ class MatterWaterHeater(MatterEntity, WaterHeaterEntity):
         temporary_setpoint: int | None = None,
     ) -> None:
         """Set boost."""
-        boost_info: clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct = clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct(
+        boost_info_cls = (
+            clusters.WaterHeaterManagement.Structs.WaterHeaterBoostInfoStruct
+        )
+        boost_info = boost_info_cls(
             duration=duration,
             emergencyBoost=emergency_boost,
             temporarySetpoint=(

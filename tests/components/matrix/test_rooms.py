@@ -36,8 +36,8 @@ async def test_join(
     matrix_bot._listening_rooms = {TEST_BAD_ROOM: TEST_BAD_ROOM}
     await matrix_bot._join_rooms()
     assert (
-        f"Could not join room '{TEST_BAD_ROOM}': JoinError: Not allowed to join this room."
-        in caplog.messages
+        f"Could not join room '{TEST_BAD_ROOM}':"
+        " JoinError: Not allowed to join this room." in caplog.messages
     )
 
 

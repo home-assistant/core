@@ -6,7 +6,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, siren
+from homeassistant.components import siren
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.siren import ATTR_VOLUME_LEVEL
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -55,7 +56,7 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {siren.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {siren.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -82,7 +83,7 @@ async def async_turn_off(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 siren.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -119,7 +120,7 @@ async def test_controlling_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 siren.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -164,7 +165,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 siren.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -205,7 +206,7 @@ async def test_controlling_state_via_topic_and_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 siren.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -223,7 +224,7 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     mqtt_mock_entry: MqttMockHAClientGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test the controlling state via topic and JSON message without a value template."""
+    """Test controlling state via topic and JSON without template."""
     await mqtt_mock_entry()
 
     state = hass.states.get("siren.test")
@@ -264,8 +265,10 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
     )
     state = hass.states.get("siren.test")
     assert (
-        "Unable to update siren state attributes from payload '{'duration': 6, 'volume_level': 2, 'tone': 'ping'}': value must be at most 1 for dictionary value @ data['volume_level']"
-        in caplog.text
+        "Unable to update siren state attributes from payload"
+        " '{'duration': 6, 'volume_level': 2, 'tone': 'ping'}':"
+        " value must be at most 1 for dictionary value"
+        " @ data['volume_level']" in caplog.text
     )
     # Only the on/of state was updated, not the attributes
     assert state.state == STATE_ON
@@ -290,7 +293,7 @@ async def test_controlling_state_and_attributes_with_json_message_without_templa
         help_custom_config(
             siren.DOMAIN,
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     siren.DOMAIN: {
                         "command_topic": "command-topic",
                     }
@@ -385,7 +388,7 @@ async def test_filtering_not_supported_attributes_optimistic(
         help_custom_config(
             siren.DOMAIN,
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     siren.DOMAIN: {
                         "command_topic": "command-topic",
                     }
@@ -493,7 +496,7 @@ async def test_default_availability_payload(
 ) -> None:
     """Test availability by default payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             siren.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -519,7 +522,7 @@ async def test_custom_availability_payload(
 ) -> None:
     """Test availability by custom payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             siren.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -545,7 +548,7 @@ async def test_custom_availability_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 siren.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -642,7 +645,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 siren.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -684,8 +687,8 @@ async def test_discovery_update_siren_topic_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered siren."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][siren.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][siren.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "siren/state1"
@@ -720,8 +723,8 @@ async def test_discovery_update_siren_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered siren."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][siren.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][siren.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "siren/state1"
@@ -985,7 +988,7 @@ async def test_publishing_with_custom_encoding(
     """Test publishing MQTT payload with command templates and different encoding."""
     domain = siren.DOMAIN
     config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
-    config[mqtt.DOMAIN][domain][siren.ATTR_AVAILABLE_TONES] = ["siren", "xylophone"]
+    config[DOMAIN][domain][siren.ATTR_AVAILABLE_TONES] = ["siren", "xylophone"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -1027,7 +1030,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         siren.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][siren.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][siren.DOMAIN],
         topic,
         value,
         attribute,
@@ -1134,6 +1137,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

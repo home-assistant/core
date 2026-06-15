@@ -4,7 +4,14 @@ from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_MODE, CONF_OPTIONS, PERCENTAGE, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_MODE,
+    CONF_MODE,
+    CONF_OPTIONS,
+    PERCENTAGE,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -26,8 +33,6 @@ from .const import (
     HumidifierAction,
     HumidifierEntityFeature,
 )
-
-CONF_MODE = "mode"
 
 IS_MODE_CONDITION_SCHEMA = ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL.extend(
     {

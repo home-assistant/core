@@ -1141,7 +1141,7 @@
       "message": "Missing required scope: {scope}"
     },
     "no_cable": {
-      "message": "Charge cable will lock automatically when connected"
+      "message": "Insert cable to lock, charge cable will lock automatically when connected"
     },
     "no_config_entry_for_device": {
       "message": "No config entry for device ID: {device_id}"
@@ -1174,7 +1174,7 @@
       "message": "Token data malformed, try reauthenticating"
     },
     "update_failed": {
-      "message": "Error fetching data from Teslemetry API"
+      "message": "Error fetching data from Teslemetry API: {message}"
     },
     "update_failed_invalid_data": {
       "message": "Received invalid data from API"

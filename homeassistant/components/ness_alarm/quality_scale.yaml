@@ -13,7 +13,7 @@ rules:
   docs-removal-instructions: done
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name: done
+  has-entity-name: todo
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
@@ -66,7 +66,7 @@ rules:
   entity-translations:
     status: exempt
     comment: Entities use device name as entity name.
-  exception-translations: done
+  exception-translations: todo
   icon-translations:
     status: exempt
     comment: No entity icons are used.

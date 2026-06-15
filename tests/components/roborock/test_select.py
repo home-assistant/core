@@ -457,7 +457,7 @@ async def test_q10_cleaning_mode_select_current_option(
     assert state.state == STATE_UNKNOWN
     options = state.attributes.get("options")
     assert options is not None
-    assert set(options) == {"vac_and_mop", "vacuum", "mop"}
+    assert set(options) == {"vac_and_mop", "vacuum", "mop", "customized"}
 
     assert fake_q10_vacuum.b01_q10_properties
     fake_q10_vacuum.b01_q10_properties.status.update_from_dps(
@@ -523,7 +523,7 @@ async def test_q10_cleaning_mode_select_invalid_option(
     setup_entry: MockConfigEntry,
     fake_q10_vacuum: FakeDevice,
 ) -> None:
-    """Test that an invalid option raises ServiceValidationError and does not call set_clean_mode."""
+    """Test invalid option raises ServiceValidationError."""
     entity_id = "select.roborock_q10_s5_cleaning_mode"
     assert hass.states.get(entity_id) is not None
 

@@ -4,12 +4,12 @@ from typing import Literal
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
+from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OpenAIConfigEntry
-from .const import CONF_PROMPT, DOMAIN
+from .const import DOMAIN
 from .entity import OpenAIBaseLLMEntity
 
 # Max number of back and forth with the LLM to generate a response

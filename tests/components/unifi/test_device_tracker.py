@@ -448,7 +448,8 @@ async def test_wireless_client_go_wired_issue(
 ) -> None:
     """Test the solution to catch wireless device go wired UniFi issue.
 
-    UniFi Network has a known issue that when a wireless device goes away it sometimes gets marked as wired.
+    UniFi Network has a known issue that when a wireless device goes away
+    it sometimes gets marked as wired.
     """
     client_payload.append(
         WIRELESS_CLIENT_1 | {"last_seen": dt_util.as_timestamp(dt_util.utcnow())}
@@ -585,7 +586,7 @@ async def test_restoring_client(
     client_payload: list[dict[str, Any]],
     clients_all_payload: list[dict[str, Any]],
 ) -> None:
-    """Verify clients are restored from clients_all if they ever was registered to entity registry."""
+    """Verify clients are restored from clients_all if registered to entity registry."""
     entity_registry.async_get_or_create(
         TRACKER_DOMAIN,
         DOMAIN,

@@ -13,8 +13,6 @@ if TYPE_CHECKING:
 DOMAIN = "calendar"
 DATA_COMPONENT: HassKey[EntityComponent[CalendarEntity]] = HassKey(DOMAIN)
 
-CONF_EVENT = "event"
-
 
 class CalendarEntityFeature(IntFlag):
     """Supported features of the calendar entity."""

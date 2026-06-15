@@ -1271,7 +1271,8 @@ async def test_traffic_routes(
         {"entity_id": "switch.unifi_network_test_traffic_route"},
         blocking=True,
     )
-    # Updating the value for traffic routes will make another call to retrieve the values
+    # Updating the value for traffic routes will make another call
+    # to retrieve the values
     assert aioclient_mock.call_count == call_count + 2
     expected_disable_call = deepcopy(traffic_route)
     expected_disable_call["enabled"] = False
@@ -1327,7 +1328,8 @@ async def test_firewall_policies(
         {"entity_id": "switch.unifi_network_allow_internal_to_iot"},
         blocking=True,
     )
-    # Updating the value for firewall policies will make another call to retrieve the values
+    # Updating the value for firewall policies will make another call
+    # to retrieve the values
     assert aioclient_mock.call_count == call_count + 2
     expected_disable_call = deepcopy(firewall_policy)
     expected_disable_call["enabled"] = False

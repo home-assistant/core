@@ -367,7 +367,7 @@ async def test_zeroconf_confirm_with_password_success(
     mock_homevolt_client: MagicMock,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test zeroconf confirm collects password and creates entry when auth is required."""
+    """Test zeroconf confirm collects password when auth is required."""
 
     mock_homevolt_client.update_info.side_effect = HomevoltAuthenticationError
 

@@ -34,7 +34,9 @@ from . import assert_adds_messages, assert_no_messages
         ),
         pytest.param(
             """
-        PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+        PLATFORMS: list[str] = [
+            Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR
+        ]
         """,
             id="typed_multiple_platform",
         ),
@@ -58,7 +60,9 @@ from . import assert_adds_messages, assert_no_messages
         ),
         pytest.param(
             """
-        _PLATFORMS: list[str] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR]
+        _PLATFORMS: list[str] = [
+            Platform.BINARY_SENSOR, Platform.BUTTON, Platform.SENSOR
+        ]
         """,
             id="private_typed_multiple_platforms",
         ),

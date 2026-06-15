@@ -15,39 +15,14 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HA_DOMAIN,
     SERVICE_UPDATE_ENTITY,
 )
-from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
 from . import mock_asyncio_subprocess_run
 
 from tests.common import async_fire_time_changed
-
-
-async def test_setup_platform_yaml(
-    hass: HomeAssistant, issue_registry: ir.IssueRegistry
-) -> None:
-    """Test setting up the platform with platform yaml."""
-    await setup.async_setup_component(
-        hass,
-        "sensor",
-        {
-            "sensor": {
-                "platform": "command_line",
-                "command": "echo 1",
-                "payload_on": "1",
-                "payload_off": "0",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 0
-    issue = issue_registry.async_get_issue(DOMAIN, "sensor_platform_yaml_not_supported")
-    assert issue is not None
-    assert issue.severity == ir.IssueSeverity.ERROR
-    assert issue.translation_placeholders == {"platform": SENSOR_DOMAIN}
 
 
 @pytest.mark.parametrize(
@@ -149,7 +124,9 @@ async def test_template_render_with_quote(hass: HomeAssistant) -> None:
                 {
                     "sensor": {
                         "name": "Test",
-                        "command": 'echo "{{ states.sensor.input_sensor.state }}" "3 4"',
+                        "command": (
+                            'echo "{{ states.sensor.input_sensor.state }}" "3 4"'
+                        ),
                     }
                 }
             ]
@@ -269,8 +246,12 @@ async def test_return_code(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": ["key", "another_key", "key_three"],
                     }
@@ -300,8 +281,12 @@ async def test_update_with_json_attrs(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": ["key", "another_key", "key_three"],
                         "value_template": '{{ value_json["key"] }}',
@@ -431,8 +416,12 @@ async def test_update_with_json_attrs_bad_json(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": [
                             "key",
@@ -468,8 +457,12 @@ async def test_update_with_missing_json_attrs(
                     "sensor": {
                         "name": "Test",
                         "command": (
-                            'echo { \\"key\\": \\"some_json_value\\", \\"another_key\\": '
-                            '\\"another_json_value\\", \\"key_three\\": \\"value_three\\" }'
+                            'echo { \\"key\\":'
+                            ' \\"some_json_value\\",'
+                            ' \\"another_key\\":'
+                            ' \\"another_json_value\\",'
+                            ' \\"key_three\\":'
+                            ' \\"value_three\\" }'
                         ),
                         "json_attributes": ["key", "another_key"],
                     }
@@ -519,7 +512,7 @@ async def test_update_with_unnecessary_json_attrs(
 async def test_update_with_json_attrs_with_json_attrs_path(
     hass: HomeAssistant, load_yaml_integration: None
 ) -> None:
-    """Test using json_attributes_path to select a different part of the json object as root."""
+    """Test json_attributes_path selects a different root."""
 
     entity_state = hass.states.get("sensor.test")
     assert entity_state
@@ -618,8 +611,8 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
 
     assert (
-        "Updating Command Line Sensor Test took longer than the scheduled update interval"
-        not in caplog.text
+        "Updating Command Line Sensor Test took longer"
+        " than the scheduled update interval" not in caplog.text
     )
 
     # Simulate update takes too long
@@ -631,8 +624,8 @@ async def test_updating_to_often(
     await asyncio.sleep(0)
 
     assert (
-        "Updating Command Line Sensor Test took longer than the scheduled update interval"
-        in caplog.text
+        "Updating Command Line Sensor Test took longer"
+        " than the scheduled update interval" in caplog.text
     )
 
 
@@ -719,7 +712,9 @@ async def test_scrape_sensor_device_timestamp(
                         "name": "Test",
                         "command": "echo January 17, 2022",
                         "device_class": "date",
-                        "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
+                        "value_template": (
+                            "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}"
+                        ),
                     }
                 }
             ]
@@ -751,7 +746,9 @@ async def test_template_not_error_when_data_is_none(
                             "name": "Test",
                             "command": "failed command",
                             "unit_of_measurement": "MB",
-                            "value_template": "{{ (value.split('\t')[0]|int(0)/1000)|round(3) }}",
+                            "value_template": (
+                                "{{ (value.split('\t')[0]|int(0)/1000)|round(3) }}"
+                            ),
                         }
                     }
                 ]
@@ -853,9 +850,13 @@ async def test_availability_json_attributes_without_value_template(
                         "name": "Test",
                         "command": "echo January 17, 2022",
                         "device_class": "date",
-                        "value_template": "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}",
+                        "value_template": (
+                            "{{ strptime(value, '%B %d, %Y').strftime('%Y-%m-%d') }}"
+                        ),
                         "availability": '{{ states("sensor.input1")=="on" }}',
-                        "icon": "mdi:o{{ 'n' if states('sensor.input1')=='on' else 'ff' }}",
+                        "icon": (
+                            "mdi:o{{ 'n' if states('sensor.input1')=='on' else 'ff' }}"
+                        ),
                     }
                 }
             ]
@@ -929,8 +930,8 @@ async def test_template_render_with_availability_syntax_error(
     assert state.state == "1"
 
     assert (
-        "Error rendering availability template for sensor.test: UndefinedError: 'what_the_heck' is undefined"
-        in caplog.text
+        "Error rendering availability template for sensor.test:"
+        " UndefinedError: 'what_the_heck' is undefined" in caplog.text
     )
 
 

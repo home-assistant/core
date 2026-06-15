@@ -6,7 +6,15 @@ import voluptuous as vol
 from voluptuous import All, Range
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DEVICE_ID, CONF_LATITUDE, CONF_LONGITUDE
+from homeassistant.const import (
+    ATTR_ID,
+    ATTR_LOCATION,
+    ATTR_NAME,
+    ATTR_TIME,
+    CONF_DEVICE_ID,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
+)
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
@@ -18,17 +26,14 @@ from .models import TeslemetryEnergyData, TeslemetryVehicleData
 _LOGGER = logging.getLogger(__name__)
 
 # Attributes
-ATTR_ID = "id"
 ATTR_GPS = "gps"
 ATTR_TYPE = "type"
 ATTR_VALUE = "value"
-ATTR_LOCATION = "location"
 ATTR_LOCALE = "locale"
 ATTR_ORDER = "order"
 ATTR_TIMESTAMP = "timestamp"
 ATTR_FIELDS = "fields"
 ATTR_ENABLE = "enable"
-ATTR_TIME = "time"
 ATTR_PIN = "pin"
 ATTR_TOU_SETTINGS = "tou_settings"
 ATTR_PRECONDITIONING_ENABLED = "preconditioning_enabled"
@@ -41,7 +46,6 @@ ATTR_DAYS_OF_WEEK = "days_of_week"
 ATTR_START_TIME = "start_time"
 ATTR_END_TIME = "end_time"
 ATTR_ONE_TIME = "one_time"
-ATTR_NAME = "name"
 ATTR_PRECONDITION_TIME = "precondition_time"
 
 # Services
@@ -345,7 +349,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
-        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        # If days_of_week is a list (from select with
+        # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]
@@ -445,7 +450,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         # Extract parameters from the service call
         days_of_week = call.data[ATTR_DAYS_OF_WEEK]
-        # If days_of_week is a list (from select with multiple), convert to comma-separated string
+        # If days_of_week is a list (from select with
+        # multiple), convert to comma-separated string
         if isinstance(days_of_week, list):
             days_of_week = ",".join(days_of_week)
         enabled = call.data[ATTR_ENABLE]

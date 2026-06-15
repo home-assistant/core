@@ -11,12 +11,13 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from . import MarantzIrConfigEntry
-from .const import CONF_INFRARED_EMITTER_ENTITY_ID, CONF_MODEL, MODELS
+from .const import CONF_INFRARED_EMITTER_ENTITY_ID, MODELS
 from .entity import MarantzIrEntity
 
 PARALLEL_UPDATES = 1
@@ -117,7 +118,7 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
 
     async def async_turn_on(self) -> None:
         """Send discrete power-on command."""
-        await self._send_marantz_command(MarantzAudioCode.POWER_ON)
+        await self._send_marantz_command(MarantzAudioCode.POWER_ON, repeat_count=5)
         self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 

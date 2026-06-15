@@ -249,8 +249,9 @@ async def test_color_temperature_light(
     )
     matter_client.send_device_command.reset_mock()
     # Change color temperature with 15 Kelvin to test capping of mireds at 65279
-    # 15 Kelvin is 66666 Mireds which is above the maximum of 65279 Mireds permitted by Matter,
-    # so it should be capped at 65279 mireds which is 15.3 Kelvin
+    # 15 Kelvin is 66666 Mireds which is above the maximum of
+    # 65279 Mireds permitted by Matter, so it should be capped at
+    # 65279 mireds which is 15.3 Kelvin
     await hass.services.async_call(
         "light",
         "turn_on",

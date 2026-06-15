@@ -61,11 +61,13 @@ async def test_fixtures() -> None:
     for fixture_name in DEVICE_FIXTURES:
         for device_details in get_device_response(fixture_name).items:
             assert device_details.device_id not in device_ids, (
-                f"Duplicate device ID {device_details.device_id} found in fixture {fixture_name}"
+                f"Duplicate device ID {device_details.device_id}"
+                f" found in fixture {fixture_name}"
             )
             device_ids.add(device_details.device_id)
             assert (label := device_details.label.lower()) not in device_labels, (
-                f"Duplicate device label {device_details.label} found in fixture {fixture_name}"
+                f"Duplicate device label {device_details.label}"
+                f" found in fixture {fixture_name}"
             )
             device_labels.add(label)
 
@@ -422,14 +424,14 @@ async def test_deleted_device_runtime(
     """Test devices that are deleted in runtime."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("climate.ac_office_granit").state == HVACMode.OFF
+    assert hass.states.get("climate.theater_ac_office_granit").state == HVACMode.OFF
 
     for call in devices.add_device_lifecycle_event_listener.call_args_list:
         if call[0][0] == Lifecycle.DELETE:
             call[0][1]("96a5ef74-5832-a84b-f1f7-ca799957065d")
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.ac_office_granit") is None
+    assert hass.states.get("climate.theater_ac_office_granit") is None
 
 
 @pytest.mark.parametrize(

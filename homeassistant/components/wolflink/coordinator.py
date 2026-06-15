@@ -98,7 +98,8 @@ async def fetch_parameters(
 ) -> list[Parameter]:
     """Fetch all available parameters with usage of WolfClient.
 
-    By default Reglertyp entity is removed because API will not provide value for this parameter.
+    By default Reglertyp entity is removed because API
+    will not provide value for this parameter.
     """
     fetched_parameters = await client.fetch_parameters(gateway_id, device_id)
     return [param for param in fetched_parameters if param.name != "Reglertyp"]

@@ -24,6 +24,11 @@ from homeassistant.const import EVENT_HOMEASSISTANT_START, EVENT_HOMEASSISTANT_S
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers.singleton import singleton
+from homeassistant.helpers.trace import (
+    suppress_template_error_logging_cv,
+    trace_stack_cv,
+    trace_stack_top,
+)
 from homeassistant.helpers.typing import TemplateVarsType
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.hass_dict import HassKey
@@ -35,6 +40,27 @@ from .context import (
     render_with_context,
     template_context_manager,
     template_cv,
+)
+from .extensions import (
+    AreaExtension,
+    Base64Extension,
+    CollectionExtension,
+    ConfigEntryExtension,
+    CryptoExtension,
+    DateTimeExtension,
+    DeviceExtension,
+    EntityExtension,
+    FloorExtension,
+    FunctionalExtension,
+    IssuesExtension,
+    LabelExtension,
+    MathExtension,
+    RegexExtension,
+    SerializationExtension,
+    StateExtension,
+    StringExtension,
+    TypeCastExtension,
+    VersionExtension,
 )
 from .helpers import result_as_boolean as result_as_boolean
 from .render_info import RenderInfo, render_info_cv
@@ -204,9 +230,17 @@ RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
 @lru_cache(maxsize=EVAL_CACHE_SIZE)
-def _cached_parse_result(render_result: str) -> Any:
+def _parse_result(render_result: str) -> Any:
     """Parse a result and cache the result."""
-    result = literal_eval(render_result)
+    # lru_cache does not memoize raised exceptions. The most common template
+    # results, plain string states such as "on", "off" or "unavailable", are
+    # not Python literals, so literal_eval compiles and raises for them on
+    # every render. Catching here caches that outcome (return the original
+    # render) so the recompile only happens once per distinct result.
+    try:
+        result = literal_eval(render_result)
+    except ValueError, TypeError, SyntaxError, MemoryError:
+        return render_result
     if type(result) in RESULT_WRAPPERS:
         result = RESULT_WRAPPERS[type(result)](result, render_result=render_result)
 
@@ -317,7 +351,7 @@ class Template:
         if self.is_static:
             if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
-            return self._parse_result(self.template)
+            return _parse_result(self.template)
         assert self.hass is not None, "hass variable not set on template"
         return run_callback_threadsafe(
             self.hass.loop,
@@ -346,7 +380,7 @@ class Template:
         if self.is_static:
             if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
-            return self._parse_result(self.template)
+            return _parse_result(self.template)
 
         compiled = self._compiled or self._ensure_compiled(limited, strict, log_fn)
 
@@ -369,16 +403,7 @@ class Template:
         if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
-        return self._parse_result(render_result)
-
-    def _parse_result(self, render_result: str) -> Any:
-        """Parse the result."""
-        try:
-            return _cached_parse_result(render_result)
-        except ValueError, TypeError, SyntaxError, MemoryError:
-            pass
-
-        return render_result
+        return _parse_result(render_result)
 
     async def async_render_will_timeout(
         self,
@@ -545,7 +570,7 @@ class Template:
         if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
-        return self._parse_result(render_result)
+        return _parse_result(render_result)
 
     def _ensure_compiled(
         self,
@@ -606,6 +631,14 @@ def make_logging_undefined(
         return jinja2.StrictUndefined
 
     def _log_with_logger(level: int, msg: str) -> None:
+        # Record the error on the active trace element so it is surfaced in the
+        # trace. Consumers such as the subscribe_condition websocket command can
+        # opt in to additionally suppress the (otherwise repeated) log entry.
+        if node := trace_stack_top(trace_stack_cv):
+            node.add_template_error(msg)
+            if suppress_template_error_logging_cv.get():
+                return
+
         template, action = template_cv.get() or ("", "rendering or compiling")
         _LOGGER.log(
             level,
@@ -722,37 +755,25 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
         ] = weakref.WeakValueDictionary()
         self.add_extension("jinja2.ext.loopcontrols")
         self.add_extension("jinja2.ext.do")
-        self.add_extension("homeassistant.helpers.template.extensions.AreaExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.Base64Extension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.CollectionExtension"
-        )
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.ConfigEntryExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.CryptoExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.DateTimeExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.DeviceExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.EntityExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.FloorExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.FunctionalExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.IssuesExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.LabelExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.MathExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.RegexExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.SerializationExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.StateExtension")
-        self.add_extension("homeassistant.helpers.template.extensions.StringExtension")
-        self.add_extension(
-            "homeassistant.helpers.template.extensions.TypeCastExtension"
-        )
-        self.add_extension("homeassistant.helpers.template.extensions.VersionExtension")
+        self.add_extension(AreaExtension)
+        self.add_extension(Base64Extension)
+        self.add_extension(CollectionExtension)
+        self.add_extension(ConfigEntryExtension)
+        self.add_extension(CryptoExtension)
+        self.add_extension(DateTimeExtension)
+        self.add_extension(DeviceExtension)
+        self.add_extension(EntityExtension)
+        self.add_extension(FloorExtension)
+        self.add_extension(FunctionalExtension)
+        self.add_extension(IssuesExtension)
+        self.add_extension(LabelExtension)
+        self.add_extension(MathExtension)
+        self.add_extension(RegexExtension)
+        self.add_extension(SerializationExtension)
+        self.add_extension(StateExtension)
+        self.add_extension(StringExtension)
+        self.add_extension(TypeCastExtension)
+        self.add_extension(VersionExtension)
 
         if hass is not None:
             # This environment has access to hass, attach its loader

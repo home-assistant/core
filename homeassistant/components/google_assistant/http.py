@@ -12,8 +12,7 @@ import jwt
 
 from homeassistant.components import webhook
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -158,20 +157,13 @@ class GoogleConfig(AbstractConfig):
 
         return None
 
-    def should_expose(self, state) -> bool:
+    def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
         expose_by_default = self._config.get(CONF_EXPOSE_BY_DEFAULT)
         exposed_domains = self._config.get(CONF_EXPOSED_DOMAINS)
 
-        if state.attributes.get("view") is not None:
-            # Ignore entities that are views
-            return False
-
-        if state.entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            return False
-
         entity_registry = er.async_get(self.hass)
-        registry_entry = entity_registry.async_get(state.entity_id)
+        registry_entry = entity_registry.async_get(entity_id)
         if registry_entry:
             auxiliary_entity = (
                 registry_entry.entity_category is not None
@@ -180,10 +172,10 @@ class GoogleConfig(AbstractConfig):
         else:
             auxiliary_entity = False
 
-        explicit_expose = self.entity_config.get(state.entity_id, {}).get(CONF_EXPOSE)
+        explicit_expose = self.entity_config.get(entity_id, {}).get(CONF_EXPOSE)
 
         domain_exposed_by_default = (
-            expose_by_default and state.domain in exposed_domains
+            expose_by_default and split_entity_id(entity_id)[0] in exposed_domains
         )
 
         # Expose an entity by default if the entity's domain is exposed by default

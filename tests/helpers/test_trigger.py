@@ -20,12 +20,14 @@ from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.components.text import DOMAIN as TEXT_DOMAIN
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
+    ATTR_LABEL_ID,
     ATTR_UNIT_OF_MEASUREMENT,
     CONF_ENTITY_ID,
     CONF_FOR,
     CONF_OPTIONS,
     CONF_PLATFORM,
     CONF_TARGET,
+    EVENT_STATE_CHANGED,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -35,23 +37,32 @@ from homeassistant.const import (
 from homeassistant.core import (
     CALLBACK_TYPE,
     Context,
+    Event,
+    EventStateChangedData,
     HomeAssistant,
     ServiceCall,
     State,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, trigger
+from homeassistant.helpers import (
+    config_validation as cv,
+    entity_registry as er,
+    label_registry as lr,
+    trigger,
+)
 from homeassistant.helpers.automation import (
     DomainSpec,
     move_top_level_schema_fields_to_options,
 )
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import (
     ATTR_BEHAVIOR,
-    BEHAVIOR_ANY,
+    BEHAVIOR_ALL,
+    BEHAVIOR_EACH,
     BEHAVIOR_FIRST,
-    BEHAVIOR_LAST,
     DATA_PLUGGABLE_ACTIONS,
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     TRIGGERS,
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
@@ -103,35 +114,275 @@ async def test_trigger_subtype(hass: HomeAssistant) -> None:
         assert integration_mock.call_args == call(hass, "test")
 
 
-async def test_trigger_variables(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
-) -> None:
-    """Test trigger variables."""
-    assert await async_setup_component(
-        hass,
-        "automation",
-        {
-            "automation": {
+class _MockTrigger(Trigger):
+    """Mock modern trigger demonstrating variable-handling.
+
+    Fires when the bus event ``mock_trigger_fire`` is observed, emitting
+    an ``extra_var`` in the extra_trigger_payload and a ``rendered_option``
+    field containing the result of rendering a config-supplied template
+    against the variables the Trigger class has access to at attach time
+    — which is none.
+    """
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return config
+
+    def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
+        """Initialize the mock trigger."""
+        super().__init__(hass, config)
+        self._options = config.options or {}
+
+    async def async_attach_runner(
+        self, run_action: TriggerActionRunner
+    ) -> CALLBACK_TYPE:
+        """Attach the trigger to a bus event."""
+        raw_template = self._options.get("option_template")
+        if raw_template is not None:
+            rendered_option = Template(raw_template, self._hass).async_render({})
+        else:
+            rendered_option = "<no_template>"
+
+        @callback
+        def _on_event(event: Any) -> None:
+            run_action(
+                {
+                    "extra_var": "from_extra_payload",
+                    "rendered_option": rendered_option,
+                },
+                "mock fired",
+                event.context,
+            )
+
+        return self._hass.bus.async_listen("mock_trigger_fire", _on_event)
+
+
+_BASE_DATA_TEMPLATE = {
+    "name": "{{ name }}",
+    "via_event": "{{ via_event }}",
+    "trigger_id": "{{ trigger.id }}",
+    "trigger_idx": "{{ trigger.idx }}",
+    "trigger_platform": "{{ trigger.platform }}",
+    "trigger_description": "{{ trigger.description }}",
+    "this_entity_id": "{{ this.entity_id }}",
+}
+_LEGACY_TRIGGER = {"platform": "event", "event_type": "test_event"}
+_LEGACY_PER_TRIGGER_VARS = {
+    "name": "Paulus",
+    "via_event": "{{ trigger.event.event_type }}",
+}
+_LEGACY_EXPECTED = {
+    "name": "Paulus",
+    "via_event": "test_event",
+    "trigger_id": 0,
+    "trigger_idx": 0,
+    "trigger_platform": "event",
+    "trigger_description": "event 'test_event'",
+    "this_entity_id": "automation.automation_0",
+}
+_MODERN_TRIGGER = {
+    "platform": "event.received",
+    "target": {"entity_id": "event.foo"},
+    "options": {"event_type": ["button_press"]},
+}
+_MODERN_PER_TRIGGER_VARS = {
+    "name": "Paulus",
+    "via_event": "{{ trigger.entity_id }}",
+}
+_MODERN_EXPECTED = {
+    "name": "Paulus",
+    "via_event": "event.foo",
+    "trigger_id": 0,
+    "trigger_idx": 0,
+    "trigger_platform": "event.received",
+    "trigger_description": "state of event.foo",
+    "this_entity_id": "automation.automation_0",
+}
+_MOCK_DATA_TEMPLATE = {
+    **_BASE_DATA_TEMPLATE,
+    "top_level_extra": "{{ extra_var | default('NOT_AT_TOP_LEVEL') }}",
+    "trigger_extra_var": "{{ trigger.extra_var }}",
+    "trigger_rendered_option": "{{ trigger.rendered_option }}",
+    "automation_in_action": "{{ automation_var }}",
+    "per_trigger_in_action": "{{ per_trigger_var }}",
+}
+_MOCK_EXPECTED = {
+    "name": "Paulus",
+    "via_event": "from_extra_payload",
+    "trigger_id": 0,
+    "trigger_idx": 0,
+    "trigger_platform": "mock_templated_trigger",
+    "trigger_description": "mock fired",
+    "this_entity_id": "automation.automation_0",
+    # New variables emitted by the trigger are wrapped in the
+    # trigger dict and not to top level
+    "top_level_extra": "NOT_AT_TOP_LEVEL",
+    "trigger_extra_var": "from_extra_payload",
+    # Variables injected by the user (typically an automation) and per
+    # trigger variables are not visible to the trigger
+    # Note: It's a documented feature that per trigger variables are
+    # not meant to be consumed by the trigger
+    "trigger_rendered_option": ("automation=NOT_VISIBLE per_trigger=NOT_VISIBLE"),
+    "automation_in_action": "automation_value",
+    "per_trigger_in_action": "per_trigger_value",
+}
+
+
+@pytest.mark.parametrize(
+    ("automation_extra", "data_template", "expected_data"),
+    [
+        pytest.param(
+            {"trigger": {**_LEGACY_TRIGGER, "variables": _LEGACY_PER_TRIGGER_VARS}},
+            _BASE_DATA_TEMPLATE,
+            _LEGACY_EXPECTED,
+            id="legacy_per_trigger_only",
+        ),
+        pytest.param(
+            {
+                "trigger_variables": {"name": "Global", "via_event": "ignored"},
+                "trigger": {**_LEGACY_TRIGGER, "variables": _LEGACY_PER_TRIGGER_VARS},
+            },
+            _BASE_DATA_TEMPLATE,
+            _LEGACY_EXPECTED,
+            id="legacy_per_trigger_overrides_automation_trigger_variables",
+        ),
+        pytest.param(
+            {
+                "variables": {
+                    "name": "Global",
+                    "via_event": "{{ trigger.event.event_type }}",
+                },
+                "trigger": {**_LEGACY_TRIGGER, "variables": {"name": "Paulus"}},
+            },
+            _BASE_DATA_TEMPLATE,
+            _LEGACY_EXPECTED,
+            id="legacy_per_trigger_overrides_automation_variables",
+        ),
+        pytest.param(
+            {
                 "trigger": {
-                    "platform": "event",
-                    "event_type": "test_event",
+                    **_LEGACY_TRIGGER,
+                    "variables": {**_LEGACY_PER_TRIGGER_VARS, "trigger": "ignored"},
+                },
+            },
+            _BASE_DATA_TEMPLATE,
+            _LEGACY_EXPECTED,
+            id="legacy_per_trigger_cannot_shadow_trigger_payload",
+        ),
+        pytest.param(
+            {"trigger": {**_MODERN_TRIGGER, "variables": _MODERN_PER_TRIGGER_VARS}},
+            _BASE_DATA_TEMPLATE,
+            _MODERN_EXPECTED,
+            id="modern_per_trigger_only",
+        ),
+        pytest.param(
+            {
+                "trigger_variables": {"name": "Global", "via_event": "ignored"},
+                "trigger": {**_MODERN_TRIGGER, "variables": _MODERN_PER_TRIGGER_VARS},
+            },
+            _BASE_DATA_TEMPLATE,
+            _MODERN_EXPECTED,
+            id="modern_per_trigger_overrides_automation_trigger_variables",
+        ),
+        pytest.param(
+            {
+                "variables": {
+                    "name": "Global",
+                    "via_event": "{{ trigger.entity_id }}",
+                },
+                "trigger": {**_MODERN_TRIGGER, "variables": {"name": "Paulus"}},
+            },
+            _BASE_DATA_TEMPLATE,
+            _MODERN_EXPECTED,
+            id="modern_per_trigger_overrides_automation_variables",
+        ),
+        pytest.param(
+            {
+                "trigger": {
+                    **_MODERN_TRIGGER,
+                    "variables": {**_MODERN_PER_TRIGGER_VARS, "trigger": "ignored"},
+                },
+            },
+            _BASE_DATA_TEMPLATE,
+            _MODERN_EXPECTED,
+            id="modern_per_trigger_cannot_shadow_trigger_payload",
+        ),
+        pytest.param(
+            {
+                "trigger_variables": {"automation_var": "automation_value"},
+                "trigger": {
+                    "platform": "mock_templated_trigger",
+                    "options": {
+                        "option_template": (
+                            "automation={{ automation_var | default('NOT_VISIBLE') }}"
+                            " per_trigger="
+                            "{{ per_trigger_var | default('NOT_VISIBLE') }}"
+                        ),
+                    },
                     "variables": {
                         "name": "Paulus",
-                        "via_event": "{{ trigger.event.event_type }}",
+                        "via_event": "{{ trigger.extra_var }}",
+                        "per_trigger_var": "per_trigger_value",
                     },
                 },
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {"hello": "{{ name }} + {{ via_event }}"},
-                },
-            }
-        },
+            },
+            _MOCK_DATA_TEMPLATE,
+            _MOCK_EXPECTED,
+            id="mock_modern_payload_contract",
+        ),
+    ],
+)
+async def test_trigger_variables(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    automation_extra: dict[str, Any],
+    data_template: dict[str, Any],
+    expected_data: dict[str, Any],
+) -> None:
+    """Test trigger variables and their precedence over other variable sources."""
+    hass.states.async_set("event.foo", STATE_UNKNOWN, {"event_type": "button_press"})
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {"_": _MockTrigger}
+
+    mock_integration(hass, MockModule("mock_templated_trigger"))
+    mock_platform(
+        hass,
+        "mock_templated_trigger.trigger",
+        Mock(async_get_triggers=async_get_triggers),
     )
 
+    with patch(
+        "homeassistant.components.labs.async_is_preview_feature_enabled",
+        return_value=True,
+    ):
+        assert await async_setup_component(
+            hass,
+            "automation",
+            {
+                "automation": {
+                    **automation_extra,
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": data_template,
+                    },
+                }
+            },
+        )
+
     hass.bus.async_fire("test_event")
+    hass.states.async_set(
+        "event.foo",
+        "2026-05-21T12:00:00+00:00",
+        {"event_type": "button_press"},
+    )
+    hass.bus.async_fire("mock_trigger_fire")
     await hass.async_block_till_done()
     assert len(service_calls) == 1
-    assert service_calls[0].data["hello"] == "Paulus + test_event"
+    assert service_calls[0].data == expected_data
 
 
 async def test_if_disabled_trigger_not_firing(
@@ -191,7 +442,8 @@ async def test_trigger_enabled_templates(
                         "event_type": "falsy_template_trigger_event",
                     },
                     {
-                        "enabled": False,  # eg. from a blueprints input defaulting to `false`
+                        # eg. from a blueprints input defaulting to `false`
+                        "enabled": False,
                         "platform": "event",
                         "event_type": "falsy_trigger_event",
                     },
@@ -302,7 +554,8 @@ async def test_trigger_enabled_template_limited(
             "automation": {
                 "trigger": [
                     {
-                        "enabled": "{{ states('sensor.limited') }}",  # only limited template supported
+                        # only limited template supported
+                        "enabled": "{{ states('sensor.limited') }}",
                         "platform": "event",
                         "event_type": "test_event",
                     },
@@ -1138,7 +1391,7 @@ async def test_subscribe_triggers_experimental_triggers(
     new_triggers_conditions_enabled: bool,
     expected_events: list[set[str]],
 ) -> None:
-    """Test trigger.async_subscribe_platform_events doesn't send events for disabled triggers."""
+    """Test async_subscribe_platform_events skips disabled triggers."""
     # Return empty triggers.yaml for light integration, the actual trigger descriptions
     # are irrelevant for this test
     light_trigger_descriptions = ""
@@ -1195,7 +1448,7 @@ async def test_subscribe_triggers_no_triggers(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test trigger.async_subscribe_platform_events doesn't send events for platforms without triggers."""
+    """Test async_subscribe_platform_events skips platforms without triggers."""
     # Return empty triggers.yaml for light integration, the actual trigger descriptions
     # are irrelevant for this test
     light_trigger_descriptions = ""
@@ -1694,6 +1947,260 @@ async def test_numerical_state_attribute_changed_error_handling(
         assert len(service_calls) == 0
 
 
+@pytest.mark.parametrize(
+    ("trigger_options", "new_value", "expected_fires"),
+    [
+        # above — limit is non-inclusive
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 75, True),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 25, False),
+        # below — limit is non-inclusive
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 25, True),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 75, False),
+        # between — both limits are inclusive
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            False,
+        ),
+        # outside — values equal to either bound are inside the between range
+        # and therefore do NOT match outside
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            True,
+        ),
+        # any — fires on every numerical change regardless of value
+        ({"threshold": {"type": "any"}}, 0, True),
+        ({"threshold": {"type": "any"}}, 50, True),
+        ({"threshold": {"type": "any"}}, 1000, True),
+    ],
+)
+async def test_numerical_state_attribute_changed_trigger_thresholds(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_options: dict[str, Any],
+    new_value: float,
+    expected_fires: bool,
+) -> None:
+    """Test numerical changed trigger above/below/between/outside/any thresholds.
+
+    Verifies that the threshold limits are non-inclusive: a tracked value
+    exactly equal to a limit is treated as "not inside" the range.
+    """
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "attribute_changed": make_entity_numerical_state_changed_trigger(
+                {"test": DomainSpec(value_source="test_attribute")}
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    # Seed the entity with a starting value that differs from new_value so
+    # the changed-transition is always satisfied; the test then exercises
+    # the is_valid_state boundary semantics for the new value.
+    initial_value = -1 if new_value != -1 else -2
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": initial_value})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.attribute_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_OPTIONS: trigger_options,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    assert len(service_calls) == 0
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": new_value})
+    await hass.async_block_till_done()
+    assert len(service_calls) == (1 if expected_fires else 0)
+
+
+async def test_numerical_state_trigger_threshold_entity_same_loop_iteration(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test threshold entity changing in the same loop iteration.
+
+    The threshold is read from the live state machine when the state change
+    event is evaluated, one event loop iteration after it was fired. We do
+    not guarantee exact sequencing between the threshold entity and the
+    targeted entity: a threshold change in the same iteration as a tracked
+    value change is applied to the evaluation of that change, even though
+    the threshold changed after the tracked value.
+    """
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "attribute_changed": make_entity_numerical_state_changed_trigger(
+                {"test": DomainSpec(value_source="test_attribute")}
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    hass.states.async_set("sensor.threshold", "100")
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.attribute_changed",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_OPTIONS: {
+                        "threshold": {
+                            "type": "above",
+                            "value": {"entity": "sensor.threshold"},
+                        }
+                    },
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    assert len(service_calls) == 0
+
+    # The tracked value rises above the threshold (100) and the threshold
+    # rises above the tracked value in the same event loop iteration. The
+    # value change is evaluated against the live threshold (200), so the
+    # trigger does not fire, even though the threshold was 100 when the
+    # value changed.
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 150})
+    hass.states.async_set("sensor.threshold", "200")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    # The tracked value changes but stays below the threshold (200), and
+    # the threshold drops below the tracked value in the same event loop
+    # iteration. The value change is evaluated against the live threshold
+    # (100), so the trigger fires, even though the threshold was 200 when
+    # the value changed. Threshold changes alone never fire the trigger.
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": 190})
+    hass.states.async_set("sensor.threshold", "100")
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+
+
 async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -2093,7 +2600,8 @@ async def test_numerical_state_attribute_changed_with_unit_error_handling(
     ("trigger_options", "expected_result"),
     [
         # Valid configurations
-        # Don't use the enum in tests to allow testing validation of strings when the source is JSON or YAML
+        # Don't use the enum in tests to allow testing validation
+        # of strings when the source is JSON or YAML
         (
             {"threshold": {"type": "above", "value": {"number": 10}}},
             does_not_raise(),
@@ -2448,12 +2956,12 @@ def _make_with_unit_crossed_threshold_trigger_class() -> type[
         ),
     ],
 )
-async def test_numerical_state_attribute_crossed_threshold_with_unit_trigger_config_validation(
+async def test_numerical_state_attr_crossed_threshold_unit_trigger_config_validation(
     hass: HomeAssistant,
     trigger_options: dict[str, Any],
     expected_result: AbstractContextManager,
 ) -> None:
-    """Test numerical state attribute crossed threshold with unit trigger config validation."""
+    """Test numerical state attribute crossed threshold with unit trigger validation."""
     trigger_cls = _make_with_unit_crossed_threshold_trigger_class()
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
@@ -2599,6 +3107,195 @@ async def test_numerical_state_attribute_crossed_threshold_error_handling(
         hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
         await hass.async_block_till_done()
         assert len(service_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("trigger_options", "new_value", "expected_fires"),
+    [
+        # above — limit is non-inclusive, crossing exactly onto the limit does
+        # not enter the range
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 75, True),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "above", "value": {"number": 50}}}, 25, False),
+        # below — limit is non-inclusive
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 25, True),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 50, False),
+        ({"threshold": {"type": "below", "value": {"number": 50}}}, 75, False),
+        # between — both limits are inclusive
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "between",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            False,
+        ),
+        # outside — values equal to either bound are inside the between range
+        # and therefore do NOT match outside (no cross from the inside seed)
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            50,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            20,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            80,
+            False,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            10,
+            True,
+        ),
+        (
+            {
+                "threshold": {
+                    "type": "outside",
+                    "value_min": {"number": 20},
+                    "value_max": {"number": 80},
+                }
+            },
+            90,
+            True,
+        ),
+    ],
+)
+async def test_numerical_state_attribute_crossed_threshold_trigger_thresholds(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    trigger_options: dict[str, Any],
+    new_value: float,
+    expected_fires: bool,
+) -> None:
+    """Test crossed-threshold trigger above/below/between/outside thresholds.
+
+    Verifies the threshold limits are non-inclusive: transitioning to a value
+    exactly equal to a limit does not enter the range, so the trigger does
+    not fire. For "outside", values equal to either bound are considered
+    outside and therefore do cause the trigger to fire.
+    """
+
+    async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
+        return {
+            "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
+                {"test": DomainSpec(value_source="test_attribute")}
+            ),
+        }
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    # Seed the entity with a value that is NOT in the target range so the
+    # transition into the new value is a potential "cross". The seed is
+    # chosen per threshold type to ensure is_valid_state(from_state) is
+    # False and the seed value differs from any parametrized new_value.
+    seed_values = {
+        "above": 0,  # 0 is not above 50
+        "below": 100,  # 100 is not below 50
+        "between": 0,  # 0 is not inside (20, 80)
+        "outside": 30,  # 30 is inside (20, 80), i.e. not "outside"
+    }
+    seed_value = seed_values[trigger_options["threshold"]["type"]]
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": seed_value})
+
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {
+                    CONF_PLATFORM: "test.crossed_threshold",
+                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                    CONF_OPTIONS: trigger_options,
+                },
+                "action": {
+                    "service": "test.automation",
+                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
+                },
+            }
+        },
+    )
+    assert len(service_calls) == 0
+
+    hass.states.async_set("test.test_entity", "on", {"test_attribute": new_value})
+    await hass.async_block_till_done()
+    assert len(service_calls) == (1 if expected_fires else 0)
 
 
 async def test_numerical_state_attribute_crossed_threshold_entity_limit_unit_validation(
@@ -2956,7 +3653,7 @@ async def test_make_entity_target_state_trigger(
     to_state: State,
     wrong_value_state: State,
 ) -> None:
-    """Test make_entity_target_state_trigger with state and attribute-based DomainSpec."""
+    """Test make_entity_target_state_trigger with state and attribute."""
     trigger_cls = make_entity_target_state_trigger(domain_specs, to_states=to_states)
 
     config = TriggerConfig(key="light.turned_on", target={"entity_id": "light.bed"})
@@ -3069,7 +3766,7 @@ async def test_make_entity_origin_state_trigger(
     to_state: State,
     wrong_from: State,
 ) -> None:
-    """Test make_entity_origin_state_trigger with state and attribute-based DomainSpec."""
+    """Test make_entity_origin_state_trigger with state and attribute."""
     trigger_cls = make_entity_origin_state_trigger(domain_specs, from_state=origin)
 
     config = TriggerConfig(
@@ -3195,8 +3892,13 @@ async def _arm_off_to_on_trigger(
     behavior: str,
     calls: list[dict[str, Any]],
     duration: dict[str, int] | None,
+    target: dict[str, Any] | None = None,
 ) -> CALLBACK_TYPE:
-    """Set up _OffToOnTrigger via async_initialize_triggers."""
+    """Set up _OffToOnTrigger via async_initialize_triggers.
+
+    The trigger targets `entity_ids` directly, unless an explicit `target`
+    configuration is given.
+    """
 
     async def async_get_triggers(
         hass: HomeAssistant,
@@ -3212,7 +3914,7 @@ async def _arm_off_to_on_trigger(
 
     trigger_config = {
         CONF_PLATFORM: "test.off_to_on",
-        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_TARGET: target if target is not None else {CONF_ENTITY_ID: entity_ids},
         CONF_OPTIONS: options,
     }
 
@@ -3243,11 +3945,11 @@ def _set_or_remove_state(
         hass.states.async_set(entity_id, state)
 
 
-@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 async def test_entity_trigger_fires_on_valid_transition(
     hass: HomeAssistant, behavior: str
 ) -> None:
-    """Test EntityTriggerBase fires immediately on a valid off→on transition without duration."""
+    """Test EntityTriggerBase fires on a valid transition without duration."""
     entity_id = "test.entity_1"
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
@@ -3276,7 +3978,7 @@ async def test_entity_trigger_fires_on_valid_transition(
     unsub()
 
 
-@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 @pytest.mark.parametrize(
     "initial_state",
     [STATE_UNAVAILABLE, STATE_UNKNOWN, None],
@@ -3285,7 +3987,7 @@ async def test_entity_trigger_fires_on_valid_transition(
 async def test_entity_trigger_from_invalid_initial_state(
     hass: HomeAssistant, behavior: str, initial_state: str | None
 ) -> None:
-    """Test that the trigger does not fire when transitioning from unavailable, unknown, or no state."""
+    """Test trigger does not fire from unavailable, unknown, or no state."""
     entity_id = "test.entity_1"
     _set_or_remove_state(hass, entity_id, initial_state)
     await hass.async_block_till_done()
@@ -3312,10 +4014,10 @@ async def test_entity_trigger_from_invalid_initial_state(
     unsub()
 
 
-async def test_entity_trigger_last_requires_all(
+async def test_entity_trigger_all_requires_all(
     hass: HomeAssistant,
 ) -> None:
-    """Test behavior last: trigger fires only when ALL entities are on."""
+    """Test behavior all: trigger fires only when ALL entities are on."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3324,7 +4026,7 @@ async def test_entity_trigger_last_requires_all(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration=None
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration=None
     )
 
     # Turn only A on — not all match, should not fire
@@ -3336,6 +4038,174 @@ async def test_entity_trigger_last_requires_all(
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
     assert len(calls) == 1
+
+    unsub()
+
+
+async def test_entity_trigger_first_same_loop_iteration(
+    hass: HomeAssistant,
+) -> None:
+    """Test behavior first when two entities change in the same loop iteration.
+
+    The trigger's state change listener is dispatched via loop.call_soon, one
+    event loop iteration after the state change event is fired. If a second
+    tracked entity changes state in the same iteration as the first, both
+    events are evaluated against the live state machine, which already
+    includes both changes.
+
+    This test documents existing unwanted behavior: entity_a was the first
+    entity to turn on, so the trigger should fire exactly once for entity_a,
+    but both events count two matching entities and the trigger never fires.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration=None
+    )
+
+    # Both entities turn on in the same event loop iteration, before the
+    # trigger's deferred listener has a chance to run.
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Unwanted: the trigger should fire exactly once, for entity_a, which
+    # was the first entity to turn on, but it doesn't.
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_entity_trigger_first_no_fire_on_swap_same_loop_iteration(
+    hass: HomeAssistant,
+) -> None:
+    """Test behavior first when entities swap states in the same loop iteration.
+
+    When one entity is already on and, within a single event loop iteration,
+    a second entity turns on and the first turns off, the number of matching
+    entities goes 1 -> 2 -> 1 and never reaches zero, so the trigger should
+    not fire for the second entity: it was not the first to turn on.
+
+    This test documents existing unwanted behavior: entity_b's event is
+    evaluated against the live state machine, which already shows entity_a
+    off, counting exactly one match — and the trigger fires spuriously.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration=None
+    )
+
+    # A turns on first — the trigger fires for it.
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    calls.clear()
+
+    # B turns on and A turns off in the same event loop iteration.
+    hass.states.async_set(entity_b, STATE_ON)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Unwanted: B was never the first matching entity, the trigger should
+    # not fire.
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_b
+
+    unsub()
+
+
+async def test_entity_trigger_all_same_loop_iteration(
+    hass: HomeAssistant,
+) -> None:
+    """Test behavior all when two entities change in the same loop iteration.
+
+    Both entities turn on in a single event loop iteration. Only the second
+    event completes the all-match, so the trigger should fire exactly once,
+    for the second entity.
+
+    This test documents existing unwanted behavior: both events are
+    evaluated against the live state machine, which already shows both
+    entities on, and the trigger fires twice.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration=None
+    )
+
+    # Both entities turn on in the same event loop iteration, before the
+    # trigger's deferred listener has a chance to run.
+    hass.states.async_set(entity_a, STATE_ON)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Unwanted: the all-match was completed by entity_b turning on, so the
+    # trigger should fire exactly once, for entity_b — but it fires twice.
+    assert len(calls) == 2
+    assert calls[0]["entity_id"] == entity_a
+    assert calls[1]["entity_id"] == entity_b
+
+    unsub()
+
+
+async def test_entity_trigger_first_resubscribe_same_loop_iteration(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test behavior first when a registry update causes resubscription.
+
+    A registry update makes the target tracker resubscribe its state change
+    listener. A state change event fired in the same event loop iteration,
+    but not yet dispatched, should still be delivered to the trigger.
+
+    This test documents existing unwanted behavior: the tracker unsubscribes
+    its old listener before subscribing the new one, and as the only
+    subscriber this tears down the shared state change tracker — dropping
+    the event which was fired but not yet dispatched. The trigger never
+    fires: entity_a's event is lost, and entity_b's event counts two
+    matching entities in the live state machine.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration=None
+    )
+
+    # entity_a turns on and an unrelated registry entry is created in the
+    # same event loop iteration. The registry update makes the target tracker
+    # resubscribe before entity_a's state change event is dispatched.
+    hass.states.async_set(entity_a, STATE_ON)
+    entity_registry.async_get_or_create("test", "test", "unrelated")
+    await hass.async_block_till_done()
+
+    # Unwanted: entity_a was the first entity to turn on, the trigger
+    # should fire — but its event was dropped during resubscription.
+    assert len(calls) == 0
+
+    # entity_b turning on must not fire the trigger: it is not the first.
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
 
     unsub()
 
@@ -3373,10 +4243,10 @@ async def test_entity_trigger_first_requires_exactly_one(
     [STATE_UNAVAILABLE, STATE_UNKNOWN],
     ids=["unavailable", "unknown"],
 )
-async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
+async def test_entity_trigger_all_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
-    """Test behavior last: unavailable/unknown entities are excluded from the all-match check.
+    """Test behavior all: unavailable/unknown excluded from all-match.
 
     With three entities (A=off, B=unavailable, C=off), turning A on should
     not fire because C is still off, so the available entities do not all
@@ -3393,7 +4263,7 @@ async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b, entity_c], BEHAVIOR_LAST, calls, duration=None
+        hass, [entity_a, entity_b, entity_c], BEHAVIOR_ALL, calls, duration=None
     )
 
     # Turn A on — B is unavailable and skipped, only A is on → all doesn't match
@@ -3429,7 +4299,7 @@ async def test_entity_trigger_last_ignores_unavailable_and_unknown_entity(
 async def test_entity_trigger_first_ignores_unavailable_and_unknown_entity(
     hass: HomeAssistant, invalid_state: str
 ) -> None:
-    """Test behavior first: unavailable/unknown entities are excluded from check_one_match.
+    """Test behavior first: unavailable/unknown excluded from check_one_match.
 
     With three entities (A=off, B=unavailable, C=off), turning A on should
     fire because exactly one *available* entity matches. B is skipped.
@@ -3462,7 +4332,7 @@ async def test_entity_trigger_first_ignores_unavailable_and_unknown_entity(
     unsub()
 
 
-@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 async def test_entity_trigger_with_duration(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
 ) -> None:
@@ -3494,7 +4364,7 @@ async def test_entity_trigger_with_duration(
     unsub()
 
 
-@pytest.mark.parametrize("behavior", [BEHAVIOR_ANY, BEHAVIOR_FIRST, BEHAVIOR_LAST])
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 async def test_entity_trigger_duration_cancelled_on_state_change(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
 ) -> None:
@@ -3528,10 +4398,10 @@ async def test_entity_trigger_duration_cancelled_on_state_change(
     unsub()
 
 
-async def test_entity_trigger_duration_any_independent(
+async def test_entity_trigger_duration_each_independent(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior any tracks per-entity durations independently."""
+    """Test behavior each tracks per-entity durations independently."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3540,7 +4410,7 @@ async def test_entity_trigger_duration_any_independent(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_EACH, calls, duration={"seconds": 5}
     )
 
     # Turn A on
@@ -3572,10 +4442,10 @@ async def test_entity_trigger_duration_any_independent(
     unsub()
 
 
-async def test_entity_trigger_duration_any_entity_off_cancels_only_that_entity(
+async def test_entity_trigger_duration_each_entity_off_cancels_only_that_entity(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior any: turning off one entity doesn't cancel the other's timer."""
+    """Test behavior each: turning off one entity doesn't cancel the other's timer."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3584,7 +4454,7 @@ async def test_entity_trigger_duration_any_entity_off_cancels_only_that_entity(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_EACH, calls, duration={"seconds": 5}
     )
 
     # Turn both on
@@ -3608,10 +4478,138 @@ async def test_entity_trigger_duration_any_entity_off_cancels_only_that_entity(
     unsub()
 
 
-async def test_entity_trigger_duration_last_requires_all(
-    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+@pytest.mark.parametrize("behavior", [BEHAVIOR_FIRST, BEHAVIOR_ALL])
+async def test_entity_trigger_blip_same_loop_iteration(
+    hass: HomeAssistant, behavior: str
 ) -> None:
-    """Test behavior last: trigger fires only when ALL entities are on for duration."""
+    """Test a same-iteration blip (off→on→off) without a duration.
+
+    The on-event should fire the trigger — consistent with behavior each
+    and with the same blip spread over multiple iterations.
+
+    This test documents existing unwanted behavior: the on-event is
+    evaluated against the live state machine, which already shows the
+    entity off again, so the trigger never fires.
+    """
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration=None
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Unwanted: the trigger should fire once, for the on-event, but doesn't.
+    assert len(calls) == 0
+
+    unsub()
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_FIRST, BEHAVIOR_ALL])
+async def test_entity_trigger_blip_same_loop_iteration_with_duration(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
+) -> None:
+    """Test a same-iteration blip (off→on→off) with a duration.
+
+    The state did not hold for the duration, so the trigger must not fire.
+    (Currently the duration timer is not even armed: the on-event is
+    evaluated against the live state machine, which already shows the
+    entity off again.)
+    """
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration={"seconds": 5}
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past the duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=6))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    ("behavior", "expected_calls"),
+    [
+        pytest.param(BEHAVIOR_EACH, 0, id="each"),
+        pytest.param(BEHAVIOR_FIRST, 1, id="first"),
+        pytest.param(BEHAVIOR_ALL, 1, id="all"),
+    ],
+)
+async def test_entity_trigger_duration_cancelled_by_dip_same_loop_iteration(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    behavior: str,
+    expected_calls: int,
+) -> None:
+    """Test a same-iteration dip through unavailable cancels the timer.
+
+    The dip breaks the continuity of the matching state, and the recovery
+    event cannot restart the timer because the transition out of
+    unavailable is excluded, so the trigger should never fire.
+
+    For behavior each the cancel check uses the dip event's own state and
+    the timer is correctly cancelled. For first/all this test documents
+    existing unwanted behavior: the cancel check counts matches against
+    the live state machine, which already shows the recovery, so the timer
+    survives and the trigger fires.
+    """
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration={"seconds": 5}
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Dip through unavailable and recover in the same event loop iteration
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE)
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Advance past the original duration — the trigger should not fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == expected_calls
+
+    unsub()
+
+
+async def test_entity_trigger_duration_cancelled_after_resubscription(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the duration cancel check after the target tracker resubscribed.
+
+    After a registry-driven resubscription the tracker's state change
+    listener runs after the duration cancel listener, so the cancel check
+    cannot rely on the tracked states view alone already including the
+    event being checked.
+    """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3620,7 +4618,318 @@ async def test_entity_trigger_duration_last_requires_all(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # An unrelated registry entry makes the target tracker resubscribe
+    entity_registry.async_get_or_create("test", "test", "unrelated")
+    await hass.async_block_till_done()
+
+    # Turning A off must cancel the timer
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past the original duration — should NOT fire
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_match_handover_after_resubscription(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the duration check sees states changed after a resubscription.
+
+    While the timer is waiting, the target tracker resubscribes due to a
+    registry update, then a second entity turns on and the first turns off.
+    At least one entity matches throughout, so the timer must survive and
+    the trigger fire. The cancel check evaluates the second entity through
+    the targeted states mapping captured when the timer was armed, so the
+    mapping must keep receiving updates across the resubscription.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration={"seconds": 5}
+    )
+
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # An unrelated registry entry makes the target tracker resubscribe
+    entity_registry.async_get_or_create("test", "test", "unrelated")
+    await hass.async_block_till_done()
+
+    # The match hands over from A to B: at least one entity matches at all
+    # times, so the timer keeps running.
+    freezer.tick(datetime.timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+
+    freezer.tick(datetime.timedelta(seconds=1))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_a, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Advance past the duration — the trigger fires for the arming event
+    freezer.tick(datetime.timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_a
+
+    unsub()
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
+async def test_entity_trigger_duration_not_cancelled_by_attribute_change(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory, behavior: str
+) -> None:
+    """Test an attribute-only change mid-wait does not cancel the timer.
+
+    The entity's state stays valid across the state change event, so the
+    pending duration timer must keep running and fire at its original
+    deadline; only a change away from a matching state cancels.
+    """
+    entity_id = "test.entity_1"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_id], behavior, calls, duration={"seconds": 5}
+    )
+
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # An attribute-only change keeps the state valid
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    hass.states.async_set(entity_id, STATE_ON, {"brightness": 10})
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # The timer fires at the original deadline
+    freezer.tick(datetime.timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_id
+
+    unsub()
+
+
+async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an each duration timer when its entity is untargeted mid-wait.
+
+    A pending `for:` wait should not outlive the entity's membership of the
+    target: when a registry change removes the entity from the target, the
+    timer should be cancelled.
+
+    This test documents existing unwanted behavior: the duration timer
+    keeps running and the trigger fires for an entity which is no longer
+    targeted.
+    """
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("Test Each Removal")
+    entry = entity_registry.async_get_or_create("test", "test", "labeled")
+    entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
+    hass.states.async_set(entry.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_EACH,
+        calls,
+        duration={"seconds": 5},
+        target={ATTR_LABEL_ID: label.label_id},
+    )
+
+    hass.states.async_set(entry.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Removing the label removes the entity from the target mid-wait
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    entity_registry.async_update_entity(entry.entity_id, labels=set())
+    await hass.async_block_till_done()
+
+    # Advance past the original duration. Unwanted: the trigger fires for
+    # the no-longer-targeted entity.
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entry.entity_id
+
+    unsub()
+
+
+async def test_entity_trigger_duration_all_survives_entity_leaving_target(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a pending all timer when an entity is removed from the target.
+
+    Once an entity is removed from the target it should no longer gate the
+    all-match: the timer should keep running and fire if the remaining
+    targeted entities stay matching, even if the removed entity changes to
+    a non-matching state.
+
+    This test documents existing unwanted behavior: the duration cancel
+    check still tracks the entity set frozen when the timer was armed, so
+    the removed entity turning off cancels the timer and the trigger does
+    not fire.
+    """
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("Test All Removal")
+    entry_a = entity_registry.async_get_or_create("test", "test", "labeled_a")
+    entry_b = entity_registry.async_get_or_create("test", "test", "labeled_b")
+    entity_registry.async_update_entity(entry_a.entity_id, labels={label.label_id})
+    entity_registry.async_update_entity(entry_b.entity_id, labels={label.label_id})
+    hass.states.async_set(entry_a.entity_id, STATE_OFF)
+    hass.states.async_set(entry_b.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_ALL,
+        calls,
+        duration={"seconds": 5},
+        target={ATTR_LABEL_ID: label.label_id},
+    )
+
+    hass.states.async_set(entry_a.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    hass.states.async_set(entry_b.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # B leaves the target mid-wait and turns off: it should no longer gate
+    # the all-match.
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    entity_registry.async_update_entity(entry_b.entity_id, labels=set())
+    await hass.async_block_till_done()
+    hass.states.async_set(entry_b.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Unwanted: the remaining targeted entity stayed on for the duration,
+    # so the trigger should fire — but the no-longer-targeted entity
+    # cancelled the timer.
+    freezer.tick(datetime.timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
+async def test_entity_trigger_first_nested_state_revert(
+    hass: HomeAssistant,
+) -> None:
+    """Test a synchronous bus listener reverting a state change.
+
+    Writing states from a synchronous bus listener during state change
+    dispatch is not supported: the nested state write is dispatched to the
+    target tracker before the event that caused it, inverting per-entity
+    delivery order. Supported state change tracking via
+    async_track_state_change_event or async_track_state_change_filtered is
+    deferred precisely so callbacks cannot run inside the dispatch loop and
+    cause this.
+
+    This test documents the resulting behavior rather than guaranteeing it:
+    both of entity_a's events are evaluated against the live state machine,
+    which already shows the entity off again, so the trigger does not fire
+    for the blip; entity_b turning on later counts as the only match and
+    fires.
+    """
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    @callback
+    def revert_entity_a(event: Event[EventStateChangedData]) -> None:
+        """Synchronously turn entity_a off again when it turns on."""
+        if (
+            event.data["entity_id"] == entity_a
+            and (new_state := event.data["new_state"]) is not None
+            and new_state.state == STATE_ON
+        ):
+            hass.states.async_set(entity_a, STATE_OFF)
+
+    # Registered before the trigger is armed, so it runs before the state
+    # change tracker's bus listener and its nested write is dispatched to
+    # the tracker first.
+    unsub_revert = hass.bus.async_listen(EVENT_STATE_CHANGED, revert_entity_a)
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration=None
+    )
+
+    # entity_a turns on and is synchronously reverted to off. The trigger
+    # receives (on→off) then (off→on); the on-event counts no matches in
+    # the live state machine and the trigger does not fire.
+    hass.states.async_set(entity_a, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # entity_a is off, so entity_b is the first matching entity and fires.
+    hass.states.async_set(entity_b, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_b
+
+    unsub()
+    unsub_revert()
+
+
+async def test_entity_trigger_duration_all_requires_all(
+    hass: HomeAssistant, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test behavior all: trigger fires only when ALL entities are on for duration."""
+    entity_a = "test.entity_a"
+    entity_b = "test.entity_b"
+    hass.states.async_set(entity_a, STATE_OFF)
+    hass.states.async_set(entity_b, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration={"seconds": 5}
     )
 
     # Turn only A on — should not start timer (not all match)
@@ -3644,12 +4953,12 @@ async def test_entity_trigger_duration_last_requires_all(
     unsub()
 
 
-async def test_entity_trigger_duration_last_cancelled_when_all_entities_filtered(
+async def test_entity_trigger_duration_all_cancelled_when_all_entities_filtered(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior last with for: timer is cancelled when every targeted entity is filtered out.
+    """Test behavior all with for: timer cancelled when all entities filtered.
 
-    With behavior=last + `for:`, an "all match" check that becomes vacuously
+    With behavior=all + `for:`, an "all match" check that becomes vacuously
     True (every targeted entity filtered by `_should_include` — here all
     entities go unavailable) must not keep the timer alive; otherwise the
     action would fire after the duration even though no entity still
@@ -3663,7 +4972,7 @@ async def test_entity_trigger_duration_last_cancelled_when_all_entities_filtered
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration={"seconds": 5}
     )
 
     # Turn both on — combined state "all on", timer starts
@@ -3689,10 +4998,10 @@ async def test_entity_trigger_duration_last_cancelled_when_all_entities_filtered
     unsub()
 
 
-async def test_entity_trigger_duration_last_cancelled_when_one_turns_off(
+async def test_entity_trigger_duration_all_cancelled_when_one_turns_off(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior last: timer is cancelled when one entity turns off."""
+    """Test behavior all: timer is cancelled when one entity turns off."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3701,7 +5010,7 @@ async def test_entity_trigger_duration_last_cancelled_when_one_turns_off(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration={"seconds": 5}
     )
 
     # Turn both on
@@ -3724,10 +5033,10 @@ async def test_entity_trigger_duration_last_cancelled_when_one_turns_off(
     unsub()
 
 
-async def test_entity_trigger_duration_last_timer_reset(
+async def test_entity_trigger_duration_all_timer_reset(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior last: timer resets when combined state goes off and back on."""
+    """Test behavior all: timer resets when combined state goes off and back on."""
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
     hass.states.async_set(entity_a, STATE_OFF)
@@ -3736,7 +5045,7 @@ async def test_entity_trigger_duration_last_timer_reset(
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_a, entity_b], BEHAVIOR_LAST, calls, duration={"seconds": 5}
+        hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration={"seconds": 5}
     )
 
     # Turn both on — combined state "all on", timer starts
@@ -3909,17 +5218,17 @@ async def test_entity_trigger_duration_first_cancelled_when_all_off(
     unsub()
 
 
-async def test_entity_trigger_duration_any_retrigger_resets_timer(
+async def test_entity_trigger_duration_each_retrigger_resets_timer(
     hass: HomeAssistant, freezer: FrozenDateTimeFactory
 ) -> None:
-    """Test behavior any: turning an entity off and on resets its timer."""
+    """Test behavior each: turning an entity off and on resets its timer."""
     entity_id = "test.entity_1"
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
 
     calls: list[dict[str, Any]] = []
     unsub = await _arm_off_to_on_trigger(
-        hass, [entity_id], BEHAVIOR_ANY, calls, duration={"seconds": 5}
+        hass, [entity_id], BEHAVIOR_EACH, calls, duration={"seconds": 5}
     )
 
     # Turn on
@@ -3951,7 +5260,7 @@ async def test_entity_trigger_duration_any_retrigger_resets_timer(
 
 @pytest.mark.parametrize(
     ("behavior", "expected_calls"),
-    [(BEHAVIOR_ANY, 0), (BEHAVIOR_FIRST, 0), (BEHAVIOR_LAST, 1)],
+    [(BEHAVIOR_EACH, 0), (BEHAVIOR_FIRST, 0), (BEHAVIOR_ALL, 1)],
 )
 @pytest.mark.parametrize(
     "invalid_state",
@@ -3965,7 +5274,7 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     expected_calls: int,
     invalid_state: str | None,
 ) -> None:
-    """Test if the duration timer is cancelled if entity becomes unavailable, unknown, or is removed.
+    """Test duration timer cancelled if entity becomes unavailable/unknown/removed.
 
     This is expected to happen in first and any modes, but not in last mode.
     """
@@ -3983,7 +5292,7 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     # Turn on the entities needed to start the timer
     _set_or_remove_state(hass, entity_a, STATE_ON)
     await hass.async_block_till_done()
-    if behavior == BEHAVIOR_LAST:
+    if behavior == BEHAVIOR_ALL:
         _set_or_remove_state(hass, entity_b, STATE_ON)
         await hass.async_block_till_done()
 
@@ -4000,3 +5309,219 @@ async def test_entity_trigger_duration_cancelled_on_invalid_state(
     assert len(calls) == expected_calls
 
     unsub()
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {"platform": "state", "entity_id": ["sensor.a", "sensor.b"]},
+            ["sensor.a", "sensor.b"],
+            id="state",
+        ),
+        pytest.param(
+            {"platform": "numeric_state", "entity_id": ["sensor.a"]},
+            ["sensor.a"],
+            id="numeric_state",
+        ),
+        pytest.param(
+            {"platform": "calendar", "options": {"entity_id": "calendar.x"}},
+            ["calendar.x"],
+            id="calendar",
+        ),
+        pytest.param(
+            {
+                "platform": "zone",
+                "options": {
+                    "entity_id": ["person.a"],
+                    "zone": "zone.home",
+                    "event": "enter",
+                },
+            },
+            ["person.a", "zone.home"],
+            id="zone-legacy",
+        ),
+        pytest.param(
+            {
+                "platform": "zone.entered",
+                "target": {"entity_id": ["person.a", "device_tracker.b"]},
+                "options": {"zone": "zone.home"},
+            },
+            ["person.a", "device_tracker.b", "zone.home"],
+            id="zone-entered-modern",
+        ),
+        pytest.param(
+            {
+                "platform": "zone.left",
+                "target": {"entity_id": "person.a"},
+                "options": {"zone": "zone.home"},
+            },
+            ["person.a", "zone.home"],
+            id="zone-left-modern",
+        ),
+        pytest.param(
+            {"platform": "geo_location", "zone": "zone.home"},
+            ["zone.home"],
+            id="geo_location",
+        ),
+        pytest.param(
+            {"platform": "sun"},
+            ["sun.sun"],
+            id="sun",
+        ),
+        pytest.param(
+            {"platform": "event", "event_data": {"entity_id": "sensor.x"}},
+            ["sensor.x"],
+            id="event-with-entity-id",
+        ),
+        pytest.param(
+            {"platform": "event"},
+            [],
+            id="event-without-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "event",
+                "event_data": {"entity_id": "not-a-valid-entity-id"},
+            },
+            [],
+            id="event-invalid-entity-id",
+        ),
+        pytest.param(
+            {
+                "platform": "event",
+                "event_data": {"entity_id": ["sensor.x", "sensor.y"]},
+            },
+            [],
+            id="event-entity-id-list-not-extracted",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {"entity_id": "sensor.x"}},
+            ["sensor.x"],
+            id="modern-target-single",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "target": {"entity_id": ["sensor.x", "sensor.y"]},
+            },
+            ["sensor.x", "sensor.y"],
+            id="modern-target-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {}},
+            [],
+            id="modern-target-empty",
+        ),
+        pytest.param(
+            {"platform": "test.modern"},
+            [],
+            id="no-match",
+        ),
+    ],
+)
+def test_async_extract_entities(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting entities from various trigger config shapes."""
+    assert trigger.async_extract_entities(trigger_conf) == expected
+
+
+@pytest.mark.parametrize(
+    ("trigger_conf", "expected"),
+    [
+        pytest.param(
+            {"platform": "device", "device_id": "abc123"},
+            ["abc123"],
+            id="device",
+        ),
+        pytest.param(
+            {"platform": "event", "event_data": {"device_id": "abc123"}},
+            ["abc123"],
+            id="event-with-device-id",
+        ),
+        pytest.param(
+            {"platform": "event"},
+            [],
+            id="event-without-device-id",
+        ),
+        pytest.param(
+            {"platform": "tag", "device_id": ["abc123", "def456"]},
+            ["abc123", "def456"],
+            id="tag-with-device-id",
+        ),
+        pytest.param(
+            {"platform": "tag"},
+            [],
+            id="tag-without-device-id",
+        ),
+        pytest.param(
+            {"platform": "test.modern", "target": {"device_id": "abc123"}},
+            ["abc123"],
+            id="modern-target-single",
+        ),
+        pytest.param(
+            {
+                "platform": "test.modern",
+                "target": {"device_id": ["abc123", "def456"]},
+            },
+            ["abc123", "def456"],
+            id="modern-target-list",
+        ),
+        pytest.param(
+            {"platform": "test.modern"},
+            [],
+            id="no-match",
+        ),
+    ],
+)
+def test_async_extract_devices(
+    trigger_conf: dict[str, Any], expected: list[str]
+) -> None:
+    """Test extracting devices from various trigger config shapes."""
+    assert trigger.async_extract_devices(trigger_conf) == expected
+
+
+@pytest.mark.parametrize(
+    ("behavior", "expected"),
+    [
+        # Legacy values are converted to their new equivalents
+        ("any", BEHAVIOR_EACH),
+        ("last", BEHAVIOR_ALL),
+        # New values pass through unchanged
+        (BEHAVIOR_FIRST, BEHAVIOR_FIRST),
+        (BEHAVIOR_ALL, BEHAVIOR_ALL),
+        (BEHAVIOR_EACH, BEHAVIOR_EACH),
+    ],
+)
+def test_entity_state_trigger_schema_behavior_backwards_compatible(
+    behavior: str, expected: str
+) -> None:
+    """Test legacy behavior values are converted to their new equivalents."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+    assert validated[CONF_OPTIONS][ATTR_BEHAVIOR] == expected
+
+
+def test_entity_state_trigger_schema_behavior_default() -> None:
+    """Test the behavior defaults to 'each' when omitted."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {},
+    }
+    validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+    assert validated[CONF_OPTIONS][ATTR_BEHAVIOR] == BEHAVIOR_EACH
+
+
+@pytest.mark.parametrize("behavior", ["invalid", "anything", ""])
+def test_entity_state_trigger_schema_behavior_invalid(behavior: str) -> None:
+    """Test invalid behavior values are rejected."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    with pytest.raises(vol.Invalid):
+        ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)

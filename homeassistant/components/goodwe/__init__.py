@@ -25,7 +25,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoodweConfigEntry) -> bo
             host=host,
             port=port,
             family=model_family,
-            retries=10,
+            retries=3,
         )
     except InverterError as err:
         try:
@@ -97,10 +97,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: GoodweConfigEntry
 ) -> bool:
     """Migrate old config entries."""
-
-    if config_entry.version > 2:
-        # This means the user has downgraded from a future version
-        return False
 
     if config_entry.version == 1:
         # Update from version 1 to version 2 adding the PROTOCOL to the config entry

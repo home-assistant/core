@@ -56,7 +56,7 @@ def get_tado_mode(data: dict[str, str]) -> str | None:
 
 
 def get_automatic_geofencing(data: dict[str, str]) -> bool:
-    """Return whether Automatic Geofencing is enabled based on Presence Locked attribute."""
+    """Return whether Automatic Geofencing is enabled."""
     if "presenceLocked" in data:
         if data["presenceLocked"]:
             return False

@@ -9,7 +9,7 @@ from victron_mqtt import (
     MetricKind,
 )
 
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -50,7 +50,6 @@ async def async_setup_entry(
 class VictronDeviceTracker(VictronBaseEntity, TrackerEntity):
     """Implementation of a Victron GX device tracker."""
 
-    _attr_source_type = SourceType.GPS
     _altitude: float | None = None
     _course: float | None = None
     _speed: float | None = None

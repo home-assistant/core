@@ -249,7 +249,7 @@ def test_conftest_autouse_named_fixture_redundant(
     usefixtures_checker: RedundantUsefixtures,
     tmp_path: Path,
 ) -> None:
-    """Test that autouse fixtures with name= override are detected by their public name."""
+    """Test autouse fixtures with name= override detection."""
     test_dir = tmp_path / "tests" / "components" / "test_int"
     test_dir.mkdir(parents=True)
 

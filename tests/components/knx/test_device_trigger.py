@@ -33,7 +33,8 @@ async def test_if_fires_on_telegram(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}
     )
 
-    # "id" field added to action to test if `trigger_data` passed correctly in `async_attach_trigger`
+    # "id" field added to action to test if `trigger_data` passed
+    # correctly in `async_attach_trigger`
     assert await async_setup_component(
         hass,
         automation.DOMAIN,
@@ -121,9 +122,11 @@ async def test_default_if_fires_on_telegram(
     knx: KNXTestKit,
 ) -> None:
     """Test default telegram device triggers firing."""
-    # by default (without a user changing any) extra_fields are not added to the trigger and
-    # pre 2024.2 device triggers did only support "destination" field so they didn't have
-    # "group_value_write", "group_value_response", "group_value_read", "incoming", "outgoing"
+    # by default (without a user changing any) extra_fields are not
+    # added to the trigger and pre 2024.2 device triggers did only
+    # support "destination" field so they didn't have
+    # "group_value_write", "group_value_response",
+    # "group_value_read", "incoming", "outgoing"
     await knx.setup_integration()
     device_entry = device_registry.async_get_device(
         identifiers={(DOMAIN, f"_{knx.mock_config_entry.entry_id}_interface")}

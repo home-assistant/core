@@ -231,7 +231,7 @@ async def test_reauth_flow_scenario(
             data=mock_config_entry.data,
         )
 
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
 
     fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
@@ -305,7 +305,7 @@ async def test_reauth_flow_scenarios(
             data=mock_config_entry.data,
         )
 
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
 
     with patch(
@@ -337,7 +337,7 @@ async def test_reauth_flow_scenarios(
             user_input={CONF_PASSWORD: NEW_PASSWORD},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)

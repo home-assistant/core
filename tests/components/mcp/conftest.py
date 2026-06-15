@@ -13,13 +13,12 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.mcp.const import (
-    CONF_ACCESS_TOKEN,
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
     CONF_TOKEN_URL,
     DOMAIN,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -105,6 +104,7 @@ async def mock_credential(hass: HomeAssistant) -> None:
 @pytest.fixture(name="config_entry_token_expiration")
 def mock_config_entry_token_expiration() -> datetime.datetime:
     """Fixture to mock the token expiration."""
+    # pylint: disable-next=home-assistant-enforce-utcnow
     return datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
 
 

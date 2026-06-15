@@ -255,7 +255,7 @@ def update_message_text():
 
 @pytest.fixture
 def unauthorized_update_message_text(update_message_text):
-    """Fixture for mocking an incoming update of type message/text that is not in our `allowed_chat_ids`."""
+    """Fixture for mocking an incoming unauthorized message/text."""
     update_message_text["message"]["from"]["id"] = 1234
     update_message_text["message"]["chat"]["id"] = 1234
     return update_message_text
@@ -285,7 +285,7 @@ def update_callback_query():
 
 @pytest.fixture
 def update_callback_inline_keyboard():
-    """Fixture for mocking an incoming update of type callback_query from inline keyboard button."""
+    """Fixture for mocking a callback_query from inline keyboard."""
     return {
         "update_id": 1,
         "callback_query": {
@@ -382,7 +382,7 @@ async def webhook_bot(
 
 @pytest.fixture
 def mock_polling_calls() -> Generator[None]:
-    """Fixture for setting up the polling platform using appropriate config and mocks."""
+    """Fixture for setting up the polling platform with config and mocks."""
     with patch(
         "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
     ) as application_builder_class:

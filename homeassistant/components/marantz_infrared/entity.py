@@ -4,10 +4,11 @@ from infrared_protocols.codes.marantz import models as marantz_models
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 
 from homeassistant.components.infrared import InfraredEmitterConsumerEntity
+from homeassistant.const import CONF_MODEL
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from . import MarantzIrConfigEntry
-from .const import CONF_MODEL, DOMAIN, MODELS
+from .const import DOMAIN, MODELS
 
 
 class MarantzIrEntity(InfraredEmitterConsumerEntity):
@@ -33,11 +34,15 @@ class MarantzIrEntity(InfraredEmitterConsumerEntity):
             model=None if lib_model is marantz_models.GENERIC else lib_model.name,
         )
 
-    async def _send_marantz_command(self, code: MarantzAudioCode) -> None:
+    async def _send_marantz_command(
+        self, code: MarantzAudioCode, repeat_count: int = 0
+    ) -> None:
         """Send an IR command using the Marantz protocol.
 
         Flips the RC-5 toggle bit before each frame so the receiver
         treats consecutive presses as new presses, not as a held repeat.
         """
         self._runtime_data.toggle ^= 1
-        await self._send_command(code.to_command(toggle=self._runtime_data.toggle))
+        await self._send_command(
+            code.to_command(repeat_count=repeat_count, toggle=self._runtime_data.toggle)
+        )

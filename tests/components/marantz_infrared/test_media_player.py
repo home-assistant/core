@@ -25,14 +25,14 @@ from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .conftest import media_player_entity_id
-from .utils import check_availability_follows_ir_entity
+from .conftest import MOCK_INFRARED_EMITTER_ENTITY_ID, media_player_entity_id
 
 from tests.common import (
     MockConfigEntry,
     mock_restore_cache_with_extra_data,
     snapshot_platform,
 )
+from tests.components.common import assert_availability_follows_source_entity
 from tests.components.infrared.common import MockInfraredEmitterEntity
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.marantz_pm6006_integrated_amplifier"
@@ -203,7 +203,9 @@ async def test_media_player_availability_follows_ir_entity(
     hass: HomeAssistant,
 ) -> None:
     """Test media player becomes unavailable when IR entity is unavailable."""
-    await check_availability_follows_ir_entity(hass, MEDIA_PLAYER_ENTITY_ID)
+    await assert_availability_follows_source_entity(
+        hass, MEDIA_PLAYER_ENTITY_ID, MOCK_INFRARED_EMITTER_ENTITY_ID
+    )
 
 
 async def _setup_with_restore(
@@ -286,3 +288,20 @@ async def test_toggle_flips_between_commands(
 
     toggles = [call.kwargs["toggle"] for call in mock_marantz_to_command.call_args_list]
     assert toggles == [1, 0, 1, 0]
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_power_on_sends_repeat_count(
+    hass: HomeAssistant,
+    mock_marantz_to_command: MagicMock,
+) -> None:
+    """Power-on sends repeat_count=5 so the receiver reliably wakes up."""
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+    )
+
+    assert mock_marantz_to_command.call_count == 1
+    assert mock_marantz_to_command.call_args_list[0].kwargs["repeat_count"] == 5

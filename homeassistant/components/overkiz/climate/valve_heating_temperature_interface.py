@@ -72,11 +72,13 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
     @property
-    def hvac_action(self) -> HVACAction:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
-        return OVERKIZ_TO_HVAC_ACTION[
-            cast(str, self.executor.select_state(OverkizState.CORE_OPEN_CLOSED_VALVE))
-        ]
+        if (
+            state := self.executor.select_state(OverkizState.CORE_OPEN_CLOSED_VALVE)
+        ) is None:
+            return None
+        return OVERKIZ_TO_HVAC_ACTION[cast(str, state)]
 
     @property
     def target_temperature(self) -> float:
@@ -89,7 +91,9 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return temperature.value_as_float
 

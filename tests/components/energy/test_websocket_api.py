@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, Mock
 
 import pytest
 
-from homeassistant.components.energy import data, is_configured
+from homeassistant.components.energy import DOMAIN, data, is_configured
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.recorder.models import StatisticMeanType
 from homeassistant.components.recorder.statistics import async_add_external_statistics
@@ -24,7 +24,7 @@ from tests.typing import WebSocketGenerator
 @pytest.fixture(autouse=True)
 async def setup_integration(recorder_mock: Recorder, hass: HomeAssistant) -> None:
     """Set up the integration."""
-    assert await async_setup_component(hass, "energy", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 @pytest.fixture
@@ -120,6 +120,7 @@ async def test_save_preferences(
                 "number_energy_price_export": None,
                 "stat_rate": "sensor.grid_power",
                 "cost_adjustment_day": 1.2,
+                "name": "Main Grid",
             },
             # Grid 2: heat_pump_meter_2 paired with return_to_grid_offpeak
             {
@@ -139,6 +140,7 @@ async def test_save_preferences(
                 "stat_energy_from": "my_solar_production",
                 "stat_rate": "my_solar_power",
                 "config_entry_solar_forecast": ["predicted_config_entry"],
+                "name": "Panels",
             },
             {
                 "type": "battery",
@@ -146,6 +148,7 @@ async def test_save_preferences(
                 "stat_energy_to": "my_battery_charging",
                 "stat_rate": "my_battery_power",
                 "stat_soc": "sensor.my_battery_state_of_charge",
+                "name": "Battery",
             },
             {"type": "gas", "stat_energy_from": "sensor.gas", "name": "My gas"},
             {"type": "water", "stat_energy_from": "sensor.water", "name": "My water"},

@@ -15,7 +15,7 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,8 +45,6 @@ SERVICE_GET_PROFILE = "get_profile"
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_V40MIN = "set_v40_min"
 SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
-SERVICE_TURN_OFF = "turn_off"
-SERVICE_TURN_ON = "turn_on"
 
 
 async def async_setup_entry(

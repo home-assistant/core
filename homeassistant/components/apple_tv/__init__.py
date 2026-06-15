@@ -369,7 +369,7 @@ class AppleTVManager(DeviceListener):
 
             attrs[ATTR_MODEL] = (
                 dev_info.raw_model
-                if dev_info.model == DeviceModel.Unknown and dev_info.raw_model
+                if dev_info.model is DeviceModel.Unknown and dev_info.raw_model
                 else model_str(dev_info.model)
             )
             attrs[ATTR_SW_VERSION] = dev_info.version
