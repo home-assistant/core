@@ -89,13 +89,15 @@ def _load_device_class_translations(
 
 def _resolve_const_string(node: nodes.NodeNG) -> str | None:
     """Resolve a node to a constant string value."""
-    if isinstance(node, nodes.Const) and isinstance(node.value, str):
-        return node.value
+    match node:
+        case nodes.Const(value=str() as value):
+            return value
 
     try:
         for inferred in node.infer():
-            if isinstance(inferred, nodes.Const) and isinstance(inferred.value, str):
-                return str(inferred.value)
+            match inferred:
+                case nodes.Const(value=str() as value):
+                    return value
     except _InferenceError:
         pass
 
@@ -108,17 +110,20 @@ def _resolve_device_class_value(node: nodes.NodeNG) -> str | None:
     Handles ``SensorDeviceClass.POWER`` style enum references by
     accessing the ``.value`` attribute on the inferred enum instance.
     """
-    if isinstance(node, nodes.Const) and isinstance(node.value, str):
-        return node.value
+    match node:
+        case nodes.Const(value=str() as value):
+            return value
 
     try:
         for inferred in node.infer():
-            if isinstance(inferred, nodes.Const) and isinstance(inferred.value, str):
-                return str(inferred.value)
-            if isinstance(inferred, astroid.Instance):
-                for val in inferred.igetattr("value"):
-                    if isinstance(val, nodes.Const) and isinstance(val.value, str):
-                        return str(val.value)
+            match inferred:
+                case nodes.Const(value=str() as value):
+                    return value
+                case astroid.Instance():
+                    for val in inferred.igetattr("value"):
+                        match val:
+                            case nodes.Const(value=str() as value):
+                                return value
     except _InferenceError, StopIteration:
         pass
 
@@ -142,10 +147,9 @@ def _resolve_description_class(call: nodes.Call) -> nodes.ClassDef | None:
     """Resolve the EntityDescription subclass from a constructor call."""
     try:
         for inferred in call.func.infer():
-            if isinstance(inferred, nodes.ClassDef) and _is_entity_description(
-                inferred
-            ):
-                return inferred
+            match inferred:
+                case nodes.ClassDef() if _is_entity_description(inferred):
+                    return inferred
     except _InferenceError:
         pass
     return None
