@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, cast
 
+from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
 from ha_silabs_firmware_client import FirmwareManifest, FirmwareMetadata
 from universal_silabs_flasher.flasher import DeviceSpecificFlasher
@@ -380,7 +381,15 @@ class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
             raise
         self._attr_in_progress = False
         # Re-fetch so the entity picks up update_pending and reads "up to date".
-        refreshed = await async_get_raspberry_pi_firmware_info(self.hass)
+        try:
+            refreshed = await async_get_raspberry_pi_firmware_info(self.hass)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
+        except SupervisorError:
+            # Shouldn't normally happen but if it does, make it traceable.
+            _LOGGER.exception(
+                "Firmware info refresh failed but assuming update succeeded"
+            )
+            refreshed = None
         if refreshed is not None:
             self._firmware = refreshed
         self.async_write_ha_state()
