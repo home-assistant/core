@@ -118,9 +118,7 @@ async def test_refresh_enriches_device_fields_from_catalog(
     assert first.device_manufacturer == "Rivian"
     # Composed per ``_compose_device_model``: "{mfr} {model}" + " {year}" +
     # " {title}".
-    assert first.device_model == (
-        "Rivian R2 2026 Rivian R2 2027 Standard Long Range RWD"
-    )
+    assert first.device_model == "Rivian R2 2026 Standard Long Range RWD"
 
 
 # ---------- catalog self-healing (retry-until-loaded + refetch on new model) -

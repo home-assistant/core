@@ -416,6 +416,6 @@ async def test_catalog_recovery_updates_device_model_without_reload(
     device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
     assert device is not None
     assert device.manufacturer == "Rivian"
-    assert device.model == "Rivian R2 2026 Rivian R2 2027 Standard Long Range RWD"
+    assert device.model == "Rivian R2 2026 Standard Long Range RWD"
     # The user-facing name is unaffected by the model recovery.
     assert device.name == "My R2"

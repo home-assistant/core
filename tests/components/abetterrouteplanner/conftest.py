@@ -53,7 +53,7 @@ def build_catalog_entry(
     *,
     manufacturer: str | None = "Rivian",
     model: str | None = "R2",
-    title: str | None = "Rivian R2 2027 Standard Long Range RWD",
+    title: str | None = "Standard Long Range RWD",
     start_year: int | None = 2026,
     end_year: int | None = None,
     battery_capacity_wh: int | None = 92_000,
