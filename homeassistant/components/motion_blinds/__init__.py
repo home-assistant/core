@@ -1,9 +1,9 @@
 """The motion_blinds component."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
-# ruff: noqa: W7482
+# pylint: disable=home-assistant-use-runtime-data
 
 import asyncio
 import logging
+import socket
 
 from motionblinds import AsyncMotionMulticast
 
