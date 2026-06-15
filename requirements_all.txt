@@ -3390,7 +3390,7 @@ wirelesstagpy==0.8.1
 wled==0.23.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.48
+wolf-comm==0.0.51
 
 # homeassistant.components.wsdot
 wsdot==0.0.1
