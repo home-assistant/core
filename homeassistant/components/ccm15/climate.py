@@ -94,14 +94,7 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
 
     @property
     def temperature_unit(self) -> str:
-        """Return the unit of measurement reported by the device.
-
-        The CCM15 ships in Celsius and only reports Fahrenheit when the user
-        explicitly switches the controller to it, so Celsius is both the
-        default and the fallback when no data has been read yet. Fahrenheit is
-        returned only when the device signals non-Celsius mode (``is_celsius``
-        is ``False``).
-        """
+        """Return the unit of measurement reported by the device."""
         if (data := self.data) is not None and not data.is_celsius:
             return UnitOfTemperature.FAHRENHEIT
         return UnitOfTemperature.CELSIUS
