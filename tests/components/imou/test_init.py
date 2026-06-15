@@ -19,6 +19,12 @@ from .const import DEFAULT_MOCK_DEVICES, create_offline_device, create_online_de
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+EXPECTED_TRANSLATION_KEYS = {
+    "mute": PARAM_MUTE,
+    "camera_sd": "camera_sd",
+    "camera_hd": "camera_hd",
+}
+
 
 @pytest.mark.usefixtures("mock_imou_openapi_client", "mock_imou_ha_device_manager")
 async def test_setup_and_unload_entry(
@@ -104,15 +110,19 @@ async def test_multiple_channels_create_separate_devices(
     entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entries) == 2
+    assert len(entries) == 6
     assert {entry.unique_id for entry in entries} == {
         "dev-1_ch9$mute",
         "dev-1_ch10$mute",
+        "dev-1_ch9$camera_sd",
+        "dev-1_ch9$camera_hd",
+        "dev-1_ch10$camera_sd",
+        "dev-1_ch10$camera_hd",
     }
     for entry in entries:
-        assert entry.translation_key == PARAM_MUTE
-        device_key = entry.unique_id.split("$", 1)[0]
+        device_key, entity_type = entry.unique_id.split("$", 1)
         assert entry.device_id == device_ids_by_key[device_key]
+        assert entry.translation_key == EXPECTED_TRANSLATION_KEYS[entity_type]
         state = hass.states.get(entry.entity_id)
         assert state is not None
         assert state.state != STATE_UNAVAILABLE

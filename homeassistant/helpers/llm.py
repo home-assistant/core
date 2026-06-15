@@ -700,7 +700,7 @@ def _get_exposed_entities(
             ):
                 # Entity is in area
                 area_names.append(area_entry.name)
-                area_names.extend(area_entry.aliases)
+                area_names.extend(sorted(area_entry.aliases))
             elif device_entry is not None:
                 # Check device area
                 if (
@@ -711,7 +711,7 @@ def _get_exposed_entities(
                     is not None
                 ):
                     area_names.append(area_entry.name)
-                    area_names.extend(area_entry.aliases)
+                    area_names.extend(sorted(area_entry.aliases))
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
@@ -962,9 +962,9 @@ def _get_cached_action_parameters(
                 aliases = er.async_get_entity_aliases(hass, entity_entry)
                 if aliases:
                     if description:
-                        description = description + ". Aliases: " + str(list(aliases))
+                        description = description + ". Aliases: " + str(sorted(aliases))
                     else:
-                        description = "Aliases: " + str(list(aliases))
+                        description = "Aliases: " + str(sorted(aliases))
 
         parameters_cache.setdefault(domain, {})[action] = (description, parameters)
 

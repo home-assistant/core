@@ -105,6 +105,7 @@ Every check has a code following the
 | `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
 | `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
+| `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
 | `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
 | `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
@@ -126,6 +127,7 @@ Every check has a code following the
 | `W7413` | [`home-assistant-missing-config-entry-unloading`](#w7413-home-assistant-missing-config-entry-unloading) | Integration should implement `async_unload_entry` |
 | `W7415` | [`home-assistant-sequential-executor-jobs`](#w7415-home-assistant-sequential-executor-jobs) | Sequential `async_add_executor_job` calls should be grouped |
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
+| `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
 
 
 ## `home_assistant_logger` checker
@@ -458,6 +460,22 @@ lookup of `UTC` on every call, while keeping the codebase consistent in
 how the current UTC time is obtained.
 
 
+## `home_assistant_enforce_now` checker
+
+Ensures the Home Assistant helper is used to get the current local time.
+
+### `C7425`: `home-assistant-enforce-now`
+
+Use `homeassistant.util.dt.now()` instead of `datetime.datetime.now(<tz>)`
+when called with a non-UTC time zone to create an aware `datetime`. The
+helper returns an aware `datetime` in the given time zone (defaulting to
+`DEFAULT_TIME_ZONE`), keeping the codebase consistent in how the current
+local time is obtained. The UTC case (`datetime.now(UTC)`) is handled by
+the [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow)
+checker, and `datetime.now()` with no argument is not flagged since it
+returns a naive local `datetime`.
+
+
 ## `home_assistant_entity_unique_id` checker
 
 Quality-scale-gated checker for the [`entity-unique-id`](https://developers.home-assistant.io/docs/core/integration-quality-scale/rules/entity-unique-id)
@@ -705,3 +723,24 @@ Entity class should statically guarantee `_attr_has_entity_name = True`:
 either set at class level, set unconditionally at the top of a method, or
 supplied by an `entity_description` whose class sets `has_entity_name = True`.
 Conditional patterns are rejected.
+
+
+## `home_assistant_unnecessary_format_mac` checker
+
+Detects redundant `format_mac()` calls inside `CONNECTION_NETWORK_MAC`
+connection tuples that are passed to device registry API methods via
+`connections=` keyword arguments.
+
+### `W7429`: `home-assistant-unnecessary-format-mac`
+
+`format_mac()` is unnecessary when constructing a `CONNECTION_NETWORK_MAC`
+connection tuple for a device registry API call (`DeviceInfo`,
+`async_get_or_create`, `async_get_device`). The device registry already
+normalizes MAC addresses through `_normalize_connections()` before
+storing them, so the call is redundant.
+
+This rule only flags tuples inside a `connections=` keyword argument.
+Tuples used for direct comparison against `device.connections` (e.g.
+the `in` operator, set intersection) are not flagged because those
+comparisons bypass the device registry normalization and genuinely
+need `format_mac()` to match the stored normalized format.
