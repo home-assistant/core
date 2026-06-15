@@ -57,7 +57,7 @@ async def test_motion_sensor(
     reolink_host.ONVIF_event_callback.return_value = [0]
     webhook_id = config_entry.runtime_data.host._webhook_ids[ONVIF]
     client = await hass_client_no_auth()
-    await client.post(f"/api/webhook/{webhook_id}", data="test_data")
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
 
     assert hass.states.get(entity_id).state == STATE_ON
 

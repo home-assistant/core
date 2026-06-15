@@ -777,6 +777,7 @@ class ReolinkHost:
     def unregister_webhook(self, id: str) -> None:
         """Unregister the webhook for motion events."""
         webhook_id = self._webhook_ids.pop(id, None)
+        self._webhook_url.pop(id, None)
         if webhook_id is None:
             return
         _LOGGER.debug("Unregistering webhook %s", webhook_id)
