@@ -405,7 +405,7 @@ The sandbox is deliberately small against core HA — five surfaces, each a
 declared public hook rather than a reach into private internals:
 
 - `config_entries.py` — the `router` attribute + `ConfigEntryRouter` Protocol (three call sites) and the first-class `ConfigEntry.sandbox` field.
-- `helpers/entity_component.py` — `EntityComponent.async_register_remote_platform`, so a sandbox-built `EntityPlatform` attaches without re-discovering the local integration.
+- `helpers/entity_component.py` — `EntityComponent.async_register_remote_platform` (+ its inverse `async_unregister_remote_platform`), so a sandbox-built `EntityPlatform` attaches without re-discovering the local integration, and detaches cleanly on unload/respawn.
 - `helpers/sandbox_context.py` (new) + `helpers/storage.py` — the `current_sandbox` ContextVar + `SandboxBridge` Protocol read by `Store`'s IO methods.
 - `helpers/translation.py` — `async_register_sandbox_translation_provider` + the `_TranslationCache` overlay and `async_invalidate_translations` (§11).
 - `loader.py` — `async_register_sandbox_catalog_provider` + the catalog merge in `async_get_integration_descriptions` (§11).

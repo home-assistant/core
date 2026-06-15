@@ -195,3 +195,28 @@ anywhere a channel can reach — a container today, another machine later.
 > Closing beat: nothing here required inventing a new model — the
 > sandbox is HA's existing contracts (state machine, service registry,
 > event bus, config entries, storage) made remote, one seam at a time.
+
+---
+
+## Slide 11 — What it costs core HA
+
+Almost all of this lives in the `sandbox` component and a separate client
+library. The footprint on **core HA itself** is just five seams — each a
+*declared public hook*, never a reach into private internals:
+
+| Core file | The hook it adds |
+|---|---|
+| `config_entries.py` | `router` attribute + `ConfigEntryRouter` Protocol (3 call sites) + the first-class `ConfigEntry.sandbox` field |
+| `helpers/entity_component.py` | `async_register_remote_platform` (+ inverse `async_unregister_remote_platform`) — attach/detach a sandbox-built `EntityPlatform` without re-discovering the local integration |
+| `helpers/sandbox_context.py` *(new)* + `helpers/storage.py` | the `current_sandbox` ContextVar + `SandboxBridge` Protocol that `Store`'s IO reads |
+| `helpers/translation.py` | `async_register_sandbox_translation_provider` + the cache overlay + `async_invalidate_translations` |
+| `loader.py` | `async_register_sandbox_catalog_provider` + the catalog merge for the integration picker |
+
+**Five hooks. No monkey-patching. Everything else is the component.**
+
+> This was the design discipline that kept the whole thing reviewable:
+> every core touch is a *public seam* other code could legitimately use,
+> not a private attribute poked from outside. The one place that started
+> as a monkey-patch — rebinding `Store` — was the cautionary tale, and it
+> got replaced by the declared `current_sandbox` hook. A reviewer can read
+> these five and reason about the entire blast radius on core.
