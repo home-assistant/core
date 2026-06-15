@@ -178,6 +178,15 @@
           "tilt": "Tilt"
         }
       }
+    },
+    "water_heater": {
+      "overkiz": {
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
+          "performance": "Boost"
+        }
+      }
     }
   },
   "exceptions": {
