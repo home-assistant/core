@@ -130,6 +130,17 @@ def test_parse_device_name_reply_empty_is_none() -> None:
     assert parse_device_name_reply(packet) is None
 
 
+def test_parse_device_name_reply_too_short() -> None:
+    """A truncated device name reply returns None."""
+    assert parse_device_name_reply(b"\x00" * 10) is None
+
+
+def test_parse_status_reply_short_payload_returns_none() -> None:
+    """A status reply with a too-short payload returns None."""
+    packet = build_packet(OP_GET_STATUS, payload=b"\x00" * 10)
+    assert parse_status_reply(packet) is None
+
+
 def test_build_set_position_payload() -> None:
     """The set-position payload encodes the requested percent."""
     payload = build_set_position_payload(75)

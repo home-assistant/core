@@ -1,10 +1,19 @@
 """Tests for the PowerShades cover platform."""
 
 from homeassistant.components.powershades import coordinator as coordinator_module
-from homeassistant.components.powershades.const import OP_JOG_STOP, OP_SET_POSITION
+from homeassistant.components.powershades.const import (
+    DOMAIN,
+    OP_JOG_STOP,
+    OP_SET_POSITION,
+)
 from homeassistant.components.powershades.protocol import build_set_position_payload
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from .conftest import TEST_IP, TEST_NAME
+
+from tests.common import MockConfigEntry
 
 ENTITY_ID = "cover.powershade_bedroom_shade"
 
@@ -28,6 +37,18 @@ async def test_cover_closed_state(hass: HomeAssistant, config_entry) -> None:
 
     state = hass.states.get(ENTITY_ID)
     assert state.state == "closed"
+
+
+async def test_cover_unknown_position_state(hass: HomeAssistant, config_entry) -> None:
+    """An unknown position is reported as neither open nor closed."""
+    coordinator = config_entry.runtime_data
+    coordinator.async_set_updated_data(
+        coordinator_module.PowerShadesData(position=None, target_position=None)
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "unknown"
 
 
 async def test_cover_opening_state(hass: HomeAssistant, config_entry) -> None:
@@ -101,3 +122,20 @@ async def test_set_cover_position(hass: HomeAssistant, config_entry) -> None:
     coordinator.connection.async_request.assert_any_call(
         OP_SET_POSITION, build_set_position_payload(30)
     )
+
+
+async def test_unique_id_without_serial_falls_back_to_entry_id(
+    hass: HomeAssistant, mock_connection
+) -> None:
+    """Without a known serial number, the unique ID is based on the entry ID."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"ip": TEST_IP, "name": TEST_NAME, "model": 1},
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_entry = er.async_get(hass).async_get(ENTITY_ID)
+    assert entity_entry is not None
+    assert entity_entry.unique_id == f"{DOMAIN}_{entry.entry_id}_cover"

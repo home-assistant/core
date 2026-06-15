@@ -10,6 +10,7 @@ from homeassistant.components.powershades.const import (
     LIMIT_LOWER,
     LIMIT_UPPER,
     OP_CLEAR_LIMITS,
+    OP_GET_SHADE_NAME,
     OP_INDICATE,
     OP_JOG_DOWN,
     OP_JOG_STOP,
@@ -21,7 +22,9 @@ from homeassistant.components.powershades.const import (
 )
 from homeassistant.components.powershades.coordinator import PowerShadesCoordinator
 from homeassistant.components.powershades.protocol import (
+    GET_SHADE_NAME_PAYLOAD,
     StatusReply,
+    build_packet,
     build_set_limit_payload,
     build_set_position_payload,
 )
@@ -320,3 +323,59 @@ async def test_async_update_data_raises_on_timeout(coordinator) -> None:
 
     with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
+
+
+async def test_async_update_data_raises_on_malformed_reply(coordinator) -> None:
+    """A reply that doesn't parse as a status reply raises UpdateFailed."""
+
+    async def fake_request(op, payload=b"", timeout=None, retries=None):
+        return build_packet(0x00)
+
+    coordinator.connection.async_request = AsyncMock(side_effect=fake_request)
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_key == "update_malformed_reply"
+
+
+def test_device_info_without_name_uses_ip(coordinator) -> None:
+    """With no known shade name, the device name falls back to the IP address."""
+    coordinator.device_name = None
+    assert coordinator.device_info["name"] == f"PowerShade {coordinator.ip_address}"
+
+
+def test_handle_status_push_updates_data(coordinator) -> None:
+    """A pushed status packet updates the coordinator's data."""
+    coordinator._handle_status_push(StatusReply(position=42, battery_mv=3700))
+    assert coordinator.data.position == 42
+
+
+async def test_async_set_shade_name_not_confirmed(coordinator) -> None:
+    """A timeout reading back the new name raises rename_not_confirmed."""
+
+    async def fake_request(op, payload=b"", timeout=None, retries=None):
+        if op == OP_GET_SHADE_NAME and payload == GET_SHADE_NAME_PAYLOAD:
+            raise PowerShadesTimeoutError("no reply")
+        return build_packet(op)
+
+    coordinator.connection.async_request = AsyncMock(side_effect=fake_request)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await coordinator.async_set_shade_name("New Name")
+
+    assert exc_info.value.translation_key == "rename_not_confirmed"
+
+
+async def test_async_set_shade_name_empty_confirmation(coordinator) -> None:
+    """An empty confirmed name raises rename_empty_name."""
+
+    async def fake_request(op, payload=b"", timeout=None, retries=None):
+        return build_packet(op)
+
+    coordinator.connection.async_request = AsyncMock(side_effect=fake_request)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await coordinator.async_set_shade_name("New Name")
+
+    assert exc_info.value.translation_key == "rename_empty_name"
