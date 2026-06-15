@@ -90,19 +90,16 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except MelCloudHomeConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except MelCloudHomeTimeoutError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         else:
             return data
