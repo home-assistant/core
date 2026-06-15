@@ -52,12 +52,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Media platform from a config entry."""
 
-    async_add_entities(
-        TeslemetryVehiclePollingMediaEntity(vehicle, entry.runtime_data.scopes)
-        if vehicle.poll or not firmware_at_least(vehicle.firmware, "2025.2.6")
-        else TeslemetryStreamingMediaEntity(vehicle, entry.runtime_data.scopes)
-        for vehicle in entry.runtime_data.vehicles
-    )
+    for vehicle in entry.runtime_data.vehicles:
+        async_add_entities(
+            [
+                TeslemetryVehiclePollingMediaEntity(vehicle, entry.runtime_data.scopes)
+                if vehicle.poll or not firmware_at_least(vehicle.firmware, "2025.2.6")
+                else TeslemetryStreamingMediaEntity(vehicle, entry.runtime_data.scopes)
+            ],
+            config_subentry_id=vehicle.subentry_id,
+        )
 
 
 class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):

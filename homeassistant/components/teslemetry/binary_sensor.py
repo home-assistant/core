@@ -552,8 +552,10 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry binary sensor platform from a config entry."""
 
-    entities: list[BinarySensorEntity] = []
+    entities: list[BinarySensorEntity]
+
     for vehicle in entry.runtime_data.vehicles:
+        entities = []
         for description in VEHICLE_DESCRIPTIONS:
             if (
                 not vehicle.poll
@@ -567,22 +569,22 @@ async def async_setup_entry(
                 entities.append(
                     TeslemetryVehiclePollingBinarySensorEntity(vehicle, description)
                 )
+        async_add_entities(entities, config_subentry_id=vehicle.subentry_id)
 
-    entities.extend(
-        TeslemetryEnergyLiveBinarySensorEntity(energysite, description)
-        for energysite in entry.runtime_data.energysites
-        if energysite.live_coordinator
-        for description in ENERGY_LIVE_DESCRIPTIONS
-        if description.key in energysite.live_coordinator.data
-    )
-    entities.extend(
-        TeslemetryEnergyInfoBinarySensorEntity(energysite, description)
-        for energysite in entry.runtime_data.energysites
-        for description in ENERGY_INFO_DESCRIPTIONS
-        if description.key in energysite.info_coordinator.data
-    )
-
-    async_add_entities(entities)
+    for energysite in entry.runtime_data.energysites:
+        entities = []
+        if energysite.live_coordinator:
+            entities.extend(
+                TeslemetryEnergyLiveBinarySensorEntity(energysite, description)
+                for description in ENERGY_LIVE_DESCRIPTIONS
+                if description.key in energysite.live_coordinator.data
+            )
+        entities.extend(
+            TeslemetryEnergyInfoBinarySensorEntity(energysite, description)
+            for description in ENERGY_INFO_DESCRIPTIONS
+            if description.key in energysite.info_coordinator.data
+        )
+        async_add_entities(entities, config_subentry_id=energysite.subentry_id)
 
 
 class TeslemetryVehiclePollingBinarySensorEntity(

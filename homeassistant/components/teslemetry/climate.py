@@ -1,6 +1,5 @@
 """Climate platform for Teslemetry integration."""
 
-from itertools import chain
 from typing import Any, cast, override
 
 from tesla_fleet_api import firmware_at_least
@@ -60,30 +59,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Climate platform from a config entry."""
 
-    async_add_entities(
-        chain(
-            (
+    for vehicle in entry.runtime_data.vehicles:
+        async_add_entities(
+            [
                 TeslemetryVehiclePollingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
                 )
                 if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingClimateEntity(
                     vehicle, TeslemetryClimateSide.DRIVER, entry.runtime_data.scopes
-                )
-                for vehicle in entry.runtime_data.vehicles
-            ),
-            (
+                ),
                 TeslemetryVehiclePollingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
                 )
                 if vehicle.poll or not firmware_at_least(vehicle.firmware, "2024.44.25")
                 else TeslemetryStreamingCabinOverheatProtectionEntity(
                     vehicle, entry.runtime_data.scopes
-                )
-                for vehicle in entry.runtime_data.vehicles
-            ),
+                ),
+            ],
+            config_subentry_id=vehicle.subentry_id,
         )
-    )
 
 
 class TeslemetryClimateEntity(TeslemetryRootEntity, ClimateEntity):

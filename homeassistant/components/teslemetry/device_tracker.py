@@ -69,15 +69,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry device tracker platform from a config entry."""
 
-    entities: list[
-        TeslemetryVehiclePollingDeviceTrackerEntity
-        | TeslemetryStreamingDeviceTrackerEntity
-    ] = []
     # Only add vehicle location entities if the user has granted vehicle location scope.
     if Scope.VEHICLE_LOCATION not in entry.runtime_data.scopes:
         return
 
     for vehicle in entry.runtime_data.vehicles:
+        entities: list[
+            TeslemetryVehiclePollingDeviceTrackerEntity
+            | TeslemetryStreamingDeviceTrackerEntity
+        ] = []
         for description in DESCRIPTIONS:
             if vehicle.poll or not firmware_at_least(
                 vehicle.firmware, description.streaming_firmware
@@ -93,7 +93,7 @@ async def async_setup_entry(
                     TeslemetryStreamingDeviceTrackerEntity(vehicle, description)
                 )
 
-    async_add_entities(entities)
+        async_add_entities(entities, config_subentry_id=vehicle.subentry_id)
 
 
 class TeslemetryVehiclePollingDeviceTrackerEntity(

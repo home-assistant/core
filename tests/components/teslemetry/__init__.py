@@ -19,6 +19,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         version=2,
+        minor_version=2,
         unique_id="abc-123",
         data={
             "auth_implementation": DOMAIN,

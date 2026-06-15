@@ -64,12 +64,15 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry Button platform from a config entry."""
 
-    async_add_entities(
-        TeslemetryButtonEntity(vehicle, description)
-        for vehicle in entry.runtime_data.vehicles
-        for description in DESCRIPTIONS
-        if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
-    )
+    for vehicle in entry.runtime_data.vehicles:
+        async_add_entities(
+            (
+                TeslemetryButtonEntity(vehicle, description)
+                for description in DESCRIPTIONS
+                if Scope.VEHICLE_CMDS in entry.runtime_data.scopes
+            ),
+            config_subentry_id=vehicle.subentry_id,
+        )
 
 
 class TeslemetryButtonEntity(TeslemetryVehicleStreamEntity, ButtonEntity):

@@ -48,7 +48,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -59,6 +59,7 @@ from .const import (
     LIVE_STATUS,
     METADATA,
     METADATA_NOSCOPE,
+    PRODUCTS,
     PRODUCTS_MODERN,
     SITE_INFO,
     UNIQUE_ID,
@@ -118,6 +119,140 @@ async def test_devices(
 
     for device in devices:
         assert device == snapshot(name=f"{device.identifiers}")
+
+
+VEHICLE_VIN = "LRW3F7EK4NC700000"
+ENERGY_SITE_ID = "123456"
+WALL_CONNECTOR_DINS = ("abd-123", "bcd-234")
+
+
+def _subentry_id(entry: MockConfigEntry, subentry_type: str, unique_id: str) -> str:
+    """Return the id of the subentry matching type and unique_id."""
+    for subentry in entry.subentries.values():
+        if subentry.subentry_type == subentry_type and subentry.unique_id == unique_id:
+            return subentry.subentry_id
+    pytest.fail(f"No {subentry_type} subentry with unique_id {unique_id}")
+
+
+async def test_subentries_created(hass: HomeAssistant) -> None:
+    """Test a subentry is created for each discovered vehicle and energy site."""
+    entry = await setup_platform(hass)
+
+    subentries = sorted(
+        entry.subentries.values(), key=lambda s: (s.subentry_type, s.unique_id)
+    )
+    assert [
+        (s.subentry_type, s.unique_id, s.title, dict(s.data)) for s in subentries
+    ] == [
+        ("energy_site", ENERGY_SITE_ID, "Energy Site", {"site_id": 123456}),
+        ("vehicle", VEHICLE_VIN, "Test", {"vin": VEHICLE_VIN}),
+    ]
+
+
+async def test_devices_bound_to_subentries(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test every device is bound to its subentry and not the bare entry."""
+    entry = await setup_platform(hass)
+
+    vehicle_subentry = _subentry_id(entry, "vehicle", VEHICLE_VIN)
+    energy_subentry = _subentry_id(entry, "energy_site", ENERGY_SITE_ID)
+
+    expected = {
+        (DOMAIN, VEHICLE_VIN): vehicle_subentry,
+        (DOMAIN, ENERGY_SITE_ID): energy_subentry,
+        (DOMAIN, WALL_CONNECTOR_DINS[0]): energy_subentry,
+        (DOMAIN, WALL_CONNECTOR_DINS[1]): energy_subentry,
+    }
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert devices
+    for device in devices:
+        identifier = next(iter(device.identifiers))
+        assert device.config_entries_subentries == {
+            entry.entry_id: {expected[identifier]}
+        }
+
+
+async def test_entities_bound_to_subentries(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test every entity with a device is bound to that device's subentry."""
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    entities = [
+        entity
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if entity.device_id is not None
+    ]
+    assert entities
+    for entity in entities:
+        device = device_registry.async_get(entity.device_id)
+        assert entity.config_subentry_id is not None
+        assert device.config_entries_subentries == {
+            entry.entry_id: {entity.config_subentry_id}
+        }
+
+
+async def test_account_entity_not_in_subentry(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test the account-level credit balance sensor stays on the main entry."""
+    await setup_platform(hass, [Platform.SENSOR])
+
+    credit_balance = entity_registry.async_get("sensor.teslemetry_command_credits")
+    assert credit_balance is not None
+    assert credit_balance.device_id is None
+    assert credit_balance.config_subentry_id is None
+
+
+async def test_reload_idempotent_subentries(hass: HomeAssistant) -> None:
+    """Test reloading does not duplicate subentries."""
+    entry = await setup_platform(hass)
+    before = set(entry.subentries)
+
+    await hass.config_entries.async_reload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert set(entry.subentries) == before
+
+
+async def test_unsubscribed_product_removes_subentry(hass: HomeAssistant) -> None:
+    """Test a subentry is removed when its product is no longer available."""
+    entry = await setup_platform(hass)
+    assert entry.subentries
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.products",
+        return_value={"response": []},
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert not entry.subentries
+
+
+async def test_subentry_title_updates_when_renamed(hass: HomeAssistant) -> None:
+    """Test a subentry title is updated when the product is renamed."""
+    entry = await setup_platform(hass)
+    vehicle_subentry = _subentry_id(entry, "vehicle", VEHICLE_VIN)
+    assert entry.subentries[vehicle_subentry].title == "Test"
+
+    renamed = deepcopy(PRODUCTS)
+    for product in renamed["response"]:
+        if product.get("vin") == VEHICLE_VIN:
+            product["display_name"] = "Renamed"
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.products",
+        return_value=renamed,
+    ):
+        await hass.config_entries.async_reload(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Same subentry id is reused, only the title changes.
+    assert entry.subentries[vehicle_subentry].title == "Renamed"
 
 
 @pytest.mark.parametrize(("side_effect", "state"), VEHICLE_ERRORS)
@@ -490,6 +625,82 @@ async def test_migrate_version_2_no_migration_needed(hass: HomeAssistant) -> Non
     # Verify data was not modified
     assert entry.data == oauth_config
     assert entry.state is ConfigEntryState.LOADED
+
+
+async def test_migrate_adds_subentries(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test minor migration creates subentries and rebinds devices and entities."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        minor_version=1,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "test_access_token",
+                "refresh_token": "test_refresh_token",
+                "expires_at": int(time.time()) + 3600,
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # Pre-seed the registries the way a pre-subentry (minor_version 1) install looks:
+    # devices and entities linked to the bare config entry with no subentry.
+    energy_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, ENERGY_SITE_ID)},
+        name="Energy Site",
+    )
+    wall_connector_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, WALL_CONNECTOR_DINS[0])},
+        via_device=(DOMAIN, ENERGY_SITE_ID),
+        name="Wall Connector",
+    )
+    vehicle_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, VEHICLE_VIN)},
+        name="Test",
+    )
+    legacy_entity = entity_registry.async_get_or_create(
+        "sensor",
+        DOMAIN,
+        f"{VEHICLE_VIN}-migration_marker",
+        config_entry=entry,
+        device_id=vehicle_device.id,
+    )
+    entity_registry.async_update_entity(legacy_entity.entity_id, name="My Car")
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.minor_version == 2
+
+    vehicle_subentry = _subentry_id(entry, "vehicle", VEHICLE_VIN)
+    energy_subentry = _subentry_id(entry, "energy_site", ENERGY_SITE_ID)
+
+    # Every pre-existing device is rebound to its subentry with no bare entry link.
+    assert device_registry.async_get(vehicle_device.id).config_entries_subentries == {
+        entry.entry_id: {vehicle_subentry}
+    }
+    assert device_registry.async_get(energy_device.id).config_entries_subentries == {
+        entry.entry_id: {energy_subentry}
+    }
+    assert device_registry.async_get(
+        wall_connector_device.id
+    ).config_entries_subentries == {entry.entry_id: {energy_subentry}}
+
+    # The pre-existing entity survives migration (customization intact) and is rebound.
+    migrated = entity_registry.async_get(legacy_entity.entity_id)
+    assert migrated is not None
+    assert migrated.name == "My Car"
+    assert migrated.config_subentry_id == vehicle_subentry
 
 
 async def test_migrate_from_future_version_fails(hass: HomeAssistant) -> None:

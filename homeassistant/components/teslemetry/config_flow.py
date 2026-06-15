@@ -34,6 +34,7 @@ class OAuth2FlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 2
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""

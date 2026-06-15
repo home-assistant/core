@@ -3,6 +3,7 @@
 import asyncio
 from collections.abc import Callable
 from functools import partial
+from types import MappingProxyType
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
@@ -21,7 +22,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState, ConfigSubentry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import (
@@ -33,6 +34,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    entity_registry as er,
     issue_registry as ir,
 )
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -44,7 +46,14 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CLIENT_ID, DOMAIN, LOGGER, VEHICLE_ISSUE_LEARN_MORE
+from .const import (
+    CLIENT_ID,
+    DOMAIN,
+    LOGGER,
+    SUBENTRY_TYPE_ENERGY_SITE,
+    SUBENTRY_TYPE_VEHICLE,
+    VEHICLE_ISSUE_LEARN_MORE,
+)
 from .coordinator import (
     TeslemetryEnergyHistoryCoordinator,
     TeslemetryEnergySiteInfoCoordinator,
@@ -246,6 +255,33 @@ def _setup_vehicle_repairs(
     )
 
 
+def _ensure_subentry(
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    subentry_type: str,
+    unique_id: str,
+    title: str,
+    data: dict[str, Any],
+) -> str:
+    """Return the subentry id for unique_id, creating or updating it as needed."""
+    for subentry in entry.subentries.values():
+        if subentry.subentry_type == subentry_type and subentry.unique_id == unique_id:
+            if subentry.title != title or dict(subentry.data) != data:
+                hass.config_entries.async_update_subentry(
+                    entry, subentry, title=title, data=data
+                )
+            return subentry.subentry_id
+
+    subentry = ConfigSubentry(
+        data=MappingProxyType(data),
+        subentry_type=subentry_type,
+        title=title,
+        unique_id=unique_id,
+    )
+    hass.config_entries.async_add_subentry(entry, subentry)
+    return subentry.subentry_id
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Set up Teslemetry config."""
 
@@ -370,6 +406,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             )
             stream_vehicle = stream.get_vehicle(vin)
 
+            subentry_id = _ensure_subentry(
+                hass,
+                entry,
+                SUBENTRY_TYPE_VEHICLE,
+                vin,
+                product["display_name"],
+                {"vin": vin},
+            )
+
             vehicles.append(
                 TeslemetryVehicleData(
                     api=vehicle,
@@ -381,6 +426,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     vin=vin,
                     firmware=firmware or "Unknown",
                     device=device,
+                    subentry_id=subentry_id,
                 )
             )
 
@@ -448,6 +494,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     translation_key="not_ready_api_error",
                 ) from e
 
+            subentry_id = _ensure_subentry(
+                hass,
+                entry,
+                SUBENTRY_TYPE_ENERGY_SITE,
+                str(site_id),
+                product.get("site_name", "Energy Site"),
+                {"site_id": site_id},
+            )
+
             energysites.append(
                 TeslemetryEnergyData(
                     api=energy_site,
@@ -468,6 +523,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     ),
                     id=site_id,
                     device=device,
+                    subentry_id=subentry_id,
                 )
             )
 
@@ -513,6 +569,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 remove_config_entry_id=entry.entry_id,
             )
 
+    # Remove subentries that no longer have a matching vehicle or energy site
+    current_subentry_ids = {vehicle.subentry_id for vehicle in vehicles} | {
+        energysite.subentry_id for energysite in energysites
+    }
+    for subentry in list(entry.subentries.values()):
+        if subentry.subentry_id not in current_subentry_ids:
+            LOGGER.debug("Removing stale subentry %s", subentry.subentry_id)
+            hass.config_entries.async_remove_subentry(entry, subentry.subentry_id)
+
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,
         energysites=energysites,
@@ -550,6 +615,81 @@ async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
+def _migrate_devices_to_subentries(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry
+) -> None:
+    """Create subentries for existing devices and rebind devices and entities.
+
+    Older entries had every device and entity linked directly to the config
+    entry. Derive the vehicle and energy site subentries from the existing
+    devices (no API call needed) and move each device and its entities onto the
+    matching subentry.
+    """
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    # Energy site device id -> subentry id, used to attach wall connectors which
+    # are children of an energy site rather than products in their own right.
+    site_subentry_by_device_id: dict[str, str] = {}
+
+    def _bind(device: dr.DeviceEntry, subentry_id: str) -> None:
+        # Move entities onto the subentry first, so that stripping the bare entry
+        # link from the device below does not drop entities still tied to it.
+        for entity in er.async_entries_for_device(
+            entity_registry, device.id, include_disabled_entities=True
+        ):
+            entity_registry.async_update_entity(
+                entity.entity_id, config_subentry_id=subentry_id
+            )
+        # Two steps on purpose: adding and removing the same config entry in a
+        # single call would delete the device. Add the subentry link, then drop
+        # the original bare (subentry-less) link.
+        device_registry.async_update_device(
+            device.id,
+            add_config_entry_id=entry.entry_id,
+            add_config_subentry_id=subentry_id,
+        )
+        device_registry.async_update_device(
+            device.id,
+            remove_config_entry_id=entry.entry_id,
+            remove_config_subentry_id=None,
+        )
+
+    # Wall connectors reference their energy site via via_device, so handle them
+    # only once every energy site subentry exists.
+    wall_connectors: list[tuple[dr.DeviceEntry, str]] = []
+    for device in devices:
+        if device.via_device_id is not None:
+            wall_connectors.append((device, device.via_device_id))
+            continue
+        identifier = next(i[1] for i in device.identifiers if i[0] == DOMAIN)
+        if identifier.isdigit():
+            subentry_id = _ensure_subentry(
+                hass,
+                entry,
+                SUBENTRY_TYPE_ENERGY_SITE,
+                identifier,
+                device.name or "Energy Site",
+                {"site_id": int(identifier)},
+            )
+            site_subentry_by_device_id[device.id] = subentry_id
+        else:
+            subentry_id = _ensure_subentry(
+                hass,
+                entry,
+                SUBENTRY_TYPE_VEHICLE,
+                identifier,
+                device.name or identifier,
+                {"vin": identifier},
+            )
+        _bind(device, subentry_id)
+
+    for device, via_device_id in wall_connectors:
+        if wall_connector_subentry_id := site_subentry_by_device_id.get(via_device_id):
+            _bind(device, wall_connector_subentry_id)
+
+
 async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TeslemetryConfigEntry
 ) -> bool:
@@ -573,11 +713,16 @@ async def async_migrate_entry(
         # Add auth_implementation for OAuth2 flow compatibility
         data["auth_implementation"] = DOMAIN
 
-        return hass.config_entries.async_update_entry(
+        hass.config_entries.async_update_entry(
             config_entry,
             data=data,
             version=2,
         )
+
+    if config_entry.minor_version < 2:
+        _migrate_devices_to_subentries(hass, config_entry)
+        hass.config_entries.async_update_entry(config_entry, minor_version=2)
+
     return True
 
 
@@ -621,7 +766,9 @@ def async_setup_energy_device(
         energysite.device["sw_version"] = version
 
     device_registry.async_get_or_create(
-        config_entry_id=entry.entry_id, **energysite.device
+        config_entry_id=entry.entry_id,
+        config_subentry_id=energysite.subentry_id,
+        **energysite.device,
     )
 
     entry.async_on_unload(
