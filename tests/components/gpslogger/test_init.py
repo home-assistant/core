@@ -7,7 +7,7 @@ from aiohttp.test_utils import TestClient
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components import gpslogger, zone
+from homeassistant.components import zone
 from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.device_tracker.legacy import Device
 from homeassistant.components.gpslogger import DOMAIN, TRACKER_UPDATE
@@ -228,6 +228,6 @@ async def test_load_unload_entry(
 
     entry = hass.config_entries.async_entries(DOMAIN)[0]
 
-    assert await gpslogger.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
     assert not hass.data[DATA_DISPATCHER][TRACKER_UPDATE]
