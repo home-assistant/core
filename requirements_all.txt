@@ -699,7 +699,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.10
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.107
+boschshcpy==0.2.111
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -733,7 +733,7 @@ bthomehub5-devicelist==0.1.1
 btsmarthub-devicelist==0.2.3
 
 # homeassistant.components.buienradar
-buienradar==1.0.6
+buienradar==1.0.9
 
 # homeassistant.components.dhcp
 cached-ipaddress==1.1.2
