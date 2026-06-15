@@ -37,6 +37,24 @@
     }
   },
   "entity": {
+    "sensor": {
+      "card_insertion_state": {
+        "name": "Card slot",
+        "state": {
+          "none": "Empty",
+          "physical": "Physical card",
+          "remote": "Remote",
+          "streaming": "Streaming"
+        }
+      },
+      "day_mode": {
+        "name": "Day mode",
+        "state": {
+          "day": "Day",
+          "night": "Night"
+        }
+      }
+    },
     "time": {
       "day_mode_start": {
         "name": "Day mode start"
