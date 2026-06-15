@@ -351,6 +351,7 @@ async def test_dynamic_device_added(
     await hass.async_block_till_done()
 
     assert hass.states.get("media_player.playroom_yoto") is not None
+    assert hass.states.get("time.playroom_yoto_day_mode_start") is not None
     mock_yoto_client.subscribe_player_events.assert_called_once_with("player-2")
 
 
