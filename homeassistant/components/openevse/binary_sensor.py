@@ -56,6 +56,7 @@ BINARY_SENSOR_TYPES: tuple[OpenEVSEBinarySensorDescription, ...] = (
     OpenEVSEBinarySensorDescription(
         key="has_limit",
         translation_key="has_limit",
+        entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda ev: ev.has_limit,
     ),
