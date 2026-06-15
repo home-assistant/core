@@ -1,0 +1,19 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: valve
+  fields:
+    behavior:
+      required: true
+      default: each
+      selector:
+        automation_behavior:
+          mode: trigger
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+closed: *trigger_common
+opened: *trigger_common

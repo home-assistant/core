@@ -1,7 +1,5 @@
 """Support for Overkiz locks."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState

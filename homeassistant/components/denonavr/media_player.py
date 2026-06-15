@@ -1,7 +1,5 @@
 """Support for Denon AVR receivers using their HTTP interface."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import timedelta
 from functools import wraps
@@ -22,6 +20,8 @@ from denonavr.const import (
 from denonavr.exceptions import (
     AvrCommandError,
     AvrForbiddenError,
+    AvrIncompleteResponseError,
+    AvrInvalidResponseError,
     AvrNetworkError,
     AvrProcessingError,
     AvrTimoutError,
@@ -193,6 +193,17 @@ def async_log_errors[_DenonDeviceT: DenonDevice, **_P, _R](
                     self._receiver.host,
                 )
                 self._attr_available = False
+        except AvrInvalidResponseError, AvrIncompleteResponseError:
+            available = False
+            if self.available:
+                _LOGGER.warning(
+                    (
+                        "Denon AVR receiver at host %s returned malformed response. "
+                        "Device is unavailable"
+                    ),
+                    self._receiver.host,
+                )
+                self._attr_available = False
         except AvrCommandError as err:
             available = False
             _LOGGER.error(
@@ -254,13 +265,15 @@ class DenonDevice(MediaPlayerEntity):
 
     def _telnet_callback(self, zone: str, event: str, parameter: str) -> None:
         """Process a telnet command callback."""
-        # There are multiple checks implemented which reduce unnecessary updates of the ha state machine
+        # There are multiple checks implemented which reduce
+        # unnecessary updates of the ha state machine
         if zone not in (self._receiver.zone, ALL_ZONES):
             return
         if event not in TELNET_EVENTS:
             return
-        # Some updates trigger multiple events like one for artist and one for title for one change
-        # We skip every event except the last one
+        # Some updates trigger multiple events like one for
+        # artist and one for title for one change.
+        # We skip every event except the last one.
         if event == "NSE" and not parameter.startswith("4"):
             return
         if event == "TA" and not parameter.startswith("ANNAME"):
@@ -392,66 +405,79 @@ class DenonDevice(MediaPlayerEntity):
         """Status of DynamicEQ."""
         return self._receiver.dynamic_eq
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_play_pause(self) -> None:
         """Play or pause the media player."""
         await self._receiver.async_toggle_play_pause()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_play(self) -> None:
         """Send play command."""
         await self._receiver.async_play()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self._receiver.async_pause()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self._receiver.async_stop()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._receiver.async_previous_track()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._receiver.async_next_track()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self._receiver.async_set_input_func(source)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         await self._receiver.async_set_sound_mode(sound_mode)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_turn_on(self) -> None:
         """Turn on media player."""
         await self._receiver.async_power_on()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._receiver.async_power_off()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_volume_up(self) -> None:
         """Volume up the media player."""
         await self._receiver.async_volume_up()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_volume_down(self) -> None:
         """Volume down media player."""
         await self._receiver.async_volume_down()
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -462,6 +488,7 @@ class DenonDevice(MediaPlayerEntity):
             volume_denon = float(18)
         await self._receiver.async_set_volume(volume_denon)
 
+    # pylint: disable-next=home-assistant-action-swallowed-exception
     @async_log_errors
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""

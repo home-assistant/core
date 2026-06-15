@@ -1,7 +1,5 @@
 """Update the IP addresses of your Cloudflare DNS records."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant, ServiceCall
 
 from .const import DOMAIN, SERVICE_UPDATE_RECORDS
@@ -20,6 +18,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: CloudflareConfigEntry) -
         """Set up service for manual trigger."""
         await entry.runtime_data.async_request_refresh()
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(DOMAIN, SERVICE_UPDATE_RECORDS, update_records_service)
 
     return True

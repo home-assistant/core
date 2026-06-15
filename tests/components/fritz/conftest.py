@@ -1,7 +1,5 @@
 """Common stuff for Fritz!Tools tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from copy import deepcopy
 import logging
@@ -104,6 +102,15 @@ class FritzConnectionMock:
                 return action_data[index]
 
         return action_data
+
+
+def wifi_services_with_ssids(ssid_1: str, ssid_2: str) -> dict[str, dict[str, Any]]:
+    """Return Fritz services with overridden Wi-Fi SSIDs."""
+    services = deepcopy(MOCK_FB_SERVICES)
+    for index, ssid in enumerate((ssid_1, ssid_2), start=1):
+        services[f"WLANConfiguration{index}"]["GetInfo"]["NewSSID"] = ssid
+        services[f"WLANConfiguration{index}"]["GetSSID"]["NewSSID"] = ssid
+    return services
 
 
 @pytest.fixture(name="fc_data")

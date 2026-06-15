@@ -1,7 +1,5 @@
 """Support for RFXtrx sirens."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from typing import Any
 
@@ -89,7 +87,7 @@ async def async_setup_entry(
     )
 
 
-class RfxtrxOffDelayMixin(Entity):  # pylint: disable=hass-enforce-class-module
+class RfxtrxOffDelayMixin(Entity):  # pylint: disable=home-assistant-enforce-class-module
     """Mixin to support timeouts on data.
 
     Many 433 devices only send data when active. They will

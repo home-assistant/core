@@ -1,7 +1,5 @@
 """Support for X10 switch over Mochad."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -80,6 +78,7 @@ class MochadSwitch(SwitchEntity):
                 if self._comm_type == "pl":
                     self._controller.read_data()
                 self._attr_is_on = True
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)
 
@@ -96,6 +95,7 @@ class MochadSwitch(SwitchEntity):
                 if self._comm_type == "pl":
                     self._controller.read_data()
                 self._attr_is_on = False
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except (MochadException, OSError) as exc:
                 _LOGGER.error("Error with mochad communication: %s", exc)
 

@@ -83,7 +83,10 @@ async def test_turbo_mode_not_supported(
 ) -> None:
     """Test turbo mode switch is not created when not supported."""
     status = mock_actron_api.state_manager.get_status.return_value
-    status.user_aircon_settings.turbo_supported = False
+    status.user_aircon_settings.turbo_mode_enabled = {
+        "Enabled": False,
+        "Supported": False,
+    }
 
     await setup_integration(hass, mock_config_entry)
 

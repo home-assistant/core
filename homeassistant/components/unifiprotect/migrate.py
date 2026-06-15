@@ -1,7 +1,5 @@
 """UniFi Protect data migrations."""
 
-from __future__ import annotations
-
 from itertools import chain
 import logging
 from typing import TypedDict
@@ -116,8 +114,10 @@ async def async_migrate_data(
 def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
     """Check for usages of hdr_mode switch and raise repair if it is used.
 
-    UniFi Protect v3.0.22 changed how HDR works so it is no longer a simple on/off toggle. There is
-    Always On, Always Off and Auto. So it has been migrated to a select. The old switch is now deprecated.
+    UniFi Protect v3.0.22 changed how HDR works so it is
+    no longer a simple on/off toggle. There is Always On,
+    Always Off and Auto. So it has been migrated to a
+    select. The old switch is now deprecated.
 
     Added in 2024.4.0
     """

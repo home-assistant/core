@@ -1,7 +1,5 @@
 """The Hardware integration."""
 
-from __future__ import annotations
-
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.core import HomeAssistant

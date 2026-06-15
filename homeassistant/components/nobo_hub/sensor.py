@@ -1,7 +1,5 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from __future__ import annotations
-
 from pynobo import nobo
 
 from homeassistant.components.sensor import (
@@ -9,25 +7,28 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_MODEL, ATTR_NAME, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from . import NoboHubConfigEntry
 from .const import ATTR_SERIAL, ATTR_ZONE_ID, DOMAIN, NOBO_MANUFACTURER
+from .entity import NoboBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NoboHubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up any temperature sensors connected to the Nobø Ecohub."""
 
     # Setup connection with hub
-    hub: nobo = hass.data[DOMAIN][config_entry.entry_id]
+    hub = config_entry.runtime_data
 
     async_add_entities(
         NoboTemperatureSensor(component["serial"], hub)
@@ -36,20 +37,19 @@ async def async_setup_entry(
     )
 
 
-class NoboTemperatureSensor(SensorEntity):
+class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
     """A Nobø device with a temperature sensor."""
 
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
     _attr_state_class = SensorStateClass.MEASUREMENT
-    _attr_should_poll = False
-    _attr_has_entity_name = True
+    _attr_suggested_display_precision = 1
 
     def __init__(self, serial: str, hub: nobo) -> None:
         """Initialize the temperature sensor."""
+        super().__init__(hub)
         self._temperature: StateType = None
         self._id = serial
-        self._nobo = hub
         component = hub.components[self._id]
         self._attr_unique_id = component[ATTR_SERIAL]
         zone_id = component[ATTR_ZONE_ID]
@@ -67,24 +67,13 @@ class NoboTemperatureSensor(SensorEntity):
         )
         self._read_state()
 
-    async def async_added_to_hass(self) -> None:
-        """Register callback from hub."""
-        self._nobo.register_callback(self._after_update)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Deregister callback from hub."""
-        self._nobo.deregister_callback(self._after_update)
-
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. This is a local call."""
+        """Copy the current hub state onto the entity attributes."""
+        if self._id not in self._nobo.components:
+            # Component removed via the Nobø app; mark unavailable.
+            self._attr_available = False
+            return
+        self._attr_available = True
         value = self._nobo.get_current_component_temperature(self._id)
-        if value is None:
-            self._attr_native_value = None
-        else:
-            self._attr_native_value = round(float(value), 1)
-
-    @callback
-    def _after_update(self, hub) -> None:
-        self._read_state()
-        self.async_write_ha_state()
+        self._attr_native_value = None if value is None else float(value)

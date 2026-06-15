@@ -1,7 +1,5 @@
 """Support for System health ."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Awaitable, Callable
 import dataclasses
@@ -20,7 +18,6 @@ from homeassistant.helpers import (
     integration_platform,
 )
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +37,6 @@ class SystemHealthProtocol(Protocol):
         """Register system health callbacks."""
 
 
-@bind_hass
 @callback
 def async_register_info(
     hass: HomeAssistant,

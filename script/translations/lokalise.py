@@ -1,7 +1,5 @@
 """API for Lokalise."""
 
-from __future__ import annotations
-
 from pprint import pprint
 
 import requests
@@ -48,12 +46,12 @@ class Lokalise:
 
         return req.json()
 
-    def keys_list(self, params={}):
+    def keys_list(self, params=None):
         """List keys.
 
         https://app.lokalise.com/api2docs/curl/#transition-list-all-keys-get
         """
-        return self.request("GET", "keys", params)["keys"]
+        return self.request("GET", "keys", params or {})["keys"]
 
     def keys_create(self, keys):
         """Create keys.
@@ -76,16 +74,16 @@ class Lokalise:
         """
         return self.request("PUT", "keys", {"keys": updates})["keys"]
 
-    def translations_list(self, params={}):
+    def translations_list(self, params=None):
         """List translations.
 
         https://app.lokalise.com/api2docs/curl/#transition-list-all-translations-get
         """
-        return self.request("GET", "translations", params)["translations"]
+        return self.request("GET", "translations", params or {})["translations"]
 
-    def languages_list(self, params={}):
+    def languages_list(self, params=None):
         """List languages.
 
         https://app.lokalise.com/api2docs/curl/#transition-list-project-languages-get
         """
-        return self.request("GET", "languages", params)["languages"]
+        return self.request("GET", "languages", params or {})["languages"]

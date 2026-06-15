@@ -1,7 +1,5 @@
 """Support for Homekit lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohomekit.model.characteristics import CharacteristicsTypes

@@ -1,7 +1,5 @@
 """GoodWe PV inverter numeric settings entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging

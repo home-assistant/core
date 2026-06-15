@@ -1,7 +1,5 @@
 """Common methods used across tests for Rituals Perfume Genie."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant.components.rituals_perfume_genie.const import DOMAIN
@@ -92,7 +90,7 @@ async def init_integration(
     mock_config_entry: MockConfigEntry,
     mock_diffusers: list[MagicMock],
 ) -> None:
-    """Initialize the Rituals Perfume Genie integration with the given Config Entry and Diffuser list."""
+    """Initialize Rituals Perfume Genie with given entry and diffusers."""
     mock_config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.rituals_perfume_genie.Account"
@@ -105,5 +103,4 @@ async def init_integration(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.entry_id in hass.data[DOMAIN]
-    assert hass.data[DOMAIN]
+    assert mock_config_entry.runtime_data

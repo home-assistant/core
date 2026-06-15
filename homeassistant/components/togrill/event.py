@@ -1,7 +1,5 @@
 """Support for event entities."""
 
-from __future__ import annotations
-
 from togrill_bluetooth.packets import Packet, PacketA5Notify
 
 from homeassistant.components.event import EventEntity

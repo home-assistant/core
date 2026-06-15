@@ -1,7 +1,5 @@
 """A sensor that monitors trends in other components."""
 
-from __future__ import annotations
-
 from collections import deque
 from collections.abc import Mapping
 import logging

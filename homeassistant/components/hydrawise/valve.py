@@ -1,7 +1,5 @@
 """Support for Hydrawise sprinkler valves."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import Any
 
@@ -18,6 +16,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
+
+PARALLEL_UPDATES = 1
 
 VALVE_TYPES: tuple[ValveEntityDescription, ...] = (
     ValveEntityDescription(

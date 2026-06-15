@@ -1,7 +1,5 @@
 """Representation of Z-Wave updates."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import Counter
 from collections.abc import Awaitable, Callable
@@ -36,7 +34,7 @@ from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.restore_state import ExtraStoredData
 
 from .const import API_KEY_FIRMWARE_UPDATE_SERVICE, DOMAIN, LOGGER
-from .helpers import get_device_info, get_valueless_base_unique_id
+from .entity import ZWaveNodeBaseEntity
 from .models import ZwaveJSConfigEntry
 
 PARALLEL_UPDATES = 1
@@ -164,12 +162,10 @@ async def async_setup_entry(
     )
 
 
-class ZWaveFirmwareUpdateEntity(UpdateEntity):
+class ZWaveFirmwareUpdateEntity(ZWaveNodeBaseEntity, UpdateEntity):
     """Representation of a firmware update entity."""
 
-    driver: Driver
     entity_description: ZWaveUpdateEntityDescription
-    node: ZwaveNode
     _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = UpdateDeviceClass.FIRMWARE
     _attr_supported_features = (
@@ -177,8 +173,7 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
         | UpdateEntityFeature.RELEASE_NOTES
         | UpdateEntityFeature.PROGRESS
     )
-    _attr_has_entity_name = True
-    _attr_should_poll = False
+    _remove_on_reinterview = True
 
     def __init__(
         self,
@@ -188,9 +183,8 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
         entity_description: ZWaveUpdateEntityDescription,
     ) -> None:
         """Initialize a Z-Wave device firmware update entity."""
-        self.driver = driver
+        super().__init__(driver, node)
         self.entity_description = entity_description
-        self.node = node
         self._latest_version_firmware: FirmwareUpdateInfo | None = None
         self._poll_unsub: Callable[[], None] | None = None
         self._progress_unsub: Callable[[], None] | None = None
@@ -201,11 +195,8 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
 
         # Entity class attributes
         self._attr_name = "Firmware"
-        self._base_unique_id = get_valueless_base_unique_id(driver, node)
         self._attr_unique_id = f"{self._base_unique_id}.firmware_update"
         self._attr_installed_version = node.firmware_version
-        # device may not be precreated in main handler yet
-        self._attr_device_info = get_device_info(driver, node)
 
     @property
     def extra_restore_state_data(self) -> ZWaveFirmwareUpdateExtraStoredData:
@@ -266,12 +257,13 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
         try:
             # Retrieve all firmware updates including non-stable ones but filter
             # non-stable channels out
-            available_firmware_updates = [
-                update
-                for update in await self.driver.controller.async_get_available_firmware_updates(
+            all_updates = (
+                await self.driver.controller.async_get_available_firmware_updates(
                     self.node, API_KEY_FIRMWARE_UPDATE_SERVICE, True
                 )
-                if update.channel == "stable"
+            )
+            available_firmware_updates = [
+                update for update in all_updates if update.channel == "stable"
             ]
         except FailedZWaveCommand as err:
             LOGGER.debug(
@@ -347,41 +339,9 @@ class ZWaveFirmwareUpdateEntity(UpdateEntity):
         self._latest_version_firmware = None
         self._unsub_firmware_events_and_reset_progress()
 
-    async def async_poll_value(self, _: bool) -> None:
-        """Poll a value."""
-        # We log an error instead of raising an exception because this service call occurs
-        # in a separate task since it is called via the dispatcher and we don't want to
-        # raise the exception in that separate task because it is confusing to the user.
-        LOGGER.error(
-            "There is no value to refresh for this entity so the zwave_js.refresh_value"
-            " service won't work for it"
-        )
-
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self.unique_id}_poll_value",
-                self.async_poll_value,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity",
-                self.async_remove,
-            )
-        )
-
-        self.async_on_remove(
-            async_dispatcher_connect(
-                self.hass,
-                f"{DOMAIN}_{self._base_unique_id}_remove_entity_on_interview_started",
-                self.async_remove,
-            )
-        )
+        await super().async_added_to_hass()
 
         # Make sure these variables are set for the elif evaluation
         state = None

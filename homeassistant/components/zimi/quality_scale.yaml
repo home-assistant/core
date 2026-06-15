@@ -96,5 +96,4 @@ rules:
     status: exempt
     comment: |
       This integration does not use web sessions.
-  strict-typing:
-    status: todo
+  strict-typing: todo

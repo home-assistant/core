@@ -1,7 +1,5 @@
 """The AccuWeather coordinator."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -64,7 +62,7 @@ class AccuWeatherObservationDataUpdateCoordinator(
         """Initialize."""
         self.accuweather = accuweather
         self.location_key = accuweather.location_key
-        name = config_entry.data[CONF_NAME]
+        name = config_entry.data.get(CONF_NAME) or config_entry.title
 
         if TYPE_CHECKING:
             assert self.location_key is not None
@@ -122,7 +120,7 @@ class AccuWeatherForecastDataUpdateCoordinator(
         self.accuweather = accuweather
         self.location_key = accuweather.location_key
         self._fetch_method = fetch_method
-        name = config_entry.data[CONF_NAME]
+        name = config_entry.data.get(CONF_NAME) or config_entry.title
 
         if TYPE_CHECKING:
             assert self.location_key is not None

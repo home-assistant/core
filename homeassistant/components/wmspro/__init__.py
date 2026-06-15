@@ -1,7 +1,5 @@
 """The WMS WebControl pro API integration."""
 
-from __future__ import annotations
-
 import aiohttp
 from wmspro.webcontrol import WebControlPro
 

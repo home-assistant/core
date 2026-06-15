@@ -1,7 +1,5 @@
 """The Qube Heat Pump integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from python_qube_heatpump import QubeClient

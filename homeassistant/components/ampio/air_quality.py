@@ -1,7 +1,5 @@
 """Support for Ampio Air Quality data."""
 
-from __future__ import annotations
-
 import logging
 from typing import Final
 

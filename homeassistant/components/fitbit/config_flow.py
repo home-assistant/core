@@ -52,7 +52,10 @@ class OAuth2FlowHandler(
     async def async_step_creation(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Create config entry from external data with Fitbit specific error handling."""
+        """Create config entry from external data.
+
+        Handles Fitbit specific errors.
+        """
         try:
             return await super().async_step_creation()
         except FitbitAuthException as err:
@@ -85,4 +88,6 @@ class OAuth2FlowHandler(
             )
 
         self._abort_if_unique_id_configured()
-        return self.async_create_entry(title=profile.display_name, data=data)
+        return self.async_create_entry(
+            title=profile.display_name or "Fitbit", data=data
+        )

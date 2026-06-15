@@ -1,14 +1,21 @@
 """Device tracker for Mobile app."""
 
-from typing import Any
+from collections.abc import Callable
+from dataclasses import dataclass
+import logging
+from typing import Any, Self
+
+import voluptuous as vol
 
 from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_GPS,
+    ATTR_IN_ZONES,
     ATTR_LOCATION_NAME,
     TrackerEntity,
 )
 from homeassistant.components.zone import (
+    DOMAIN as ZONE_DOMAIN,
     ENTITY_ID_FORMAT as ZONE_ENTITY_ID_FORMAT,
     HOME_ZONE,
 )
@@ -22,10 +29,11 @@ from homeassistant.const import (
     STATE_HOME,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 
 from .const import (
     ATTR_ALTITUDE,
@@ -37,7 +45,49 @@ from .const import (
 )
 from .helpers import device_info
 
+_LOGGER = logging.getLogger(__name__)
+
 ATTR_KEYS = (ATTR_ALTITUDE, ATTR_COURSE, ATTR_SPEED, ATTR_VERTICAL_ACCURACY)
+
+LOCATION_UPDATE_SCHEMA = vol.All(
+    cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
+    vol.Schema(
+        {
+            vol.Optional(ATTR_LOCATION_NAME): cv.string,
+            vol.Optional(ATTR_GPS): cv.gps,
+            vol.Optional(ATTR_GPS_ACCURACY): cv.positive_float,
+            vol.Optional(ATTR_BATTERY): cv.positive_int,
+            vol.Optional(ATTR_SPEED): cv.positive_int,
+            vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
+            vol.Optional(ATTR_COURSE): cv.positive_int,
+            vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
+            vol.Optional(ATTR_IN_ZONES): cv.entities_domain(ZONE_DOMAIN),
+        },
+    ),
+)
+
+
+@dataclass
+class MobileAppDeviceTrackerExtraStoredData(ExtraStoredData):
+    """Object to hold mobile app device tracker data to be restored."""
+
+    data: dict[str, Any]
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the stored data."""
+        return {"data": self.data}
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored mobile app entity data from a dict."""
+        if (data := restored.get("data")) is None:
+            return None
+        try:
+            validated = LOCATION_UPDATE_SCHEMA(data)
+        except vol.Invalid as err:
+            _LOGGER.debug("Discarding invalid restored device tracker data: %s", err)
+            return None
+        return cls(validated)
 
 
 async def async_setup_entry(
@@ -53,11 +103,11 @@ async def async_setup_entry(
 class MobileAppEntity(TrackerEntity, RestoreEntity):
     """Represent a tracked device."""
 
-    def __init__(self, entry, data=None):
+    def __init__(self, entry: ConfigEntry) -> None:
         """Set up Mobile app entity."""
         self._entry = entry
-        self._data = data
-        self._dispatch_unsub = None
+        self._data: dict[str, Any] = {}
+        self._dispatch_unsub: Callable[[], None] | None = None
 
     @property
     def unique_id(self) -> str:
@@ -78,6 +128,11 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
                 attrs[key] = value
 
         return attrs
+
+    @property
+    def in_zones(self) -> list[str] | None:
+        """Return the zones the device is currently in."""
+        return self._data.get(ATTR_IN_ZONES)
 
     @property
     def location_accuracy(self) -> float:
@@ -103,6 +158,11 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
     @property
     def location_name(self) -> str | None:
         """Return a location name for the current location of the device."""
+        if ATTR_IN_ZONES in self._data:
+            # New app sends in_zones as well as location_name. Prioritize in_zones
+            # and only use location_name for backwards compatibility with old
+            # app versions.
+            return None
         if location_name := self._data.get(ATTR_LOCATION_NAME):
             if location_name == HOME_ZONE:
                 return STATE_HOME
@@ -132,12 +192,19 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
             self.update_data,
         )
 
-        # Don't restore if we got set up with data.
-        if self._data is not None:
+        if (extra_data := await self.async_get_last_extra_data()) is not None:
+            if (
+                restored := MobileAppDeviceTrackerExtraStoredData.from_dict(
+                    extra_data.as_dict()
+                )
+            ) is not None:
+                self._data = restored.data
             return
 
+        # Fallback for entities saved before MobileAppDeviceTrackerExtraStoredData
+        # was introduced: reconstruct from the previous state's attributes.
+        # This can be removed in HA Core 2026.12.
         if (state := await self.async_get_last_state()) is None:
-            self._data = {}
             return
 
         attr = state.attributes
@@ -149,6 +216,11 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
         data.update({key: attr[key] for key in attr if key in ATTR_KEYS})
         self._data = data
 
+    @property
+    def extra_restore_state_data(self) -> MobileAppDeviceTrackerExtraStoredData:
+        """Return the entity data to be restored."""
+        return MobileAppDeviceTrackerExtraStoredData(self._data)
+
     async def async_will_remove_from_hass(self) -> None:
         """Call when entity is being removed from hass."""
         await super().async_will_remove_from_hass()
@@ -158,7 +230,7 @@ class MobileAppEntity(TrackerEntity, RestoreEntity):
             self._dispatch_unsub = None
 
     @callback
-    def update_data(self, data):
+    def update_data(self, data: dict[str, Any]) -> None:
         """Mark the device as seen."""
         self._data = data
         self.async_write_ha_state()

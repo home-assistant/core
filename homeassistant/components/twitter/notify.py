@@ -1,7 +1,5 @@
 """Twitter platform for notify component."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from functools import partial
 from http import HTTPStatus

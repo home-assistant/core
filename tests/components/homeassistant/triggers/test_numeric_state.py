@@ -988,7 +988,9 @@ async def test_template_string(
                 "trigger": {
                     "platform": "numeric_state",
                     "entity_id": "test.entity",
-                    "value_template": "{{ state.attributes.test_attribute | multiply(10) }}",
+                    "value_template": (
+                        "{{ state.attributes.test_attribute | multiply(10) }}"
+                    ),
                     "below": below,
                 },
                 "action": {
@@ -1988,7 +1990,9 @@ async def test_template_variable(
                 "trigger": {
                     "platform": "numeric_state",
                     "entity_id": "test.entity",
-                    "value_template": "{{ state.attributes.test_attribute[2] * multiplier}}",
+                    "value_template": (
+                        "{{ state.attributes.test_attribute[2] * multiplier}}"
+                    ),
                     "below": 10,
                 },
                 "action": {"service": "test.automation"},

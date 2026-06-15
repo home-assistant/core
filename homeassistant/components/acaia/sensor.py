@@ -143,4 +143,4 @@ class AcaiaRestoreSensor(AcaiaEntity, RestoreSensor):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-        return super().available or self._restored_data is not None
+        return super().available or self.native_value is not None

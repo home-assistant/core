@@ -1,7 +1,5 @@
 """Entity classes for the QNAP QSW integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any
@@ -16,7 +14,6 @@ from aioqsw.const import (
     QSD_SYSTEM_BOARD,
 )
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -24,7 +21,7 @@ from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import MANUFACTURER
-from .coordinator import QswDataCoordinator, QswFirmwareCoordinator
+from .coordinator import QnapQswConfigEntry, QswDataCoordinator, QswFirmwareCoordinator
 
 
 class QswEntityType(StrEnum):
@@ -40,7 +37,7 @@ class QswDataEntity(CoordinatorEntity[QswDataCoordinator]):
     def __init__(
         self,
         coordinator: QswDataCoordinator,
-        entry: ConfigEntry,
+        entry: QnapQswConfigEntry,
         type_id: int | None = None,
     ) -> None:
         """Initialize."""
@@ -127,7 +124,7 @@ class QswFirmwareEntity(CoordinatorEntity[QswFirmwareCoordinator]):
     def __init__(
         self,
         coordinator: QswFirmwareCoordinator,
-        entry: ConfigEntry,
+        entry: QnapQswConfigEntry,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator)

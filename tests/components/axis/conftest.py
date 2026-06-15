@@ -1,7 +1,5 @@
 """Axis conftest."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator
 from copy import deepcopy
 import re
@@ -68,8 +66,8 @@ class RtspEventMock(Protocol):
 
 
 class _RtspClientMock(Protocol):
-    async def __call__(
-        self, data: dict[str, Any] | None = None, state: str = ""
+    def __call__(
+        self, data: bytes | None = None, state: Signal | None = None
     ) -> None: ...
 
 
@@ -142,6 +140,7 @@ def fixture_request(
     aioclient_mock: AiohttpClientMocker,
     port_management_payload: dict[str, Any],
     param_properties_payload: str,
+    param_properties_status_code: int,
     param_ports_payload: str,
     mqtt_status_code: int,
 ) -> Callable[[str], None]:
@@ -151,12 +150,15 @@ def fixture_request(
         def _url_pattern(path: str) -> re.Pattern[str]:
             return re.compile(rf"^https?://{re.escape(host)}(?::\d+)?{path}$")
 
-        def _text_response(url: URL, text: str) -> AiohttpClientMockResponse:
+        def _text_response(
+            url: URL, text: str, status: int = 200
+        ) -> AiohttpClientMockResponse:
             return AiohttpClientMockResponse(
                 "post",
                 url,
                 text=text,
                 headers={"Content-Type": "text/plain"},
+                status=status,
             )
 
         async def _param_cgi_response(
@@ -174,7 +176,9 @@ def fixture_request(
             if group == "root.Output":
                 return _text_response(url, PORTS_RESPONSE)
             if group == "root.Properties":
-                return _text_response(url, param_properties_payload)
+                return _text_response(
+                    url, param_properties_payload, param_properties_status_code
+                )
             if group == "root.PTZ":
                 return _text_response(url, PTZ_RESPONSE)
             if group == "root.StreamProfile":
@@ -278,9 +282,15 @@ def fixture_param_ports_data() -> str:
     return PORTS_RESPONSE
 
 
+@pytest.fixture(name="param_properties_status_code")
+def fixture_param_properties_status_code() -> int:
+    """Property parameter status code."""
+    return 200
+
+
 @pytest.fixture(name="mqtt_status_code")
 def fixture_mqtt_status_code() -> int:
-    """Property parameter data."""
+    """MQTT status code."""
     return 200
 
 
@@ -337,14 +347,16 @@ def fixture_axis_rtsp_client() -> Generator[_RtspClientMock]:
 
         rtsp_client_mock.return_value.stop = stop_stream
 
-        def make_rtsp_call(data: dict[str, Any] | None = None, state: str = "") -> None:
+        def make_rtsp_call(
+            data: bytes | None = None, state: Signal | None = None
+        ) -> None:
             """Generate a RTSP call."""
             axis_streammanager_session_callback = rtsp_client_mock.call_args[0][4]
 
-            if data:
-                rtsp_client_mock.return_value.rtp.data = data
+            if data is not None:
+                rtsp_client_mock.return_value.data = data
                 axis_streammanager_session_callback(signal=Signal.DATA)
-            elif state:
+            elif state is not None:
                 axis_streammanager_session_callback(signal=state)
             else:
                 raise NotImplementedError

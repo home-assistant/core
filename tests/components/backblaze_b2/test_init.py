@@ -57,6 +57,7 @@ async def test_setup_entry_invalid_auth(
         (exception.RestrictedBucket("testBucket"), ConfigEntryState.SETUP_RETRY),
         (exception.NonExistentBucket(), ConfigEntryState.SETUP_RETRY),
         (exception.ConnectionReset(), ConfigEntryState.SETUP_RETRY),
+        (exception.BadRequest("test", "bad_request"), ConfigEntryState.SETUP_RETRY),
         (exception.MissingAccountData("key"), ConfigEntryState.SETUP_ERROR),
     ],
 )

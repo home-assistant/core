@@ -1,7 +1,5 @@
 """Base entity for the Casper Glow integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable
 
 from pycasperglow import CasperGlowError

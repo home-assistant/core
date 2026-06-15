@@ -1,5 +1,10 @@
 {
   "entity": {
+    "button": {
+      "shutdown": {
+        "default": "mdi:power"
+      }
+    },
     "sensor": {
       "cpu_15min_load": {
         "default": "mdi:chip"

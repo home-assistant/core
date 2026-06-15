@@ -1,24 +1,18 @@
 """Config flow for kraken integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import krakenex
 from pykrakenapi.pykrakenapi import KrakenAPI
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
 from .const import CONF_TRACKED_ASSET_PAIRS, DEFAULT_SCAN_INTERVAL, DOMAIN
+from .coordinator import KrakenConfigEntry
 from .utils import get_tradable_asset_pairs
 
 
@@ -30,7 +24,7 @@ class KrakenConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: KrakenConfigEntry,
     ) -> KrakenOptionsFlowHandler:
         """Get the options flow for this handler."""
         return KrakenOptionsFlowHandler()
@@ -66,7 +60,8 @@ class KrakenOptionsFlowHandler(OptionsFlow):
         )
         tradable_asset_pairs_for_multi_select = {v: v for v in tradable_asset_pairs}
 
-        # Ensure that a previously selected tracked asset pair is still available in multiselect
+        # Ensure that a previously selected tracked asset pair
+        # is still available in multiselect
         # even if it is not tradable anymore
         tracked_asset_pairs = self.config_entry.options.get(
             CONF_TRACKED_ASSET_PAIRS, []
@@ -79,6 +74,8 @@ class KrakenOptionsFlowHandler(OptionsFlow):
         )
 
         options = {
+            # Polling interval is user-configurable, which is no longer allowed
+            # pylint: disable-next=home-assistant-config-flow-polling-field
             vol.Optional(
                 CONF_SCAN_INTERVAL,
                 default=self.config_entry.options.get(

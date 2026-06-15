@@ -1,7 +1,5 @@
 """Entity for Fyta plant image."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime

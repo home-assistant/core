@@ -1,7 +1,5 @@
 """Config flow for Philips TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import platform
 from typing import Any
@@ -47,8 +45,8 @@ USER_SCHEMA = vol.Schema(
         ): str,
         vol.Required(
             CONF_API_VERSION,
-            default=1,
-        ): vol.In([1, 5, 6]),
+            default="1",
+        ): vol.In(["1", "5", "6"]),
     }
 )
 
@@ -225,7 +223,7 @@ class PhilipsJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self._current = user_input
             try:
                 await self._async_attempt_prepare(
-                    user_input[CONF_HOST], user_input[CONF_API_VERSION], False
+                    user_input[CONF_HOST], int(user_input[CONF_API_VERSION]), False
                 )
             except GeneralFailure as exc:
                 LOGGER.error(exc)

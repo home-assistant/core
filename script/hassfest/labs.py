@@ -1,7 +1,5 @@
 """Generate lab preview features file."""
 
-from __future__ import annotations
-
 from .model import Config, Integration
 from .serializer import format_python_namespace
 
@@ -20,7 +18,8 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
         if not isinstance(preview_features, dict):
             integration.add_error(
                 "labs",
-                f"preview_features must be a dict, got {type(preview_features).__name__}",
+                "preview_features must be a dict,"
+                f" got {type(preview_features).__name__}",
             )
             continue
 
@@ -30,13 +29,17 @@ def generate_and_validate(integrations: dict[str, Integration]) -> str:
             if not isinstance(preview_feature_id, str):
                 integration.add_error(
                     "labs",
-                    f"preview_features keys must be strings, got {type(preview_feature_id).__name__}",
+                    "preview_features keys must be"
+                    " strings, got"
+                    f" {type(preview_feature_id).__name__}",
                 )
                 break
             if not isinstance(preview_feature_config, dict):
                 integration.add_error(
                     "labs",
-                    f"preview_features[{preview_feature_id}] must be a dict, got {type(preview_feature_config).__name__}",
+                    f"preview_features[{preview_feature_id}]"
+                    " must be a dict, got"
+                    f" {type(preview_feature_config).__name__}",
                 )
                 break
             # Include the full feature configuration

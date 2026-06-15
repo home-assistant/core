@@ -1,7 +1,5 @@
 """Support to interact with a Music Player Daemon."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import asynccontextmanager, suppress
 from datetime import timedelta
@@ -294,8 +292,9 @@ class MpdDevice(MediaPlayerEntity):
                 bytes(response["binary"])
             ).hexdigest()[:16]
         else:
-            # If there is no image, this hash has to be None, else the media player component
-            # assumes there is an image and returns an error trying to load it and the
+            # If there is no image, this hash has to be None,
+            # else the media player component assumes there is an
+            # image and returns an error trying to load it and the
             # frontend media control card breaks.
             self._media_image_hash = None
 
@@ -324,7 +323,8 @@ class MpdDevice(MediaPlayerEntity):
                         error,
                     )
 
-        # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
+        # read artwork contained in the media directory
+        # (cover.{jpg,png,tiff,bmp}) if none is embedded
         if can_albumart and not response:
             try:
                 with suppress(mpd.ConnectionError):

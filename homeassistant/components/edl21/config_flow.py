@@ -3,12 +3,13 @@
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import CONF_SERIAL_PORT, DEFAULT_TITLE, DOMAIN
 
 DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_SERIAL_PORT): str,
+        vol.Required(CONF_SERIAL_PORT): SerialPortSelector(),
     }
 )
 

@@ -1,7 +1,5 @@
 """Test the UniFi Protect setup flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -310,7 +308,7 @@ async def test_setup_failed_error(hass: HomeAssistant, ufp: MockUFPFixture) -> N
 
 
 async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> None:
-    """Test setup of unifiprotect entry with unauthorized error after multiple retries."""
+    """Test setup of unifiprotect entry with unauthorized error after retries."""
 
     ufp.api.update = AsyncMock(side_effect=NotAuthorized)
 
@@ -328,7 +326,7 @@ async def test_setup_failed_auth(hass: HomeAssistant, ufp: MockUFPFixture) -> No
 async def test_setup_starts_discovery(
     hass: HomeAssistant, ufp_config_entry: ConfigEntry, ufp_client: ProtectApiClient
 ) -> None:
-    """Test setting up will start discovery."""
+    """Test setting up will start discovery via unifi_discovery dependency."""
     with (
         _patch_discovery(),
         patch(
@@ -340,9 +338,9 @@ async def test_setup_starts_discovery(
         ufp = MockUFPFixture(ufp_config_entry, ufp_client)
 
         await hass.config_entries.async_setup(ufp.entry.entry_id)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
         assert ufp.entry.state is ConfigEntryState.LOADED
-        await hass.async_block_till_done()
+        # Discovery is now handled by unifi_discovery dependency
         assert len(hass.config_entries.flow.async_progress_by_handler(DOMAIN)) == 1
 
 
@@ -439,7 +437,7 @@ async def test_async_ufp_instance_for_config_entry_ids(
     mock_entries: list[MockConfigEntry],
     expected_result: str | None,
 ) -> None:
-    """Test async_ufp_instance_for_config_entry_ids with various entry configurations."""
+    """Test async_ufp_instance_for_config_entry_ids with various configs."""
 
     for index, entry in enumerate(mock_entries):
         entry.add_to_hass(hass)
@@ -525,7 +523,8 @@ async def test_setup_handles_api_key_creation_bad_request(
     hass: HomeAssistant, ufp: MockUFPFixture, mock_user_can_write_nvr: Mock
 ) -> None:
     """Test handling of API key creation BadRequest error."""
-    # Setup: API key is not set, user has write permissions, but creation fails with BadRequest
+    # Setup: API key is not set, user has write permissions,
+    # but creation fails with BadRequest
     ufp.api.is_api_key_set.return_value = False
     ufp.api.create_api_key = AsyncMock(
         side_effect=BadRequest("Invalid API key creation request")
@@ -586,7 +585,6 @@ async def test_migrate_entry_version_2(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry", return_value=True
         ),
-        patch("homeassistant.components.unifiprotect.async_start_discovery"),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,

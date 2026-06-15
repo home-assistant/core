@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -40,7 +42,10 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-ZOE-50 Location',
+      'in_zones': list([
+      ]),
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_zoe_50_location',
@@ -56,7 +61,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -91,6 +98,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-ZOE-50 Location',
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_zoe_50_location',
@@ -106,7 +114,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -142,9 +152,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-CAPTUR-FUEL Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_captur_fuel_location',
@@ -160,7 +173,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -196,9 +211,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-CAPTUR_PHEV Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_captur_phev_location',
@@ -214,7 +232,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -250,9 +270,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-MEG-0 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_meg_0_location',
@@ -268,7 +291,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -304,9 +329,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-TWINGO-III Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_twingo_iii_location',
@@ -322,7 +350,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -358,9 +388,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'REG-ZOE-50 Location',
       'gps_accuracy': 0,
+      'in_zones': list([
+      ]),
       'latitude': 48.1234567,
       'longitude': 11.1234567,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.reg_zoe_50_location',

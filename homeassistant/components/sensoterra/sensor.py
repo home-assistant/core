@@ -1,7 +1,5 @@
 """Sensoterra devices."""
 
-from __future__ import annotations
-
 from datetime import UTC, datetime, timedelta
 from enum import StrEnum, auto
 
@@ -167,5 +165,5 @@ class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
             return False
 
         # Expire sensor if no update within the last few days.
-        expiration = datetime.now(UTC) - timedelta(days=SENSOR_EXPIRATION_DAYS)
+        expiration = datetime.now(UTC) - timedelta(days=SENSOR_EXPIRATION_DAYS)  # pylint: disable=home-assistant-enforce-utcnow
         return sensor.timestamp >= expiration

@@ -97,7 +97,7 @@ async def test_diagnostics(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -107,10 +107,10 @@ async def test_diagnostics(
         hass, hass_client, config_entry
     )
 
-    assert "addons" in diagnostics["coordinator_data"]
     assert "core" in diagnostics["coordinator_data"]
     assert "supervisor" in diagnostics["coordinator_data"]
     assert "os" in diagnostics["coordinator_data"]
     assert "host" in diagnostics["coordinator_data"]
+    assert "addons" in diagnostics["addons_coordinator_data"]
 
     assert len(diagnostics["devices"]) == 6

@@ -1,7 +1,5 @@
 """Support for Synology DSM backup agents."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
 from typing import TYPE_CHECKING, Any

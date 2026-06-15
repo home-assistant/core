@@ -1,6 +1,4 @@
-"""Switch platform for Hyperion."""
-
-from __future__ import annotations
+"""Camera platform for Hyperion."""
 
 import asyncio
 import base64
@@ -156,7 +154,8 @@ class HyperionCamera(Camera):
         """Update Hyperion components."""
         if not img:
             return
-        # Prefer KEY_DATA (Hyperion server >= 2.1.1); fall back to KEY_RESULT for older server versions
+        # Prefer KEY_DATA (Hyperion server >= 2.1.1); fall back to
+        # KEY_RESULT for older server versions
         img_data = img.get(KEY_DATA, img.get(KEY_RESULT, {})).get(KEY_IMAGE)
         if not img_data or not img_data.startswith(IMAGE_STREAM_JPG_SENTINEL):
             return

@@ -1,7 +1,5 @@
 """Speech to text support for Google Generative AI."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable
 
 from google.genai.errors import APIError, ClientError
@@ -9,16 +7,11 @@ from google.genai.types import Part
 
 from homeassistant.components import stt
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
+from homeassistant.const import CONF_PROMPT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    CONF_CHAT_MODEL,
-    CONF_PROMPT,
-    DEFAULT_STT_PROMPT,
-    LOGGER,
-    RECOMMENDED_STT_MODEL,
-)
+from .const import CONF_CHAT_MODEL, DEFAULT_STT_PROMPT, LOGGER, RECOMMENDED_STT_MODEL
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
 
@@ -218,8 +211,10 @@ class GoogleGenerativeAISttEntity(
     @property
     def supported_channels(self) -> list[stt.AudioChannels]:
         """Return a list of supported channels."""
-        # Per https://ai.google.dev/gemini-api/docs/audio
-        # If the audio source contains multiple channels, Gemini combines those channels into a single channel.
+        # Per
+        # https://ai.google.dev/gemini-api/docs/audio
+        # If the audio source contains multiple channels,
+        # Gemini combines those channels into a single channel.
         return [stt.AudioChannels.CHANNEL_MONO]
 
     async def async_process_audio_stream(

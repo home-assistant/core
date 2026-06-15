@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Merge all translation sources into a single JSON file."""
 
-from __future__ import annotations
-
 import json
 from pathlib import Path
 import subprocess
@@ -40,6 +38,7 @@ def run_download_docker() -> None:
             "file",
             "download",
             CORE_PROJECT_ID,
+            "--async",
             "--original-filenames=false",
             "--replace-breaks=false",
             "--filter-data",
@@ -98,14 +97,18 @@ def save_language_translations(lang: str, translations: dict[str, Any]) -> None:
         component_path = Path("homeassistant") / "components" / component
         if not component_path.is_dir():
             print(
-                f"Skipping {lang} for {component}, as the integration doesn't seem to exist."
+                f"Skipping {lang} for {component},"
+                " as the integration doesn't seem"
+                " to exist."
             )
             continue
 
         strings_path = component_path / "strings.json"
         if not strings_path.exists():
             print(
-                f"Skipping {lang} for {component}, as the integration doesn't have a strings.json file."
+                f"Skipping {lang} for {component},"
+                " as the integration doesn't have"
+                " a strings.json file."
             )
             continue
         strings = load_json_from_path(strings_path)

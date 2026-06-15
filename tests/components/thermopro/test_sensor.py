@@ -229,6 +229,7 @@ async def test_thermopro_restores_entities_on_restart_behavior(
     await hass.async_block_till_done()
 
     # Manually set up sensor platform with our callback
+    # pylint: disable-next=home-assistant-tests-direct-platform-async-setup-entry
     await thermopro_sensor.async_setup_entry(hass, entry1, add_entities_first)
     await hass.async_block_till_done()
 
@@ -242,6 +243,7 @@ async def test_thermopro_restores_entities_on_restart_behavior(
     assert await hass.config_entries.async_setup(entry2.entry_id)
     await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-tests-direct-platform-async-setup-entry
     await thermopro_sensor.async_setup_entry(hass, entry2, add_entities_second)
     await hass.async_block_till_done()
 

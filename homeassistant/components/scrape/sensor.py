@@ -1,13 +1,11 @@
 """Support for getting data from websites with scraping."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, cast
+from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.sensor import CONF_STATE_CLASS
+from homeassistant.components.sensor import CONF_STATE_CLASS, DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_DEVICE_CLASS,
@@ -23,6 +21,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.template import _SENTINEL, Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -46,9 +45,10 @@ TRIGGER_ENTITY_OPTIONS = (
     CONF_AVAILABILITY,
     CONF_DEVICE_CLASS,
     CONF_ICON,
+    CONF_NAME,
     CONF_PICTURE,
-    CONF_UNIQUE_ID,
     CONF_STATE_CLASS,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
 )
 
@@ -60,7 +60,17 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Web scrape sensor."""
-    discovery_info = cast(DiscoveryInfoType, discovery_info)
+    if discovery_info is None:
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SENSOR_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/scrape/",
+            logger=_LOGGER,
+        )
+        return
+
     coordinator: ScrapeCoordinator = discovery_info["coordinator"]
     sensors_config: list[ConfigType] = discovery_info["configs"]
 
@@ -70,7 +80,7 @@ async def async_setup_platform(
 
     entities: list[ScrapeSensor] = []
     for sensor_config in sensors_config:
-        trigger_entity_config = {CONF_NAME: sensor_config[CONF_NAME]}
+        trigger_entity_config = {}
         for key in TRIGGER_ENTITY_OPTIONS:
             if key not in sensor_config:
                 continue
@@ -98,23 +108,24 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Scrape sensor entry."""
-    entities: list = []
-
     coordinator = entry.runtime_data
-    config = dict(entry.options)
-    for sensor in config["sensor"]:
+    for subentry in entry.subentries.values():
+        sensor = dict(subentry.data)
+        sensor.update(sensor.pop("advanced", {}))
+        sensor[CONF_UNIQUE_ID] = subentry.subentry_id
+        sensor[CONF_NAME] = subentry.title
+
         sensor_config: ConfigType = vol.Schema(
             TEMPLATE_SENSOR_BASE_SCHEMA.schema, extra=vol.ALLOW_EXTRA
         )(sensor)
 
-        name: str = sensor_config[CONF_NAME]
         value_string: str | None = sensor_config.get(CONF_VALUE_TEMPLATE)
 
         value_template: ValueTemplate | None = (
             ValueTemplate(value_string, hass) if value_string is not None else None
         )
 
-        trigger_entity_config: dict[str, str | Template | None] = {CONF_NAME: name}
+        trigger_entity_config: dict[str, str | Template | None] = {}
         for key in TRIGGER_ENTITY_OPTIONS:
             if key not in sensor_config:
                 continue
@@ -123,20 +134,21 @@ async def async_setup_entry(
                 continue
             trigger_entity_config[key] = sensor_config[key]
 
-        entities.append(
-            ScrapeSensor(
-                hass,
-                coordinator,
-                trigger_entity_config,
-                sensor_config[CONF_SELECT],
-                sensor_config.get(CONF_ATTRIBUTE),
-                sensor_config[CONF_INDEX],
-                value_template,
-                False,
-            )
+        async_add_entities(
+            [
+                ScrapeSensor(
+                    hass,
+                    coordinator,
+                    trigger_entity_config,
+                    sensor_config[CONF_SELECT],
+                    sensor_config.get(CONF_ATTRIBUTE),
+                    sensor_config[CONF_INDEX],
+                    value_template,
+                    False,
+                )
+            ],
+            config_subentry_id=subentry.subentry_id,
         )
-
-    async_add_entities(entities)
 
 
 class ScrapeSensor(CoordinatorEntity[ScrapeCoordinator], ManualTriggerSensorEntity):

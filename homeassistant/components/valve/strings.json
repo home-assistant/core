@@ -1,11 +1,19 @@
 {
+  "common": {
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least",
+    "trigger_behavior_name": "Trigger when",
+    "trigger_for_name": "For at least"
+  },
   "conditions": {
     "is_closed": {
       "description": "Tests if one or more valves are closed.",
       "fields": {
         "behavior": {
-          "description": "Whether the condition should pass when any or all targeted entities match.",
-          "name": "Behavior"
+          "name": "[%key:component::valve::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::valve::common::condition_for_name%]"
         }
       },
       "name": "Valve is closed"
@@ -14,8 +22,10 @@
       "description": "Tests if one or more valves are open.",
       "fields": {
         "behavior": {
-          "description": "Whether the condition should pass when any or all targeted entities match.",
-          "name": "Behavior"
+          "name": "[%key:component::valve::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::valve::common::condition_for_name%]"
         }
       },
       "name": "Valve is open"
@@ -42,14 +52,6 @@
     },
     "water": {
       "name": "Water"
-    }
-  },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
     }
   },
   "services": {
@@ -80,5 +82,31 @@
       "name": "Toggle valve"
     }
   },
-  "title": "Valve"
+  "title": "Valve",
+  "triggers": {
+    "closed": {
+      "description": "Triggers after one or more valves close.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::valve::common::trigger_for_name%]"
+        }
+      },
+      "name": "Valve closed"
+    },
+    "opened": {
+      "description": "Triggers after one or more valves open.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::valve::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::valve::common::trigger_for_name%]"
+        }
+      },
+      "name": "Valve opened"
+    }
+  }
 }

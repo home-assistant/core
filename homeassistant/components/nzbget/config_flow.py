@@ -1,7 +1,5 @@
 """Config flow for NZBGet."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -17,8 +15,16 @@ from homeassistant.const import (
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
+from homeassistant.data_entry_flow import SectionConfig, section
 
-from .const import DEFAULT_NAME, DEFAULT_PORT, DEFAULT_SSL, DEFAULT_VERIFY_SSL, DOMAIN
+from .const import (
+    CONF_MORE_OPTIONS,
+    DEFAULT_NAME,
+    DEFAULT_PORT,
+    DEFAULT_SSL,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+)
 from .coordinator import NZBGetAPI, NZBGetAPIException
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,12 +36,12 @@ def _validate_input(data: dict[str, Any]) -> None:
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     nzbget_api = NZBGetAPI(
-        data[CONF_HOST],
-        data.get(CONF_USERNAME),
-        data.get(CONF_PASSWORD),
-        data[CONF_SSL],
-        data[CONF_VERIFY_SSL],
-        data[CONF_PORT],
+        host=data[CONF_HOST],
+        username=data.get(CONF_USERNAME),
+        password=data.get(CONF_PASSWORD),
+        secure=data[CONF_SSL],
+        verify_certificate=data[CONF_VERIFY_SSL],
+        port=data[CONF_PORT],
     )
 
     nzbget_api.version()
@@ -53,8 +59,10 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
         errors = {}
 
         if user_input is not None:
-            if CONF_VERIFY_SSL not in user_input:
-                user_input[CONF_VERIFY_SSL] = DEFAULT_VERIFY_SSL
+            more_options = user_input.pop(CONF_MORE_OPTIONS, {})
+            user_input[CONF_VERIFY_SSL] = more_options.get(
+                CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL
+            )
 
             try:
                 await self.hass.async_add_executor_job(_validate_input, user_input)
@@ -69,22 +77,31 @@ class NZBGetConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=user_input,
                 )
 
-        data_schema = {
-            vol.Required(CONF_HOST): str,
-            vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
-            vol.Optional(CONF_USERNAME): str,
-            vol.Optional(CONF_PASSWORD): str,
-            vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
-            vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
-        }
-
-        if self.show_advanced_options:
-            data_schema[vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL)] = (
-                bool
-            )
+        data_schema = vol.Schema(
+            {
+                vol.Required(CONF_HOST): str,
+                # Name field is no longer allowed in config flow schemas
+                # pylint: disable-next=home-assistant-config-flow-name-field
+                vol.Optional(CONF_NAME, default=DEFAULT_NAME): str,
+                vol.Optional(CONF_USERNAME): str,
+                vol.Optional(CONF_PASSWORD): str,
+                vol.Optional(CONF_PORT, default=DEFAULT_PORT): int,
+                vol.Optional(CONF_SSL, default=DEFAULT_SSL): bool,
+                vol.Required(CONF_MORE_OPTIONS): section(
+                    vol.Schema(
+                        {
+                            vol.Optional(
+                                CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL
+                            ): bool,
+                        }
+                    ),
+                    SectionConfig(collapsed=True),
+                ),
+            }
+        )
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(data_schema),
+            data_schema=data_schema,
             errors=errors or {},
         )

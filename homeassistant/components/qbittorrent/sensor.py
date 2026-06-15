@@ -1,7 +1,5 @@
 """Support for monitoring the qBittorrent API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import logging
@@ -13,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_IDLE, UnitOfDataRate, UnitOfInformation
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -22,7 +19,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, STATE_DOWNLOADING, STATE_SEEDING, STATE_UP_DOWN
-from .coordinator import QBittorrentDataCoordinator
+from .coordinator import QBittorrentConfigEntry, QBittorrentDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -236,12 +233,12 @@ SENSOR_TYPES: tuple[QBittorrentSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: QBittorrentConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up qBittorrent sensor entries."""
 
-    coordinator: QBittorrentDataCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         QBittorrentSensor(coordinator, config_entry, description)
@@ -258,7 +255,7 @@ class QBittorrentSensor(CoordinatorEntity[QBittorrentDataCoordinator], SensorEnt
     def __init__(
         self,
         coordinator: QBittorrentDataCoordinator,
-        config_entry: ConfigEntry,
+        config_entry: QBittorrentConfigEntry,
         entity_description: QBittorrentSensorEntityDescription,
     ) -> None:
         """Initialize the qBittorrent sensor."""

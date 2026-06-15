@@ -1,7 +1,5 @@
 """Base entity for Watts Vision integration."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from visionpluspython.models import Device

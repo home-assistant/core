@@ -1,7 +1,5 @@
 """Config flow for TOLO integration."""
 
-from __future__ import annotations
-
 import logging
 from types import MappingProxyType
 from typing import Any

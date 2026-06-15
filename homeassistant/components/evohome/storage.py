@@ -1,8 +1,6 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
-from __future__ import annotations
-
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any, NotRequired, TypedDict
 
 from evohomeasync.auth import (
@@ -14,6 +12,7 @@ from evohomeasync2.auth import AbstractTokenManager
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import Store
+from homeassistant.util import dt as dt_util
 
 from .const import STORAGE_KEY, STORAGE_VER
 
@@ -93,7 +92,7 @@ class TokenManager(AbstractTokenManager, AbstractSessionManager):
 
         session_id_expires = session.get(SZ_SESSION_ID_EXPIRES)
         if session_id_expires is None:
-            self._session_id_expires = datetime.now(tz=UTC) + timedelta(minutes=15)
+            self._session_id_expires = dt_util.utcnow() + timedelta(minutes=15)
         else:
             self._session_id_expires = datetime.fromisoformat(session_id_expires)
 

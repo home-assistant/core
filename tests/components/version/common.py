@@ -1,7 +1,5 @@
 """Fixtures for version integration."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 from unittest.mock import patch
 

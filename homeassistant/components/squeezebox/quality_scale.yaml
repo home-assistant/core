@@ -22,8 +22,7 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions:
-    status: done
+  action-exceptions: done
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done

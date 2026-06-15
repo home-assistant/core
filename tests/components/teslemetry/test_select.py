@@ -239,7 +239,8 @@ async def test_export_rule_restore(
             },
             EnergyExportMode.NEVER.value,
         ),
-        # Path 3: In VPP, Export enabled but state shows disabled (current_option is NEVER)
+        # Path 3: In VPP, Export enabled but state shows disabled
+        # (current_option is NEVER)
         (
             {
                 "customer_preferred_export_rule": "never",

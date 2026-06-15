@@ -1,7 +1,5 @@
 """Home Assistant wrapper for a pyWeMo device."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, fields
 from datetime import timedelta
@@ -50,7 +48,8 @@ class OptionsValidationError(Exception):
         The field_key and error_key strings must be the same as in strings.json.
 
         Args:
-          field_key: Name of the options.step.init.data key that corresponds to this error.
+          field_key: Name of the options.step.init.data key
+            that corresponds to this error.
             field_key must also match one of the field names inside the Options class.
           error_key: Name of the options.error key that corresponds to this error.
           message: Message for the Exception class.
@@ -81,7 +80,8 @@ class Options:
             raise OptionsValidationError(
                 "enable_subscription",
                 "long_press_requires_subscription",
-                "Local push update subscriptions must be enabled to use long-press events",
+                "Local push update subscriptions must be"
+                " enabled to use long-press events",
             )
 
 
@@ -154,7 +154,8 @@ class DeviceCoordinator(DataUpdateCoordinator[None]):
         if self.options.enable_subscription:
             await self._async_set_enable_subscription(False)
         # Check that the device is available (last_update_success) before disabling long
-        # press. That avoids long shutdown times for devices that are no longer connected.
+        # press. That avoids long shutdown times for devices
+        # that are no longer connected.
         if self.options.enable_long_press and self.last_update_success:
             await self._async_set_enable_long_press(False)
 

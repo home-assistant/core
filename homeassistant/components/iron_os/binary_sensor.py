@@ -1,7 +1,5 @@
 """Binary sensor platform for IronOS integration."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 
 from homeassistant.components.binary_sensor import (

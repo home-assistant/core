@@ -1,7 +1,5 @@
 """Tankerkoenig binary sensor integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aiotankerkoenig import PriceInfo, Station, Status

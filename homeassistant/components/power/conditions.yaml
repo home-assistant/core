@@ -2,11 +2,14 @@
   required: true
   default: any
   selector:
-    select:
-      translation_key: condition_behavior
-      options:
-        - all
-        - any
+    automation_behavior:
+      mode: condition
+
+.condition_for: &condition_for
+  required: true
+  default: 00:00:00
+  selector:
+    duration:
 
 .power_units: &power_units
   - "mW"
@@ -32,6 +35,7 @@ is_value:
         device_class: power
   fields:
     behavior: *condition_behavior
+    for: *condition_for
     threshold:
       required: true
       selector:

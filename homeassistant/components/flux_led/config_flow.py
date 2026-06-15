@@ -1,7 +1,5 @@
 """Config flow for Flux LED/MagicLight."""
 
-from __future__ import annotations
-
 import contextlib
 from typing import Any, Self, cast
 
@@ -138,7 +136,7 @@ class FluxLedConfigFlow(ConfigFlow, domain=DOMAIN):
                     ConfigEntryState.SETUP_IN_PROGRESS,
                     ConfigEntryState.NOT_LOADED,
                 )
-            ) or entry.state == ConfigEntryState.SETUP_RETRY:
+            ) or entry.state is ConfigEntryState.SETUP_RETRY:
                 self.hass.config_entries.async_schedule_reload(entry.entry_id)
             else:
                 async_dispatcher_send(

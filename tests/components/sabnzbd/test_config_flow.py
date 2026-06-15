@@ -156,7 +156,7 @@ async def test_abort_already_configured(
 async def test_abort_reconfigure_successful(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test that the reconfigure flow aborts successfully if SABnzbd instance is already configured."""
+    """Test reconfigure flow aborts if SABnzbd is already configured."""
     result = await config_entry.start_reconfigure_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}

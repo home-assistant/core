@@ -1,7 +1,5 @@
 """Support for Open-Meteo weather."""
 
-from __future__ import annotations
-
 from datetime import datetime, time
 
 from open_meteo import Forecast as OpenMeteoForecast

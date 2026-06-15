@@ -1,7 +1,5 @@
 """Support for Xiaomi event entities."""
 
-from __future__ import annotations
-
 from dataclasses import replace
 
 from homeassistant.components.event import (

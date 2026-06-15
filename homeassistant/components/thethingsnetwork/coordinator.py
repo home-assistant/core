@@ -15,13 +15,15 @@ from .const import CONF_APP_ID, POLLING_PERIOD_S
 
 _LOGGER = logging.getLogger(__name__)
 
+type TTNConfigEntry = ConfigEntry[TTNCoordinator]
+
 
 class TTNCoordinator(DataUpdateCoordinator[TTNClient.DATA_TYPE]):
     """TTN coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: TTNConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: ConfigEntry) -> None:
+    def __init__(self, hass: HomeAssistant, entry: TTNConfigEntry) -> None:
         """Initialize my coordinator."""
         super().__init__(
             hass,

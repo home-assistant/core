@@ -1,7 +1,5 @@
 """Helper for httpx."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import sys
 from types import TracebackType
@@ -14,7 +12,6 @@ import httpx
 
 from homeassistant.const import APPLICATION_NAME, EVENT_HOMEASSISTANT_CLOSE, __version__
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.ssl import (
     SSL_ALPN_HTTP11,
@@ -44,7 +41,6 @@ USER_AGENT = "User-Agent"
 
 
 @callback
-@bind_hass
 def get_async_client(
     hass: HomeAssistant,
     verify_ssl: bool = True,

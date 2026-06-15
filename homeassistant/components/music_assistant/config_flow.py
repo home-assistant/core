@@ -1,7 +1,5 @@
 """Config flow for MusicAssistant integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 from urllib.parse import urlencode
@@ -23,7 +21,7 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_URL
+from homeassistant.const import CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import aiohttp_client
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -33,13 +31,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import (
-    AUTH_SCHEMA_VERSION,
-    CONF_TOKEN,
-    DOMAIN,
-    HASSIO_DISCOVERY_SCHEMA_VERSION,
-    LOGGER,
-)
+from .const import AUTH_SCHEMA_VERSION, DOMAIN, HASSIO_DISCOVERY_SCHEMA_VERSION, LOGGER
 
 DEFAULT_TITLE = "Music Assistant"
 DEFAULT_URL = "http://mass.local:8095"
@@ -147,9 +139,11 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         This flow is triggered by the Music Assistant app.
         """
         # Build URL from app discovery info
-        # The app exposes the API on port 8095, but also hosts an internal-only
-        # webserver (default at port 8094) for the Home Assistant integration to connect to.
-        # The info where the internal API is exposed is passed via discovery_info
+        # The app exposes the API on port 8095, but also
+        # hosts an internal-only webserver (default at port
+        # 8094) for the HA integration to connect to.
+        # The info where the internal API is exposed is
+        # passed via discovery_info
         host = discovery_info.config["host"]
         port = discovery_info.config["port"]
         self.url = f"http://{host}:{port}"
@@ -290,7 +284,8 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         state = _encode_jwt(
             self.hass, {"flow_id": self.flow_id, "redirect_uri": redirect_uri}
         )
-        # Music Assistant server will redirect to: {redirect_uri}?state={state}&code={token}
+        # Music Assistant server will redirect to:
+        # {redirect_uri}?state={state}&code={token}
         params = urlencode(
             {
                 "return_url": f"{redirect_uri}?state={state}",

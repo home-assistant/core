@@ -1,7 +1,5 @@
 """Config flow for iotty."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.helpers import config_entry_oauth2_flow

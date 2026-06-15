@@ -1,7 +1,5 @@
 """Support for AVM FRITZ!SmartHome thermostat devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.climate import (
