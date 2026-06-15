@@ -1,12 +1,15 @@
 """Tests for motion_blinds __init__ and entity position polling."""
 
+import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
 from homeassistant.components.motion_blinds import const
+from homeassistant.components.motion_blinds.entity import MotionCoordinatorEntity
 from homeassistant.const import CONF_API_KEY, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from tests.common import MockConfigEntry
 
@@ -136,28 +139,19 @@ async def test_setup_stored_interface_oserror_triggers_probe(
 # ---------------------------------------------------------------------------
 
 
-async def test_position_polling_stops_when_stable(hass: HomeAssistant) -> None:
-    """Polling loop terminates once the position is the same for two consecutive reads."""
-    from homeassistant.components.motion_blinds.entity import MotionCoordinatorEntity
-
+def _make_entity(hass):
+    """Create a minimal MotionCoordinatorEntity without full HA wiring."""
     blind = MagicMock()
     blind.position = 50
     blind.angle = None
     blind.device_type = "gateway_blind"
 
     coordinator = MagicMock()
-    coordinator.api_lock = __import__("asyncio").Lock()
+    coordinator.api_lock = asyncio.Lock()
     coordinator.data = {}
     coordinator.async_update_listeners = MagicMock()
 
-    # Patch the parent __init__ so we don't need full HA wiring.
-    with patch.object(
-        __import__(
-            "homeassistant.helpers.update_coordinator", fromlist=["CoordinatorEntity"]
-        ).CoordinatorEntity,
-        "__init__",
-        lambda self, coordinator: None,
-    ):
+    with patch.object(CoordinatorEntity, "__init__", lambda *_: None):
         entity = object.__new__(MotionCoordinatorEntity)
         entity.hass = hass
         entity._blind = blind
@@ -168,11 +162,15 @@ async def test_position_polling_stops_when_stable(hass: HomeAssistant) -> None:
         entity._requesting_position = None
         entity.coordinator = coordinator
 
-    trigger_calls = 0
+    return entity, blind
+
+
+async def test_position_polling_stops_when_stable(hass: HomeAssistant) -> None:
+    """Polling loop terminates once the position is the same for two consecutive reads."""
+    entity, _ = _make_entity(hass)
 
     async def fake_trigger():
-        nonlocal trigger_calls
-        trigger_calls += 1
+        pass
 
     with (
         patch.object(
@@ -188,12 +186,12 @@ async def test_position_polling_stops_when_stable(hass: HomeAssistant) -> None:
             "homeassistant.components.motion_blinds.entity.async_call_later"
         ) as mock_call_later,
     ):
-        # First scheduled call: only one position sample → must keep polling.
+        # First call: only one sample recorded → not enough to confirm stability.
         await entity.async_scheduled_update_request()
         assert mock_call_later.called
         mock_call_later.reset_mock()
 
-        # Second scheduled call: same position again → polling should stop.
+        # Second call: same position as before → polling must stop.
         await entity.async_scheduled_update_request()
         mock_call_later.assert_not_called()
         assert entity._requesting_position is None
@@ -201,34 +199,7 @@ async def test_position_polling_stops_when_stable(hass: HomeAssistant) -> None:
 
 async def test_position_polling_continues_while_moving(hass: HomeAssistant) -> None:
     """Polling loop keeps going while the position is still changing."""
-    from homeassistant.components.motion_blinds.entity import MotionCoordinatorEntity
-
-    blind = MagicMock()
-    blind.position = 20
-    blind.angle = None
-    blind.device_type = "gateway_blind"
-
-    coordinator = MagicMock()
-    coordinator.api_lock = __import__("asyncio").Lock()
-    coordinator.data = {}
-    coordinator.async_update_listeners = MagicMock()
-
-    with patch.object(
-        __import__(
-            "homeassistant.helpers.update_coordinator", fromlist=["CoordinatorEntity"]
-        ).CoordinatorEntity,
-        "__init__",
-        lambda self, coordinator: None,
-    ):
-        entity = object.__new__(MotionCoordinatorEntity)
-        entity.hass = hass
-        entity._blind = blind
-        entity._api_lock = coordinator.api_lock
-        entity._update_interval_moving = 5
-        entity._previous_positions = []
-        entity._previous_angles = []
-        entity._requesting_position = None
-        entity.coordinator = coordinator
+    entity, blind = _make_entity(hass)
 
     async def fake_trigger_and_move():
         blind.position += 10  # Simulate blind still moving
