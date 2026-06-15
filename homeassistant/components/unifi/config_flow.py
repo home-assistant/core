@@ -231,14 +231,6 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(mac_address)
         self._abort_if_unique_id_configured(updates=self.config, reload_on_update=False)
 
-        # Build a recognizable discovery title, e.g. "Dream Machine Pro
-        # (192.168.1.1)", instead of "default (<direct-connect domain>)":
-        # - show the console's own name, falling back to hostname then
-        #   product_name (model is omitted on purpose: it is None in the
-        #   discovery payload for current consoles);
-        # - show the LAN IP rather than the opaque direct-connect domain,
-        #   which is more recognizable on the discovery card (the connection
-        #   host in CONF_HOST is unchanged and still prefers direct-connect).
         self.context["title_placeholders"] = {
             CONF_NAME: (
                 discovery_info.get("name")
