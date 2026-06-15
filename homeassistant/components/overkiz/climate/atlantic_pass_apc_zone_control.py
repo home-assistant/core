@@ -48,7 +48,7 @@ class AtlanticPassAPCZoneControl(OverkizEntity, ClimateEntity):
     def is_auto_hvac_mode_available(self) -> bool:
         """Check if auto mode is available on the ZoneControl."""
 
-        return self.executor.has_command(
+        return self.device.supports_command(
             OverkizCommand.SET_HEATING_COOLING_AUTO_SWITCH
         ) and self.executor.has_state(OverkizState.CORE_HEATING_COOLING_AUTO_SWITCH)
 
