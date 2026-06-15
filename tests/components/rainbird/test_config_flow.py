@@ -277,10 +277,17 @@ async def test_controller_cannot_connect(
 ) -> None:
     """Test an error talking to the controller."""
 
-    # Controller response with a failure
+    # Controller response with a failure, followed by successful responses
     responses.clear()
-    responses.append(
-        AiohttpClientMockResponse("POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE)
+    responses.extend(
+        [
+            AiohttpClientMockResponse(
+                "POST", URL, status=HTTPStatus.SERVICE_UNAVAILABLE
+            ),
+            mock_response(MODEL_AND_VERSION_RESPONSE),
+            mock_response(SERIAL_RESPONSE),
+            mock_json_response(WIFI_PARAMS_RESPONSE),
+        ]
     )
 
     result = await complete_flow(hass)
@@ -289,6 +296,19 @@ async def test_controller_cannot_connect(
     assert result.get("errors") == {"base": "cannot_connect"}
 
     assert not mock_setup.mock_calls
+
+    # Correct the form and enter the password again and setup completes
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == HOST
+    assert "result" in result
+    assert dict(result["result"].data) == CONFIG_ENTRY_DATA
+    assert result["result"].unique_id == MAC_ADDRESS_UNIQUE_ID
+
+    assert len(mock_setup.mock_calls) == 1
 
 
 async def test_controller_invalid_auth(
@@ -347,19 +367,44 @@ async def test_controller_invalid_auth(
 async def test_controller_timeout(
     hass: HomeAssistant,
     mock_setup: Mock,
+    responses: list[AiohttpClientMockResponse],
 ) -> None:
     """Test an error talking to the controller."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result.get("type") is FlowResultType.FORM
+    assert result.get("step_id") == "user"
+    assert not result.get("errors")
+    assert "flow_id" in result
 
     with patch(
         "homeassistant.components.rainbird.config_flow.asyncio.timeout",
         side_effect=TimeoutError,
     ):
-        result = await complete_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD},
+        )
         assert result.get("type") is FlowResultType.FORM
         assert result.get("step_id") == "user"
         assert result.get("errors") == {"base": "timeout_connect"}
 
     assert not mock_setup.mock_calls
+
+    # Enter the password again and setup completes
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: HOST, CONF_PASSWORD: PASSWORD},
+    )
+    assert result.get("type") is FlowResultType.CREATE_ENTRY
+    assert result.get("title") == HOST
+    assert "result" in result
+    assert dict(result["result"].data) == CONFIG_ENTRY_DATA
+    assert result["result"].unique_id == MAC_ADDRESS_UNIQUE_ID
+
+    assert len(mock_setup.mock_calls) == 1
 
 
 @pytest.mark.parametrize(

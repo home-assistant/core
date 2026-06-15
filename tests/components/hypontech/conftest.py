@@ -110,4 +110,5 @@ def mock_hyponcloud(
         mock_client.get_monitor.side_effect = lambda plant_id, *args, **kwargs: (
             load_monitor_fixture[plant_id]
         )
+        mock_client.hyponcloud_class = mock_hyponcloud
         yield mock_client
