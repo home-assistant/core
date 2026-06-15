@@ -1062,7 +1062,7 @@ fritzconnection[qr]==1.15.1
 fumis==0.4.0
 
 # homeassistant.components.fyta
-fyta_cli==0.7.2
+fyta_cli==0.7.3
 
 # homeassistant.components.google_translate
 gTTS==2.5.4
