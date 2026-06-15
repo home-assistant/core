@@ -19,7 +19,6 @@ from homeassistant.components.update import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.restore_state import ExtraStoredData
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -369,17 +368,7 @@ class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
         """Install an update."""
-        # The flash is a single blocking host call with no progress output, so
-        # all we can show is a boolean in-progress state while it runs.
-        self._attr_in_progress = True
-        self.async_write_ha_state()
-        try:
-            await async_update_raspberry_pi_firmware(self.hass)
-        except HomeAssistantError:
-            self._attr_in_progress = False
-            self.async_write_ha_state()
-            raise
-        self._attr_in_progress = False
+        await async_update_raspberry_pi_firmware(self.hass)
         # Re-fetch so the entity picks up update_pending and reads "up to date".
         try:
             refreshed = await async_get_raspberry_pi_firmware_info(self.hass)
