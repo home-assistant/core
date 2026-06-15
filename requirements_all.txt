@@ -2229,7 +2229,7 @@ pyheos==1.0.6
 pyhive-integration==1.0.9
 
 # homeassistant.components.homematic
-pyhomematic==0.1.77
+pyhomematic==0.1.78
 
 # homeassistant.components.homeworks
 pyhomeworks==1.1.2
