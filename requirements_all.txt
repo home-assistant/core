@@ -1037,7 +1037,7 @@ flux-led==1.2.0
 fnv-hash-fast==2.0.3
 
 # homeassistant.components.foobot
-foobot_async==1.0.0
+foobot_async==1.0.1
 
 # homeassistant.components.forecast_solar
 forecast-solar==5.0.1
