@@ -12,6 +12,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -49,6 +50,7 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
         self.api_client = AqvifyAPI(
             entry.data[CONF_API_KEY], websession=async_get_clientsession(hass)
         )
+        self.previous_devices: set[str] = set()
 
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
@@ -102,10 +104,25 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
                 },
             ) from err
 
+        current_devices = set(devices.devices.keys())
+        if stale_devices := self.previous_devices - current_devices:
+            account_id = self.config_entry.unique_id
+            device_registry = dr.async_get(self.hass)
+            for device_id in stale_devices:
+                device = device_registry.async_get_device(
+                    identifiers={(DOMAIN, f"{account_id}_{device_id}")}
+                )
+                if device:
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+        self.previous_devices = current_devices
+
         device_data = {}
-        for device in devices.devices.values():
+        for aqvify_device in devices.devices.values():
             try:
-                device_key = str(device.device_key)
+                device_key = str(aqvify_device.device_key)
                 device_data[
                     device_key
                 ] = await self.api_client.async_get_device_latest_data(device_key)
