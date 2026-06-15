@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import cast
 
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
@@ -1655,9 +1656,14 @@ async def async_setup_entry(
     )
 
     if entry.runtime_data.stream is not None:
-        entities.append(
-            TeslemetryCreditBalanceSensor(
-                entry.unique_id or entry.entry_id, entry.runtime_data.stream
+        entities.extend(
+            (
+                TeslemetryCreditBalanceSensor(
+                    entry.unique_id or entry.entry_id, entry.runtime_data.stream
+                ),
+                TeslemetryCreditQuotaSensor(
+                    entry.unique_id or entry.entry_id, entry.runtime_data.stream
+                ),
             )
         )
 
@@ -1899,4 +1905,53 @@ class TeslemetryCreditBalanceSensor(RestoreSensor):
     def _async_update(self, value: int) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = value
+        self.async_write_ha_state()
+
+
+class TeslemetryCreditQuotaSensor(RestoreSensor):
+    """Entity for Teslemetry credit quota usage."""
+
+    _attr_has_entity_name = True
+    stream: TeslemetryStream
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 1
+
+    def __init__(self, uid: str, stream: TeslemetryStream) -> None:
+        """Initialize common aspects of a Teslemetry entity."""
+
+        self._attr_translation_key = "credit_quota"
+        self._attr_unique_id = f"{uid}_credit_quota"
+        self.stream = stream
+
+    async def async_added_to_hass(self) -> None:
+        """Handle entity which will be added."""
+        await super().async_added_to_hass()
+
+        if (sensor_data := await self.async_get_last_sensor_data()) is not None:
+            self._attr_native_value = sensor_data.native_value
+
+        if (last_state := await self.async_get_last_state()) is not None:
+            self._attr_extra_state_attributes = {
+                "credits": last_state.attributes.get("credits"),
+                "reset": last_state.attributes.get("reset"),
+            }
+
+        self.async_on_remove(self.stream.listen_Credits(self._async_update))
+
+    def _async_update(self, credits: dict[str, str | int]) -> None:
+        """Handle updated data from the coordinator."""
+        quota = cast("dict[str, object] | None", credits.get("quota"))
+        if not isinstance(quota, dict):
+            return
+
+        fraction = quota.get("fraction")
+        if not isinstance(fraction, (float, int)) or isinstance(fraction, bool):
+            return
+
+        self._attr_native_value = fraction * 100
+        self._attr_extra_state_attributes = {
+            "credits": quota.get("used"),
+            "reset": quota.get("reset_at"),
+        }
         self.async_write_ha_state()

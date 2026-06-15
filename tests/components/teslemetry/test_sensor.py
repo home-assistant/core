@@ -78,8 +78,22 @@ async def test_sensors_streaming(
                 "cost": 20,
                 "name": "wake_up",
                 "balance": 1980,
+                "quota": {
+                    "used": 212,
+                    "fraction": 0.212,
+                    "reset_at": "2026-07-10T00:00:00.000Z",
+                },
             },
             "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    # Balance-only credit events should not clear quota usage.
+    mock_add_listener.send(
+        {
+            "credits": {"balance": 1980},
+            "createdAt": "2024-10-04T10:45:18.537Z",
         }
     )
     await hass.async_block_till_done()
@@ -96,7 +110,11 @@ async def test_sensors_streaming(
     assert hass.states.get("sensor.test_charge_cable").state == "unknown"
     assert hass.states.get("sensor.test_time_to_full_charge").state == "unknown"
     assert hass.states.get("sensor.test_time_to_arrival").state == "unknown"
-    assert hass.states.get("sensor.teslemetry_credits").state == "1980"
+    assert hass.states.get("sensor.teslemetry_command_credits").state == "1980"
+    assert (quota_state := hass.states.get("sensor.teslemetry_command_quota"))
+    assert quota_state.state == "21.2"
+    assert quota_state.attributes["credits"] == 212
+    assert quota_state.attributes["reset"] == "2026-07-10T00:00:00.000Z"
 
 
 async def test_energy_history_no_time_series(

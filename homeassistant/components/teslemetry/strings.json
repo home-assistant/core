@@ -575,8 +575,11 @@
         "name": "Consumer imported from solar"
       },
       "credit_balance": {
-        "name": "Teslemetry credits",
+        "name": "Teslemetry command credits",
         "unit_of_measurement": "credits"
+      },
+      "credit_quota": {
+        "name": "Teslemetry command quota"
       },
       "cruise_follow_distance": {
         "name": "Cruise follow distance"
