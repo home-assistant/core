@@ -74,6 +74,30 @@ def test_render_empty_change_set() -> None:
     assert "No tracked requirement changes detected" in rendered
 
 
+def test_render_embeds_head_sha_marker_and_visible_line() -> None:
+    """A head SHA produces the hidden marker (for the gate) and a visible line."""
+    pkg = PackageChange(
+        name="pkg",
+        old_version="1.0.0",
+        new_version="1.1.0",
+        repo_url="https://github.com/x/pkg",
+        checks={CheckKind.CI_UPLOAD: _pass("ok")},
+    )
+    sha = "abc1234def5678"
+    rendered = render_comment(CheckRunResult(pr_number=1, head_sha=sha, packages=[pkg]))
+    assert f"<!-- requirements-check-sha: {sha} -->" in rendered
+    assert "Checked at commit `abc1234`." in rendered
+    # The visible marker must still lead so add_comment dedup keeps working.
+    assert rendered.startswith("<!-- requirements-check -->\n")
+
+
+def test_render_without_head_sha_omits_marker() -> None:
+    """With no head SHA, neither the hidden marker nor the visible line appears."""
+    rendered = render_comment(CheckRunResult(pr_number=1))
+    assert "requirements-check-sha" not in rendered
+    assert "Checked at commit" not in rendered
+
+
 def test_render_missing_check_renders_as_skipped() -> None:
     """A check kind absent from `pkg.checks` shows the skipped marker in both cells and bullets."""
     pkg = PackageChange(
