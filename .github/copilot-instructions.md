@@ -6,6 +6,7 @@
 
 - Start review comments with a short, one-sentence summary of the suggested fix.
 - Do not comment on code style, formatting or linting issues.
+- Flag comments that over-explain straightforward code, narrate the obvious, or read like AI commentary (multi-sentence justifications for a single line).
 - A Pull Request with a dependency version bump should only contain changes required for the version bump. If the PR includes other changes, request that they are removed from the PR.
 
 # GitHub Copilot & Claude Code Instructions
@@ -34,8 +35,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 - Python 3.14 evaluates annotations lazily (PEP 649). Forward references in annotations do not need to be quoted — annotations can reference names defined later in the module without quoting them or using `from __future__ import annotations`. Do not flag unquoted forward references in annotations as issues.
 
 ## Code comments
-
-- Comments in the code should be used to explain why something is done, not what is being done. Comments should not restate the code, but rather provide context, rationale, or explanations for non-obvious decisions. Comments for obvious decisions only clutter the code and are not helpful.
+Keep comments concise. Prefer one short line stating the non-obvious constraint, or no comment at all. Never add comments that justify the change being made, in relation to previous code, that existed before the change is applied.
 
 ## Testing
 
