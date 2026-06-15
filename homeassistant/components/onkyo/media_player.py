@@ -205,9 +205,8 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         self._attr_name = f"{name}{' ' + ZONES[zone] if zone is not Zone.MAIN else ''}"
         self._attr_unique_id = f"{identifier}_{zone.value}"
 
-        self._volume_resolution = volume_resolution
-        self._max_volume = max_volume
-        self._min_volume = min_volume
+        self._min_volume_raw = (min_volume / 100) * volume_resolution
+        self._max_volume_raw = (max_volume / 100) * volume_resolution
 
         zone_sources = InputSource.for_zone(zone)
         self._source_mapping = {
@@ -295,10 +294,11 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
         Map HA 0..1 to receiver range [min_volume%, max_volume%] of resolution.
         So the full slider uses only the useful range (e.g. 80-100% on receiver).
         """
-        min_raw = (self._min_volume / 100) * self._volume_resolution
-        max_raw = (self._max_volume / 100) * self._volume_resolution
-        raw_value = min_raw + (max_raw - min_raw) * volume
-        value = round(max(min_raw, min(max_raw, raw_value)))
+        raw_value = (
+            self._min_volume_raw
+            + (self._max_volume_raw - self._min_volume_raw) * volume
+        )
+        value = round(max(self._min_volume_raw, min(self._max_volume_raw, raw_value)))
         message = command.Volume(self._zone, int(value))
         await self._manager.write(message)
 
@@ -384,12 +384,12 @@ class OnkyoMediaPlayer(MediaPlayerEntity):
                 if not self._supports_volume:
                     self._attr_supported_features |= SUPPORTED_FEATURES_VOLUME
                     self._supports_volume = True
-                min_raw = (self._min_volume / 100) * self._volume_resolution
-                max_raw = (self._max_volume / 100) * self._volume_resolution
-                if max_raw <= min_raw:
+                if self._max_volume_raw <= self._min_volume_raw:
                     self._attr_volume_level = 1.0
                 else:
-                    volume_level = (volume - min_raw) / (max_raw - min_raw)
+                    volume_level = (volume - self._min_volume_raw) / (
+                        self._max_volume_raw - self._min_volume_raw
+                    )
                     self._attr_volume_level = max(0, min(1, volume_level))
 
             case status.Muting(param=muting):
