@@ -703,6 +703,61 @@ async def test_migrate_adds_subentries(
     assert migrated.config_subentry_id == vehicle_subentry
 
 
+async def test_migrate_ignores_foreign_and_orphan_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test migration skips devices without our identifier and orphan wall connectors."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        version=2,
+        minor_version=1,
+        unique_id=UNIQUE_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {
+                "access_token": "test_access_token",
+                "refresh_token": "test_refresh_token",
+                "expires_at": int(time.time()) + 3600,
+            },
+        },
+    )
+    entry.add_to_hass(hass)
+
+    # A stale/manually created device linked to the entry without our identifier,
+    # and a wall connector whose parent is that foreign (non-energy-site) device.
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("other_domain", "foreign")},
+        name="Foreign",
+    )
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "orphan-wall-connector")},
+        via_device=("other_domain", "foreign"),
+        name="Orphan Wall Connector",
+    )
+    vehicle_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, VEHICLE_VIN)},
+        name="Test",
+    )
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Migration completed without raising on the foreign or orphan devices.
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.minor_version == 2
+    assert not any(s.unique_id == "foreign" for s in entry.subentries.values())
+
+    # The real vehicle device still migrated correctly.
+    vehicle_subentry = _subentry_id(entry, "vehicle", VEHICLE_VIN)
+    assert device_registry.async_get(vehicle_device.id).config_entries_subentries == {
+        entry.entry_id: {vehicle_subentry}
+    }
+
+
 async def test_migrate_from_future_version_fails(hass: HomeAssistant) -> None:
     """Test migration fails for future versions."""
     mock_entry = MockConfigEntry(
