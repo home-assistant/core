@@ -4,12 +4,9 @@ from datetime import timedelta
 from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from aiohttp import ClientError, ClientResponseError
+import pytest
 
-from homeassistant.components.energyid import (
-    DOMAIN,
-    _async_handle_state_change,
-    async_unload_entry,
-)
+from homeassistant.components.energyid import DOMAIN, _async_handle_state_change
 from homeassistant.components.energyid.const import (
     CONF_DEVICE_NAME,
     CONF_ENERGYID_KEY,
@@ -1380,6 +1377,7 @@ async def test_direct_state_change_handler(
     _async_handle_state_change(hass, mock_config_entry.entry_id, event)
 
 
+@pytest.mark.usefixtures("mock_webhook_client")
 async def test_subentry_unload_during_entry_unload(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -1389,6 +1387,7 @@ async def test_subentry_unload_during_entry_unload(
     # Setup the entry
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     # Create a subentry with the correct attribute
     sub_entry = MockConfigEntry(
@@ -1415,12 +1414,12 @@ async def test_subentry_unload_during_entry_unload(
     # Replace the async_unload method
     hass.config_entries.async_unload = mock_async_unload
 
-    # ACT: Directly call the unload function
-    result = await async_unload_entry(hass, mock_config_entry)
+    # ACT: Unload the main entry through the normal pipeline
+    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # ASSERT: Line 363 should have been executed
+    # ASSERT: async_unload should have been called for the subentry
     assert subentry_unload_called, (
-        "async_unload should have been called for the subentry (line 363)"
+        "async_unload should have been called for the subentry"
     )
     assert result is True
