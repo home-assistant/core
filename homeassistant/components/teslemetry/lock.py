@@ -1,6 +1,5 @@
 """Lock platform for Teslemetry integration."""
 
-from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import Scope
@@ -34,30 +33,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry lock platform from a config entry."""
 
-    async_add_entities(
-        chain(
-            (
+    for vehicle in entry.runtime_data.vehicles:
+        async_add_entities(
+            [
                 TeslemetryVehiclePollingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
                 if vehicle.poll or vehicle.firmware < "2024.26"
                 else TeslemetryStreamingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
-                )
-                for vehicle in entry.runtime_data.vehicles
-            ),
-            (
+                ),
                 TeslemetryVehiclePollingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
                 if vehicle.poll or vehicle.firmware < "2024.26"
                 else TeslemetryStreamingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
-                )
-                for vehicle in entry.runtime_data.vehicles
-            ),
+                ),
+            ],
+            config_subentry_id=vehicle.subentry_id,
         )
-    )
 
 
 class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):

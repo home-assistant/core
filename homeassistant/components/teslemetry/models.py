@@ -43,6 +43,7 @@ class TeslemetryVehicleData:
     vin: str
     firmware: str
     device: DeviceInfo
+    subentry_id: str
     wakelock: asyncio.Lock = field(default_factory=asyncio.Lock)
 
 
@@ -56,3 +57,4 @@ class TeslemetryEnergyData:
     history_coordinator: TeslemetryEnergyHistoryCoordinator | None
     id: int
     device: DeviceInfo
+    subentry_id: str
