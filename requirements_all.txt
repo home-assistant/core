@@ -2253,7 +2253,7 @@ pyintesishome==1.8.8
 pyipma==3.0.9
 
 # homeassistant.components.ipp
-pyipp==0.17.0
+pyipp==0.17.2
 
 # homeassistant.components.iqvia
 pyiqvia==2022.04.0
