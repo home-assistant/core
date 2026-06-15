@@ -9,7 +9,7 @@ from duco_connectivity.exceptions import (
     DucoError,
     DucoResponseError,
 )
-from duco_connectivity.models import BoardInfo, Node
+from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -29,6 +29,7 @@ class DucoData:
     """Data returned by the Duco coordinator."""
 
     nodes: dict[int, Node]
+    node_actions: NodeListActionItemList
     rssi_wifi: int | None
 
 
@@ -99,6 +100,33 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+        try:
+            node_actions = await self.client.async_get_node_actions()
+        except DucoConnectionError as err:
+            if self.data is None:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="cannot_connect",
+                    translation_placeholders={"error": repr(err)},
+                ) from err
+            _LOGGER.warning(
+                "Could not fetch Duco node actions; keeping previous select discovery data",
+                exc_info=err,
+            )
+            node_actions = self.data.node_actions
+        except DucoError as err:
+            if self.data is None:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                    translation_placeholders={"error": repr(err)},
+                ) from err
+            _LOGGER.warning(
+                "Could not fetch Duco node actions; keeping previous select discovery data",
+                exc_info=err,
+            )
+            node_actions = self.data.node_actions
+
         # LAN info only backs the diagnostic RSSI sensor, so failures on this
         # supplemental endpoint, including connection failures, should not make
         # the primary node entities unavailable.
@@ -112,5 +140,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         return DucoData(
             nodes={node.node_id: node for node in nodes},
+            node_actions=node_actions,
             rssi_wifi=rssi_wifi,
         )

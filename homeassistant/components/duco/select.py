@@ -1,11 +1,9 @@
 """Select platform for the Duco integration."""
 
-from collections.abc import Iterable
 import logging
 
 from duco_connectivity import (
     ActionItem,
-    ActionValueType,
     DucoError,
     DucoRateLimitError,
     KnownActionName,
@@ -29,26 +27,12 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-def _normalize_options(enum_values: Iterable[str]) -> tuple[str, ...]:
-    """Return distinct option values while preserving the API order."""
-    return tuple(dict.fromkeys(enum_values))
-
-
 def _get_ventilation_options(action: ActionItem) -> tuple[str, ...] | None:
     """Return ventilation options advertised by a node action."""
     if action.action.known_value is not KnownActionName.SET_VENTILATION_STATE:
         return None
 
-    if not action.enum_values:
-        return None
-
-    if action.val_type is not ActionValueType.ENUM:
-        _LOGGER.debug(
-            "Using Duco SetVentilationState enum values despite val_type=%s",
-            action.val_type,
-        )
-
-    options = _normalize_options(str(value) for value in action.enum_values if value)
+    options = tuple(str(value) for value in action.enum_values if value)
     return options or None
 
 
@@ -74,35 +58,26 @@ async def async_setup_entry(
 ) -> None:
     """Set up Duco select entities."""
     coordinator = entry.runtime_data
-
-    try:
-        node_actions = await coordinator.client.async_get_node_actions()
-    except DucoError as err:
-        _LOGGER.debug(
-            "Could not fetch Duco node actions for select discovery", exc_info=err
-        )
-        return
-
-    options_by_node = _discover_ventilation_options(node_actions)
     known_nodes: set[int] = set()
 
     @callback
     def _async_add_new_entities() -> None:
         """Add select entities for newly discovered controllable nodes."""
+        options_by_node = _discover_ventilation_options(coordinator.data.node_actions)
         new_entities: list[DucoVentilationStateSelect] = []
 
-        for node_id, options in options_by_node.items():
-            if node_id in known_nodes:
-                continue
-
-            node = coordinator.data.nodes.get(node_id)
-            if node is None:
+        for node in coordinator.data.nodes.values():
+            if node.node_id in known_nodes:
                 continue
 
             if node.general.node_type is not NodeType.BOX:
                 continue
 
-            known_nodes.add(node_id)
+            options = options_by_node.get(node.node_id)
+            if options is None:
+                continue
+
+            known_nodes.add(node.node_id)
             new_entities.append(DucoVentilationStateSelect(coordinator, node, options))
 
         if new_entities:
@@ -163,7 +138,6 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_state",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
         # Duco may normalize the requested action on readback, such as

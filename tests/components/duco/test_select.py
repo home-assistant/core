@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 
 from duco_connectivity import (
     ActionItem,
-    ActionValueType,
     DucoError,
     DucoRateLimitError,
     KnownActionName,
@@ -38,7 +37,6 @@ def _build_node_actions(
     *,
     node_id: int = 1,
     options: list[str] | None = None,
-    val_type: ActionValueType = ActionValueType.ENUM,
 ) -> NodeListActionItemList:
     """Build node action discovery data for select tests."""
     return NodeListActionItemList(
@@ -48,7 +46,7 @@ def _build_node_actions(
                 actions=[
                     ActionItem(
                         action=KnownActionName.SET_VENTILATION_STATE,
-                        val_type=val_type,
+                        val_type="ENUM",
                         enum_values=[] if options is None else options,
                     )
                 ],
@@ -61,7 +59,6 @@ def _build_multi_node_actions(
     node_ids: list[int],
     *,
     options: list[str],
-    val_type: ActionValueType = ActionValueType.ENUM,
 ) -> NodeListActionItemList:
     """Build identical node action discovery data for multiple nodes."""
     return NodeListActionItemList(
@@ -71,7 +68,7 @@ def _build_multi_node_actions(
                 actions=[
                     ActionItem(
                         action=KnownActionName.SET_VENTILATION_STATE,
-                        val_type=val_type,
+                        val_type="ENUM",
                         enum_values=options,
                     )
                 ],
@@ -250,6 +247,41 @@ async def test_select_auto_option_allows_cnt1_readback(
     assert state.state == "CNT1"
 
 
+async def test_select_entity_is_added_when_action_discovery_succeeds_later(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test select entities are added when action discovery becomes available later."""
+    mock_duco_client.async_get_node_actions.side_effect = [
+        NodeListActionItemList(nodes=[]),
+        _build_node_actions(
+            options=["AUTO", "CNT1", "CNT2", "CNT3", "MAN1", "MAN2", "MAN3"]
+        ),
+    ]
+
+    config_entry = await setup_platform_integration(
+        hass, mock_config_entry, [Platform.SELECT]
+    )
+
+    assert hass.states.get(_SELECT_ENTITY) is None
+
+    await config_entry.runtime_data.async_refresh()
+    await hass.async_block_till_done()
+
+    state = hass.states.get(_SELECT_ENTITY)
+    assert state is not None
+    assert state.attributes[ATTR_OPTIONS] == [
+        "AUTO",
+        "CNT1",
+        "CNT2",
+        "CNT3",
+        "MAN1",
+        "MAN2",
+        "MAN3",
+    ]
+
+
 @pytest.mark.parametrize(
     ("node_actions", "creates_entity"),
     [
@@ -263,16 +295,9 @@ async def test_select_auto_option_allows_cnt1_readback(
             False,
             id="missing-enum-values",
         ),
-        pytest.param(
-            _build_node_actions(
-                options=["AUTO", "MAN1"], val_type=ActionValueType.UNKNOWN
-            ),
-            True,
-            id="unknown-metadata",
-        ),
     ],
 )
-async def test_select_missing_or_unknown_action_metadata_does_not_crash(
+async def test_select_missing_action_metadata_does_not_crash(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,

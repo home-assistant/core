@@ -120,7 +120,7 @@
       "message": "Could not connect to the Duco device."
     },
     "failed_to_set_state": {
-      "message": "Failed to set ventilation state: {error}"
+      "message": "Failed to set ventilation state."
     },
     "rate_limit_exceeded": {
       "message": "The Duco device has reached its daily write limit. Try again tomorrow."
