@@ -27,7 +27,7 @@ type ThebenConfigEntry = ConfigEntry[SmgwSensorCoordinator]
 class SmgwSensorCoordinator(DataUpdateCoordinator):
     """The data update coordinator for the Theben Conexa Smartmeter gateway integration."""
 
-    __api: ConexaSMGW
+    _api: ConexaSMGW
     gateway_info: ConexaSMGW.GatewayInfo
 
     def __init__(self, hass: HomeAssistant, entry: ThebenConfigEntry) -> None:
@@ -51,19 +51,19 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
         if self.config_entry is None:
             raise ValueError("config_entry set in __init__ mysteriously disappeared")
 
-        self.__api = await ConexaSMGW.create(
+        self._api = await ConexaSMGW.create(
             async_get_clientsession(self.hass),
             self.config_entry.data[CONF_HOST],
             self.config_entry.data[CONF_USERNAME],
             self.config_entry.data[CONF_PASSWORD],
         )
 
-        self.gateway_info = self.__api.gatewayInfo
+        self.gateway_info = self._api.gatewayInfo
 
         # Check if we got a different URL back -> Something is seriously wrong
-        if self.__api.m2mUrl != self.config_entry.data["m2mUrl"]:
+        if self._api.m2mUrl != self.config_entry.data["m2mUrl"]:
             raise ConfigEntryError(
-                f"SMGW returned {self.__api.m2mUrl} but it was originally configured with {self.config_entry.data['m2mUrl']}!"
+                f"SMGW returned {self._api.m2mUrl} but it was originally configured with {self.config_entry.data['m2mUrl']}!"
             )
 
         # Currently the SMGW provides new data only every 15 minutes at the starting of the hour (in UTC).
@@ -82,7 +82,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
         is_first_update = self.data is None
 
         _LOGGER.debug("Fetching data from API")
-        vals = await self.__api.getLatestValues()
+        vals = await self._api.getLatestValues()
 
         now_utc = dt_util.utcnow()
         _LOGGER.debug("Data fetched at %s: %s", now_utc, vals)
@@ -93,9 +93,8 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
             meter_timestamp: str = next(iter(vals.values())).utcTimestamp
             meter_datetime = dt_util.parse_datetime(meter_timestamp)
             if meter_datetime is None:
-                raise ValueError(
-                    f"Could not parse meter timestamp: {meter_timestamp!r}"
-                )
+                _LOGGER.warning("Could not parse meter timestamp: %s", meter_timestamp)
+                return vals
             age = (now_utc - meter_datetime).total_seconds()
             _LOGGER.debug("Data age in seconds: %s", age)
 

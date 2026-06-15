@@ -26,8 +26,9 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     sensors = []
     for key in entry.runtime_data.data:
-        if TotalInOutSensor.is_supported_key(key):
-            sensors.append(TotalInOutSensor(key, entry.runtime_data))
+        translation_key = TotalInOutSensor.derive_translation_key(key)
+        if translation_key:
+            sensors.append(TotalInOutSensor(key, translation_key, entry.runtime_data))
         else:
             _LOGGER.warning("Skipping unsupported Conexa SMGW key %s during setup", key)
 
@@ -42,23 +43,26 @@ class TotalInOutSensor(ConexaSMGWEntity, SensorEntity):
     _attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @classmethod
-    def is_supported_key(cls, key: str) -> bool:
+    def derive_translation_key(cls, key: str) -> str | None:
         """So far the Conexa 3.0 provides only total power in and out.
 
         But this might change in the future so we check the key
         """
-        return OBIS_IN in key or OBIS_OUT in key
-
-    def __init__(self, key: str, coordinator: SmgwSensorCoordinator) -> None:
-        """Initialize the Sensor."""
-        super().__init__(coordinator)
         if OBIS_IN in key:
             # This is the total power consumed channel, which has the OBIS code 1-0:1.8.0
-            self._attr_translation_key = "power_consumed"
-        elif OBIS_OUT in key:
+            return "power_consumed"
+        if OBIS_OUT in key:
             # This is the total power supplied channel, which has the OBIS code 1-0:2.8.0
-            self._attr_translation_key = "power_supplied"
+            return "power_supplied"
+        return None
 
+    def __init__(
+        self, key: str, translation_key: str, coordinator: SmgwSensorCoordinator
+    ) -> None:
+        """Initialize the Sensor."""
+        super().__init__(coordinator)
+
+        self._attr_translation_key = translation_key
         self._key = key
         self._attr_native_value = coordinator.data[key].value
         # As far as I know the Conexa 3.0 returns always Wh but there is the possibility that it returns Joules

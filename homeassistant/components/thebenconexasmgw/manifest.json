@@ -3,7 +3,6 @@
   "name": "Theben Conexa Smartmeter gateway",
   "codeowners": ["@mdluhosch"],
   "config_flow": true,
-  "dependencies": ["http"],
   "documentation": "https://www.home-assistant.io/integrations/thebenconexasmgw",
   "integration_type": "device",
   "iot_class": "local_polling",

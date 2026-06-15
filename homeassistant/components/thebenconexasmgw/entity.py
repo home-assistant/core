@@ -1,5 +1,6 @@
 """Base Entity for the Theben Conexa Smartmeter gateway integration."""
 
+from homeassistant.const import CONF_HOST
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -22,5 +23,9 @@ class ConexaSMGWEntity(CoordinatorEntity[SmgwSensorCoordinator]):
             model="CONEXA 3.0 Smart Meter Gateway",
             sw_version=coordinator.gateway_info.firmwareVersion,
             serial_number=coordinator.gateway_info.smgwID,
-            # configuration_url=f"https://{data.host}", TODO: Should I add it? Is it useful? pylint: disable=fixme
         )
+
+        if coordinator.config_entry:
+            self._attr_device_info["configuration_url"] = (
+                f"https://{coordinator.config_entry.data[CONF_HOST]}"
+            )
