@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import light, template
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
+    ATTR_BRIGHTNESS_PCT,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
     ATTR_HS_COLOR,
@@ -67,7 +68,10 @@ ON_OFF_ACTIONS = {
 }
 
 
-BRIGHTNESS_DATA = {"brightness": "{{ brightness }}"}
+BRIGHTNESS_DATA = {
+    "brightness": "{{ brightness }}",
+    "brightness_pct": "{{ brightness_pct }}",
+}
 SET_LEVEL_ACTION = make_test_action("set_level", BRIGHTNESS_DATA)
 ON_OFF_SET_LEVEL_ACTIONS = {
     **ON_OFF_ACTIONS,
@@ -670,9 +674,13 @@ async def test_off_action_optimistic(
     "style",
     [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER],
 )
+@pytest.mark.parametrize(
+    ("brightness", "brightness_pct"),
+    [(2, 1), (255, 100), (124, 49), (1, 0), (254, 100)],
+)
 @pytest.mark.usefixtures("setup_state_light")
 async def test_level_action_no_template(
-    hass: HomeAssistant, calls: list[ServiceCall]
+    hass: HomeAssistant, brightness: int, brightness_pct: int, calls: list[ServiceCall]
 ) -> None:
     """Test setting brightness with optimistic template."""
     state = hass.states.get(TEST_LIGHT.entity_id)
@@ -682,14 +690,14 @@ async def test_level_action_no_template(
         hass,
         calls,
         SERVICE_TURN_ON,
-        {ATTR_BRIGHTNESS: 124},
-        {ATTR_BRIGHTNESS: 124},
+        {ATTR_BRIGHTNESS: brightness},
+        {ATTR_BRIGHTNESS: brightness, ATTR_BRIGHTNESS_PCT: brightness_pct},
         "set_level",
     )
 
     state = hass.states.get(TEST_LIGHT.entity_id)
     assert state.state == STATE_ON
-    assert state.attributes["brightness"] == 124
+    assert state.attributes["brightness"] == brightness
     assert state.attributes["color_mode"] == ColorMode.BRIGHTNESS
     assert state.attributes["supported_color_modes"] == [ColorMode.BRIGHTNESS]
     assert state.attributes["supported_features"] == 0
