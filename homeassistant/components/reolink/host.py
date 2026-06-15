@@ -29,7 +29,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
-from homeassistant.helpers.network import NoURLAvailableError, get_url
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.storage import Store
 from homeassistant.util.ssl import SSLCipherList
 
@@ -757,21 +757,18 @@ class ReolinkHost:
         )
 
         try:
-            self._base_url = get_url(self._hass, prefer_external=False)
-        except NoURLAvailableError:
-            try:
-                self._base_url = get_url(self._hass, prefer_external=True)
-            except NoURLAvailableError as err:
-                self.unregister_webhook(id)
-                # pylint: disable-next=home-assistant-exception-not-translated
-                raise ReolinkWebhookException(
-                    f"Error registering URL for webhook {event_id}: "
-                    "HomeAssistant URL is not available"
-                ) from err
+            self._webhook_url[id] = webhook.async_generate_url(
+                self._hass, event_id, prefer_external=False
+            )
+        except NoURLAvailableError as err:
+            self.unregister_webhook(id)
+            raise ReolinkWebhookException(
+                translation_domain=DOMAIN,
+                translation_key="webhook_no_url",
+                translation_placeholders={"event_id": event_id},
+            ) from err
 
-        webhook_path = webhook.async_generate_path(event_id)
-        self._webhook_url[id] = f"{self._base_url}{webhook_path}"
-
+        self._base_url = self._webhook_url[id].split("/api/", 1)[0]
         _LOGGER.debug("Registered webhook: %s", event_id)
 
     def unregister_webhook(self, id: str) -> None:
