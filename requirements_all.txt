@@ -584,7 +584,7 @@ asyncsleepiq==1.7.1
 asyncssh==2.21.0
 
 # homeassistant.components.aten_pe
-# atenpdu==0.3.2
+# atenpdu==0.3.6
 
 # homeassistant.components.aurora
 auroranoaa==0.0.5
