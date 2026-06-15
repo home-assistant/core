@@ -104,6 +104,7 @@ Every check has a code following the
 | `W7420` | [`home-assistant-tests-direct-platform-async-setup-entry`](#w7420-home-assistant-tests-direct-platform-async-setup-entry) | Tests should not call a platform's `async_setup_entry` directly |
 | `W7421` | [`home-assistant-tests-direct-async-migrate-entry`](#w7421-home-assistant-tests-direct-async-migrate-entry) | Tests should not call an integration's `async_migrate_entry` directly |
 | `W7422` | [`home-assistant-tests-direct-async-setup`](#w7422-home-assistant-tests-direct-async-setup) | Tests should not call an integration's `async_setup` directly |
+| `W7426` | [`home-assistant-tests-direct-async-unload-entry`](#w7426-home-assistant-tests-direct-async-unload-entry) | Tests should not call an integration's `async_unload_entry` directly |
 | `C7414` | [`home-assistant-enforce-utcnow`](#c7414-home-assistant-enforce-utcnow) | Use `homeassistant.util.dt.utcnow` instead of `datetime.now(UTC)` |
 | `C7425` | [`home-assistant-enforce-now`](#c7425-home-assistant-enforce-now) | Use `homeassistant.util.dt.now` instead of `datetime.now(<tz>)` |
 | `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
@@ -444,6 +445,19 @@ the setup through the normal pipeline:
   `homeassistant.setup`.
 
 See [epic #79](https://github.com/home-assistant/epics/issues/79).
+
+
+## `home_assistant_tests_direct_async_unload_entry` checker
+
+Detects tests that call an integration's `async_unload_entry` directly.
+
+### `W7426`: `home-assistant-tests-direct-async-unload-entry`
+
+Tests should not invoke an integration's `async_unload_entry` from
+`__init__.py` directly. Instead, tests should let Home Assistant trigger
+the unload via `await hass.config_entries.async_unload(entry.entry_id)` so
+that the real unload flow (platform unloading, listener teardown,
+`runtime_data` cleanup, etc.) is exercised.
 
 
 ## `home_assistant_enforce_utcnow` checker
