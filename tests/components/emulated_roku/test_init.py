@@ -113,4 +113,4 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
     await hass.async_block_till_done()
 
-    assert await emulated_roku.async_unload_entry(hass, entry)
+    assert await hass.config_entries.async_unload(entry.entry_id)
