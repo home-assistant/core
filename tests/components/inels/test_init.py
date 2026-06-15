@@ -2,10 +2,8 @@
 
 from unittest.mock import ANY, AsyncMock, patch
 
-import pytest
-
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 
 from . import HA_INELS_PATH
 from .common import DOMAIN, inels
@@ -32,8 +30,7 @@ async def test_ha_mqtt_publish(
         mock_discovery.start.return_value = []
         mock_discovery_class.return_value = mock_discovery
 
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        await inels.async_setup_entry(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
         topic, payload, qos, retain = "test/topic", "test_payload", 1, True
 
@@ -61,8 +58,7 @@ async def test_ha_mqtt_subscribe(
         mock_discovery.start.return_value = []
         mock_discovery_class.return_value = mock_discovery
 
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        await inels.async_setup_entry(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
 
         topic = "test/topic"
 
@@ -77,15 +73,13 @@ async def test_ha_mqtt_not_available(
     config_entry = MockConfigEntry(domain=DOMAIN, data={})
     config_entry.add_to_hass(hass)
 
-    with (
-        patch(
-            "homeassistant.components.mqtt.async_wait_for_mqtt_client",
-            return_value=False,
-        ),
-        pytest.raises(ConfigEntryNotReady, match="MQTT integration not available"),
+    with patch(
+        "homeassistant.components.mqtt.async_wait_for_mqtt_client",
+        return_value=False,
     ):
-        # pylint: disable-next=home-assistant-tests-direct-async-setup-entry
-        await inels.async_setup_entry(hass, config_entry)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_entry(hass: HomeAssistant, mock_mqtt) -> None:

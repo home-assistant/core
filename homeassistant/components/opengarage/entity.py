@@ -52,5 +52,5 @@ class OpenGarageEntity(CoordinatorEntity[OpenGarageDataUpdateCoordinator]):
             manufacturer="Open Garage",
             name=self.coordinator.data["name"],
             suggested_area="Garage",
-            sw_version=self.coordinator.data["fwv"],
+            sw_version=str(self.coordinator.data["fwv"]),
         )
