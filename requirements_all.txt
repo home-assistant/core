@@ -2211,7 +2211,7 @@ pyfttt==0.3
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.gtfs
-pygtfs==0.1.9
+pygtfs==0.1.11
 
 # homeassistant.components.hvv_departures
 pygti==1.1.1
