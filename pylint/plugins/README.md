@@ -111,6 +111,7 @@ Every check has a code following the
 | `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
 | `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
 | `W7425` | [`home-assistant-entity-unique-id-redundant-domain`](#w7425-home-assistant-entity-unique-id-redundant-domain) | Entity unique ID references the `DOMAIN` constant or includes the integration's domain as a string-literal delimited segment |
+| `W7427` | [`home-assistant-entity-unique-id-redundant-platform`](#w7427-home-assistant-entity-unique-id-redundant-platform) | Entity unique ID includes the entity platform name (e.g. `sensor`, `light`) as a delimited string-literal segment |
 | `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
 | `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
@@ -599,6 +600,26 @@ Three locations are scanned: class-body `_attr_unique_id` assignments,
 `return` values inside a `unique_id` property/method override.
 Aliased imports (`from .const import DOMAIN as MY_DOMAIN`) are not
 scanned.
+
+### `W7427`: `home-assistant-entity-unique-id-redundant-platform`
+
+In `(domain, platform, unique_id)` the `domain` field is the entity
+platform (e.g. `sensor`, `light`, `binary_sensor` — the file the
+entity lives in), so embedding that name as a delimited segment of
+the unique id duplicates information already in the registry key.
+
+The rule fires when a string literal in `_attr_unique_id` contains
+the current module's platform name as a delimited segment. The same
+boundary rules as `W7425` apply: a segment is considered delimited
+when bordered by a non-alphanumeric character (`_`, `-`, `.`, `:`,
+space, ...) or a string boundary, so unrelated substrings like
+`"highlight-..."` or `"light2"` don't match `light`.
+
+Scope is narrower than `W7425`: only platform modules whose file
+name matches a known entity platform are checked.
+`entity.py`, `__init__.py`, and other helper sub-modules are out of
+scope because the platform context is ambiguous there. The three
+in-class scan locations are the same as for `W7425`.
 
 
 ## `home_assistant_entity_description_defaults` checker

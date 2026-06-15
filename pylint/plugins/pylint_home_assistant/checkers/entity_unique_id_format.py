@@ -30,25 +30,59 @@ the entity's unique id either:
   longer identifier, so substrings like ``"myhubitat_..."`` or
   ``"myhub2"`` don't match.
 
-Three locations are scanned: class-body ``_attr_unique_id``
-assignments, ``self._attr_unique_id = ...`` assignments inside method
-bodies, and ``return`` values inside a ``unique_id`` property/method
-override. Aliased imports (``from .const import DOMAIN as MY_DOMAIN``)
-are not scanned.
+``W7427`` (``home-assistant-entity-unique-id-redundant-platform``)
+------------------------------------------------------------------
+The ``domain`` field of the registry key (in Home Assistant
+user-facing vocabulary: the *platform*, e.g. ``sensor``, ``light``,
+``binary_sensor``) is already known from the module the entity lives
+in. Repeating that name as a delimited segment of the entity's unique
+ID duplicates information already present in the registry key. The
+rule only fires inside platform modules whose file name matches a
+known entity platform (``sensor.py``, ``binary_sensor.py``,
+``light.py``, ...); shared bases in ``entity.py`` and code in
+``__init__.py`` are not in scope because the platform context is
+ambiguous there.
+
+Three locations are scanned for both rules: class-body
+``_attr_unique_id`` assignments, ``self._attr_unique_id = ...``
+assignments inside method bodies, and ``return`` values inside a
+``unique_id`` property/method override. Aliased imports
+(``from .const import DOMAIN as MY_DOMAIN``) are not scanned.
 """
 
+from collections.abc import Callable
 import re
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
 from pylint.lint import PyLinter
 
+from pylint_home_assistant.const import ENTITY_COMPONENTS
 from pylint_home_assistant.helpers.entity_class import inherits_from_entity
 from pylint_home_assistant.helpers.integration import read_manifest
-from pylint_home_assistant.helpers.module_info import is_integration_module
+from pylint_home_assistant.helpers.module_info import (
+    is_integration_module,
+    parse_module,
+)
 
 _ATTR_NAME = "_attr_unique_id"
 _PROPERTY_NAME = "unique_id"
+
+
+def _value_contains_segment(value: nodes.NodeNG, segment: str) -> bool:
+    """Return True if a string Const in *value* contains *segment* delimited.
+
+    A segment is considered delimited when bordered by a non-alphanumeric
+    character (``_``, ``-``, ``.``, ``:``, space, ...) or a string
+    boundary. Letters and digits are excluded from the boundary set
+    because both are valid in HA integration domain names, so substrings
+    like ``"myhubitat_..."`` or ``"myhub2"`` don't match ``myhub``.
+    """
+    pattern = re.compile(rf"(?:^|[^a-zA-Z0-9]){re.escape(segment)}(?:[^a-zA-Z0-9]|$)")
+    return any(
+        isinstance(const.value, str) and pattern.search(const.value)
+        for const in value.nodes_of_class(nodes.Const)
+    )
 
 
 def _value_references_domain(value: nodes.NodeNG | None, domain: str | None) -> bool:
@@ -56,23 +90,23 @@ def _value_references_domain(value: nodes.NodeNG | None, domain: str | None) -> 
 
     Matches either a ``Name(name="DOMAIN")`` reference at any depth, or
     the integration's domain string appearing as a delimited segment
-    (bordered by a non-alphanumeric character or a string boundary)
-    inside any string ``Const`` in the value (including f-string
-    literal parts). Letters and digits are excluded from the boundary
-    set because both are valid in HA integration domain names.
+    inside any string ``Const`` in the value (including f-string literal
+    parts).
     """
     if value is None:
         return False
     if any(n.name == "DOMAIN" for n in value.nodes_of_class(nodes.Name)):
         return True
-    if domain:
-        pattern = re.compile(
-            rf"(?:^|[^a-zA-Z0-9]){re.escape(domain)}(?:[^a-zA-Z0-9]|$)"
-        )
-        for const in value.nodes_of_class(nodes.Const):
-            if isinstance(const.value, str) and pattern.search(const.value):
-                return True
-    return False
+    return domain is not None and _value_contains_segment(value, domain)
+
+
+def _value_references_platform(
+    value: nodes.NodeNG | None, platform: str | None
+) -> bool:
+    """Return True if the value embeds the platform name as a delimited segment."""
+    if value is None or platform is None:
+        return False
+    return _value_contains_segment(value, platform)
 
 
 def _is_self_attr_target(target: nodes.NodeNG) -> bool:
@@ -85,10 +119,11 @@ def _is_self_attr_target(target: nodes.NodeNG) -> bool:
     return False
 
 
-def _redundant_domain_value_nodes(
-    class_node: nodes.ClassDef, domain: str | None
+def _redundant_value_nodes(
+    class_node: nodes.ClassDef,
+    check: Callable[[nodes.NodeNG], bool],
 ) -> list[nodes.NodeNG]:
-    """Return value nodes that embed the domain in the entity's unique_id.
+    """Return value nodes for which *check* returns True.
 
     Scans three locations:
 
@@ -102,23 +137,24 @@ def _redundant_domain_value_nodes(
     for item in class_node.body:
         match item:
             case nodes.AnnAssign(target=nodes.AssignName(name=name), value=value) if (
-                name == _ATTR_NAME and _value_references_domain(value, domain)
+                name == _ATTR_NAME and value is not None and check(value)
             ):
                 hits.append(value)
             case nodes.Assign(targets=targets, value=value) if any(
                 isinstance(t, nodes.AssignName) and t.name == _ATTR_NAME
                 for t in targets
-            ) and _value_references_domain(value, domain):
+            ) and check(value):
                 hits.append(value)
     for method in class_node.body:
-        if not isinstance(method, nodes.FunctionDef):
+        if not isinstance(method, nodes.FunctionDef | nodes.AsyncFunctionDef):
             continue
         if method.name == _PROPERTY_NAME:
-            hits.extend(
-                ret.value
-                for ret in method.nodes_of_class(nodes.Return)
-                if ret.value is not None and _value_references_domain(ret.value, domain)
-            )
+            if isinstance(method, nodes.FunctionDef):
+                hits.extend(
+                    ret.value
+                    for ret in method.nodes_of_class(nodes.Return)
+                    if ret.value is not None and check(ret.value)
+                )
             continue
         for stmt in method.nodes_of_class((nodes.Assign, nodes.AnnAssign)):
             match stmt:
@@ -128,8 +164,10 @@ def _redundant_domain_value_nodes(
                     target_list = [target]
                 case _:
                     continue
-            if _value_references_domain(value, domain) and any(
-                _is_self_attr_target(t) for t in target_list
+            if (
+                value is not None
+                and check(value)
+                and any(_is_self_attr_target(t) for t in target_list)
             ):
                 hits.append(value)
     return hits
@@ -141,8 +179,23 @@ def _integration_domain(module: nodes.Module) -> str | None:
     return manifest.get("domain") if manifest else None
 
 
+def _module_platform(module_name: str) -> str | None:
+    """Return the entity platform for *module_name*, or None.
+
+    Returns the platform name (e.g. ``"sensor"``) when *module_name*
+    points to a known entity-platform sub-module of an integration.
+    Returns ``None`` for non-platform sub-modules (``entity.py``,
+    ``__init__.py``, ``const.py``, ...) and for modules outside the
+    integration root.
+    """
+    parsed = parse_module(module_name)
+    if parsed is None or parsed.module is None:
+        return None
+    return parsed.module if parsed.module in ENTITY_COMPONENTS else None
+
+
 class EntityUniqueIdFormatChecker(BaseChecker):
-    """Format-related checks on ``_attr_unique_id`` values."""
+    """Format-related checks on entity unique-ID values."""
 
     name = "home_assistant_entity_unique_id_format"
     priority = -1
@@ -164,11 +217,29 @@ class EntityUniqueIdFormatChecker(BaseChecker):
                 "in the entity_id namespace."
             ),
         ),
+        "W7427": (
+            (
+                "Entity class `%s` embeds the platform name `%s` in its "
+                "unique ID; the entity registry namespaces unique IDs per "
+                "platform, so this segment is redundant"
+            ),
+            "home-assistant-entity-unique-id-redundant-platform",
+            (
+                "Used when an entity's unique ID contains the name of the "
+                "entity platform (e.g. `sensor`, `light`, `binary_sensor`) "
+                "as a delimited substring. Entity registry uniqueness is "
+                "keyed on (domain, platform, unique_id) where `domain` is "
+                "the entity platform, so embedding the platform in the "
+                "unique id duplicates information already present in the "
+                "registry key."
+            ),
+        ),
     }
     options = ()
 
     _is_integration_module: bool
     _integration_domain: str | None
+    _platform: str | None
 
     def visit_module(self, node: nodes.Module) -> None:
         """Cache per-module state."""
@@ -176,9 +247,12 @@ class EntityUniqueIdFormatChecker(BaseChecker):
         self._integration_domain = (
             _integration_domain(node) if self._is_integration_module else None
         )
+        self._platform = (
+            _module_platform(node.name) if self._is_integration_module else None
+        )
 
     def visit_classdef(self, node: nodes.ClassDef) -> None:
-        """Flag entity classes whose unique_id embeds the integration's domain.
+        """Flag entity classes whose unique_id embeds the domain or platform.
 
         Every class inheriting from ``Entity`` in any integration module
         is inspected. Mixin/abstract bases are not exempted, because the
@@ -189,11 +263,24 @@ class EntityUniqueIdFormatChecker(BaseChecker):
             return
         if not inherits_from_entity(node):
             return
-        for value_node in _redundant_domain_value_nodes(node, self._integration_domain):
+        for value_node in _redundant_value_nodes(
+            node, lambda v: _value_references_domain(v, self._integration_domain)
+        ):
             self.add_message(
                 "home-assistant-entity-unique-id-redundant-domain",
                 node=value_node,
                 args=(node.name,),
+            )
+        platform = self._platform
+        if platform is None:
+            return
+        for value_node in _redundant_value_nodes(
+            node, lambda v: _value_references_platform(v, platform)
+        ):
+            self.add_message(
+                "home-assistant-entity-unique-id-redundant-platform",
+                node=value_node,
+                args=(node.name, platform),
             )
 
 
