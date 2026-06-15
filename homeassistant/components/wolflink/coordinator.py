@@ -45,6 +45,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         self._gateway_id = device.gateway
         self.device_id = device.id
         self.device_name = device.name
+        self._system_share_id = device.system_share_id
         self._refetch_parameters = False
 
     async def _async_setup(self) -> None:
@@ -62,7 +63,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
         """Update all stored entities for Wolf SmartSet."""
         try:
             if not await self._wolf_client.fetch_system_state_list(
-                self.device_id, self._gateway_id
+                self.device_id, self._gateway_id, self._system_share_id
             ):
                 self._refetch_parameters = True
                 raise UpdateFailed(

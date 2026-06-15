@@ -5,6 +5,7 @@ from unittest.mock import MagicMock
 
 from httpx import RequestError
 import pytest
+from wolf_comm.models import Device
 from wolf_comm.token_auth import InvalidAuth
 from wolf_comm.wolf_client import FetchFailed, ParameterReadError
 
@@ -15,6 +16,21 @@ from homeassistant.util import dt as dt_util
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def test_system_share_id_forwarded_to_state_list(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that system_share_id is passed to fetch_system_state_list for shared systems."""
+    mock_wolflink.fetch_system_list.return_value = [
+        Device(1234, 5678, "test-device", system_share_id=9999),
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_wolflink.fetch_system_state_list.assert_called_with(1234, 5678, 9999)
 
 
 async def test_update_skipped_when_device_offline(
