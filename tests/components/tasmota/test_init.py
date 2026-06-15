@@ -5,7 +5,7 @@ import json
 from unittest.mock import call
 
 from homeassistant.components.tasmota.const import DEFAULT_PREFIX, DOMAIN
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.setup import async_setup_component
@@ -101,6 +101,7 @@ async def test_device_remove_non_tasmota_device(
     config_entry = MockConfigEntry(domain="test")
     config_entry.supports_remove_device = True
     config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
 
     mac = "12:34:56:AB:CD:EF"
     device_entry = device_registry.async_get_or_create(
