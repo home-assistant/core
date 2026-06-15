@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
-from typing import cast
+from typing import Any
 
 from teslemetry_stream import TeslemetryStream, TeslemetryStreamVehicle
 
@@ -1939,9 +1939,9 @@ class TeslemetryCreditQuotaSensor(RestoreSensor):
 
         self.async_on_remove(self.stream.listen_Credits(self._async_update))
 
-    def _async_update(self, credits: dict[str, str | int]) -> None:
+    def _async_update(self, credits: dict[str, Any]) -> None:
         """Handle updated data from the coordinator."""
-        quota = cast("dict[str, object] | None", credits.get("quota"))
+        quota = credits.get("quota")
         if not isinstance(quota, dict):
             return
 
