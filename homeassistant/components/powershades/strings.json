@@ -1,158 +1,158 @@
 {
-    "config": {
-        "flow_title": "{name}",
-        "step": {
-            "pick_device": {
-                "title": "Select your PowerShades device",
-                "data": {
-                    "device": "Device"
-                },
-                "data_description": {
-                    "device": "The PowerShades device to set up, discovered on your network."
-                }
-            },
-            "manual": {
-                "title": "Connect to a PowerShades device",
-                "description": "Enter the IP address of your PowerShades device.",
-                "data": {
-                    "ip": "IP address"
-                },
-                "data_description": {
-                    "ip": "The IP address of your PowerShades device."
-                }
-            },
-            "discovery_confirm": {
-                "title": "Discovered PowerShades device",
-                "description": "Do you want to set up {name} ({ip})?"
-            },
-            "reconfigure": {
-                "title": "Reconfigure PowerShades device",
-                "description": "Update the IP address if it has changed (e.g. after a DHCP reassignment).",
-                "data": {
-                    "ip": "IP address"
-                },
-                "data_description": {
-                    "ip": "The new IP address of your PowerShades device."
-                }
-            }
-        },
-        "error": {
-            "cannot_connect": "The device did not respond. Check the IP address and make sure the shade is awake.",
-            "invalid_ip": "Invalid IPv4 address",
-            "wrong_device": "The device at this IP address is a different shade than the one configured here",
-            "same_ip": "This is already this shade's configured IP address"
-        },
-        "abort": {
-            "already_configured": "Device is already configured",
-            "cannot_connect": "The device did not respond to a PowerShades probe",
-            "reconfigure_successful": "Re-configuration was successful"
-        }
+  "config": {
+    "abort": {
+      "already_configured": "Device is already configured",
+      "cannot_connect": "The device did not respond to a PowerShades probe",
+      "reconfigure_successful": "Re-configuration was successful"
     },
-    "issues": {
-        "cannot_connect": {
-            "title": "{name} is not responding",
-            "description": "Home Assistant could not connect to the PowerShades shade \"{name}\" at {ip}.\n\nMake sure the shade is powered on and connected to the network, then reload the integration. If its IP address has changed, open the device's PowerShades entry, select **Reconfigure** and enter the new IP address."
-        }
+    "error": {
+      "cannot_connect": "The device did not respond. Check the IP address and make sure the shade is awake.",
+      "invalid_ip": "Invalid IPv4 address",
+      "same_ip": "This is already this shade's configured IP address",
+      "wrong_device": "The device at this IP address is a different shade than the one configured here"
     },
-    "exceptions": {
-        "update_timeout": {
-            "message": "Shade at {ip_address} did not reply: {error}"
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "description": "Do you want to set up {name} ({ip})?",
+        "title": "Discovered PowerShades device"
+      },
+      "manual": {
+        "data": {
+          "ip": "IP address"
         },
-        "update_malformed_reply": {
-            "message": "Malformed status reply from {ip_address}"
+        "data_description": {
+          "ip": "The IP address of your PowerShades device."
         },
-        "entity_not_found": {
-            "message": "{entity_id} is not a PowerShades entity."
+        "description": "Enter the IP address of your PowerShades device.",
+        "title": "Connect to a PowerShades device"
+      },
+      "pick_device": {
+        "data": {
+          "device": "Device"
         },
-        "entry_not_loaded": {
-            "message": "The PowerShades config entry for {entity_id} is not loaded."
+        "data_description": {
+          "device": "The PowerShades device to set up, discovered on your network."
         },
-        "invalid_shade_name": {
-            "message": "Shade name must be 1-50 ASCII characters."
+        "title": "Select your PowerShades device"
+      },
+      "reconfigure": {
+        "data": {
+          "ip": "IP address"
         },
-        "command_not_acknowledged": {
-            "message": "Shade at {ip_address} did not acknowledge the command."
+        "data_description": {
+          "ip": "The new IP address of your PowerShades device."
         },
-        "rename_not_confirmed": {
-            "message": "Shade at {ip_address} did not confirm its new name."
-        },
-        "rename_empty_name": {
-            "message": "Shade at {ip_address} returned an empty name."
-        }
-    },
-    "services": {
-        "toggle_shade": {
-            "name": "Toggle shade",
-            "description": "Toggles the shade between open and closed positions (stops it if moving)."
-        },
-        "set_upper_limit": {
-            "name": "Set upper limit",
-            "description": "Sets the upper limit (fully open position) for a PowerShades device."
-        },
-        "set_lower_limit": {
-            "name": "Set lower limit",
-            "description": "Sets the lower limit (fully closed position) for a PowerShades device."
-        },
-        "clear_limits": {
-            "name": "Clear limits",
-            "description": "Clears both upper and lower limits for a PowerShades device."
-        },
-        "step_up": {
-            "name": "Step up",
-            "description": "Moves the motor up one step (for trimming limits)."
-        },
-        "step_down": {
-            "name": "Step down",
-            "description": "Moves the motor down one step (for trimming limits)."
-        },
-        "jog_up": {
-            "name": "Jog up",
-            "description": "Moves the shade up continuously until it reaches a limit or is stopped (useful when setting limits)."
-        },
-        "jog_down": {
-            "name": "Jog down",
-            "description": "Moves the shade down continuously until it reaches a limit or is stopped (useful when setting limits)."
-        },
-        "set_shade_name": {
-            "name": "Set shade name",
-            "description": "Renames a PoE shade on the device itself; the Home Assistant device name is updated to match.",
-            "fields": {
-                "name": {
-                    "name": "Name",
-                    "description": "The new shade name (1-50 ASCII characters)."
-                }
-            }
-        }
-    },
-    "entity": {
-        "button": {
-            "toggle": {
-                "name": "Toggle Shade"
-            },
-            "identify": {
-                "name": "Identify"
-            },
-            "jog_up": {
-                "name": "Jog Up"
-            },
-            "jog_down": {
-                "name": "Jog Down"
-            },
-            "set_upper_limit": {
-                "name": "Set Upper Limit"
-            },
-            "set_lower_limit": {
-                "name": "Set Lower Limit"
-            },
-            "clear_limits": {
-                "name": "Clear Limits"
-            },
-            "step_up": {
-                "name": "Step Up"
-            },
-            "step_down": {
-                "name": "Step Down"
-            }
-        }
+        "description": "Update the IP address if it has changed (e.g. after a DHCP reassignment).",
+        "title": "Reconfigure PowerShades device"
+      }
     }
+  },
+  "entity": {
+    "button": {
+      "clear_limits": {
+        "name": "Clear Limits"
+      },
+      "identify": {
+        "name": "Identify"
+      },
+      "jog_down": {
+        "name": "Jog Down"
+      },
+      "jog_up": {
+        "name": "Jog Up"
+      },
+      "set_lower_limit": {
+        "name": "Set Lower Limit"
+      },
+      "set_upper_limit": {
+        "name": "Set Upper Limit"
+      },
+      "step_down": {
+        "name": "Step Down"
+      },
+      "step_up": {
+        "name": "Step Up"
+      },
+      "toggle": {
+        "name": "Toggle Shade"
+      }
+    }
+  },
+  "exceptions": {
+    "command_not_acknowledged": {
+      "message": "Shade at {ip_address} did not acknowledge the command."
+    },
+    "entity_not_found": {
+      "message": "{entity_id} is not a PowerShades entity."
+    },
+    "entry_not_loaded": {
+      "message": "The PowerShades config entry for {entity_id} is not loaded."
+    },
+    "invalid_shade_name": {
+      "message": "Shade name must be 1-50 ASCII characters."
+    },
+    "rename_empty_name": {
+      "message": "Shade at {ip_address} returned an empty name."
+    },
+    "rename_not_confirmed": {
+      "message": "Shade at {ip_address} did not confirm its new name."
+    },
+    "update_malformed_reply": {
+      "message": "Malformed status reply from {ip_address}"
+    },
+    "update_timeout": {
+      "message": "Shade at {ip_address} did not reply: {error}"
+    }
+  },
+  "issues": {
+    "cannot_connect": {
+      "description": "Home Assistant could not connect to the PowerShades shade \"{name}\" at {ip}.\n\nMake sure the shade is powered on and connected to the network, then reload the integration. If its IP address has changed, open the device's PowerShades entry, select **Reconfigure** and enter the new IP address.",
+      "title": "{name} is not responding"
+    }
+  },
+  "services": {
+    "clear_limits": {
+      "description": "Clears both upper and lower limits for a PowerShades device.",
+      "name": "Clear limits"
+    },
+    "jog_down": {
+      "description": "Moves the shade down continuously until it reaches a limit or is stopped (useful when setting limits).",
+      "name": "Jog down"
+    },
+    "jog_up": {
+      "description": "Moves the shade up continuously until it reaches a limit or is stopped (useful when setting limits).",
+      "name": "Jog up"
+    },
+    "set_lower_limit": {
+      "description": "Sets the lower limit (fully closed position) for a PowerShades device.",
+      "name": "Set lower limit"
+    },
+    "set_shade_name": {
+      "description": "Renames a PoE shade on the device itself; the Home Assistant device name is updated to match.",
+      "fields": {
+        "name": {
+          "description": "The new shade name (1-50 ASCII characters).",
+          "name": "Name"
+        }
+      },
+      "name": "Set shade name"
+    },
+    "set_upper_limit": {
+      "description": "Sets the upper limit (fully open position) for a PowerShades device.",
+      "name": "Set upper limit"
+    },
+    "step_down": {
+      "description": "Moves the motor down one step (for trimming limits).",
+      "name": "Step down"
+    },
+    "step_up": {
+      "description": "Moves the motor up one step (for trimming limits).",
+      "name": "Step up"
+    },
+    "toggle_shade": {
+      "description": "Toggles the shade between open and closed positions (stops it if moving).",
+      "name": "Toggle shade"
+    }
+  }
 }

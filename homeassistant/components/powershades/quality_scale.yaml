@@ -76,4 +76,8 @@ rules:
   inject-websession:
     status: exempt
     comment: uses UDP, not http(s), so there's no aiohttp session to inject
-  strict-typing: done
+  strict-typing:
+    status: exempt
+    comment: |
+      The getmac dependency does not include a py.typed file and is not PEP 561 compliant.
+      This is outside the integration's control as it's a third-party library requirement.
