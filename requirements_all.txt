@@ -2298,7 +2298,7 @@ pykodi==0.2.7
 pykoplenti==1.5.0
 
 # homeassistant.components.kraken
-pykrakenapi==0.1.8
+pykrakenapi==0.1.9
 
 # homeassistant.components.kulersky
 pykulersky==0.5.8
