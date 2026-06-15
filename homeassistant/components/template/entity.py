@@ -221,7 +221,7 @@ class AbstractTemplateEntity(Entity):
             context=context,
         )
 
-    async def async_get_last_template_data(
+    async def _async_get_last_template_data(
         self,
     ) -> Any | None:
         """Get the last template data."""
@@ -252,7 +252,7 @@ class AbstractTemplateEntity(Entity):
         # Handle extra data.
         extra_data = _SENTINEL
         if self._restore_state_extra_data is not None:
-            extra_data = await self.async_get_last_template_data()
+            extra_data = await self._async_get_last_template_data()
 
         if (
             extra_data is None
