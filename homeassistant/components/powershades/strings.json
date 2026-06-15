@@ -48,37 +48,6 @@
       }
     }
   },
-  "entity": {
-    "button": {
-      "clear_limits": {
-        "name": "Clear Limits"
-      },
-      "identify": {
-        "name": "Identify"
-      },
-      "jog_down": {
-        "name": "Jog Down"
-      },
-      "jog_up": {
-        "name": "Jog Up"
-      },
-      "set_lower_limit": {
-        "name": "Set Lower Limit"
-      },
-      "set_upper_limit": {
-        "name": "Set Upper Limit"
-      },
-      "step_down": {
-        "name": "Step Down"
-      },
-      "step_up": {
-        "name": "Step Up"
-      },
-      "toggle": {
-        "name": "Toggle Shade"
-      }
-    }
-  },
   "exceptions": {
     "command_not_acknowledged": {
       "message": "Shade at {ip_address} did not acknowledge the command."

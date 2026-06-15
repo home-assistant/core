@@ -54,12 +54,23 @@ rules:
       RF hub owners to help properly integrate it.
   entity-category: done
   entity-device-class: done
-  entity-disabled-by-default: done
-  entity-translations: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: >-
+      The only entity is the primary cover, which must be enabled by
+      default. There are no secondary/diagnostic entities to disable.
+  entity-translations:
+    status: exempt
+    comment: >-
+      The only entity (cover) has `_attr_name = None` and relies on the
+      cover device class's built-in name. There's nothing for the
+      integration to translate.
   exception-translations: done
   icon-translations:
     status: exempt
-    comment: icons are static (mdi:* set in code), there's nothing state-dependent to translate
+    comment: >-
+      The cover entity has no custom icon, it uses the default
+      device-class icon, so there's nothing state-dependent to translate.
   reconfiguration-flow: done
   repair-issues: done
   stale-devices:

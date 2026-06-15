@@ -30,7 +30,6 @@ async def test_setup_entry_success(hass: HomeAssistant, config_entry) -> None:
     assert config_entry.runtime_data.data.position == 50
 
     assert len(hass.states.async_all("cover")) == 1
-    assert len(hass.states.async_all("button")) > 0
 
 
 async def test_setup_entry_not_ready(hass: HomeAssistant) -> None:
