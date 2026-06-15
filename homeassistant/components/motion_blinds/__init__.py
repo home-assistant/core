@@ -53,7 +53,7 @@ async def async_setup_entry(
                         multicast_interface,
                         host,
                     )
-                except (socket.gaierror, OSError):
+                except socket.gaierror, OSError:
                     pass
 
                 if working_interface is None:
