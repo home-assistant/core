@@ -1,7 +1,6 @@
 """Media player platform for Teslemetry integration."""
 
 from tesla_fleet_api.const import Scope
-from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -21,6 +20,7 @@ from .entity import (
 )
 from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
+from .source import VehicleSource
 
 STATES = {
     "Playing": MediaPlayerState.PLAYING,
@@ -60,7 +60,7 @@ async def async_setup_entry(
 class TeslemetryMediaEntity(TeslemetryRootEntity, MediaPlayerEntity):
     """Base vehicle media player class."""
 
-    api: Vehicle
+    api: VehicleSource
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = VOLUME_STEP
 

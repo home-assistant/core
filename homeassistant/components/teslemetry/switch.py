@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from tesla_fleet_api.const import AutoSeat, Scope
-from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import TeslemetryStreamVehicle
 
 from homeassistant.components.switch import (
@@ -27,6 +26,7 @@ from .entity import (
 )
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryEnergyData, TeslemetryVehicleData
+from .source import VehicleSource
 
 PARALLEL_UPDATES = 0
 
@@ -36,8 +36,8 @@ class TeslemetrySwitchEntityDescription(SwitchEntityDescription):
     """Describes Teslemetry Switch entity."""
 
     polling: bool = False
-    on_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
-    off_func: Callable[[Vehicle], Awaitable[dict[str, Any]]]
+    on_func: Callable[[VehicleSource], Awaitable[dict[str, Any]]]
+    off_func: Callable[[VehicleSource], Awaitable[dict[str, Any]]]
     scopes: list[Scope]
     value_func: Callable[[StateType], bool] = bool
     streaming_listener: Callable[
@@ -197,7 +197,7 @@ async def async_setup_entry(
 class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
     """Base class for all Teslemetry switch entities."""
 
-    api: Vehicle
+    api: VehicleSource
     _attr_device_class = SwitchDeviceClass.SWITCH
     entity_description: TeslemetrySwitchEntityDescription
 

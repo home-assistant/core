@@ -4,7 +4,6 @@ from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import Scope, SunRoofCommand, Trunk, WindowCommand
-from tesla_fleet_api.teslemetry import Vehicle
 from teslemetry_stream import Signal
 from teslemetry_stream.const import WindowState
 
@@ -25,6 +24,7 @@ from .entity import (
 )
 from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
+from .source import VehicleSource
 
 OPEN = 1
 CLOSED = 0
@@ -103,7 +103,7 @@ class CoverRestoreEntity(RestoreEntity, CoverEntity):
 class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for window cover entities."""
 
-    api: Vehicle
+    api: VehicleSource
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -233,7 +233,7 @@ class TeslemetryChargePortEntity(
 ):
     """Base class for for charge port cover entities."""
 
-    api: Vehicle
+    api: VehicleSource
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -314,7 +314,7 @@ class TeslemetryStreamingChargePortEntity(
 class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
     """Base class for the front trunk cover entities."""
 
-    api: Vehicle
+    api: VehicleSource
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN
 
@@ -377,7 +377,7 @@ class TeslemetryStreamingFrontTrunkEntity(
 class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
     """Cover entity for the rear trunk."""
 
-    api: Vehicle
+    api: VehicleSource
     _attr_device_class = CoverDeviceClass.DOOR
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
 
@@ -447,7 +447,7 @@ class TeslemetryStreamingRearTrunkEntity(
 class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
     """Cover entity for the sunroof."""
 
-    api: Vehicle
+    api: VehicleSource
     _attr_device_class = CoverDeviceClass.WINDOW
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP

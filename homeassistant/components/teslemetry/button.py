@@ -5,7 +5,6 @@ from dataclasses import dataclass
 from typing import Any
 
 from tesla_fleet_api.const import Scope
-from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -15,6 +14,7 @@ from . import TeslemetryConfigEntry
 from .entity import TeslemetryVehicleStreamEntity
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryVehicleData
+from .source import VehicleSource
 
 PARALLEL_UPDATES = 0
 
@@ -75,7 +75,7 @@ async def async_setup_entry(
 class TeslemetryButtonEntity(TeslemetryVehicleStreamEntity, ButtonEntity):
     """Base class for Teslemetry buttons."""
 
-    api: Vehicle
+    api: VehicleSource
     entity_description: TeslemetryButtonEntityDescription
 
     def __init__(

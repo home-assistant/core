@@ -3,7 +3,6 @@
 from typing import Any
 
 from tesla_fleet_api.const import Scope
-from tesla_fleet_api.teslemetry import Vehicle
 
 from homeassistant.components.update import UpdateEntity, UpdateEntityFeature
 from homeassistant.core import HomeAssistant
@@ -18,6 +17,7 @@ from .entity import (
 )
 from .helpers import handle_vehicle_command
 from .models import TeslemetryVehicleData
+from .source import VehicleSource
 
 AVAILABLE = "available"
 DOWNLOADING = "downloading"
@@ -46,7 +46,7 @@ async def async_setup_entry(
 class TeslemetryUpdateEntity(TeslemetryRootEntity, UpdateEntity):
     """Teslemetry Updates entity."""
 
-    api: Vehicle
+    api: VehicleSource
     _attr_supported_features = UpdateEntityFeature.PROGRESS
 
     async def async_install(

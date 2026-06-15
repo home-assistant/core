@@ -94,7 +94,13 @@ async def test_services(
             blocking=True,
         )
         set_scheduled_departure_off.assert_called_once_with(
-            False, False, False, 0, False, False, 0
+            enable=False,
+            preconditioning_enabled=False,
+            preconditioning_weekdays_only=False,
+            departure_time=0,
+            off_peak_charging_enabled=False,
+            off_peak_charging_weekdays_only=False,
+            end_off_peak_time=0,
         )
 
     with patch(
@@ -210,7 +216,7 @@ async def test_services(
             },
             blocking=True,
         )
-        set_time_of_use.assert_called_once_with({"utility": "test"})
+        set_time_of_use.assert_called_once_with(settings={"utility": "test"})
 
     # Test that tariff_content_v2 wrapper is unwrapped before passing to SDK
     with patch(
@@ -228,7 +234,7 @@ async def test_services(
             },
             blocking=True,
         )
-        set_time_of_use.assert_called_once_with({"utility": "test"})
+        set_time_of_use.assert_called_once_with(settings={"utility": "test"})
 
     with patch(
         "tesla_fleet_api.teslemetry.Vehicle.add_charge_schedule",

@@ -45,6 +45,7 @@ from .coordinator import (
 from .helpers import async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_setup_services
+from .source import EnergySource, VehicleSource
 
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
@@ -282,7 +283,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             vehicles.append(
                 TeslemetryVehicleData(
-                    api=vehicle,
+                    api=VehicleSource(vehicle),
                     config_entry=entry,
                     coordinator=coordinator,
                     poll=poll,
@@ -355,7 +356,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
             energysites.append(
                 TeslemetryEnergyData(
-                    api=energy_site,
+                    api=EnergySource(energy_site),
                     live_coordinator=(
                         TeslemetryEnergySiteLiveCoordinator(
                             hass, entry, energy_site, live_status
