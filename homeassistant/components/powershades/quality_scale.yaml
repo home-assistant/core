@@ -47,9 +47,11 @@ rules:
   docs-use-cases: done
   dynamic-devices:
     status: exempt
-    comment: one device per config entry. At least for the PoE Powershades. 
-    I do not know nor can I test if there are multiple devices for the RF hub.
-    I have made this clear in the documentation, and I ask for people who do have the Hub to help me properly integrate it into Home Assistant.
+    comment: >-
+      One device per config entry, at least for PoE PowerShades. It is
+      unknown whether the RF hub exposes multiple devices, since it cannot
+      be tested by the maintainer. This is documented, with a request for
+      RF hub owners to help properly integrate it.
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -62,9 +64,12 @@ rules:
   repair-issues: done
   stale-devices:
     status: exempt
-    comment: single device per config entry, nothing to go stale independently
-    I do not know nor can I test if there are multiple devices for the RF hub.
-    I have made this clear in the documentation, and I ask for people who do have the Hub to help me properly integrate it into Home Assistant.
+    comment: >-
+      Single device per config entry, nothing to go stale independently, at
+      least for PoE PowerShades. It is unknown whether the RF hub exposes
+      multiple devices, since it cannot be tested by the maintainer. This is
+      documented, with a request for RF hub owners to help properly
+      integrate it.
 
   # Platinum
   async-dependency: done
