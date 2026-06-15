@@ -25,11 +25,7 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ElectraSmartConfigEntry
@@ -149,9 +145,7 @@ class ElectraClimateEntity(ClimateEntity):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._electra_ac_device.mac)},
-            connections={
-                (CONNECTION_NETWORK_MAC, format_mac(self._electra_ac_device.mac))
-            },
+            connections={(CONNECTION_NETWORK_MAC, self._electra_ac_device.mac)},
             name=device.name,
             model=self._electra_ac_device.model,
             manufacturer=self._electra_ac_device.manufactor,
