@@ -931,7 +931,7 @@
       "message": "Reolink firmware update already running, wait on completion before starting another"
     },
     "webhook_no_url": {
-      "message": "Error registering URL for webhook {event_id}: HomeAssistant URL is not available"
+      "message": "Error registering URL for webhook {event_id}: Home Assistant URL is not available"
     }
   },
   "issues": {
