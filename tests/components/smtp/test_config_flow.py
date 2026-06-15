@@ -224,6 +224,7 @@ async def test_form_recipient_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("smtp")
 async def test_options_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

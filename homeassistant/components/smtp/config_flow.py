@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryData,
@@ -46,6 +45,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util.ssl import create_client_context
 
+from . import SmtpConfigEntry
 from .const import (
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
@@ -120,14 +120,14 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
     @classmethod
     @callback
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: SmtpConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlowHandler}
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: SmtpConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
