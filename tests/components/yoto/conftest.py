@@ -100,6 +100,9 @@ def _build_player() -> YotoPlayer:
         battery_level_percentage=75,
         card_insertion_state=CardInsertionState.PHYSICAL,
         day_mode=DayMode.DAY,
+        is_charging=True,
+        is_audio_device_connected=False,
+        is_bluetooth_audio_connected=False,
     )
     player.last_event = PlaybackEvent(
         player_id=PLAYER_ID,

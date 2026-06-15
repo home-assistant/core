@@ -1,5 +1,13 @@
 {
   "entity": {
+    "binary_sensor": {
+      "bluetooth_audio": {
+        "default": "mdi:bluetooth-audio"
+      },
+      "headphones": {
+        "default": "mdi:headphones"
+      }
+    },
     "sensor": {
       "card_insertion_state": {
         "default": "mdi:card-bulleted-outline",

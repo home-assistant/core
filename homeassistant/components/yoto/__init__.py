@@ -20,6 +20,7 @@ from .const import DOMAIN
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.MEDIA_PLAYER,
     Platform.SENSOR,
     Platform.TIME,
