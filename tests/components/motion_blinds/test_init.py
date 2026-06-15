@@ -58,7 +58,7 @@ def config_entry_stored_interface():
     )
 
 
-async def _do_setup(hass, config_entry, mock_mc_factory, mock_gw_cls):
+async def _do_setup(hass: HomeAssistant, config_entry, mock_mc_factory, mock_gw_cls):
     """Add entry to hass and run setup with standard patches applied."""
     config_entry.add_to_hass(hass)
 
@@ -139,7 +139,7 @@ async def test_setup_stored_interface_oserror_triggers_probe(
 # ---------------------------------------------------------------------------
 
 
-def _make_entity(hass):
+def _make_entity(hass: HomeAssistant):
     """Create a minimal MotionCoordinatorEntity without full HA wiring."""
     blind = MagicMock()
     blind.position = 50
