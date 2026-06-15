@@ -6,9 +6,7 @@ rules:
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: todo
-    comment: "Will do after first review of draft PR"
+  dependency-transparency: done
   docs-actions:
     status: todo
     comment: "Will do after first review of draft PR"

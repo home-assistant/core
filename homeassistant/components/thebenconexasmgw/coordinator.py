@@ -3,6 +3,8 @@
 from datetime import datetime, timedelta
 import logging
 
+from theben_conexa_smgw import ConexaSMGW
+
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
@@ -16,7 +18,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 from homeassistant.util import dt as dt_util
 
 from .const import MAX_MEASUREMENT_AGE, MAX_RETRIES
-from .smgw import ConexaSMGW
 
 _LOGGER = logging.getLogger(__name__)
 

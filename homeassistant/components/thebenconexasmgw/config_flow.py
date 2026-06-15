@@ -4,6 +4,7 @@ import logging
 from typing import Any
 
 import aiohttp
+from theben_conexa_smgw import ConexaSMGW, checkNetworkConnection
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -13,7 +14,6 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN
-from .smgw import ConexaSMGW, checkNetworkConnection
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -3,13 +3,13 @@
 import logging
 
 import aiohttp
+from theben_conexa_smgw import checkNetworkConnection
 
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .coordinator import SmgwSensorCoordinator, ThebenConfigEntry
-from .smgw import checkNetworkConnection
 
 _LOGGER = logging.getLogger(__name__)
 
