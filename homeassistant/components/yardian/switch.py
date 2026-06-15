@@ -12,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DEFAULT_WATERING_DURATION
+from .const import DEFAULT_WATERING_DURATION, SWITCH_REFRESH_DELAY
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
 
 SERVICE_START_IRRIGATION = "start_irrigation"
@@ -78,11 +78,11 @@ class YardianSwitch(CoordinatorEntity[YardianUpdateCoordinator], SwitchEntity):
             self._zone_id,
             kwargs.get("duration", DEFAULT_WATERING_DURATION),
         )
-        await asyncio.sleep(2)
+        await asyncio.sleep(SWITCH_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.controller.stop_irrigation()
-        await asyncio.sleep(2)
+        await asyncio.sleep(SWITCH_REFRESH_DELAY)
         await self.coordinator.async_request_refresh()
