@@ -22,7 +22,13 @@ from homeassistant.components.climate import (
     SERVICE_TURN_ON,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_PORT, SERVICE_TURN_OFF
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    CONF_HOST,
+    CONF_PORT,
+    SERVICE_TURN_OFF,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
@@ -135,14 +141,7 @@ async def test_climate_state(
 
 
 async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
-    """A controller set to Fahrenheit is reported in Fahrenheit.
-
-    Byte 0 bit 0 of the status flags the unit; this device reports it set, so
-    the entity must expose Fahrenheit rather than the hardcoded Celsius. Under
-    the US unit system the device's native values then pass through unconverted
-    (target 86 °F, current 75 °F); were the entity still reporting Celsius they
-    would be converted and differ.
-    """
+    """A controller set to Fahrenheit is reported in Fahrenheit."""
     hass.config.units = US_CUSTOMARY_SYSTEM
     device_state = CCM15DeviceState(
         devices={0: CCM15SlaveDevice(bytes.fromhex("01000041c0004b"))}
@@ -161,6 +160,15 @@ async def test_climate_fahrenheit_unit(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
+    # The entity must report the device's Fahrenheit unit, not hardcoded Celsius.
+    climate_component = hass.data[CLIMATE_DOMAIN]
+    entity = climate_component.get_entity("climate.midea_0")
+    assert entity is not None
+    assert entity.temperature_unit == UnitOfTemperature.FAHRENHEIT
+
+    # With the entity already in Fahrenheit under the US system, the device's
+    # native values pass through unconverted; were it still Celsius they would
+    # be converted and differ.
     state = hass.states.get("climate.midea_0")
     assert state is not None
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 75
