@@ -181,7 +181,7 @@ aio-ownet==0.0.5
 aioacaia==0.1.18
 
 # homeassistant.components.airq
-aioairq==0.4.7
+aioairq==0.4.8
 
 # homeassistant.components.airzone_cloud
 aioairzone-cloud==0.7.2
