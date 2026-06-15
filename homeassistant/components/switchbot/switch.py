@@ -1,5 +1,6 @@
 """Support for Switchbot bot."""
 
+import abc
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
@@ -226,26 +227,24 @@ class SwitchbotMultiChannelSwitch(SwitchbotSwitchedEntity, SwitchEntity):
         self.async_write_ha_state()
 
 
-class SwitchbotFanOscillationSwitch(SwitchbotSwitchedEntity, SwitchEntity):
+class SwitchbotFanOscillationSwitch(SwitchbotSwitchedEntity, SwitchEntity, abc.ABC):
     """Base class for fan oscillation switch entities."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
     _device: switchbot.SwitchbotStandingFan
 
     @property
+    @abc.abstractmethod
     def is_on(self) -> bool | None:
         """Return true if oscillation is active."""
-        raise NotImplementedError
 
-    @exception_handler
+    @abc.abstractmethod
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable oscillation."""
-        raise NotImplementedError
 
-    @exception_handler
+    @abc.abstractmethod
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable oscillation."""
-        raise NotImplementedError
 
 
 class SwitchbotFanHorizontalOscillationSwitch(SwitchbotFanOscillationSwitch):
