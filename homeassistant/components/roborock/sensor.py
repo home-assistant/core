@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import datetime
 import logging
+from typing import Any
 
 from roborock.data import (
     B01Props,
@@ -18,7 +19,7 @@ from roborock.data import (
     ZeoState,
 )
 from roborock.data.b01_q10.b01_q10_code_mappings import YXDeviceState
-from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
+from roborock.devices.traits.b01 import Q10PropertiesApi
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
 
@@ -87,7 +88,10 @@ class RoborockSensorDescriptionB01(SensorEntityDescription):
 class RoborockSensorDescriptionQ10(SensorEntityDescription):
     """A class that describes Roborock Q10 sensors."""
 
-    value_fn: Callable[[Q10StatusTrait], StateType]
+    value_fn: Callable[[Any], StateType]
+    # Which push-driven trait this sensor reads from (status by default;
+    # consumable life values live on the consumable trait).
+    trait_fn: Callable[[Q10PropertiesApi], Any] = lambda api: api.status
 
 
 def _dock_error_value_fn(state: DeviceState) -> str | None:
@@ -491,6 +495,7 @@ Q10_B01_SENSOR_DESCRIPTIONS = [
     RoborockSensorDescriptionQ10(
         key="main_brush_life",
         translation_key="main_brush_life",
+        trait_fn=lambda api: api.consumable,
         value_fn=lambda data: data.main_brush_life,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -499,6 +504,7 @@ Q10_B01_SENSOR_DESCRIPTIONS = [
     RoborockSensorDescriptionQ10(
         key="side_brush_life",
         translation_key="side_brush_life",
+        trait_fn=lambda api: api.consumable,
         value_fn=lambda data: data.side_brush_life,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -507,6 +513,7 @@ Q10_B01_SENSOR_DESCRIPTIONS = [
     RoborockSensorDescriptionQ10(
         key="filter_life",
         translation_key="filter_life",
+        trait_fn=lambda api: api.consumable,
         value_fn=lambda data: data.filter_life,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -515,6 +522,7 @@ Q10_B01_SENSOR_DESCRIPTIONS = [
     RoborockSensorDescriptionQ10(
         key="sensor_life",
         translation_key="sensor_life",
+        trait_fn=lambda api: api.consumable,
         value_fn=lambda data: data.sensor_life,
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -706,11 +714,11 @@ class RoborockSensorEntityB01Q10(RoborockCoordinatedEntityB01Q10, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Register trait listener for push-based status updates."""
         await super().async_added_to_hass()
-        self.async_on_remove(
-            self.coordinator.api.status.add_update_listener(self.async_write_ha_state)
-        )
+        trait = self.entity_description.trait_fn(self.coordinator.api)
+        self.async_on_remove(trait.add_update_listener(self.async_write_ha_state))
 
     @property
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
-        return self.entity_description.value_fn(self.coordinator.api.status)
+        trait = self.entity_description.trait_fn(self.coordinator.api)
+        return self.entity_description.value_fn(trait)
