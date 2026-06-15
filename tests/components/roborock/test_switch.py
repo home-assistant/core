@@ -255,3 +255,83 @@ async def test_a01_switch_unknown_state(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "trait", "service", "method"),
+    [
+        (
+            "switch.roborock_q10_s5_child_lock",
+            "child_lock",
+            SERVICE_TURN_ON,
+            "enable",
+        ),
+        (
+            "switch.roborock_q10_s5_child_lock",
+            "child_lock",
+            SERVICE_TURN_OFF,
+            "disable",
+        ),
+        (
+            "switch.roborock_q10_s5_do_not_disturb",
+            "do_not_disturb",
+            SERVICE_TURN_ON,
+            "enable",
+        ),
+        (
+            "switch.roborock_q10_s5_dust_collection",
+            "dust_collection",
+            SERVICE_TURN_ON,
+            "enable",
+        ),
+        (
+            "switch.roborock_q10_s5_indicator_light",
+            "button_light",
+            SERVICE_TURN_ON,
+            "enable",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_q10_switch_commands(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+    entity_id: str,
+    trait: str,
+    service: str,
+    method: str,
+) -> None:
+    """Test toggling a Q10 switch calls the matching trait method."""
+    assert hass.states.get(entity_id) is not None
+    await hass.services.async_call(
+        "switch",
+        service,
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    getattr(getattr(fake_q10_vacuum.b01_q10_properties, trait), method).assert_awaited()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_q10_switch_command_failure(
+    hass: HomeAssistant,
+    bypass_api_client_fixture: None,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test a backend error toggling a Q10 switch raises HomeAssistantError."""
+    entity_id = "switch.roborock_q10_s5_child_lock"
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.child_lock.enable.side_effect = (
+        roborock.exceptions.RoborockException
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "switch",
+            SERVICE_TURN_ON,
+            blocking=True,
+            target={"entity_id": entity_id},
+        )

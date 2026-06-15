@@ -72,3 +72,44 @@ async def test_volume_update_failed(
 
     assert fake_vacuum.v1_properties.sound_volume.set_volume.call_count == 1
     assert fake_vacuum.v1_properties.sound_volume.set_volume.call_args[0] == (3.0,)
+
+
+async def test_q10_set_volume(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test setting the Q10 speaker volume."""
+    entity_id = "number.roborock_q10_s5_volume"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "50.0"
+
+    await hass.services.async_call(
+        "number",
+        SERVICE_SET_VALUE,
+        service_data={ATTR_VALUE: 40.0},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.volume.set_volume.assert_awaited_once_with(40)
+
+
+async def test_q10_set_volume_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_q10_vacuum: FakeDevice,
+) -> None:
+    """Test a backend error setting the Q10 volume raises HomeAssistantError."""
+    entity_id = "number.roborock_q10_s5_volume"
+    assert fake_q10_vacuum.b01_q10_properties is not None
+    fake_q10_vacuum.b01_q10_properties.volume.set_volume.side_effect = RoborockTimeout
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "number",
+            SERVICE_SET_VALUE,
+            service_data={ATTR_VALUE: 40.0},
+            blocking=True,
+            target={"entity_id": entity_id},
+        )

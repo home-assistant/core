@@ -15,8 +15,12 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
-from .entity import RoborockEntityV1
+from .coordinator import (
+    RoborockB01Q10UpdateCoordinator,
+    RoborockConfigEntry,
+    RoborockDataUpdateCoordinator,
+)
+from .entity import RoborockCoordinatedEntityB01Q10, RoborockEntityV1
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -71,6 +75,10 @@ async def async_setup_entry(
             if (trait := description.trait(coordinator.properties_api)) is not None
         ]
     )
+    async_add_entities(
+        RoborockQ10VolumeNumberEntity(coordinator)
+        for coordinator in config_entry.runtime_data.b01_q10
+    )
 
 
 class RoborockNumberEntity(RoborockEntityV1, NumberEntity):
@@ -105,4 +113,43 @@ class RoborockNumberEntity(RoborockEntityV1, NumberEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="update_options_failed",
+            ) from err
+
+
+class RoborockQ10VolumeNumberEntity(RoborockCoordinatedEntityB01Q10, NumberEntity):
+    """Speaker volume control for a Roborock Q10 (B01/ss07) device."""
+
+    _attr_translation_key = "volume"
+    _attr_native_min_value = 0
+    _attr_native_max_value = 100
+    _attr_native_unit_of_measurement = PERCENTAGE
+    _attr_entity_category = EntityCategory.CONFIG
+    coordinator: RoborockB01Q10UpdateCoordinator
+
+    def __init__(self, coordinator: RoborockB01Q10UpdateCoordinator) -> None:
+        """Create a number entity."""
+        super().__init__(f"volume_{coordinator.duid_slug}", coordinator)
+
+    async def async_added_to_hass(self) -> None:
+        """Register a trait listener for push-based state updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.coordinator.api.volume.add_update_listener(self.async_write_ha_state)
+        )
+
+    @property
+    def native_value(self) -> float | None:
+        """Get native value."""
+        volume = self.coordinator.api.volume.volume
+        return float(volume) if volume is not None else None
+
+    async def async_set_native_value(self, value: float) -> None:
+        """Set the speaker volume."""
+        try:
+            await self.coordinator.api.volume.set_volume(int(value))
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": "volume"},
             ) from err

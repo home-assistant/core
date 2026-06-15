@@ -45,7 +45,7 @@ async def test_floorplan_image(
     fake_devices: list[FakeDevice],
 ) -> None:
     """Test floor plan map image is correctly set up."""
-    assert len(hass.states.async_all("image")) == 4
+    assert len(hass.states.async_all("image")) == 5
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     # Load the image on demand
@@ -131,7 +131,7 @@ async def test_map_status_change(
     fake_vacuum: FakeDevice,
 ) -> None:
     """Test floor plan map image is correctly updated on status change."""
-    assert len(hass.states.async_all("image")) == 4
+    assert len(hass.states.async_all("image")) == 5
 
     assert hass.states.get("image.roborock_s7_maxv_upstairs") is not None
     client = await hass_client()
@@ -181,6 +181,7 @@ async def test_map_status_change(
                 "image.roborock_s7_2_upstairs",
                 "image.roborock_s7_maxv_downstairs",
                 "image.roborock_s7_maxv_upstairs",
+                "image.roborock_q10_s5_map",
             },
         ),
         (
@@ -191,6 +192,7 @@ async def test_map_status_change(
                 # Expect default names based on map flags
                 "image.roborock_s7_maxv_map_0",
                 "image.roborock_s7_maxv_map_1",
+                "image.roborock_q10_s5_map",
             },
         ),
     ],
@@ -222,3 +224,18 @@ async def test_image_entity_naming(
     assert {
         state.entity_id for state in hass.states.async_all("image")
     } == expected_entity_ids
+
+
+async def test_q10_map_image(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the Q10 map image entity is created and serves the rendered map."""
+    entity_id = "image.roborock_q10_s5_map"
+    assert hass.states.get(entity_id) is not None
+
+    client = await hass_client()
+    resp = await client.get(f"/api/image_proxy/{entity_id}")
+    assert resp.status == HTTPStatus.OK
+    assert await resp.read() == b"\x89PNG-q10"

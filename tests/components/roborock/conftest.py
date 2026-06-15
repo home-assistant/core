@@ -185,6 +185,22 @@ def create_b01_q10_trait() -> Mock:
     q10_trait.vacuum = AsyncMock()
     q10_trait.command = AsyncMock()
     q10_trait.refresh = AsyncMock()
+
+    # Setting / map traits (provided by the newer python-roborock release). Each
+    # exposes a synchronous add_update_listener returning an unsubscribe handle.
+    def _listenable(**attrs: Any) -> AsyncMock:
+        trait = AsyncMock()
+        for name, value in attrs.items():
+            setattr(trait, name, value)
+        trait.add_update_listener = Mock(return_value=Mock())
+        return trait
+
+    q10_trait.volume = _listenable(volume=50)
+    q10_trait.child_lock = _listenable(is_on=False)
+    q10_trait.do_not_disturb = _listenable(is_on=True)
+    q10_trait.dust_collection = _listenable(is_on=True)
+    q10_trait.button_light = AsyncMock()
+    q10_trait.map = _listenable(image_content=b"\x89PNG-q10")
     return q10_trait
 
 
