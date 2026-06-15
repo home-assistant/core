@@ -797,7 +797,7 @@ crownstone-uart==2.1.0
 data-grand-lyon-ha==0.8.0
 
 # homeassistant.components.datadog
-datadog==0.52.0
+datadog==0.52.1
 
 # homeassistant.components.metoffice
 datapoint==0.12.1
