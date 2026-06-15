@@ -230,11 +230,19 @@ class GoogleGenerativeAISttEntity(
                 f"audio/L{metadata.bit_rate.value};rate={metadata.sample_rate.value}",
             )
 
+        prompt = self.subentry.data.get(CONF_PROMPT, DEFAULT_STT_PROMPT)
+        if metadata.language:
+            prompt = (
+                f"{prompt}\n"
+                f"The spoken language is {metadata.language}. "
+                f"Transcribe in that language."
+            )
+
         try:
             response = await self._genai_client.aio.models.generate_content(
                 model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_STT_MODEL),
                 contents=[
-                    self.subentry.data.get(CONF_PROMPT, DEFAULT_STT_PROMPT),
+                    prompt,
                     Part.from_bytes(
                         data=audio_data,
                         mime_type=f"audio/{metadata.format.value}",
