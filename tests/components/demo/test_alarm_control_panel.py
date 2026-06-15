@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_CONTROL_PANEL_DOMAIN,
+    AlarmControlPanelState,
 )
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -40,4 +41,4 @@ def test_setup_params(hass: HomeAssistant) -> None:
     """Test the initial parameters."""
     state = hass.states.get(ENTITY_SECURITY)
     assert state
-    assert state.state == "disarmed"
+    assert state.state == AlarmControlPanelState.DISARMED
