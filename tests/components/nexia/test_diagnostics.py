@@ -14,6 +14,7 @@ from tests.typing import ClientSessionGenerator
 async def test_diagnostics(
     hass: HomeAssistant,
     mock_nexia_home: NexiaHome,
+    patch_nexia_home,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:

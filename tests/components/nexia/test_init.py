@@ -19,14 +19,11 @@ from tests.typing import WebSocketGenerator
 
 
 async def test_setup_retry_client_os_error(
-    hass: HomeAssistant, mock_nexia_home: NonCallableMock[NexiaHome]
+    hass: HomeAssistant, mock_nexia_home: NonCallableMock[NexiaHome], patch_nexia_home,
 ) -> None:
     """Verify we retry setup on aiohttp.ClientOSError."""
 
-    async def _raise_exception(*args, **kwargs):
-        raise aiohttp.ClientOSError
-
-    mock_nexia_home.login.side_effect = _raise_exception
+    mock_nexia_home.login.side_effect = aiohttp.ClientOSError
     config_entry = await setup_integration(hass, mock_nexia_home)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
@@ -34,6 +31,7 @@ async def test_setup_retry_client_os_error(
 async def test_device_remove_devices(
     hass: HomeAssistant,
     mock_nexia_home: NexiaHome,
+    patch_nexia_home,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,

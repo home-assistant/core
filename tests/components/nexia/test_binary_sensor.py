@@ -9,7 +9,7 @@ from .conftest import setup_integration
 
 
 async def test_create_binary_sensors(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome
+    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
 ) -> None:
     """Test creation of binary sensors."""
 

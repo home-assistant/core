@@ -13,7 +13,7 @@ from .conftest import setup_integration
 
 
 async def test_create_fan_speed_number_entities(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome
+    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
 ) -> None:
     """Test creation of fan speed number entities."""
 
@@ -50,7 +50,7 @@ async def test_create_fan_speed_number_entities(
     )
 
 
-async def test_set_fan_speed(hass: HomeAssistant, mock_nexia_home: NexiaHome) -> None:
+async def test_set_fan_speed(hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home) -> None:
     """Test setting fan speed."""
 
     await setup_integration(hass, mock_nexia_home)
