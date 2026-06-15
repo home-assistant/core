@@ -50,6 +50,157 @@
     'state': 'on',
   })
 # ---
+# name: test_binary_sensors[adsl][binary_sensor.sfr_box_voip_call_history_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.sfr_box_voip_call_history_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'VoIP call history active',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'VoIP call history active',
+    'platform': 'sfr_box',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voip_callhistory_active',
+    'unique_id': 'e4:5d:51:00:11:22_voip_callhistory_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[adsl][binary_sensor.sfr_box_voip_call_history_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SFR Box VoIP call history active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sfr_box_voip_call_history_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[adsl][binary_sensor.sfr_box_voip_phone_hook_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.sfr_box_voip_phone_hook_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'VoIP phone hook status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'VoIP phone hook status',
+    'platform': 'sfr_box',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voip_hook_status',
+    'unique_id': 'e4:5d:51:00:11:22_voip_hook_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[adsl][binary_sensor.sfr_box_voip_phone_hook_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SFR Box VoIP phone hook status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sfr_box_voip_phone_hook_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[adsl][binary_sensor.sfr_box_voip_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.sfr_box_voip_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'VoIP status',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'VoIP status',
+    'platform': 'sfr_box',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voip_status',
+    'unique_id': 'e4:5d:51:00:11:22_voip_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[adsl][binary_sensor.sfr_box_voip_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'SFR Box VoIP status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sfr_box_voip_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[adsl][binary_sensor.sfr_box_wan_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -152,6 +303,157 @@
     'state': 'off',
   })
 # ---
+# name: test_binary_sensors[ftth][binary_sensor.sfr_box_voip_call_history_active-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.sfr_box_voip_call_history_active',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'VoIP call history active',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'VoIP call history active',
+    'platform': 'sfr_box',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voip_callhistory_active',
+    'unique_id': 'e4:5d:51:00:11:22_voip_callhistory_active',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[ftth][binary_sensor.sfr_box_voip_call_history_active-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SFR Box VoIP call history active',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sfr_box_voip_call_history_active',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[ftth][binary_sensor.sfr_box_voip_phone_hook_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.sfr_box_voip_phone_hook_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'VoIP phone hook status',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'VoIP phone hook status',
+    'platform': 'sfr_box',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voip_hook_status',
+    'unique_id': 'e4:5d:51:00:11:22_voip_hook_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[ftth][binary_sensor.sfr_box_voip_phone_hook_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'SFR Box VoIP phone hook status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sfr_box_voip_phone_hook_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensors[ftth][binary_sensor.sfr_box_voip_status-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.sfr_box_voip_status',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'VoIP status',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.CONNECTIVITY: 'connectivity'>,
+    'original_icon': None,
+    'original_name': 'VoIP status',
+    'platform': 'sfr_box',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voip_status',
+    'unique_id': 'e4:5d:51:00:11:22_voip_status',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[ftth][binary_sensor.sfr_box_voip_status-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'connectivity',
+      'friendly_name': 'SFR Box VoIP status',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.sfr_box_voip_status',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_binary_sensors[ftth][binary_sensor.sfr_box_wan_status-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -202,4 +504,10 @@
     'last_updated': <ANY>,
     'state': 'on',
   })
+# ---
+# name: test_binary_sensors_no_auth
+  list([
+    'binary_sensor.sfr_box_dsl_status',
+    'binary_sensor.sfr_box_wan_status',
+  ])
 # ---

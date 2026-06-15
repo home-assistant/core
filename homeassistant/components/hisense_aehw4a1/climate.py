@@ -1,6 +1,5 @@
 """Pyaehw4a1 platform to control of Hisense AEH-W4A1 Climate Devices."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any

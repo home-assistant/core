@@ -1,7 +1,5 @@
 """Cover entity platform for Tailwind."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from gotailwind import (
@@ -25,6 +23,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN, LOGGER
 from .coordinator import TailwindConfigEntry
 from .entity import TailwindDoorEntity
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(

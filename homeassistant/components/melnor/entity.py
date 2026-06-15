@@ -6,7 +6,7 @@ from melnor_bluetooth.device import Device, Valve
 
 from homeassistant.components.number import EntityDescription
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -30,6 +30,7 @@ class MelnorBluetoothEntity(CoordinatorEntity[MelnorDataUpdateCoordinator]):
 
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._device.mac)},
+            connections={(CONNECTION_BLUETOOTH, self._device.mac)},
             manufacturer="Melnor",
             model=self._device.model,
             name=self._device.name,
@@ -87,7 +88,8 @@ def get_entities_for_valves[_T: EntityDescription](
     """Get descriptions for valves."""
     entities: list[CoordinatorEntity[MelnorDataUpdateCoordinator]] = []
 
-    # This device may not have 4 valves total, but the library will only expose the right number of valves
+    # This device may not have 4 valves total, but the library
+    # will only expose the right number of valves
     for i in range(1, 5):
         valve = coordinator.data[f"zone{i}"]
 

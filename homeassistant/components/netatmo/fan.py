@@ -1,21 +1,19 @@
 """Support for Netatmo/Bubendorff fans."""
 
-from __future__ import annotations
-
 import logging
 from typing import Final
 
 from pyatmo import modules as NaModules
 
 from homeassistant.components.fan import FanEntity, FanEntityFeature
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_FAN
-from .data_handler import HOME, SIGNAL_NAME, NetatmoDevice
+from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
 from .entity import NetatmoModuleEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,7 +25,7 @@ PRESETS = {v: k for k, v in PRESET_MAPPING.items()}
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetatmoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo fan platform."""
@@ -65,7 +63,9 @@ class NetatmoFan(NetatmoModuleEntity, FanEntity):
             ]
         )
 
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = (
+            f"{self.device.entity_id}-{device_type_to_str(self.device_type)}"
+        )
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""

@@ -1,7 +1,5 @@
 """Switch for Shelly."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Any, cast
@@ -263,7 +261,6 @@ RPC_SWITCHES = {
         method_on="cury_set",
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "left", value),
-        entity_registry_enabled_default=True,
         available=lambda status: (
             (left := status["left"]) is not None
             and left.get("vial", {}).get("level", -1) != -1
@@ -277,7 +274,6 @@ RPC_SWITCHES = {
         method_on="cury_boost",
         method_off="cury_stop_boost",
         method_params_fn=lambda id, _: (id, "left"),
-        entity_registry_enabled_default=True,
         available=lambda status: (
             (left := status["left"]) is not None
             and left.get("vial", {}).get("level", -1) != -1
@@ -291,7 +287,6 @@ RPC_SWITCHES = {
         method_on="cury_set",
         method_off="cury_set",
         method_params_fn=lambda id, value: (id, "right", value),
-        entity_registry_enabled_default=True,
         available=lambda status: (
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1
@@ -305,7 +300,6 @@ RPC_SWITCHES = {
         method_on="cury_boost",
         method_off="cury_stop_boost",
         method_params_fn=lambda id, _: (id, "right"),
-        entity_registry_enabled_default=True,
         available=lambda status: (
             (right := status["right"]) is not None
             and right.get("vial", {}).get("level", -1) != -1

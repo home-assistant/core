@@ -1,7 +1,5 @@
 """The nVent RAYCHEM SENZ integration."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
 

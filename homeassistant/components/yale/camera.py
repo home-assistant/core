@@ -1,7 +1,5 @@
 """Support for Yale doorbell camera."""
 
-from __future__ import annotations
-
 import logging
 
 from aiohttp import ClientSession

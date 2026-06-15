@@ -1,7 +1,5 @@
 """Platform for Flexit AC units with CI66 Modbus adapter."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

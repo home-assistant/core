@@ -1,7 +1,5 @@
 """Support for Anthem Network Receivers and Processors."""
 
-from __future__ import annotations
-
 import logging
 
 from anthemav.protocol import AVR

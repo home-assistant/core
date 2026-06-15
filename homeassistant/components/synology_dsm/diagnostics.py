@@ -1,7 +1,5 @@
 """Diagnostics support for Synology DSM."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.camera import diagnostics as camera_diagnostics

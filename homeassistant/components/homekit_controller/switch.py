@@ -1,7 +1,5 @@
 """Support for Homekit switches."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
 
@@ -46,11 +44,13 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
         translation_key="pairing_mode",
         entity_category=EntityCategory.CONFIG,
     ),
-    CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: DeclarativeSwitchEntityDescription(
-        key=CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE,
-        name="Pairing Mode",
-        translation_key="pairing_mode",
-        entity_category=EntityCategory.CONFIG,
+    CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE: (
+        DeclarativeSwitchEntityDescription(
+            key=CharacteristicsTypes.VENDOR_AQARA_E1_PAIRING_MODE,
+            name="Pairing Mode",
+            translation_key="pairing_mode",
+            entity_category=EntityCategory.CONFIG,
+        )
     ),
     CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS: DeclarativeSwitchEntityDescription(
         key=CharacteristicsTypes.LOCK_PHYSICAL_CONTROLS,
@@ -68,6 +68,12 @@ SWITCH_ENTITIES: dict[str, DeclarativeSwitchEntityDescription] = {
         key=CharacteristicsTypes.VENDOR_AIRVERSA_SLEEP_MODE,
         name="Sleep Mode",
         translation_key="sleep_mode",
+        entity_category=EntityCategory.CONFIG,
+    ),
+    CharacteristicsTypes.AIRPLAY_ENABLE: DeclarativeSwitchEntityDescription(
+        key=CharacteristicsTypes.AIRPLAY_ENABLE,
+        name="AirPlay Enable",
+        translation_key="airplay_enable",
         entity_category=EntityCategory.CONFIG,
     ),
 }

@@ -52,7 +52,8 @@ flow for details.
 
 Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
-have type FlowResultType.CREATE_ENTRY and "result" key will contain an authorization code.
+have type FlowResultType.CREATE_ENTRY and "result" key will contain
+an authorization code.
 The authorization code associated with an authorized user by default, it will
 associate with an credential if "type" set to "link_user" in
 "/auth/login_flow"
@@ -66,8 +67,6 @@ associate with an credential if "type" set to "link_user" in
     "version": 1
 }
 """
-
-from __future__ import annotations
 
 from collections.abc import Callable
 from http import HTTPStatus
@@ -142,6 +141,13 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             "authorization_endpoint": f"{url_prefix}/auth/authorize",
             "token_endpoint": f"{url_prefix}/auth/token",
             "revocation_endpoint": f"{url_prefix}/auth/revoke",
+            # Home Assistant already accepts URL-based client_ids via
+            # IndieAuth without prior registration, which is compatible with
+            # draft-ietf-oauth-client-id-metadata-document. This flag
+            # advertises that support to encourage clients to use it. The
+            # metadata document is not actually fetched as IndieAuth doesn't
+            # require it.
+            "client_id_metadata_document_supported": True,
             "response_types_supported": ["code"],
             "service_documentation": (
                 "https://developers.home-assistant.io/docs/auth_api"
@@ -221,7 +227,8 @@ class AuthProvidersView(HomeAssistantView):
                         remote_address
                     )
                 except InvalidAuthError:
-                    # Not a trusted network, so we don't expose that trusted_network authenticator is setup
+                    # Not a trusted network, so we don't expose that
+                    # trusted_network authenticator is setup
                     continue
 
             providers.append(
@@ -244,12 +251,12 @@ class AuthProvidersView(HomeAssistantView):
 
 def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
     """Convert result to JSON serializable dict."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
         return {
             key: val for key, val in result.items() if key not in ("result", "data")
         }
 
-    if result["type"] != data_entry_flow.FlowResultType.FORM:
+    if result["type"] is not data_entry_flow.FlowResultType.FORM:
         return result  # type: ignore[return-value]
 
     data = dict(result)
@@ -282,11 +289,11 @@ class LoginFlowBaseView(HomeAssistantView):
         result: AuthFlowResult,
     ) -> web.Response:
         """Convert the flow result to a response."""
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             # @log_invalid_auth does not work here since it returns HTTP 200.
             # We need to manually log failed login attempts.
             if (
-                result["type"] == data_entry_flow.FlowResultType.FORM
+                result["type"] is data_entry_flow.FlowResultType.FORM
                 and (errors := result.get("errors"))
                 and errors.get("base")
                 in (

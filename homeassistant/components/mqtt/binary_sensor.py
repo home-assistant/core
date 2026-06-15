@@ -1,7 +1,5 @@
 """Support for MQTT binary sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -127,8 +125,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             )
 
     async def async_will_remove_from_hass(self) -> None:
-        """Remove exprire triggers."""
-        # Clean up expire triggers
+        """Clean up expire triggers."""
         if self._expiration_trigger:
             _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
             self._expiration_trigger()

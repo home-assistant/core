@@ -1,10 +1,7 @@
 """AirOS Binary Sensor component for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Generic, TypeVar
 
 from airos.data import AirOSDataBaseClass
 
@@ -22,13 +19,10 @@ from .entity import AirOSEntity
 
 PARALLEL_UPDATES = 0
 
-AirOSDataModel = TypeVar("AirOSDataModel", bound=AirOSDataBaseClass)
-
 
 @dataclass(frozen=True, kw_only=True)
-class AirOSBinarySensorEntityDescription(
+class AirOSBinarySensorEntityDescription[AirOSDataModel: AirOSDataBaseClass](
     BinarySensorEntityDescription,
-    Generic[AirOSDataModel],
 ):
     """Describe an AirOS binary sensor."""
 
@@ -87,7 +81,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AirOS binary sensors from a config entry."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.status
 
     entities = [
         AirOSBinarySensor(coordinator, description)

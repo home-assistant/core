@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[light.bedroom_lamp-entry]
+# name: test_entities[light.bedroom_bedroom_lamp-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -20,7 +20,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.bedroom_lamp',
+    'entity_id': 'light.bedroom_bedroom_lamp',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -43,7 +43,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.bedroom_lamp-state]
+# name: test_entities[light.bedroom_bedroom_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': 205,
@@ -72,14 +72,14 @@
       ),
     }),
     'context': <ANY>,
-    'entity_id': 'light.bedroom_lamp',
+    'entity_id': 'light.bedroom_bedroom_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_entities[light.lamp_bulb_1-entry]
+# name: test_entities[light.office_lamp_bulb_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -100,7 +100,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.lamp_bulb_1',
+    'entity_id': 'light.office_lamp_bulb_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,7 +123,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.lamp_bulb_1-state]
+# name: test_entities[light.office_lamp_bulb_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -142,14 +142,14 @@
       'xy_color': None,
     }),
     'context': <ANY>,
-    'entity_id': 'light.lamp_bulb_1',
+    'entity_id': 'light.office_lamp_bulb_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_entities[light.lamp_bulb_2-entry]
+# name: test_entities[light.office_lamp_bulb_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -170,7 +170,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.lamp_bulb_2',
+    'entity_id': 'light.office_lamp_bulb_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -193,7 +193,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[light.lamp_bulb_2-state]
+# name: test_entities[light.office_lamp_bulb_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Lamp Bulb 2',
@@ -206,7 +206,7 @@
       'supported_features': <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.lamp_bulb_2',
+    'entity_id': 'light.office_lamp_bulb_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

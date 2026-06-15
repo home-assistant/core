@@ -1,7 +1,5 @@
 """Websocket API for Z-Wave JS."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import dataclasses
@@ -671,7 +669,8 @@ async def websocket_node_alerts(
                         "comments": [
                             {
                                 "level": "info",
-                                "text": "This device has been provisioned but is not yet included in the "
+                                "text": "This device has been provisioned"
+                                " but is not yet included in the "
                                 "network.",
                             }
                         ],
@@ -688,7 +687,9 @@ async def websocket_node_alerts(
         comments.append(
             {
                 "level": "warning",
-                "text": "This device is currently being interviewed and may not be fully operational.",
+                "text": "This device is currently being"
+                " interviewed and may not be fully"
+                " operational.",
             }
         )
     connection.send_result(
@@ -1099,13 +1100,7 @@ async def websocket_provision_smart_start_node(
         )
         return
 
-    provisioning_info = ProvisioningEntry(
-        dsk=qr_info.dsk,
-        security_classes=qr_info.security_classes,
-        requested_security_classes=qr_info.requested_security_classes,
-        protocol=msg.get(PROTOCOL),
-        additional_properties=qr_info.additional_properties,
-    )
+    additional_properties = qr_info.additional_properties or {}
 
     device = None
     # Create an empty device if device_name is provided
@@ -1141,12 +1136,17 @@ async def websocket_provision_smart_start_node(
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
         )
+        additional_properties["device_id"] = device.id
 
-        if provisioning_info.additional_properties is None:
-            provisioning_info.additional_properties = {}
-        provisioning_info.additional_properties["device_id"] = device.id
-
-    await driver.controller.async_provision_smart_start_node(provisioning_info)
+    await driver.controller.async_provision_smart_start_node(
+        ProvisioningEntry(
+            dsk=qr_info.dsk,
+            security_classes=qr_info.security_classes,
+            requested_security_classes=qr_info.requested_security_classes,
+            protocol=msg.get(PROTOCOL),
+            additional_properties=additional_properties,
+        )
+    )
     if device:
         connection.send_result(msg[ID], device.id)
     else:
@@ -1753,16 +1753,21 @@ async def websocket_subscribe_rebuild_routes_progress(
         controller.on("rebuild routes done", partial(forward_event, "result")),
     ]
 
+    connection.send_result(msg[ID])
+
     if controller.rebuild_routes_progress:
-        connection.send_result(
-            msg[ID],
-            {
-                node.node_id: status
-                for node, status in controller.rebuild_routes_progress.items()
-            },
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": "rebuild routes progress",
+                    "rebuild_routes_status": {
+                        node.node_id: status
+                        for node, status in controller.rebuild_routes_progress.items()
+                    },
+                },
+            )
         )
-    else:
-        connection.send_result(msg[ID], None)
 
 
 @websocket_api.require_admin

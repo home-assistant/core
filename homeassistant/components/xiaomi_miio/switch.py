@@ -1,7 +1,5 @@
 """Support for Xiaomi Smart WiFi Socket and Smart Power Strip."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from functools import partial
@@ -27,6 +25,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    ATTR_MODEL,
     ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_HOST,
@@ -151,7 +150,6 @@ ATTR_LED = "led"
 ATTR_IONIZER = "ionizer"
 ATTR_ANION = "anion"
 ATTR_LOAD_POWER = "load_power"
-ATTR_MODEL = "model"
 ATTR_POWER = "power"
 ATTR_POWER_MODE = "power_mode"
 ATTR_POWER_PRICE = "power_price"
@@ -519,6 +517,7 @@ async def async_setup_other_entry(
 
         for plug_service, method in SERVICE_TO_METHOD.items():
             schema = method.schema or SERVICE_SCHEMA
+            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )

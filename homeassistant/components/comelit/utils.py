@@ -2,13 +2,17 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, Literal
 
 from aiocomelit.api import ComelitSerialBridgeObject
-from aiocomelit.exceptions import CannotAuthenticate, CannotConnect, CannotRetrieveData
+from aiocomelit.exceptions import (
+    CannotAuthenticate,
+    CannotConnect,
+    CannotRetrieveData,
+    DeviceStorageFailureError,
+)
 from aiohttp import ClientSession, CookieJar
 
-from homeassistant.components.climate import DOMAIN as CLIMATE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -30,17 +34,19 @@ async def async_client_session(hass: HomeAssistant) -> ClientSession:
     )
 
 
-def load_api_data(device: ComelitSerialBridgeObject, domain: str) -> list[Any]:
+def load_api_data(
+    device: ComelitSerialBridgeObject,
+    domain: Literal["climate", "humidifier"],
+) -> list[Any]:
     """Load data from the API."""
-    # This function is called when the data is loaded from the API
-    if not isinstance(device.val, list):
-        raise HomeAssistantError(
-            translation_domain=domain, translation_key="invalid_clima_data"
-        )
+    # This function is called when the data is loaded from the API.
+    # For climate and humidifier device.val is always a list.
+    if TYPE_CHECKING:
+        assert isinstance(device.val, list)
     # CLIMATE has a 2 item tuple:
     # - first  for Clima
     # - second for Humidifier
-    return device.val[0] if domain == CLIMATE_DOMAIN else device.val[1]
+    return device.val[0] if domain == "climate" else device.val[1]
 
 
 async def cleanup_stale_entity(
@@ -108,6 +114,12 @@ def bridge_api_call[_T: ComelitBridgeBaseEntity, **_P](
                 translation_domain=DOMAIN,
                 translation_key="cannot_retrieve_data",
                 translation_placeholders={"error": repr(err)},
+            ) from err
+        except DeviceStorageFailureError as err:
+            self.coordinator.last_update_success = False
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="device_storage_failure",
             ) from err
         except CannotAuthenticate:
             self.coordinator.last_update_success = False

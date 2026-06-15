@@ -40,12 +40,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
                     continue
                 if entry.domain == DOMAIN:
                     break
-            if entry is None or entry.state != ConfigEntryState.LOADED:
+            if entry is None or entry.state is not ConfigEntryState.LOADED:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="invalid_config_entry",
                 )
-            home_store = hass.data[DOMAIN][entry.entry_id]
+            home_store = entry.runtime_data
             for identifier in device_entry.identifiers:
                 if (
                     device_coordinator := home_store.device_coordinators.get(

@@ -31,7 +31,7 @@ from .coordinator import MetEireannConfigEntry, MetEireannUpdateCoordinator
 
 
 def format_condition(condition: str | None) -> str | None:
-    """Map the conditions provided by the weather API to those supported by the frontend."""
+    """Map weather API conditions to those supported by the frontend."""
     if condition is not None:
         for key, value in CONDITION_MAP.items():
             if condition in value:

@@ -1,7 +1,5 @@
 """Implement a iotty Shutter Device."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -128,19 +126,19 @@ class IottyShutter(IottyEntity, CoverEntity):
             self._iotty_device.percentage,
         )
         return (
-            self._iotty_device.status == ShutterState.STATIONARY
+            self._iotty_device.status is ShutterState.STATIONARY
             and self._iotty_device.percentage == 0
         )
 
     @property
     def is_opening(self) -> bool:
         """Return true if the Shutter is opening."""
-        return self._iotty_device.status == ShutterState.OPENING
+        return self._iotty_device.status is ShutterState.OPENING
 
     @property
     def is_closing(self) -> bool:
         """Return true if the Shutter is closing."""
-        return self._iotty_device.status == ShutterState.CLOSING
+        return self._iotty_device.status is ShutterState.CLOSING
 
     @property
     def supported_features(self) -> CoverEntityFeature:

@@ -1,7 +1,5 @@
 """Support for Hue lights."""
 
-from __future__ import annotations
-
 from functools import partial
 from typing import Any
 
@@ -72,7 +70,7 @@ async def async_setup_entry(
     )
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueLight(HueBaseEntity, LightEntity):
     """Representation of a Hue light."""
 
@@ -179,18 +177,22 @@ class HueLight(HueBaseEntity, LightEntity):
 
     @property
     def max_color_temp_mireds(self) -> int:
-        """Return the warmest color_temp in mireds (so highest number) that this light supports."""
-        if color_temp := self.resource.color_temperature:
-            return color_temp.mirek_schema.mirek_maximum
-        # return a fallback value if the light doesn't provide limits
+        """Return the warmest color_temp in mireds that this light supports."""
+        if (color_temp := self.resource.color_temperature) and (
+            mirek_max := color_temp.mirek_schema.mirek_maximum
+        ):
+            return mirek_max
+        # return a fallback value if the light doesn't provide valid limits
         return FALLBACK_MAX_MIREDS
 
     @property
     def min_color_temp_mireds(self) -> int:
-        """Return the coldest color_temp in mireds (so lowest number) that this light supports."""
-        if color_temp := self.resource.color_temperature:
-            return color_temp.mirek_schema.mirek_minimum
-        # return a fallback value if the light doesn't provide limits
+        """Return the coldest color_temp in mireds that this light supports."""
+        if (color_temp := self.resource.color_temperature) and (
+            mirek_min := color_temp.mirek_schema.mirek_minimum
+        ):
+            return mirek_min
+        # return a fallback value if the light doesn't provide valid limits
         return FALLBACK_MIN_MIREDS
 
     @property
@@ -283,10 +285,11 @@ class HueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash cannot be sent with other commands at the same time or result will be flaky
-            # Hue's default behavior is that a light returns to its previous state for short
-            # flash (identify) and the light is kept turned on for long flash (breathe effect)
-            # Why is this flash alert/effect hidden in the turn_on/off commands ?
+            # flash cannot be sent with other commands at the same
+            # time or result will be flaky. Hue's default behavior
+            # is that a light returns to its previous state for
+            # short flash (identify) and the light is kept turned
+            # on for long flash (breathe effect)
             return
 
         await self.bridge.async_request_call(
@@ -309,9 +312,11 @@ class HueLight(HueBaseEntity, LightEntity):
 
         if flash is not None:
             await self.async_set_flash(flash)
-            # flash cannot be sent with other commands at the same time or result will be flaky
-            # Hue's default behavior is that a light returns to its previous state for short
-            # flash (identify) and the light is kept turned on for long flash (breathe effect)
+            # flash cannot be sent with other commands at the same
+            # time or result will be flaky. Hue's default behavior
+            # is that a light returns to its previous state for
+            # short flash (identify) and the light is kept turned
+            # on for long flash (breathe effect)
             return
 
         await self.bridge.async_request_call(

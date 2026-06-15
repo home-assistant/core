@@ -1,7 +1,5 @@
 """Support for interacting with Snapcast clients."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -17,14 +15,13 @@ from homeassistant.components.media_player import (
     MediaPlayerState,
     MediaType,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CLIENT_PREFIX, CLIENT_SUFFIX, DOMAIN
-from .coordinator import SnapcastUpdateCoordinator
+from .coordinator import SnapcastConfigEntry, SnapcastUpdateCoordinator
 from .entity import SnapcastCoordinatorEntity
 
 STREAM_STATUS = {
@@ -38,13 +35,12 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SnapcastConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the snapcast config entry."""
 
-    # Fetch coordinator from global data
-    coordinator: SnapcastUpdateCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     _known_client_ids: set[str] = set()
 
@@ -253,7 +249,7 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
 
     @property
     def group_members(self) -> list[str] | None:
-        """List of player entities which are currently grouped together for synchronous playback."""
+        """List of players currently grouped for synchronous playback."""
         if self._current_group is None:
             return None
 
@@ -302,7 +298,8 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
             # Validate client belongs to the same server
             if not client.unique_id.startswith(unique_id_prefix):
                 raise ServiceValidationError(
-                    f"Entity '{client.entity_id}' does not belong to the same Snapcast server."
+                    f"Entity '{client.entity_id}' does not belong"
+                    " to the same Snapcast server."
                 )
 
             # Extract client ID and join it to the current group
@@ -311,7 +308,8 @@ class SnapcastClientDevice(SnapcastCoordinatorEntity, MediaPlayerEntity):
                 await self._current_group.add_client(identifier)
             except KeyError as e:
                 raise ServiceValidationError(
-                    f"Client with identifier '{identifier}' does not exist on the server."
+                    f"Client with identifier '{identifier}'"
+                    " does not exist on the server."
                 ) from e
 
         self.async_write_ha_state()

@@ -1,7 +1,5 @@
 """Support for (EMEA/EU-based) Honeywell TCC systems."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable
 from datetime import timedelta
 from http import HTTPStatus
@@ -138,6 +136,9 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         try:
             result = await client_api
+
+        except ec2.InvalidSystemModeError:
+            raise
 
         except ec2.ApiRequestFailedError as err:
             self.logger.error(err)

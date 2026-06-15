@@ -487,7 +487,7 @@ async def test_restore_history_from_dbus_and_corrupted_remote_adapters(
     hass_storage: dict[str, Any],
     disable_new_discovery_flows,
 ) -> None:
-    """Test we can restore history from dbus when the remote adapters data is corrupted."""
+    """Test history restore when remote adapters data is corrupted."""
     address = "AA:BB:CC:CC:CC:FF"
 
     data = hass_storage[storage.REMOTE_SCANNER_STORAGE_KEY] = json_loads(
@@ -617,12 +617,12 @@ async def test_switching_adapters_based_on_rssi_connectable_to_non_connectable(
 
 
 @pytest.mark.usefixtures("enable_bluetooth")
-async def test_connectable_advertisement_can_be_retrieved_with_best_path_is_non_connectable(
+async def test_connectable_adv_retrieved_when_best_path_is_non_connectable(
     hass: HomeAssistant,
     register_hci0_scanner: None,
     register_hci1_scanner: None,
 ) -> None:
-    """Test we can still get a connectable BLEDevice when the best path is non-connectable.
+    """Test connectable BLEDevice when best path is non-connectable.
 
     In this case the device is closer to a non-connectable scanner, but the
     at least one connectable scanner has the device in range.
@@ -791,7 +791,10 @@ async def test_switching_adapters_when_one_stop_scanning(
 async def test_goes_unavailable_connectable_only_and_recovers(
     hass: HomeAssistant,
 ) -> None:
-    """Test all connectable scanners go unavailable, and than recover when there is a non-connectable scanner."""
+    """Test connectable scanners go unavailable and recover.
+
+    Uses a non-connectable scanner for recovery.
+    """
     assert await async_setup_component(hass, bluetooth.DOMAIN, {})
     await hass.async_block_till_done()
 
@@ -953,7 +956,7 @@ async def test_goes_unavailable_connectable_only_and_recovers(
 async def test_goes_unavailable_dismisses_discovery_and_makes_discoverable(
     hass: HomeAssistant,
 ) -> None:
-    """Test that unavailable will dismiss any active discoveries and make device discoverable again."""
+    """Test unavailable dismisses discoveries and re-enables them."""
     mock_bt = [
         {
             "domain": "switchbot",
@@ -1240,7 +1243,8 @@ async def test_set_fallback_interval_big(hass: HomeAssistant) -> None:
     """Test we can set the fallback advertisement interval."""
     assert async_get_fallback_availability_interval(hass, "44:44:33:11:23:12") is None
 
-    # Force the interval to be really big and check it doesn't expire using the default timeout (900)
+    # Force the interval to be really big and check it
+    # doesn't expire using the default timeout (900)
 
     async_set_fallback_availability_interval(hass, "44:44:33:11:23:12", 604800.0)
     assert (

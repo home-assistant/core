@@ -1,7 +1,5 @@
 """Sensor platform for Nord Pool integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -304,7 +302,8 @@ async def async_setup_entry(
         )
         for block_prices in entry.runtime_data.get_data_current_day().block_prices:
             LOGGER.debug(
-                "Setting up block price sensors for area %s with currency %s in block %s",
+                "Setting up block price sensors for"
+                " area %s with currency %s in block %s",
                 area,
                 currency,
                 block_prices.name,

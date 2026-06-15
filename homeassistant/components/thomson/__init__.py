@@ -1,1 +1,1 @@
-"""The thomson component."""
+"""The Thomson integration."""

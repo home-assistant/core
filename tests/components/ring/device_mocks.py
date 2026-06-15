@@ -1,8 +1,10 @@
 """Module for ring device mocks.
 
-Creates a MagicMock for all device families, i.e. chimes, doorbells, stickup_cams and other.
+Creates a MagicMock for all device families, i.e. chimes,
+doorbells, stickup_cams and other.
 
-Each device entry in the devices.json will have a MagicMock instead of the RingObject.
+Each device entry in the devices.json will have a MagicMock
+instead of the RingObject.
 
 Mocks the api calls on the devices such as history() and health().
 """

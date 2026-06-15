@@ -1,7 +1,5 @@
 """Constants for the Improv BLE integration."""
 
-from __future__ import annotations
-
 import asyncio
 
 from homeassistant.util.hass_dict import HassKey

@@ -56,10 +56,10 @@ async def test_form(
     ("side_effect", "expected_error"),
     [(AuthFailedError, "invalid_auth"), (Exception, "unknown")],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_nice_go: AsyncMock,
-    mock_setup_entry: AsyncMock,
     side_effect: Exception,
     expected_error: str,
 ) -> None:

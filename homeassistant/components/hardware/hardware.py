@@ -1,7 +1,5 @@
 """The Hardware integration."""
 
-from __future__ import annotations
-
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (

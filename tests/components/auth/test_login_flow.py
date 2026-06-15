@@ -413,7 +413,7 @@ async def test_well_known_auth_info(
     expected_url_prefix: str,
     extra_response_data: dict[str, str],
 ) -> None:
-    """Test the well-known OAuth authorization server endpoint with different URL configurations."""
+    """Test well-known OAuth endpoint with different URL configurations."""
     await async_process_ha_core_config(hass, config)
     client = await async_setup_auth(hass, aiohttp_client, setup_api=True)
     resp = await client.get(
@@ -425,6 +425,7 @@ async def test_well_known_auth_info(
         "authorization_endpoint": f"{expected_url_prefix}/auth/authorize",
         "token_endpoint": f"{expected_url_prefix}/auth/token",
         "revocation_endpoint": f"{expected_url_prefix}/auth/revoke",
+        "client_id_metadata_document_supported": True,
         "response_types_supported": ["code"],
         "service_documentation": "https://developers.home-assistant.io/docs/auth_api",
     }

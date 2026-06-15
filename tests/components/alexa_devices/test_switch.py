@@ -3,7 +3,7 @@
 from copy import deepcopy
 from unittest.mock import AsyncMock, patch
 
-from aioamazondevices.api import AmazonDeviceSensor
+from aioamazondevices.structures import AmazonDeviceSensor
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -25,7 +25,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_DEVICE_1, TEST_DEVICE_1_SN
+from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 

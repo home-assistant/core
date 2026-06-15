@@ -1,7 +1,5 @@
 """Platform for binary sensor integration."""
 
-from __future__ import annotations
-
 import logging
 
 from laundrify_aio import LaundrifyDevice

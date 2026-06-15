@@ -1,7 +1,5 @@
 """Tests for the devolo Home Network diagnostics."""
 
-from __future__ import annotations
-
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props

@@ -201,11 +201,6 @@ SSDP = {
             "manufacturer": "ZyXEL Communications Corp.",
         },
     ],
-    "konnected": [
-        {
-            "manufacturer": "konnected.io",
-        },
-    ],
     "lametric": [
         {
             "deviceType": "urn:schemas-upnp-org:device:LaMetric:1",
@@ -341,25 +336,7 @@ SSDP = {
             "manufacturer": "Synology",
         },
     ],
-    "unifi": [
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine",
-        },
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine Pro",
-        },
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine SE",
-        },
-        {
-            "manufacturer": "Ubiquiti Networks",
-            "modelDescription": "UniFi Dream Machine Pro Max",
-        },
-    ],
-    "unifiprotect": [
+    "unifi_discovery": [
         {
             "manufacturer": "Ubiquiti Networks",
             "modelDescription": "UniFi Dream Machine",
@@ -389,6 +366,12 @@ SSDP = {
         },
         {
             "nt": "urn:schemas-upnp-org:device:InternetGatewayDevice:2",
+        },
+    ],
+    "victron_gx": [
+        {
+            "X_MqttOnLan": "1",
+            "manufacturer": "Victron Energy",
         },
     ],
     "webostv": [

@@ -1,7 +1,5 @@
 """Support for the Electra climate."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import time
@@ -186,7 +184,8 @@ class ElectraClimateEntity(ClimateEntity):
         self._last_state_update = 0
 
         try:
-            # skip the first update only as we already got the devices with their current state
+            # skip the first update only as we already got
+            # the devices with their current state
             if self._skip_update:
                 self._skip_update = False
             else:
@@ -196,7 +195,8 @@ class ElectraClimateEntity(ClimateEntity):
                 # show the warning once upon state change
                 if self._was_available:
                     _LOGGER.warning(
-                        "Electra AC %s (%s) is not available, check its status in the Electra Smart mobile app",
+                        "Electra AC %s (%s) is not available, check"
+                        " its status in the Electra Smart mobile app",
                         self.name,
                         self._electra_ac_device.mac,
                     )
@@ -220,7 +220,8 @@ class ElectraClimateEntity(ClimateEntity):
         except ElectraApiError as exp:
             self._consecutive_failures += 1
             _LOGGER.warning(
-                "Failed to get %s state: %s (try #%i since last success), keeping old state",
+                "Failed to get %s state: %s"
+                " (try #%i since last success), keeping old state",
                 self.name,
                 exp,
                 self._consecutive_failures,
@@ -228,7 +229,8 @@ class ElectraClimateEntity(ClimateEntity):
 
             if self._consecutive_failures >= CONSECUTIVE_FAILURE_THRESHOLD:
                 raise HomeAssistantError(
-                    f"Failed to get {self.name} state: {exp} for the {self._consecutive_failures} time",
+                    f"Failed to get {self.name} state: {exp}"
+                    f" for the {self._consecutive_failures} time",
                 ) from ElectraApiError
 
         self._consecutive_failures = 0

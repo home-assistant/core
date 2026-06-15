@@ -1,7 +1,5 @@
 """Class to manage the entities for a single platform."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
@@ -66,6 +64,61 @@ DATA_DOMAIN_PLATFORM_ENTITIES: HassKey[dict[tuple[str, str], dict[str, Entity]]]
 PLATFORM_NOT_READY_BASE_WAIT_TIME = 30  # seconds
 
 _LOGGER = getLogger(__name__)
+
+
+@callback
+def async_create_platform_config_not_supported_issue(
+    hass: HomeAssistant,
+    integration_domain: str,
+    platform_domain: str,
+    *,
+    yaml_config_under_integration_supported: bool = False,
+    learn_more_url: str | None = None,
+    logger: Logger = _LOGGER,
+) -> None:
+    """Create a repair issue for an unsupported YAML platform configuration.
+
+    Raised when an integration is configured via the legacy
+    <platform_domain>: - platform: <integration_domain> schema.
+    Set yaml_config_under_integration_supported=False if the integration does
+    not support YAML configuration for this platform and the config should be
+    removed. Set it to True if the integration supports YAML configuration
+    under its own <integration_domain>: key and the config should be moved
+    there.
+    """
+    if yaml_config_under_integration_supported:
+        logger.error(
+            "Configuring the %s integration under the %s platform key is not"
+            " supported, it must be configured under its own %s key instead",
+            integration_domain,
+            platform_domain,
+            integration_domain,
+        )
+    else:
+        logger.error(
+            "The %s platform for the %s integration does not support platform"
+            " setup, please remove it from your config",
+            integration_domain,
+            platform_domain,
+        )
+    platform_key = f"platform: {integration_domain}"
+    yaml_example = f"```yaml\n{platform_domain}:\n  - {platform_key}\n```"
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"platform_integration_no_support_{platform_domain}_{integration_domain}",
+        is_fixable=False,
+        issue_domain=integration_domain,
+        learn_more_url=learn_more_url,
+        severity=IssueSeverity.ERROR,
+        translation_key=f"platform_{'config' if yaml_config_under_integration_supported else 'setup'}_not_supported",
+        translation_placeholders={
+            "platform_domain": platform_domain,
+            "integration_domain": integration_domain,
+            "platform_key": platform_key,
+            "yaml_example": yaml_example,
+        },
+    )
 
 
 class AddEntitiesCallback(Protocol):
@@ -317,20 +370,13 @@ class EntityPlatform:
         if not hasattr(platform, "async_setup_platform") and not hasattr(
             platform, "setup_platform"
         ):
-            self.logger.error(
-                (
-                    "The %s platform for the %s integration does not support platform"
-                    " setup. Please remove it from your config."
-                ),
-                self.platform_name,
-                self.domain,
-            )
             learn_more_url = None
             if self.platform:
                 if "custom_components" in self.platform.__file__:  # type: ignore[attr-defined]
                     self.logger.warning(
                         (
-                            "The %s platform module for the %s custom integration does not implement"
+                            "The %s platform module for the %s custom"
+                            " integration does not implement"
                             " async_setup_platform or setup_platform."
                         ),
                         self.platform_name,
@@ -338,25 +384,14 @@ class EntityPlatform:
                     )
                 else:
                     learn_more_url = f"https://www.home-assistant.io/integrations/{self.platform_name}/"
-            platform_key = f"platform: {self.platform_name}"
-            yaml_example = f"```yaml\n{self.domain}:\n  - {platform_key}\n```"
-            async_create_issue(
-                self.hass,
-                HOMEASSISTANT_DOMAIN,
-                f"platform_integration_no_support_{self.domain}_{self.platform_name}",
-                is_fixable=False,
-                issue_domain=self.platform_name,
-                learn_more_url=learn_more_url,
-                severity=IssueSeverity.ERROR,
-                translation_key="no_platform_setup",
-                translation_placeholders={
-                    "domain": self.domain,
-                    "platform": self.platform_name,
-                    "platform_key": platform_key,
-                    "yaml_example": yaml_example,
-                },
-            )
 
+            async_create_platform_config_not_supported_issue(
+                self.hass,
+                self.platform_name,
+                self.domain,
+                learn_more_url=learn_more_url,
+                logger=self.logger,
+            )
             return
 
         @callback
@@ -583,7 +618,8 @@ class EntityPlatform:
                 update_before_add=update_before_add,
                 config_subentry_id=config_subentry_id,
             ),
-            f"EntityPlatform async_add_entities_for_entry {self.domain}.{self.platform_name}",
+            "EntityPlatform async_add_entities_for_entry"
+            f" {self.domain}.{self.platform_name}",
             eager_start=True,
         )
 
@@ -714,8 +750,9 @@ class EntityPlatform:
             or config_subentry_id not in self.config_entry.subentries
         ):
             raise HomeAssistantError(
-                f"Can't add entities to unknown subentry {config_subentry_id} of config "
-                f"entry {self.config_entry.entry_id if self.config_entry else None}"
+                f"Can't add entities to unknown subentry"
+                f" {config_subentry_id} of config entry"
+                f" {self.config_entry.entry_id if self.config_entry else None}"
             )
 
         entities: list[Entity] = (
@@ -787,7 +824,7 @@ class EntityPlatform:
                 already_exists = True
         return (already_exists, restored)
 
-    async def _async_add_entity(
+    async def _async_add_entity(  # noqa: C901
         self,
         entity: Entity,
         update_before_add: bool,
@@ -822,29 +859,42 @@ class EntityPlatform:
 
         # An entity may suggest the entity_id by setting entity_id itself
         if not hasattr(entity, "internal_integration_suggested_object_id"):
-            if entity.entity_id is not None and not valid_entity_id(entity.entity_id):
-                if entity.unique_id is not None:
-                    report_usage(
-                        f"sets an invalid entity ID: '{entity.entity_id}'. "
-                        "In most cases, entities should not set entity_id,"
-                        " but if they do, it should be a valid entity ID.",
-                        integration_domain=self.platform_name,
-                        breaks_in_ha_version="2027.2.0",
+            if entity.entity_id is None:
+                entity.internal_integration_suggested_object_id = None  # type: ignore[unreachable]
+            else:
+                if not valid_entity_id(entity.entity_id):
+                    if entity.unique_id is not None:
+                        report_usage(
+                            f"sets an invalid entity ID: '{entity.entity_id}'. "
+                            "In most cases, entities should not set entity_id,"
+                            " but if they do, it should be a valid entity ID",
+                            integration_domain=self.platform_name,
+                            breaks_in_ha_version="2027.2.0",
+                        )
+                    else:
+                        entity.add_to_platform_abort()
+                        raise HomeAssistantError(
+                            f"Invalid entity ID: {entity.entity_id}"
+                        )
+                try:
+                    domain, entity.internal_integration_suggested_object_id = (
+                        split_entity_id(entity.entity_id)
                     )
-                else:
+                    if domain != self.domain:
+                        report_usage(
+                            "sets an entity ID with wrong domain:"
+                            f" '{entity.entity_id}'."
+                            f" Expected domain is '{self.domain}'",
+                            integration_domain=self.platform_name,
+                            breaks_in_ha_version="2027.5.0",
+                        )
+                except ValueError:
+                    # This error handling should be removed once we remove
+                    # the invalid entity ID deprecation above.
                     entity.add_to_platform_abort()
-                    raise HomeAssistantError(f"Invalid entity ID: {entity.entity_id}")
-            try:
-                entity.internal_integration_suggested_object_id = (
-                    split_entity_id(entity.entity_id)[1]
-                    if entity.entity_id is not None
-                    else None
-                )
-            except ValueError:
-                entity.add_to_platform_abort()
-                raise HomeAssistantError(
-                    f"Invalid entity ID: {entity.entity_id}"
-                ) from None
+                    raise HomeAssistantError(
+                        f"Invalid entity ID: {entity.entity_id}"
+                    ) from None
 
         # Get entity_id from unique ID registration
         if entity.unique_id is not None:

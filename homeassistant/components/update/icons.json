@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_available": {
+      "condition": "mdi:package-up"
+    },
+    "is_not_available": {
+      "condition": "mdi:package"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:package-up",

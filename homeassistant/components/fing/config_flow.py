@@ -10,6 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_IP_ADDRESS, CONF_PORT
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN, UPNP_AVAILABLE
 
@@ -40,13 +41,16 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 ip=user_input[CONF_IP_ADDRESS],
                 port=int(user_input[CONF_PORT]),
                 key=user_input[CONF_API_KEY],
+                client=get_async_client(self.hass),
             )
 
             try:
                 devices_response = await fing_api.get_devices()
 
                 with suppress(httpx.ConnectError):
-                    # The suppression is needed because the get_agent_info method isn't available for desktop agents
+                    # The suppression is needed because the
+                    # get_agent_info method isn't available
+                    # for desktop agents
                     agent_info_response = await fing_api.get_agent_info()
 
             except httpx.NetworkError as _:
@@ -55,7 +59,8 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "timeout_connect"
             except httpx.HTTPStatusError as exception:
                 description_placeholders["message"] = (
-                    f"{exception.response.status_code} - {exception.response.reason_phrase}"
+                    f"{exception.response.status_code}"
+                    f" - {exception.response.reason_phrase}"
                 )
                 if exception.response.status_code == 401:
                     errors["base"] = "invalid_api_key"

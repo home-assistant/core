@@ -1,6 +1,6 @@
 """Tests for the telegram_bot integration."""
 
-from collections.abc import AsyncGenerator, Generator
+from collections.abc import Generator
 from datetime import datetime
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -19,6 +19,7 @@ from telegram import (
 from telegram.constants import ChatType
 
 from homeassistant.components.telegram_bot.const import (
+    ATTR_MEDIA,
     ATTR_PARSER,
     CONF_ALLOWED_CHAT_IDS,
     CONF_API_ENDPOINT,
@@ -124,13 +125,26 @@ def mock_external_calls() -> Generator[None]:
             super().__init__(*args, **kwargs)
             self._bot_user = test_user
 
+    def mock_send_media_group(*args: Any, **kwargs: Any) -> list[Message]:
+        chat_id: int = args[0]
+        return [
+            Message(
+                message_id=12345 + idx,
+                date=datetime.now(),
+                chat=Chat(id=chat_id, type=ChatType.PRIVATE),
+            )
+            for idx, _ in enumerate(kwargs[ATTR_MEDIA])
+        ]
+
     with (
         patch("homeassistant.components.telegram_bot.bot.Bot", BotMock),
         patch.object(BotMock, "get_chat", return_value=test_chat),
         patch.object(BotMock, "get_me", return_value=test_user),
         patch.object(BotMock, "bot", test_user),
         patch.object(BotMock, "send_message", return_value=message),
+        patch.object(BotMock, "send_message_draft", return_value=True),
         patch.object(BotMock, "send_photo", return_value=message),
+        patch.object(BotMock, "send_media_group", side_effect=mock_send_media_group),
         patch.object(BotMock, "send_sticker", return_value=message),
         patch.object(BotMock, "send_video", return_value=message),
         patch.object(BotMock, "send_document", return_value=message),
@@ -241,7 +255,7 @@ def update_message_text():
 
 @pytest.fixture
 def unauthorized_update_message_text(update_message_text):
-    """Fixture for mocking an incoming update of type message/text that is not in our `allowed_chat_ids`."""
+    """Fixture for mocking an incoming unauthorized message/text."""
     update_message_text["message"]["from"]["id"] = 1234
     update_message_text["message"]["chat"]["id"] = 1234
     return update_message_text
@@ -271,7 +285,7 @@ def update_callback_query():
 
 @pytest.fixture
 def update_callback_inline_keyboard():
-    """Fixture for mocking an incoming update of type callback_query from inline keyboard button."""
+    """Fixture for mocking a callback_query from inline keyboard."""
     return {
         "update_id": 1,
         "callback_query": {
@@ -359,18 +373,16 @@ async def webhook_bot(
     mock_register_webhook: None,
     mock_external_calls: None,
     mock_generate_secret_token: str,
-) -> AsyncGenerator[None]:
+) -> None:
     """Fixture for setting up a webhook telegram bot."""
     mock_webhooks_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_webhooks_config_entry.entry_id)
     await hass.async_block_till_done()
-    yield
-    await hass.async_stop()
 
 
 @pytest.fixture
 def mock_polling_calls() -> Generator[None]:
-    """Fixture for setting up the polling platform using appropriate config and mocks."""
+    """Fixture for setting up the polling platform with config and mocks."""
     with patch(
         "homeassistant.components.telegram_bot.polling.ApplicationBuilder"
     ) as application_builder_class:

@@ -1,7 +1,5 @@
 """Support for Epion API."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.sensor import (
@@ -99,7 +97,11 @@ class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
 
     @property
     def native_value(self) -> float | None:
-        """Return the value reported by the sensor, or None if the relevant sensor can't produce a current measurement."""
+        """Return the value reported by the sensor.
+
+        Returns None if the relevant sensor can't produce a
+        current measurement.
+        """
         return self.device.get(self.entity_description.key)
 
     @property
@@ -109,5 +111,9 @@ class EpionSensor(CoordinatorEntity[EpionCoordinator], SensorEntity):
 
     @property
     def device(self) -> dict[str, Any]:
-        """Get the device record from the current coordinator data, or None if there is no data being returned for this device ID anymore."""
+        """Get the device record from the current coordinator data.
+
+        Returns None if there is no data being returned for
+        this device ID anymore.
+        """
         return self.coordinator.data[self._epion_device_id]

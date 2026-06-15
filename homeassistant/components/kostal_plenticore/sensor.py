@@ -1,7 +1,5 @@
 """Platform for Kostal Plenticore sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -56,7 +54,6 @@ SENSOR_PROCESS_DATA = [
         name="Solar Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         formatter="format_round",
     ),
@@ -66,7 +63,6 @@ SENSOR_PROCESS_DATA = [
         name="Grid Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         formatter="format_round",
     ),
@@ -121,7 +117,6 @@ SENSOR_PROCESS_DATA = [
         name="AC Power",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         formatter="format_round",
     ),
@@ -572,7 +567,6 @@ SENSOR_PROCESS_DATA = [
         name="Energy Yield Day",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.TOTAL_INCREASING,
         formatter="format_energy",
     ),
@@ -762,7 +756,6 @@ SENSOR_PROCESS_DATA = [
         name="Sum power of all PV DC inputs",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
-        entity_registry_enabled_default=True,
         state_class=SensorStateClass.MEASUREMENT,
         formatter="format_round",
     ),

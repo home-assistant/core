@@ -1,0 +1,32 @@
+.trigger_common: &trigger_common
+  target:
+    entity:
+      domain: timer
+  fields:
+    behavior:
+      required: true
+      default: each
+      selector:
+        automation_behavior:
+          mode: trigger
+    for:
+      required: true
+      default: 00:00:00
+      selector:
+        duration:
+
+cancelled: *trigger_common
+finished: *trigger_common
+paused: *trigger_common
+restarted: *trigger_common
+started: *trigger_common
+
+time_remaining:
+  target:
+    entity:
+      domain: timer
+  fields:
+    remaining:
+      required: true
+      selector:
+        duration:

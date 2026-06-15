@@ -1,7 +1,5 @@
 """Base entity for Trafikverket Camera."""
 
-from __future__ import annotations
-
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription

@@ -1,11 +1,9 @@
 """Support for select entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Mapping
 from dataclasses import dataclass
 from enum import Enum
-from typing import Any, TypeVar
+from typing import Any
 
 from togrill_bluetooth.packets import (
     GrillType,
@@ -39,17 +37,14 @@ class ToGrillSelectEntityDescription(SelectEntityDescription):
     probe_number: int | None = None
 
 
-_ENUM = TypeVar("_ENUM", bound=Enum)
-
-
-def _get_enum_from_name(type_: type[_ENUM], value: str) -> _ENUM | None:
+def _get_enum_from_name[T: Enum](type_: type[T], value: str) -> T | None:
     """Return enum value or None."""
     if value == OPTION_NONE:
         return None
     return type_[value.upper()]
 
 
-def _get_enum_from_value(type_: type[_ENUM], value: int | None) -> _ENUM | None:
+def _get_enum_from_value[T: Enum](type_: type[T], value: int | None) -> T | None:
     """Return enum value or None."""
     if value is None:
         return None
@@ -59,7 +54,7 @@ def _get_enum_from_value(type_: type[_ENUM], value: int | None) -> _ENUM | None:
         return None
 
 
-def _get_enum_options(type_: type[_ENUM]) -> list[str]:
+def _get_enum_options[T: Enum](type_: type[T]) -> list[str]:
     """Return a list of enum options."""
     values = [OPTION_NONE]
     values.extend(option.name.lower() for option in type_)

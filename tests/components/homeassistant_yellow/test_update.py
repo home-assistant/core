@@ -11,7 +11,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
 )
-from homeassistant.components.homeassistant_yellow.const import RADIO_DEVICE
+from homeassistant.components.homeassistant_yellow.const import DOMAIN, RADIO_DEVICE
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -27,7 +27,7 @@ async def test_yellow_update_entity(hass: HomeAssistant) -> None:
     # Set up the Yellow integration
     yellow_config_entry = MockConfigEntry(
         title="Home Assistant Yellow",
-        domain="homeassistant_yellow",
+        domain=DOMAIN,
         data={
             "firmware": "ezsp",
             "firmware_version": "7.3.1.0 build 0",
@@ -78,7 +78,9 @@ async def test_yellow_update_entity(hass: HomeAssistant) -> None:
         FirmwareInfo(
             device=RADIO_DEVICE,
             firmware_type=ApplicationType.SPINEL,
-            firmware_version="SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57",
+            firmware_version=(
+                "SL-OPENTHREAD/2.4.4.0_GitHub-7074a43e4; EFR32; Oct 21 2024 14:40:57"
+            ),
             owners=[],
             source="otbr",
         ),
@@ -113,7 +115,7 @@ async def test_yellow_update_entity_state(
     # Set up the Yellow integration
     yellow_config_entry = MockConfigEntry(
         title="Home Assistant Yellow",
-        domain="homeassistant_yellow",
+        domain=DOMAIN,
         data={
             "firmware": firmware,
             "firmware_version": version,

@@ -1,7 +1,5 @@
 """Test the google config flow."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 import datetime

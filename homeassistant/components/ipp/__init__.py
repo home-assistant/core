@@ -1,7 +1,5 @@
 """The Internet Printing Protocol (IPP) integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 

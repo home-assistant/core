@@ -1,7 +1,5 @@
 """Nintendo Switch Parental Controls select entity definitions."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from enum import StrEnum

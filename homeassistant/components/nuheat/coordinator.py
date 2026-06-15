@@ -16,15 +16,18 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(minutes=5)
 
 
+type NuHeatConfigEntry = ConfigEntry[NuHeatCoordinator]
+
+
 class NuHeatCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for NuHeat thermostat data."""
 
-    config_entry: ConfigEntry
+    config_entry: NuHeatConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: NuHeatConfigEntry,
         thermostat: nuheat.NuHeatThermostat,
     ) -> None:
         """Initialize the coordinator."""

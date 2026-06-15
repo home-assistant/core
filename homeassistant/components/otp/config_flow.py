@@ -1,7 +1,5 @@
 """Config flow for One-Time Password (OTP) integration."""
 
-from __future__ import annotations
-
 import binascii
 import logging
 from re import sub
@@ -28,6 +26,8 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Optional(CONF_TOKEN): str,
         vol.Optional(CONF_NEW_TOKEN): BooleanSelector(BooleanSelectorConfig()),
+        # Name field is no longer allowed in config flow schemas
+        # pylint: disable-next=home-assistant-config-flow-name-field
         vol.Required(CONF_NAME, default=DEFAULT_NAME): str,
     }
 )

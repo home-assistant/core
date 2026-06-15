@@ -18,5 +18,10 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find LED BLE device with address {address}: {reason}"
+    }
   }
 }

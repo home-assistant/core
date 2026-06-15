@@ -1,7 +1,5 @@
 """Weather entity."""
 
-from __future__ import annotations
-
 from google_weather_api import (
     DailyForecastResponse,
     HourlyForecastResponse,
@@ -266,7 +264,9 @@ class GoogleWeatherEntity(
                 ATTR_FORECAST_NATIVE_APPARENT_TEMP: (
                     item.feels_like_max_temperature.degrees
                 ),
-                ATTR_FORECAST_WIND_BEARING: item.daytime_forecast.wind.direction.degrees,
+                ATTR_FORECAST_WIND_BEARING: (
+                    item.daytime_forecast.wind.direction.degrees
+                ),
                 ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: max(
                     item.daytime_forecast.wind.gust.value,
                     item.nighttime_forecast.wind.gust.value,
@@ -294,10 +294,14 @@ class GoogleWeatherEntity(
                 ),
                 ATTR_FORECAST_TIME: item.interval.start_time,
                 ATTR_FORECAST_HUMIDITY: item.relative_humidity,
-                ATTR_FORECAST_PRECIPITATION_PROBABILITY: item.precipitation.probability.percent,
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                    item.precipitation.probability.percent
+                ),
                 ATTR_FORECAST_CLOUD_COVERAGE: item.cloud_cover,
                 ATTR_FORECAST_NATIVE_PRECIPITATION: item.precipitation.qpf.quantity,
-                ATTR_FORECAST_NATIVE_PRESSURE: item.air_pressure.mean_sea_level_millibars,
+                ATTR_FORECAST_NATIVE_PRESSURE: (
+                    item.air_pressure.mean_sea_level_millibars
+                ),
                 ATTR_FORECAST_NATIVE_TEMP: item.temperature.degrees,
                 ATTR_FORECAST_NATIVE_APPARENT_TEMP: item.feels_like_temperature.degrees,
                 ATTR_FORECAST_WIND_BEARING: item.wind.direction.degrees,
@@ -328,11 +332,17 @@ class GoogleWeatherEntity(
                     ),
                     ATTR_FORECAST_TIME: day_forecast.interval.start_time,
                     ATTR_FORECAST_HUMIDITY: day_forecast.relative_humidity,
-                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: day_forecast.precipitation.probability.percent,
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                        day_forecast.precipitation.probability.percent
+                    ),
                     ATTR_FORECAST_CLOUD_COVERAGE: day_forecast.cloud_cover,
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: day_forecast.precipitation.qpf.quantity,
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: (
+                        day_forecast.precipitation.qpf.quantity
+                    ),
                     ATTR_FORECAST_NATIVE_TEMP: item.max_temperature.degrees,
-                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: item.feels_like_max_temperature.degrees,
+                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: (
+                        item.feels_like_max_temperature.degrees
+                    ),
                     ATTR_FORECAST_WIND_BEARING: day_forecast.wind.direction.degrees,
                     ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: day_forecast.wind.gust.value,
                     ATTR_FORECAST_NATIVE_WIND_SPEED: day_forecast.wind.speed.value,
@@ -350,13 +360,21 @@ class GoogleWeatherEntity(
                     ),
                     ATTR_FORECAST_TIME: night_forecast.interval.start_time,
                     ATTR_FORECAST_HUMIDITY: night_forecast.relative_humidity,
-                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: night_forecast.precipitation.probability.percent,
+                    ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                        night_forecast.precipitation.probability.percent
+                    ),
                     ATTR_FORECAST_CLOUD_COVERAGE: night_forecast.cloud_cover,
-                    ATTR_FORECAST_NATIVE_PRECIPITATION: night_forecast.precipitation.qpf.quantity,
+                    ATTR_FORECAST_NATIVE_PRECIPITATION: (
+                        night_forecast.precipitation.qpf.quantity
+                    ),
                     ATTR_FORECAST_NATIVE_TEMP: item.min_temperature.degrees,
-                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: item.feels_like_min_temperature.degrees,
+                    ATTR_FORECAST_NATIVE_APPARENT_TEMP: (
+                        item.feels_like_min_temperature.degrees
+                    ),
                     ATTR_FORECAST_WIND_BEARING: night_forecast.wind.direction.degrees,
-                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: night_forecast.wind.gust.value,
+                    ATTR_FORECAST_NATIVE_WIND_GUST_SPEED: (
+                        night_forecast.wind.gust.value
+                    ),
                     ATTR_FORECAST_NATIVE_WIND_SPEED: night_forecast.wind.speed.value,
                     ATTR_FORECAST_UV_INDEX: night_forecast.uv_index,
                     ATTR_FORECAST_IS_DAYTIME: False,

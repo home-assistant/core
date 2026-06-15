@@ -1,11 +1,9 @@
 """Support for Satel Integra alarm, using ETHM module."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
-from satel_integra.satel_integra import AlarmState
+from satel_integra import AlarmState
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -35,6 +33,8 @@ ALARM_STATE_MAP = {
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -45,12 +45,7 @@ async def async_setup_entry(
 
     runtime_data = config_entry.runtime_data
 
-    partition_subentries = filter(
-        lambda entry: entry.subentry_type == SUBENTRY_TYPE_PARTITION,
-        config_entry.subentries.values(),
-    )
-
-    for subentry in partition_subentries:
+    for subentry in config_entry.get_subentries_of_type(SUBENTRY_TYPE_PARTITION):
         partition_num: int = subentry.data[CONF_PARTITION_NUMBER]
         arm_home_mode: int = subentry.data[CONF_ARM_HOME_MODE]
 
@@ -78,6 +73,7 @@ class SatelIntegraAlarmPanel(
         AlarmControlPanelEntityFeature.ARM_HOME
         | AlarmControlPanelEntityFeature.ARM_AWAY
     )
+    _attr_name = None
 
     def __init__(
         self,
@@ -105,13 +101,8 @@ class SatelIntegraAlarmPanel(
         self._attr_alarm_state = self._read_alarm_state()
         self.async_write_ha_state()
 
-    def _read_alarm_state(self) -> AlarmControlPanelState | None:
+    def _read_alarm_state(self) -> AlarmControlPanelState:
         """Read current status of the alarm and translate it into HA status."""
-
-        if not self._controller.connected:
-            _LOGGER.debug("Alarm panel not connected")
-            return None
-
         for satel_state, ha_state in ALARM_STATE_MAP.items():
             if (
                 satel_state in self.coordinator.data

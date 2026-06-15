@@ -1,7 +1,5 @@
 """Support for recording details."""
 
-from __future__ import annotations
-
 import abc
 import asyncio
 from collections.abc import Callable, Iterable
@@ -177,7 +175,7 @@ class StatisticsTask(RecorderTask):
 
 @dataclass(slots=True)
 class CompileMissingStatisticsTask(RecorderTask):
-    """An object to insert into the recorder queue to run a compile missing statistics."""
+    """An object to insert into the recorder queue to compile missing statistics."""
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task to compile missing statistics."""

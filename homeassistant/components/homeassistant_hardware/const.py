@@ -1,8 +1,7 @@
 """Constants for the Homeassistant Hardware integration."""
 
-from __future__ import annotations
-
 import logging
+import re
 from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey
@@ -37,3 +36,7 @@ SILABS_MULTIPROTOCOL_ADDON_SLUG = "core_silabs_multiprotocol"
 SILABS_FLASHER_ADDON_SLUG = "core_silabs_flasher"
 
 Z2M_EMBER_DOCS_URL = "https://www.zigbee2mqtt.io/guide/adapters/emberznet.html"
+
+# Community add-ons use an 8-char repository hash prefix in their slug
+Z2M_ADDON_NAME = "Zigbee2MQTT"
+Z2M_ADDON_SLUG_REGEX = re.compile(r"^[0-9a-f]{8}_zigbee2mqtt(?:_edge)?$")

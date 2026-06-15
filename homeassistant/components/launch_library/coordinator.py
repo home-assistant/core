@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the launch_library integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TypedDict
@@ -16,6 +14,9 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+type LaunchLibraryConfigEntry = ConfigEntry[LaunchLibraryCoordinator]
+
+
 _LOGGER = logging.getLogger(__name__)
 
 
@@ -29,12 +30,12 @@ class LaunchLibraryData(TypedDict):
 class LaunchLibraryCoordinator(DataUpdateCoordinator[LaunchLibraryData]):
     """Class to manage fetching Launch Library data."""
 
-    config_entry: ConfigEntry
+    config_entry: LaunchLibraryConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: LaunchLibraryConfigEntry,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(

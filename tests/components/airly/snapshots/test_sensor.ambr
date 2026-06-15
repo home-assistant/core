@@ -29,14 +29,14 @@
         'suggested_display_precision': 0,
       }),
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.CO: 'carbon_monoxide'>,
     'original_icon': None,
     'original_name': 'Carbon monoxide',
     'platform': 'airly',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'co',
+    'translation_key': None,
     'unique_id': '123-456-co',
     'unit_of_measurement': 'μg/m³',
   })
@@ -45,6 +45,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Airly',
+      'device_class': 'carbon_monoxide',
       'friendly_name': 'Home Carbon monoxide',
       'limit': 4000,
       'percent': 4,

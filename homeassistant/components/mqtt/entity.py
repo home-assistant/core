@@ -1,7 +1,5 @@
 """MQTT (entity) component mixins and helpers."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
 from functools import partial
@@ -29,6 +27,7 @@ from homeassistant.const import (
     CONF_MODEL_ID,
     CONF_NAME,
     CONF_UNIQUE_ID,
+    CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
 )
 from homeassistant.core import Event, HassJobType, HomeAssistant, callback
@@ -85,6 +84,7 @@ from .const import (
     CONF_JSON_ATTRS_TEMPLATE,
     CONF_JSON_ATTRS_TOPIC,
     CONF_MANUFACTURER,
+    CONF_MESSAGE_EXPIRY_INTERVAL,
     CONF_PAYLOAD_AVAILABLE,
     CONF_PAYLOAD_NOT_AVAILABLE,
     CONF_QOS,
@@ -95,7 +95,7 @@ from .const import (
     CONF_SW_VERSION,
     CONF_TOPIC,
     CONF_VIA_DEVICE,
-    DEFAULT_ENCODING,
+    CONF_VISIBLE_BY_DEFAULT,
     DOMAIN,
     MQTT_CONNECTION_STATE,
 )
@@ -125,7 +125,11 @@ from .subscription import (
     async_subscribe_topics_internal,
     async_unsubscribe_topics,
 )
-from .util import learn_more_url, mqtt_config_entry_enabled
+from .util import (
+    async_cleanup_device_registry,
+    learn_more_url,
+    mqtt_config_entry_enabled,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +144,7 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "entity_registry_enabled_default",
     "extra_state_attributes",
     "force_update",
+    "group_entities",
     "icon",
     "friendly_name",
     "should_poll",
@@ -148,6 +153,8 @@ MQTT_ATTRIBUTES_BLOCKED = {
     "unique_id",
     "unit_of_measurement",
 }
+
+PUBLISH_KWARGS = (CONF_MESSAGE_EXPIRY_INTERVAL,)
 
 
 @callback
@@ -237,7 +244,7 @@ def async_setup_non_entity_entry_helper(
 
 
 @callback
-def async_setup_entity_entry_helper(
+def async_setup_entity_entry_helper(  # noqa: C901
     hass: HomeAssistant,
     entry: ConfigEntry,
     entity_class: type[MqttEntity] | None,
@@ -386,6 +393,8 @@ def async_setup_entity_entry_helper(
                     and component_config[CONF_ENTITY_CATEGORY] is None
                 ):
                     component_config.pop(CONF_ENTITY_CATEGORY)
+                if component_config.get(CONF_UNIT_OF_MEASUREMENT) == "None":
+                    component_config.pop(CONF_UNIT_OF_MEASUREMENT)
 
                 try:
                     config = platform_schema_modern(component_config)
@@ -522,7 +531,7 @@ class MqttAttributesMixin(Entity):
                         self._attributes_message_received,
                         {
                             "_attr_extra_state_attributes",
-                            "_attr_gps_accuracy",
+                            "_attr_location_accuracy",
                             "_attr_latitude",
                             "_attr_location_name",
                             "_attr_longitude",
@@ -710,34 +719,6 @@ class MqttAvailabilityMixin(Entity):
         if self._avail_config[CONF_AVAILABILITY_MODE] == AVAILABILITY_ANY:
             return any(self._available.values())
         return self._available_latest
-
-
-async def cleanup_device_registry(
-    hass: HomeAssistant, device_id: str | None, config_entry_id: str | None
-) -> None:
-    """Clean up the device registry after MQTT removal.
-
-    Remove MQTT from the device registry entry if there are no remaining
-    entities, triggers or tags.
-    """
-    # Local import to avoid circular dependencies
-    from . import device_trigger, tag  # noqa: PLC0415
-
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
-    if (
-        device_id
-        and device_id not in device_registry.deleted_devices
-        and config_entry_id
-        and not er.async_entries_for_device(
-            entity_registry, device_id, include_disabled_entities=False
-        )
-        and not await device_trigger.async_get_triggers(hass, device_id)
-        and not tag.async_has_tags(hass, device_id)
-    ):
-        device_registry.async_update_device(
-            device_id, remove_config_entry_id=config_entry_id
-        )
 
 
 def get_discovery_hash(discovery_data: DiscoveryInfoType) -> tuple[str, str]:
@@ -994,7 +975,7 @@ class MqttDiscoveryDeviceUpdateMixin(ABC):
         if not self._skip_device_removal:
             # Prevent a second cleanup round after the device is removed
             self._skip_device_removal = True
-            await cleanup_device_registry(
+            await async_cleanup_device_registry(
                 self.hass, self._device_id, self._config_entry_id
             )
 
@@ -1062,7 +1043,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         entity_registry = er.async_get(self.hass)
         if entity_entry := entity_registry.async_get(self.entity_id):
             entity_registry.async_remove(self.entity_id)
-            await cleanup_device_registry(
+            await async_cleanup_device_registry(
                 self.hass, entity_entry.device_id, entity_entry.config_entry_id
             )
         else:
@@ -1260,7 +1241,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Stop listening to signal and cleanup discovery data.."""
+        """Stop listening to signal and cleanup discovery data."""
         self._cleanup_discovery_on_remove()
 
     def _cleanup_discovery_on_remove(self) -> None:
@@ -1410,7 +1391,7 @@ class MqttEntity(
         self._setup_common_attributes_from_config(self._config)
 
         # Initialize entity_id from config
-        self._init_entity_id()
+        self._init_entity_registry(discovery_data)
 
         # Initialize mixin classes
         MqttAttributesMixin.__init__(self, config)
@@ -1421,16 +1402,19 @@ class MqttEntity(
         MqttEntityDeviceInfo.__init__(self, config.get(CONF_DEVICE), config_entry)
         ensure_via_device_exists(self.hass, self.device_info, self._config_entry)
 
-    def _init_entity_id(self) -> None:
-        """Set entity_id from default_entity_id if defined in config."""
+    def _init_entity_registry(self, discovery_data: DiscoveryInfoType | None) -> None:
+        """Set entity_id from default_entity_id if defined in config.
+
+        Check if the previous registry state was disabled
+        or is set to be disabled initially for discovered entities.
+        """
         object_id: str
         default_entity_id: str | None
-        if (default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID)) is None:
-            return
-        _, _, object_id = default_entity_id.partition(".")
-        self.entity_id = async_generate_entity_id(
-            self._entity_id_format, object_id, None, self.hass
-        )
+        if default_entity_id := self._config.get(CONF_DEFAULT_ENTITY_ID):
+            _, _, object_id = default_entity_id.partition(".")
+            self.entity_id = async_generate_entity_id(
+                self._entity_id_format, object_id, None, self.hass
+            )
 
         if self.unique_id is None:
             return
@@ -1445,6 +1429,67 @@ class MqttEntity(
             # Plan to update the entity_id based on `default_entity_id`
             # if a deleted entity was found
             self._update_registry_entity_id = self.entity_id
+        if (
+            reenable_condition := (
+                deleted_entry
+                and self._config[CONF_ENABLED_BY_DEFAULT]
+                and deleted_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+            )
+        ) or (
+            deleted_entry
+            and self._config[CONF_VISIBLE_BY_DEFAULT]
+            and deleted_entry.hidden_by is not None
+        ):
+            # Enable previous deleted entity,
+            # if it was not disabled by the user.
+            # Only reset hidden by flag if it was not hidden by the user.
+            if (
+                deleted_entry.hidden_by is er.RegistryEntryHider.USER
+                and self._config[CONF_VISIBLE_BY_DEFAULT]
+            ):
+                _LOGGER.info(
+                    "Restored entity %s was configured as visible by default, "
+                    "but was hidden by the user before, and will remain hidden",
+                    self.entity_id,
+                )
+            if deleted_entry.hidden_by is er.RegistryEntryHider.USER:
+                hidden_by: er.RegistryEntryHider | None = er.RegistryEntryHider.USER
+            else:
+                hidden_by = (
+                    None
+                    if self._config[CONF_VISIBLE_BY_DEFAULT]
+                    else er.RegistryEntryHider.INTEGRATION
+                )
+            recreated_entry = entity_registry.async_get_or_create(
+                entity_platform, DOMAIN, self.unique_id
+            )
+            entity_registry.async_update_entity(
+                recreated_entry.entity_id,
+                disabled_by=None if reenable_condition else UNDEFINED,
+                hidden_by=hidden_by,
+            )
+
+        if discovery_data is None:
+            return
+
+        # Allow a disabled entity and device registry
+        # to be cleaned up via MQTT discovery
+        if existing_entity_id := entity_registry.async_get_entity_id(
+            entity_platform, DOMAIN, self.unique_id
+        ):
+            existing_entry = entity_registry.async_get(existing_entity_id)
+
+        # Store discovery hash for new entities that are initial disabled
+        # or for entries that are disabled in the registry,
+        # so they can be removed with an empty discovery payload
+        if (
+            existing_entity_id is None
+            or (existing_entry and existing_entry.disabled_by is not None)
+        ) and not self._config[CONF_ENABLED_BY_DEFAULT]:
+            mqtt_data = self.hass.data[DATA_MQTT]
+            mqtt_data.discovery_discovered_and_disabled[
+                discovery_data[ATTR_DISCOVERY_HASH]
+            ] = (entity_platform, DOMAIN, self.unique_id)
 
     @final
     async def async_added_to_hass(self) -> None:
@@ -1457,6 +1502,7 @@ class MqttEntity(
             self._update_registry_entity_id = None
 
         await super().async_added_to_hass()
+        await self._async_finish_update_config()
         self._subscriptions = {}
         self._prepare_subscribe_topics()
         if self._subscriptions:
@@ -1474,6 +1520,12 @@ class MqttEntity(
         To be extended by subclasses.
         """
 
+    async def _async_finish_update_config(self) -> None:
+        """Called after added to hass and after discovery update.
+
+        To be extended by subclasses.
+        """
+
     async def discovery_update(self, discovery_payload: MQTTDiscoveryPayload) -> None:
         """Handle updated discovery message."""
         try:
@@ -1484,7 +1536,7 @@ class MqttEntity(
         self._config = config
         self._setup_from_config(self._config)
         self._setup_common_attributes_from_config(self._config)
-        self._process_entity_update()
+        await self._async_finish_update_config()
 
         # Prepare MQTT subscriptions
         self.attributes_prepare_discovery_update(config)
@@ -1515,36 +1567,20 @@ class MqttEntity(
         await MqttDiscoveryUpdateMixin.async_will_remove_from_hass(self)
         debug_info.remove_entity_data(self.hass, self.entity_id)
 
-    async def async_publish(
-        self,
-        topic: str,
-        payload: PublishPayloadType,
-        qos: int = 0,
-        retain: bool = False,
-        encoding: str | None = DEFAULT_ENCODING,
-    ) -> None:
-        """Publish message to an MQTT topic."""
-        log_message(self.hass, self.entity_id, topic, payload, qos, retain)
-        await async_publish(
-            self.hass,
-            topic,
-            payload,
-            qos,
-            retain,
-            encoding,
-        )
-
     async def async_publish_with_config(
         self, topic: str, payload: PublishPayloadType
     ) -> None:
         """Publish payload to a topic using config."""
-        await self.async_publish(
-            topic,
-            payload,
-            self._config[CONF_QOS],
-            self._config[CONF_RETAIN],
-            self._config[CONF_ENCODING],
+        kwargs: dict[str, Any] = {
+            key: value for key, value in self._config.items() if key in PUBLISH_KWARGS
+        }
+        qos: int = self._config[CONF_QOS]
+        retain: bool = self._config[CONF_RETAIN]
+        encoding: str = self._config[CONF_ENCODING]
+        log_message(
+            self.hass, self.entity_id, topic, payload, qos, retain, encoding, **kwargs
         )
+        await async_publish(self.hass, topic, payload, qos, retain, encoding, **kwargs)
 
     @staticmethod
     @abstractmethod
@@ -1577,7 +1613,10 @@ class MqttEntity(
         """(Re)Setup the common attributes for the entity."""
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_entity_registry_enabled_default = bool(
-            config.get(CONF_ENABLED_BY_DEFAULT)
+            config.get(CONF_ENABLED_BY_DEFAULT, True)
+        )
+        self._attr_entity_registry_visible_default = bool(
+            config.get(CONF_VISIBLE_BY_DEFAULT, True)
         )
         self._attr_icon = config.get(CONF_ICON)
         self._attr_entity_picture = config.get(CONF_ENTITY_PICTURE)
@@ -1586,10 +1625,6 @@ class MqttEntity(
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
-
-    @callback
-    def _process_entity_update(self) -> None:
-        """Process an entity discovery update."""
 
     @abstractmethod
     @callback

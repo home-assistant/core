@@ -1,7 +1,5 @@
 """Jabber (XMPP) notification service."""
 
-from __future__ import annotations
-
 from concurrent.futures import TimeoutError as FutTimeoutError
 from http import HTTPStatus
 import logging

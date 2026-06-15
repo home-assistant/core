@@ -1,7 +1,5 @@
 """Support for Modern Forms switches."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity

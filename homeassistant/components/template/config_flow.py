@@ -1,7 +1,5 @@
 """Config flow for the Template integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, cast
@@ -13,6 +11,7 @@ from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.button import ButtonDeviceClass
 from homeassistant.components.cover import CoverDeviceClass
 from homeassistant.components.event import EventDeviceClass
+from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASS_STATE_CLASSES,
@@ -24,6 +23,8 @@ from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_DEVICE_ID,
+    CONF_LATITUDE,
+    CONF_LONGITUDE,
     CONF_NAME,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
@@ -74,6 +75,11 @@ from .cover import (
     POSITION_ACTION,
     STOP_ACTION,
     async_create_preview_cover,
+)
+from .device_tracker import (
+    CONF_IN_ZONES,
+    CONF_LOCATION_ACCURACY,
+    async_create_preview_tracker,
 )
 from .event import CONF_EVENT_TYPE, CONF_EVENT_TYPES, async_create_preview_event
 from .fan import (
@@ -151,6 +157,7 @@ _SCHEMA_STATE: dict[vol.Marker, Any] = {
 def generate_schema(domain: str, flow_type: str) -> vol.Schema:
     """Generate schema."""
     schema: dict[vol.Marker, Any] = {}
+    advanced_options: dict[vol.Marker, Any] = {}
 
     if flow_type == "config":
         schema = {vol.Required(CONF_NAME): selector.TextSelector()}
@@ -180,18 +187,16 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
         }
 
     if domain == Platform.BINARY_SENSOR:
-        schema |= _SCHEMA_STATE
-        if flow_type == "config":
-            schema |= {
-                vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
-                    selector.SelectSelectorConfig(
-                        options=[cls.value for cls in BinarySensorDeviceClass],
-                        mode=selector.SelectSelectorMode.DROPDOWN,
-                        translation_key="binary_sensor_device_class",
-                        sort=True,
-                    ),
+        schema |= _SCHEMA_STATE | {
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in BinarySensorDeviceClass],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="binary_sensor_device_class",
+                    sort=True,
                 ),
-            }
+            ),
+        }
 
     if domain == Platform.BUTTON:
         schema |= {
@@ -228,6 +233,16 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
                     ),
                 )
             }
+
+    if domain == Platform.DEVICE_TRACKER:
+        schema |= {
+            vol.Optional(CONF_IN_ZONES): selector.TemplateSelector(),
+            vol.Optional(CONF_LATITUDE): selector.TemplateSelector(),
+            vol.Optional(CONF_LONGITUDE): selector.TemplateSelector(),
+        }
+        advanced_options |= {
+            vol.Optional(CONF_LOCATION_ACCURACY): selector.TemplateSelector(),
+        }
 
     if domain == Platform.EVENT:
         schema |= {
@@ -288,6 +303,14 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
 
     if domain == Platform.NUMBER:
         schema |= {
+            vol.Optional(CONF_DEVICE_CLASS): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[cls.value for cls in NumberDeviceClass],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                    translation_key="number_device_class",
+                    sort=True,
+                ),
+            ),
             vol.Required(CONF_STATE): selector.TemplateSelector(),
             vol.Required(CONF_MIN, default=DEFAULT_MIN_VALUE): selector.NumberSelector(
                 selector.NumberSelectorConfig(mode=selector.NumberSelectorMode.BOX),
@@ -426,6 +449,7 @@ def generate_schema(domain: str, flow_type: str) -> vol.Schema:
             vol.Schema(
                 {
                     vol.Optional(CONF_AVAILABILITY): selector.TemplateSelector(),
+                    **advanced_options,
                 }
             ),
             {"collapsed": True},
@@ -535,6 +559,7 @@ TEMPLATE_TYPES = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
     Platform.COVER,
+    Platform.DEVICE_TRACKER,
     Platform.EVENT,
     Platform.FAN,
     Platform.IMAGE,
@@ -569,6 +594,11 @@ CONFIG_FLOW = {
         config_schema(Platform.COVER),
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
+    ),
+    Platform.DEVICE_TRACKER: SchemaFlowFormStep(
+        config_schema(Platform.DEVICE_TRACKER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.DEVICE_TRACKER),
     ),
     Platform.EVENT: SchemaFlowFormStep(
         config_schema(Platform.EVENT),
@@ -655,6 +685,11 @@ OPTIONS_FLOW = {
         preview="template",
         validate_user_input=validate_user_input(Platform.COVER),
     ),
+    Platform.DEVICE_TRACKER: SchemaFlowFormStep(
+        options_schema(Platform.DEVICE_TRACKER),
+        preview="template",
+        validate_user_input=validate_user_input(Platform.DEVICE_TRACKER),
+    ),
     Platform.EVENT: SchemaFlowFormStep(
         options_schema(Platform.EVENT),
         preview="template",
@@ -725,6 +760,7 @@ CREATE_PREVIEW_ENTITY: dict[
     Platform.ALARM_CONTROL_PANEL: async_create_preview_alarm_control_panel,
     Platform.BINARY_SENSOR: async_create_preview_binary_sensor,
     Platform.COVER: async_create_preview_cover,
+    Platform.DEVICE_TRACKER: async_create_preview_tracker,
     Platform.EVENT: async_create_preview_event,
     Platform.FAN: async_create_preview_fan,
     Platform.LIGHT: async_create_preview_light,
@@ -842,7 +878,12 @@ def ws_start_preview(
         connection.send_message(
             websocket_api.event_message(
                 msg["id"],
-                {"attributes": attributes, "listeners": listeners, "state": state},
+                {
+                    "attributes": attributes,
+                    "domain": template_type,
+                    "listeners": listeners,
+                    "state": state,
+                },
             )
         )
 

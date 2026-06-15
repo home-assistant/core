@@ -15,5 +15,25 @@
     "is_not_low": {
       "condition": "mdi:battery"
     }
+  },
+  "triggers": {
+    "level_changed": {
+      "trigger": "mdi:battery-unknown"
+    },
+    "level_crossed_threshold": {
+      "trigger": "mdi:battery-alert"
+    },
+    "low": {
+      "trigger": "mdi:battery-alert"
+    },
+    "not_low": {
+      "trigger": "mdi:battery"
+    },
+    "started_charging": {
+      "trigger": "mdi:battery-charging"
+    },
+    "stopped_charging": {
+      "trigger": "mdi:battery"
+    }
   }
 }

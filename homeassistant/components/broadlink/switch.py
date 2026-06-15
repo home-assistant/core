@@ -1,6 +1,5 @@
 """Support for Broadlink switches."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from abc import ABC, abstractmethod
 import logging

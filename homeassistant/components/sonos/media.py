@@ -1,7 +1,5 @@
 """Support for media metadata handling."""
 
-from __future__ import annotations
-
 import datetime
 from typing import Any
 
@@ -132,7 +130,8 @@ class SonosMedia:
 
         self.artist = track_info.get("artist")
         self.album_name = track_info.get("album")
-        self.title = track_info.get("title")
+        title = track_info.get("title") or ""
+        self.title = title.strip() or None
         self.image_url = track_info.get("album_art")
 
         playlist_position = int(track_info.get("playlist_position", -1))

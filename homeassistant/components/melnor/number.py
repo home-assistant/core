@@ -1,7 +1,5 @@
 """Number support for Melnor Bluetooth water timer."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any

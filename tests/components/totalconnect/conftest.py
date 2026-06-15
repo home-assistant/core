@@ -214,7 +214,7 @@ def mock_client(mock_location: TotalConnectLocation) -> Generator[TotalConnectCl
             "can_bypass_zones": True,
             "can_clear_bypass": True,
         }
-        setattr(client, "_user", user_mock)
+        client._user = user_mock
         yield client
 
 
