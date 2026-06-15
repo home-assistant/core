@@ -7,5 +7,5 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["solax"],
-  "requirements": ["solax==3.2.3"]
+  "requirements": ["solax==3.2.4"]
 }
