@@ -214,23 +214,17 @@ class HassImportsFormatChecker(BaseChecker):
     }
     options = ()
 
-    def __init__(self, linter: PyLinter) -> None:
-        """Initialize the HassImportsFormatChecker."""
-        super().__init__(linter)
-        self.current_package: str | None = None
+    current_package: str
 
     def visit_module(self, node: nodes.Module) -> None:
         """Determine current package."""
-        if node.package:
-            self.current_package = node.name
-        else:
+        self.current_package = node.name
+        if not node.package:
             # Strip name of the current module
             self.current_package = node.name[: node.name.rfind(".")]
 
     def visit_import(self, node: nodes.Import) -> None:
         """Check for improper `import _` invocations."""
-        if self.current_package is None:
-            return
         for other_module, _alias in node.names:
             if other_module.startswith(f"{self.current_package}."):
                 self.add_message("home-assistant-relative-import", node=node)
@@ -367,8 +361,6 @@ class HassImportsFormatChecker(BaseChecker):
 
     def visit_importfrom(self, node: nodes.ImportFrom) -> None:
         """Check for improper 'from _ import _' invocations."""
-        if not self.current_package:
-            return
         if node.level is not None:
             self._visit_importfrom_relative(self.current_package, node)
             return
