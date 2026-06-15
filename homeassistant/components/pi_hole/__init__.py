@@ -1,10 +1,14 @@
 """The pi_hole component."""
 
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 import logging
 from typing import Any, Literal
 
+import aiohttp
+from aiohttp import DummyCookieJar
 from hole import Hole, HoleV5, HoleV6
-from hole.exceptions import HoleConnectionError, HoleError
+from hole.exceptions import HoleAuthenticationError, HoleConnectionError, HoleError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,13 +21,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.aiohttp_client import (
+    async_create_clientsession,
+    async_get_clientsession,
+)
 
 from .const import CONF_STATISTICS_ONLY, DOMAIN
 from .coordinator import PiHoleConfigEntry, PiHoleData, PiHoleUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -105,6 +111,7 @@ def api_by_version(
     entry: dict[str, Any],
     version: int,
     password: str | None = None,
+    session: aiohttp.ClientSession | None = None,
 ) -> HoleV5 | HoleV6:
     """Create a pi-hole API object by API version number.
 
@@ -113,7 +120,10 @@ def api_by_version(
 
     if password is None:
         password = entry.get(CONF_API_KEY, "")
-    session = async_get_clientsession(hass, entry[CONF_VERIFY_SSL])
+    if version == 6:
+        session = session or _async_create_v6_session(hass, entry[CONF_VERIFY_SSL])
+    else:
+        session = async_get_clientsession(hass, entry[CONF_VERIFY_SSL])
     hole_kwargs = {
         "host": entry[CONF_HOST],
         "session": session,
@@ -131,53 +141,77 @@ def api_by_version(
     return Hole(**hole_kwargs)
 
 
+@callback
+def _async_create_v6_session(
+    hass: HomeAssistant, verify_ssl: bool, *, auto_cleanup: bool = True
+) -> aiohttp.ClientSession:
+    """Create a session with an isolated cookie jar for the Pi-hole v6 API."""
+    return async_create_clientsession(
+        hass,
+        verify_ssl,
+        auto_cleanup=auto_cleanup,
+        cookie_jar=DummyCookieJar(),
+    )
+
+
+@asynccontextmanager
+async def _async_v6_session(
+    hass: HomeAssistant, verify_ssl: bool
+) -> AsyncIterator[aiohttp.ClientSession]:
+    """Yield a short-lived isolated session for one-shot Pi-hole v6 requests."""
+    session = _async_create_v6_session(hass, verify_ssl, auto_cleanup=False)
+    try:
+        yield session
+    finally:
+        session.detach()
+
+
+async def _async_v6_api_authentication_required(
+    hass: HomeAssistant, entry: dict[str, Any]
+) -> bool | None:
+    """Return if the v6 API requires auth, or None when v6 is not detected."""
+    async with _async_v6_session(hass, entry[CONF_VERIFY_SSL]) as session:
+        hole_v6 = api_by_version(hass, entry, 6, password="", session=session)
+        try:
+            await hole_v6.get_versions()
+        except HoleConnectionError:
+            raise
+        except HoleAuthenticationError:
+            return True
+        except HoleError:
+            return None
+
+        return False
+
+
 async def determine_api_version(
     hass: HomeAssistant, entry: dict[str, Any]
 ) -> Literal[5, 6]:
-    """Determine the API version of the Pi-hole instance.
+    """Determine the API version of the Pi-hole instance without authentication.
 
-    Neither API v5 or v6 provides an endpoint to check the
-    version without authentication. Version 6 provides other
-    endpoints that do not require authentication, so we can
-    use those to determine the version. Version 5 returns an
-    empty list in response to unauthenticated requests.
-    Because we are using endpoints that are not designed for
-    this purpose, we should log liberally to help with
-    debugging.
+    Version 6 returns either version data or a distinct unauthorized error from
+    /api/info/version, so we can use that endpoint to determine the version.
+    Version 5 returns an empty list in response to unauthenticated requests.
+    Because we are using endpoints that are not designed for this purpose, we should
+    log liberally to help with debugging.
     """
 
-    hole_v6 = api_by_version(hass, entry, 6, password="wrong_password")
     try:
-        await hole_v6.authenticate()
-    except HoleConnectionError as err:
-        _LOGGER.error(
-            "Unexpected error connecting to Pi-hole v6 API"
-            " at %s: %s. Trying version 5 API",
-            hole_v6.base_url,
-            err,
-        )
-    # Ideally python-hole would raise a specific exception for authentication failures
-    except HoleError as ex_v6:
-        if str(ex_v6) == "Authentication failed: Invalid password":
+        if await _async_v6_api_authentication_required(hass, entry) is not None:
             _LOGGER.debug(
-                "Success connecting to Pi-hole at %s without auth, API version is : %s",
-                hole_v6.base_url,
-                6,
+                "Response from v6 API without auth, Pi-hole API version 6 probably"
+                " detected at %s",
+                entry[CONF_HOST],
             )
             return 6
-        _LOGGER.debug(
-            "Connection to %s failed: %s, trying API version 5", hole_v6.base_url, ex_v6
+    except HoleConnectionError as err:
+        _LOGGER.error(
+            "Unexpected error connecting to Pi-hole v6 API at %s: %s. Trying version"
+            " 5 API",
+            entry[CONF_HOST],
+            err,
         )
-    else:
-        # It seems that occasionally the auth can succeed
-        # unexpectedly when there is a valid session
-        _LOGGER.warning(
-            "Authenticated with %s through v6 API, but"
-            " succeeded with an incorrect password."
-            " This is a known bug",
-            hole_v6.base_url,
-        )
-        return 6
+
     hole_v5 = api_by_version(hass, entry, 5, password="wrong_token")
     try:
         await hole_v5.get_data()
@@ -203,6 +237,6 @@ async def determine_api_version(
         )
     _LOGGER.debug(
         "Could not determine pi-hole API version at: %s",
-        hole_v6.base_url,
+        entry[CONF_HOST],
     )
     raise HoleError("Could not determine Pi-hole API version")
