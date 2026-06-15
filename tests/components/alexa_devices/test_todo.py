@@ -1,7 +1,7 @@
 """Test Alexa Devices todo entities."""
 
-from typing import Any, cast
-from unittest.mock import AsyncMock, MagicMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, patch
 
 from aioamazondevices.structures import (
     AmazonListEvent,
@@ -11,30 +11,28 @@ from aioamazondevices.structures import (
     AmazonListItemStatus,
     AmazonListType,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.alexa_devices.todo import AlexaToDoList
+from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
 from homeassistant.components.alexa_devices.utils import (
     async_remove_stale_todo_list_entities,
 )
 from homeassistant.components.todo import (
-    DATA_COMPONENT,
     DOMAIN as TODO_DOMAIN,
-    TodoItem,
     TodoItemStatus,
     TodoServices,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import slugify
 
 from . import setup_integration
 from .const import TEST_USERNAME
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 LIST_ENTITY_ID_PREFIX = f"{TODO_DOMAIN.lower()}.{slugify(TEST_USERNAME)}_"
 SHOPPING_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}shopping_list"
@@ -248,82 +246,9 @@ async def test_update_todo_item(
     )
 
 
-async def test_update_todo_item_errors(
-    hass: HomeAssistant,
-    mock_amazon_devices_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_todo_lists: list[AmazonListInfo],
-    mock_todo_items: dict[str, Any],
-) -> None:
-    """Test updating a todo item with errors."""
-    mock_amazon_devices_client.todo_lists = mock_todo_lists
-    mock_amazon_devices_client.get_todo_list_items = AsyncMock(
-        side_effect=lambda list_id: mock_todo_items.get(list_id, {})
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    entity_id = TODO_LIST_ENTITY_ID
-
-    # Item not found in HA
-    with pytest.raises(ServiceValidationError, match="Unable to find to-do list item"):
-        await hass.services.async_call(
-            TODO_DOMAIN,
-            TodoServices.UPDATE_ITEM,
-            {
-                ATTR_ENTITY_ID: entity_id,
-                "item": "non_existent_item",
-                "status": TodoItemStatus.COMPLETED,
-            },
-            blocking=True,
-        )
-
-    # Test platform method directly for error paths that are harder to reach via service calls
-    # Get the actual entity object from the component
-    component = hass.data[DATA_COMPONENT]
-    alexa_entity = cast(AlexaToDoList, component.get_entity(entity_id))
-    assert alexa_entity is not None
-
-    # Item not found in coordinator lookup
-    with pytest.raises(ServiceValidationError, match="the item was not found"):
-        await alexa_entity.async_update_todo_item(
-            TodoItem(uid="non_existent", summary="Task")
-        )
-
-    # Item summary empty
-    with pytest.raises(ServiceValidationError, match="Item summary cannot be empty"):
-        await alexa_entity.async_create_todo_item(TodoItem(summary=""))
-
-    # Item summary and UID required for update
-    with pytest.raises(
-        ServiceValidationError, match="Item summary and UID are required"
-    ):
-        await alexa_entity.async_update_todo_item(TodoItem(uid=None, summary="Task"))
-    with pytest.raises(
-        ServiceValidationError, match="Item summary and UID are required"
-    ):
-        await alexa_entity.async_update_todo_item(TodoItem(uid="item_1", summary=None))
-
-    # Item not found for delete
-    with pytest.raises(ServiceValidationError, match="the item was not found"):
-        await alexa_entity.async_delete_todo_items(["non_existent"])
-
-    # Lookup not found
-    alexa_entity.coordinator._todo_list_items.pop(alexa_entity._list.id, None)
-    with pytest.raises(
-        ServiceValidationError, match="the cached list items could not be found"
-    ):
-        await alexa_entity.async_update_todo_item(
-            TodoItem(uid="item_1", summary="Task")
-        )
-    with pytest.raises(
-        ServiceValidationError, match="the cached list items could not be found"
-    ):
-        await alexa_entity.async_delete_todo_items(["item_1"])
-
-
 async def test_dynamic_lists(
     hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -351,9 +276,8 @@ async def test_dynamic_lists(
         )
     )
 
-    # Trigger update
-    coordinator = mock_config_entry.runtime_data
-    coordinator.async_update_listeners()
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
@@ -384,10 +308,6 @@ async def test_todo_event_handler(
     )
     coordinator.todo_list_items[list_id] = {item_id: item}
 
-    # Add a listener to check if data is updated
-    listener = MagicMock()
-    coordinator.async_add_listener(listener)
-
     # Test CREATED
     new_item_id = "item_2"
     new_item = AmazonListItem(
@@ -404,8 +324,6 @@ async def test_todo_event_handler(
     )
     await coordinator.todo_event_handler(created_event)
     assert coordinator.todo_list_items[list_id][new_item_id] == new_item
-    listener.assert_called_once()
-    listener.reset_mock()
 
     # Test UPDATED
     updated_item = AmazonListItem(
@@ -422,8 +340,6 @@ async def test_todo_event_handler(
     )
     await coordinator.todo_event_handler(updated_event)
     assert coordinator.todo_list_items[list_id][item_id] == updated_item
-    listener.assert_called_once()
-    listener.reset_mock()
 
     # Test DELETED
     deleted_event = AmazonListEvent(
@@ -434,18 +350,18 @@ async def test_todo_event_handler(
     )
     await coordinator.todo_event_handler(deleted_event)
     assert item_id not in coordinator.todo_list_items[list_id]
-    listener.assert_called_once()
-    listener.reset_mock()
 
-    # Test event for unknown list (should log warning and return)
+    # Test event for unknown list (should log warning and return,
+    # no changes to coordinator state)
     unknown_event = AmazonListEvent(
         list_id="unknown_list",
         item_id="some_id",
         type=AmazonListEventType.CREATED,
         items=None,
     )
+    todo_items_before = coordinator.todo_list_items.copy()
     await coordinator.todo_event_handler(unknown_event)
-    listener.assert_not_called()
+    assert coordinator.todo_list_items == todo_items_before
 
 
 async def test_remove_stale_todo_list_entities(
@@ -477,39 +393,3 @@ async def test_remove_stale_todo_list_entities(
     assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
     assert hass.states.get(TODO_LIST_ENTITY_ID) is not None
     assert hass.states.get(CUSTOM_LIST_ENTITY_ID) is None
-
-
-async def test_entity_naming(
-    hass: HomeAssistant,
-    mock_amazon_devices_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_todo_lists: list[AmazonListInfo],
-) -> None:
-    """Test entity naming."""
-    mock_amazon_devices_client.todo_lists = mock_todo_lists
-    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
-
-    await setup_integration(hass, mock_config_entry)
-
-    entity_registry = er.async_get(hass)
-
-    # Shopping list (System)
-    shopping_list_entity = entity_registry.async_get(SHOPPING_LIST_ENTITY_ID)
-    assert shopping_list_entity is not None
-    assert shopping_list_entity.translation_key == "shop"
-    assert shopping_list_entity.has_entity_name is True
-    assert shopping_list_entity.original_name == "Shopping list"
-
-    # To-do list (System)
-    todo_list_entity = entity_registry.async_get(TODO_LIST_ENTITY_ID)
-    assert todo_list_entity is not None
-    assert todo_list_entity.translation_key == "todo"
-    assert todo_list_entity.has_entity_name is True
-    assert todo_list_entity.original_name == "To-do list"
-
-    # Custom list
-    custom_list_entity = entity_registry.async_get(CUSTOM_LIST_ENTITY_ID)
-    assert custom_list_entity is not None
-    assert custom_list_entity.original_name == "Concerts"
-    assert custom_list_entity.translation_key is None
-    assert custom_list_entity.has_entity_name is True

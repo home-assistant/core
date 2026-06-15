@@ -14,10 +14,9 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity import EntityDescription
 
-from .const import _LOGGER, DOMAIN
+from .const import _LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonServiceEntity
 from .utils import async_remove_stale_todo_list_entities
@@ -114,11 +113,11 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             "Creating todo item: %s for list: %s", item.summary, self._list.name
         )
 
-        if not item.summary:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="todo_item_summary_empty",
-            )
+        # For passing type checking, existence of summary
+        # is already checked by voluptuous
+        if TYPE_CHECKING:
+            assert item.uid is not None
+            assert item.summary is not None
 
         async with alexa_api_call(self.coordinator):
             await self.coordinator.api.add_todo_list_item(self._list.id, item.summary)
@@ -133,27 +132,11 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         """Delete items from the to-do list."""
         _LOGGER.debug("Called async_delete_todo_items for %s item(s)", len(uids))
 
-        list_items_lookup = self.coordinator.todo_list_items.get(self._list.id)
-
-        if list_items_lookup is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="todo_items_lookup_not_found",
-                translation_placeholders={"entity_id": self.entity_id},
-            )
+        list_items_lookup = self.coordinator.todo_list_items[self._list.id]
 
         for uid in uids:
-            existing_item = list_items_lookup.get(uid)
+            existing_item = list_items_lookup[uid]
 
-            if existing_item is None:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="todo_item_not_found",
-                    translation_placeholders={
-                        "uid": uid,
-                        "entity_id": self.entity_id,
-                    },
-                )
             _LOGGER.debug(
                 "Deleting item %s (ID: %s) with version %s",
                 existing_item.name,
@@ -173,32 +156,15 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
-        if not item.summary or not item.uid:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="todo_item_summary_uid_required",
-            )
+        list_items_lookup = self.coordinator.todo_list_items[self._list.id]
 
-        list_items_lookup = self.coordinator.todo_list_items.get(self._list.id)
+        # For passing type checking, existence of UID and summary
+        # is already checked by voluptuous
+        if TYPE_CHECKING:
+            assert item.uid is not None
+            assert item.summary is not None
 
-        if list_items_lookup is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="todo_items_lookup_not_found",
-                translation_placeholders={"entity_id": self.entity_id},
-            )
-
-        existing_item = list_items_lookup.get(item.uid)
-
-        if existing_item is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="todo_item_not_found",
-                translation_placeholders={
-                    "uid": item.uid,
-                    "entity_id": self.entity_id,
-                },
-            )
+        existing_item = list_items_lookup[item.uid]
 
         has_completed_changed = (
             existing_item.status == AmazonListItemStatus.COMPLETE

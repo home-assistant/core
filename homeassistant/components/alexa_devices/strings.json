@@ -134,18 +134,6 @@
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
     },
-    "todo_item_not_found": {
-      "message": "Unable to update or delete to-do item {uid} from list {entity_id}: the item was not found. It may have already been deleted."
-    },
-    "todo_item_summary_empty": {
-      "message": "Item summary cannot be empty."
-    },
-    "todo_item_summary_uid_required": {
-      "message": "Item summary and UID are required."
-    },
-    "todo_items_lookup_not_found": {
-      "message": "Unable to update or delete to-do item(s) from list {entity_id}: the cached list items could not be found. Restart and try again."
-    },
     "unknown_exception": {
       "message": "Unknown error occurred: {error}"
     }
