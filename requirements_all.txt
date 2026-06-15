@@ -1362,7 +1362,7 @@ indevolt-api==1.8.5
 influxdb-client==1.50.0
 
 # homeassistant.components.influxdb
-influxdb==5.3.1
+influxdb==5.3.2
 
 # homeassistant.components.infrared
 infrared-protocols==6.0.0
