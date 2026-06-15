@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from compit_inext_api import Param, Parameter
+from compit_inext_api import Parameter
 from compit_inext_api.consts import (
     CompitFanMode,
     CompitHVACMode,
