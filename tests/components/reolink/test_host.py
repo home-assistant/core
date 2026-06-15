@@ -437,7 +437,7 @@ async def test_register_webhook_errors(
 ) -> None:
     """Test errors while registering the webhook."""
     with patch(
-        "homeassistant.components.reolink.host.get_url",
+        "homeassistant.components.reolink.host.webhook.async_generate_url",
         side_effect=NoURLAvailableError("Test error"),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
