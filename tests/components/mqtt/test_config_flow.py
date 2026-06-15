@@ -1251,10 +1251,6 @@ async def test_bad_certificate_validation(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "broker"
 
-    test_input["other_settings"]["set_client_cert"] = set_client_cert
-    test_input["other_settings"]["set_ca_cert"] = set_ca_cert
-    test_input["other_settings"]["tls_insecure"] = tls_insecure
-
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input=test_input,
@@ -2129,7 +2125,7 @@ async def test_setup_with_advanced_settings(
     assert result["step_id"] == "broker"
     assert result["errors"]["base"] == "bad_ws_headers"
 
-    # next iteration, with with client cert and key set
+    # next iteration, with client cert and key set
     # and correct json payload for ws_headers
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
