@@ -2812,7 +2812,7 @@ pyversasense==0.0.6
 pyvesync==3.4.2
 
 # homeassistant.components.vizio
-pyvizio==0.1.61
+pyvizio==0.1.64
 
 # homeassistant.components.velux
 pyvlx==0.2.35
