@@ -404,7 +404,7 @@ class OnkyoOptionsFlowHandler(OptionsFlowWithReload):
             min_volume = user_input.get(OPTION_MIN_VOLUME, OPTION_MIN_VOLUME_DEFAULT)
             max_volume = user_input[OPTION_MAX_VOLUME]
             if min_volume >= max_volume:
-                errors[OPTION_MIN_VOLUME] = "min_volume_below_max"
+                errors[OPTION_MIN_VOLUME] = "min_volume_not_below_max"
 
             if not errors:
                 self._input_sources = {}

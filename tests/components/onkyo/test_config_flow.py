@@ -587,7 +587,7 @@ async def test_options_flow(
     }
 
 
-async def test_options_flow_min_volume_below_max(
+async def test_options_flow_min_volume_not_below_max(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow rejects min_volume >= max_volume."""
@@ -609,4 +609,4 @@ async def test_options_flow_min_volume_below_max(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
-    assert result["errors"] == {OPTION_MIN_VOLUME: "min_volume_below_max"}
+    assert result["errors"] == {OPTION_MIN_VOLUME: "min_volume_not_below_max"}
