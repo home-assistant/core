@@ -47,10 +47,11 @@ def _is_inside_connections_kwarg(node: nodes.NodeNG) -> bool:
     """Check if a node is inside a ``connections=`` keyword argument."""
     current = node.parent
     while current is not None:
-        if isinstance(current, nodes.Keyword) and current.arg == "connections":
-            return True
-        if isinstance(current, (nodes.FunctionDef, nodes.ClassDef, nodes.Module)):
-            break
+        match current:
+            case nodes.Keyword(arg="connections"):
+                return True
+            case nodes.FunctionDef() | nodes.ClassDef() | nodes.Module():
+                break
         current = current.parent
     return False
 
