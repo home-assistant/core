@@ -93,13 +93,7 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         return self._index_devices(self.client.devices)
 
     def _index_devices(self, devices: list[Device]) -> dict[str, Device]:
-        """Build a dict of devices keyed by their stable unique key.
-
-        HID devices that share the same base key (identical model, no serial)
-        are sorted by their raw location string and then assigned incrementing
-        suffixes (hid_0, hid_1, …).  This matches the ordering used by the
-        unique-ID migration so indices stay consistent.
-        """
+        """Index devices by stable key, appending ``_N`` for duplicate HID keys."""
         result: dict[str, Device] = {}
         hid_groups: dict[str, list[Device]] = defaultdict(list)
         for device in devices:
@@ -128,13 +122,9 @@ class OpenRGBCoordinator(DataUpdateCoordinator[dict[str, Device]]):
     def _get_device_key(self, device: Device) -> str:
         """Build a stable device key.
 
-        Note: the OpenRGB device.id is intentionally not used because it is just
-        a positional index that can change when devices are added or removed.
-
-        For HID devices, the location string is excluded because it contains a
-        platform-specific path (e.g. DevSrvsID on macOS) that changes every time
-        the device is reconnected.
-        For non-HID devices (e.g. I2C), location is more stable and is included.
+        ``device.id`` is intentionally excluded (positional index).
+        HID locations are replaced with ``hid`` because they change on reconnect;
+        non-HID locations (e.g. I2C) are stable and kept as-is.
         """
         location = device.metadata.location or "none"
         serial = device.metadata.serial or "none"
