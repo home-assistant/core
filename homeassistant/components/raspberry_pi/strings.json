@@ -5,5 +5,10 @@
         "name": "Firmware"
       }
     }
+  },
+  "exceptions": {
+    "supervisor_not_ready": {
+      "message": "Supervisor is not ready"
+    }
   }
 }

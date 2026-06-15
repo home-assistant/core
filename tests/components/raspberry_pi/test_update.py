@@ -1,17 +1,25 @@
 """Test the Raspberry Pi firmware update entity."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from aiohasupervisor import SupervisorNotFoundError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
+from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
 from homeassistant.components.raspberry_pi.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
 
-from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.common import (
+    MockConfigEntry,
+    MockModule,
+    async_fire_time_changed,
+    mock_integration,
+)
 
 RPI_FIRMWARE_ENTITY_ID = "update.raspberry_pi_5_firmware"
 
@@ -91,3 +99,55 @@ async def test_rpi_firmware_entity_absent_on_unsupported_board(
 
     assert hass.states.get(RPI_FIRMWARE_ENTITY_ID) is None
     supervisor_client.os.raspberry_pi_firmware_info.assert_not_called()
+
+
+async def test_rpi_firmware_platform_retries_when_os_info_unavailable(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The platform retries and recovers once the OS info becomes available."""
+    supervisor_client.os.raspberry_pi_firmware_info.return_value = (
+        RaspberryPiFirmwareInfo(
+            current_version="1765222194",
+            latest_version="1778498402",
+            update_available=True,
+            update_blocked=False,
+            update_pending=False,
+            blocked_reason=None,
+        )
+    )
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    config_entry = MockConfigEntry(data={}, domain=DOMAIN, title="Raspberry Pi")
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.raspberry_pi.get_os_info",
+            return_value={"board": "rpi5-64"},
+        ),
+        patch(
+            "homeassistant.components.raspberry_pi.update.get_os_info",
+            side_effect=HassioNotReadyError,
+        ) as mock_update_os_info,
+        patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # First attempt fails: OS info isn't ready, so no entity is created yet.
+        # The PlatformNotReady message comes from the supervisor_not_ready
+        # translation.
+        assert hass.states.get(RPI_FIRMWARE_ENTITY_ID) is None
+        assert "Supervisor is not ready" in caplog.text
+
+        # Once the OS info is available, the scheduled retry creates the entity.
+        mock_update_os_info.side_effect = None
+        mock_update_os_info.return_value = {"board": "rpi5-64"}
+        freezer.tick(timedelta(seconds=PLATFORM_NOT_READY_BASE_WAIT_TIME + 1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(RPI_FIRMWARE_ENTITY_ID) is not None

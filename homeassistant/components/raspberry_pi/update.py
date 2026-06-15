@@ -4,7 +4,7 @@ import logging
 
 from aiohasupervisor import SupervisorError
 
-from homeassistant.components.hassio import get_os_info
+from homeassistant.components.hassio import HassioNotReadyError, get_os_info
 from homeassistant.components.homeassistant_hardware.update import (
     RaspberryPiFirmwareUpdateEntity,
 )
@@ -30,8 +30,16 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Raspberry Pi firmware update entity."""
-    os_info = get_os_info(hass)
-    board = None if os_info is None else os_info.get("board")
+    try:
+        os_info = get_os_info(hass)
+    except HassioNotReadyError as err:
+        raise PlatformNotReady(
+            translation_domain=DOMAIN,
+            translation_key="supervisor_not_ready",
+        ) from err
+
+    board = os_info.get("board")
+
     # Only RPi 4/5 expose the bootloader EEPROM. The Yellow's CM4/CM5 is handled
     # by the homeassistant_yellow integration on its own device.
     if board is None or board not in BOARDS_WITH_RASPBERRYPI_FIRMWARE:
