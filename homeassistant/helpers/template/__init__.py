@@ -230,7 +230,7 @@ RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
 @lru_cache(maxsize=EVAL_CACHE_SIZE)
-def _cached_parse_result(render_result: str) -> Any:
+def _parse_result(render_result: str) -> Any:
     """Parse a result and cache the result."""
     # lru_cache does not memoize raised exceptions. The most common template
     # results, plain string states such as "on", "off" or "unavailable", are
@@ -351,7 +351,7 @@ class Template:
         if self.is_static:
             if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
-            return self._parse_result(self.template)
+            return _parse_result(self.template)
         assert self.hass is not None, "hass variable not set on template"
         return run_callback_threadsafe(
             self.hass.loop,
@@ -380,7 +380,7 @@ class Template:
         if self.is_static:
             if not parse_result or (self.hass and self.hass.config.legacy_templates):
                 return self.template
-            return self._parse_result(self.template)
+            return _parse_result(self.template)
 
         compiled = self._compiled or self._ensure_compiled(limited, strict, log_fn)
 
@@ -403,11 +403,7 @@ class Template:
         if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
-        return self._parse_result(render_result)
-
-    def _parse_result(self, render_result: str) -> Any:
-        """Parse the result."""
-        return _cached_parse_result(render_result)
+        return _parse_result(render_result)
 
     async def async_render_will_timeout(
         self,
@@ -574,7 +570,7 @@ class Template:
         if not parse_result or (self.hass and self.hass.config.legacy_templates):
             return render_result
 
-        return self._parse_result(render_result)
+        return _parse_result(render_result)
 
     def _ensure_compiled(
         self,
