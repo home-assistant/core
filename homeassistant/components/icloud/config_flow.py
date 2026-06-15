@@ -37,7 +37,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
-    """Handle a iCloud config flow."""
+    """Handle an iCloud config flow."""
 
     VERSION = 1
 
@@ -55,6 +55,10 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self._existing_entry_data: dict[str, Any] | None = None
         self._description_placeholders: dict[str, str] | None = None
+
+        # Track 2FA code requests so redisplaying the form does not repeatedly
+        # request new Apple verification codes.
+        self._2fa_code_requested: bool = False
 
     def _show_setup_form(self, user_input=None, errors=None, step_id="user"):
         """Show the setup form to the user."""
@@ -89,6 +93,68 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=self._description_placeholders,
         )
 
+    async def _create_icloud_api(self) -> PyiCloudService:
+        """Create a pyicloud API object in the executor."""
+        return await self.hass.async_add_executor_job(
+            PyiCloudService,
+            self._username,
+            self._password,
+            Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
+            True,
+            None,
+            self._with_family,
+        )
+
+    async def _request_2fa_code_if_supported(
+        self, errors: dict[str, str] | None = None
+    ) -> dict[str, str]:
+        """Request an Apple 2FA code when pyicloud supports that flow.
+
+        Older pyicloud versions may not expose request_2fa_code().
+        Newer pyicloud versions do, and Apple may not send/show a code until
+        this is called.
+        """
+        if errors is None:
+            errors = {}
+
+        if self._2fa_code_requested:
+            return errors
+
+        if TYPE_CHECKING:
+            assert self.api is not None
+
+        request_2fa_code = getattr(self.api, "request_2fa_code", None)
+
+        if request_2fa_code is None:
+            _LOGGER.warning(
+                "PyiCloud does not expose request_2fa_code(); showing verification "
+                "form without explicitly requesting a 2FA code"
+            )
+            self._2fa_code_requested = True
+            return errors
+
+        try:
+            result = await self.hass.async_add_executor_job(request_2fa_code)
+        except PyiCloudException as error:
+            _LOGGER.error("Failed to request iCloud 2FA verification code: %s", error)
+            errors["base"] = "send_verification_code"
+            return errors
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error requesting iCloud 2FA verification code"
+            )
+            errors["base"] = "send_verification_code"
+            return errors
+
+        if result is False:
+            _LOGGER.error("PyiCloud request_2fa_code returned False")
+            errors["base"] = "send_verification_code"
+            return errors
+
+        self._2fa_code_requested = True
+        _LOGGER.debug("Requested iCloud 2FA verification code")
+        return errors
+
     async def _validate_and_create_entry(self, user_input, step_id):
         """Check if config is valid and create entry if so."""
         self._password = user_input[CONF_PASSWORD]
@@ -96,7 +162,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         extra_inputs = user_input
 
         # If an existing entry was found, meaning this is a password update attempt,
-        # use those to get config values that aren't changing
+        # use those to get config values that aren't changing.
         if self._existing_entry_data:
             extra_inputs = self._existing_entry_data
 
@@ -107,21 +173,13 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_GPS_ACCURACY_THRESHOLD, DEFAULT_GPS_ACCURACY_THRESHOLD
         )
 
-        # Check if already configured
+        # Check if already configured.
         if self.unique_id is None:
             await self.async_set_unique_id(self._username)
             self._abort_if_unique_id_configured()
 
         try:
-            self.api = await self.hass.async_add_executor_job(
-                PyiCloudService,
-                self._username,
-                self._password,
-                Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
-                True,
-                None,
-                self._with_family,
-            )
+            self.api = await self._create_icloud_api()
         except PyiCloudFailedLoginException as error:
             _LOGGER.error("Error logging into iCloud service: %s", error)
             self.api = None
@@ -129,7 +187,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             return self._show_setup_form(user_input, errors, step_id)
 
         if self.api.requires_2fa:
-            return await self.async_step_verification_code()
+            self._2fa_code_requested = False
+            return await self.async_step_verification_code(request_code=True)
 
         if self.api.requires_2sa:
             return await self.async_step_trusted_device()
@@ -153,7 +212,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
         }
 
-        # If this is a password update attempt, don't try and creating one
+        # If this is a password update attempt, don't try creating a new one.
         if self.source == SOURCE_USER:
             return self.async_create_entry(title=self._username, data=data)
 
@@ -183,7 +242,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Initialise re-authentication."""
         # Store existing entry data so it can be used later and set unique ID
-        # so existing config entry can be updated
+        # so existing config entry can be updated.
         await self.async_set_unique_id(self.context["unique_id"])
         self._existing_entry_data = {**entry_data}
         self._description_placeholders = {"username": entry_data[CONF_USERNAME]}
@@ -209,6 +268,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if TYPE_CHECKING:
             assert self.api is not None
+
         trusted_devices = await self.hass.async_add_executor_job(
             getattr, self.api, "trusted_devices"
         )
@@ -259,12 +319,15 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
+        request_code: bool = False,
     ) -> ConfigFlowResult:
         """Ask the verification code to the user."""
         if errors is None:
             errors = {}
 
         if user_input is None:
+            if request_code:
+                errors = await self._request_2fa_code_if_supported(errors)
             return await self._show_verification_code_form(errors)
 
         if TYPE_CHECKING:
@@ -285,31 +348,21 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             ):
                 raise PyiCloudException("The code you entered is not valid.")  # noqa: TRY301
         except PyiCloudException as error:
-            # Reset to the initial 2FA state to allow the user to retry
+            # Redisplay the verification form after a failed verification attempt.
+            # For 2FA, do not request a new Apple verification code on every bad
+            # user entry. The original code may still be valid, and repeatedly
+            # requesting new codes can invalidate prior codes or trigger rate limits.
             _LOGGER.error("Failed to verify verification code: %s", error)
             self._trusted_device = None
             self._verification_code = None
             errors["base"] = "validate_verification_code"
 
             if self.api.requires_2fa:
-                try:
-                    self.api = await self.hass.async_add_executor_job(
-                        PyiCloudService,
-                        self._username,
-                        self._password,
-                        Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
-                        True,
-                        None,
-                        self._with_family,
-                    )
-                    return await self.async_step_verification_code(None, errors)
-                except PyiCloudFailedLoginException as error_login:
-                    _LOGGER.error("Error logging into iCloud service: %s", error_login)
-                    self.api = None
-                    errors = {CONF_PASSWORD: "invalid_auth"}
-                    return self._show_setup_form(user_input, errors, "user")
-            else:
-                return await self.async_step_trusted_device(None, errors)
+                return await self.async_step_verification_code(
+                    None, errors, request_code=False
+                )
+
+            return await self.async_step_trusted_device(None, errors)
 
         return await self.async_step_user(
             {
@@ -329,5 +382,5 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="verification_code",
             data_schema=vol.Schema({vol.Required(CONF_VERIFICATION_CODE): str}),
-            errors=errors,
+            errors=errors or {},
         )
