@@ -45,13 +45,6 @@ async def async_setup_entry(
                 test_multicast = AsyncMotionMulticast(interface=multicast_interface)
                 try:
                     await test_multicast.Start_listen()
-                    test_multicast.Stop_listen()
-                    working_interface = multicast_interface
-                    _LOGGER.debug(
-                        "Stored Motionblinds interface '%s' validated for host %s",
-                        multicast_interface,
-                        host,
-                    )
                 except OSError:
                     # Stored interface no longer works, do full probe
                     _LOGGER.debug(
@@ -64,6 +57,14 @@ async def async_setup_entry(
                     )
                     working_interface = (
                         await check_multicast_class.async_check_interface(host, key)
+                    )
+                else:
+                    test_multicast.Stop_listen()
+                    working_interface = multicast_interface
+                    _LOGGER.debug(
+                        "Stored Motionblinds interface '%s' validated for host %s",
+                        multicast_interface,
+                        host,
                     )
             else:
                 check_multicast_class = ConnectMotionGateway(
