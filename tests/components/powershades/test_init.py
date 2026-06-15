@@ -162,3 +162,39 @@ async def test_setup_entry_fills_in_missing_metadata(hass: HomeAssistant) -> Non
 
     assert entry.data["model"] == 1
     assert entry.data["mac"] == "aa:bb:cc:dd:ee:ff"
+
+
+async def test_setup_entry_serial_probe_timeout(hass: HomeAssistant) -> None:
+    """A timeout probing for the model leaves it unset but setup still succeeds."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"ip": TEST_IP, "serial": TEST_SERIAL, "name": TEST_NAME},
+        unique_id=str(TEST_SERIAL),
+    )
+    entry.add_to_hass(hass)
+
+    async def fake_request(op, payload=b"", timeout=None, retries=None):
+        if op == OP_GET_STATUS:
+            return status_packet()
+        if op == OP_GET_SERIAL:
+            raise PowerShadesTimeoutError("no reply")
+        return build_packet(op)
+
+    with (
+        patch.object(PowerShadesConnection, "async_connect", AsyncMock()),
+        patch.object(
+            PowerShadesConnection,
+            "async_request",
+            AsyncMock(side_effect=fake_request),
+        ),
+        patch.object(PowerShadesConnection, "close"),
+        patch(
+            "homeassistant.components.powershades.get_mac_address",
+            return_value="AA:BB:CC:DD:EE:FF",
+        ),
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert "model" not in entry.data
+    assert entry.data["mac"] == "aa:bb:cc:dd:ee:ff"

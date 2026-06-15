@@ -2,6 +2,7 @@
 
 from unittest.mock import patch
 
+from homeassistant.components.powershades.config_flow import MANUAL_ENTRY
 from homeassistant.components.powershades.const import DOMAIN
 from homeassistant.components.powershades.udp import PowerShadesTimeoutError
 from homeassistant.config_entries import (
@@ -150,6 +151,92 @@ async def test_discovery_hides_already_configured_devices(
     assert result["step_id"] == "pick_device"
     assert new_ip in result["data_schema"].schema["device"].container
     assert TEST_IP not in result["data_schema"].schema["device"].container
+
+
+async def test_pick_device_manual_entry(
+    hass: HomeAssistant, mock_device_info, mock_setup_entry
+) -> None:
+    """Choosing manual entry from the discovered-device list goes to the manual step."""
+    with patch(
+        "homeassistant.components.powershades.config_flow.async_discover_devices",
+        return_value=[{"ip": TEST_IP, "serial": 12345, "model": 1}],
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+        assert result["step_id"] == "pick_device"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"device": MANUAL_ENTRY}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+
+async def test_dhcp_discovery_cannot_connect(
+    hass: HomeAssistant, mock_setup_entry
+) -> None:
+    """A DHCP-discovered device that doesn't respond to a probe aborts."""
+    discovery_info = DhcpServiceInfo(
+        ip=TEST_IP,
+        hostname="ps-bedroom",
+        macaddress="d83af5112233",
+    )
+
+    with patch(
+        "homeassistant.components.powershades.config_flow.async_get_device_info",
+        side_effect=PowerShadesTimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_DHCP}, data=discovery_info
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
+async def test_integration_discovery_probes_for_name(
+    hass: HomeAssistant, mock_device_info, mock_setup_entry
+) -> None:
+    """Background discovery without a name probes the device for one."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_INTEGRATION_DISCOVERY},
+        data={"ip": TEST_IP, "serial": 12345},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["name"] == "Bedroom Shade"
+    assert result["data"]["model"] == 1
+
+
+async def test_integration_discovery_probe_timeout(
+    hass: HomeAssistant, mock_setup_entry
+) -> None:
+    """If probing for the name times out, discovery continues without one."""
+    with patch(
+        "homeassistant.components.powershades.config_flow.async_get_device_info",
+        side_effect=PowerShadesTimeoutError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_INTEGRATION_DISCOVERY},
+            data={"ip": TEST_IP, "serial": 12345, "model": 1},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    assert result["description_placeholders"]["name"] == "PowerShades device"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["name"] is None
 
 
 async def test_dhcp_discovery(
