@@ -4075,7 +4075,7 @@ async def test_entity_trigger_first_same_loop_iteration(
     await hass.async_block_till_done()
 
     # Unwanted: the trigger should fire exactly once, for entity_a, which
-    # was the first entity to turn on.
+    # was the first entity to turn on, but it doesn't.
     assert len(calls) == 0
 
     unsub()
@@ -4504,7 +4504,7 @@ async def test_entity_trigger_blip_same_loop_iteration(
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
 
-    # Unwanted: the trigger should fire once, for the on-event.
+    # Unwanted: the trigger should fire once, for the on-event, but doesn't.
     assert len(calls) == 0
 
     unsub()
