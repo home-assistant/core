@@ -9,6 +9,7 @@
       'latitude': 10.0,
       'longitude': 40.0,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.template_device_tracker',

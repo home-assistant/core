@@ -25,6 +25,7 @@ def test_render_all_conclusive_collapses_details() -> None:
             CheckKind.REPO_PUBLIC: _pass("public"),
             CheckKind.CI_UPLOAD: _pass("attestation found"),
             CheckKind.RELEASE_PIPELINE: _pass("OIDC via attestation"),
+            CheckKind.SECURITY: _pass("baseline scan clean"),
             CheckKind.PR_LINK: _pass("link found"),
             CheckKind.ASYNC_BLOCKING: _pass("no blocking calls in async"),
         },
@@ -49,6 +50,7 @@ def test_render_needs_agent_emits_generic_placeholders() -> None:
             CheckKind.REPO_PUBLIC: CheckResult(CheckStatus.NEEDS_AGENT, ""),
             CheckKind.CI_UPLOAD: CheckResult(CheckStatus.WARN, "no attestation"),
             CheckKind.RELEASE_PIPELINE: CheckResult(CheckStatus.NEEDS_AGENT, ""),
+            CheckKind.SECURITY: CheckResult(CheckStatus.NEEDS_AGENT, ""),
             CheckKind.PR_LINK: CheckResult(CheckStatus.NEEDS_AGENT, ""),
             CheckKind.ASYNC_BLOCKING: CheckResult(CheckStatus.NEEDS_AGENT, ""),
         },
@@ -58,6 +60,8 @@ def test_render_needs_agent_emits_generic_placeholders() -> None:
     assert "{{CHECK_DETAIL:pkg:repo_public}}" in rendered
     assert "{{CHECK_CELL:pkg:release_pipeline}}" in rendered
     assert "{{CHECK_DETAIL:pkg:release_pipeline}}" in rendered
+    assert "{{CHECK_CELL:pkg:security}}" in rendered
+    assert "{{CHECK_DETAIL:pkg:security}}" in rendered
     assert "{{CHECK_CELL:pkg:pr_link}}" in rendered
     assert "{{CHECK_CELL:pkg:async_blocking}}" in rendered
     assert "{{CHECK_DETAIL:pkg:async_blocking}}" in rendered
@@ -68,6 +72,30 @@ def test_render_empty_change_set() -> None:
     """A run with no package changes renders an explicit empty-state message."""
     rendered = render_comment(CheckRunResult(pr_number=1))
     assert "No tracked requirement changes detected" in rendered
+
+
+def test_render_embeds_head_sha_marker_and_visible_line() -> None:
+    """A head SHA produces the hidden marker (for the gate) and a visible line."""
+    pkg = PackageChange(
+        name="pkg",
+        old_version="1.0.0",
+        new_version="1.1.0",
+        repo_url="https://github.com/x/pkg",
+        checks={CheckKind.CI_UPLOAD: _pass("ok")},
+    )
+    sha = "abc1234def5678"
+    rendered = render_comment(CheckRunResult(pr_number=1, head_sha=sha, packages=[pkg]))
+    assert f"<!-- requirements-check-sha: {sha} -->" in rendered
+    assert "Checked at commit `abc1234`." in rendered
+    # The visible marker must still lead so add_comment dedup keeps working.
+    assert rendered.startswith("<!-- requirements-check -->\n")
+
+
+def test_render_without_head_sha_omits_marker() -> None:
+    """With no head SHA, neither the hidden marker nor the visible line appears."""
+    rendered = render_comment(CheckRunResult(pr_number=1))
+    assert "requirements-check-sha" not in rendered
+    assert "Checked at commit" not in rendered
 
 
 def test_render_missing_check_renders_as_skipped() -> None:

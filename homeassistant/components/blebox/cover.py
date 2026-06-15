@@ -74,6 +74,8 @@ async def async_setup_entry(
 class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
     """Representation of a BleBox cover feature."""
 
+    _attr_name = None
+
     def __init__(
         self, coordinator: BleBoxCoordinator, feature: blebox_uniapi.cover.Cover
     ) -> None:
@@ -90,10 +92,10 @@ class BleBoxCoverEntity(BleBoxEntity[blebox_uniapi.cover.Cover], CoverEntity):
 
         if feature.has_tilt:
             self._attr_supported_features |= (
-                CoverEntityFeature.SET_TILT_POSITION
-                | CoverEntityFeature.OPEN_TILT
-                | CoverEntityFeature.CLOSE_TILT
+                CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT
             )
+            if feature.is_calibrated:
+                self._attr_supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
         if feature.tilt_only:
             self._attr_supported_features &= ~(

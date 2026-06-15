@@ -4,7 +4,11 @@ from typing import Any, Unpack, cast
 
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import ATTR_IN_ZONES
+from homeassistant.components.device_tracker import (
+    ATTR_IN_ZONES,
+    DOMAIN as DEVICE_TRACKER_DOMAIN,
+)
+from homeassistant.components.person import DOMAIN as PERSON_DOMAIN
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
     ATTR_LATITUDE,
@@ -44,6 +48,8 @@ _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
 }
 _CONDITION_SCHEMA = vol.Schema({CONF_OPTIONS: _OPTIONS_SCHEMA_DICT})
 
+_IN_ZONES_DOMAINS = {DEVICE_TRACKER_DOMAIN, PERSON_DOMAIN}
+
 
 def zone(
     hass: HomeAssistant,
@@ -79,6 +85,14 @@ def zone(
         STATE_UNKNOWN,
     ):
         return False
+
+    # Prefer the in_zones attribute reported by the entity (e.g. person,
+    # device_tracker) over recomputing membership from coordinates.
+    if (
+        entity.domain in _IN_ZONES_DOMAINS
+        and (in_zones := entity.attributes.get(ATTR_IN_ZONES)) is not None
+    ):
+        return zone_ent.entity_id in in_zones
 
     latitude = entity.attributes.get(ATTR_LATITUDE)
     longitude = entity.attributes.get(ATTR_LONGITUDE)
@@ -211,7 +225,7 @@ class NotInZoneCondition(_ZoneTargetConditionBase):
 _OCCUPANCY_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(CONF_ZONE): cv.entity_domain("zone"),
+            vol.Required(CONF_ZONE): cv.entity_domain(DOMAIN),
             vol.Optional(CONF_FOR): cv.positive_time_period,
         },
     }
@@ -221,7 +235,7 @@ _OCCUPANCY_CONDITION_SCHEMA = vol.Schema(
 class _ZoneOccupancyConditionBase(EntityConditionBase):
     """Base for zone occupancy conditions (single zone, no behavior)."""
 
-    _domain_specs = {"zone": DomainSpec()}
+    _domain_specs = {DOMAIN: DomainSpec()}
     _schema = _OCCUPANCY_CONDITION_SCHEMA
 
     @classmethod
