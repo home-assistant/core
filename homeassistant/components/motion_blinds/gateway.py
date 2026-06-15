@@ -83,11 +83,8 @@ class ConnectMotionGateway:
         for adapter in adapters:
             if ipv4s := adapter["ipv4"]:
                 ip4 = ipv4s[0]["address"]
-                if adapter["enabled"]:
-                    if adapter["default"]:
-                        concrete_interfaces.insert(0, ip4)
-                    else:
-                        concrete_interfaces.append(ip4)
+                if adapter["enabled"] and adapter["default"]:
+                    concrete_interfaces.insert(0, ip4)
                 else:
                     concrete_interfaces.append(ip4)
 
