@@ -150,7 +150,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         value = self.get_parameter_value(CompitParameter.CURRENT_TEMPERATURE)
         if value is None:
             return None
-        return float(value.value)
+        return float(value)
 
     @property
     def target_temperature(self) -> float | None:
@@ -158,7 +158,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         value = self.get_parameter_value(CompitParameter.SET_TARGET_TEMPERATURE)
         if value is None:
             return None
-        return float(value.value)
+        return float(value)
 
     @cached_property
     def preset_modes(self) -> list[str] | None:
@@ -196,7 +196,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         preset_mode = self.get_parameter_value(CompitParameter.PRESET_MODE)
 
         if preset_mode:
-            compit_preset_mode = CompitPresetMode(preset_mode.value)
+            compit_preset_mode = CompitPresetMode(preset_mode)
             return COMPIT_PRESET_MAP.get(compit_preset_mode)
         return None
 
@@ -205,7 +205,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         """Return the current fan mode."""
         fan_mode = self.get_parameter_value(CompitParameter.FAN_MODE)
         if fan_mode:
-            compit_fan_mode = CompitFanMode(fan_mode.value)
+            compit_fan_mode = CompitFanMode(fan_mode)
             return COMPIT_FANSPEED_MAP.get(compit_fan_mode)
         return None
 
@@ -214,7 +214,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         """Return the current HVAC mode."""
         hvac_mode = self.get_parameter_value(CompitParameter.HVAC_MODE)
         if hvac_mode:
-            compit_hvac_mode = CompitHVACMode(hvac_mode.value)
+            compit_hvac_mode = CompitHVACMode(hvac_mode)
             return COMPIT_MODE_MAP.get(compit_hvac_mode)
         return None
 
@@ -258,8 +258,6 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
         self.async_write_ha_state()
 
-    def get_parameter_value(self, parameter: CompitParameter) -> Param | None:
+    def get_parameter_value(self, parameter: CompitParameter) -> str | float | None:
         """Get the parameter value from the device state."""
-        return self.coordinator.connector.get_device_parameter(
-            self.device_id, parameter
-        )
+        return self.coordinator.connector.get_current_value(self.device_id, parameter)
