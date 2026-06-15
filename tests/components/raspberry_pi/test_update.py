@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
-from aiohasupervisor import SupervisorNotFoundError
+from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import RaspberryPiFirmwareInfo
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -12,6 +12,7 @@ import pytest
 from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
 from homeassistant.components.raspberry_pi.const import DOMAIN
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
 
@@ -171,3 +172,121 @@ async def test_rpi_firmware_platform_retries_when_os_info_unavailable(
         await hass.async_block_till_done()
 
     assert hass.states.get(RPI_FIRMWARE_ENTITY_ID) is not None
+
+
+async def test_rpi_firmware_install_success(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """Installing reports the new version as installed once it is applied."""
+    supervisor_client.os.raspberry_pi_firmware_info.return_value = (
+        RaspberryPiFirmwareInfo(
+            current_version="1765222194",
+            latest_version="1778498402",
+            update_available=True,
+            update_blocked=False,
+            update_pending=False,
+            blocked_reason=None,
+        )
+    )
+    await _setup_rpi(hass, "rpi5-64")
+
+    state = hass.states.get(RPI_FIRMWARE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+
+    # After the flash the Supervisor reports the update as pending (applied,
+    # awaiting reboot), so the entity should read "up to date".
+    supervisor_client.os.raspberry_pi_firmware_info.return_value = (
+        RaspberryPiFirmwareInfo(
+            current_version="1765222194",
+            latest_version="1778498402",
+            update_available=False,
+            update_blocked=False,
+            update_pending=True,
+            blocked_reason=None,
+        )
+    )
+    await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": RPI_FIRMWARE_ENTITY_ID},
+        blocking=True,
+    )
+
+    supervisor_client.os.update_raspberry_pi_firmware.assert_awaited_once()
+    state = hass.states.get(RPI_FIRMWARE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "off"
+    assert state.attributes["installed_version"] == "2026-05-11"
+    assert state.attributes["latest_version"] == "2026-05-11"
+
+
+async def test_rpi_firmware_install_failure(
+    hass: HomeAssistant, supervisor_client: AsyncMock
+) -> None:
+    """A failed update is surfaced to the user as a HomeAssistantError."""
+    supervisor_client.os.raspberry_pi_firmware_info.return_value = (
+        RaspberryPiFirmwareInfo(
+            current_version="1765222194",
+            latest_version="1778498402",
+            update_available=True,
+            update_blocked=False,
+            update_pending=False,
+            blocked_reason=None,
+        )
+    )
+    await _setup_rpi(hass, "rpi5-64")
+
+    supervisor_client.os.update_raspberry_pi_firmware.side_effect = SupervisorError(
+        "boom"
+    )
+    with pytest.raises(
+        HomeAssistantError, match="Error updating Raspberry Pi firmware"
+    ):
+        await hass.services.async_call(
+            "update",
+            "install",
+            {"entity_id": RPI_FIRMWARE_ENTITY_ID},
+            blocking=True,
+        )
+
+    # A failed install must not optimistically flip the entity to "up to date".
+    state = hass.states.get(RPI_FIRMWARE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+
+
+async def test_rpi_firmware_install_refresh_failure_is_optimistic(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failed info refresh after a successful update is assumed to succeed."""
+    supervisor_client.os.raspberry_pi_firmware_info.return_value = (
+        RaspberryPiFirmwareInfo(
+            current_version="1765222194",
+            latest_version="1778498402",
+            update_available=True,
+            update_blocked=False,
+            update_pending=False,
+            blocked_reason=None,
+        )
+    )
+    await _setup_rpi(hass, "rpi5-64")
+
+    # The update call succeeds, but the follow-up info refresh fails.
+    supervisor_client.os.raspberry_pi_firmware_info.side_effect = SupervisorError(
+        "boom"
+    )
+    await hass.services.async_call(
+        "update",
+        "install",
+        {"entity_id": RPI_FIRMWARE_ENTITY_ID},
+        blocking=True,
+    )
+
+    supervisor_client.os.update_raspberry_pi_firmware.assert_awaited_once()
+    state = hass.states.get(RPI_FIRMWARE_ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+    assert "assuming update succeeded" in caplog.text
