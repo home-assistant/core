@@ -1,5 +1,7 @@
 """Support for Alexa Devices."""
 
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 from datetime import timedelta
 
 from aioamazondevices.api import AmazonEchoApi
@@ -8,13 +10,22 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
-from aioamazondevices.structures import AmazonDevice, AmazonVocalRecord
+from aioamazondevices.structures import (
+    AmazonDevice,
+    AmazonMediaState,
+    AmazonVocalRecord,
+    AmazonVolumeState,
+)
 from aiohttp import ClientSession
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    HomeAssistantError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -23,6 +34,65 @@ from homeassistant.util import slugify
 from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
 
 SCAN_INTERVAL = 300
+
+
+@asynccontextmanager
+async def alexa_api_call(
+    coordinator: DataUpdateCoordinator | None = None,
+) -> AsyncGenerator[None]:
+    """Handle common Alexa API exceptions as HomeAssistantError."""
+    try:
+        yield
+    except CannotAuthenticate as err:
+        if coordinator:
+            coordinator.last_update_success = False
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except CannotConnect as err:
+        if coordinator:
+            coordinator.last_update_success = False
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect_with_error",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except (CannotRetrieveData, ValueError) as err:
+        if coordinator:
+            coordinator.last_update_success = False
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="cannot_retrieve_data_with_error",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+
+
+@asynccontextmanager
+async def alexa_config_entry_errors() -> AsyncGenerator[None]:
+    """Handle common Alexa API exceptions as ConfigEntry errors."""
+    try:
+        yield
+    except CannotAuthenticate as err:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except (CannotConnect, TimeoutError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect_with_error",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+    except (CannotRetrieveData, ValueError, KeyError, StopIteration) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_retrieve_data_with_error",
+            translation_placeholders={"error": repr(err)},
+        ) from err
+
 
 type AmazonConfigEntry = ConfigEntry[AmazonDevicesCoordinator]
 
@@ -74,9 +144,16 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         }
 
         self._vocal_records: dict[str, AmazonVocalRecord] = {}
-
         self.api.on_history_event.append(self.history_state_event_handler)
         self.api.on_history_event.freeze()
+
+        self._volume_states: dict[str, AmazonVolumeState] = {}
+        self.api.on_volume_state_event.append(self.volume_state_event_handler)
+        self.api.on_volume_state_event.freeze()
+
+        self._media_states: dict[str, AmazonMediaState] = {}
+        self.api.on_media_state_event.append(self.media_state_event_handler)
+        self.api.on_media_state_event.freeze()
 
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
@@ -99,6 +176,12 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
+                translation_placeholders={"error": repr(err)},
+            ) from err
+        except ValueError as err:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="cannot_retrieve_data_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
         else:
@@ -157,26 +240,8 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     async def sync_history_state(self) -> None:
         """Sync history state."""
-        try:
+        async with alexa_config_entry_errors():
             self._vocal_records = await self.api.sync_history_state()
-        except CannotAuthenticate as e:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="invalid_auth",
-                translation_placeholders={"error": repr(e)},
-            ) from e
-        except CannotConnect as e:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_connect_with_error",
-                translation_placeholders={"error": repr(e)},
-            ) from e
-        except BaseException as e:
-            raise ConfigEntryNotReady(
-                translation_domain=DOMAIN,
-                translation_key="cannot_retrieve_data_with_error",
-                translation_placeholders={"error": repr(e)},
-            ) from e
 
     async def history_state_event_handler(
         self, vocal_records: dict[str, AmazonVocalRecord]
@@ -189,3 +254,32 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     def vocal_records(self) -> dict[str, AmazonVocalRecord]:
         """Vocal records of devices."""
         return self._vocal_records
+
+    async def sync_media_state(self) -> None:
+        """Sync media state."""
+        async with alexa_config_entry_errors():
+            await self.api.sync_media_state()
+
+    async def media_state_event_handler(
+        self, media_state: dict[str, AmazonMediaState]
+    ) -> None:
+        """Handle pushed media state changed events."""
+        self._media_states = media_state
+        self.async_update_listeners()
+
+    @property
+    def media_states(self) -> dict[str, AmazonMediaState]:
+        """Media state of devices."""
+        return self._media_states
+
+    async def volume_state_event_handler(
+        self, volume_states: dict[str, AmazonVolumeState]
+    ) -> None:
+        """Handle pushed volume change events."""
+        self._volume_states = volume_states
+        self.async_update_listeners()
+
+    @property
+    def volume_states(self) -> dict[str, AmazonVolumeState]:
+        """Volumes of devices."""
+        return self._volume_states

@@ -9,6 +9,7 @@
       ]),
       'mac': '00:00:5E:00:53:01',
       'source_type': <SourceType.ROUTER: 'router'>,
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
       'wifi': 'Main',
     }),
     'context': <ANY>,

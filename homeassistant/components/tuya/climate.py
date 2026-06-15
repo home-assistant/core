@@ -202,9 +202,10 @@ class TuyaClimateEntity(TuyaEntity, ClimateEntity):
 
         # Determine preset modes (ignore if empty options)
         if definition.preset_wrapper and definition.preset_wrapper.options:
-            self._attr_hvac_modes.append(description.switch_only_hvac_mode)
             self._attr_preset_modes = definition.preset_wrapper.options
             self._attr_supported_features |= ClimateEntityFeature.PRESET_MODE
+            if description.switch_only_hvac_mode not in self._attr_hvac_modes:
+                self._attr_hvac_modes.append(description.switch_only_hvac_mode)
 
         # Determine dpcode to use for setting the humidity
         if definition.target_humidity_wrapper:

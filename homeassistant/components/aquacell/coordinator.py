@@ -14,7 +14,7 @@ from aioaquacell import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -79,7 +79,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
 
                 softeners = await self.aquacell_api.get_all_softeners()
             except AuthenticationFailed as err:
-                raise ConfigEntryError from err
+                raise ConfigEntryAuthFailed from err
             except (AquacellApiException, TimeoutError) as err:
                 raise UpdateFailed(f"Error communicating with API: {err}") from err
 
