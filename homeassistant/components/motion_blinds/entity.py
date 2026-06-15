@@ -1,5 +1,7 @@
 """Support for Motionblinds using their WLAN API."""
 
+import asyncio
+
 from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
 from motionblinds.motion_blinds import MotionBlind
 
@@ -109,6 +111,11 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
 
     async def async_scheduled_update_request(self, *_) -> None:
         """Request a state update from the blind at a scheduled point in time."""
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._blind.Update_trigger)
+
+        await asyncio.sleep(2)
+
         # add the last position to the list and keep the list at max 2 items
         self._previous_positions.append(self._blind.position)
         self._previous_angles.append(self._blind.angle)
@@ -116,9 +123,6 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             del self._previous_positions[: len(self._previous_positions) - 2]
         if len(self._previous_angles) > 2:
             del self._previous_angles[: len(self._previous_angles) - 2]
-
-        async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Update_trigger)
 
         self.coordinator.async_update_listeners()
 
@@ -133,8 +137,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
                 self._blind.angle == prev_angle for prev_angle in self._previous_angles
             )
         ):
-            # keep updating the position @self._update_interval_moving
-            # until the position does not change.
+            # keep updating the position @self._update_interval_moving until the position does not change.
             self._requesting_position = async_call_later(
                 self.hass,
                 self._update_interval_moving,
@@ -146,7 +149,7 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
             self._requesting_position = None
 
     async def async_request_position_till_stop(self, delay: int | None = None) -> None:
-        """Request the position of the blind at intervals until it stops moving."""
+        """Request the position of the blind every self._update_interval_moving seconds until it stops moving."""
         if delay is None:
             delay = self._update_interval_moving
 
