@@ -1,5 +1,23 @@
 {
   "entity": {
+    "sensor": {
+      "card_insertion_state": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "none": "mdi:card-bulleted-off-outline",
+          "physical": "mdi:card-bulleted",
+          "remote": "mdi:cast-audio",
+          "streaming": "mdi:radio-tower"
+        }
+      },
+      "day_mode": {
+        "default": "mdi:theme-light-dark",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "night": "mdi:weather-night"
+        }
+      }
+    },
     "time": {
       "day_mode_start": {
         "default": "mdi:weather-sunny"
