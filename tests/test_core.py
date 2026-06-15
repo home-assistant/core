@@ -1432,7 +1432,7 @@ async def test_eventbus_fire_raises_when_queue_limit_reached(
         with pytest.raises(HomeAssistantError, match="endless loop"):
             hass.bus.async_fire("test")
         # The rejected event is not queued
-        assert len(hass.bus._fire_queue) == 0
+        assert len(hass.bus._event_queue) == 0
     finally:
         hass.bus._dispatching = False
         hass.bus._queued_event_count = 0

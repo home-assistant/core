@@ -1440,7 +1440,7 @@ class EventBus:
     __slots__ = (
         "_debug",
         "_dispatching",
-        "_fire_queue",
+        "_event_queue",
         "_hass",
         "_listeners",
         "_match_all_listeners",
@@ -1455,7 +1455,7 @@ class EventBus:
         self._match_all_listeners: list[_FilterableJobType[Any]] = []
         self._listeners[MATCH_ALL] = self._match_all_listeners
         self._hass = hass
-        self._fire_queue: deque[
+        self._event_queue: deque[
             tuple[EventType[Any] | str, Any, EventOrigin, Context | None, float]
         ] = deque()
         self._dispatching = False
@@ -1540,10 +1540,9 @@ class EventBus:
             )
 
         if self._dispatching:
-            # Non-reentrant dispatch: an event fired from within an event
-            # listener is queued and dispatched after the current dispatch
-            # completes, so all listeners observe events in fire order. The
-            # fire time is captured now since dispatch is deferred.
+            # A nested fire is queued and dispatched after the current
+            # dispatch. The fire time is captured now since dispatch is
+            # deferred.
             if self._queued_event_count >= _MAX_QUEUED_EVENT_DISPATCHES:
                 # Guard against event listeners firing events in an endless
                 # loop: stop queuing further events and raise so the firing
@@ -1556,7 +1555,7 @@ class EventBus:
                     " are likely firing events in an endless loop"
                 )
             self._queued_event_count += 1
-            self._fire_queue.append(
+            self._event_queue.append(
                 (event_type, event_data, origin, context, time_fired or time.time())
             )
             return
@@ -1565,9 +1564,9 @@ class EventBus:
         self._queued_event_count = 0
         try:
             self._async_dispatch(event_type, event_data, origin, context, time_fired)
-            fire_queue = self._fire_queue
-            while fire_queue:
-                self._async_dispatch(*fire_queue.popleft())
+            event_queue = self._event_queue
+            while event_queue:
+                self._async_dispatch(*event_queue.popleft())
         finally:
             self._dispatching = False
 
