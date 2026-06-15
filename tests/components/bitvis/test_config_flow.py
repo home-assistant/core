@@ -75,9 +75,7 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize("recover", [False, True])
-async def test_user_form_cannot_connect(
-    hass: HomeAssistant, recover: bool
-) -> None:
+async def test_user_form_cannot_connect(hass: HomeAssistant, recover: bool) -> None:
     """Test user form error on port bind failure, optionally with recovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

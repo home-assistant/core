@@ -1,15 +1,12 @@
 """Tests for the Bitvis Power Hub coordinator."""
 
-import asyncio
-from datetime import timedelta
-import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bitvis_protobuf import powerhub_pb2
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
 import pytest
 
-from homeassistant.components.bitvis.const import DOMAIN, MODEL_NAME, WATCHDOG_INTERVAL
+from homeassistant.components.bitvis.const import DOMAIN, MODEL_NAME
 from homeassistant.components.bitvis.coordinator import (
     BitvisDataUpdateCoordinator,
     BitvisListenerRegistry,
@@ -18,7 +15,6 @@ from homeassistant.components.bitvis.coordinator import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -81,10 +77,10 @@ def test_handle_payload_diagnostic(
 # ---------------------------------------------------------------------------
 
 
-async def test_coordinator_async_setup_registers_callback_and_starts_watchdog(
+async def test_coordinator_async_setup_registers_callback(
     hass: HomeAssistant, coordinator: BitvisDataUpdateCoordinator
 ) -> None:
-    """Test that _async_setup registers callback with listener and starts watchdog."""
+    """Test that _async_setup registers callback with listener."""
     mock_listener = MagicMock()
     mock_listener.start = AsyncMock()
     mock_listener.stop = AsyncMock()
@@ -99,10 +95,8 @@ async def test_coordinator_async_setup_registers_callback_and_starts_watchdog(
     mock_listener.register.assert_called_once()
     registered_callback = mock_listener.register.call_args[0][1]
     assert callable(registered_callback)
-    assert coordinator._watchdog_task is not None
 
     await coordinator.async_stop()
-    assert coordinator._watchdog_task is None
 
 
 async def test_coordinator_async_setup_reuses_existing_listener(
@@ -221,25 +215,8 @@ async def test_coordinator_handle_sample(
     await hass.async_block_till_done()
 
     assert coordinator.data.sample is parsed
-    assert coordinator.data.last_sample_timestamp is not None
     assert coordinator.last_update_success is True
     ha_listener.assert_called()
-
-
-async def test_coordinator_handle_sample_recovery_log(
-    hass: HomeAssistant,
-    coordinator: BitvisDataUpdateCoordinator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test recovery log is emitted when sample arrives after unavailability."""
-    coordinator._unavailable_logged = True
-    parsed = PayloadSample(sample=powerhub_pb2.Payload().sample)
-
-    with caplog.at_level(logging.INFO, logger="homeassistant.components.bitvis"):
-        coordinator._handle_sample(parsed)
-
-    assert "back online" in caplog.text
-    assert coordinator._unavailable_logged is False
 
 
 # ---------------------------------------------------------------------------
@@ -306,122 +283,16 @@ async def test_coordinator_handle_diagnostic_clears_device_info(
 
 
 # ---------------------------------------------------------------------------
-# Watchdog tests
-# ---------------------------------------------------------------------------
-
-
-async def test_watchdog_no_data_does_nothing(
-    hass: HomeAssistant,
-    coordinator: BitvisDataUpdateCoordinator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that watchdog does nothing when no data has been received yet."""
-    coordinator.last_update_success = True
-
-    with (
-        patch(
-            "asyncio.sleep",
-            new_callable=AsyncMock,
-            side_effect=[None, asyncio.CancelledError()],
-        ),
-        pytest.raises(asyncio.CancelledError),
-    ):
-        await coordinator._async_watchdog()
-
-    assert coordinator.last_update_success is True
-    assert "unavailable" not in caplog.text
-
-
-async def test_watchdog_recent_data_does_nothing(
-    hass: HomeAssistant,
-    coordinator: BitvisDataUpdateCoordinator,
-) -> None:
-    """Test that watchdog does nothing when data is recent."""
-    coordinator.data.last_sample_timestamp = dt_util.utcnow()
-    coordinator.last_update_success = True
-
-    with (
-        patch(
-            "asyncio.sleep",
-            new_callable=AsyncMock,
-            side_effect=[None, asyncio.CancelledError()],
-        ),
-        pytest.raises(asyncio.CancelledError),
-    ):
-        await coordinator._async_watchdog()
-
-    assert coordinator.last_update_success is True
-
-
-async def test_watchdog_stale_data_marks_unavailable(
-    hass: HomeAssistant,
-    coordinator: BitvisDataUpdateCoordinator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that watchdog marks coordinator unavailable on stale data."""
-    coordinator.data.last_sample_timestamp = (
-        dt_util.utcnow() - WATCHDOG_INTERVAL - timedelta(seconds=1)
-    )
-    coordinator.last_update_success = True
-
-    ha_listener = MagicMock()
-    coordinator.async_add_listener(ha_listener)
-
-    with (
-        patch(
-            "asyncio.sleep",
-            new_callable=AsyncMock,
-            side_effect=[None, asyncio.CancelledError()],
-        ),
-        caplog.at_level(logging.INFO, logger="homeassistant.components.bitvis"),
-        pytest.raises(asyncio.CancelledError),
-    ):
-        await coordinator._async_watchdog()
-
-    assert coordinator.last_update_success is False
-    assert coordinator._unavailable_logged is True
-    assert "unavailable" in caplog.text
-    ha_listener.assert_called()
-
-
-async def test_watchdog_unavailable_logs_only_once(
-    hass: HomeAssistant,
-    coordinator: BitvisDataUpdateCoordinator,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Test that unavailability is logged only once, not on every watchdog tick."""
-    coordinator.data.last_sample_timestamp = (
-        dt_util.utcnow() - WATCHDOG_INTERVAL - timedelta(seconds=1)
-    )
-    coordinator.last_update_success = False
-    coordinator._unavailable_logged = True
-
-    with (
-        patch(
-            "asyncio.sleep",
-            new_callable=AsyncMock,
-            side_effect=[None, asyncio.CancelledError()],
-        ),
-        caplog.at_level(logging.INFO, logger="homeassistant.components.bitvis"),
-        pytest.raises(asyncio.CancelledError),
-    ):
-        await coordinator._async_watchdog()
-
-    assert caplog.text.count("unavailable") == 0
-
-
-# ---------------------------------------------------------------------------
 # async_stop edge cases
 # ---------------------------------------------------------------------------
 
 
-async def test_coordinator_async_stop_without_watchdog(
+async def test_coordinator_async_stop_without_listener(
     hass: HomeAssistant, config_entry: MockConfigEntry
 ) -> None:
-    """Test that async_stop works when no watchdog task is running."""
+    """Test that async_stop works when no listener is registered."""
     config_entry.add_to_hass(hass)
     coordinator = BitvisDataUpdateCoordinator(hass, config_entry, "192.168.1.100", 5000)
-    assert coordinator._watchdog_task is None
 
     await coordinator.async_stop()
 

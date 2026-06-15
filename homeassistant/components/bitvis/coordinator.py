@@ -1,7 +1,6 @@
 """Data coordinator for Bitvis Power Hub."""
 
 import asyncio
-import contextlib
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
@@ -17,7 +16,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from homeassistant.util import dt as dt_util
 from homeassistant.util.variance import ignore_variance
 
-from .const import DATA_LISTENER_REGISTRY, DOMAIN, WATCHDOG_INTERVAL
+from .const import DATA_LISTENER_REGISTRY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -35,7 +34,6 @@ class BitvisData:
 
     sample: PayloadSample | None = None
     diagnostic: PayloadDiagnostic | None = None
-    last_sample_timestamp: datetime | None = None
     mac_address: str | None = None
     model_name: str | None = None
     sw_version: str | None = None
@@ -106,8 +104,6 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         self.host = host
         self.port = port
         self._registered_ips: set[str] = set()
-        self._watchdog_task: asyncio.Task[None] | None = None
-        self._unavailable_logged: bool = False
         self._stable_boot_time = ignore_variance(
             _uptime_to_boot_time, timedelta(minutes=5)
         )
@@ -131,21 +127,8 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
                 f"Failed to start UDP listener on port {self.port}"
             ) from err
 
-        assert self.config_entry is not None
-        self._watchdog_task = self.config_entry.async_create_background_task(
-            self.hass,
-            self._async_watchdog(),
-            f"{DOMAIN} watchdog",
-        )
-
     async def async_stop(self) -> None:
         """Unregister from the shared listener, stopping it when no longer needed."""
-        if self._watchdog_task:
-            self._watchdog_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._watchdog_task
-            self._watchdog_task = None
-
         if listener_registry := self.hass.data.get(DATA_LISTENER_REGISTRY):
             if listener := listener_registry.get(self.port):
                 listener.unregister(self._registered_ips)
@@ -172,11 +155,7 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
     @callback
     def _handle_sample(self, payload: PayloadSample) -> None:
         """Update sample data and notify listeners."""
-        if self._unavailable_logged:
-            _LOGGER.info("Device is back online")
-            self._unavailable_logged = False
         self.data.sample = payload
-        self.data.last_sample_timestamp = dt_util.utcnow()
         self.async_set_updated_data(self.data)
 
     @callback
@@ -196,30 +175,6 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         self.data.boot_time = self._stable_boot_time(diagnostic.uptime_s)
 
         self.async_set_updated_data(self.data)
-
-    async def _async_watchdog(self) -> None:
-        """Monitor for stale data and mark unavailable."""
-        while True:
-            await asyncio.sleep(WATCHDOG_INTERVAL.total_seconds())
-
-            if not self.data.last_sample_timestamp:
-                continue
-
-            time_since_update = dt_util.utcnow() - self.data.last_sample_timestamp
-            if time_since_update < WATCHDOG_INTERVAL:
-                continue
-
-            if not self._unavailable_logged:
-                _LOGGER.info(
-                    "No data received for %s seconds, marking unavailable",
-                    time_since_update.total_seconds(),
-                )
-                self._unavailable_logged = True
-
-            self.data = BitvisData()
-            self.async_set_update_error(
-                UpdateFailed("No data received within watchdog interval")
-            )
 
     async def _async_update_data(self) -> BitvisData:
         """Return current data (updates are push-based via UDP datagrams)."""
