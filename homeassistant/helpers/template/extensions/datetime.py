@@ -344,4 +344,4 @@ class DateTimeExtension(BaseTemplateExtension):
         """
         if not isinstance(value, timedelta):
             return value
-        return dt_util.timedelta_as_string(value, precision)
+        return dt_util.timedelta_string(value, precision)

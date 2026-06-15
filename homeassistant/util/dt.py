@@ -385,7 +385,7 @@ def get_time_remaining(date: dt.datetime, precision: int = 1) -> str:
     return _get_timestring(rounded_delta, precision)
 
 
-def timedelta_as_string(delta: dt.timedelta, precision: int = 1) -> str:
+def timedelta_string(delta: dt.timedelta, precision: int = 1) -> str:
     """Return a string representation of a timedelta.
 
     The result can be in seconds, minutes, hours, days, months and years.

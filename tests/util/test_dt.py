@@ -313,9 +313,9 @@ def test_time_remaining() -> None:
         (timedelta(hours=-1, minutes=-30), 2, "1 hour 30 minutes"),
     ],
 )
-def test_timedelta_as_string(delta: timedelta, precision: int, expected: str) -> None:
-    """Test timedelta_as_string."""
-    assert dt_util.timedelta_as_string(delta, precision) == expected
+def test_timedelta_string(delta: timedelta, precision: int, expected: str) -> None:
+    """Test timedelta_string."""
+    assert dt_util.timedelta_string(delta, precision) == expected
 
 
 def test_parse_time_expression() -> None:
