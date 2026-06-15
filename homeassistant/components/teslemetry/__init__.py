@@ -663,7 +663,11 @@ def _migrate_devices_to_subentries(
         if device.via_device_id is not None:
             wall_connectors.append((device, device.via_device_id))
             continue
-        identifier = next(i[1] for i in device.identifiers if i[0] == DOMAIN)
+        identifier = next((i[1] for i in device.identifiers if i[0] == DOMAIN), None)
+        if identifier is None:
+            # Skip stale or manually created devices that have no Teslemetry
+            # identifier; there is no product to map them to.
+            continue
         if identifier.isdigit():
             subentry_id = _ensure_subentry(
                 hass,
@@ -688,6 +692,11 @@ def _migrate_devices_to_subentries(
     for device, via_device_id in wall_connectors:
         if wall_connector_subentry_id := site_subentry_by_device_id.get(via_device_id):
             _bind(device, wall_connector_subentry_id)
+        else:
+            LOGGER.debug(
+                "No energy site subentry for wall connector device %s; skipping",
+                device.id,
+            )
 
 
 async def async_migrate_entry(
