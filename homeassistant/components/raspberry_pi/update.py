@@ -1,7 +1,5 @@
 """Raspberry Pi firmware update entity."""
 
-import logging
-
 from aiohasupervisor import SupervisorError
 
 from homeassistant.components.hassio import HassioNotReadyError, get_os_info
@@ -20,8 +18,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .hardware import BOARD_NAMES, MODELS
-
-_LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(
