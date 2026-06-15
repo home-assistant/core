@@ -343,6 +343,36 @@ class MySensor(Entity):
 """,
             id="domain_in_class_body_literal",
         ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"myhub.{key}"
+""",
+            id="domain_prefix_with_dot",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"{key}:myhub:value"
+""",
+            id="domain_embedded_with_colons",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"{key} myhub other"
+""",
+            id="domain_delimited_by_spaces",
+        ),
     ],
 )
 def test_redundant_domain_literal_fires(
@@ -361,6 +391,45 @@ def test_redundant_domain_literal_fires(
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-entity-unique-id-redundant-domain"
+
+
+@pytest.mark.parametrize(
+    ("literal", "fires"),
+    [
+        pytest.param("my_hub", True, id="exact_match"),
+        pytest.param("my_hub_key", True, id="trailing_underscore"),
+        pytest.param("prefix_my_hub_key", True, id="underscore_on_both_sides"),
+        pytest.param("my_hub-key", True, id="trailing_dash"),
+        pytest.param("my_hub.key", True, id="trailing_dot"),
+        pytest.param("my_hubs_key", False, id="extended_into_longer_word"),
+        pytest.param("Amy_hubB", False, id="alpha_on_both_sides"),
+        pytest.param("my_hubX", False, id="trailing_letter"),
+    ],
+)
+def test_redundant_domain_with_underscored_domain(
+    linter: UnittestLinter,
+    checker: EntityUniqueIdFormatChecker,
+    tmp_path: Path,
+    literal: str,
+    fires: bool,
+) -> None:
+    """Domain containing ``_`` is matched literally; boundaries apply outside it."""
+    integration_dir = _make_integration(tmp_path, domain="my_hub")
+
+    root_node = _parse(
+        f"""
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    _attr_unique_id = "{literal}"
+""",
+        integration_dir,
+    )
+    walker = ASTWalker(linter)
+    walker.add_checker(checker)
+    walker.walk(root_node)
+    messages = linter.release_messages()
+    assert len(messages) == (1 if fires else 0)
 
 
 @pytest.mark.parametrize(
@@ -385,6 +454,46 @@ class MySensor(Entity):
         self._attr_unique_id = f"submyhub-{key}"
 """,
             id="domain_appears_inside_other_word",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"Amyhub-{key}"
+""",
+            id="domain_preceded_by_letter",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"-myhubX-{key}"
+""",
+            id="domain_followed_by_letter",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"1myhub2"
+""",
+            id="domain_between_digits",
+        ),
+        pytest.param(
+            """
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    def __init__(self, key):
+        self._attr_unique_id = f"-myhub2{key}"
+""",
+            id="domain_followed_by_digit",
         ),
     ],
 )

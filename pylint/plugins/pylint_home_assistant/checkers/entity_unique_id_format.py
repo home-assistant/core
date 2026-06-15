@@ -22,7 +22,12 @@ the entity's unique id either:
 - contains the integration's domain (read from ``manifest.json``) as a
   delimited segment of any string literal (including f-string literal
   parts), e.g. ``f"myhub-{device_id}"`` in an integration whose
-  manifest declares ``"domain": "myhub"``.
+  manifest declares ``"domain": "myhub"``. A segment is considered
+  delimited when bordered by a non-alphanumeric character
+  (``_``, ``-``, ``.``, ``:``, space, ...) or a string boundary;
+  letters and digits adjacent to the segment make it part of a
+  longer identifier, so substrings like ``"myhubitat_..."`` or
+  ``"myhub2"`` don't match.
 
 Three locations are scanned: class-body ``_attr_unique_id``
 assignments, ``self._attr_unique_id = ...`` assignments inside method
@@ -50,15 +55,19 @@ def _value_references_domain(value: nodes.NodeNG | None, domain: str | None) -> 
 
     Matches either a ``Name(name="DOMAIN")`` reference at any depth, or
     the integration's domain string appearing as a delimited segment
-    (bordered by ``_``/``-``/string boundary) inside any string ``Const``
-    in the value (including f-string literal parts).
+    (bordered by a non-alphanumeric character or a string boundary)
+    inside any string ``Const`` in the value (including f-string
+    literal parts). Letters and digits are excluded from the boundary
+    set because both are valid in HA integration domain names.
     """
     if value is None:
         return False
     if any(n.name == "DOMAIN" for n in value.nodes_of_class(nodes.Name)):
         return True
     if domain:
-        pattern = re.compile(rf"(?:^|[_-]){re.escape(domain)}(?:[_-]|$)")
+        pattern = re.compile(
+            rf"(?:^|[^a-zA-Z0-9]){re.escape(domain)}(?:[^a-zA-Z0-9]|$)"
+        )
         for const in value.nodes_of_class(nodes.Const):
             if isinstance(const.value, str) and pattern.search(const.value):
                 return True
