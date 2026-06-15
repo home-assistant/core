@@ -1,5 +1,6 @@
 """Test the Raspberry Pi firmware update entity."""
 
+from collections.abc import Generator
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -25,7 +26,7 @@ RPI_FIRMWARE_ENTITY_ID = "update.raspberry_pi_5_firmware"
 
 
 @pytest.fixture(autouse=True)
-def mock_rpi_power():
+def mock_rpi_power() -> Generator[None]:
     """Mock the rpi_power integration."""
     with patch(
         "homeassistant.components.rpi_power.async_setup_entry",
