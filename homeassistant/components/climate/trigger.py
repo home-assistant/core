@@ -7,7 +7,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     EntityNumericalStateChangedTriggerBase,
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerBase,
@@ -26,7 +26,7 @@ from .const import ATTR_HUMIDITY, ATTR_HVAC_ACTION, DOMAIN, HVACAction, HVACMode
 
 CONF_HVAC_MODE = "hvac_mode"
 
-HVAC_MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+HVAC_MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
         vol.Required(CONF_OPTIONS): {
             vol.Required(CONF_HVAC_MODE): vol.All(
@@ -120,7 +120,9 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "target_humidity_changed": ClimateTargetHumidityChangedTrigger,
     "target_humidity_crossed_threshold": ClimateTargetHumidityCrossedThresholdTrigger,
     "target_temperature_changed": ClimateTargetTemperatureChangedTrigger,
-    "target_temperature_crossed_threshold": ClimateTargetTemperatureCrossedThresholdTrigger,
+    "target_temperature_crossed_threshold": (
+        ClimateTargetTemperatureCrossedThresholdTrigger
+    ),
     "turned_off": make_entity_target_state_trigger(DOMAIN, HVACMode.OFF),
     "turned_on": make_entity_transition_trigger(
         DOMAIN,

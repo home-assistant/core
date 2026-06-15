@@ -156,7 +156,7 @@ async def test_multi_monitor_config(hass: HomeAssistant, monitors: AsyncMock) ->
 
 
 async def test_setup_and_shutdown(hass: HomeAssistant, monitors: AsyncMock) -> None:
-    """Test that the component can set up and shut down cleanly, closing the underlying server on shutdown."""
+    """Test the component can set up and shut down cleanly."""
     monitors.start_server = AsyncMock(return_value=None)
     monitors.close = AsyncMock(return_value=None)
     assert await setup_greeneye_monitor_component_with_config(

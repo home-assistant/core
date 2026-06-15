@@ -100,6 +100,7 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
                 self.robot.enable_schedule()
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
                 _LOGGER.error(
                     "Neato switch connection error '%s': %s", self.entity_id, ex
@@ -110,6 +111,7 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
                 self.robot.disable_schedule()
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
                 _LOGGER.error(
                     "Neato switch connection error '%s': %s", self.entity_id, ex

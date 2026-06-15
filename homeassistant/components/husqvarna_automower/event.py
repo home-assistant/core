@@ -10,6 +10,7 @@ from homeassistant.components.event import (
     EventEntity,
     EventEntityDescription,
 )
+from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,8 +24,6 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 ATTR_SEVERITY = "severity"
-ATTR_LATITUDE = "latitude"
-ATTR_LONGITUDE = "longitude"
 ATTR_DATE_TIME = "date_time"
 
 
@@ -104,7 +103,7 @@ class AutomowerMessageEventEntity(AutomowerBaseEntity, EventEntity):
 
     @callback
     def _handle(self, msg: SingleMessageData) -> None:
-        """Handle a message event from the API and trigger the event entity if it matches the entity's mower ID."""
+        """Handle a message event from the API and trigger for matching mower ID."""
         if msg.id != self.mower_id:
             return
         message = msg.attributes.message

@@ -34,5 +34,10 @@ class NoboBaseEntity(Entity):
 
     @callback
     def _read_state(self) -> None:
-        """Read the current state from the hub. Must be overridden."""
+        """Copy the current hub state from the pynobo client onto the entity attributes.
+
+        The pynobo client keeps its own in-memory state, updated via pushes
+        from the hub; subclasses override this to map the relevant values
+        onto their `_attr_*` fields. Must be overridden.
+        """
         raise NotImplementedError

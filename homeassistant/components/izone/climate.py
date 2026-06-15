@@ -43,7 +43,7 @@ from .const import (
     DISPATCH_CONTROLLER_RECONNECTED,
     DISPATCH_CONTROLLER_UPDATE,
     DISPATCH_ZONE_UPDATE,
-    IZONE,
+    DOMAIN,
 )
 
 type _FuncType[_T, **_P, _R] = Callable[Concatenate[_T, _P], _R]
@@ -94,7 +94,7 @@ async def async_setup_entry(
         async_add_entities(device.zones.values())
 
     # create any components not yet created
-    for controller in disco.pi_disco.controllers.values():
+    for controller in (await disco.pi_disco.fetch_controllers()).values():
         init_controller(controller)
 
     # connect to register any further components
@@ -188,7 +188,7 @@ class ControllerDevice(ClimateEntity):
 
         self._attr_unique_id = controller.device_uid
         self._attr_device_info = DeviceInfo(
-            identifiers={(IZONE, controller.device_uid)},
+            identifiers={(DOMAIN, controller.device_uid)},
             manufacturer="IZone",
             model=controller.sys_type,
             name=f"iZone Controller {controller.device_uid}",
@@ -341,7 +341,10 @@ class ControllerDevice(ClimateEntity):
 
     @property
     def control_zone_name(self):
-        """Return the zone that currently controls the AC unit (if target temp not set by controller)."""
+        """Return the zone that currently controls the AC unit.
+
+        Only relevant if target temp not set by controller.
+        """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
         zone_ctrl = self._controller.zone_ctrl
@@ -352,7 +355,10 @@ class ControllerDevice(ClimateEntity):
 
     @property
     def control_zone_setpoint(self) -> float | None:
-        """Return the temperature setpoint of the zone that currently controls the AC unit (if target temp not set by controller)."""
+        """Return the temperature setpoint of the controlling zone.
+
+        Only relevant if target temp not set by controller.
+        """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return None
         zone_ctrl = self._controller.zone_ctrl
@@ -364,7 +370,10 @@ class ControllerDevice(ClimateEntity):
     @property
     @_return_on_connection_error()
     def target_temperature(self) -> float | None:
-        """Return the temperature we try to reach (either from control zone or master unit)."""
+        """Return the temperature we try to reach.
+
+        Either from control zone or master unit.
+        """
         if self._attr_supported_features & ClimateEntityFeature.TARGET_TEMPERATURE:
             return self._controller.temp_setpoint
         return self.control_zone_setpoint
@@ -475,12 +484,12 @@ class ZoneDevice(ClimateEntity):
         assert controller.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={
-                (IZONE, controller.unique_id, zone.index)  # type:ignore[arg-type]
+                (DOMAIN, controller.unique_id, zone.index)  # type:ignore[arg-type]
             },
             manufacturer="IZone",
             model=zone.type.name.title(),
             name=zone.name.title(),
-            via_device=(IZONE, controller.unique_id),
+            via_device=(DOMAIN, controller.unique_id),
         )
 
     async def async_added_to_hass(self) -> None:

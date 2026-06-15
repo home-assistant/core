@@ -96,7 +96,9 @@ class PterodactylButtonEntity(PterodactylEntity, ButtonEntity):
             )
         except PterodactylConnectionError as err:
             raise HomeAssistantError(
-                f"Failed to send action '{self.entity_description.key}': Connection error"
+                "Failed to send action"
+                f" '{self.entity_description.key}':"
+                " Connection error"
             ) from err
         except PterodactylAuthorizationError as err:
             raise HomeAssistantError(

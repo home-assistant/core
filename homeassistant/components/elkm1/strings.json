@@ -58,6 +58,16 @@
       }
     }
   },
+  "issues": {
+    "deprecated_sensor": {
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nUpdate your dashboards, templates, automations and scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",
+      "title": "Deprecated sensor detected"
+    },
+    "deprecated_sensor_scripts": {
+      "description": "The sensor {entity_name} (`{entity_id}`) is deprecated because it has been replaced with `{replacement_entity_id}`.\n\nThe sensor was used in the following automations or scripts:\n{items}\n\nUpdate the above automations or scripts to use the replacement entity, then disable the deprecated sensor to have it removed after the next restart.",
+      "title": "[%key:component::elkm1::issues::deprecated_sensor::title%]"
+    }
+  },
   "services": {
     "alarm_arm_home_instant": {
       "description": "Arms the Elk-M1 in home instant mode.",
@@ -200,6 +210,16 @@
         }
       },
       "name": "Speak word"
+    },
+    "switch_output_turn_on_for": {
+      "description": "Turns on an output for a specified length of time.",
+      "fields": {
+        "duration": {
+          "description": "Length of time to turn the output on for.",
+          "name": "Duration"
+        }
+      },
+      "name": "Switch output turn on for"
     }
   }
 }

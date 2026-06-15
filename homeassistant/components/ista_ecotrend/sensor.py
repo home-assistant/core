@@ -210,8 +210,10 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
 
     async def async_added_to_hass(self) -> None:
         """When added to hass."""
-        # perform initial statistics import when sensor is added, otherwise it would take
-        # 1 day when _handle_coordinator_update is triggered for the first time.
+        # Perform initial statistics import when sensor is
+        # added, otherwise it would take 1 day when
+        # _handle_coordinator_update is triggered for the
+        # first time.
         await self.update_statistics()
         await super().async_added_to_hass()
 
@@ -281,7 +283,9 @@ class IstaSensor(CoordinatorEntity[IstaCoordinator], SensorEntity):
                 "source": DOMAIN,
                 "statistic_id": statistic_id,
                 "unit_class": self.entity_description.unit_class,
-                "unit_of_measurement": self.entity_description.native_unit_of_measurement,
+                "unit_of_measurement": (
+                    self.entity_description.native_unit_of_measurement
+                ),
             }
             if statistics:
                 _LOGGER.debug("Insert statistics: %s %s", metadata, statistics)

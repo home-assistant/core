@@ -103,7 +103,10 @@ class IrmKmiConfigFlow(ConfigFlow, domain=DOMAIN):
 
 
 class IrmKmiOptionFlow(OptionsFlowWithReload):
-    """Option flow for the IRM KMI integration, help change the options once the integration was configured."""
+    """Option flow for the IRM KMI integration.
+
+    Helps change options once the integration was configured.
+    """
 
     async def async_step_init(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Manage the options."""

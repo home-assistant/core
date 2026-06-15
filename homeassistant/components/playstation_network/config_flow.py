@@ -148,7 +148,7 @@ class PlaystationNetworkConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 )
 
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     entry,
                     data_updates={CONF_NPSSO: npsso},
                 )

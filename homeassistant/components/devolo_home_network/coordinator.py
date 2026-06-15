@@ -82,7 +82,7 @@ class DevoloDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
 
     @callback
     def update_sw_version(self) -> None:
-        """Update device registry with new firmware version, if it changed at runtime."""
+        """Update device registry with new firmware version."""
         device_registry = dr.async_get(self.hass)
         if (
             device_entry := device_registry.async_get_device(

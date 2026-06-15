@@ -17,6 +17,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import IndevoltConfigEntry
+from .const import DOMAIN
 from .coordinator import IndevoltCoordinator
 from .entity import IndevoltEntity
 
@@ -135,7 +136,13 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         )
 
         if success:
-            await self.coordinator.async_request_refresh()
+            self.coordinator.async_optimistic_update(
+                self.entity_description.read_key, int_value
+            )
 
         else:
-            raise HomeAssistantError(f"Failed to set value {int_value} for {self.name}")
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_error",
+                translation_placeholders={"name": str(self.name)},
+            )

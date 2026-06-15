@@ -290,7 +290,9 @@ class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
                     scheme="https" if entry.data.get(CONF_SSL) else "http",
                     host=entry.data.get(CONF_HOST, ""),
                     port=entry.data.get(CONF_PORT),
-                    path=entry.data.get(CONF_PATH, ""),
+                    path=""
+                    if entry.data.get(CONF_PATH) is None
+                    else entry.data[CONF_PATH],
                 )
             )
 

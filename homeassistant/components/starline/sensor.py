@@ -60,7 +60,8 @@ SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
         key="fuel",
         translation_key="fuel",
-        # No device_class: fuel can be reported as percentage or volume depending on vehicle
+        # No device_class: fuel can be reported as percentage
+        # or volume depending on vehicle
         state_class=SensorStateClass.TOTAL,
     ),
     SensorEntityDescription(

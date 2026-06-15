@@ -332,7 +332,7 @@ class MyUplinkEnumSensor(MyUplinkDevicePointSensor):
 
 
 class MyUplinkEnumRawSensor(MyUplinkDevicePointSensor):
-    """Representation of a myUplink device point sensor for raw value from ENUM device_class."""
+    """Representation of a myUplink device point sensor for raw ENUM value."""
 
     _attr_entity_registry_enabled_default = False
     _attr_device_class = None

@@ -17,9 +17,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_numerical_attribute_changed_trigger_states,
@@ -65,12 +65,39 @@ async def test_water_heater_triggers_gated_by_labs_flag(
     await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
 
 
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+_CROSSED_THRESHOLD = {
+    "threshold": {
+        "type": "above",
+        "value": {"number": 20, "unit_of_measurement": UnitOfTemperature.CELSIUS},
+    }
+}
+
+
 @pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
         ("water_heater.turned_off", {}, True, True),
         ("water_heater.turned_on", {}, True, True),
+        (
+            "water_heater.operation_mode_changed",
+            {"operation_mode": [STATE_ECO]},
+            True,
+            True,
+        ),
+        (
+            "water_heater.target_temperature_changed",
+            _CHANGED_THRESHOLD,
+            False,
+            False,
+        ),
+        (
+            "water_heater.target_temperature_crossed_threshold",
+            _CROSSED_THRESHOLD,
+            True,
+            True,
+        ),
     ],
 )
 async def test_water_heater_trigger_options_validation(
@@ -128,7 +155,7 @@ async def test_water_heater_trigger_options_validation(
         ),
     ],
 )
-async def test_water_heater_state_trigger_behavior_any(
+async def test_water_heater_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_water_heaters: list[str],
     trigger_target_config: dict,
@@ -138,8 +165,8 @@ async def test_water_heater_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the water heater state trigger fires when any water heater state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test water heater state trigger fires on any state change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
@@ -175,7 +202,7 @@ async def test_water_heater_state_trigger_behavior_any(
         ),
     ],
 )
-async def test_water_heater_state_attribute_trigger_behavior_any(
+async def test_water_heater_state_attribute_trigger_behavior_each(
     hass: HomeAssistant,
     target_water_heaters: list[str],
     trigger_target_config: dict,
@@ -185,8 +212,8 @@ async def test_water_heater_state_attribute_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the water heater target temperature attribute triggers fire when any water heater's target temperature changes or crosses a threshold."""
-    await assert_trigger_behavior_any(
+    """Test water heater target temp trigger fires on threshold cross."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
@@ -246,7 +273,7 @@ async def test_water_heater_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the water heater state trigger fires when the first water heater changes to a specific state."""
+    """Test water heater state trigger fires on first entity change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_water_heaters,
@@ -286,7 +313,7 @@ async def test_water_heater_state_attribute_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the water heater attribute threshold trigger fires when the first water heater's target temperature crosses the configured threshold."""
+    """Test water heater temp trigger fires on first entity threshold."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_water_heaters,
@@ -337,7 +364,7 @@ async def test_water_heater_state_attribute_trigger_behavior_first(
         ),
     ],
 )
-async def test_water_heater_state_trigger_behavior_last(
+async def test_water_heater_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_water_heaters: list[str],
     trigger_target_config: dict,
@@ -347,8 +374,8 @@ async def test_water_heater_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the water heater state trigger fires when the last water heater changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test water heater state trigger fires when all entities have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,
@@ -377,7 +404,7 @@ async def test_water_heater_state_trigger_behavior_last(
         ),
     ],
 )
-async def test_water_heater_state_attribute_trigger_behavior_last(
+async def test_water_heater_state_attribute_trigger_behavior_all(
     hass: HomeAssistant,
     target_water_heaters: list[str],
     trigger_target_config: dict,
@@ -387,8 +414,8 @@ async def test_water_heater_state_attribute_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the water heater trigger fires when the last water heater's target temperature crosses the configured threshold."""
-    await assert_trigger_behavior_last(
+    """Test water heater temp trigger fires when all entities have crossed threshold."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_water_heaters,
         trigger_target_config=trigger_target_config,

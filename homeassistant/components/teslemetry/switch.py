@@ -140,7 +140,6 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySwitchEntityDescription, ...] = (
     ),
     TeslemetrySwitchEntityDescription(
         key="guest_mode_enabled",
-        polling=False,
         unique_id="guest_mode_enabled",
         streaming_listener=lambda vehicle, callback: vehicle.listen_GuestModeEnabled(
             callback

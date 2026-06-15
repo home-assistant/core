@@ -4,8 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
-from python_qube_heatpump.models import QubeState
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -21,6 +19,7 @@ from homeassistant.const import (
 )
 from homeassistant.helpers.typing import StateType
 
+from .coordinator import QubeData
 from .entity import QubeEntity
 
 PARALLEL_UPDATES = 0
@@ -52,12 +51,12 @@ STATUS_MAP: dict[int, str] = {
 class QubeSensorEntityDescription(SensorEntityDescription):
     """Sensor entity description for Qube Heat Pump."""
 
-    value_fn: Callable[[QubeState], StateType]
+    value_fn: Callable[[QubeData], StateType]
 
 
-def _status_value(data: QubeState) -> StateType:
+def _status_value(data: QubeData) -> StateType:
     """Return status string from status code."""
-    code = data.status_code
+    code = data.state.status_code
     if code is None:
         return None
     return STATUS_MAP.get(code)
@@ -71,7 +70,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.temp_supply,
+        value_fn=lambda data: data.state.temp_supply,
     ),
     QubeSensorEntityDescription(
         key="temp_return",
@@ -80,7 +79,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.temp_return,
+        value_fn=lambda data: data.state.temp_return,
     ),
     QubeSensorEntityDescription(
         key="temp_source_in",
@@ -89,7 +88,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.temp_source_in,
+        value_fn=lambda data: data.state.temp_source_in,
     ),
     QubeSensorEntityDescription(
         key="temp_source_out",
@@ -98,7 +97,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.temp_source_out,
+        value_fn=lambda data: data.state.temp_source_out,
     ),
     QubeSensorEntityDescription(
         key="temp_room",
@@ -107,7 +106,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.temp_room,
+        value_fn=lambda data: data.state.temp_room,
     ),
     QubeSensorEntityDescription(
         key="temp_dhw",
@@ -116,7 +115,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.temp_dhw,
+        value_fn=lambda data: data.state.temp_dhw,
     ),
     QubeSensorEntityDescription(
         key="temp_outside",
@@ -125,7 +124,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.temp_outside,
+        value_fn=lambda data: data.state.temp_outside,
     ),
     QubeSensorEntityDescription(
         key="power_thermic",
@@ -134,7 +133,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda data: data.power_thermic,
+        value_fn=lambda data: data.state.power_thermic,
     ),
     QubeSensorEntityDescription(
         key="power_electric",
@@ -143,7 +142,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda data: data.power_electric,
+        value_fn=lambda data: data.state.power_electric,
     ),
     QubeSensorEntityDescription(
         key="energy_total_electric",
@@ -152,7 +151,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        value_fn=lambda data: data.energy_total_electric,
+        value_fn=lambda data: data.state.energy_total_electric,
     ),
     QubeSensorEntityDescription(
         key="energy_total_thermic",
@@ -161,14 +160,14 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=3,
-        value_fn=lambda data: data.energy_total_thermic,
+        value_fn=lambda data: data.state.energy_total_thermic,
     ),
     QubeSensorEntityDescription(
         key="cop_calc",
         translation_key="cop_calc",
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.cop_calc,
+        value_fn=lambda data: data.state.cop_calc,
     ),
     QubeSensorEntityDescription(
         key="compressor_speed",
@@ -176,7 +175,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda data: data.compressor_speed,
+        value_fn=lambda data: data.state.compressor_speed,
     ),
     QubeSensorEntityDescription(
         key="flow_rate",
@@ -185,7 +184,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=0,
-        value_fn=lambda data: data.flow_rate,
+        value_fn=lambda data: data.state.flow_rate,
     ),
     QubeSensorEntityDescription(
         key="setpoint_room_heat_day",
@@ -194,7 +193,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.setpoint_room_heat_day,
+        value_fn=lambda data: data.state.setpoint_room_heat_day,
     ),
     QubeSensorEntityDescription(
         key="setpoint_room_heat_night",
@@ -203,7 +202,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.setpoint_room_heat_night,
+        value_fn=lambda data: data.state.setpoint_room_heat_night,
     ),
     QubeSensorEntityDescription(
         key="setpoint_room_cool_day",
@@ -212,7 +211,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.setpoint_room_cool_day,
+        value_fn=lambda data: data.state.setpoint_room_cool_day,
     ),
     QubeSensorEntityDescription(
         key="setpoint_room_cool_night",
@@ -221,7 +220,7 @@ SENSOR_TYPES: tuple[QubeSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
-        value_fn=lambda data: data.setpoint_room_cool_night,
+        value_fn=lambda data: data.state.setpoint_room_cool_night,
     ),
     QubeSensorEntityDescription(
         key="status_heatpump",

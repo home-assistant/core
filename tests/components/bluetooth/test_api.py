@@ -10,10 +10,13 @@ from homeassistant.components.bluetooth import (
     MONOTONIC_TIME,
     BaseHaRemoteScanner,
     BluetoothChange,
+    BluetoothReachabilityIntent,
     BluetoothScanningMode,
     BluetoothServiceInfo,
     HaBluetoothConnector,
+    async_address_reachability_diagnostics,
     async_clear_advertisement_history,
+    async_request_active_scan,
     async_scanner_by_source,
     async_scanner_devices_by_address,
 )
@@ -107,6 +110,57 @@ async def test_async_scanner_devices_by_address_connectable(
     assert devices[0].scanner == scanner
     assert devices[0].ble_device.name == switchbot_device.name
     assert devices[0].advertisement.local_name == switchbot_device_adv.local_name
+    unsetup()
+    cancel()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_address_reachability_diagnostics(hass: HomeAssistant) -> None:
+    """Test the address reachability diagnostics passthrough."""
+    # An address that was never seen reports as unknown.
+    assert "unknown" in async_address_reachability_diagnostics(
+        hass, "44:44:33:11:23:99", BluetoothReachabilityIntent.CONNECTION
+    )
+
+    manager = _get_manager()
+
+    class FakeInjectableScanner(BaseHaRemoteScanner):
+        def inject_advertisement(
+            self, device: BLEDevice, advertisement_data: AdvertisementData
+        ) -> None:
+            """Inject an advertisement."""
+            self._async_on_advertisement(
+                device.address,
+                advertisement_data.rssi,
+                device.name,
+                advertisement_data.service_uuids,
+                advertisement_data.service_data,
+                advertisement_data.manufacturer_data,
+                advertisement_data.tx_power,
+                {"scanner_specific_data": "test"},
+                MONOTONIC_TIME(),
+            )
+
+    connector = HaBluetoothConnector(MockBleakClient, "esp32", lambda: True)
+    scanner = FakeInjectableScanner("esp32", "esp32", connector, True)
+    unsetup = scanner.async_setup()
+    cancel = manager.async_register_scanner(scanner)
+    switchbot_device = generate_ble_device("44:44:33:11:23:45", "wohand", {})
+    switchbot_device_adv = generate_advertisement_data(local_name="wohand", rssi=-80)
+    scanner.inject_advertisement(switchbot_device, switchbot_device_adv)
+
+    connection_diag = async_address_reachability_diagnostics(
+        hass, "44:44:33:11:23:45", BluetoothReachabilityIntent.CONNECTION
+    )
+    assert "in connectable history" in connection_diag
+    assert "esp32" in connection_diag
+
+    # An advertisement intent does not report connectable paths or slots.
+    advertisement_diag = async_address_reachability_diagnostics(
+        hass, "44:44:33:11:23:45", BluetoothReachabilityIntent.PASSIVE_ADVERTISEMENT
+    )
+    assert "advertising" in advertisement_diag
+
     unsetup()
     cancel()
 
@@ -278,3 +332,12 @@ async def test_clear_advertisement_history(hass: HomeAssistant) -> None:
     assert len(callbacks) == 2
 
     cancel()
+
+
+@pytest.mark.usefixtures("enable_bluetooth")
+async def test_async_request_active_scan(hass: HomeAssistant) -> None:
+    """Test async_request_active_scan completes without error."""
+    await async_request_active_scan(hass, 0.01)
+
+    with pytest.raises(ValueError):
+        await async_request_active_scan(hass, 0)

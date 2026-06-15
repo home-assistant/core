@@ -163,7 +163,8 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
             self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
             LOGGER.warning(
-                "Updating Command Line Switch %s took longer than the scheduled update interval %s",
+                "Updating Command Line Switch %s took longer than"
+                " the scheduled update interval %s",
                 self.name,
                 self._scan_interval,
             )

@@ -14,6 +14,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
+from homeassistant.components.intent import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry, ConfigFlow
 from homeassistant.const import ATTR_DEVICE_CLASS, Platform, UnitOfTemperature
@@ -141,7 +142,7 @@ async def test_get_temperature(
 ) -> None:
     """Test HassClimateGetTemperature intent."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     climate_1 = MockClimateEntity()
     climate_1._attr_name = "Climate 1"
@@ -261,7 +262,7 @@ async def test_get_temperature(
     # Exception should contain details of what we tried to match
     assert isinstance(error.value, intent.MatchFailedError)
     assert (
-        error.value.result.no_match_reason == intent.MatchFailedReason.MULTIPLE_TARGETS
+        error.value.result.no_match_reason is intent.MatchFailedReason.MULTIPLE_TARGETS
     )
 
     # Select by area (office_temperature)
@@ -272,7 +273,7 @@ async def test_get_temperature(
         {"area": {"value": office_area.name}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == office_temperature_id
     state = response.matched_states[0]
@@ -286,7 +287,7 @@ async def test_get_temperature(
         {"preferred_area_id": {"value": attic_area.id}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == attic_temperature_id
     state = response.matched_states[0]
@@ -300,7 +301,7 @@ async def test_get_temperature(
         {"area": {"value": bedroom_area.name}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = response.matched_states[0]
@@ -314,7 +315,7 @@ async def test_get_temperature(
         {"name": {"value": "Climate 2"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = response.matched_states[0]
@@ -332,7 +333,7 @@ async def test_get_temperature(
 
     # Exception should contain details of what we tried to match
     assert isinstance(error.value, intent.MatchFailedError)
-    assert error.value.result.no_match_reason == intent.MatchFailedReason.AREA
+    assert error.value.result.no_match_reason is intent.MatchFailedReason.AREA
     constraints = error.value.constraints
     assert constraints.name is None
     assert constraints.area_name == bathroom_area.name
@@ -349,7 +350,7 @@ async def test_get_temperature(
         )
 
     assert isinstance(error.value, intent.MatchFailedError)
-    assert error.value.result.no_match_reason == intent.MatchFailedReason.NAME
+    assert error.value.result.no_match_reason is intent.MatchFailedReason.NAME
     constraints = error.value.constraints
     assert constraints.name == "Does not exist"
     assert constraints.area_name is None
@@ -366,7 +367,7 @@ async def test_get_temperature(
         )
 
     assert isinstance(error.value, intent.MatchFailedError)
-    assert error.value.result.no_match_reason == intent.MatchFailedReason.AREA
+    assert error.value.result.no_match_reason is intent.MatchFailedReason.AREA
     constraints = error.value.constraints
     assert constraints.name == "Climate 1"
     assert constraints.area_name == bedroom_area.name
@@ -381,7 +382,7 @@ async def test_get_temperature(
         {"floor": {"value": first_floor.name}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_1.entity_id
     state = response.matched_states[0]
@@ -395,7 +396,7 @@ async def test_get_temperature(
         {"preferred_area_id": {"value": bedroom_area.id}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
     state = response.matched_states[0]
@@ -409,7 +410,7 @@ async def test_get_temperature(
         {"preferred_floor_id": {"value": first_floor.floor_id}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_1.entity_id
     state = response.matched_states[0]
@@ -421,7 +422,7 @@ async def test_get_temperature_no_entities(
 ) -> None:
     """Test HassClimateGetTemperature intent with no climate entities."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     await create_mock_platform(hass, [])
 
@@ -433,7 +434,7 @@ async def test_get_temperature_no_entities(
             {},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.DOMAIN
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.DOMAIN
 
 
 async def test_not_exposed(
@@ -443,7 +444,7 @@ async def test_not_exposed(
 ) -> None:
     """Test HassClimateGetTemperature intent when entities aren't exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
-    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     climate_1 = MockClimateEntity()
     climate_1._attr_name = "Climate 1"
@@ -505,7 +506,7 @@ async def test_not_exposed(
         {},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
 
@@ -517,7 +518,7 @@ async def test_not_exposed(
         {"area": {"value": living_room_area.name}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
 
@@ -529,7 +530,7 @@ async def test_not_exposed(
         {"name": {"value": climate_2.name}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_2.entity_id
 
@@ -542,7 +543,7 @@ async def test_not_exposed(
             {"name": {"value": climate_1.name}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.ASSISTANT
 
     # Expose first, hide second
     async_expose_entity(hass, conversation.DOMAIN, climate_1.entity_id, True)
@@ -556,7 +557,7 @@ async def test_not_exposed(
         {},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.QUERY_ANSWER
+    assert response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert len(response.matched_states) == 1
     assert response.matched_states[0].entity_id == climate_1.entity_id
 
@@ -569,7 +570,7 @@ async def test_not_exposed(
             {"area": {"value": bedroom_area.name}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.AREA
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.AREA
 
     # Neither are exposed
     async_expose_entity(hass, conversation.DOMAIN, climate_1.entity_id, False)
@@ -583,7 +584,7 @@ async def test_not_exposed(
             {},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.ASSISTANT
 
     # Should fail with area
     with pytest.raises(intent.MatchFailedError) as err:
@@ -594,7 +595,7 @@ async def test_not_exposed(
             {"area": {"value": living_room_area.name}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.ASSISTANT
 
     # Should fail with both names
     for name in (climate_1.name, climate_2.name):
@@ -606,4 +607,4 @@ async def test_not_exposed(
                 {"name": {"value": name}},
                 assistant=conversation.DOMAIN,
             )
-        assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+        assert err.value.result.no_match_reason is intent.MatchFailedReason.ASSISTANT

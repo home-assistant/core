@@ -40,19 +40,15 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: exempt
-    comment: Integration does not support network discovery
-  discovery:
-    status: exempt
-    comment: Integration does not support network discovery
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: Integration represents a single device, not a hub with multiple devices
@@ -60,8 +56,8 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
-  icon-translations: todo
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow: done
   repair-issues:
     status: exempt
@@ -73,4 +69,4 @@ rules:
   # Platinum
   async-dependency: done
   inject-websession: done
-  strict-typing: todo
+  strict-typing: done

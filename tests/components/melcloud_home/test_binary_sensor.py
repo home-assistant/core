@@ -1,0 +1,39 @@
+"""Tests for the MELCloud Home binary sensor platform."""
+
+from unittest.mock import patch
+
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+
+from . import setup_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
+
+ATA_ERROR_ENTITY_ID = "binary_sensor.living_room_ac_error"
+
+
+@pytest.fixture(autouse=True)
+def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
+    """Make sure all entities are enabled."""
+
+
+@pytest.mark.usefixtures("mock_melcloud_client")
+async def test_all_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test all entities."""
+    with patch(
+        "homeassistant.components.melcloud_home.PLATFORMS",
+        [Platform.BINARY_SENSOR],
+    ):
+        await setup_integration(hass, mock_config_entry)
+        await snapshot_platform(
+            hass, entity_registry, snapshot, mock_config_entry.entry_id
+        )

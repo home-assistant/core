@@ -130,7 +130,7 @@ async def test_flow_user_invalid(hass: HomeAssistant) -> None:
 
 
 async def test_flow_user_invalid_v6(hass: HomeAssistant) -> None:
-    """Test user initialized flow with invalid server - typically a V6 API and a incorrect app password."""
+    """Test user flow with invalid server (V6 API, wrong password)."""
     mocked_hole = _create_mocked_hole(
         has_data=True, api_version=6, incorrect_app_password=True
     )

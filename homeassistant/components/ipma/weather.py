@@ -73,7 +73,11 @@ class IPMAWeather(WeatherEntity, IPMADevice):
         self._daily_forecast: list[IPMAForecast] | None = None
         self._hourly_forecast: list[IPMAForecast] | None = None
         if self._mode is not None:
-            self._attr_unique_id = f"{self._location.station_latitude}, {self._location.station_longitude}, {self._mode}"
+            self._attr_unique_id = (
+                f"{self._location.station_latitude},"
+                f" {self._location.station_longitude},"
+                f" {self._mode}"
+            )
         else:
             self._attr_unique_id = (
                 f"{self._location.station_latitude}, {self._location.station_longitude}"
@@ -128,7 +132,10 @@ class IPMAWeather(WeatherEntity, IPMADevice):
 
     @property
     def condition(self) -> str | None:
-        """Return the current condition which is only available on the hourly forecast data."""
+        """Return the current condition.
+
+        Only available on the hourly forecast data.
+        """
         forecast = self._hourly_forecast
 
         if not forecast:
@@ -189,7 +196,9 @@ class IPMAWeather(WeatherEntity, IPMADevice):
                 ),
                 ATTR_FORECAST_NATIVE_TEMP_LOW: data_in.min_temperature,
                 ATTR_FORECAST_NATIVE_TEMP: data_in.max_temperature,
-                ATTR_FORECAST_PRECIPITATION_PROBABILITY: data_in.precipitation_probability,
+                ATTR_FORECAST_PRECIPITATION_PROBABILITY: (
+                    data_in.precipitation_probability
+                ),
                 ATTR_FORECAST_NATIVE_WIND_SPEED: data_in.wind_strength,
                 ATTR_FORECAST_WIND_BEARING: data_in.wind_direction,
             }

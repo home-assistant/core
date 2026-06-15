@@ -20,7 +20,6 @@ from tests.conftest import WebSocketGenerator
 class ConfigurationStyle(Enum):
     """Configuration Styles for template testing."""
 
-    LEGACY = "Legacy"
     MODERN = "Modern"
     TRIGGER = "Trigger"
 
@@ -89,36 +88,6 @@ async def async_trigger(
     await hass.async_block_till_done()
 
 
-async def async_setup_legacy_platforms(
-    hass: HomeAssistant,
-    domain: str,
-    slug: str | None,
-    count: int,
-    config: ConfigType | list[ConfigType],
-) -> None:
-    """Do setup of any legacy platform that supports a keyed dictionary of template entities."""
-    if slug is None:
-        # Lock and Weather platforms do not use a slug
-        if isinstance(config, list):
-            config = {domain: [{"platform": "template", **item} for item in config]}
-        else:
-            config = {domain: {"platform": "template", **config}}
-    else:
-        assert isinstance(config, dict)
-        config = {domain: {"platform": "template", slug: config}}
-
-    with assert_setup_component(count, domain):
-        assert await async_setup_component(
-            hass,
-            domain,
-            config,
-        )
-
-    await hass.async_block_till_done()
-    await hass.async_start()
-    await hass.async_block_till_done()
-
-
 async def async_setup_modern_state_format(
     hass: HomeAssistant,
     domain: str,
@@ -167,7 +136,6 @@ class TemplatePlatformSetup:
     """Template Platform Setup Information."""
 
     domain: str
-    legacy_slug: str | None
     object_id: str
     trigger: ConfigType
 
@@ -189,24 +157,6 @@ async def setup_entity(
     extra_section_config: ConfigType | None = None,
 ) -> None:
     """Do setup of a template entity based on the configuration style."""
-    if style == ConfigurationStyle.LEGACY:
-        entity_config = {
-            **({"value_template": state_template} if state_template else {}),
-            **config,
-            **(extra_config or {}),
-            **({"attribute_templates": attributes} if attributes else {}),
-        }
-        # Lock and weather platforms do not use a slug.
-        if platform_setup.legacy_slug is None:
-            config = {"name": platform_setup.object_id, **entity_config}
-        else:
-            config = {platform_setup.object_id: entity_config}
-
-        await async_setup_legacy_platforms(
-            hass, platform_setup.domain, platform_setup.legacy_slug, count, config
-        )
-        return
-
     entity_config = {
         "name": platform_setup.object_id,
         **({"state": state_template} if state_template else {}),
@@ -214,11 +164,11 @@ async def setup_entity(
         **({"attributes": attributes} if attributes else {}),
         **(extra_config or {}),
     }
-    if style == ConfigurationStyle.MODERN:
+    if style is ConfigurationStyle.MODERN:
         await async_setup_modern_state_format(
             hass, platform_setup.domain, count, entity_config, extra_section_config
         )
-    elif style == ConfigurationStyle.TRIGGER:
+    elif style is ConfigurationStyle.TRIGGER:
         await async_setup_modern_trigger_format(
             hass,
             platform_setup.domain,
@@ -240,54 +190,21 @@ async def setup_and_test_unique_id(
 
     The entity_config not provide name or unique_id, those are added automatically.
     """
-    if style == ConfigurationStyle.LEGACY:
-        state_config = {"value_template": state_template} if state_template else {}
-        entity_config = {
-            "unique_id": "not-so_-unique-anymore",
-            **(entity_config or {}),
-            **state_config,
-        }
-        if platform_setup.legacy_slug is None:
-            config = [
-                {"name": "template_entity_1", **entity_config},
-                {"name": "template_entity_2", **entity_config},
-            ]
-        else:
-            config = {
-                "template_entity_1": entity_config,
-                "template_entity_2": entity_config,
-            }
-        await async_setup_legacy_platforms(
-            hass, platform_setup.domain, platform_setup.legacy_slug, 1, config
-        )
-        return
-
     state_config = {"state": state_template} if state_template else {}
     entity_config = {
         "unique_id": "not-so_-unique-anymore",
         **(entity_config or {}),
         **state_config,
     }
-    if style == ConfigurationStyle.MODERN:
-        await async_setup_modern_state_format(
-            hass,
-            platform_setup.domain,
-            1,
-            [
-                {"name": "template_entity_1", **entity_config},
-                {"name": "template_entity_2", **entity_config},
-            ],
-        )
-    elif style == ConfigurationStyle.TRIGGER:
+    entities = [
+        {"name": "template_entity_1", **entity_config},
+        {"name": "template_entity_2", **entity_config},
+    ]
+    if style is ConfigurationStyle.MODERN:
+        await async_setup_modern_state_format(hass, platform_setup.domain, 1, entities)
+    elif style is ConfigurationStyle.TRIGGER:
         await async_setup_modern_trigger_format(
-            hass,
-            platform_setup.domain,
-            platform_setup.trigger,
-            1,
-            [
-                {"name": "template_entity_1", **entity_config},
-                {"name": "template_entity_2", **entity_config},
-            ],
+            hass, platform_setup.domain, platform_setup.trigger, 1, entities
         )
 
     assert len(hass.states.async_all(platform_setup.domain)) == 1
@@ -301,12 +218,13 @@ async def setup_and_test_nested_unique_id(
     entity_config: ConfigType | None,
     state_template: str | None = None,
 ) -> None:
-    """Setup 2 entities with unique unique_ids in a template section that contains a unique_id.
+    """Setup 2 entities with unique_ids in a template section with a unique_id.
 
-    The test will verify that 2 entities are created where the unique_id appends the
-    section unique_id to each entity unique_id.
+    The test will verify that 2 entities are created where the unique_id
+    appends the section unique_id to each entity unique_id.
 
-    The entity_config should not provide name or unique_id, those are added automatically.
+    The entity_config should not provide name or unique_id, those are
+    added automatically.
     """
     state_config = {"state": state_template} if state_template else {}
     entities = [
@@ -314,11 +232,11 @@ async def setup_and_test_nested_unique_id(
         {"name": "test_b", "unique_id": "b", **(entity_config or {}), **state_config},
     ]
     extra_section_config = {"unique_id": "x"}
-    if style == ConfigurationStyle.MODERN:
+    if style is ConfigurationStyle.MODERN:
         await async_setup_modern_state_format(
             hass, platform_setup.domain, 1, entities, extra_section_config
         )
-    elif style == ConfigurationStyle.TRIGGER:
+    elif style is ConfigurationStyle.TRIGGER:
         await async_setup_modern_trigger_format(
             hass,
             platform_setup.domain,

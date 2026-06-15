@@ -1,11 +1,11 @@
 """The Netatmo integration."""
-# pylint: disable=hass-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 
 from aiohttp.web import Request
 
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME, ATTR_PERSONS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -14,7 +14,6 @@ from .const import (
     ATTR_FACE_URL,
     ATTR_HOME_ID,
     ATTR_IS_KNOWN,
-    ATTR_PERSONS,
     DATA_DEVICE_IDS,
     DATA_PERSONS,
     DEFAULT_PERSON,

@@ -203,7 +203,10 @@ class NoTimerCommandError(intent.IntentHandleError):
 
 
 class TimersNotSupportedError(intent.IntentHandleError):
-    """Error when a timer intent is used from a device that isn't registered to handle timer events."""
+    """Error when a timer intent is used from an unregistered device.
+
+    The device isn't registered to handle timer events.
+    """
 
     def __init__(self, device_id: str | None = None) -> None:
         """Initialize error."""
@@ -308,7 +311,8 @@ class TimerManager:
         if (not timer.conversation_command) and (timer.device_id in self.handlers):
             self.handlers[timer.device_id](TimerEventType.STARTED, timer)
         _LOGGER.debug(
-            "Timer started: id=%s, name=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
+            "Timer started: id=%s, name=%s, hours=%s,"
+            " minutes=%s, seconds=%s, device_id=%s",
             timer_id,
             name,
             hours,
@@ -641,7 +645,8 @@ def _find_timer(
         raise MultipleTimersMatchedError
 
     _LOGGER.warning(
-        "Timer not found: name=%s, area=%s, hours=%s, minutes=%s, seconds=%s, device_id=%s",
+        "Timer not found: name=%s, area=%s, hours=%s,"
+        " minutes=%s, seconds=%s, device_id=%s",
         name,
         area_name,
         start_hours,

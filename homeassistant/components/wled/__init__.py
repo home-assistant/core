@@ -81,10 +81,6 @@ async def async_migrate_entry(
         config_entry.minor_version,
     )
 
-    if config_entry.version > 1:
-        # The user has downgraded from a future version
-        return False
-
     if config_entry.version == 1:
         if config_entry.minor_version < 2:
             # 1.2: Normalize unique ID to be lowercase MAC address without separators.
@@ -106,7 +102,8 @@ async def async_migrate_entry(
             ]
             if ignored_entries:
                 _LOGGER.info(
-                    "Found %d ignored WLED config entries with the same MAC address, removing them",
+                    "Found %d ignored WLED config entries"
+                    " with the same MAC address, removing them",
                     len(ignored_entries),
                 )
                 await asyncio.gather(
@@ -117,7 +114,9 @@ async def async_migrate_entry(
                 )
             if len(duplicate_entries) - len(ignored_entries) > 1:
                 _LOGGER.warning(
-                    "Found multiple WLED config entries with the same MAC address, cannot migrate to version 1.2"
+                    "Found multiple WLED config entries with"
+                    " the same MAC address, cannot migrate"
+                    " to version 1.2"
                 )
                 return False
 
