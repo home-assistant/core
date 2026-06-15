@@ -2283,7 +2283,7 @@ pyituran==0.1.6
 pyjvcprojector==2.0.6
 
 # homeassistant.components.kaleidescape
-pykaleidescape==1.1.5
+pykaleidescape==1.1.6
 
 # homeassistant.components.kira
 pykira==0.1.1
