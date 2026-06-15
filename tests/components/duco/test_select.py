@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock
 
 from duco_connectivity import (
     ActionItem,
+    ActionValueType,
     DucoError,
     DucoRateLimitError,
     KnownActionName,
@@ -46,7 +47,7 @@ def _build_node_actions(
                 actions=[
                     ActionItem(
                         action=KnownActionName.SET_VENTILATION_STATE,
-                        val_type="ENUM",
+                        val_type=ActionValueType.ENUM,
                         enum_values=[] if options is None else options,
                     )
                 ],
@@ -68,7 +69,7 @@ def _build_multi_node_actions(
                 actions=[
                     ActionItem(
                         action=KnownActionName.SET_VENTILATION_STATE,
-                        val_type="ENUM",
+                        val_type=ActionValueType.ENUM,
                         enum_values=options,
                     )
                 ],
@@ -283,16 +284,14 @@ async def test_select_entity_is_added_when_action_discovery_succeeds_later(
 
 
 @pytest.mark.parametrize(
-    ("node_actions", "creates_entity"),
+    "node_actions",
     [
         pytest.param(
             NodeListActionItemList(nodes=[NodeActionItemList(node_id=1, actions=[])]),
-            False,
             id="missing-action",
         ),
         pytest.param(
             _build_node_actions(options=None),
-            False,
             id="missing-enum-values",
         ),
     ],
@@ -302,7 +301,6 @@ async def test_select_missing_action_metadata_does_not_crash(
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     node_actions: NodeListActionItemList,
-    creates_entity: bool,
 ) -> None:
     """Test incomplete action discovery data does not create broken entities."""
     mock_duco_client.async_get_node_actions.return_value = node_actions
@@ -310,11 +308,7 @@ async def test_select_missing_action_metadata_does_not_crash(
     await setup_platform_integration(hass, mock_config_entry, [Platform.SELECT])
 
     state = hass.states.get(_SELECT_ENTITY)
-    if creates_entity:
-        assert state is not None
-        assert state.attributes[ATTR_OPTIONS] == ["AUTO", "MAN1"]
-    else:
-        assert state is None
+    assert state is None
 
 
 @pytest.mark.parametrize(

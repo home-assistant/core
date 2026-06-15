@@ -102,23 +102,15 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         try:
             node_actions = await self.client.async_get_node_actions()
-        except DucoConnectionError as err:
-            if self.data is None:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="cannot_connect",
-                    translation_placeholders={"error": repr(err)},
-                ) from err
-            _LOGGER.warning(
-                "Could not fetch Duco node actions; keeping previous select discovery data",
-                exc_info=err,
-            )
-            node_actions = self.data.node_actions
         except DucoError as err:
             if self.data is None:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
+                    translation_key=(
+                        "cannot_connect"
+                        if isinstance(err, DucoConnectionError)
+                        else "api_error"
+                    ),
                     translation_placeholders={"error": repr(err)},
                 ) from err
             _LOGGER.warning(
