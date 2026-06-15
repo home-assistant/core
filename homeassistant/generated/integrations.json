@@ -4324,12 +4324,6 @@
           "iot_class": "cloud_push",
           "name": "Microsoft Text-to-Speech (TTS)"
         },
-        "msteams": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Microsoft Teams"
-        },
         "onedrive": {
           "integration_type": "service",
           "config_flow": true,
@@ -4562,6 +4556,12 @@
           "name": "MQTT Statestream"
         }
       }
+    },
+    "msteams": {
+      "name": "Microsoft Teams",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "cloud_push"
     },
     "mta": {
       "name": "MTA New York City Transit",
