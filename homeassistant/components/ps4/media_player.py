@@ -369,9 +369,7 @@ class PS4Device(MediaPlayerEntity):
             sw_version = f"{_sw_version[0]}.{_sw_version[1:]}"
             # status["host-id"] is the console's network MAC address.
             self._attr_device_info = DeviceInfo(
-                connections={
-                    (dr.CONNECTION_NETWORK_MAC, dr.format_mac(status["host-id"]))
-                },
+                connections={(dr.CONNECTION_NETWORK_MAC, status["host-id"])},
                 identifiers={(DOMAIN, status["host-id"])},
                 manufacturer="Sony Interactive Entertainment Inc.",
                 model="PlayStation 4",
