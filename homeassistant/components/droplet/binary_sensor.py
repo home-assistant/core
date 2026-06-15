@@ -32,13 +32,13 @@ BINARY_SENSORS: list[DropletBinarySensorEntityDescription] = [
     DropletBinarySensorEntityDescription(
         key=KEY_UNUSUAL_FLOW,
         translation_key=KEY_UNUSUAL_FLOW,
-        device_class=BinarySensorDeviceClass.MOISTURE,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         value_fn=lambda device: device.get_low_leak(),
     ),
     DropletBinarySensorEntityDescription(
         key=KEY_HIGH_FLOW,
         translation_key=KEY_HIGH_FLOW,
-        device_class=BinarySensorDeviceClass.MOISTURE,
+        device_class=BinarySensorDeviceClass.PROBLEM,
         value_fn=lambda device: device.get_high_leak(),
     ),
 ]
