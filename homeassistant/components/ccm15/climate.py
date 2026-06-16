@@ -49,7 +49,6 @@ async def async_setup_entry(
 class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     """Climate device for CCM15 coordinator."""
 
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_has_entity_name = True
     _attr_target_temperature_step = PRECISION_WHOLE
     _attr_hvac_modes = [
@@ -92,6 +91,13 @@ class CCM15Climate(CoordinatorEntity[CCM15Coordinator], ClimateEntity):
     def data(self) -> CCM15SlaveDevice | None:
         """Return device data."""
         return self.coordinator.get_ac_data(self._ac_index)
+
+    @property
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement reported by the device."""
+        if (data := self.data) is not None and not data.is_celsius:
+            return UnitOfTemperature.FAHRENHEIT
+        return UnitOfTemperature.CELSIUS
 
     @property
     def current_temperature(self) -> int | None:
