@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 
 from gardena_bluetooth.const import (
     AquaContourBattery,
@@ -279,7 +279,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
             super()._handle_coordinator_update()
             return
 
-        time = datetime.now(UTC) + timedelta(seconds=value)  # pylint: disable=home-assistant-enforce-utcnow
+        time = dt_util.utcnow() + timedelta(seconds=value)
         if not self._attr_native_value:
             self._attr_native_value = time
             super()._handle_coordinator_update()

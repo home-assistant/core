@@ -21,4 +21,4 @@ mypy.ini linguist-generated=true
 requirements*.txt linguist-generated=true
 requirements_*.lock linguist-generated=true
 script/hassfest/docker/Dockerfile linguist-generated=true
-.github/workflows/*.lock.yml linguist-generated=true
+.github/workflows/*.lock.yml linguist-generated=true merge=ours

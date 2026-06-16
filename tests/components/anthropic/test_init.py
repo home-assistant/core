@@ -70,7 +70,7 @@ async def test_init_error(
         "anthropic.resources.models.AsyncModels.list",
         side_effect=side_effect,
     ):
-        assert await async_setup_component(hass, "anthropic", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text
 
@@ -90,7 +90,7 @@ async def test_init_auth_error(
             message="",
         ),
     ):
-        assert await async_setup_component(hass, "anthropic", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         await hass.async_block_till_done()
         assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
 

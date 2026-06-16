@@ -41,6 +41,14 @@
       "ptz_up": {
         "name": "PTZ up"
       }
+    },
+    "camera": {
+      "camera_hd": {
+        "name": "Live view HD"
+      },
+      "camera_sd": {
+        "name": "Live view SD"
+      }
     }
   },
   "selector": {

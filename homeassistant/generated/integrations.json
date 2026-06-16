@@ -520,6 +520,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "aqvify": {
+      "name": "Aqvify",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "aranet": {
       "name": "Aranet",
       "integration_type": "device",
@@ -2725,6 +2731,12 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "greencell": {
+      "name": "Greencell",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "greeneye_monitor": {
       "name": "GreenEye Monitor (GEM)",
       "integration_type": "hub",
@@ -3575,6 +3587,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "klik_aan_klik_uit": {
+      "name": "KlikAanKlikUit",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "assumed_state"
+    },
     "kmtronic": {
       "name": "KMtronic",
       "integration_type": "device",
@@ -4160,6 +4178,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "melcloud_home": {
+      "name": "MELCloud Home",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
     "melissa": {
       "name": "Melissa",
       "integration_type": "hub",
@@ -4305,12 +4329,6 @@
           "config_flow": false,
           "iot_class": "cloud_push",
           "name": "Microsoft Text-to-Speech (TTS)"
-        },
-        "msteams": {
-          "integration_type": "hub",
-          "config_flow": false,
-          "iot_class": "cloud_push",
-          "name": "Microsoft Teams"
         },
         "onedrive": {
           "integration_type": "service",
@@ -4544,6 +4562,12 @@
           "name": "MQTT Statestream"
         }
       }
+    },
+    "msteams": {
+      "name": "Microsoft Teams",
+      "integration_type": "hub",
+      "config_flow": false,
+      "iot_class": "cloud_push"
     },
     "mta": {
       "name": "MTA New York City Transit",
@@ -6599,8 +6623,8 @@
     },
     "smtp": {
       "name": "SMTP",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "smud": {
@@ -7554,8 +7578,8 @@
           "name": "UniFi Access"
         },
         "unifi_direct": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "UniFi AP"
         },
