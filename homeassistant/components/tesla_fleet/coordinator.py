@@ -21,7 +21,11 @@ from tesla_fleet_api.tesla import EnergySite, VehicleFleet
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.helpers.update_coordinator import (
+    DataUpdateCoordinator,
+    RestoreDataUpdateCoordinator,
+    UpdateFailed,
+)
 
 if TYPE_CHECKING:
     from . import TeslaFleetConfigEntry
@@ -106,7 +110,7 @@ def flatten(data: dict[str, Any], parent: str | None = None) -> dict[str, Any]:
     return result
 
 
-class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+class TeslaFleetVehicleDataCoordinator(RestoreDataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the TeslaFleet API."""
 
     config_entry: TeslaFleetConfigEntry
@@ -129,6 +133,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             LOGGER,
             config_entry=config_entry,
             name="Tesla Fleet Vehicle",
+            storage_key=api.vin,
             update_interval=VEHICLE_INTERVAL,
         )
         self.api = api
