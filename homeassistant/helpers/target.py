@@ -2,7 +2,7 @@
 
 import abc
 import asyncio
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Mapping
 import dataclasses
 import logging
 from logging import Logger
@@ -21,6 +21,7 @@ from homeassistant.core import (
     Event,
     EventStateChangedData,
     HomeAssistant,
+    State,
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError
@@ -43,10 +44,19 @@ _LOGGER = logging.getLogger(__name__)
 
 @dataclasses.dataclass(slots=True, frozen=True)
 class TargetStateChangedData:
-    """Data for state change events related to targets."""
+    """Data for state change events related to targets.
+
+    `targeted_entity_states` holds the states of all targeted entities as of
+    the state change event. State change events are dispatched one event loop
+    iteration after the state machine is updated, so the live state machine
+    may already contain later changes; this mapping does not. It is only
+    valid during the synchronous callback: it is updated in place as
+    subsequent events are dispatched.
+    """
 
     state_change_event: Event[EventStateChangedData]
     targeted_entity_ids: set[str]
+    targeted_entity_states: Mapping[str, State | None]
 
 
 def _has_match(ids: str | list[str] | None) -> TypeGuard[str | list[str]]:
@@ -360,7 +370,8 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         action: Callable[[TargetStateChangedData], Any],
         entity_filter: Callable[[set[str]], set[str]],
         on_entities_update: Callable[
-            [set[str], set[str]], Coroutine[Any, Any, None] | None
+            [set[str], set[str], Mapping[str, State | None]],
+            Coroutine[Any, Any, None] | None,
         ]
         | None = None,
         *,
@@ -371,7 +382,10 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         `on_entities_update` may be a plain callback or a coroutine function.
         A coroutine is awaited for the initial entity set (so setup is
         deterministic) and scheduled as a background task for later
-        registry-driven changes.
+        registry-driven changes. It is called with the added and removed
+        entity ids and the states of all currently targeted entities; the
+        states mapping is only valid during the synchronous call, so a
+        coroutine must copy what it needs before awaiting.
         """
         super().__init__(
             hass,
@@ -383,6 +397,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         self._on_entities_update = on_entities_update
         self._state_change_unsub: CALLBACK_TYPE | None = None
         self._tracked_entities: set[str] = set()
+        self._tracked_entity_states: dict[str, State | None] = {}
         self._update_tasks: set[asyncio.Task[None]] = set()
 
     async def async_setup(self) -> Callable[[], None]:
@@ -418,25 +433,49 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         previous_entities = self._tracked_entities
         self._tracked_entities = tracked_entities
 
+        # Carry over the tracked states of still-tracked entities: they are
+        # consistent with the already-dispatched event stream, while the live
+        # state machine may be ahead of it. Only entities new to the view are
+        # read from the live state machine.
+        previous_states = self._tracked_entity_states
+        tracked_entity_states = {
+            entity_id: (
+                previous_states[entity_id]
+                if entity_id in previous_states
+                else self._hass.states.get(entity_id)
+            )
+            for entity_id in tracked_entities
+        }
+        self._tracked_entity_states = tracked_entity_states
+
         result: Coroutine[Any, Any, None] | None = None
         if self._on_entities_update is not None:
             added = tracked_entities - previous_entities
             removed = previous_entities - tracked_entities
             if added or removed:
-                result = self._on_entities_update(added, removed)
+                result = self._on_entities_update(added, removed, tracked_entity_states)
 
         @callback
         def state_change_listener(event: Event[EventStateChangedData]) -> None:
             """Handle state change events."""
-            if event.data["entity_id"] in tracked_entities:
-                self._action(TargetStateChangedData(event, tracked_entities))
+            if (entity_id := event.data["entity_id"]) not in tracked_entities:
+                return
+            tracked_entity_states[entity_id] = event.data["new_state"]
+            self._action(
+                TargetStateChangedData(event, tracked_entities, tracked_entity_states)
+            )
 
         _LOGGER.debug("Tracking state changes for entities: %s", tracked_entities)
-        if self._state_change_unsub:
-            self._state_change_unsub()
+        # Subscribe before unsubscribing the previous listener: if this
+        # tracker is the only subscriber, unsubscribing first tears down the
+        # shared state change tracker, dropping events which have been fired
+        # but not yet dispatched.
+        previous_unsub = self._state_change_unsub
         self._state_change_unsub = async_track_state_change_event(
             self._hass, tracked_entities, state_change_listener
         )
+        if previous_unsub:
+            previous_unsub()
         return result
 
     def _unsubscribe(self) -> None:
@@ -455,7 +494,10 @@ async def async_track_target_selector_state_change_event(
     target_selector_config: ConfigType,
     action: Callable[[TargetStateChangedData], Any],
     entity_filter: Callable[[set[str]], set[str]] = lambda x: x,
-    on_entities_update: Callable[[set[str], set[str]], Coroutine[Any, Any, None] | None]
+    on_entities_update: Callable[
+        [set[str], set[str], Mapping[str, State | None]],
+        Coroutine[Any, Any, None] | None,
+    ]
     | None = None,
     *,
     primary_entities_only: bool = True,
@@ -467,9 +509,11 @@ async def async_track_target_selector_state_change_event(
     expansion (via device, area, and floor) skips entities
     with an `entity_category` (config or diagnostic entities).
 
-    `on_entities_update` may be a coroutine function; it is awaited for the
-    initial entity set and scheduled as a task for later registry-driven
-    changes, so this function must itself be awaited.
+    `on_entities_update` is called with the added and removed entity ids and
+    the states of all currently targeted entities. It may be a coroutine
+    function; it is awaited for the initial entity set and scheduled as a
+    task for later registry-driven changes, so this function must itself be
+    awaited. The states mapping is only valid during the synchronous call.
     """
     target_selection = TargetSelection(target_selector_config)
     if not target_selection.has_any_target:

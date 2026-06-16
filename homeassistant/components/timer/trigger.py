@@ -1,5 +1,6 @@
 """Provides triggers for timers."""
 
+from collections.abc import Mapping
 from datetime import datetime, timedelta
 from typing import cast, override
 
@@ -128,13 +129,17 @@ class TimeRemainingTrigger(Trigger):
             schedule_for_state(entity_id, to_state, event.context)
 
         @callback
-        def on_entities_update(added: set[str], removed: set[str]) -> None:
+        def on_entities_update(
+            added: set[str],
+            removed: set[str],
+            entity_states: Mapping[str, State | None],
+        ) -> None:
             """Handle changes to the tracked entity set."""
             for entity_id in removed:
                 if entity_id in scheduled:
                     scheduled.pop(entity_id)()
             for entity_id in added:
-                state = self._hass.states.get(entity_id)
+                state = entity_states[entity_id]
                 schedule_for_state(entity_id, state, state.context if state else None)
 
         unsub = await async_track_target_selector_state_change_event(
