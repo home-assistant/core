@@ -579,7 +579,7 @@ class EntityTriggerBase(Trigger):
                 ),
             )
 
-        unsub = async_track_target_selector_state_change_event(
+        unsub = await async_track_target_selector_state_change_event(
             self._hass,
             self._target,
             state_change_listener,
