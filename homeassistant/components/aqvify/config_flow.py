@@ -59,8 +59,9 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
                         self._get_reconfigure_entry(), data_updates=user_input
                     )
                 self._abort_if_unique_id_configured()
-                title = account_data.name or "Aqvify"
-                return self.async_create_entry(title=title, data=user_input)
+                return self.async_create_entry(
+                    title=account_data.name or "Aqvify", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",

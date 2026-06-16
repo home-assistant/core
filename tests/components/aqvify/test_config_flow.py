@@ -41,10 +41,10 @@ async def test_full_flow(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_empty_username(
+async def test_missing_username(
     hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_aqvify_client: MagicMock
 ) -> None:
-    """Test full flow with empty username in account."""
+    """Test full flow with missing name in account."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
