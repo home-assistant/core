@@ -760,11 +760,29 @@ class UnitOfPrecipitationDepth(StrEnum):
     """Derived from cm³/cm²"""
 
 
+class UnitOfDensity(StrEnum):
+    """Density units.
+
+    Ratio of a substance's mass to its volume.
+    """
+
+    GRAMS_PER_CUBIC_METER = "g/m³"
+    MILLIGRAMS_PER_CUBIC_METER = "mg/m³"
+    MICROGRAMS_PER_CUBIC_METER = "μg/m³"
+    MICROGRAMS_PER_CUBIC_FOOT = "μg/ft³"
+
+
 # Concentration units
-CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = "g/m³"
-CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = "mg/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = "μg/m³"
-CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = "μg/ft³"
+CONCENTRATION_GRAMS_PER_CUBIC_METER: Final = UnitOfDensity.GRAMS_PER_CUBIC_METER.value
+CONCENTRATION_MILLIGRAMS_PER_CUBIC_METER: Final = (
+    UnitOfDensity.MILLIGRAMS_PER_CUBIC_METER.value
+)
+CONCENTRATION_MICROGRAMS_PER_CUBIC_METER: Final = (
+    UnitOfDensity.MICROGRAMS_PER_CUBIC_METER.value
+)
+CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = (
+    UnitOfDensity.MICROGRAMS_PER_CUBIC_FOOT.value
+)
 _DEPRECATED_CONCENTRATION_PARTS_PER_CUBIC_METER = DeprecatedConstant(
     "p/m³", "p/m³", "2027.7"
 )
