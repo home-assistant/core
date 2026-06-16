@@ -127,6 +127,7 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
         return SWITCHBOT_ACTION_TO_HASS_HVAC_ACTION.get(
             self._device.hvac_action, HVACAction.OFF
         )
+
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
