@@ -73,16 +73,13 @@ rules:
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices: done
   entity-category:
     status: done
     comment: |
       None of current sensors should be set as diagnostic
   entity-device-class: done
-  entity-disabled-by-default:
-    status: done
-    comment: |
-      None of current sensors should be created as disabled
+  entity-disabled-by-default: done
   entity-translations: done
   exception-translations: done
   icon-translations: done
