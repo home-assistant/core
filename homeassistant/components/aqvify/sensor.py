@@ -13,7 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import UnitOfLength
+from homeassistant.const import UnitOfLength, UnitOfTemperature, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -49,6 +49,23 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=2,
         value_fn=lambda value: value.water_level,
+    ),
+    AqvifySensorEntityDescription(
+        key="volume",
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLUME,
+        suggested_display_precision=0,
+        value_fn=lambda value: value.volume,
+    ),
+    AqvifySensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=0,
+        value_fn=lambda value: value.temperature,
+        entity_registry_enabled_default=False,
     ),
 )
 
