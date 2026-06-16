@@ -11,6 +11,7 @@ from homeassistant.components.subaru.const import (
     VEHICLE_HAS_REMOTE_SERVICE,
     VEHICLE_HAS_REMOTE_START,
     VEHICLE_HAS_SAFETY_SERVICE,
+    VEHICLE_HEALTH,
     VEHICLE_MODEL_NAME,
     VEHICLE_MODEL_YEAR,
     VEHICLE_NAME,
@@ -94,7 +95,10 @@ VEHICLE_STATUS_EV = {
         "WINDOW_SUNROOF_STATUS": "UNKNOWN",
         "LATITUDE": 40.0,
         "LONGITUDE": -100.0,
-    }
+    },
+    VEHICLE_HEALTH: {
+        "RECOMMENDED_TIRE_PRESSURE": {"FRONT_TIRES": 35, "REAR_TIRES": 33},
+    },
 }
 
 
@@ -147,6 +151,8 @@ EXPECTED_STATE_EV_IMPERIAL = {
     "TYRE_PRESSURE_REAR_LEFT": "32.6",
     "TYRE_PRESSURE_REAR_RIGHT": "unknown",
     "VEHICLE_STATE_TYPE": "IGNITION_OFF",
+    "recommended_tire_pressure_front": "35",
+    "recommended_tire_pressure_rear": "33",
     "LATITUDE": 40.0,
     "LONGITUDE": -100.0,
 }
@@ -170,6 +176,8 @@ EXPECTED_STATE_EV_METRIC = {
     "TYRE_PRESSURE_REAR_LEFT": "224.77",
     "TYRE_PRESSURE_REAR_RIGHT": "unknown",
     "VEHICLE_STATE_TYPE": "IGNITION_OFF",
+    "recommended_tire_pressure_front": "241.32",
+    "recommended_tire_pressure_rear": "227.53",
     "LATITUDE": 40.0,
     "LONGITUDE": -100.0,
 }
@@ -194,6 +202,8 @@ EXPECTED_STATE_EV_UNAVAILABLE = {
     "TYRE_PRESSURE_REAR_LEFT": "unavailable",
     "TYRE_PRESSURE_REAR_RIGHT": "unavailable",
     "VEHICLE_STATE_TYPE": "unavailable",
+    "recommended_tire_pressure_front": "unavailable",
+    "recommended_tire_pressure_rear": "unavailable",
     "LATITUDE": "unavailable",
     "LONGITUDE": "unavailable",
 }

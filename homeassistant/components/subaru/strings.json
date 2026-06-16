@@ -67,8 +67,14 @@
       "ev_battery_level": {
         "name": "EV battery level"
       },
+      "ev_charger_state": {
+        "name": "EV charger state"
+      },
       "ev_range": {
         "name": "EV range"
+      },
+      "ev_state_of_charge_mode": {
+        "name": "EV charge mode"
       },
       "ev_time_to_full_charge": {
         "name": "EV time to full charge"
@@ -82,6 +88,12 @@
       "range": {
         "name": "Range"
       },
+      "recommended_tire_pressure_front": {
+        "name": "Recommended tire pressure front"
+      },
+      "recommended_tire_pressure_rear": {
+        "name": "Recommended tire pressure rear"
+      },
       "tire_pressure_front_left": {
         "name": "Tire pressure front left"
       },
@@ -93,6 +105,9 @@
       },
       "tire_pressure_rear_right": {
         "name": "Tire pressure rear right"
+      },
+      "vehicle_state": {
+        "name": "Vehicle state"
       }
     }
   },
