@@ -843,9 +843,11 @@ async def test_redacted_thinking(
     assert chat_log.content[1:] == snapshot
 
 
+@patch("homeassistant.helpers.llm._async_get_registered_tools")
 @patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
 async def test_extended_thinking_tool_call(
     mock_get_tools,
+    mock_registered_tools,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_init_component,
@@ -875,6 +877,9 @@ async def test_extended_thinking_tool_call(
     mock_tool.async_call.return_value = "Test response"
 
     mock_get_tools.return_value = [mock_tool]
+    # The Assist API now also sources tools from the llm integration's registry;
+    # empty it so this test's tool set is just the mock tool.
+    mock_registered_tools.return_value = llm.LLMTools(tools=[])
 
     mock_create_stream.return_value = [
         (
