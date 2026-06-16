@@ -135,6 +135,8 @@ class MieleFan(MieleEntity, FanEntity):
         _LOGGER.debug("Calc ventilation_step: %s", ventilation_step)
         if ventilation_step == 0:
             await self.async_turn_off()
+        elif ventilation_step == self.device.state_ventilation_step:
+            return
         else:
             try:
                 await self.api.send_action(
@@ -165,7 +167,6 @@ class MieleFan(MieleEntity, FanEntity):
         try:
             await self.api.send_action(self._device_id, {POWER_ON: True})
         except ClientResponseError as ex:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
@@ -183,7 +184,6 @@ class MieleFan(MieleEntity, FanEntity):
         try:
             await self.api.send_action(self._device_id, {POWER_OFF: True})
         except ClientResponseError as ex:
-            # pylint: disable-next=home-assistant-exception-placeholder-mismatch
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
