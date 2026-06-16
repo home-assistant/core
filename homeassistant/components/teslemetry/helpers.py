@@ -3,13 +3,15 @@
 from collections.abc import Awaitable
 from typing import Any
 
-from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.exceptions import InsufficientCredits, TeslaFleetError
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
-from .const import DOMAIN, LOGGER
+from .const import CREDITS_URL, DOMAIN, LOGGER
+
+INSUFFICIENT_CREDITS_ISSUE = "insufficient_credits"
 
 
 def flatten(
@@ -31,23 +33,44 @@ def flatten(
     return result
 
 
-async def handle_command(command: Awaitable[dict[str, Any]]) -> dict[str, Any]:
+async def handle_command(
+    hass: HomeAssistant, command: Awaitable[dict[str, Any]]
+) -> dict[str, Any]:
     """Handle a command."""
     try:
         result = await command
+    except InsufficientCredits as e:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            INSUFFICIENT_CREDITS_ISSUE,
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=INSUFFICIENT_CREDITS_ISSUE,
+            translation_placeholders={"credits_url": CREDITS_URL},
+            learn_more_url=CREDITS_URL,
+        )
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=INSUFFICIENT_CREDITS_ISSUE,
+        ) from e
     except TeslaFleetError as e:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="command_exception",
             translation_placeholders={"message": e.message},
         ) from e
+    # A successful command means the account has credits again
+    ir.async_delete_issue(hass, DOMAIN, INSUFFICIENT_CREDITS_ISSUE)
     LOGGER.debug("Command result: %s", result)
     return result
 
 
-async def handle_vehicle_command(command: Awaitable[dict[str, Any]]) -> Any:
+async def handle_vehicle_command(
+    hass: HomeAssistant, command: Awaitable[dict[str, Any]]
+) -> Any:
     """Handle a vehicle command."""
-    result = await handle_command(command)
+    result = await handle_command(hass, command)
     if (response := result.get("response")) is None:
         if error := result.get("error"):
             # No response with error

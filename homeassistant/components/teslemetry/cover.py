@@ -112,7 +112,7 @@ class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
         self.raise_for_scope(Scope.VEHICLE_CMDS)
 
         await handle_vehicle_command(
-            self.api.window_control(command=WindowCommand.VENT)
+            self.hass, self.api.window_control(command=WindowCommand.VENT)
         )
         self._attr_is_closed = False
         self.async_write_ha_state()
@@ -122,7 +122,7 @@ class TeslemetryWindowEntity(TeslemetryRootEntity, CoverEntity):
         self.raise_for_scope(Scope.VEHICLE_CMDS)
 
         await handle_vehicle_command(
-            self.api.window_control(command=WindowCommand.CLOSE)
+            self.hass, self.api.window_control(command=WindowCommand.CLOSE)
         )
         self._attr_is_closed = True
         self.async_write_ha_state()
@@ -241,7 +241,7 @@ class TeslemetryChargePortEntity(
         """Open charge port."""
         self.raise_for_scope(Scope.VEHICLE_CHARGING_CMDS)
 
-        await handle_vehicle_command(self.api.charge_port_door_open())
+        await handle_vehicle_command(self.hass, self.api.charge_port_door_open())
         self._attr_is_closed = False
         self.async_write_ha_state()
 
@@ -249,7 +249,7 @@ class TeslemetryChargePortEntity(
         """Close charge port."""
         self.raise_for_scope(Scope.VEHICLE_CHARGING_CMDS)
 
-        await handle_vehicle_command(self.api.charge_port_door_close())
+        await handle_vehicle_command(self.hass, self.api.charge_port_door_close())
         self._attr_is_closed = True
         self.async_write_ha_state()
 
@@ -322,7 +322,7 @@ class TeslemetryFrontTrunkEntity(TeslemetryRootEntity, CoverEntity):
         """Open front trunk."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-        await handle_vehicle_command(self.api.actuate_trunk(Trunk.FRONT))
+        await handle_vehicle_command(self.hass, self.api.actuate_trunk(Trunk.FRONT))
         self._attr_is_closed = False
         self.async_write_ha_state()
 
@@ -386,7 +386,7 @@ class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
         if self.is_closed is not False:
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-            await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
+            await handle_vehicle_command(self.hass, self.api.actuate_trunk(Trunk.REAR))
             self._attr_is_closed = False
             self.async_write_ha_state()
 
@@ -395,7 +395,7 @@ class TeslemetryRearTrunkEntity(TeslemetryRootEntity, CoverEntity):
         if self.is_closed is not True:
             self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-            await handle_vehicle_command(self.api.actuate_trunk(Trunk.REAR))
+            await handle_vehicle_command(self.hass, self.api.actuate_trunk(Trunk.REAR))
             self._attr_is_closed = True
             self.async_write_ha_state()
 
@@ -477,20 +477,26 @@ class TeslemetrySunroofEntity(TeslemetryVehiclePollingEntity, CoverEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open sunroof."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.VENT))
+        await handle_vehicle_command(
+            self.hass, self.api.sun_roof_control(SunRoofCommand.VENT)
+        )
         self._attr_is_closed = False
         self.async_write_ha_state()
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.CLOSE))
+        await handle_vehicle_command(
+            self.hass, self.api.sun_roof_control(SunRoofCommand.CLOSE)
+        )
         self._attr_is_closed = True
         self.async_write_ha_state()
 
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Close sunroof."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
-        await handle_vehicle_command(self.api.sun_roof_control(SunRoofCommand.STOP))
+        await handle_vehicle_command(
+            self.hass, self.api.sun_roof_control(SunRoofCommand.STOP)
+        )
         self._attr_is_closed = False
         self.async_write_ha_state()
