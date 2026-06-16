@@ -1244,7 +1244,7 @@ hdate[astral]==1.2.1
 hdfury==1.6.0
 
 # homeassistant.components.heatmiser
-heatmiserV3==2.0.4
+heatmiserV3==2.0.6
 
 # homeassistant.components.hegel
 hegel-ip-client==0.1.4
