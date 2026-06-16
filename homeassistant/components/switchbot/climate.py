@@ -107,10 +107,18 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
         """Return the current HVAC action."""
 
         # Simple threshold check
-        if self.current_temperature is not None and self.target_temperature is not None:
-            if self.current_temperature >= self.target_temperature:
-                return HVACAction.IDLE
+        # Ensure the threshold checks are gated on the correct active HVAC mode
+        if self.hvac_mode == HVACMode.HEAT:
+            if self.current_temperature is not None and self.target_temperature is not None:
+                if self.current_temperature >= self.target_temperature:
+                    return HVACAction.IDLE
 
+        elif self.hvac_mode == HVACMode.COOL:
+            if self.current_temperature is not None and self.target_temperature is not None:
+                if self.current_temperature <= self.target_temperature:
+                    return HVACAction.IDLE
+
+        # Fall back to standard tracking if thresholds aren't actively hit
         return SWITCHBOT_ACTION_TO_HASS_HVAC_ACTION.get(
             self._device.hvac_action, HVACAction.OFF
         )
