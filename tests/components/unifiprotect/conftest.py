@@ -102,7 +102,13 @@ def mock_nvr():
 
 @pytest.fixture(name="ufp_options")
 def mock_ufp_options(request: pytest.FixtureRequest) -> dict[str, Any]:
-    """Options for the mock config entry (default: unset, i.e. private path)."""
+    """Options for the mock config entry.
+
+    Unset by default, so ``use_public_api_streams`` resolves to
+    ``DEFAULT_USE_PUBLIC_API_STREAMS`` (``True``) and the suite exercises the
+    public path. Legacy private-path modules override this fixture with
+    ``{CONF_USE_PUBLIC_API_STREAMS: False}`` to opt out.
+    """
     options: dict[str, Any] = {}
     if hasattr(request, "param"):
         options.update(request.param)

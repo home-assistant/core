@@ -99,6 +99,10 @@ def _get_camera_channels(
             data.async_add_pending_camera_id(camera.id)
             continue
 
+        # Private mode supersedes the public-stream repair (mirror of the
+        # public path clearing the per-channel rtsp_disabled repair).
+        ir.async_delete_issue(hass, DOMAIN, f"public_stream_disabled_{camera.id}")
+
         is_default = True
         for channel in camera.channels:
             if channel.is_package:

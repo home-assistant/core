@@ -315,3 +315,34 @@ async def test_rtsp_no_fix_if_globally_disabled(
     await async_process_repairs_platforms(hass)
 
     assert len(issue_registry.issues) == 0
+
+
+async def test_public_stream_repair_cleared_on_private_path(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a stale public-stream repair is cleared when on the private path.
+
+    Switching back from the public to the private stream path must drop the
+    now-meaningless ``public_stream_disabled`` repair (it is non-persistent and
+    would otherwise linger until the next restart).
+    """
+    issue_id = f"public_stream_disabled_{doorbell.id}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=True,
+        is_persistent=False,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="public_stream_disabled",
+        translation_placeholders={"camera": doorbell.display_name},
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+    await async_process_repairs_platforms(hass)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
