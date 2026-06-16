@@ -170,11 +170,9 @@ def mock_energieleser_client(
         ) as init_client,
         patch(
             "homeassistant.components.energieleser.config_flow.EnergieleserClient",
-            autospec=True,
-        ) as cf_client,
+            new=init_client,
+        ),
     ):
-        instance = AsyncMock()
-        instance.get_device = AsyncMock(return_value=mock_stromleser_device)
-        init_client.return_value = instance
-        cf_client.return_value = instance
+        instance = init_client.return_value
+        instance.get_device.return_value = mock_stromleser_device
         yield instance

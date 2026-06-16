@@ -158,6 +158,33 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
     assert result["data"][CONF_DEVICE_ID] == STROMLESER_DEVICE_ID
 
 
+@pytest.mark.usefixtures("mock_setup_entry", "mock_energieleser_client")
+async def test_zeroconf_flow_already_configured(
+    hass: HomeAssistant,
+    mock_stromleser_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a zeroconf flow aborts when the device is already configured."""
+    mock_stromleser_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("192.168.1.200"),
+            ip_addresses=[ip_address("192.168.1.200")],
+            hostname="stromleser-one.local.",
+            name="stromleser-one",
+            port=80,
+            properties={},
+            type="_stromleser._tcp.local.",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_stromleser_config_entry.data[CONF_HOST] == "192.168.1.200"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_reason"),
     [
