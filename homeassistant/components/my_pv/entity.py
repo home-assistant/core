@@ -10,7 +10,6 @@ class MyPVDataEntity(CoordinatorEntity[MyPVCoordinator]):
     """The my-PV data entity."""
 
     _attr_has_entity_name = True
-    _attr_available = False
 
     def __init__(
         self,
