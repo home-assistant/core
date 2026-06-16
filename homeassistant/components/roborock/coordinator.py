@@ -107,9 +107,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         self.properties_api = properties_api
         self.device_info = get_device_info(device)
         if mac := properties_api.network_info.mac:
-            self.device_info[ATTR_CONNECTIONS] = {
-                (dr.CONNECTION_NETWORK_MAC, dr.format_mac(mac))
-            }
+            self.device_info[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, mac)}
         self.last_update_state: str | None = None
         # Keep track of last attempt to refresh maps/rooms to know when to try again.
         self._last_home_update_attempt: datetime
