@@ -101,7 +101,7 @@ class KaiterraAirQuality(AirQualityEntity):
     @property
     def unique_id(self):
         """Return the sensor's unique id."""
-        return f"{self._device_id}_air_quality"
+        return f"{self._device_id}_air_quality"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:

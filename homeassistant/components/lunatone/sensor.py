@@ -115,7 +115,7 @@ class LunatoneSensor(
 
         self._attr_name = self.sensor.name
         self._attr_unique_id = (
-            f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
+            f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         )
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self._config_entry_unique_id)},

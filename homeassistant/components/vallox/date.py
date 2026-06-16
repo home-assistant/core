@@ -25,7 +25,7 @@ class ValloxFilterChangeDateEntity(ValloxEntity, DateEntity):
         """Initialize the Vallox date."""
         super().__init__(name, coordinator)
 
-        self._attr_unique_id = f"{self._device_uuid}-filter_change_date"
+        self._attr_unique_id = f"{self._device_uuid}-filter_change_date"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     def native_value(self) -> date | None:

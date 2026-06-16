@@ -47,7 +47,7 @@ class SteamSensor(SteamEntity, SensorEntity):
             name=f"steam_{account}",
             icon="mdi:steam",
         )
-        self._attr_unique_id = f"sensor.steam_{account}"
+        self._attr_unique_id = f"sensor.steam_{account}"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     @property
     def native_value(self) -> StateType:

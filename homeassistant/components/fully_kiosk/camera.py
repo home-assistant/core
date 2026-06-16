@@ -32,7 +32,7 @@ class FullyCameraEntity(FullyKioskEntity, Camera):
         """Initialize the camera."""
         FullyKioskEntity.__init__(self, coordinator)
         Camera.__init__(self)
-        self._attr_unique_id = f"{coordinator.data['deviceID']}-camera"
+        self._attr_unique_id = f"{coordinator.data['deviceID']}-camera"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
 
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None

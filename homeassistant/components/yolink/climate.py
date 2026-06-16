@@ -67,7 +67,7 @@ class YoLinkClimateEntity(YoLinkEntity, ClimateEntity):
     ) -> None:
         """Init YoLink Thermostat."""
         super().__init__(config_entry, coordinator)
-        self._attr_unique_id = f"{coordinator.device.device_id}_climate"
+        self._attr_unique_id = f"{coordinator.device.device_id}_climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_temperature_unit = UnitOfTemperature.CELSIUS
         self._attr_fan_modes = [FAN_ON, FAN_AUTO]
         self._attr_min_temp = -10

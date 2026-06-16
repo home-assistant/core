@@ -67,7 +67,7 @@ class ProtectSiren(SirenEntity):
         """Initialise the siren entity."""
         self.data = data
         self._siren_id = siren.id
-        self._attr_unique_id = f"{siren.mac}_siren"
+        self._attr_unique_id = f"{siren.mac}_siren"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         nvr = data.api.bootstrap.nvr
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, siren.mac)},
