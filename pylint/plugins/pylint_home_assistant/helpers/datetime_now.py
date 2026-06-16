@@ -1,17 +1,28 @@
 """Shared logic for the ``datetime.now`` enforcement checkers.
 
-Both the ``home-assistant-enforce-now`` and ``home-assistant-enforce-utcnow``
-checkers look for ``datetime.datetime.now(<tz>)`` calls and differ only in which
-time zone argument they care about. The common detection lives here; each checker
-module just declares its message and whether it fires on the UTC case.
+The ``home-assistant-enforce-now``, ``home-assistant-enforce-utcnow`` and
+``home-assistant-enforce-naive-now`` checkers all look for
+``datetime.datetime.now(...)`` calls and differ only in which call shape they
+care about. The common detection lives here; each checker module declares its
+message and which case it fires on:
+
+- ``utc``: ``datetime.now(UTC)`` -- steered to ``dt_util.utcnow``.
+- ``other``: ``datetime.now(<non-UTC tz>)`` -- steered to ``dt_util.now``.
+- ``naive``: ``datetime.now()`` with no time zone -- steered to
+  ``dt_util.naive_now``.
 """
 
 from astroid import nodes
 from pylint.checkers import BaseChecker
 
-# ``homeassistant.util.dt`` defines ``now``/``utcnow`` itself, so it must call
-# ``datetime.datetime.now(...)`` directly.
+# ``homeassistant.util.dt`` defines ``now``/``utcnow``/``naive_now`` itself, so
+# it must call ``datetime.datetime.now(...)`` directly.
 SKIP_MODULES = frozenset({"homeassistant.util.dt"})
+
+# The mutually exclusive cases a ``datetime.now(...)`` call can fall into.
+CASE_NAIVE = "naive"
+CASE_UTC = "utc"
+CASE_OTHER = "other"
 
 
 def attribute_path(node: nodes.NodeNG) -> tuple[str, ...] | None:
@@ -44,15 +55,15 @@ class HassEnforceDatetimeNowChecker(BaseChecker):
     Subclasses must define ``name`` and ``msgs`` and set:
 
     - ``message``: the message symbol to emit.
-    - ``flags_utc``: ``True`` to fire on the UTC case, ``False`` to fire on every
-      other (non-UTC) time zone.
+    - ``flagged_case``: which call shape to fire on -- one of ``CASE_UTC``,
+      ``CASE_OTHER`` or ``CASE_NAIVE``.
     """
 
     priority = -1
     options = ()
 
     message: str
-    flags_utc: bool
+    flagged_case: str
 
     _enabled: bool
     _datetime_class_paths: set[tuple[str, ...]]
@@ -101,11 +112,17 @@ class HassEnforceDatetimeNowChecker(BaseChecker):
                                 self._utc_paths.add((alias, "UTC"))
 
     def visit_call(self, node: nodes.Call) -> None:
-        """Check for ``datetime.now(<tz>)`` calls matching the configured case."""
+        """Check for ``datetime.now(...)`` calls matching the configured case."""
         if not self._enabled:
             return
 
         match node:
+            case nodes.Call(
+                func=nodes.Attribute(attrname="now", expr=expr),
+                args=[],
+                keywords=[],
+            ):
+                arg = None
             case nodes.Call(
                 func=nodes.Attribute(attrname="now", expr=expr),
                 args=[arg],
@@ -123,8 +140,18 @@ class HassEnforceDatetimeNowChecker(BaseChecker):
 
         if attribute_path(expr) not in self._datetime_class_paths:
             return
-        is_utc = attribute_path(arg) in self._utc_paths or is_zoneinfo_utc(arg)
-        if is_utc is not self.flags_utc:
+        if self._categorize(arg) != self.flagged_case:
             return
 
         self.add_message(self.message, node=node)
+
+    def _categorize(self, arg: nodes.NodeNG | None) -> str:
+        """Categorize the time zone argument of a ``datetime.now(...)`` call.
+
+        A missing argument or an explicit ``None`` yields a naive ``datetime``.
+        """
+        if arg is None or (isinstance(arg, nodes.Const) and arg.value is None):
+            return CASE_NAIVE
+        if attribute_path(arg) in self._utc_paths or is_zoneinfo_utc(arg):
+            return CASE_UTC
+        return CASE_OTHER
