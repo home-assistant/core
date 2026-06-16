@@ -1,4 +1,62 @@
 # serializer version: 1
+# name: test_sensor_snapshot[sensor.device_1_ground_water_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_1_ground_water_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ground water level',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Ground water level',
+    'platform': 'aqvify',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ground_water_level',
+    'unique_id': 'test_account_id_DeviceKey_1_ground_water_level',
+    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.device_1_ground_water_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Device 1 Ground water level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_1_ground_water_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_sensor_snapshot[sensor.device_1_inflow-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -121,7 +179,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -143,7 +203,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Outflow',
     'platform': 'aqvify',
@@ -152,15 +212,16 @@
     'supported_features': 0,
     'translation_key': 'out_volume',
     'unique_id': 'test_account_id_DeviceKey_1_out_volume',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
 # name: test_sensor_snapshot[sensor.device_1_outflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
+      'device_class': 'water',
       'friendly_name': 'Device 1 Outflow',
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_1_outflow',
@@ -226,6 +287,64 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '-0.136786005',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.device_2_ground_water_level-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.device_2_ground_water_level',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Ground water level',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DISTANCE: 'distance'>,
+    'original_icon': None,
+    'original_name': 'Ground water level',
+    'platform': 'aqvify',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'ground_water_level',
+    'unique_id': 'test_account_id_DeviceKey_2_ground_water_level',
+    'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.device_2_ground_water_level-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'distance',
+      'friendly_name': 'Device 2 Ground water level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfLength.METERS: 'm'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.device_2_ground_water_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
   })
 # ---
 # name: test_sensor_snapshot[sensor.device_2_inflow-entry]
@@ -350,7 +469,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -372,7 +493,7 @@
         'suggested_display_precision': 1,
       }),
     }),
-    'original_device_class': <SensorDeviceClass.VOLUME_FLOW_RATE: 'volume_flow_rate'>,
+    'original_device_class': <SensorDeviceClass.WATER: 'water'>,
     'original_icon': None,
     'original_name': 'Outflow',
     'platform': 'aqvify',
@@ -381,15 +502,16 @@
     'supported_features': 0,
     'translation_key': 'out_volume',
     'unique_id': 'test_account_id_DeviceKey_2_out_volume',
-    'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+    'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
   })
 # ---
 # name: test_sensor_snapshot[sensor.device_2_outflow-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'volume_flow_rate',
+      'device_class': 'water',
       'friendly_name': 'Device 2 Outflow',
-      'unit_of_measurement': <UnitOfVolumeFlowRate.LITERS_PER_HOUR: 'L/h'>,
+      'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+      'unit_of_measurement': <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_2_outflow',

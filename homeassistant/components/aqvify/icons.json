@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "ground_water_level": {
+        "default": "mdi:arrow-collapse-down"
+      },
       "in_flow": {
         "default": "mdi:water-plus-outline"
       },

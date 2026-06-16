@@ -34,6 +34,9 @@
   },
   "entity": {
     "sensor": {
+      "ground_water_level": {
+        "name": "Ground water level"
+      },
       "in_flow": {
         "name": "Inflow"
       },

@@ -74,6 +74,16 @@ ENTITIES_AGGR: tuple[AqvifySensorEntityDescription, ...] = (
         suggested_display_precision=1,
         value_fn=lambda value: value.out_volume,  # type: ignore[union-attr]
     ),
+    AqvifySensorEntityDescription(
+        key="ground_water_level",
+        translation_key="ground_water_level",
+        native_unit_of_measurement=UnitOfLength.METERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.DISTANCE,
+        suggested_display_precision=2,
+        value_fn=lambda value: value.valid_ground_water_level,  # type: ignore[union-attr]
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
