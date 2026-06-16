@@ -2,7 +2,7 @@
   "domain": "willow",
   "name": "Willow",
   "codeowners": [
-    "@PlantWithWillow"
+    "@paxprz"
   ],
   "config_flow": true,
   "dependencies": [

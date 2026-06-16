@@ -68,7 +68,9 @@ def mock_willow_client() -> Generator[MagicMock]:
     """Patch WillowClient wherever it is instantiated."""
     client = MagicMock()
     client.get_profile = AsyncMock(return_value=dict(copy.deepcopy(PROFILE)))
-    client.get_devices = AsyncMock(return_value=[dict(copy.deepcopy(device)) for device in DEVICES])
+    client.get_devices = AsyncMock(
+        return_value=[dict(copy.deepcopy(device)) for device in DEVICES]
+    )
     with (
         patch("homeassistant.components.willow.WillowClient", return_value=client),
         patch(

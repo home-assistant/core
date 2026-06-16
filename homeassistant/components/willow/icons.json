@@ -4,20 +4,20 @@
       "battery_life": {
         "default": "mdi:battery"
       },
-      "temperature": {
-        "default": "mdi:thermometer"
-      },
       "humidity": {
         "default": "mdi:water-percent"
       },
-      "moisture": {
-        "default": "mdi:water-percent"
+      "last_reading": {
+        "default": "mdi:clock-outline"
       },
       "light": {
         "default": "mdi:white-balance-sunny"
       },
-      "last_reading": {
-        "default": "mdi:clock-outline"
+      "moisture": {
+        "default": "mdi:water-percent"
+      },
+      "temperature": {
+        "default": "mdi:thermometer"
       }
     }
   }

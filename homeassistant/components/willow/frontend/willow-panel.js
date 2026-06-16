@@ -40,7 +40,7 @@ class WillowPanel extends HTMLElement {
 
   _toggleMenu() {
     this.dispatchEvent(
-      new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true })
+      new CustomEvent("hass-toggle-menu", { bubbles: true, composed: true }),
     );
   }
 
@@ -51,7 +51,7 @@ class WillowPanel extends HTMLElement {
     }
 
     const entities = Object.values(hass.entities || {}).filter(
-      (entry) => entry.platform === "willow"
+      (entry) => entry.platform === "willow",
     );
 
     const byDevice = new Map();
@@ -87,7 +87,7 @@ class WillowPanel extends HTMLElement {
             const state = hass.states[entry.entity_id];
             return `${entry.entity_id}:${state ? state.state : "?"}`;
           })
-          .join("|")
+          .join("|"),
       )
       .join("||");
   }
