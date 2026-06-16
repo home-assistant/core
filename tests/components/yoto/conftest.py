@@ -94,6 +94,10 @@ def _build_player() -> YotoPlayer:
         config=PlayerConfig(
             day_time=dt_time(7, 0),
             night_time=dt_time(19, 0),
+            bluetooth_enabled=True,
+            headphones_volume_limited=True,
+            day_display_brightness_auto=False,
+            night_display_brightness_auto=True,
         ),
     )
     player.status = PlayerStatus(
