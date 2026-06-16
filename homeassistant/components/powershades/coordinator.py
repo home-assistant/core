@@ -28,12 +28,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-# Within this distance of the target the shade counts as arrived
+# % The margin for considering the shade arrived at its target
 POSITION_TOLERANCE = 2
 
-# How long the reported position can stay unchanged while heading to a
-# target before the shade is considered stopped by an external controller
-# or obstruction.
+ # seconds before an unmoving target is changed from moving to still
 STUCK_TIMEOUT = 15
 
 PowerShadesConfigEntry = ConfigEntry["PowerShadesCoordinator"]
@@ -124,8 +122,7 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
                 if self._target_position is None or (
                     (self._target_position > self._last_position) != moving_up
                 ):
-                    # No active target or shade reversed direction — assume it's
-                    # heading to the natural limit in the observed direction.
+                    # treat an unexpected direction change as externally-initiated move
                     self._target_position = 100 if moving_up else 0
                 self._last_change_time = now
             elif (
