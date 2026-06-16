@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.reolink.const import DOMAIN
 from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
+from homeassistant.components.reolink.host import ONVIF
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
@@ -54,9 +55,9 @@ async def test_motion_sensor(
     # test ONVIF webhook callback
     reolink_host.motion_detected.return_value = True
     reolink_host.ONVIF_event_callback.return_value = [0]
-    webhook_id = config_entry.runtime_data.host.webhook_id
+    webhook_id = config_entry.runtime_data.host._webhook_ids[ONVIF]
     client = await hass_client_no_auth()
-    await client.post(f"/api/webhook/{webhook_id}", data="test_data")
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
 
     assert hass.states.get(entity_id).state == STATE_ON
 
