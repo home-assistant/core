@@ -735,6 +735,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
         value = self.data.value
 
         if isinstance(value, time):
+            # pylint: disable-next=home-assistant-enforce-now
             local_now = datetime.now(
                 tz=dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
             )
@@ -847,6 +848,7 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
 
     async def _async_update_and_schedule(self) -> None:
         """Update the state of the sensor."""
+        # pylint: disable-next=home-assistant-enforce-now
         local_now = datetime.now(
             dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
         )
