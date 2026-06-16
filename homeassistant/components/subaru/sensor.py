@@ -150,6 +150,10 @@ API_GEN_2_SENSORS = [
         key=API_KEY_VEHICLE_STATE_TYPE,
         translation_key="vehicle_state",
     ),
+    # Recommended tire pressure is a static reference value from the
+    # manufacturer (sourced from vehicle_health.RECOMMENDED_TIRE_PRESSURE),
+    # not a live measurement. Intentionally no state_class — there is
+    # nothing meaningful for the recorder to track over time.
     SubaruSensorEntityDescription(
         key=KEY_RECOMMENDED_TIRE_PRESSURE_FRONT,
         translation_key=KEY_RECOMMENDED_TIRE_PRESSURE_FRONT,
