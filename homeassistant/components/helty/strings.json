@@ -20,6 +20,11 @@
     }
   },
   "entity": {
+    "button": {
+      "reset_filter": {
+        "name": "Reset filter"
+      }
+    },
     "sensor": {
       "indoor_humidity": {
         "name": "Indoor humidity"
@@ -30,6 +35,14 @@
       "outdoor_temperature": {
         "name": "Outdoor temperature"
       }
+    }
+  },
+  "exceptions": {
+    "reset_filter_failed": {
+      "message": "Failed to reset the filter."
+    },
+    "set_fan_mode_failed": {
+      "message": "Failed to set the ventilation mode."
     }
   }
 }

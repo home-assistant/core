@@ -18,6 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
 
 from . import BleBoxConfigEntry
+from .const import DOMAIN
 from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
 
@@ -86,7 +87,11 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
         try:
             await self._feature.async_update()
         except Error as ex:
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
         self._sync_sw_version()
 
     @property
@@ -121,7 +126,11 @@ class BleBoxUpdateEntity(BleBoxEntity[blebox_uniapi.update.Update], UpdateEntity
             await self._feature.async_install()
         except Error as ex:
             self._reset_progress()
-            raise HomeAssistantError(ex) from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="install_failed",
+                translation_placeholders={"error": str(ex)},
+            ) from ex
         self._poll_cancel = async_call_later(
             self.hass, _POLL_INTERVAL_SECONDS, self._poll_until_updated
         )
