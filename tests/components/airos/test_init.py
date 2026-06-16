@@ -14,7 +14,7 @@ from homeassistant.components.airos.const import (
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from homeassistant.components.airos.coordinator import async_fetch_airos_data
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
@@ -46,7 +46,7 @@ MOCK_CONFIG_PLAIN = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "ubnt",
     CONF_PASSWORD: "test-password",
-    SECTION_ADVANCED_SETTINGS: {
+    SECTION_ADDITIONAL_SETTINGS: {
         CONF_SSL: False,
         CONF_VERIFY_SSL: False,
     },
@@ -56,7 +56,7 @@ MOCK_CONFIG_V1_2 = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "ubnt",
     CONF_PASSWORD: "test-password",
-    SECTION_ADVANCED_SETTINGS: {
+    SECTION_ADDITIONAL_SETTINGS: {
         CONF_SSL: DEFAULT_SSL,
         CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
     },
@@ -86,8 +86,8 @@ async def test_setup_entry_with_default_ssl(
         use_ssl=DEFAULT_SSL,
     )
 
-    assert mock_config_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL] is True
-    assert mock_config_entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL] is False
+    assert mock_config_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL] is True
+    assert mock_config_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL] is False
 
 
 async def test_setup_entry_without_ssl(
@@ -120,8 +120,8 @@ async def test_setup_entry_without_ssl(
         use_ssl=False,
     )
 
-    assert entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL] is False
-    assert entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL] is False
+    assert entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL] is False
+    assert entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL] is False
 
 
 async def test_ssl_migrate_entry(
