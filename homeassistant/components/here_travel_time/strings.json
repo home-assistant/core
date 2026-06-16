@@ -15,7 +15,7 @@
         },
         "title": "[%key:component::here_travel_time::config::step::destination_menu::title%]"
       },
-      "destination_entity_id": {
+      "destination_entity": {
         "data": {
           "destination_entity_id": "Destination using an entity"
         },
@@ -34,7 +34,7 @@
         },
         "title": "[%key:component::here_travel_time::config::step::origin_menu::title%]"
       },
-      "origin_entity_id": {
+      "origin_entity": {
         "data": {
           "origin_entity_id": "Origin using an entity"
         },
