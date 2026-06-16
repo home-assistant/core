@@ -109,10 +109,6 @@ async def async_migrate_data(
     async_deprecate_hdr(hass, entry)
     _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
 
-    _LOGGER.debug("Start Migrate: async_deprecate_package_binary_sensor")
-    async_deprecate_package_binary_sensor(hass, entry)
-    _LOGGER.debug("Completed Migrate: async_deprecate_package_binary_sensor")
-
 
 @callback
 def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
@@ -131,31 +127,4 @@ def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
         entry,
         "2024.10.0",
         {"hdr_switch": {"id": "hdr_mode", "platform": Platform.SWITCH}},
-    )
-
-
-@callback
-def async_deprecate_package_binary_sensor(
-    hass: HomeAssistant, entry: UFPConfigEntry
-) -> None:
-    """Raise a repair if the removed package-detected binary sensor is still used.
-
-    Package detection is a discrete, point-in-time smart-detect event that
-    Protect records already-ended, so the sustained "Package detected" binary
-    sensor could never reliably turn on. It has been removed in favour of the
-    package event entity (``event.*_package``).
-
-    Added in 2026.7.0
-    """
-
-    create_repair_if_used(
-        hass,
-        entry,
-        "2026.7.0",
-        {
-            "package_binary_sensor": {
-                "id": "smart_obj_package",
-                "platform": Platform.BINARY_SENSOR,
-            }
-        },
     )

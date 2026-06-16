@@ -754,10 +754,6 @@
       "description": "UniFi Protect v3 added a new state for HDR (auto). As a result, the HDR Mode switch has been replaced with an HDR Mode select, and it is deprecated.\n\nBelow are the detected automations or scripts that use one or more of the deprecated entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
       "title": "HDR Mode switch deprecated"
     },
-    "deprecate_package_binary_sensor": {
-      "description": "Package detection is a momentary event rather than a continuous state, so the \"Package detected\" binary sensor could never reliably turn on. It has been removed and replaced with a Package event entity.\n\nBelow are the detected automations or scripts that use the removed entity:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts to use the new Package event entity.",
-      "title": "Package detected binary sensor removed"
-    },
     "rtsp_disabled_readonly": {
       "fix_flow": {
         "step": {
