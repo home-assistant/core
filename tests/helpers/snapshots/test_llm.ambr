@@ -202,6 +202,60 @@
         'type': 'object',
       }),
     }),
+    'HassListAddItem': dict({
+      'description': 'Add item to a todo list',
+      'parameters': dict({
+        'properties': dict({
+          'item': dict({
+            'type': 'string',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
+        }),
+        'required': list([
+          'item',
+          'name',
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'HassListCompleteItem': dict({
+      'description': 'Complete item on a todo list',
+      'parameters': dict({
+        'properties': dict({
+          'item': dict({
+            'type': 'string',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
+        }),
+        'required': list([
+          'item',
+          'name',
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'HassListRemoveItem': dict({
+      'description': 'Remove one or more items from a todo list',
+      'parameters': dict({
+        'properties': dict({
+          'item': dict({
+            'type': 'string',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
+        }),
+        'required': list([
+          'item',
+          'name',
+        ]),
+        'type': 'object',
+      }),
+    }),
     'HassPauseTimer': dict({
       'description': 'Pauses a running timer',
       'parameters': dict({

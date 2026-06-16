@@ -448,6 +448,7 @@ async def test_assist_api_snapshot(
     assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(hass, "llm", {})
     assert await async_setup_component(hass, "calendar", {})
+    assert await async_setup_component(hass, "todo", {})
     assert await async_setup_component(
         hass,
         "script",
@@ -2012,6 +2013,7 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
 async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     """Test the todo get items tool."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "llm", {})
     assert await async_setup_component(hass, "todo", {})
     hass.states.async_set(
         "todo.test_list", "0", {"friendly_name": "Mock Todo List Name"}
