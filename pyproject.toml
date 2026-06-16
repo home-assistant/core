@@ -99,7 +99,7 @@ hass = "homeassistant.__main__:main"
 # to the platforms Home Assistant actually targets: Linux and macOS.
 environments = [
     "sys_platform == 'linux'",
-#    "sys_platform == 'darwin'",
+    "sys_platform == 'darwin'",
 ]
 
 [tool.setuptools]
