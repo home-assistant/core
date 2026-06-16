@@ -9,8 +9,8 @@
     },
     {
       "connectable": true,
-      "manufacturer_id": 1062,
-      "manufacturer_data_start": [4, 6, 18]
+      "manufacturer_data_start": [4, 6, 18],
+      "manufacturer_id": 1062
     }
   ],
   "codeowners": ["@elupus"],
