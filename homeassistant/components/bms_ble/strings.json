@@ -44,6 +44,9 @@
       "min_cell_voltage": {
         "name": "Lowest cell voltage"
       },
+      "rssi": {
+        "name": "[%key:component::sensor::entity_component::signal_strength::name%]"
+      },
       "runtime": {
         "name": "Runtime"
       }
