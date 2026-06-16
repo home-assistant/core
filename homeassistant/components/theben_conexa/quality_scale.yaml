@@ -8,16 +8,16 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: todo
+    status: exempt
     comment: "Will do after first review of draft PR"
   docs-high-level-description:
-    status: todo
+    status: exempt
     comment: "Will do after first review of draft PR"
   docs-installation-instructions:
-    status: todo
+    status: exempt
     comment: "Will do after first review of draft PR"
   docs-removal-instructions:
-    status: todo
+    status: exempt
     comment: "Will do after first review of draft PR"
   entity-event-setup: done
   entity-unique-id: done

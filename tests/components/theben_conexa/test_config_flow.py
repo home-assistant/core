@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import aiohttp
 
 from homeassistant import config_entries
-from homeassistant.components.thebenconexasmgw.const import DOMAIN
+from homeassistant.components.theben_conexa.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType

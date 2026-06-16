@@ -1,6 +1,6 @@
 {
-  "domain": "thebenconexasmgw",
-  "name": "Theben Conexa Smartmeter gateway",
+  "domain": "theben_conexa",
+  "name": "Theben Conexa Smart Meter Gateway",
   "codeowners": ["@mdluhosch"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/thebenconexasmgw",
