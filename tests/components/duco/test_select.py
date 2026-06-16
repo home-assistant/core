@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 from duco_connectivity import (
     ActionItem,
     ActionValueType,
+    DucoConnectionError,
     DucoError,
     DucoRateLimitError,
     KnownActionName,
@@ -255,7 +256,7 @@ async def test_select_entity_is_added_when_action_discovery_succeeds_later(
 ) -> None:
     """Test select entities are added when action discovery becomes available later."""
     mock_duco_client.async_get_node_actions.side_effect = [
-        NodeListActionItemList(nodes=[]),
+        DucoConnectionError("Connection refused"),
         _build_node_actions(
             options=["AUTO", "CNT1", "CNT2", "CNT3", "MAN1", "MAN2", "MAN3"]
         ),

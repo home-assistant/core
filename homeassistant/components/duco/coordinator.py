@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import cast
 
 from duco_connectivity import DucoClient
 from duco_connectivity.exceptions import (
@@ -103,21 +104,19 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         try:
             node_actions = await self.client.async_get_node_actions()
         except DucoError as err:
-            if self.data is None:
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key=(
-                        "cannot_connect"
-                        if isinstance(err, DucoConnectionError)
-                        else "api_error"
-                    ),
-                    translation_placeholders={"error": repr(err)},
-                ) from err
-            _LOGGER.warning(
-                "Could not fetch Duco node actions; keeping previous select discovery data",
-                exc_info=err,
-            )
-            node_actions = self.data.node_actions
+            previous_data = cast(DucoData | None, getattr(self, "data", None))
+            if previous_data is None:
+                _LOGGER.warning(
+                    "Could not fetch Duco node actions; starting with empty select discovery data",
+                    exc_info=err,
+                )
+                node_actions = NodeListActionItemList(nodes=[])
+            else:
+                _LOGGER.warning(
+                    "Could not fetch Duco node actions; keeping previous select discovery data",
+                    exc_info=err,
+                )
+                node_actions = previous_data.node_actions
 
         # LAN info only backs the diagnostic RSSI sensor, so failures on this
         # supplemental endpoint, including connection failures, should not make

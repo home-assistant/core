@@ -63,7 +63,7 @@ from tests.common import MockConfigEntry
         (
             "async_get_node_actions",
             DucoConnectionError("Connection refused"),
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             None,
             False,
         ),
