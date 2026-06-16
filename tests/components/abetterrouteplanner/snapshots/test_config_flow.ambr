@@ -1,0 +1,17 @@
+# serializer version: 1
+# name: test_full_flow
+  dict({
+    'auth_implementation': 'abetterrouteplanner',
+    'token': dict({
+      'access_token': 'mock-access-token',
+      'expires_at': 1767229200.0,
+      'expires_in': 3600,
+      'id_token': 'header.eyJzdWIiOiAidXNlci1zdWItMTIzNDUifQ.signature',
+      'refresh_token': 'mock-refresh-token',
+      'token_type': 'Bearer',
+    }),
+    'vehicle_ids': list([
+      '941349991303',
+    ]),
+  })
+# ---
