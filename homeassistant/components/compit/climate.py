@@ -195,27 +195,24 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         """Return the current preset mode."""
         preset_mode = self.get_parameter_value(CompitParameter.PRESET_MODE)
 
-        if preset_mode:
-            compit_preset_mode = CompitPresetMode(preset_mode)
-            return COMPIT_PRESET_MAP.get(compit_preset_mode)
+        if preset_mode is not None:
+            return COMPIT_PRESET_MAP.get(CompitPresetMode(preset_mode))
         return None
 
     @property
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         fan_mode = self.get_parameter_value(CompitParameter.FAN_MODE)
-        if fan_mode:
-            compit_fan_mode = CompitFanMode(fan_mode)
-            return COMPIT_FANSPEED_MAP.get(compit_fan_mode)
+        if fan_mode is not None:
+            return COMPIT_FANSPEED_MAP.get(CompitFanMode(fan_mode))
         return None
 
     @property
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         hvac_mode = self.get_parameter_value(CompitParameter.HVAC_MODE)
-        if hvac_mode:
-            compit_hvac_mode = CompitHVACMode(hvac_mode)
-            return COMPIT_MODE_MAP.get(compit_hvac_mode)
+        if hvac_mode is not None:
+            return COMPIT_MODE_MAP.get(CompitHVACMode(hvac_mode))
         return None
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
