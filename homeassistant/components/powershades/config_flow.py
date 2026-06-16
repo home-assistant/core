@@ -120,7 +120,7 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle a device found by DHCP discovery."""
         ip = discovery_info.ip
         self._discovered_mac = format_mac(discovery_info.macaddress)
-        # The DHCP matcher is a heuristic (MAC prefix + hostname); verify
+        # The DHCP matcher is assumes the mac address and hostname may be a Powershade; verify
         # the device actually speaks the PowerShades protocol.
         try:
             info = await async_get_device_info(ip)
