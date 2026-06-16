@@ -76,14 +76,14 @@ class SubaruSensorEntityDescription(SensorEntityDescription):
 
 
 def _recommended_tire_pressure(
-    side: str,
+    axle: str,
 ) -> Callable[[dict[str, Any]], StateType | date | datetime | Decimal]:
-    """Return a getter for recommended FRONT or REAR tire pressure from vehicle_health."""
+    """Return a getter for recommended FRONT or REAR axle tire pressure from vehicle_health."""
 
     def getter(data: dict[str, Any]) -> StateType | date | datetime | Decimal:
         health = data.get(VEHICLE_HEALTH) or {}
         recommended = health.get(API_KEY_RECOMMENDED_TIRE_PRESSURE) or {}
-        return recommended.get(side)
+        return recommended.get(axle)
 
     return getter
 
