@@ -16,7 +16,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN, device_model_name
+from .const import CONF_SW_VERSION, DOMAIN, device_model_name
 
 STEP_USER_SCHEMA = vol.Schema(
     {
@@ -33,6 +33,7 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_host: str
     _discovered_device_id: str
     _discovered_device_type: str
+    _discovered_sw_version: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -77,10 +78,17 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
             host=host, session=async_get_clientsession(self.hass)
         )
 
-        device_id = discovery_info.name.split(".")[0].replace("-", "_").upper()
+        # The mDNS hostname ("strom-one-123.local.") encodes the API device_id
+        # ("STROM_ONE_123"), so it can gate an already-configured device before
+        # any network request and refresh the host even while it is unreachable.
+        device_id = discovery_info.hostname.split(".")[0].replace("-", "_").upper()
+        sw_version = discovery_info.properties.get("version")
+        updates: dict[str, Any] = {CONF_HOST: host}
+        if sw_version is not None:
+            updates[CONF_SW_VERSION] = sw_version
 
         await self.async_set_unique_id(device_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates=updates)
 
         try:
             device = await client.get_device()
@@ -92,11 +100,12 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="unknown")
 
         await self.async_set_unique_id(device.device_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+        self._abort_if_unique_id_configured(updates=updates)
 
         self._discovered_host = host
         self._discovered_device_id = device.device_id
         self._discovered_device_type = device_model_name(device.device_type)
+        self._discovered_sw_version = sw_version
 
         self.context.update(
             {
@@ -118,6 +127,7 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._discovered_host,
                 self._discovered_device_type,
                 self._discovered_device_id,
+                self._discovered_sw_version,
             )
 
         return self.async_show_form(
@@ -129,9 +139,11 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    def _create_entry(self, host: str, title: str, device_id: str) -> ConfigFlowResult:
+    def _create_entry(
+        self, host: str, title: str, device_id: str, sw_version: str | None = None
+    ) -> ConfigFlowResult:
         """Create the config entry with a friendly title and consistent data."""
-        return self.async_create_entry(
-            title=title,
-            data={CONF_HOST: host, CONF_DEVICE_ID: device_id},
-        )
+        data: dict[str, Any] = {CONF_HOST: host, CONF_DEVICE_ID: device_id}
+        if sw_version is not None:
+            data[CONF_SW_VERSION] = sw_version
+        return self.async_create_entry(title=title, data=data)

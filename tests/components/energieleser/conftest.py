@@ -21,6 +21,9 @@ GASLESER_DEVICE_ID = "GAS_8530321017"
 WAERMELESER_DEVICE_ID = "HEAT_0000000001"
 WASSERLESER_DEVICE_ID = "WASSER_0499632826"
 
+# Firmware version advertised in the mDNS TXT "version" property at discovery.
+STROMLESER_SW_VERSION = "v1.4.22-31-g1658863"
+
 STROMLESER_API_RESPONSE: dict = {
     "device_id": STROMLESER_DEVICE_ID,
     "timestamp": "1776178480",

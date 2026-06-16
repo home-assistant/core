@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, device_model_name
+from .const import CONF_SW_VERSION, DOMAIN, device_model_name
 from .coordinator import EnergieleserConfigEntry, EnergieleserCoordinator
 
 PARALLEL_UPDATES = 0
@@ -394,6 +394,7 @@ class _EnergieleserSensorBase(CoordinatorEntity[EnergieleserCoordinator], Sensor
             manufacturer="nineti GmbH",
             model=device_model_name(coordinator.data.device_type),
             serial_number=serial_number,
+            sw_version=coordinator.config_entry.data.get(CONF_SW_VERSION),
             configuration_url=f"http://{host}/",
         )
 

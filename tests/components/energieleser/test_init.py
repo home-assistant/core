@@ -9,8 +9,13 @@ from energieleser import (
 )
 import pytest
 
+from homeassistant.components.energieleser.const import CONF_SW_VERSION, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_DEVICE_ID, CONF_HOST
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
+
+from .conftest import STROMLESER_DEVICE_ID, STROMLESER_SW_VERSION
 
 from tests.common import MockConfigEntry
 
@@ -57,3 +62,30 @@ async def test_setup_retries_on_client_error(
     )
     await hass.async_block_till_done()
     assert mock_stromleser_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("mock_energieleser_client")
+async def test_device_exposes_discovery_sw_version(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the firmware version captured at discovery is set on the device."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: "192.168.1.100",
+            CONF_DEVICE_ID: STROMLESER_DEVICE_ID,
+            CONF_SW_VERSION: STROMLESER_SW_VERSION,
+        },
+        unique_id=STROMLESER_DEVICE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(
+        identifiers={(DOMAIN, STROMLESER_DEVICE_ID)}
+    )
+    assert device is not None
+    assert device.sw_version == STROMLESER_SW_VERSION
