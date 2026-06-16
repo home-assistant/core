@@ -2171,10 +2171,6 @@ async def test_numerical_state_trigger_threshold_entity_same_loop_iteration(
     value rises to 150 while the threshold is 100, which should fire, but if
     the adversary runs first the trigger reads the bumped threshold (200) and
     misses the crossing.
-
-    A state view for the threshold entity would make the outcome independent
-    of listener order (see the targeted-entity equivalent
-    ``test_entity_trigger_first_view_needed_for_synchronous_change``).
     """
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
