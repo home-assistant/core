@@ -6,6 +6,7 @@ from unittest.mock import MagicMock, patch
 from pyps4_2ndscreen.credential import get_ddp_message
 from pyps4_2ndscreen.ddp import DEFAULT_UDP_PORT
 from pyps4_2ndscreen.media_art import TYPE_APP as PS_TYPE_APP
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import ps4
 from homeassistant.components.media_player import (
@@ -321,6 +322,24 @@ async def test_device_info_is_set_from_status_correctly(
     assert mock_entry.model == MOCK_DEVICE_MODEL
     assert mock_entry.sw_version == mock_version
     assert mock_entry.identifiers == {(DOMAIN, MOCK_HOST_ID)}
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    patch_get_status: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry, including the network MAC connection."""
+    patch_get_status.return_value = MOCK_STATUS_STANDBY
+    await setup_mock_component(hass)
+
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, MOCK_HOST_ID)}
+    )
+    assert device_entry == snapshot
 
 
 async def test_device_info_is_assummed(
