@@ -426,3 +426,106 @@ async def test_form_reconfigure_errors(
         CONF_VERIFY_SSL: True,
     }
     assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.usefixtures("smtp")
+async def test_form_reauth(hass: HomeAssistant, config_entry: MockConfigEntry) -> None:
+    """Test reauth flow."""
+
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert config_entry.data == {
+        CONF_SENDER: "email@example.com",
+        CONF_SENDER_NAME: "Home Assistant",
+        CONF_SERVER: "mail.example.com",
+        CONF_PORT: 587,
+        CONF_ENCRYPTION: "starttls",
+        CONF_USERNAME: "new-username",
+        CONF_PASSWORD: "new-password",
+        CONF_VERIFY_SSL: True,
+    }
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
+@pytest.mark.parametrize(
+    ("exception", "text_error"),
+    [
+        (SMTPAuthenticationError(0, ""), "invalid_auth"),
+        (ConnectionRefusedError, "cannot_connect"),
+        (gaierror, "cannot_connect"),
+        (SSLCertVerificationError, "invalid_cert"),
+        (ValueError, "unknown"),
+    ],
+)
+@pytest.mark.usefixtures("smtp")
+async def test_form_reauth_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+    exception: Exception,
+    text_error: str,
+) -> None:
+    """Test reauth flow connection errors."""
+
+    smtp.login.side_effect = exception
+
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": text_error}
+
+    smtp.login.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_USERNAME: "new-username",
+            CONF_PASSWORD: "new-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+    assert config_entry.data == {
+        CONF_SENDER: "email@example.com",
+        CONF_SENDER_NAME: "Home Assistant",
+        CONF_SERVER: "mail.example.com",
+        CONF_PORT: 587,
+        CONF_ENCRYPTION: "starttls",
+        CONF_USERNAME: "new-username",
+        CONF_PASSWORD: "new-password",
+        CONF_VERIFY_SSL: True,
+    }
+    assert len(hass.config_entries.async_entries()) == 1
