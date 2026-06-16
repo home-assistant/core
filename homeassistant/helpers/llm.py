@@ -579,11 +579,20 @@ class AssistAPI(API):
         else:
             exposed_entities = None
 
+        registered = _async_get_registered_tools(self.hass, LLM_API_ASSIST, llm_context)
+
+        api_prompt = self._async_get_api_prompt(llm_context, exposed_entities)
+        if registered.prompt:
+            api_prompt = f"{api_prompt}\n{registered.prompt}"
+
+        tools = self._async_get_tools(llm_context, exposed_entities)
+        tools.extend(registered.tools)
+
         return APIInstance(
             api=self,
-            api_prompt=self._async_get_api_prompt(llm_context, exposed_entities),
+            api_prompt=api_prompt,
             llm_context=llm_context,
-            tools=self._async_get_tools(llm_context, exposed_entities),
+            tools=tools,
             custom_serializer=selector_serializer,
         )
 

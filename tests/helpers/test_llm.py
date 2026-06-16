@@ -565,6 +565,27 @@ async def test_assist_api_tools(
     ]
 
 
+async def test_assist_api_registered_tools(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test Assist API includes tools and prompt from the tool registry."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+
+    tool = _StubTool("registered_tool")
+
+    @callback
+    def provider(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> llm.LLMTools:
+        return llm.LLMTools(tools=[tool], prompt="registered prompt fragment")
+
+    llm.async_register_tool_provider(hass, provider, apis={"assist": None})
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    assert "registered_tool" in [t.name for t in api.tools]
+    assert "registered prompt fragment" in api.api_prompt
+
+
 async def test_assist_api_description(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
