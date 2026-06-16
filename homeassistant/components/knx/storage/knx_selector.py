@@ -6,6 +6,9 @@ from typing import Any, override
 
 import voluptuous as vol
 
+from homeassistant.const import CONF_PAYLOAD
+
+from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE
 from ..dpt import HaDptClass, get_supported_dpts
 from ..validation import ga_validator, maybe_ga_validator, sync_state_validator
 from .const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
@@ -300,3 +303,29 @@ class SyncStateSelector(KNXSelectorBase):
         if not self.allow_false and not data:
             raise vol.Invalid(f"Sync state cannot be {data}")
         return self.schema(data)
+
+
+class KnxPayloadSelector(KNXSelectorBase):
+    """Selector for KNX payload configuration."""
+
+    schema = vol.Any(
+        {
+            vol.Optional(CONF_VALUE): object,
+        },
+        {
+            vol.Required(CONF_PAYLOAD): list[int],
+            vol.Required(CONF_PAYLOAD_LENGTH): int,
+        },
+    )
+    selector_type = "knx_payload"
+
+    def __init__(self, ga_path: str) -> None:
+        """Initialize the KNX payload selector."""
+        self.ga_path = ga_path
+
+    def serialize(self) -> dict[str, Any]:
+        """Serialize the selector to a dictionary."""
+        return {
+            "type": self.selector_type,
+            "ga_path": self.ga_path,
+        }

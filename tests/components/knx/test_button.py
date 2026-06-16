@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.knx.const import (
     CONF_PAYLOAD_LENGTH,
+    CONF_VALUE,
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
@@ -83,7 +84,7 @@ async def test_button_type(hass: HomeAssistant, knx: KNXTestKit) -> None:
             ButtonSchema.PLATFORM: {
                 CONF_NAME: "test",
                 KNX_ADDRESS: "1/2/3",
-                ButtonSchema.CONF_VALUE: 21.5,
+                CONF_VALUE: 21.5,
                 CONF_TYPE: "2byte_float",
             }
         }
@@ -125,7 +126,7 @@ async def test_button_invalid(
                 ButtonSchema.PLATFORM: {
                     CONF_NAME: "test",
                     KNX_ADDRESS: "1/2/3",
-                    ButtonSchema.CONF_VALUE: conf_value,
+                    CONF_VALUE: conf_value,
                     CONF_TYPE: conf_type,
                 }
             }

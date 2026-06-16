@@ -92,6 +92,7 @@ from .const import (
     CONF_GA_RED_SWITCH,
     CONF_GA_SATURATION,
     CONF_GA_SCENE,
+    CONF_GA_SEND,
     CONF_GA_SENSOR,
     CONF_GA_SETPOINT_SHIFT,
     CONF_GA_SPEED,
@@ -115,6 +116,7 @@ from .knx_selector import (
     GASelector,
     GroupSelect,
     GroupSelectOption,
+    KnxPayloadSelector,
     KNXSectionFlat,
     SyncStateSelector,
 )
@@ -166,6 +168,17 @@ BINARY_SENSOR_KNX_SCHEMA = vol.Schema(
         vol.Required(CONF_SYNC_STATE, default=True): SyncStateSelector(
             allow_false=True
         ),
+    },
+)
+
+BUTTON_KNX_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_GA_SEND): GASelector(
+            state=False,
+            state_required=True,
+            dpt=["numeric", "enum", "complex", "string"],
+        ),
+        vol.Required(CONF_DATA): KnxPayloadSelector(ga_path=CONF_GA_SEND),
     },
 )
 
@@ -741,6 +754,7 @@ SENSOR_KNX_SCHEMA = AllSerializeFirst(
 
 KNX_SCHEMA_FOR_PLATFORM = {
     Platform.BINARY_SENSOR: BINARY_SENSOR_KNX_SCHEMA,
+    Platform.BUTTON: BUTTON_KNX_SCHEMA,
     Platform.CLIMATE: CLIMATE_KNX_SCHEMA,
     Platform.COVER: COVER_KNX_SCHEMA,
     Platform.DATE: DATE_KNX_SCHEMA,
