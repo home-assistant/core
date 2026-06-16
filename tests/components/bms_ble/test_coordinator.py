@@ -136,7 +136,7 @@ async def test_stale_recovery(
     bt_discovery: BluetoothServiceInfoBleak,
     hass: HomeAssistant,
 ) -> None:
-    """Test if coordinator raises appropriate exception from BMS."""
+    """Test if coordinator triggers reconnect after 10 consecutive update fails and LQ < 10%."""
     flags: dict[str, bool] = {"disconnect_called": False}
     bms_data: Final[MockBMS] = MockBMS()
     bms_nodata: Final[MockBMS] = MockBMS(ret_value={})

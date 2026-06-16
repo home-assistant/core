@@ -148,7 +148,7 @@ class MockBMS(BaseBMS):
 
     def __init__(
         self, exc: Exception | None = None, ret_value: BMSSample | None = None
-    ) -> None:  # , ble_device, keep_alive: bool = True
+    ) -> None:
         """Initialize BMS."""
         super().__init__(generate_ble_device(address="", details={"path": None}), True)
         LOGGER.debug("%s init(), Test except: %s", MockBMS.bms_id(), str(exc))
