@@ -57,7 +57,7 @@ def mock_aqvify_client(
 
     with (
         patch(
-            "homeassistant.components.aqvify.coordinator.AqvifyAPI",
+            "homeassistant.components.aqvify.AqvifyAPI",
             autospec=True,
         ) as mock_client,
         patch(

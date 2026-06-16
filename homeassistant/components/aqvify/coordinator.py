@@ -14,10 +14,8 @@ from pyaqvify import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.dt import utcnow
@@ -53,7 +51,9 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
 
     config_entry: AqvifyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: AqvifyConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: AqvifyConfigEntry, api_client: AqvifyAPI
+    ) -> None:
         """Initialize the Aqvify data update coordinator."""
         super().__init__(
             hass,
@@ -63,9 +63,7 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
             config_entry=entry,
         )
 
-        self.api_client = AqvifyAPI(
-            entry.data[CONF_API_KEY], websession=async_get_clientsession(hass)
-        )
+        self.api_client = api_client
         self.previous_devices: set[str] = set()
 
     async def _async_setup(self) -> None:
@@ -175,7 +173,9 @@ class AqvifyAggrDataCoordinator(DataUpdateCoordinator):
 
     config_entry: AqvifyConfigEntry
 
-    def __init__(self, hass: HomeAssistant, entry: AqvifyConfigEntry) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry: AqvifyConfigEntry, api_client: AqvifyAPI
+    ) -> None:
         """Initialize the Aqvify aggregated data update coordinator."""
         super().__init__(
             hass,
@@ -185,9 +185,7 @@ class AqvifyAggrDataCoordinator(DataUpdateCoordinator):
             config_entry=entry,
         )
 
-        self.api_client = AqvifyAPI(
-            entry.data[CONF_API_KEY], websession=async_get_clientsession(hass)
-        )
+        self.api_client = api_client
 
     @staticmethod
     def _get_times() -> tuple[str, str]:
