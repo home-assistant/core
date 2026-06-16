@@ -118,6 +118,14 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "eufylife_ble",
+        "local_name": "eufy T9120",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9130",
+    },
+    {
+        "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },
     {
@@ -135,6 +143,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "eufylife_ble",
         "local_name": "eufy T9149",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9150",
     },
     {
         "connectable": True,
