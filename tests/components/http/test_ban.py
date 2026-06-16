@@ -405,27 +405,14 @@ async def test_failed_login_attempts_counter(
 
     app.router.add_get(
         "/auth_true",
-        request_handler_factory(
-            hass,
-            Mock(requires_auth=True, use_query_token_for_auth=False),
-            auth_true_handler,
-        ),
+        request_handler_factory(hass, Mock(requires_auth=True), auth_true_handler),
     )
     app.router.add_get(
         "/auth_false",
-        request_handler_factory(
-            hass,
-            Mock(requires_auth=True, use_query_token_for_auth=False),
-            auth_handler,
-        ),
+        request_handler_factory(hass, Mock(requires_auth=True), auth_handler),
     )
     app.router.add_get(
-        "/",
-        request_handler_factory(
-            hass,
-            Mock(requires_auth=False, use_query_token_for_auth=False),
-            auth_handler,
-        ),
+        "/", request_handler_factory(hass, Mock(requires_auth=False), auth_handler)
     )
 
     setup_bans(hass, app, 5)

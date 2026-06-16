@@ -262,8 +262,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/braviatv/ @bieniu @Drafteed
 /homeassistant/components/bring/ @miaucl @tr4nt0r
 /tests/components/bring/ @miaucl @tr4nt0r
-/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
-/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
+/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am
+/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
 /homeassistant/components/brottsplatskartan/ @gjohansson-ST
@@ -695,6 +695,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gree/ @cmroche
 /homeassistant/components/green_planet_energy/ @petschni
 /tests/components/green_planet_energy/ @petschni
+/homeassistant/components/greencell/ @BrzezowskiGC
+/tests/components/greencell/ @BrzezowskiGC
 /homeassistant/components/greeneye_monitor/ @jkeljo
 /tests/components/greeneye_monitor/ @jkeljo
 /homeassistant/components/group/ @home-assistant/core
@@ -949,6 +951,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/kiosker/ @Claeysson
 /homeassistant/components/kitchen_sink/ @home-assistant/core
 /tests/components/kitchen_sink/ @home-assistant/core
+/homeassistant/components/klik_aan_klik_uit/ @Phunkafizer
+/tests/components/klik_aan_klik_uit/ @Phunkafizer
 /homeassistant/components/kmtronic/ @dgomes
 /tests/components/kmtronic/ @dgomes
 /homeassistant/components/knocki/ @joostlek @jgatto1 @JakeBosh
@@ -1086,6 +1090,8 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/mediaroom/ @dgomes
 /homeassistant/components/melcloud/ @erwindouna
 /tests/components/melcloud/ @erwindouna
+/homeassistant/components/melcloud_home/ @erwindouna
+/tests/components/melcloud_home/ @erwindouna
 /homeassistant/components/melissa/ @kennedyshead
 /tests/components/melissa/ @kennedyshead
 /homeassistant/components/melnor/ @vanstinator
@@ -1153,7 +1159,6 @@ CLAUDE.md @home-assistant/core
 /tests/components/motionmount/ @laiho-vogels
 /homeassistant/components/mqtt/ @emontnemery @jbouwh @bdraco
 /tests/components/mqtt/ @emontnemery @jbouwh @bdraco
-/homeassistant/components/msteams/ @peroyvind
 /homeassistant/components/mta/ @OnFreund
 /tests/components/mta/ @OnFreund
 /homeassistant/components/mullvad/ @meichthys
@@ -1889,6 +1894,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/unifi_access/ @imhotep @RaHehl
 /tests/components/unifi_access/ @imhotep @RaHehl
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
+/tests/components/unifi_direct/ @tofuSCHNITZEL
 /homeassistant/components/unifi_discovery/ @RaHehl
 /tests/components/unifi_discovery/ @RaHehl
 /homeassistant/components/unifiled/ @florisvdk
