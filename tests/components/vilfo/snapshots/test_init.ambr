@@ -1,0 +1,69 @@
+# serializer version: 1
+# name: test_device_registry[with_mac]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        'ff:00:00:00:00:00',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'vilfo',
+        'testadmin.vilfo.com',
+        'FF-00-00-00-00-00',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Vilfo AB',
+    'model': 'Vilfo Router',
+    'model_id': None,
+    'name': 'Vilfo Router',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '1.1.0',
+    'via_device_id': None,
+  })
+# ---
+# name: test_device_registry[without_mac]
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'vilfo',
+        'testadmin.vilfo.com',
+        None,
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Vilfo AB',
+    'model': 'Vilfo Router',
+    'model_id': None,
+    'name': 'Vilfo Router',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': '1.1.0',
+    'via_device_id': None,
+  })
+# ---
