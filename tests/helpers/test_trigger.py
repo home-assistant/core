@@ -1,8 +1,9 @@
 """The tests for the trigger helper."""
 
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 import datetime
+import inspect
 import io
 import logging
 from typing import Any
@@ -55,6 +56,7 @@ from homeassistant.helpers.automation import (
     DomainSpec,
     move_top_level_schema_fields_to_options,
 )
+from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger import (
     ATTR_BEHAVIOR,
@@ -95,6 +97,23 @@ from tests.common import (
     mock_platform,
 )
 from tests.typing import WebSocketGenerator
+
+
+async def _call_in_order(funcs: list[Callable[[], Any]], *, reverse: bool) -> list[Any]:
+    """Call each function in order (or reversed), awaiting awaitable results.
+
+    Used to control the registration order of test listeners. Results are
+    returned in the order of `funcs`, regardless of call order, so callers
+    can unpack them consistently.
+    """
+    indexes = range(len(funcs))
+    results: list[Any] = [None] * len(funcs)
+    for index in reversed(indexes) if reverse else indexes:
+        result = funcs[index]()
+        if inspect.isawaitable(result):
+            result = await result
+        results[index] = result
+    return results
 
 
 async def test_bad_trigger_platform(hass: HomeAssistant) -> None:
@@ -2130,17 +2149,32 @@ async def test_numerical_state_attribute_changed_trigger_thresholds(
     assert len(service_calls) == (1 if expected_fires else 0)
 
 
+@pytest.mark.parametrize(
+    ("adversary_first", "expected_calls"),
+    [
+        pytest.param(True, 0, id="adversary_first"),
+        pytest.param(False, 1, id="trigger_first"),
+    ],
+)
 async def test_numerical_state_trigger_threshold_entity_same_loop_iteration(
-    hass: HomeAssistant, service_calls: list[ServiceCall]
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    adversary_first: bool,
+    expected_calls: int,
 ) -> None:
-    """Test threshold entity changing in the same loop iteration.
+    """Test the threshold entity changed synchronously during the value dispatch.
 
-    The threshold is read from the live state machine when the state change
-    event is evaluated, one event loop iteration after it was fired. We do
-    not guarantee exact sequencing between the threshold entity and the
-    targeted entity: a threshold change in the same iteration as a tracked
-    value change is applied to the evaluation of that change, even though
-    the threshold changed after the tracked value.
+    Threshold entities are read from the live state machine; unlike targeted
+    entities, they are not snapshotted in a state view. So when an adversary
+    listener changes the threshold synchronously while the tracked value's
+    state change is dispatched, the outcome depends on listener order: the
+    value rises to 150 while the threshold is 100, which should fire, but if
+    the adversary runs first the trigger reads the bumped threshold (200) and
+    misses the crossing.
+
+    A state view for the threshold entity would make the outcome independent
+    of listener order (see the targeted-entity equivalent
+    ``test_entity_trigger_first_view_needed_for_synchronous_change``).
     """
 
     async def async_get_triggers(hass: HomeAssistant) -> dict[str, type[Trigger]]:
@@ -2156,49 +2190,46 @@ async def test_numerical_state_trigger_threshold_entity_same_loop_iteration(
     hass.states.async_set("sensor.threshold", "100")
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 50})
 
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: "test.attribute_changed",
-                    CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
-                    CONF_OPTIONS: {
-                        "threshold": {
-                            "type": "above",
-                            "value": {"entity": "sensor.threshold"},
-                        }
-                    },
+    @callback
+    def bump_threshold(event: Event[EventStateChangedData]) -> None:
+        """Bump the threshold above the new value when the value changes."""
+        if event.data["entity_id"] == "test.test_entity":
+            hass.states.async_set("sensor.threshold", "200")
+
+    automation_config = {
+        automation.DOMAIN: {
+            "trigger": {
+                CONF_PLATFORM: "test.attribute_changed",
+                CONF_TARGET: {CONF_ENTITY_ID: "test.test_entity"},
+                CONF_OPTIONS: {
+                    "threshold": {
+                        "type": "above",
+                        "value": {"entity": "sensor.threshold"},
+                    }
                 },
-                "action": {
-                    "service": "test.automation",
-                    "data_template": {CONF_ENTITY_ID: "{{ trigger.entity_id }}"},
-                },
-            }
-        },
+            },
+            "action": {"service": "test.automation"},
+        }
+    }
+
+    # The listener order in the dispatch follows registration order.
+    await _call_in_order(
+        [
+            lambda: async_setup_component(hass, automation.DOMAIN, automation_config),
+            lambda: async_track_state_change_event(
+                hass, ["test.test_entity"], bump_threshold
+            ),
+        ],
+        reverse=adversary_first,
     )
     assert len(service_calls) == 0
 
-    # The tracked value rises above the threshold (100) and the threshold
-    # rises above the tracked value in the same event loop iteration. The
-    # value change is evaluated against the live threshold (200), so the
-    # trigger does not fire, even though the threshold was 100 when the
-    # value changed.
+    # value -> 150. At that instant the threshold is 100, so 150 > 100 should
+    # fire; whether it does depends on whether the adversary bumped the
+    # threshold to 200 before the trigger evaluated the value change.
     hass.states.async_set("test.test_entity", "on", {"test_attribute": 150})
-    hass.states.async_set("sensor.threshold", "200")
     await hass.async_block_till_done()
-    assert len(service_calls) == 0
-
-    # The tracked value changes but stays below the threshold (200), and
-    # the threshold drops below the tracked value in the same event loop
-    # iteration. The value change is evaluated against the live threshold
-    # (100), so the trigger fires, even though the threshold was 200 when
-    # the value changed. Threshold changes alone never fire the trigger.
-    hass.states.async_set("test.test_entity", "on", {"test_attribute": 190})
-    hass.states.async_set("sensor.threshold", "100")
-    await hass.async_block_till_done()
-    assert len(service_calls) == 1
+    assert len(service_calls) == expected_calls
 
 
 async def test_numerical_state_attribute_changed_entity_limit_unit_validation(
@@ -4047,15 +4078,10 @@ async def test_entity_trigger_first_same_loop_iteration(
 ) -> None:
     """Test behavior first when two entities change in the same loop iteration.
 
-    The trigger's state change listener is dispatched via loop.call_soon, one
-    event loop iteration after the state change event is fired. If a second
-    tracked entity changes state in the same iteration as the first, both
-    events are evaluated against the live state machine, which already
-    includes both changes.
-
-    This test documents existing unwanted behavior: entity_a was the first
-    entity to turn on, so the trigger should fire exactly once for entity_a,
-    but both events count two matching entities and the trigger never fires.
+    State change listeners are called synchronously, so when two tracked
+    entities turn on as separate updates in the same iteration, entity_a's
+    event is evaluated before entity_b's update is applied. entity_a turns on
+    first, so the trigger fires exactly once, for entity_a.
     """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
@@ -4068,15 +4094,14 @@ async def test_entity_trigger_first_same_loop_iteration(
         hass, [entity_a, entity_b], BEHAVIOR_FIRST, calls, duration=None
     )
 
-    # Both entities turn on in the same event loop iteration, before the
-    # trigger's deferred listener has a chance to run.
+    # entity_a then entity_b turn on as separate updates in the same iteration.
     hass.states.async_set(entity_a, STATE_ON)
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
 
-    # Unwanted: the trigger should fire exactly once, for entity_a, which
-    # was the first entity to turn on, but it doesn't.
-    assert len(calls) == 0
+    # entity_a was the first to turn on, so the trigger fires once for it.
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_a
 
     unsub()
 
@@ -4088,12 +4113,10 @@ async def test_entity_trigger_first_no_fire_on_swap_same_loop_iteration(
 
     When one entity is already on and, within a single event loop iteration,
     a second entity turns on and the first turns off, the number of matching
-    entities goes 1 -> 2 -> 1 and never reaches zero, so the trigger should
-    not fire for the second entity: it was not the first to turn on.
-
-    This test documents existing unwanted behavior: entity_b's event is
-    evaluated against the live state machine, which already shows entity_a
-    off, counting exactly one match — and the trigger fires spuriously.
+    entities goes 1 -> 2 -> 1 and never reaches zero, so the trigger does not
+    fire for the second entity: it was not the first to turn on. State change
+    listeners are called synchronously, so entity_b's event is evaluated while
+    entity_a is still on (two matches).
     """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
@@ -4117,10 +4140,8 @@ async def test_entity_trigger_first_no_fire_on_swap_same_loop_iteration(
     hass.states.async_set(entity_a, STATE_OFF)
     await hass.async_block_till_done()
 
-    # Unwanted: B was never the first matching entity, the trigger should
-    # not fire.
-    assert len(calls) == 1
-    assert calls[0]["entity_id"] == entity_b
+    # B was never the first matching entity, so the trigger does not fire.
+    assert len(calls) == 0
 
     unsub()
 
@@ -4130,13 +4151,10 @@ async def test_entity_trigger_all_same_loop_iteration(
 ) -> None:
     """Test behavior all when two entities change in the same loop iteration.
 
-    Both entities turn on in a single event loop iteration. Only the second
-    event completes the all-match, so the trigger should fire exactly once,
-    for the second entity.
-
-    This test documents existing unwanted behavior: both events are
-    evaluated against the live state machine, which already shows both
-    entities on, and the trigger fires twice.
+    Both entities turn on in a single event loop iteration. State change
+    listeners are called synchronously, so entity_a's event is evaluated
+    before entity_b's update is applied: only entity_b's event completes the
+    all-match, so the trigger fires exactly once, for entity_b.
     """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
@@ -4149,17 +4167,14 @@ async def test_entity_trigger_all_same_loop_iteration(
         hass, [entity_a, entity_b], BEHAVIOR_ALL, calls, duration=None
     )
 
-    # Both entities turn on in the same event loop iteration, before the
-    # trigger's deferred listener has a chance to run.
+    # entity_a then entity_b turn on as separate updates in the same iteration.
     hass.states.async_set(entity_a, STATE_ON)
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
 
-    # Unwanted: the all-match was completed by entity_b turning on, so the
-    # trigger should fire exactly once, for entity_b — but it fires twice.
-    assert len(calls) == 2
-    assert calls[0]["entity_id"] == entity_a
-    assert calls[1]["entity_id"] == entity_b
+    # entity_b completed the all-match, so the trigger fires once, for it.
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_b
 
     unsub()
 
@@ -4169,16 +4184,10 @@ async def test_entity_trigger_first_resubscribe_same_loop_iteration(
 ) -> None:
     """Test behavior first when a registry update causes resubscription.
 
-    A registry update makes the target tracker resubscribe its state change
-    listener. A state change event fired in the same event loop iteration,
-    but not yet dispatched, should still be delivered to the trigger.
-
-    This test documents existing unwanted behavior: the tracker unsubscribes
-    its old listener before subscribing the new one, and as the only
-    subscriber this tears down the shared state change tracker — dropping
-    the event which was fired but not yet dispatched. The trigger never
-    fires: entity_a's event is lost, and entity_b's event counts two
-    matching entities in the live state machine.
+    A registry update in the same iteration as a first-match makes the target
+    tracker resubscribe its state change listener. State change listeners are
+    called synchronously, so entity_a's event is dispatched (and the trigger
+    fires for it) before the registry-driven resubscription.
     """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
@@ -4192,20 +4201,20 @@ async def test_entity_trigger_first_resubscribe_same_loop_iteration(
     )
 
     # entity_a turns on and an unrelated registry entry is created in the
-    # same event loop iteration. The registry update makes the target tracker
-    # resubscribe before entity_a's state change event is dispatched.
+    # same event loop iteration; the registry update makes the target tracker
+    # resubscribe its state change listener.
     hass.states.async_set(entity_a, STATE_ON)
     entity_registry.async_get_or_create("test", "test", "unrelated")
     await hass.async_block_till_done()
 
-    # Unwanted: entity_a was the first entity to turn on, the trigger
-    # should fire — but its event was dropped during resubscription.
-    assert len(calls) == 0
+    # entity_a was the first to turn on, so the trigger fires for it.
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_a
 
     # entity_b turning on must not fire the trigger: it is not the first.
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(calls) == 1
 
     unsub()
 
@@ -4484,12 +4493,10 @@ async def test_entity_trigger_blip_same_loop_iteration(
 ) -> None:
     """Test a same-iteration blip (off→on→off) without a duration.
 
-    The on-event should fire the trigger — consistent with behavior each
-    and with the same blip spread over multiple iterations.
-
-    This test documents existing unwanted behavior: the on-event is
-    evaluated against the live state machine, which already shows the
-    entity off again, so the trigger never fires.
+    State change listeners are called synchronously, so the on-event is
+    evaluated (and fires) before the off-event is applied — consistent with
+    behavior each and with the same blip spread over multiple iterations.
+    The off-event is then an invalid transition and does not fire.
     """
     entity_id = "test.entity_1"
     hass.states.async_set(entity_id, STATE_OFF)
@@ -4504,8 +4511,9 @@ async def test_entity_trigger_blip_same_loop_iteration(
     hass.states.async_set(entity_id, STATE_OFF)
     await hass.async_block_till_done()
 
-    # Unwanted: the trigger should fire once, for the on-event, but doesn't.
-    assert len(calls) == 0
+    # The on-event fires before the off-event is applied.
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_id
 
     unsub()
 
@@ -4516,10 +4524,9 @@ async def test_entity_trigger_blip_same_loop_iteration_with_duration(
 ) -> None:
     """Test a same-iteration blip (off→on→off) with a duration.
 
-    The state did not hold for the duration, so the trigger must not fire.
-    (Currently the duration timer is not even armed: the on-event is
-    evaluated against the live state machine, which already shows the
-    entity off again.)
+    State change listeners are called synchronously, so the on-event arms the
+    duration timer and the off-event from the same iteration then cancels it.
+    The state did not hold for the duration, so the trigger does not fire.
     """
     entity_id = "test.entity_1"
     hass.states.async_set(entity_id, STATE_OFF)
@@ -4543,31 +4550,19 @@ async def test_entity_trigger_blip_same_loop_iteration_with_duration(
     unsub()
 
 
-@pytest.mark.parametrize(
-    ("behavior", "expected_calls"),
-    [
-        pytest.param(BEHAVIOR_EACH, 0, id="each"),
-        pytest.param(BEHAVIOR_FIRST, 1, id="first"),
-        pytest.param(BEHAVIOR_ALL, 1, id="all"),
-    ],
-)
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 async def test_entity_trigger_duration_cancelled_by_dip_same_loop_iteration(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     behavior: str,
-    expected_calls: int,
 ) -> None:
     """Test a same-iteration dip through unavailable cancels the timer.
 
     The dip breaks the continuity of the matching state, and the recovery
-    event cannot restart the timer because the transition out of
-    unavailable is excluded, so the trigger should never fire.
-
-    For behavior each the cancel check uses the dip event's own state and
-    the timer is correctly cancelled. For first/all this test documents
-    existing unwanted behavior: the cancel check counts matches against
-    the live state machine, which already shows the recovery, so the timer
-    survives and the trigger fires.
+    event cannot restart the timer because the transition out of unavailable
+    is excluded, so the trigger does not fire. State change listeners are
+    called synchronously, so the unavailable event cancels the timer before
+    the recovery event is applied.
     """
     entity_id = "test.entity_1"
     hass.states.async_set(entity_id, STATE_OFF)
@@ -4589,11 +4584,11 @@ async def test_entity_trigger_duration_cancelled_by_dip_same_loop_iteration(
     hass.states.async_set(entity_id, STATE_ON)
     await hass.async_block_till_done()
 
-    # Advance past the original duration — the trigger should not fire
+    # Advance past the original duration — the trigger does not fire
     freezer.tick(datetime.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(calls) == expected_calls
+    assert len(calls) == 0
 
     unsub()
 
