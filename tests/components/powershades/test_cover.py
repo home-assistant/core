@@ -1,12 +1,9 @@
 """Tests for the PowerShades cover platform."""
 
+from pyowershades import OP_JOG_STOP, OP_SET_POSITION, build_set_position_payload
+
 from homeassistant.components.powershades import coordinator as coordinator_module
-from homeassistant.components.powershades.const import (
-    DOMAIN,
-    OP_JOG_STOP,
-    OP_SET_POSITION,
-)
-from homeassistant.components.powershades.protocol import build_set_position_payload
+from homeassistant.components.powershades.const import DOMAIN
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

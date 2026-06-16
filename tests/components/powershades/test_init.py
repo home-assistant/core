@@ -3,17 +3,16 @@
 import struct
 from unittest.mock import AsyncMock, patch
 
-from homeassistant.components.powershades.const import (
-    DOMAIN,
+from pyowershades import (
     OP_GET_SERIAL,
     OP_GET_STATUS,
-)
-from homeassistant.components.powershades.coordinator import PowerShadesCoordinator
-from homeassistant.components.powershades.protocol import build_packet
-from homeassistant.components.powershades.udp import (
     PowerShadesConnection,
     PowerShadesTimeoutError,
+    build_packet,
 )
+
+from homeassistant.components.powershades.const import DOMAIN
+from homeassistant.components.powershades.coordinator import PowerShadesCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir

@@ -1,13 +1,17 @@
 rules:
   # Bronze
-  action-setup: done
+  action-setup:
+    status: exempt
+    comment: no custom actions in the initial release; planned for a follow-up PR
   appropriate-polling: done
   brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
-  docs-actions: done
+  docs-actions:
+    status: exempt
+    comment: no custom actions in the initial release; planned for a follow-up PR
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
@@ -20,7 +24,9 @@ rules:
   unique-config-entry: done
 
   # Silver
-  action-exceptions: done
+  action-exceptions:
+    status: exempt
+    comment: no custom actions in the initial release; planned for a follow-up PR
   config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
@@ -35,7 +41,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: done
+  diagnostics: todo
   discovery-update-info: done
   discovery: done
   docs-data-update: done

@@ -3,6 +3,12 @@
 import logging
 
 from getmac import get_mac_address
+from pyowershades import (
+    OP_GET_SERIAL,
+    PowerShadesConnection,
+    PowerShadesTimeoutError,
+    parse_serial_reply,
+)
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -11,12 +17,9 @@ from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, OP_GET_SERIAL
+from .const import DOMAIN
 from .coordinator import PowerShadesConfigEntry, PowerShadesCoordinator
 from .discovery import async_start_discovery
-from .protocol import parse_serial_reply
-from .services import async_setup_services
-from .udp import PowerShadesConnection, PowerShadesTimeoutError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,12 +33,7 @@ async def _async_update_device_metadata(
     entry: PowerShadesConfigEntry,
     coordinator: PowerShadesCoordinator,
 ) -> None:
-    """Fill in MAC and model metadata missing from the entry.
-
-    Called right after a successful first refresh, so the device is
-    known reachable and the ARP cache is warm from the UDP exchange.
-    Best-effort: silently keeps the entry unchanged on lookup failure.
-    """
+    """Fill in MAC and model metadata missing from the entry."""
     updates: dict[str, str | int] = {}
 
     mac = await hass.async_add_executor_job(
@@ -58,19 +56,16 @@ async def _async_update_device_metadata(
             updates["model"] = parsed["model"]
 
     if updates:
-        _LOGGER.debug("Updating metadata for shade %s: %s", entry.data["ip"], updates)
         hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the PowerShades component."""
-    async_setup_services(hass)
     async_start_discovery(hass)
     return True
 
 
 def _cannot_connect_issue_id(entry: PowerShadesConfigEntry) -> str:
-    """Return the repair issue ID for a setup-failure of this entry."""
     return f"cannot_connect_{entry.entry_id}"
 
 

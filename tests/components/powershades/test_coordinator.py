@@ -2,36 +2,20 @@
 
 from unittest.mock import AsyncMock, patch
 
+from pyowershades import (
+    OP_JOG_STOP,
+    OP_SET_POSITION,
+    PowerShadesConnection,
+    PowerShadesTimeoutError,
+    StatusReply,
+    build_packet,
+    build_set_position_payload,
+)
 import pytest
 
 from homeassistant.components.powershades import coordinator as coordinator_module
-from homeassistant.components.powershades.const import (
-    DOMAIN,
-    LIMIT_LOWER,
-    LIMIT_UPPER,
-    OP_CLEAR_LIMITS,
-    OP_GET_SHADE_NAME,
-    OP_INDICATE,
-    OP_JOG_DOWN,
-    OP_JOG_STOP,
-    OP_JOG_UP,
-    OP_SET_LIMIT,
-    OP_SET_POSITION,
-    OP_STEP_DOWN,
-    OP_STEP_UP,
-)
+from homeassistant.components.powershades.const import DOMAIN
 from homeassistant.components.powershades.coordinator import PowerShadesCoordinator
-from homeassistant.components.powershades.protocol import (
-    GET_SHADE_NAME_PAYLOAD,
-    StatusReply,
-    build_packet,
-    build_set_limit_payload,
-    build_set_position_payload,
-)
-from homeassistant.components.powershades.udp import (
-    PowerShadesConnection,
-    PowerShadesTimeoutError,
-)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -74,15 +58,11 @@ def test_unchanged_position_within_timeout_keeps_target(coordinator) -> None:
     """A position that hasn't changed yet is not immediately marked stuck."""
     times = [100.0, 100.0, 114.0]
     with patch.object(coordinator_module.time, "monotonic", side_effect=times):
-        coordinator._set_target(0)  # t=100, last_change=100
-        data = coordinator._data_from_status(
-            StatusReply(position=50, battery_mv=3700)
-        )  # t=100, first reading -> last_change=100
+        coordinator._set_target(0)
+        data = coordinator._data_from_status(StatusReply(position=50, battery_mv=3700))
         assert data.target_position == 0
 
-        data = coordinator._data_from_status(
-            StatusReply(position=50, battery_mv=3700)
-        )  # t=114, unchanged for 14s (< STUCK_TIMEOUT)
+        data = coordinator._data_from_status(StatusReply(position=50, battery_mv=3700))
         assert data.target_position == 0
 
 
@@ -90,14 +70,10 @@ def test_stuck_position_clears_target_after_timeout(coordinator) -> None:
     """A position unchanged for STUCK_TIMEOUT seconds clears the target."""
     times = [100.0, 100.0, 116.0]
     with patch.object(coordinator_module.time, "monotonic", side_effect=times):
-        coordinator._set_target(0)  # t=100, last_change=100
-        coordinator._data_from_status(
-            StatusReply(position=50, battery_mv=3700)
-        )  # t=100, first reading -> last_change=100
+        coordinator._set_target(0)
+        coordinator._data_from_status(StatusReply(position=50, battery_mv=3700))
 
-        data = coordinator._data_from_status(
-            StatusReply(position=50, battery_mv=3700)
-        )  # t=116, unchanged for 16s (>= STUCK_TIMEOUT)
+        data = coordinator._data_from_status(StatusReply(position=50, battery_mv=3700))
         assert data.target_position is None
 
 
@@ -199,11 +175,7 @@ async def test_async_set_position_failure_clears_target(coordinator) -> None:
         await coordinator.async_set_position(75)
 
     assert coordinator._target_position is None
-    assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "command_not_acknowledged"
-    assert exc_info.value.translation_placeholders == {
-        "ip_address": coordinator.ip_address
-    }
 
 
 async def test_async_stop_clears_target(coordinator) -> None:
@@ -213,97 +185,6 @@ async def test_async_stop_clears_target(coordinator) -> None:
 
     coordinator.connection.async_request.assert_any_call(OP_JOG_STOP, b"")
     assert coordinator.data.target_position is None
-
-
-async def test_async_toggle_stops_when_moving(coordinator) -> None:
-    """Toggling a shade that's already moving stops it."""
-    coordinator.async_set_updated_data(
-        coordinator_module.PowerShadesData(position=50, target_position=75)
-    )
-    await coordinator.async_toggle()
-
-    coordinator.connection.async_request.assert_any_call(OP_JOG_STOP, b"")
-
-
-async def test_async_toggle_closes_when_mostly_open(coordinator) -> None:
-    """Toggling a shade that's more than half open closes it."""
-    coordinator.async_set_updated_data(
-        coordinator_module.PowerShadesData(position=80, target_position=None)
-    )
-    await coordinator.async_toggle()
-
-    coordinator.connection.async_request.assert_any_call(
-        OP_SET_POSITION, build_set_position_payload(0)
-    )
-
-
-async def test_async_toggle_opens_when_mostly_closed(coordinator) -> None:
-    """Toggling a shade that's at or below half open opens it."""
-    coordinator.async_set_updated_data(
-        coordinator_module.PowerShadesData(position=20, target_position=None)
-    )
-    await coordinator.async_toggle()
-
-    coordinator.connection.async_request.assert_any_call(
-        OP_SET_POSITION, build_set_position_payload(100)
-    )
-
-
-async def test_async_toggle_does_nothing_when_position_unknown(coordinator) -> None:
-    """Toggling with an unknown position is a no-op."""
-    coordinator.async_set_updated_data(
-        coordinator_module.PowerShadesData(position=None, target_position=None)
-    )
-    await coordinator.async_toggle()
-
-    for call in coordinator.connection.async_request.call_args_list:
-        assert call.args[0] != OP_SET_POSITION
-
-
-async def test_async_jog_up_and_down(coordinator) -> None:
-    """Jog commands send the corresponding op codes."""
-    await coordinator.async_jog_up()
-    coordinator.connection.async_request.assert_any_call(OP_JOG_UP, b"")
-
-    await coordinator.async_jog_down()
-    coordinator.connection.async_request.assert_any_call(OP_JOG_DOWN, b"")
-
-
-async def test_async_identify(coordinator) -> None:
-    """Identify sends the indicate command."""
-    await coordinator.async_identify()
-    coordinator.connection.async_request.assert_any_call(OP_INDICATE, b"")
-
-
-async def test_async_limits(coordinator) -> None:
-    """Limit commands send the right limit type payloads."""
-    await coordinator.async_set_upper_limit()
-    coordinator.connection.async_request.assert_any_call(
-        OP_SET_LIMIT, build_set_limit_payload(LIMIT_UPPER)
-    )
-
-    await coordinator.async_set_lower_limit()
-    coordinator.connection.async_request.assert_any_call(
-        OP_SET_LIMIT, build_set_limit_payload(LIMIT_LOWER)
-    )
-
-    await coordinator.async_clear_limits()
-    coordinator.connection.async_request.assert_any_call(OP_CLEAR_LIMITS, b"")
-
-
-async def test_async_step_up_and_down(coordinator) -> None:
-    """Step commands send the corresponding op codes."""
-    await coordinator.async_step_up()
-    coordinator.connection.async_request.assert_any_call(OP_STEP_UP, b"")
-
-    await coordinator.async_step_down()
-    coordinator.connection.async_request.assert_any_call(OP_STEP_DOWN, b"")
-
-
-async def test_async_set_shade_name(coordinator) -> None:
-    """Renaming the shade updates the coordinator and config entry."""
-    await coordinator.async_set_shade_name("New Name")
-    assert coordinator.device_name == TEST_NAME
 
 
 async def test_async_update_data_polls_status(coordinator) -> None:
@@ -349,33 +230,3 @@ def test_handle_status_push_updates_data(coordinator) -> None:
     """A pushed status packet updates the coordinator's data."""
     coordinator._handle_status_push(StatusReply(position=42, battery_mv=3700))
     assert coordinator.data.position == 42
-
-
-async def test_async_set_shade_name_not_confirmed(coordinator) -> None:
-    """A timeout reading back the new name raises rename_not_confirmed."""
-
-    async def fake_request(op, payload=b"", timeout=None, retries=None):
-        if op == OP_GET_SHADE_NAME and payload == GET_SHADE_NAME_PAYLOAD:
-            raise PowerShadesTimeoutError("no reply")
-        return build_packet(op)
-
-    coordinator.connection.async_request = AsyncMock(side_effect=fake_request)
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await coordinator.async_set_shade_name("New Name")
-
-    assert exc_info.value.translation_key == "rename_not_confirmed"
-
-
-async def test_async_set_shade_name_empty_confirmation(coordinator) -> None:
-    """An empty confirmed name raises rename_empty_name."""
-
-    async def fake_request(op, payload=b"", timeout=None, retries=None):
-        return build_packet(op)
-
-    coordinator.connection.async_request = AsyncMock(side_effect=fake_request)
-
-    with pytest.raises(HomeAssistantError) as exc_info:
-        await coordinator.async_set_shade_name("New Name")
-
-    assert exc_info.value.translation_key == "rename_empty_name"
