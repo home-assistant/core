@@ -1212,9 +1212,7 @@ async def test_websocket_http_config(
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"]["stable"]["server_port"] == 8123
-    assert response["result"]["stable"]["ip_ban_enabled"] is True
-    assert response["result"]["pending"] is None
+    assert response["result"] == {"stable": _DEFAULT_CONFIG, "pending": None}
 
     new_config = {
         "server_port": 9123,
@@ -1243,8 +1241,7 @@ async def test_websocket_http_config(
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"]["stable"]["server_port"] == 8123
-    assert response["result"]["pending"]["server_port"] == 9123
+    assert response["result"] == {"stable": _DEFAULT_CONFIG, "pending": new_config}
 
     # Promote: pending becomes stable, pending is cleared.
     await ws_client.send_json_auto_id({"type": "http/config/promote"})
@@ -1256,8 +1253,7 @@ async def test_websocket_http_config(
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"]["stable"]["server_port"] == 9123
-    assert response["result"]["pending"] is None
+    assert response["result"] == {"stable": new_config, "pending": None}
 
     # Promoting again with no pending is rejected.
     await ws_client.send_json_auto_id({"type": "http/config/promote"})
