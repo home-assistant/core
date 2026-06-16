@@ -347,3 +347,52 @@ async def test_job_manager_reload_on_supervisor_restart(
     assert job_data.reference == "test"
     assert job_data.done is True
     assert not data_coordinator.jobs.current_jobs
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_subscribe_returns_unsubscribe_when_job_already_matches(
+    hass: HomeAssistant,
+    jobs_info: AsyncMock,
+) -> None:
+    """Test subscribe returns a working unsubscribe even if a job already matches."""
+    jobs_info.return_value = JobsInfo(
+        ignore_conditions=[],
+        jobs=[
+            Job(
+                name="test_job",
+                reference="test",
+                uuid=uuid4(),
+                progress=0,
+                stage=None,
+                done=False,
+                errors=[],
+                created=datetime.now(),
+                extra=None,
+                child_jobs=[],
+            )
+        ],
+    )
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
+
+    received: list[Job] = []
+
+    @callback
+    def mock_subcription_callback(job: Job) -> None:
+        received.append(job)
+
+    subscription = JobSubscription(mock_subcription_callback, name="test_job")
+    unsubscribe = data_coordinator.jobs.subscribe(subscription)
+
+    # Existing matching job is delivered immediately, and a callable unsubscribe
+    # is returned (not the None result of the callback)
+    assert len(received) == 1
+    assert received[0].name == "test_job"
+    assert callable(unsubscribe)
+
+    # Unsubscribe should remove the subscription without raising
+    unsubscribe()
+    assert subscription not in data_coordinator.jobs._subscriptions
