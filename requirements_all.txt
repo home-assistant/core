@@ -2537,7 +2537,7 @@ pysensibo==1.2.1
 pysenz==1.0.2
 
 # homeassistant.components.sesame
-pysesame2==1.0.1
+pysesame2==1.0.2
 
 # homeassistant.components.seventeentrack
 pyseventeentrack==1.1.3
