@@ -381,6 +381,7 @@ async def test_remove_stale_todo_list_entities(
 
     assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
     assert hass.states.get(TODO_LIST_ENTITY_ID) is not None
+    assert hass.states.get(CUSTOM_LIST_ENTITY_ID) is not None
 
     # Remove custom list from the API
     for i, amazon_list in enumerate(mock_amazon_devices_client.todo_lists):
