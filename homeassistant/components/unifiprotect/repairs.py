@@ -1,5 +1,6 @@
 """unifiprotect.repairs."""
 
+import logging
 from typing import cast
 
 from uiprotect import ProtectApiClient
@@ -17,6 +18,8 @@ from homeassistant.helpers import issue_registry as ir
 
 from .data import UFPConfigEntry, async_get_data_for_entry_id
 from .utils import async_create_api_client
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class ProtectRepair(RepairsFlow):
@@ -209,6 +212,11 @@ class PublicStreamRepair(_CameraRepair):
                 await self._api.create_camera_rtsps_streams(self._camera_id, "high")
                 active = await self._has_active_stream()
         except ClientError:
+            # Usually a NotAuthorized; log so the manual-fallback step is traceable.
+            _LOGGER.debug(
+                "Auto-creating RTSPS stream failed; routing to manual fallback",
+                exc_info=True,
+            )
             active = False
 
         if active:

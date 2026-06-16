@@ -333,7 +333,9 @@ class ProtectData:
             try:
                 await self.api.update_public()
             except Exception:  # noqa: BLE001
-                _LOGGER.debug(
+                # Keep going (the reconnect refresh will retry) but warn, since
+                # setup raises ConfigEntryNotReady for the same failure.
+                _LOGGER.warning(
                     "Public bootstrap refresh failed on camera adopt", exc_info=True
                 )
         async_dispatcher_send(self._hass, self.adopt_signal, camera)
