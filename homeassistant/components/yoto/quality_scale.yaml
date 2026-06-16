@@ -45,7 +45,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: The integration supports local DHCP discovery (via hostname pattern), but does not implement a separate discovery update handling flow.
