@@ -10,7 +10,7 @@ from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 from voluptuous_openapi import convert
 
-from homeassistant.components import calendar, todo
+from homeassistant.components import calendar, script, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
@@ -1386,6 +1386,7 @@ async def test_script_tool(
     """Test ScriptTool for the assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "llm", {})
     context = Context()
     llm_context = llm.LLMContext(
         platform="test_platform",
@@ -1441,11 +1442,11 @@ async def test_script_tool(
     area = area_registry.async_create("Living room")
     floor = floor_registry.async_create("2")
 
-    assert llm.ACTION_PARAMETERS_CACHE not in hass.data
+    assert script.llm.ACTION_PARAMETERS_CACHE not in hass.data
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
-    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    tools = [tool for tool in api.tools if isinstance(tool, script.llm.ScriptTool)]
     assert len(tools) == 2
 
     tool = tools[0]
@@ -1465,7 +1466,7 @@ async def test_script_tool(
     }
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
+    assert hass.data[script.llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
             "This is a test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
@@ -1565,11 +1566,11 @@ async def test_script_tool(
     ):
         await hass.services.async_call("script", "reload", blocking=True)
 
-    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {}
+    assert hass.data[script.llm.ACTION_PARAMETERS_CACHE]["script"] == {}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
-    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    tools = [tool for tool in api.tools if isinstance(tool, script.llm.ScriptTool)]
     assert len(tools) == 2
 
     tool = tools[0]
@@ -1581,7 +1582,7 @@ async def test_script_tool(
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
-    assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
+    assert hass.data[script.llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
             "This is a new test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
@@ -1596,6 +1597,7 @@ async def test_script_tool(
 async def test_script_tool_name(hass: HomeAssistant) -> None:
     """Test that script tool name is not started with a digit."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "llm", {})
     context = Context()
     llm_context = llm.LLMContext(
         platform="test_platform",
@@ -1625,7 +1627,7 @@ async def test_script_tool_name(hass: HomeAssistant) -> None:
 
     api = await llm.async_get_api(hass, "assist", llm_context)
 
-    tools = [tool for tool in api.tools if isinstance(tool, llm.ScriptTool)]
+    tools = [tool for tool in api.tools if isinstance(tool, script.llm.ScriptTool)]
     assert len(tools) == 1
 
     tool = tools[0]
