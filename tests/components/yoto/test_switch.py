@@ -138,6 +138,11 @@ async def test_turn_on(
             id="bluetooth-pairing",
         ),
         pytest.param(
+            "switch.nursery_yoto_maximum_headphone_volume",
+            {"headphones_volume_limited": False},
+            id="max-headphone-volume",
+        ),
+        pytest.param(
             "switch.nursery_yoto_day_mode_automatic_brightness",
             {"day_display_brightness": 100},
             id="day-auto-brightness",
