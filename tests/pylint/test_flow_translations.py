@@ -320,6 +320,134 @@ class SharedFlow(ConfigSubentryFlow):
         walker.walk(root_node)
 
 
+def test_subentry_section_field_missing(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Warning when a subentry flow section field is missing a translation."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {
+            "config_subentries": {
+                "my_sub": {
+                    "step": {
+                        "user": {
+                            "sections": {"advanced": {"data": {"timeout": "Timeout"}}}
+                        }
+                    },
+                }
+            }
+        },
+    )
+
+    root_node = astroid.parse(
+        """
+class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+    @classmethod
+    def async_get_supported_subentry_types(cls, config_entry):
+        return {"my_sub": MySubentryFlow}
+
+class MySubentryFlow(ConfigSubentryFlow):
+    async def async_step_user(self, user_input=None):
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({
+                vol.Required("advanced"): section(
+                    vol.Schema({
+                        vol.Required("timeout"): int,
+                        vol.Required("retries"): int,
+                    }),
+                ),
+            }),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-subentry-flow-field-not-translated"
+    assert "retries" in messages[0].args[0]
+
+
+# --- Schema extend tests ---
+
+
+def test_schema_extend_base_field_flagged(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """Warning for untranslated base schema field when using schema.extend()."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"config": {"step": {"user": {"data": {"port": "Port"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+BASE_SCHEMA = vol.Schema({vol.Required("host"): str})
+
+class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+    async def async_step_user(self, user_input=None):
+        return self.async_show_form(
+            step_id="user",
+            data_schema=BASE_SCHEMA.extend({vol.Optional("port"): int}),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+    walker.walk(root_node)
+
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-config-flow-field-not-translated"
+    assert "host" in messages[0].args[0]
+
+
+def test_schema_extend_all_translated_ok(
+    linter: UnittestLinter,
+    flow_translations_checker: ConfigFlowTranslationsChecker,
+    tmp_path: Path,
+) -> None:
+    """No warning when all fields (base + extension) are translated."""
+    integration_dir = _make_integration(
+        tmp_path,
+        {"config": {"step": {"user": {"data": {"host": "Host", "port": "Port"}}}}},
+    )
+
+    root_node = astroid.parse(
+        """
+BASE_SCHEMA = vol.Schema({vol.Required("host"): str})
+
+class MyConfigFlow(ConfigFlow, domain=DOMAIN):
+    async def async_step_user(self, user_input=None):
+        return self.async_show_form(
+            step_id="user",
+            data_schema=BASE_SCHEMA.extend({vol.Optional("port"): int}),
+        )
+""",
+        "homeassistant.components.test_int.config_flow",
+    )
+    root_node.file = str(integration_dir / "config_flow.py")
+
+    walker = ASTWalker(linter)
+    walker.add_checker(flow_translations_checker)
+
+    with assert_no_messages(linter):
+        walker.walk(root_node)
+
+
 # --- Inference tests ---
 
 

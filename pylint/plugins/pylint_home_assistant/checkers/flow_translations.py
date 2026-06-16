@@ -101,8 +101,13 @@ def _extract_items_from_node(
     """Recursively extract fields and sections from a schema node."""
     items: list[_Field | _Section] = []
 
-    # vol.Schema({...}) or similar call wrapping a dict
+    # schema.extend({...}) - extract fields from both base and extension
     if isinstance(node, nodes.Call) and node.args:
+        match node.func:
+            case nodes.Attribute(attrname="extend"):
+                items.extend(_extract_items_from_node(node.func.expr))
+                items.extend(_extract_items_from_node(node.args[0]))
+                return items
         return _extract_items_from_node(node.args[0])
 
     # Direct dict literal
@@ -129,7 +134,21 @@ def _extract_items_from_node(
                 items.append(_Field(name))
         return items
 
-    # Variable reference: try to infer to a Call or Dict
+    # Variable reference: resolve via AST assignment lookup
+    if isinstance(node, nodes.Name):
+        try:
+            _, assigns = node.lookup(node.name)
+            for assign in assigns:
+                if isinstance(assign, nodes.AssignName) and isinstance(
+                    assign.parent, nodes.Assign
+                ):
+                    result = _extract_items_from_node(assign.parent.value)
+                    if result:
+                        return result
+        except astroid.exceptions.NameInferenceError:
+            pass
+
+    # Fallback: try type inference
     try:
         for inferred in node.infer():
             if isinstance(inferred, (nodes.Call, nodes.Dict)):

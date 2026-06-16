@@ -130,8 +130,8 @@ Every check has a code following the
 | `W7416` | [`home-assistant-missing-has-entity-name`](#w7416-home-assistant-missing-has-entity-name) | Entity class should set `_attr_has_entity_name = True` |
 | `W7425` | [`home-assistant-config-flow-field-not-translated`](#w7425-home-assistant-config-flow-field-not-translated) | Config flow form field missing translation in `strings.json` |
 | `W7427` | [`home-assistant-options-flow-field-not-translated`](#w7427-home-assistant-options-flow-field-not-translated) | Options flow form field missing translation in `strings.json` |
-| `W7430` | [`home-assistant-subentry-flow-field-not-translated`](#w7430-home-assistant-subentry-flow-field-not-translated) | Subentry flow form field missing translation in `strings.json` |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
+| `W7430` | [`home-assistant-subentry-flow-field-not-translated`](#w7430-home-assistant-subentry-flow-field-not-translated) | Subentry flow form field missing translation in `strings.json` |
 
 
 ## `home_assistant_logger` checker
