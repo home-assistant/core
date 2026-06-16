@@ -369,7 +369,7 @@ aiooui==0.1.9
 aiopegelonline==0.1.1
 
 # homeassistant.components.opnsense
-aiopnsense==1.0.8
+aiopnsense==1.0.10
 
 # homeassistant.components.ptdevices
 aioptdevices==2026.03.2
@@ -702,7 +702,7 @@ bond-async==0.2.1
 bosch-alarm-mode2==0.4.10
 
 # homeassistant.components.bosch_shc
-boschshcpy==0.2.107
+boschshcpy==0.2.111
 
 # homeassistant.components.amazon_polly
 # homeassistant.components.route53
@@ -736,7 +736,7 @@ bthomehub5-devicelist==0.1.1
 btsmarthub-devicelist==0.2.3
 
 # homeassistant.components.buienradar
-buienradar==1.0.6
+buienradar==1.0.9
 
 # homeassistant.components.dhcp
 cached-ipaddress==1.1.2
@@ -1065,7 +1065,7 @@ fritzconnection[qr]==1.15.1
 fumis==0.4.0
 
 # homeassistant.components.fyta
-fyta_cli==0.7.2
+fyta_cli==0.7.3
 
 # homeassistant.components.google_translate
 gTTS==2.5.4
@@ -1174,7 +1174,10 @@ gpiozero==1.6.2
 gps3==0.33.3
 
 # homeassistant.components.gree
-greeclimate==2.1.1
+greeclimate==2.1.4
+
+# homeassistant.components.greencell
+greencell_client==1.0.3
 
 # homeassistant.components.greeneye_monitor
 greeneye_monitor==3.0.3
@@ -1198,7 +1201,7 @@ gspread==5.5.0
 guntamatic==1.9.0
 
 # homeassistant.components.profiler
-guppy3==3.1.6
+guppy3==3.1.7
 
 # homeassistant.components.iaqualink
 h2==4.3.0
@@ -1480,7 +1483,7 @@ libpyvivotek==0.6.1
 librehardwaremonitor-api==1.11.1
 
 # homeassistant.components.mikrotik
-librouteros==3.2.0
+librouteros==3.2.1
 
 # homeassistant.components.soundtouch
 libsoundtouch==0.8
@@ -1975,7 +1978,7 @@ pyElectra==1.2.4
 pyEmby==1.10
 
 # homeassistant.components.hikvision
-pyHik==0.4.2
+pyHik==0.4.3
 
 # homeassistant.components.homee
 pyHomee==1.4.0
@@ -2027,7 +2030,7 @@ pyanglianwater==3.1.2
 pyaprilaire==0.9.1
 
 # homeassistant.components.aqvify
-pyaqvify==0.0.9
+pyaqvify==0.0.10
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
@@ -2211,7 +2214,7 @@ pyfttt==0.3
 pygatt[GATTTOOL]==4.0.5
 
 # homeassistant.components.gtfs
-pygtfs==0.1.9
+pygtfs==0.1.11
 
 # homeassistant.components.hvv_departures
 pygti==1.1.1
@@ -2253,7 +2256,7 @@ pyintelliclima==0.3.1
 pyintesishome==1.8.8
 
 # homeassistant.components.ipma
-pyipma==3.0.9
+pyipma==3.0.10
 
 # homeassistant.components.ipp
 pyipp==0.17.2
@@ -2283,7 +2286,7 @@ pyituran==0.1.6
 pyjvcprojector==2.0.6
 
 # homeassistant.components.kaleidescape
-pykaleidescape==1.1.5
+pykaleidescape==1.1.6
 
 # homeassistant.components.kira
 pykira==0.1.1
@@ -2298,7 +2301,7 @@ pykodi==0.2.7
 pykoplenti==1.5.0
 
 # homeassistant.components.kraken
-pykrakenapi==0.1.8
+pykrakenapi==0.1.9
 
 # homeassistant.components.kulersky
 pykulersky==0.5.8
@@ -2369,9 +2372,6 @@ pymodbus==3.11.2
 # homeassistant.components.monoprice
 pymonoprice==0.5
 
-# homeassistant.components.msteams
-pymsteams==0.1.12
-
 # homeassistant.components.mysensors
 pymysensors==0.26.0
 
@@ -2391,7 +2391,7 @@ pynina==1.0.2
 pynintendoauth==1.0.2
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.4.0
+pynintendoparental==2.4.0.1
 
 # homeassistant.components.nobo_hub
 pynobo==1.9.0
@@ -2456,7 +2456,7 @@ pypaperless==4.1.1
 pypca==0.0.7
 
 # homeassistant.components.lcn
-pypck==0.9.11
+pypck==0.9.13
 
 # homeassistant.components.pglab
 pypglab==0.0.5
@@ -2815,7 +2815,7 @@ pyversasense==0.0.6
 pyvesync==3.4.2
 
 # homeassistant.components.vizio
-pyvizio==0.1.61
+pyvizio==0.1.64
 
 # homeassistant.components.velux
 pyvlx==0.2.35
@@ -3264,7 +3264,7 @@ uiprotect==13.1.2
 ultraheat-api==0.6.1
 
 # homeassistant.components.unifi_discovery
-unifi-discovery==1.4.0
+unifi-discovery==1.5.0
 
 # homeassistant.components.unifi_direct
 unifi_ap==0.0.2
@@ -3393,7 +3393,7 @@ wirelesstagpy==0.8.1
 wled==0.23.0
 
 # homeassistant.components.wolflink
-wolf-comm==0.0.48
+wolf-comm==0.0.52
 
 # homeassistant.components.wsdot
 wsdot==0.0.1
