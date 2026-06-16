@@ -3,7 +3,6 @@
 from abc import ABC, abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field
-from datetime import timedelta
 from decimal import Decimal
 from enum import Enum
 from functools import cache, partial
@@ -14,10 +13,7 @@ import slugify as unicode_slug
 import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
-from homeassistant.components.calendar import (
-    DOMAIN as CALENDAR_DOMAIN,
-    SERVICE_GET_EVENTS,
-)
+from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
 from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
@@ -716,12 +712,6 @@ class AssistAPI(API):
         ]
 
         if exposed_entities:
-            if exposed_entities[CALENDAR_DOMAIN]:
-                names = []
-                for info in exposed_entities[CALENDAR_DOMAIN].values():
-                    names.extend(info["names"].split(", "))
-                tools.append(CalendarGetEventsTool(names))
-
             if exposed_domains is not None and TODO_DOMAIN in exposed_domains:
                 names = []
                 for info in exposed_entities["entities"].values():
@@ -849,6 +839,21 @@ def _get_exposed_entities(
 
     data["entities"] = entities
     return data
+
+
+@callback
+def async_get_exposed_entities(
+    hass: HomeAssistant,
+    assistant: str,
+    *,
+    include_state: bool = False,
+) -> dict[str, dict[str, dict[str, Any]]]:
+    """Get exposed entities for a tool provider.
+
+    Splits out calendars and scripts. Tool providers can use this to reproduce
+    the exact entity names that AssistAPI feeds to its built-in tools.
+    """
+    return _get_exposed_entities(hass, assistant, include_state=include_state)
 
 
 def selector_serializer(schema: Any) -> Any:  # noqa: C901
@@ -1158,72 +1163,6 @@ class ScriptTool(ActionTool):
         self.name = script_name
         if self.name[0].isdigit():
             self.name = "_" + self.name
-
-
-class CalendarGetEventsTool(Tool):
-    """LLM Tool allowing querying a calendar."""
-
-    name = "calendar_get_events"
-    description = (
-        "Get events from a calendar. "
-        "When asked if something happens, search the whole week. "
-        "Results are RFC 5545 which means 'end' is exclusive."
-    )
-
-    def __init__(self, calendars: list[str]) -> None:
-        """Init the get events tool."""
-        self.parameters = vol.Schema(
-            {
-                vol.Required("calendar"): vol.In(calendars),
-                vol.Required("range"): vol.In(["today", "week"]),
-            }
-        )
-
-    async def async_call(
-        self, hass: HomeAssistant, tool_input: ToolInput, llm_context: LLMContext
-    ) -> JsonObjectType:
-        """Query a calendar."""
-        data = self.parameters(tool_input.tool_args)
-        result = intent.async_match_targets(
-            hass,
-            intent.MatchTargetsConstraints(
-                name=data["calendar"],
-                domains=[CALENDAR_DOMAIN],
-                assistant=llm_context.assistant,
-            ),
-        )
-        if not result.is_match:
-            return {"success": False, "error": "Calendar not found"}
-
-        entity_id = result.states[0].entity_id
-        if data["range"] == "today":
-            start = dt_util.now()
-            end = dt_util.start_of_local_day() + timedelta(days=1)
-        elif data["range"] == "week":
-            start = dt_util.now()
-            end = dt_util.start_of_local_day() + timedelta(days=7)
-
-        service_data = {
-            "entity_id": entity_id,
-            "start_date_time": start.isoformat(),
-            "end_date_time": end.isoformat(),
-        }
-
-        service_result = await hass.services.async_call(
-            CALENDAR_DOMAIN,
-            SERVICE_GET_EVENTS,
-            service_data,
-            context=llm_context.context,
-            blocking=True,
-            return_response=True,
-        )
-
-        events = [
-            event if "T" in event["start"] else {**event, "all_day": True}
-            for event in cast(dict, service_result)[entity_id]["events"]
-        ]
-
-        return {"success": True, "result": events}
 
 
 class TodoGetItemsTool(Tool):

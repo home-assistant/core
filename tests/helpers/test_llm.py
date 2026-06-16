@@ -447,6 +447,7 @@ async def test_assist_api_snapshot(
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
     assert await async_setup_component(hass, "llm", {})
+    assert await async_setup_component(hass, "calendar", {})
     assert await async_setup_component(
         hass,
         "script",
@@ -1908,6 +1909,8 @@ async def test_selector_serializer(
 async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
     """Test the calendar get events tool."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "llm", {})
+    assert await async_setup_component(hass, "calendar", {})
     hass.states.async_set(
         "calendar.test_calendar", "on", {"friendly_name": "Mock Calendar Name"}
     )
