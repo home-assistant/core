@@ -1,7 +1,5 @@
 """Support for Cyclus NV Calendar."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -54,9 +52,7 @@ class CyclusNVCalendar(CyclusNVEntity, CalendarEntity):
             if start_date.date() <= e.pickup_date <= end_date.date()
         ]
 
-    @callback
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
+    def _set_event(self) -> None:
         today = dt_util.now().date()
         self._event = None
         for event in sorted(self.coordinator.data, key=lambda e: e.pickup_date):
@@ -67,9 +63,13 @@ class CyclusNVCalendar(CyclusNVEntity, CalendarEntity):
                     end=event.pickup_date + timedelta(days=1),
                 )
                 break
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        self._set_event()
         super()._handle_coordinator_update()
 
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
+        self._set_event()
         await super().async_added_to_hass()
-        self._handle_coordinator_update()

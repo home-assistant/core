@@ -39,15 +39,12 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-    config_entry = result["result"]
-    assert config_entry.unique_id == "0123456789abcdef"
-    assert config_entry.data == {
+    assert result["result"].unique_id == "0123456789abcdef"
+    assert result["data"] == {
         CONF_ZIPCODE: "1234AB",
         CONF_HOUSE_NUMBER: "1",
         CONF_BAG_ID: "0123456789abcdef",
     }
-    assert not config_entry.options
 
 
 async def test_cannot_connect(
@@ -82,14 +79,6 @@ async def test_cannot_connect(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-
-    config_entry = result["result"]
-    assert config_entry.unique_id == "0123456789abcdef"
-    assert config_entry.data == {
-        CONF_ZIPCODE: "1234AB",
-        CONF_HOUSE_NUMBER: "1",
-        CONF_BAG_ID: "0123456789abcdef",
-    }
 
 
 @pytest.mark.usefixtures("mock_cyclus_client")

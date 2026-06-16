@@ -1,7 +1,5 @@
 """Data update coordinator for Cyclus NV."""
 
-from __future__ import annotations
-
 from cyclus.cyclus import CyclusClient
 from cyclus.exceptions import CyclusError
 from cyclus.models import CalendarEvent

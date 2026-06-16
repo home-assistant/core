@@ -1,7 +1,5 @@
 """Config flow to configure the Cyclus NV integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from cyclus.cyclus import CyclusClient

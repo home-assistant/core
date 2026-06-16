@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from datetime import date
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 from cyclus.const import WasteType
 from cyclus.models import CalendarEvent
@@ -58,16 +58,12 @@ def mock_cyclus_client() -> Generator[MagicMock]:
         ),
     ):
         client = client_mock.return_value
-        client.get_bag_id = AsyncMock(return_value="0123456789abcdef")
-        client.get_calendar_events = AsyncMock(
-            return_value=[
-                CalendarEvent(
-                    waste_type=WasteType.RESIDUAL_WASTE, pickup_date=date(2024, 1, 10)
-                ),
-                CalendarEvent(waste_type=WasteType.GFT, pickup_date=date(2024, 1, 17)),
-                CalendarEvent(
-                    waste_type=WasteType.PAPER, pickup_date=date(2024, 1, 24)
-                ),
-            ]
-        )
+        client.get_bag_id.return_value = "0123456789abcdef"
+        client.get_calendar_events.return_value = [
+            CalendarEvent(
+                waste_type=WasteType.RESIDUAL_WASTE, pickup_date=date(2024, 1, 10)
+            ),
+            CalendarEvent(waste_type=WasteType.GFT, pickup_date=date(2024, 1, 17)),
+            CalendarEvent(waste_type=WasteType.PAPER, pickup_date=date(2024, 1, 24)),
+        ]
         yield client
