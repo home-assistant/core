@@ -1926,6 +1926,8 @@ async def test_calendar_get_events_tool(hass: HomeAssistant) -> None:
         assistant="conversation",
         device_id=None,
     )
+    # Wait for the llm integration to discover the calendar tools platform.
+    await hass.async_block_till_done()
     api = await llm.async_get_api(hass, "assist", llm_context)
     tool = next(
         (tool for tool in api.tools if tool.name == "calendar_get_events"), None
@@ -2029,6 +2031,8 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
         assistant="conversation",
         device_id=None,
     )
+    # Wait for the llm integration to discover the todo tools platform.
+    await hass.async_block_till_done()
     api = await llm.async_get_api(hass, "assist", llm_context)
     tool = next((tool for tool in api.tools if tool.name == "todo_get_items"), None)
     assert tool is not None
