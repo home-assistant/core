@@ -1557,13 +1557,13 @@ STATE_CONDITION_BASE_SCHEMA = {
         vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
-    vol.Optional(CONF_FOR): positive_time_period_template,
 }
 
 STATE_CONDITION_STATE_SCHEMA = vol.Schema(
     {
         **STATE_CONDITION_BASE_SCHEMA,
         vol.Required(CONF_STATE): vol.Any(str, [str]),
+        vol.Optional(CONF_FOR): positive_time_period_template,
     }
 )
 

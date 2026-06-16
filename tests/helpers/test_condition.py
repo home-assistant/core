@@ -1462,6 +1462,24 @@ async def test_state_for_invalid_template(
         assert not test.async_check()
 
 
+async def test_state_for_not_allowed_with_attribute(hass: HomeAssistant) -> None:
+    """Test state condition rejects `for` combined with `attribute`.
+
+    The `for` duration is anchored to the entity's last_changed, which only
+    advances on state changes, not attribute changes. Pairing `for` with an
+    `attribute` is therefore unsupported and rejected during config validation.
+    """
+    config = {
+        "condition": "state",
+        "entity_id": "sensor.temperature",
+        "attribute": "battery_level",
+        "state": "100",
+        "for": {"seconds": 5},
+    }
+    with pytest.raises(vol.Invalid, match=r"extra keys not allowed @ data\['for'\]"):
+        cv.CONDITION_SCHEMA(config)
+
+
 async def test_state_unknown_attribute(hass: HomeAssistant) -> None:
     """Test that state returns False on unknown attribute."""
     # Unknown attribute
