@@ -1,6 +1,8 @@
 """Custom actions (previously known as services) for the Home Connect integration."""
 
-from collections.abc import Awaitable
+from collections.abc import Awaitable, Callable
+from functools import partial
+import logging
 from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
@@ -12,12 +14,14 @@ from aiohomeconnect.model import (
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
+from aiohomeconnect.model.program import Program, ProgramDefinition
 import voluptuous as vol
 
-from homeassistant.const import ATTR_DEVICE_ID
+from homeassistant.const import ATTR_DEVICE_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     AFFECTS_TO_ACTIVE_PROGRAM,
@@ -35,6 +39,8 @@ from .const import (
 )
 from .coordinator import HomeConnectConfigEntry
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
+
+LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -93,6 +99,11 @@ SERVICE_SETTING_SCHEMA = vol.Schema(
         vol.Required(ATTR_VALUE): vol.Any(str, int, bool),
     }
 )
+
+TEMPERATURE_OPTIONS = {
+    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
+    OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
+}
 
 
 def _require_program_or_at_least_one_option(data: dict) -> dict:
@@ -221,6 +232,41 @@ async def async_service_setting(call: ServiceCall) -> None:
         ) from err
 
 
+async def _check_temperature_options(
+    options: list[Option],
+    method_call: Callable[..., Awaitable[Program | ProgramDefinition]],
+) -> None:
+    if not options or not (
+        options_to_check := {
+            option.key: option
+            for option in options
+            if option.key in TEMPERATURE_OPTIONS
+        }
+    ):
+        return
+
+    try:
+        program_data = await method_call()
+    except HomeConnectError:
+        LOGGER.debug("Failed to get information about temperature options, using ºC")
+    else:
+        checked_options = []
+        for option in program_data.options or []:
+            if _option := options_to_check.get(option.key):
+                checked_options.append(option.key)
+                if option.unit == "°F":
+                    _option.value = TemperatureConverter.convert(
+                        _option.value,
+                        UnitOfTemperature.CELSIUS,
+                        UnitOfTemperature.FAHRENHEIT,
+                    )
+        if checked_options != options_to_check.keys():
+            LOGGER.debug(
+                "Couldn't check all the temperature options units,"
+                " using ºC for the ones that couldn't be checked"
+            )
+
+
 async def async_service_set_program_and_options(call: ServiceCall) -> None:
     """Service for setting a program and options."""
     data = dict(call.data)
@@ -250,6 +296,10 @@ async def async_service_set_program_and_options(call: ServiceCall) -> None:
             if isinstance(program, ProgramKey)
             else TRANSLATION_KEYS_PROGRAMS_MAP[program]
         )
+        await _check_temperature_options(
+            options,
+            partial(client.get_available_program, ha_id, program_key=program),
+        )
 
         if affects_to == AFFECTS_TO_ACTIVE_PROGRAM:
             method_call = client.start_program(
@@ -264,12 +314,18 @@ async def async_service_set_program_and_options(call: ServiceCall) -> None:
     else:
         array_of_options = ArrayOfOptions(options)
         if affects_to == AFFECTS_TO_ACTIVE_PROGRAM:
+            await _check_temperature_options(
+                options, partial(client.get_active_program, ha_id)
+            )
             method_call = client.set_active_program_options(
                 ha_id, array_of_options=array_of_options
             )
             exception_translation_key = "set_options_active_program"
         else:
             # affects_to is AFFECTS_TO_SELECTED_PROGRAM
+            await _check_temperature_options(
+                options, partial(client.get_selected_program, ha_id)
+            )
             method_call = client.set_selected_program_options(
                 ha_id, array_of_options=array_of_options
             )

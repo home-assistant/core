@@ -206,7 +206,7 @@ set_program_and_options:
             number:
               step: 0.1
               mode: box
-              unit_of_measurement: °C/°F
+              unit_of_measurement: °C
         heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_percentage:
           example: 50
           required: false
@@ -513,7 +513,7 @@ set_program_and_options:
               min: 0
               step: 1
               mode: box
-              unit_of_measurement: °C/°F
+              unit_of_measurement: °C
         b_s_h_common_option_duration:
           example: 900
           required: false
