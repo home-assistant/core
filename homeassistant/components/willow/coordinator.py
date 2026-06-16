@@ -1,7 +1,7 @@
 """Coordinator for the Willow integration."""
 
 from collections.abc import Mapping
-from typing import NotRequired, TypedDict
+from typing import NotRequired, TypedDict, cast
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -82,7 +82,7 @@ class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]
         try:
             await self._oauth_session.async_ensure_token_valid()
             self.client.update_token(self._oauth_session.token[CONF_ACCESS_TOKEN])
-            self.profile = await self.client.get_profile()
+            self.profile = cast(WillowProfile, await self.client.get_profile())
             devices = await self.client.get_devices()
         except WillowAuthError as err:
             raise ConfigEntryAuthFailed from err
@@ -90,7 +90,7 @@ class WillowDataUpdateCoordinator(DataUpdateCoordinator[dict[str, WillowDevice]]
             raise UpdateFailed(f"Unable to fetch Willow data: {err}") from err
 
         return {
-            str(device["sensor_id"]): device
+            str(device["sensor_id"]): cast(WillowDevice, device)
             for device in devices
             if isinstance(device, Mapping) and device.get("sensor_id")
         }

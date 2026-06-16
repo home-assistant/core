@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import datetime
+from typing import cast
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -123,7 +124,7 @@ class WillowSensor(CoordinatorEntity[WillowDataUpdateCoordinator], SensorEntity)
         if reading is None or self.entity_description.reading_key is None:
             return None
 
-        value = reading.get(self.entity_description.reading_key)
+        value = cast(StateType, reading.get(self.entity_description.reading_key))
         if self.entity_description.device_class is SensorDeviceClass.TIMESTAMP:
             return dt_util.parse_datetime(value) if isinstance(value, str) else None
 
