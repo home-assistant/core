@@ -34,7 +34,7 @@ class AutomaticBackupEvent(BackupManagerBaseEntity, EventEntity):
     def __init__(self, coordinator: BackupDataUpdateCoordinator) -> None:
         """Initialize the automatic backup event."""
         super().__init__(coordinator)
-        self._attr_unique_id = "automatic_backup_event"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        self._attr_unique_id = "automatic_backup_event"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
         self._attr_translation_key = "automatic_backup_event"
 
     @callback
