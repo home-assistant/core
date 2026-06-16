@@ -1,7 +1,8 @@
 """Helpers for dealing with entity targets."""
 
 import abc
-from collections.abc import Callable
+import asyncio
+from collections.abc import Callable, Coroutine
 import dataclasses
 import logging
 from logging import Logger
@@ -292,7 +293,7 @@ class TargetEntityChangeTracker(abc.ABC):
 
         self._registry_unsubs: list[CALLBACK_TYPE] = []
 
-    def async_setup(self) -> Callable[[], None]:
+    async def async_setup(self) -> Callable[[], None]:
         """Set up the state change tracking."""
         self._setup_registry_listeners()
         self._handle_target_update()
@@ -304,18 +305,20 @@ class TargetEntityChangeTracker(abc.ABC):
         """Called when there's an update to tracked target entities."""
 
     @callback
-    def _handle_target_update(self, event: Event[Any] | None = None) -> None:
-        """Handle updates in the tracked targets."""
+    def _referenced_entities(self) -> set[str]:
+        """Return the currently tracked, filtered entity ids."""
         selected = async_extract_referenced_entity_ids(
             self._hass,
             self._target_selection,
             expand_group=False,
             primary_entities_only=self._primary_entities_only,
         )
-        filtered_entities = self._entity_filter(
-            selected.referenced | selected.indirectly_referenced
-        )
-        self._handle_entities_update(filtered_entities)
+        return self._entity_filter(selected.referenced | selected.indirectly_referenced)
+
+    @callback
+    def _handle_target_update(self, event: Event[Any] | None = None) -> None:
+        """Handle updates in the tracked targets."""
+        self._handle_entities_update(self._referenced_entities())
 
     def _setup_registry_listeners(self) -> None:
         """Set up listeners for registry changes that require resubscription."""
@@ -356,11 +359,20 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         target_selection: TargetSelection,
         action: Callable[[TargetStateChangedData], Any],
         entity_filter: Callable[[set[str]], set[str]],
-        on_entities_update: Callable[[set[str], set[str]], None] | None = None,
+        on_entities_update: Callable[
+            [set[str], set[str]], Coroutine[Any, Any, None] | None
+        ]
+        | None = None,
         *,
         primary_entities_only: bool = True,
     ) -> None:
-        """Initialize the state change tracker."""
+        """Initialize the state change tracker.
+
+        `on_entities_update` may be a plain callback or a coroutine function.
+        A coroutine is awaited for the initial entity set (so setup is
+        deterministic) and scheduled as a background task for later
+        registry-driven changes.
+        """
         super().__init__(
             hass,
             target_selection,
@@ -371,17 +383,47 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         self._on_entities_update = on_entities_update
         self._state_change_unsub: CALLBACK_TYPE | None = None
         self._tracked_entities: set[str] = set()
+        self._update_tasks: set[asyncio.Task[None]] = set()
 
+    async def async_setup(self) -> Callable[[], None]:
+        """Set up tracking, awaiting the update for the initial entity set.
+
+        The initial update is awaited so that a coroutine `on_entities_update`
+        (e.g. one that loads history) completes before setup returns. Later
+        registry-driven updates instead arrive via the callback
+        `_handle_entities_update` and are scheduled as background tasks.
+        """
+        self._setup_registry_listeners()
+        entities = self._referenced_entities()
+        if (coro := self._apply_entities_update(entities)) is not None:
+            await coro
+        return self._unsubscribe
+
+    @callback
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
-        """Handle the tracked entities."""
+        """Handle a registry-driven change to the tracked entity set."""
+        if (coro := self._apply_entities_update(tracked_entities)) is None:
+            return
+        # Tracked so it can be cancelled on unsubscribe.
+        task = self._hass.async_create_background_task(
+            coro, "Target entity tracker update"
+        )
+        self._update_tasks.add(task)
+        task.add_done_callback(self._update_tasks.discard)
+
+    def _apply_entities_update(
+        self, tracked_entities: set[str]
+    ) -> Coroutine[Any, Any, None] | None:
+        """Resubscribe to state changes; return the update coroutine, if any."""
         previous_entities = self._tracked_entities
         self._tracked_entities = tracked_entities
 
+        result: Coroutine[Any, Any, None] | None = None
         if self._on_entities_update is not None:
             added = tracked_entities - previous_entities
             removed = previous_entities - tracked_entities
             if added or removed:
-                self._on_entities_update(added, removed)
+                result = self._on_entities_update(added, removed)
 
         @callback
         def state_change_listener(event: Event[EventStateChangedData]) -> None:
@@ -395,6 +437,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         self._state_change_unsub = async_track_state_change_event(
             self._hass, tracked_entities, state_change_listener
         )
+        return result
 
     def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
@@ -402,14 +445,18 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         if self._state_change_unsub:
             self._state_change_unsub()
             self._state_change_unsub = None
+        for task in self._update_tasks:
+            task.cancel()
+        self._update_tasks.clear()
 
 
-def async_track_target_selector_state_change_event(
+async def async_track_target_selector_state_change_event(
     hass: HomeAssistant,
     target_selector_config: ConfigType,
     action: Callable[[TargetStateChangedData], Any],
     entity_filter: Callable[[set[str]], set[str]] = lambda x: x,
-    on_entities_update: Callable[[set[str], set[str]], None] | None = None,
+    on_entities_update: Callable[[set[str], set[str]], Coroutine[Any, Any, None] | None]
+    | None = None,
     *,
     primary_entities_only: bool = True,
 ) -> CALLBACK_TYPE:
@@ -419,6 +466,10 @@ def async_track_target_selector_state_change_event(
     When `primary_entities_only` is True, indirect target
     expansion (via device, area, and floor) skips entities
     with an `entity_category` (config or diagnostic entities).
+
+    `on_entities_update` may be a coroutine function; it is awaited for the
+    initial entity set and scheduled as a task for later registry-driven
+    changes, so this function must itself be awaited.
     """
     target_selection = TargetSelection(target_selector_config)
     if not target_selection.has_any_target:
@@ -435,4 +486,4 @@ def async_track_target_selector_state_change_event(
         on_entities_update,
         primary_entities_only=primary_entities_only,
     )
-    return tracker.async_setup()
+    return await tracker.async_setup()

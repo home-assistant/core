@@ -137,7 +137,7 @@ class TimeRemainingTrigger(Trigger):
                 state = self._hass.states.get(entity_id)
                 schedule_for_state(entity_id, state, state.context if state else None)
 
-        unsub = async_track_target_selector_state_change_event(
+        unsub = await async_track_target_selector_state_change_event(
             self._hass,
             self._target,
             state_change_listener,

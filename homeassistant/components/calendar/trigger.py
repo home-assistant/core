@@ -460,7 +460,7 @@ class EventTrigger(Trigger):
         listener = TargetCalendarEventListener(
             self._hass, target_selection, self._event_type, offset, run_action
         )
-        return listener.async_setup()
+        return await listener.async_setup()
 
 
 class EventStartedTrigger(EventTrigger):
