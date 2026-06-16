@@ -376,9 +376,9 @@ class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
             refreshed = await async_get_raspberry_pi_firmware_info(self.hass)
         # pylint: disable-next=home-assistant-action-swallowed-exception
         except SupervisorError:
-            # Shouldn't normally happen but if it does, make it traceable.
+            # The update succeeded; keep the previous info until the next fetch.
             _LOGGER.exception(
-                "Firmware info refresh failed but assuming update succeeded"
+                "Failed to refresh Raspberry Pi firmware info after update"
             )
             refreshed = None
         if refreshed is not None:

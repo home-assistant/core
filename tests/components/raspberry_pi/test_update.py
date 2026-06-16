@@ -254,18 +254,17 @@ async def test_rpi_firmware_install_failure(
             blocking=True,
         )
 
-    # A failed install must not optimistically flip the entity to "up to date".
     state = hass.states.get(RPI_FIRMWARE_ENTITY_ID)
     assert state is not None
     assert state.state == "on"
 
 
-async def test_rpi_firmware_install_refresh_failure_is_optimistic(
+async def test_rpi_firmware_install_refresh_failure_keeps_previous_info(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """A failed info refresh after a successful update is assumed to succeed."""
+    """A failed info refresh after a successful update is logged, not raised."""
     supervisor_client.os.raspberry_pi_firmware_info.return_value = (
         RaspberryPiFirmwareInfo(
             current_version="1765222194",
@@ -293,4 +292,4 @@ async def test_rpi_firmware_install_refresh_failure_is_optimistic(
     state = hass.states.get(RPI_FIRMWARE_ENTITY_ID)
     assert state is not None
     assert state.state == "on"
-    assert "assuming update succeeded" in caplog.text
+    assert "Failed to refresh Raspberry Pi firmware info" in caplog.text
