@@ -31,6 +31,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     get_z2m_addon_manager,
     guess_firmware_info,
     guess_hardware_owners,
+    humanize_rpi_firmware_version,
     probe_silabs_firmware_info,
     probe_silabs_firmware_type,
 )
@@ -1039,3 +1040,20 @@ async def test_async_flash_silabs_firmware_probe_failure(hass: HomeAssistant) ->
         call().__aenter__(ANY),
         call().__aexit__(ANY, HomeAssistantError, exc.value, ANY),
     ]
+
+
+@pytest.mark.parametrize(
+    ("version", "expected"),
+    [
+        (None, None),
+        ("1778498402", "2026-05-11"),
+        ("1778498402-abcdef", "2026-05-11 (VL805 abcdef)"),
+        ("unknown", "unknown"),
+    ],
+    ids=["none", "timestamp", "timestamp_with_vl805", "non_numeric_fallback"],
+)
+def test_humanize_rpi_firmware_version(
+    version: str | None, expected: str | None
+) -> None:
+    """Test rendering raw Raspberry Pi firmware versions as readable strings."""
+    assert humanize_rpi_firmware_version(version) == expected
