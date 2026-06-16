@@ -31,7 +31,7 @@ _LOGGER = logging.getLogger(__name__)
 # % The margin for considering the shade arrived at its target
 POSITION_TOLERANCE = 2
 
- # seconds before an unmoving target is changed from moving to still
+# seconds before an unmoving target is changed from moving to still
 STUCK_TIMEOUT = 15
 
 PowerShadesConfigEntry = ConfigEntry["PowerShadesCoordinator"]
