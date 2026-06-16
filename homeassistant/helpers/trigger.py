@@ -540,12 +540,24 @@ class EntityTriggerBase(Trigger):
         def handle_entities_update(
             added: set[str],
             removed: set[str],
-            _entity_states: Mapping[str, State | None],
+            entity_states: Mapping[str, State | None],
         ) -> None:
-            """Cancel pending duration timers of entities no longer targeted."""
+            """Re-validate pending duration timers on target changes.
+
+            Timers of entities no longer targeted are cancelled, and the
+            combined first/all condition is recounted over the updated
+            target: e.g. a non-matching entity added to the target breaks a
+            pending all-match.
+            """
             for entity_id in removed:
                 if (cancel := pending_timers.pop(entity_id, None)) is not None:
                     cancel()
+            if behavior not in pending_timers:
+                return
+            if not self._combined_state_still_valid(
+                behavior, entity_states.keys(), entity_states
+            ):
+                pending_timers.pop(behavior)()
 
         @callback
         def state_change_listener(

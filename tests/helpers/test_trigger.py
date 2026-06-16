@@ -4892,7 +4892,7 @@ async def test_entity_trigger_duration_all_survives_entity_leaving_target(
 @pytest.mark.parametrize(
     ("added_entity_state", "expected_calls"),
     [
-        pytest.param(STATE_OFF, 1, id="added_entity_breaks_all_match"),
+        pytest.param(STATE_OFF, 0, id="added_entity_breaks_all_match"),
         pytest.param(STATE_ON, 1, id="added_entity_keeps_all_match"),
     ],
 )
@@ -4903,16 +4903,11 @@ async def test_entity_trigger_duration_all_revalidated_when_entity_joins_target(
     added_entity_state: str,
     expected_calls: int,
 ) -> None:
-    """Test a pending all timer when an entity is added to the target.
+    """Test a pending all timer is re-validated when an entity is added.
 
-    An entity added to the target mid-wait should participate in the
-    all-match: a non-matching entity should cancel the pending timer, while
-    a matching one should leave it running.
-
-    This test documents existing unwanted behavior: an entity added to the
-    target mid-wait is not re-validated against the pending all timer, so
-    the timer keeps running regardless of the added entity's state and the
-    trigger fires in both cases.
+    An entity added to the target mid-wait participates in the all-match:
+    a non-matching entity cancels the pending timer, while a matching one
+    leaves it running and the trigger fires after the duration.
     """
     label_registry = lr.async_get(hass)
     label = label_registry.async_create("Test All Addition")
@@ -4949,9 +4944,7 @@ async def test_entity_trigger_duration_all_revalidated_when_entity_joins_target(
     entity_registry.async_update_entity(entry_c.entity_id, labels={label.label_id})
     await hass.async_block_till_done()
 
-    # Advance past the duration. Unwanted: when the added entity does not
-    # match (STATE_OFF) the all-match should be broken and the trigger
-    # should not fire, but it fires anyway.
+    # Advance past the duration
     freezer.tick(datetime.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -4967,13 +4960,9 @@ async def test_entity_trigger_duration_first_cancelled_when_match_leaves_target(
 ) -> None:
     """Test a pending first timer when the matching entity is untargeted.
 
-    Removing the only matching entity from the target mid-wait should leave
-    the target without a matching entity, so the pending timer should be
-    cancelled and the trigger should not fire.
-
-    This test documents existing unwanted behavior: the pending first timer
-    is not re-validated when the target changes, so it keeps running and the
-    trigger fires for the entity that left the target.
+    Removing the only matching entity from the target mid-wait leaves the
+    target without a matching entity, so the pending timer is cancelled and
+    the trigger does not fire.
     """
     label_registry = lr.async_get(hass)
     label = label_registry.async_create("Test First Removal")
@@ -5005,13 +4994,11 @@ async def test_entity_trigger_duration_first_cancelled_when_match_leaves_target(
     entity_registry.async_update_entity(entry_a.entity_id, labels=set())
     await hass.async_block_till_done()
 
-    # Advance past the original duration. Unwanted: the only matching entity
-    # left the target, so the trigger should not fire, but it fires for it.
+    # Advance past the original duration — should NOT fire
     freezer.tick(datetime.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0]["entity_id"] == entry_a.entity_id
+    assert len(calls) == 0
 
     unsub()
 
