@@ -255,6 +255,88 @@ async def test_punctuation(hass: HomeAssistant) -> None:
     assert result.response.intent.slots["name"]["text"] == "test light"
 
 
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        # STT may or may not insert the comma based on speech cadence
+        "Turn off upstairs, hallway",
+        "Turn off upstairs hallway",
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_punctuation_in_alias(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    sentence: str,
+) -> None:
+    """Test that an alias containing punctuation can still be matched.
+
+    The input is matched with punctuation removed, so the alias must be too.
+    """
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="test_light"
+    )
+    entity_registry.async_update_entity(
+        "light.test_light", aliases=["Upstairs, hallway"]
+    )
+    hass.states.async_set(
+        "light.test_light",
+        "on",
+        attributes={ATTR_FRIENDLY_NAME: "Test light"},
+    )
+    expose_entity(hass, "light.test_light", True)
+
+    calls = async_mock_service(hass, "light", "turn_off")
+    result = await conversation.async_converse(hass, sentence, None, Context(), None)
+
+    assert len(calls) == 1
+    assert calls[0].data["entity_id"][0] == "light.test_light"
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+
+@pytest.mark.parametrize(
+    "sentence",
+    [
+        # STT may or may not insert the comma based on speech cadence
+        "Turn on lights in second, floor",
+        "Turn on lights in second floor",
+    ],
+)
+@pytest.mark.usefixtures("init_components")
+async def test_punctuation_in_area_alias(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    sentence: str,
+) -> None:
+    """Test that an area alias containing punctuation can still be matched.
+
+    The input is matched with punctuation removed, so the alias must be too.
+    """
+    area = area_registry.async_get_or_create("area_id")
+    area = area_registry.async_update(area.id, aliases={"Second, floor"})
+
+    entity_registry.async_get_or_create(
+        "light", "demo", "1234", suggested_object_id="test_light"
+    )
+    entity_registry.async_update_entity("light.test_light", area_id=area.id)
+    hass.states.async_set(
+        "light.test_light",
+        "off",
+        attributes={ATTR_FRIENDLY_NAME: "Test light"},
+    )
+    expose_entity(hass, "light.test_light", True)
+
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(hass, sentence, None, Context(), None)
+
+    assert len(calls) == 1
+    assert calls[0].data["entity_id"][0] == "light.test_light"
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.intent is not None
+    assert result.response.intent.slots["area"]["value"] == area.id
+
+
 async def test_expose_flag_automatically_set(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
