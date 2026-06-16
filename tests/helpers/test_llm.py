@@ -2,10 +2,13 @@
 
 from datetime import timedelta
 from decimal import Decimal
+from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
+from voluptuous_openapi import convert
 
 from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
@@ -325,6 +328,103 @@ async def test_assist_api(
             "hello": 1,
         },
     }
+
+
+def _normalize_schema(value: Any) -> Any:
+    """Recursively sort scalar lists (e.g. enum values) for a stable snapshot.
+
+    Some tool parameter schemas build enum options from Python sets, so their
+    order varies per process. Order is semantically irrelevant here.
+    """
+    if isinstance(value, dict):
+        return {key: _normalize_schema(val) for key, val in value.items()}
+    if isinstance(value, list):
+        items = [_normalize_schema(item) for item in value]
+        if all(isinstance(item, (str, int, float, bool)) for item in items):
+            return sorted(items, key=repr)
+        return items
+    return value
+
+
+async def test_assist_api_snapshot(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Golden snapshot of the Assist API prompt + tools.
+
+    Behavior-parity net for the v1 tool-platform refactor: the assembled prompt
+    and the full serialized tool set (name, description, parameters) must stay
+    identical as built-in tools and intents move out of AssistAPI into per-
+    integration platforms.
+    """
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(
+        hass,
+        "script",
+        {
+            "script": {
+                "test_script": {
+                    "description": "This is a test script",
+                    "sequence": [],
+                    "fields": {
+                        "beer": {"description": "Number of beers"},
+                        "wine": {},
+                    },
+                }
+            }
+        },
+    )
+
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "1234")},
+        suggested_area="Test Area",
+    )
+
+    # Expose one entity per tool-bearing domain so every built-in tool appears.
+    for domain, object_id, name in (
+        ("light", "kitchen", "Kitchen"),
+        ("calendar", "personal", "Personal"),
+        ("todo", "shopping", "Shopping"),
+    ):
+        created = entity_registry.async_get_or_create(
+            domain,
+            "test",
+            f"mock-{object_id}",
+            original_name=name,
+            suggested_object_id=object_id,
+        )
+        hass.states.async_set(created.entity_id, "on", {"friendly_name": name})
+        async_expose_entity(hass, "conversation", created.entity_id, True)
+
+    async_expose_entity(hass, "conversation", "script.test_script", True)
+    async_register_timer_handler(hass, device.id, lambda *args: None)
+
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=Context(),
+        language="*",
+        assistant="conversation",
+        device_id=device.id,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    assert api.api_prompt == snapshot(name="prompt")
+    assert [
+        {
+            "name": tool.name,
+            "description": tool.description,
+            "parameters": _normalize_schema(
+                convert(tool.parameters, custom_serializer=api.custom_serializer)
+            ),
+        }
+        for tool in api.tools
+    ] == snapshot(name="tools")
 
 
 async def test_assist_api_get_timer_tools(
