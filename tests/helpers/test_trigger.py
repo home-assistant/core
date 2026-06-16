@@ -4777,6 +4777,61 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
     unsub()
 
 
+async def test_entity_trigger_duration_each_cancelled_on_entity_rename(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an each duration timer is cancelled when its entity is renamed.
+
+    A rename is delivered as the old entity id leaving the target and the
+    new entity id joining it, so the pending per-entity timer is cancelled
+    rather than transferred to the new id. The entity stays on and targeted
+    under the new id, but never had an off→on transition as the new id, so
+    no timer is armed for it and the trigger does not fire.
+    """
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("Test Each Rename")
+    entry = entity_registry.async_get_or_create("test", "test", "labeled")
+    entity_registry.async_update_entity(entry.entity_id, labels={label.label_id})
+    hass.states.async_set(entry.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_EACH,
+        calls,
+        duration={"seconds": 5},
+        target={ATTR_LABEL_ID: label.label_id},
+    )
+
+    hass.states.async_set(entry.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # Rename the entity mid-wait. It keeps its label, so it stays targeted
+    # under the new id; the state follows the rename like the entity
+    # component does.
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    new_entity_id = "test.renamed"
+    entity_registry.async_update_entity(entry.entity_id, new_entity_id=new_entity_id)
+    hass.states.async_remove(entry.entity_id)
+    hass.states.async_set(new_entity_id, STATE_ON)
+    await hass.async_block_till_done()
+
+    # Advance past the original duration — should NOT fire: the timer for
+    # the old id was cancelled, and the new id never transitioned off→on.
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    unsub()
+
+
 async def test_entity_trigger_duration_all_survives_entity_leaving_target(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -4830,6 +4885,183 @@ async def test_entity_trigger_duration_all_survives_entity_leaving_target(
     await hass.async_block_till_done()
     assert len(calls) == 1
     assert calls[0]["entity_id"] == entry_b.entity_id
+
+    unsub()
+
+
+@pytest.mark.parametrize(
+    ("added_entity_state", "expected_calls"),
+    [
+        pytest.param(STATE_OFF, 1, id="added_entity_breaks_all_match"),
+        pytest.param(STATE_ON, 1, id="added_entity_keeps_all_match"),
+    ],
+)
+async def test_entity_trigger_duration_all_revalidated_when_entity_joins_target(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    added_entity_state: str,
+    expected_calls: int,
+) -> None:
+    """Test a pending all timer when an entity is added to the target.
+
+    An entity added to the target mid-wait should participate in the
+    all-match: a non-matching entity should cancel the pending timer, while
+    a matching one should leave it running.
+
+    This test documents existing unwanted behavior: an entity added to the
+    target mid-wait is not re-validated against the pending all timer, so
+    the timer keeps running regardless of the added entity's state and the
+    trigger fires in both cases.
+    """
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("Test All Addition")
+    entry_a = entity_registry.async_get_or_create("test", "test", "labeled_a")
+    entry_b = entity_registry.async_get_or_create("test", "test", "labeled_b")
+    entity_registry.async_update_entity(entry_a.entity_id, labels={label.label_id})
+    entity_registry.async_update_entity(entry_b.entity_id, labels={label.label_id})
+    hass.states.async_set(entry_a.entity_id, STATE_OFF)
+    hass.states.async_set(entry_b.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_ALL,
+        calls,
+        duration={"seconds": 5},
+        target={ATTR_LABEL_ID: label.label_id},
+    )
+
+    hass.states.async_set(entry_a.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    hass.states.async_set(entry_b.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # A third entity joins the target mid-wait
+    entry_c = entity_registry.async_get_or_create("test", "test", "labeled_c")
+    hass.states.async_set(entry_c.entity_id, added_entity_state)
+    await hass.async_block_till_done()
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    entity_registry.async_update_entity(entry_c.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+
+    # Advance past the duration. Unwanted: when the added entity does not
+    # match (STATE_OFF) the all-match should be broken and the trigger
+    # should not fire, but it fires anyway.
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == expected_calls
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_cancelled_when_match_leaves_target(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a pending first timer when the matching entity is untargeted.
+
+    Removing the only matching entity from the target mid-wait should leave
+    the target without a matching entity, so the pending timer should be
+    cancelled and the trigger should not fire.
+
+    This test documents existing unwanted behavior: the pending first timer
+    is not re-validated when the target changes, so it keeps running and the
+    trigger fires for the entity that left the target.
+    """
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("Test First Removal")
+    entry_a = entity_registry.async_get_or_create("test", "test", "labeled_a")
+    entry_b = entity_registry.async_get_or_create("test", "test", "labeled_b")
+    entity_registry.async_update_entity(entry_a.entity_id, labels={label.label_id})
+    entity_registry.async_update_entity(entry_b.entity_id, labels={label.label_id})
+    hass.states.async_set(entry_a.entity_id, STATE_OFF)
+    hass.states.async_set(entry_b.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_FIRST,
+        calls,
+        duration={"seconds": 5},
+        target={ATTR_LABEL_ID: label.label_id},
+    )
+
+    hass.states.async_set(entry_a.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # The only matching entity leaves the target mid-wait
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    entity_registry.async_update_entity(entry_a.entity_id, labels=set())
+    await hass.async_block_till_done()
+
+    # Advance past the original duration. Unwanted: the only matching entity
+    # left the target, so the trigger should not fire, but it fires for it.
+    freezer.tick(datetime.timedelta(seconds=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entry_a.entity_id
+
+    unsub()
+
+
+async def test_entity_trigger_duration_first_survives_entity_joining_target(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a pending first timer when an entity is added to the target.
+
+    The added entity does not match, but at least one targeted entity
+    still does, so the timer keeps running and the trigger fires.
+    """
+    label_registry = lr.async_get(hass)
+    label = label_registry.async_create("Test First Addition")
+    entry_a = entity_registry.async_get_or_create("test", "test", "labeled_a")
+    entity_registry.async_update_entity(entry_a.entity_id, labels={label.label_id})
+    hass.states.async_set(entry_a.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    unsub = await _arm_off_to_on_trigger(
+        hass,
+        [],
+        BEHAVIOR_FIRST,
+        calls,
+        duration={"seconds": 5},
+        target={ATTR_LABEL_ID: label.label_id},
+    )
+
+    hass.states.async_set(entry_a.entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 0
+
+    # A non-matching entity joins the target mid-wait
+    entry_b = entity_registry.async_get_or_create("test", "test", "labeled_b")
+    hass.states.async_set(entry_b.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    freezer.tick(datetime.timedelta(seconds=2))
+    async_fire_time_changed(hass)
+    entity_registry.async_update_entity(entry_b.entity_id, labels={label.label_id})
+    await hass.async_block_till_done()
+
+    # The matching entity stayed on for the duration — fires
+    freezer.tick(datetime.timedelta(seconds=4))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entry_a.entity_id
 
     unsub()
 
