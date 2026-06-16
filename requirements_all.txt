@@ -925,7 +925,7 @@ emoji==2.8.0
 emulated-roku==0.3.0
 
 # homeassistant.components.energieleser
-energieleser==0.1.2
+energieleser==0.1.4
 
 # homeassistant.components.huisbaasje
 energyflip-client==0.2.2
