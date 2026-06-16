@@ -381,7 +381,7 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
     received: list[Job] = []
 
     @callback
-    def mock_subcription_callback(job: Job) -> None:
+    def mock_subscription_callback(job: Job) -> None:
         received.append(job)
 
     subscription = JobSubscription(mock_subcription_callback, name="test_job")
