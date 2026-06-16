@@ -137,8 +137,6 @@ async def validate_actions_and_conditions_config(
     script_options: tuple[str, ...] | None = None,
 ) -> None:
     """Validate template scripts."""
-    if not script_options:
-        return
 
     def _humanize(err: Exception, data: Any) -> str:
         """Humanize vol.Invalid, stringify other exceptions."""
@@ -160,6 +158,9 @@ async def validate_actions_and_conditions_config(
                 breadcrumb,
                 _humanize(err, condition_config),
             )
+
+    if not script_options:
+        return
 
     for script_option in script_options:
         if (script_config := config.pop(script_option, None)) is not None:

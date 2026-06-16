@@ -44,6 +44,7 @@ from homeassistant.const import (
     CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_VARIABLES,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -111,8 +112,29 @@ def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
     return obj
 
 
+_DEFAULT_NAMES = {
+    Platform.ALARM_CONTROL_PANEL: alarm_control_panel_platform.DEFAULT_NAME,
+    Platform.BINARY_SENSOR: binary_sensor_platform.DEFAULT_NAME,
+    Platform.BUTTON: button_platform.DEFAULT_NAME,
+    Platform.COVER: cover_platform.DEFAULT_NAME,
+    Platform.DEVICE_TRACKER: device_tracker_platform.DEFAULT_NAME,
+    Platform.EVENT: event_platform.DEFAULT_NAME,
+    Platform.FAN: fan_platform.DEFAULT_NAME,
+    Platform.IMAGE: image_platform.DEFAULT_NAME,
+    Platform.LIGHT: light_platform.DEFAULT_NAME,
+    Platform.LOCK: lock_platform.DEFAULT_NAME,
+    Platform.NUMBER: number_platform.DEFAULT_NAME,
+    Platform.SELECT: select_platform.DEFAULT_NAME,
+    Platform.SENSOR: sensor_platform.DEFAULT_NAME,
+    Platform.SWITCH: switch_platform.DEFAULT_NAME,
+    Platform.UPDATE: update_platform.DEFAULT_NAME,
+    Platform.VACUUM: vacuum_platform.DEFAULT_NAME,
+    Platform.WEATHER: weather_platform.DEFAULT_NAME,
+}
+
+
 def validate_entity_condition_has_trigger(obj: dict) -> dict:
-    """Validate that binary sensors with auto_off have triggers."""
+    """Validate entity condition requires trigger."""
     if CONF_TRIGGERS not in obj:
         for platform in PLATFORMS:
             if platform not in obj:
@@ -122,11 +144,11 @@ def validate_entity_condition_has_trigger(obj: dict) -> dict:
                 if CONF_CONDITIONS not in entity_config:
                     continue
 
-                identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
+                identifier = f"{CONF_NAME}: Template {platform.title()}"
                 if (
                     (name := entity_config.get(CONF_NAME))
                     and isinstance(name, Template)
-                    and name.template != binary_sensor_platform.DEFAULT_NAME
+                    and name.template != _DEFAULT_NAMES.get(platform, "Template Entity")
                 ):
                     identifier = f"{CONF_NAME}: {name.template}"
                 elif default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
@@ -136,7 +158,7 @@ def validate_entity_condition_has_trigger(obj: dict) -> dict:
 
                 raise vol.Invalid(
                     f"The condition option for template {platform}: {identifier} "
-                    "requires a trigger, remove the auto_off option or rewrite "
+                    "requires a trigger, remove the ccondition option or rewrite "
                     "configuration to use a trigger"
                 )
 
