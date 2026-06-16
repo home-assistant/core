@@ -45,8 +45,8 @@ def async_start_discovery(hass: HomeAssistant) -> None:
                 context={"source": SOURCE_INTEGRATION_DISCOVERY},
                 data=device,
             )
-        # Re-assert each coordinator's socket after the broadcast scan,
-        # which temporarily diverts async status pushes.
+        # During the scan the "udp master" goes to the discovery system
+        # This reclaims it back to the HA coordinator
         for entry in hass.config_entries.async_loaded_entries(DOMAIN):
             hass.async_create_task(entry.runtime_data.async_request_refresh())
 
