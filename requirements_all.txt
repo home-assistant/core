@@ -2027,7 +2027,7 @@ pyanglianwater==3.1.2
 pyaprilaire==0.9.1
 
 # homeassistant.components.aqvify
-pyaqvify==0.0.10
+pyaqvify==0.0.11
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
