@@ -3,6 +3,12 @@
   "name": "EufyLife",
   "bluetooth": [
     {
+      "local_name": "eufy T9120"
+    },
+    {
+      "local_name": "eufy T9130"
+    },
+    {
       "local_name": "eufy T9140"
     },
     {
@@ -16,6 +22,9 @@
     },
     {
       "local_name": "eufy T9149"
+    },
+    {
+      "local_name": "eufy T9150"
     }
   ],
   "codeowners": ["@bdr99"],
