@@ -670,7 +670,10 @@ class EntityConditionBase(Condition):
         self._on_unload.append(unsub)
 
     async def _async_on_entities_update(
-        self, added: set[str], removed: set[str]
+        self,
+        added: set[str],
+        removed: set[str],
+        _entity_states: Mapping[str, State | None],
     ) -> None:
         """Handle changes to the tracked entity set.
 

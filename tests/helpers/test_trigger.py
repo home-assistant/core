@@ -4735,15 +4735,11 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test an each duration timer when its entity is untargeted mid-wait.
+    """Test an each duration timer is cancelled when its entity is untargeted.
 
-    A pending `for:` wait should not outlive the entity's membership of the
+    A pending `for:` wait does not outlive the entity's membership of the
     target: when a registry change removes the entity from the target, the
-    timer should be cancelled.
-
-    This test documents existing unwanted behavior: the duration timer
-    keeps running and the trigger fires for an entity which is no longer
-    targeted.
+    timer is cancelled and the trigger does not fire.
     """
     label_registry = lr.async_get(hass)
     label = label_registry.async_create("Test Each Removal")
@@ -4772,13 +4768,11 @@ async def test_entity_trigger_duration_each_cancelled_when_entity_leaves_target(
     entity_registry.async_update_entity(entry.entity_id, labels=set())
     await hass.async_block_till_done()
 
-    # Advance past the original duration. Unwanted: the trigger fires for
-    # the no-longer-targeted entity.
+    # Advance past the original duration — should NOT fire
     freezer.tick(datetime.timedelta(seconds=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0]["entity_id"] == entry.entity_id
+    assert len(calls) == 0
 
     unsub()
 
@@ -4788,17 +4782,12 @@ async def test_entity_trigger_duration_all_survives_entity_leaving_target(
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test a pending all timer when an entity is removed from the target.
+    """Test a pending all timer ignores an entity removed from the target.
 
-    Once an entity is removed from the target it should no longer gate the
-    all-match: the timer should keep running and fire if the remaining
-    targeted entities stay matching, even if the removed entity changes to
-    a non-matching state.
-
-    This test documents existing unwanted behavior: the duration cancel
-    check still tracks the entity set frozen when the timer was armed, so
-    the removed entity turning off cancels the timer and the trigger does
-    not fire.
+    Once an entity is removed from the target, it no longer gates the
+    all-match: the timer keeps running and fires if the remaining targeted
+    entities stay matching, even if the removed entity changes to a
+    non-matching state.
     """
     label_registry = lr.async_get(hass)
     label = label_registry.async_create("Test All Removal")
@@ -4826,8 +4815,8 @@ async def test_entity_trigger_duration_all_survives_entity_leaving_target(
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    # B leaves the target mid-wait and turns off: it should no longer gate
-    # the all-match.
+    # B leaves the target mid-wait and turns off: it no longer gates the
+    # all-match, so the timer keeps running.
     freezer.tick(datetime.timedelta(seconds=2))
     async_fire_time_changed(hass)
     entity_registry.async_update_entity(entry_b.entity_id, labels=set())
@@ -4835,13 +4824,12 @@ async def test_entity_trigger_duration_all_survives_entity_leaving_target(
     hass.states.async_set(entry_b.entity_id, STATE_OFF)
     await hass.async_block_till_done()
 
-    # Unwanted: the remaining targeted entity stayed on for the duration,
-    # so the trigger should fire — but the no-longer-targeted entity
-    # cancelled the timer.
+    # The remaining targeted entity stayed on for the duration — fires
     freezer.tick(datetime.timedelta(seconds=4))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entry_b.entity_id
 
     unsub()
 
@@ -4851,19 +4839,15 @@ async def test_entity_trigger_first_nested_state_revert(
 ) -> None:
     """Test a synchronous bus listener reverting a state change.
 
-    Writing states from a synchronous bus listener during state change
-    dispatch is not supported: the nested state write is dispatched to the
-    target tracker before the event that caused it, inverting per-entity
-    delivery order. Supported state change tracking via
-    async_track_state_change_event or async_track_state_change_filtered is
-    deferred precisely so callbacks cannot run inside the dispatch loop and
-    cause this.
+    A synchronous bus listener turns entity_a off again from within the
+    dispatch of its turn-on event. The event bus queues the nested off-event
+    and dispatches it after the on-event, so the target tracker observes the
+    two events in fire order and its tracked states view stays consistent.
 
-    This test documents the resulting behavior rather than guaranteeing it:
-    both of entity_a's events are evaluated against the live state machine,
-    which already shows the entity off again, so the trigger does not fire
-    for the blip; entity_b turning on later counts as the only match and
-    fires.
+    The trigger fires for entity_a — it was the first entity to match, even
+    though it was immediately reverted — consistent with behavior each and
+    with a same-iteration blip. Because the view is not left stale, entity_b
+    turning on later is correctly recognized as a first match and fires too.
     """
     entity_a = "test.entity_a"
     entity_b = "test.entity_b"
@@ -4881,9 +4865,6 @@ async def test_entity_trigger_first_nested_state_revert(
         ):
             hass.states.async_set(entity_a, STATE_OFF)
 
-    # Registered before the trigger is armed, so it runs before the state
-    # change tracker's bus listener and its nested write is dispatched to
-    # the tracker first.
     unsub_revert = hass.bus.async_listen(EVENT_STATE_CHANGED, revert_entity_a)
 
     calls: list[dict[str, Any]] = []
@@ -4892,17 +4873,19 @@ async def test_entity_trigger_first_nested_state_revert(
     )
 
     # entity_a turns on and is synchronously reverted to off. The trigger
-    # receives (on→off) then (off→on); the on-event counts no matches in
-    # the live state machine and the trigger does not fire.
+    # receives (off→on) then (on→off) in fire order and fires for the
+    # on-event: entity_a was the first matching entity.
     hass.states.async_set(entity_a, STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 0
+    assert len(calls) == 1
+    assert calls[0]["entity_id"] == entity_a
 
-    # entity_a is off, so entity_b is the first matching entity and fires.
+    # entity_a is off again, so entity_b is now the first matching entity
+    # and the trigger fires for it.
     hass.states.async_set(entity_b, STATE_ON)
     await hass.async_block_till_done()
-    assert len(calls) == 1
-    assert calls[0]["entity_id"] == entity_b
+    assert len(calls) == 2
+    assert calls[1]["entity_id"] == entity_b
 
     unsub()
     unsub_revert()
