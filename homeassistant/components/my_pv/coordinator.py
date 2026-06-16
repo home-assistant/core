@@ -1,5 +1,6 @@
 """Data update coordinator for the my-PV integration."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import functools
 import logging
@@ -19,9 +20,11 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-def _my_pv_connection(func):
+def _my_pv_connection[T](
+    func: Callable[..., Coroutine[Any, Any, T]],
+) -> Callable[..., Coroutine[Any, Any, T]]:
     @functools.wraps(func)
-    async def wrapper(self, *args, **kwargs):
+    async def wrapper(self, *args: Any, **kwargs: Any) -> T:
         if not self._device.connected and not await self._device.connect():
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
