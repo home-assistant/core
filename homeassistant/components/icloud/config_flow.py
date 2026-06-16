@@ -296,12 +296,12 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             errors = {}
 
         if user_input:
-            if user_input.get(CONF_REQUEST_NEW_CODE, False):
+            if user_input[CONF_REQUEST_NEW_CODE]:
                 # If the user requested a new code, request it
                 errors = await self._request_2fa_code(errors)
                 user_input = None
 
-            elif user_input.get(CONF_VERIFICATION_CODE, "") == "":
+            elif user_input[CONF_VERIFICATION_CODE] == "":
                 # If the user didn't provide a code, show the form again with an error
                 errors["base"] = "validate_verification_code"
                 return await self.async_step_verification_code(errors=errors)

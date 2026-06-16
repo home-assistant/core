@@ -7,7 +7,6 @@ from typing import Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
-    PyiCloud2FARequiredException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -106,13 +105,8 @@ class IcloudAccount:
                 with_family=self._with_family,
             )
 
-            if self.api.requires_2fa:
-                # Trigger a new log in to ensure the user enters the 2FA code again.
-                raise PyiCloud2FARequiredException(  # noqa: TRY301
-                    self._config_entry.data[CONF_USERNAME], None
-                )
-
-        except (PyiCloudFailedLoginException, PyiCloud2FARequiredException) as err:
+        except PyiCloudFailedLoginException:
+            self.api = None
             # Login failed which means credentials/2fa need to be updated.
             _LOGGER.error(
                 (
@@ -123,9 +117,10 @@ class IcloudAccount:
                 self._config_entry.data[CONF_USERNAME],
             )
 
-            if not isinstance(err, PyiCloud2FARequiredException):
-                self.api = None
+            self._require_reauth()
+            return
 
+        if self.api.requires_2fa:
             self._require_reauth()
             return
 
