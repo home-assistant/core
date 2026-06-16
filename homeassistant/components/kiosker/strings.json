@@ -105,7 +105,7 @@
         "name": "Blackout button text"
       },
       "blackout_expire": {
-        "name": "Blackout expire"
+        "name": "Blackout expiry"
       },
       "blackout_foreground": {
         "name": "Blackout foreground color"

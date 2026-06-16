@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,7 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTime
+from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -82,11 +82,10 @@ SENSORS: tuple[KioskerSensorEntityDescription, ...] = (
     KioskerSensorEntityDescription(
         key="blackoutExpire",
         translation_key="blackout_expire",
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        device_class=SensorDeviceClass.DURATION,
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_registry_enabled_default=False,
         value_fn=lambda x: (
-            round(x.blackout.expire)
+            x.status.last_update + timedelta(seconds=x.blackout.expire)
             if x.blackout and x.blackout.expire is not None
             else None
         ),

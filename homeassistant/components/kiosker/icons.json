@@ -63,7 +63,7 @@
         "default": "mdi:button-cursor"
       },
       "blackout_expire": {
-        "default": "mdi:timer-outline"
+        "default": "mdi:clock-end"
       },
       "blackout_foreground": {
         "default": "mdi:palette-outline"
