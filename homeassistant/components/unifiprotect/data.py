@@ -48,6 +48,12 @@ from .const import (
 from .utils import async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
+
+# Number of consecutive failed public-bootstrap re-prime attempts (one per
+# websocket reconnect) before escalating the log from debug to a single
+# warning, so a persistently dead public events feed becomes visible.
+PUBLIC_EVENTS_RETRY_WARN_THRESHOLD = 3
+
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 type UFPConfigEntry = ConfigEntry[ProtectData]
 
@@ -95,6 +101,7 @@ class ProtectData:
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._public_events_subscribed = False
+        self._public_events_retries = 0
         self._auth_failures = 0
         self.auth_retries = 0
         self.last_update_success = False
@@ -222,7 +229,19 @@ class ProtectData:
             try:
                 await self.api.update_public()
             except Exception:  # noqa: BLE001
-                _LOGGER.debug("Public API bootstrap retry failed", exc_info=True)
+                self._public_events_retries += 1
+                # Stay at debug for transient blips; warn exactly once it is
+                # clearly not recovering so the dead public feed is visible.
+                if self._public_events_retries == PUBLIC_EVENTS_RETRY_WARN_THRESHOLD:
+                    _LOGGER.warning(
+                        "Public API bootstrap still failing after %d attempts; "
+                        "smart-detect events such as package detection will not be "
+                        "delivered until it recovers",
+                        self._public_events_retries,
+                        exc_info=True,
+                    )
+                else:
+                    _LOGGER.debug("Public API bootstrap retry failed", exc_info=True)
                 return
         self.async_subscribe_public_events()
 

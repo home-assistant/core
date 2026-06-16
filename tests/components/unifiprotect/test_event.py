@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
+import logging
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -21,6 +22,9 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
     DEFAULT_ATTRIBUTION,
     EVENT_TYPE_PACKAGE_DETECTED,
+)
+from homeassistant.components.unifiprotect.data import (
+    PUBLIC_EVENTS_RETRY_WARN_THRESHOLD,
 )
 from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
 from homeassistant.const import ATTR_ATTRIBUTION, Platform
@@ -349,6 +353,42 @@ async def test_public_events_resubscribe_on_reconnect(
 
     ufp.api.update_public.assert_awaited()
     assert ufp.events_subscription is not None
+
+
+async def test_public_events_resubscribe_warns_after_retries(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a persistently failing public-bootstrap re-prime escalates to a warning.
+
+    Transient reconnect retries stay at debug, but once the bootstrap has failed
+    to prime ``PUBLIC_EVENTS_RETRY_WARN_THRESHOLD`` times a single warning is
+    logged so the dead public events feed is observable.
+    """
+    ufp.api.has_public_bootstrap = False
+    await init_entry(hass, ufp, [doorbell])
+    assert ufp.events_subscription is None
+
+    ufp.api.update_public = AsyncMock(side_effect=Exception("boom"))
+    assert ufp.ws_state_subscription is not None
+
+    with caplog.at_level(
+        logging.WARNING, logger="homeassistant.components.unifiprotect.data"
+    ):
+        for _ in range(PUBLIC_EVENTS_RETRY_WARN_THRESHOLD):
+            ufp.ws_state_subscription(WebsocketState.CONNECTED)
+            await hass.async_block_till_done()
+
+    assert ufp.events_subscription is None
+    assert ufp.api.update_public.await_count == PUBLIC_EVENTS_RETRY_WARN_THRESHOLD
+    warnings = [
+        record
+        for record in caplog.records
+        if record.levelno == logging.WARNING and "still failing" in record.getMessage()
+    ]
+    assert len(warnings) == 1
 
 
 async def test_doorbell_nfc_scanned(
