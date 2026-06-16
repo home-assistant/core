@@ -1,14 +1,16 @@
 """Test the Antifurto365 iAlarm init."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 from uuid import uuid4
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.ialarm.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -52,6 +54,26 @@ async def test_setup_not_ready(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_device_registry(
+    hass: HomeAssistant,
+    ialarm_api: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the device registry entry, including the network MAC connection."""
+    ialarm_api.return_value.get_mac = Mock(return_value="00:00:54:12:34:56")
+
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, "00:00:54:12:34:56")}
+    )
+    assert device_entry == snapshot
 
 
 async def test_unload_entry(hass: HomeAssistant, ialarm_api, mock_config_entry) -> None:
