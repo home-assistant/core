@@ -4,11 +4,12 @@ Two coordinators back the integration:
 
 * :class:`AbrpVehiclesCoordinator` polls the authenticated user's garage
   every :data:`SCAN_INTERVAL` via :meth:`aioabrp.AbrpClient.async_get_vehicles`
-  and joins each raw vehicle against the v2 catalog (HA-side device-model
-  composition — see :mod:`.device_info`). The garage rarely changes —
-  vehicles are added or removed manually in the ABRP web app — so a
-  10-minute interval keeps the rate-limit footprint negligible while still
-  picking up additions/removals within one HA dashboard reload.
+  and resolves each vehicle's device-card strings by calling
+  :meth:`aioabrp.AbrpClient.async_get_vehicle_model_display` per typecode
+  (HA-side device-card composition — see :mod:`.device_info`). The garage
+  rarely changes — vehicles are added or removed manually in the ABRP web
+  app — so a 10-minute interval keeps the rate-limit footprint negligible
+  while still picking up additions/removals within one HA dashboard reload.
 * :class:`AbrpTelemetryCoordinator` is a thin push-mode coordinator. The
   :class:`aioabrp.TelemetryStream` (built in ``__init__``) drives state in
   through :meth:`AbrpTelemetryCoordinator.on_update` /
@@ -27,11 +28,11 @@ from aioabrp import (
     AbrpAuthError,
     AbrpClient,
     AbrpVehicle,
-    CatalogEntry,
     ConnectionEvent,
     ConnectionState,
     Metric,
     Telemetry,
+    VehicleModelDisplay,
 )
 
 from homeassistant.core import HomeAssistant, callback
@@ -146,34 +147,20 @@ class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]
             ABRP_APP_KEY,
             AbetterrouteplannerAuth(session),
         )
-        # Self-healing v2 vehicle catalog (typecode → CatalogEntry).
-        # ``_catalog`` holds the last successful fetch (empty until the first
-        # one); ``_catalog_loaded`` distinguishes "never fetched successfully"
-        # (keep retrying every poll — covers a transient catalog outage or an
-        # ABRP feature-plan entitlement that lags the first setup) from
-        # "loaded, possibly empty". ``_catalog_refetch_attempted`` records the
-        # typecodes already evaluated against a good catalog so a brand-new
-        # vehicle model triggers exactly one refetch (a model added to ABRP's
-        # catalog is picked up without a reload) while a genuinely-absent
-        # typecode never re-fetches the ~850 KB catalog on every poll.
-        self._catalog: dict[str, CatalogEntry] = {}
-        self._catalog_loaded = False
-        self._catalog_refetch_attempted: set[str] = set()
 
     async def _async_update_data(self) -> list[GarageVehicle]:
-        """Fetch the garage, (re)load the catalog, and compose device fields.
+        """Fetch the garage and compose each vehicle's device-card fields.
 
         The :class:`.auth.AbetterrouteplannerAuth` wrapper handles the OAuth
         token refresh and maps a revoked/rotated refresh token to
         :class:`aioabrp.AbrpAuthError`; here that surfaces as
-        :class:`ConfigEntryAuthFailed`. Other API failures map to
+        :class:`ConfigEntryAuthFailed`. Other garage API failures map to
         :class:`UpdateFailed`.
 
-        The catalog fetch is self-healing (see ``__init__``): it is attempted
-        on every poll until the first success, and re-attempted once whenever
-        a vehicle carries a typecode not yet matched against a good catalog —
-        so a delayed catalog (transient failure / entitlement lag) or a
-        brand-new vehicle model resolves without a config-entry reload.
+        Per-typecode display metadata is fetched fresh for every vehicle on
+        every poll (no cache, by design). A per-vehicle display failure
+        degrades only that vehicle to the raw-typecode fallback (see
+        :func:`.device_info.compose_device_info`) and never fails the refresh.
         """
         try:
             raw_vehicles = await self._client.async_get_vehicles()
@@ -188,49 +175,77 @@ class AbrpVehiclesCoordinator(TimestampDataUpdateCoordinator[list[GarageVehicle]
                 translation_key="abrp_update_failed",
             ) from err
 
-        # Typecodes the *current* (possibly stale/empty) catalog cannot match.
-        unmatched = {
-            raw.vehicle_model
-            for raw in raw_vehicles
-            if compose_device_info(raw, self._catalog).device_model is None
-        }
-        # Fetch when we have never succeeded (retry-until-loaded) OR a new
-        # unmatched typecode appeared that we have not already refetched for.
-        if not self._catalog_loaded or (unmatched - self._catalog_refetch_attempted):
-            try:
-                self._catalog = await self._client.async_get_catalog()
-            except (AbrpAuthError, AbrpApiError, TimeoutError) as err:
-                # Non-fatal and self-healing: the catalog endpoint can fail or
-                # rate-limit independently of the garage endpoint, and the ABRP
-                # feature-plan entitlement can lag the first setup. Leave
-                # ``_catalog_loaded`` unset so the next poll retries; this
-                # poll composes against the current ``_catalog`` (empty until
-                # the first success, else the last-good one) so device cards
-                # fall back to the raw typecode meanwhile.
-                #
-                # ``TimeoutError`` is named explicitly as defense-in-depth: the
-                # client already wraps a naked ``asyncio.TimeoutError`` as
-                # ``AbrpApiError`` at its boundary, so under normal flow none
-                # reaches this band; the explicit name guards a future path
-                # that bypasses the wrapper from crashing the whole refresh.
-                _LOGGER.warning(
-                    "ABRP catalog fetch failed; DeviceInfo.model falls back to "
-                    "the raw type code, will retry on the next poll: %s",
-                    err,
-                )
-            else:
-                self._catalog_loaded = True
-                # Every typecode now in the garage has been evaluated against
-                # this fresh catalog, so only a later brand-new typecode
-                # re-triggers a fetch (a genuinely-absent typecode does not).
-                self._catalog_refetch_attempted.update(
-                    raw.vehicle_model for raw in raw_vehicles
-                )
-
+        displays = await self._async_fetch_displays(raw_vehicles)
         return [
-            GarageVehicle(raw, compose_device_info(raw, self._catalog))
-            for raw in raw_vehicles
+            GarageVehicle(raw, compose_device_info(display))
+            for raw, display in zip(raw_vehicles, displays, strict=True)
         ]
+
+    async def _async_fetch_displays(
+        self, raw_vehicles: list[AbrpVehicle]
+    ) -> list[VehicleModelDisplay | None]:
+        """Resolve each vehicle's display metadata, degrading per-vehicle.
+
+        Calls :meth:`aioabrp.AbrpClient.async_get_vehicle_model_display` per
+        vehicle in parallel via :func:`asyncio.gather` with
+        ``return_exceptions=True`` so one typecode's failure does not block the
+        rest. Any failure maps to ``None`` (the vehicle's device card then
+        falls back to the raw typecode):
+
+        * a 404 for a typecode ABRP does not catalog (``AbrpApiError``),
+        * a transient API / transport / timeout failure, or
+        * an ``AbrpAuthError``.
+
+        Auth errors are NOT propagated to reauth from here: the garage fetch
+        above already maps auth failure to :class:`ConfigEntryAuthFailed`, and
+        the telemetry stream is the authoritative reauth trigger; surfacing it
+        from here too would race two reauth flows. Each failure logs at DEBUG —
+        this is per-vehicle, so a global outage would emit one line per
+        vehicle; DEBUG keeps that quiet (consistent with
+        :meth:`AbrpTelemetryCoordinator.async_seed`).
+        """
+        results = await asyncio.gather(
+            *(
+                self._client.async_get_vehicle_model_display(raw.vehicle_model)
+                for raw in raw_vehicles
+            ),
+            return_exceptions=True,
+        )
+        displays: list[VehicleModelDisplay | None] = []
+        for raw, result in zip(raw_vehicles, results, strict=True):
+            if isinstance(result, AbrpAuthError):
+                _LOGGER.debug(
+                    "Display metadata for typecode %s rejected (%s); device "
+                    "card falls back to the raw typecode",
+                    raw.vehicle_model,
+                    result,
+                )
+                displays.append(None)
+                continue
+            if isinstance(result, (AbrpApiError, TimeoutError)):
+                _LOGGER.debug(
+                    "Display metadata for typecode %s failed (%s); device "
+                    "card falls back to the raw typecode",
+                    raw.vehicle_model,
+                    result,
+                )
+                displays.append(None)
+                continue
+            if isinstance(result, BaseException):
+                # ``BaseException`` (not ``Exception``) so ``CancelledError`` /
+                # ``KeyboardInterrupt`` / ``SystemExit`` propagate cleanly
+                # rather than being silently turned into "no display".
+                if isinstance(result, Exception):
+                    _LOGGER.warning(
+                        "Unexpected display-metadata failure for typecode %s: %s",
+                        raw.vehicle_model,
+                        result,
+                    )
+                    displays.append(None)
+                    continue
+                raise result
+            displays.append(result)
+        return displays
 
 
 class AbrpTelemetryCoordinator(TimestampDataUpdateCoordinator[dict[int, Telemetry]]):

@@ -331,13 +331,13 @@ async def async_setup_entry(
 
         * ``name`` — an ABRP vehicle rename. ``name_by_user`` wins: once the
           user has overridden the device name in HA, ABRP renames are skipped.
-        * ``model`` / ``manufacturer`` — these only resolve once the garage
-          coordinator's self-healing catalog fetch finally succeeds (a delayed
-          catalog or a newly-added model). They are integration-owned (no
-          user-override concept), so they always track the anchor formula;
-          before the catalog loads they read the raw typecode / the default
-          manufacturer, and flip to the catalog values on the poll after the
-          fetch succeeds.
+        * ``model`` / ``manufacturer`` — recomposed from the per-vehicle
+          display fetch each poll. They are integration-owned (no
+          user-override concept), so they always track the anchor formula:
+          on a display hit they carry the composed model + manufacturer, and
+          on a display miss/failure they fall back to the raw typecode / the
+          default manufacturer for that poll, recomposing when the fetch next
+          succeeds.
 
         Each field is compared before writing so an unchanged poll is a no-op.
         """

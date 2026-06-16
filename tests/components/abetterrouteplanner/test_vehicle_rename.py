@@ -21,9 +21,9 @@ returns immediately without a real SSE consumer and these tests need neither
 """
 
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from aioabrp import AbrpApiError, AbrpVehicle
+from aioabrp import AbrpVehicle
 import pytest
 
 from homeassistant.components.abetterrouteplanner import AbrpData
@@ -42,7 +42,7 @@ from .conftest import (
     MOCK_VEHICLE_ID_2,
     MOCK_VEHICLE_MODEL,
     SENSOR_TEST_SUB,
-    build_catalog_entry,
+    build_vehicle_model_display,
 )
 
 from tests.common import MockConfigEntry
@@ -376,42 +376,39 @@ async def test_vehicle_disappears_mid_life_does_not_crash(
 
 
 @pytest.mark.usefixtures("fake_stream")
-async def test_catalog_recovery_updates_device_model_without_reload(
+async def test_display_recovery_updates_device_model_without_reload(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     mock_abrp_client: AsyncMock,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Late catalog recovery updates device model + manufacturer in place.
+    """Late display recovery updates device model + manufacturer in place.
 
     No config-entry reload is required. Mirrors the real ABRP
-    feature-plan-entitlement-lag case: the catalog
-    endpoint 403s during setup so the device card falls back to the raw
-    typecode (and the default manufacturer), then the endpoint recovers on the
-    next poll. The garage coordinator's self-healing retry reloads the catalog
-    and ``_propagate_device_metadata`` pushes the composed model/manufacturer
-    into the registry on that same poll. The user-facing name is unaffected.
+    feature-plan-entitlement-lag case: the display endpoint 404s during
+    setup so the device card falls back to the raw typecode (and the default
+    manufacturer), then the endpoint recovers on the next poll.
+    ``_propagate_device_metadata`` pushes the composed model/manufacturer into
+    the registry on that same poll. The user-facing name is unaffected.
     """
     mock_abrp_client.return_value = [
         _make_vehicle(MOCK_VEHICLE_ID, "My R2", MOCK_VEHICLE_MODEL)
     ]
-    catalog = {MOCK_VEHICLE_MODEL: build_catalog_entry()}
-    with patch(
-        "aioabrp.AbrpClient.async_get_catalog",
-        new_callable=AsyncMock,
-        side_effect=[AbrpApiError("HTTP 403"), catalog],
-    ):
-        await _setup_integration(hass, config_entry_with_vehicles)
+    # First setup poll: display_responses is empty → 404 for every typecode.
+    await _setup_integration(hass, config_entry_with_vehicles)
 
-        scope = _device_scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)
-        device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
-        assert device is not None
-        # Setup hit the 403 → raw-typecode + default-manufacturer fallback.
-        assert device.model == MOCK_VEHICLE_MODEL
-        assert device.manufacturer == "A Better Routeplanner"
+    scope = _device_scope(config_entry_with_vehicles, MOCK_VEHICLE_ID)
+    device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
+    assert device is not None
+    # Setup hit the 404 → raw-typecode + default-manufacturer fallback.
+    assert device.model == MOCK_VEHICLE_MODEL
+    assert device.manufacturer == "A Better Routeplanner"
 
-        # Next poll: catalog recovers → model/manufacturer propagate in place.
-        await _poll(hass, config_entry_with_vehicles)
+    # Next poll: display recovers → model/manufacturer propagate in place.
+    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = (
+        build_vehicle_model_display()
+    )
+    await _poll(hass, config_entry_with_vehicles)
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, scope)})
     assert device is not None

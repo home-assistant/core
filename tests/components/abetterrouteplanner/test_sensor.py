@@ -32,9 +32,9 @@ import json
 import logging
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
-from aioabrp import AbrpVehicle, CatalogEntry, ChargingState, Metric, Telemetry
+from aioabrp import AbrpVehicle, ChargingState, Metric, Telemetry
 from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -58,6 +58,7 @@ from .conftest import (
     MOCK_VEHICLE_MODEL,
     SENSOR_TEST_SUB,
     build_metric_value,
+    build_vehicle_model_display,
 )
 
 from tests.common import (
@@ -450,13 +451,13 @@ def _make_vehicle(
     vehicle_model: str = MOCK_VEHICLE_MODEL,
     paint: str | None = "WHITE",
 ) -> AbrpVehicle:
-    """Build an AbrpVehicle with identity fields only.
+    """Build an AbrpVehicle from its four identity fields.
 
-    :class:`AbrpVehicle` carries identity fields plus a single
-    ``device_model`` column populated by :func:`_enrich_with_catalog` (no
-    per-field catalog columns). For tests that don't exercise catalog
-    enrichment directly this builder constructs the minimal vehicle with
-    ``device_model`` defaulting to ``None``.
+    :class:`AbrpVehicle` carries only ``vehicle_id`` / ``name`` /
+    ``vehicle_model`` / ``paint`` — no composed device-card columns. The
+    device-card model/manufacturer are composed separately from the
+    per-typecode display endpoint, so this builder constructs the minimal
+    raw vehicle the integration receives from the garage.
     """
     return AbrpVehicle(
         vehicle_id=vehicle_id,
@@ -500,54 +501,35 @@ _PREFIX_MATCH_VEHICLE_MODEL = "rivian:r1s:25:c3-53g:dual:perf"
 _PREFIX_MATCH_DEVICE_MODEL = "Rivian R1S 2025 Dual Motor"
 
 
-def _build_prefix_match_catalog() -> dict[str, CatalogEntry]:
-    """Build a catalog dict with one prefix-matchable entry for the test vehicle.
-
-    The entry's typecode (``rivian:r1s:25:c3-53g:dual``) is a strict
-    prefix of :data:`_PREFIX_MATCH_VEHICLE_MODEL` — the user's vehicle adds
-    a ``:perf`` suffix the catalog doesn't carry. current
-    :func:`_compute_device_model` resolves via longest-prefix-match;
-    legacy ``catalog.get(raw.vehicle_model)`` misses (exact-key only) so
-    ``DeviceInfo.model`` falls back to the raw typecode.
-    """
-    return {
-        "rivian:r1s:25:c3-53g:dual": CatalogEntry(
-            typecode="rivian:r1s:25:c3-53g:dual",
-            manufacturer="Rivian",
-            model="R1S",
-            title="Dual Motor",
-            start_year=2025,
-            end_year=None,
-            battery_capacity_wh=None,
-        ),
-    }
-
-
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
-async def test_device_info_model_uses_catalog_prefix_match(
+async def test_device_info_model_uses_display_endpoint(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """``DeviceInfo.model`` reflects the prefix-matched composed display string.
+    """``DeviceInfo.model`` reflects the composed display string.
 
-    The user's vehicle typecode is a suffix-decorated variant of an
-    ancestor catalog entry. The pure
-    helper :func:`_compute_device_model` resolves to the
-    longest-prefix-matching catalog row and composes
-    ``"{manufacturer} {model} {year} {title}"``; the result lands on
-    the per-vehicle device's ``DeviceInfo.model`` slot.
+    The display endpoint resolves the vehicle's typecode to manufacturer /
+    model / year / trim; ``_compose_device_model`` composes
+    ``"{manufacturer} {model} {year} {title}"`` and the result lands on the
+    per-vehicle device's ``DeviceInfo.model`` slot.
     """
     mock_abrp_client.return_value = [
         _make_vehicle(vehicle_model=_PREFIX_MATCH_VEHICLE_MODEL)
     ]
+    mock_abrp_client.display_responses[_PREFIX_MATCH_VEHICLE_MODEL] = (
+        build_vehicle_model_display(
+            manufacturer="Rivian",
+            model="R1S",
+            years="2025",
+            title="Dual Motor",
+            start_year=2025,
+            end_year=None,
+        )
+    )
 
-    with patch(
-        "aioabrp.AbrpClient.async_get_catalog",
-        return_value=_build_prefix_match_catalog(),
-    ):
-        await _setup_integration(hass, config_entry_with_vehicles)
+    await _setup_integration(hass, config_entry_with_vehicles)
 
     device = device_registry.async_get_device(
         identifiers={(DOMAIN, _scope(config_entry_with_vehicles, MOCK_VEHICLE_ID))}
@@ -557,17 +539,16 @@ async def test_device_info_model_uses_catalog_prefix_match(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
-async def test_device_info_model_falls_back_to_typecode_on_catalog_miss(
+async def test_device_info_model_falls_back_to_typecode_on_display_miss(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """``DeviceInfo.model`` falls back to the raw typecode on catalog miss.
+    """``DeviceInfo.model`` falls back to the raw typecode on display miss.
 
-    The default ``mock_abrp_client`` fixture mocks the catalog to an
-    empty dict, so :func:`_compute_device_model` returns ``None`` for
-    every typecode → ``vehicle.device_model`` stays ``None`` →
+    The default ``mock_abrp_client`` fixture 404s the display endpoint for
+    every typecode, so ``vehicle.device_model`` stays ``None`` →
     ``DeviceInfo.model`` falls back to ``vehicle.vehicle_model`` (raw
     typecode). The device card's Model field is never blank.
     """
@@ -582,55 +563,52 @@ async def test_device_info_model_falls_back_to_typecode_on_catalog_miss(
     assert device.model == MOCK_VEHICLE_MODEL
 
 
-# Two-make catalog used by the per-vehicle manufacturer test below. The
-# second entry sits under a distinct ``polestar:2`` ancestor so the two
-# selected vehicles resolve to different manufacturers — a single-make
-# catalog couldn't distinguish "manufacturer per-vehicle bound" from "hard-coded
-# to the first catalog entry's make."
+# Two-make display fixtures used by the per-vehicle manufacturer test below.
+# The second vehicle resolves to Polestar so the two selected vehicles have
+# distinct manufacturers — a single-make setup couldn't distinguish
+# "manufacturer per-vehicle bound" from "hard-coded to first make."
 _POLESTAR_VEHICLE_MODEL = "polestar:2:24:bev:awd"
 
 
-def _build_two_make_catalog() -> dict[str, CatalogEntry]:
-    """Build a catalog with two distinct-manufacturer prefix-matchable entries.
+def _set_two_make_displays(mock_abrp_client: AsyncMock) -> None:
+    """Register display fixtures for the two distinct-make vehicles.
 
-    ``rivian:r2`` matches :data:`MOCK_VEHICLE_MODEL`
-    (``rivian:r2:26:ncma91:rwd:w21``); ``polestar:2`` matches
-    :data:`_POLESTAR_VEHICLE_MODEL`. Both entries carry their own make so
-    each per-vehicle device's ``DeviceInfo.manufacturer`` can be pinned
+    ``MOCK_VEHICLE_MODEL`` resolves to Rivian; ``_POLESTAR_VEHICLE_MODEL`` to
+    Polestar — so each per-vehicle device's manufacturer/model is pinned
     independently.
     """
-    return {
-        "rivian:r2": CatalogEntry(
-            typecode="rivian:r2",
+    mock_abrp_client.display_responses[MOCK_VEHICLE_MODEL] = (
+        build_vehicle_model_display(
             manufacturer="Rivian",
             model="R2",
-            title=None,
+            years="2026",
+            title="",
             start_year=2026,
             end_year=None,
-            battery_capacity_wh=None,
-        ),
-        "polestar:2": CatalogEntry(
-            typecode="polestar:2",
+        )
+    )
+    mock_abrp_client.display_responses[_POLESTAR_VEHICLE_MODEL] = (
+        build_vehicle_model_display(
             manufacturer="Polestar",
             model="2",
-            title=None,
+            years="2024",
+            title="",
             start_year=2024,
             end_year=None,
-            battery_capacity_wh=None,
-        ),
-    }
+        )
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "fake_stream")
-async def test_device_info_manufacturer_uses_catalog_make(
+async def test_device_info_manufacturer_uses_display_make(
     hass: HomeAssistant,
     token_entry: dict[str, Any],
     device_registry: dr.DeviceRegistry,
     mock_abrp_client: AsyncMock,
 ) -> None:
-    """Each per-vehicle device's ``manufacturer`` reflects its catalog-derived make.
+    """Each per-vehicle device's ``manufacturer`` reflects its display-derived make.
 
-    Two vehicles whose typecodes resolve to two distinct catalog makes
+    Two vehicles whose typecodes resolve to two distinct display makes
     prove per-instance binding of ``DeviceInfo.manufacturer`` (not
     hard-coded-to-first or hard-coded-to-integration-name).
     """
@@ -651,11 +629,8 @@ async def test_device_info_manufacturer_uses_catalog_make(
         },
     )
 
-    with patch(
-        "aioabrp.AbrpClient.async_get_catalog",
-        return_value=_build_two_make_catalog(),
-    ):
-        await _setup_integration(hass, entry)
+    _set_two_make_displays(mock_abrp_client)
+    await _setup_integration(hass, entry)
 
     expected_makes = {
         MOCK_VEHICLE_ID: "Rivian",
@@ -672,18 +647,17 @@ async def test_device_info_manufacturer_uses_catalog_make(
 @pytest.mark.usefixtures(
     "entity_registry_enabled_by_default", "mock_abrp_client", "fake_stream"
 )
-async def test_device_info_manufacturer_falls_back_to_integration_name_on_catalog_miss(
+async def test_device_info_manufacturer_falls_back_to_integration_name_on_display_miss(
     hass: HomeAssistant,
     config_entry_with_vehicles: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """``DeviceInfo.manufacturer`` falls back to the integration name on catalog miss.
+    """``DeviceInfo.manufacturer`` falls back to the integration name on display miss.
 
-    The default ``mock_abrp_client`` fixture mocks the catalog to an
-    empty dict, so every typecode misses → ``vehicle.device_manufacturer``
-    stays ``None`` → ``DeviceInfo.manufacturer`` falls back to the
-    integration's user-visible name. The device card's Manufacturer
-    field is never blank.
+    The default ``mock_abrp_client`` fixture 404s the display endpoint for
+    every typecode → ``vehicle.device_manufacturer`` stays ``None`` →
+    ``DeviceInfo.manufacturer`` falls back to the integration's user-visible
+    name. The device card's Manufacturer field is never blank.
     """
     await _setup_integration(hass, config_entry_with_vehicles)
 
@@ -862,11 +836,8 @@ async def test_per_vehicle_device_anchored_at_setup(
         },
     )
 
-    with patch(
-        "aioabrp.AbrpClient.async_get_catalog",
-        return_value=_build_two_make_catalog(),
-    ):
-        await _setup_integration(hass, entry)
+    _set_two_make_displays(mock_abrp_client)
+    await _setup_integration(hass, entry)
 
     expected_by_vehicle: dict[int, dict[str, str]] = {
         MOCK_VEHICLE_ID: {

@@ -10,12 +10,13 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aioabrp import (
+    AbrpApiError,
     AbrpVehicle,
-    CatalogEntry,
     ChargingState,
     ConnectionEvent,
     MetricValue,
     Telemetry,
+    VehicleModelDisplay,
 )
 import pytest
 
@@ -48,25 +49,29 @@ MOCK_PAINT_2 = "BLACK"
 SENSOR_TEST_SUB = "abrp-test-sub"
 
 
-def build_catalog_entry(
-    typecode: str = MOCK_VEHICLE_MODEL,
+def build_vehicle_model_display(
     *,
-    manufacturer: str | None = "Rivian",
-    model: str | None = "R2",
-    title: str | None = "Standard Long Range RWD",
+    manufacturer: str = "Rivian",
+    model: str = "R2",
+    years: str = "2026",
+    title: str = "Standard Long Range RWD",
     start_year: int | None = 2026,
     end_year: int | None = None,
-    battery_capacity_wh: int | None = 92_000,
-) -> CatalogEntry:
-    """Build a typed CatalogEntry for catalog-enrichment tests."""
-    return CatalogEntry(
-        typecode=typecode,
+) -> VehicleModelDisplay:
+    """Build a typed VehicleModelDisplay for device-enrichment tests.
+
+    Default fields compose (per ``device_info._compose_device_model``) to
+    ``"Rivian R2 2026 Standard Long Range RWD"`` — the same string the old
+    ``build_catalog_entry`` produced — so device-model assertions are
+    unchanged.
+    """
+    return VehicleModelDisplay(
         manufacturer=manufacturer,
         model=model,
+        years=years,
         title=title,
         start_year=start_year,
         end_year=end_year,
-        battery_capacity_wh=battery_capacity_wh,
     )
 
 
@@ -208,10 +213,12 @@ def mock_abrp_client(
 
     - ``async_get_vehicles`` (autospec): returns the 2-vehicle
       ``mock_abrp_vehicles`` list.
-    - ``async_get_catalog`` (autospec): returns an empty
-      ``dict[str, CatalogEntry]`` by default; tests exercising catalog
-      enrichment reassign ``return_value`` / ``side_effect`` on the underlying
-      class mock, or nest their own ``with patch(...)``.
+    - ``async_get_vehicle_model_display`` (autospec): per-typecode configurable
+      typed returns. Tests populate ``mock_abrp_client.display_responses`` keyed
+      by typecode with either a ``VehicleModelDisplay`` (returned) or a
+      ``BaseException`` (raised). Any typecode absent from the table raises
+      ``AbrpApiError`` (404), so by default every vehicle's device card falls
+      back to the raw typecode — matching the old empty-catalog default.
     - ``async_get_current_telemetry`` (the coordinator seed path, autospec):
       per-vehicle configurable typed returns. Tests populate
       ``mock_abrp_client.seed_responses`` keyed by vehicle id with either a
@@ -241,6 +248,16 @@ def mock_abrp_client(
             raise outcome
         return outcome
 
+    display_responses: dict[str, VehicleModelDisplay | BaseException] = {}
+
+    async def _display(self: Any, typecode: str) -> VehicleModelDisplay:
+        outcome = display_responses.get(typecode)
+        if outcome is None:
+            raise AbrpApiError(f"HTTP 404 (no display fixture for {typecode})")
+        if isinstance(outcome, BaseException):
+            raise outcome
+        return outcome
+
     with (
         patch(
             "aioabrp.AbrpClient.async_get_vehicles",
@@ -248,9 +265,9 @@ def mock_abrp_client(
             return_value=mock_abrp_vehicles,
         ) as mock_client,
         patch(
-            "aioabrp.AbrpClient.async_get_catalog",
+            "aioabrp.AbrpClient.async_get_vehicle_model_display",
             autospec=True,
-            return_value={},
+            side_effect=_display,
         ),
         patch(
             "aioabrp.AbrpClient.async_get_current_telemetry",
@@ -259,6 +276,7 @@ def mock_abrp_client(
         ),
     ):
         mock_client.seed_responses = seed_responses
+        mock_client.display_responses = display_responses
         yield mock_client
 
 
