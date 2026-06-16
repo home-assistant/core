@@ -3,15 +3,15 @@
 import struct
 from unittest.mock import AsyncMock, patch
 
-import pytest
-
-from homeassistant.components.powershades.const import (
-    DOMAIN,
+from pyowershades import (
     OP_GET_SHADE_NAME,
     OP_GET_STATUS,
+    PowerShadesConnection,
+    build_packet,
 )
-from homeassistant.components.powershades.protocol import build_packet
-from homeassistant.components.powershades.udp import PowerShadesConnection
+import pytest
+
+from homeassistant.components.powershades.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry

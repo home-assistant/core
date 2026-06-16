@@ -2,9 +2,10 @@
 
 from unittest.mock import patch
 
+from pyowershades import PowerShadesTimeoutError
+
 from homeassistant.components.powershades.config_flow import MANUAL_ENTRY
 from homeassistant.components.powershades.const import DOMAIN
-from homeassistant.components.powershades.udp import PowerShadesTimeoutError
 from homeassistant.config_entries import (
     SOURCE_DHCP,
     SOURCE_INTEGRATION_DISCOVERY,

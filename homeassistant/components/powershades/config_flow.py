@@ -4,6 +4,11 @@ import ipaddress
 import logging
 from typing import Any
 
+from pyowershades import (
+    DiscoveredDevice,
+    PowerShadesTimeoutError,
+    async_get_device_info,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -11,12 +16,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import DOMAIN
-from .udp import (
-    DiscoveredDevice,
-    PowerShadesTimeoutError,
-    async_discover_devices,
-    async_get_device_info,
-)
+from .discovery import async_discover_devices
 
 _LOGGER = logging.getLogger(__name__)
 

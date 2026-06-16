@@ -52,21 +52,6 @@
     "command_not_acknowledged": {
       "message": "Shade at {ip_address} did not acknowledge the command."
     },
-    "entity_not_found": {
-      "message": "{entity_id} is not a PowerShades entity."
-    },
-    "entry_not_loaded": {
-      "message": "The PowerShades config entry for {entity_id} is not loaded."
-    },
-    "invalid_shade_name": {
-      "message": "Shade name must be 1-50 ASCII characters."
-    },
-    "rename_empty_name": {
-      "message": "Shade at {ip_address} returned an empty name."
-    },
-    "rename_not_confirmed": {
-      "message": "Shade at {ip_address} did not confirm its new name."
-    },
     "update_malformed_reply": {
       "message": "Malformed status reply from {ip_address}"
     },
@@ -78,50 +63,6 @@
     "cannot_connect": {
       "description": "Home Assistant could not connect to the PowerShades shade \"{name}\" at {ip}.\n\nMake sure the shade is powered on and connected to the network, then reload the integration. If its IP address has changed, open the device's PowerShades entry, select **Reconfigure** and enter the new IP address.",
       "title": "{name} is not responding"
-    }
-  },
-  "services": {
-    "clear_limits": {
-      "description": "Clears both upper and lower limits for a PowerShades device.",
-      "name": "Clear limits"
-    },
-    "jog_down": {
-      "description": "Moves the shade down continuously until it reaches a limit or is stopped (useful when setting limits).",
-      "name": "Jog down"
-    },
-    "jog_up": {
-      "description": "Moves the shade up continuously until it reaches a limit or is stopped (useful when setting limits).",
-      "name": "Jog up"
-    },
-    "set_lower_limit": {
-      "description": "Sets the lower limit (fully closed position) for a PowerShades device.",
-      "name": "Set lower limit"
-    },
-    "set_shade_name": {
-      "description": "Renames a PoE shade on the device itself; the Home Assistant device name is updated to match.",
-      "fields": {
-        "name": {
-          "description": "The new shade name (1-50 ASCII characters).",
-          "name": "Name"
-        }
-      },
-      "name": "Set shade name"
-    },
-    "set_upper_limit": {
-      "description": "Sets the upper limit (fully open position) for a PowerShades device.",
-      "name": "Set upper limit"
-    },
-    "step_down": {
-      "description": "Moves the motor down one step (for trimming limits).",
-      "name": "Step down"
-    },
-    "step_up": {
-      "description": "Moves the motor up one step (for trimming limits).",
-      "name": "Step up"
-    },
-    "toggle_shade": {
-      "description": "Toggles the shade between open and closed positions (stops it if moving).",
-      "name": "Toggle shade"
     }
   }
 }

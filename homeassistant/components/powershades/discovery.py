@@ -4,6 +4,9 @@ from datetime import timedelta
 import logging
 from typing import Any
 
+from pyowershades import DiscoveredDevice, async_discover_devices as _lib_discover
+
+from homeassistant.components import network
 from homeassistant.config_entries import SOURCE_INTEGRATION_DISCOVERY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
@@ -11,11 +14,22 @@ from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.start import async_at_started
 
 from .const import DOMAIN
-from .udp import async_discover_devices
 
 _LOGGER = logging.getLogger(__name__)
 
 DISCOVERY_INTERVAL = timedelta(minutes=15)
+
+
+async def async_discover_devices(hass: HomeAssistant) -> list[DiscoveredDevice]:
+    """Discover PowerShades devices on all enabled network adapters."""
+    adapters = await network.async_get_adapters(hass)
+    addresses = [
+        ip_info["address"]
+        for adapter in adapters
+        if adapter["enabled"]
+        for ip_info in adapter["ipv4"]
+    ]
+    return await _lib_discover(addresses)
 
 
 @callback
@@ -31,14 +45,11 @@ def async_start_discovery(hass: HomeAssistant) -> None:
                 context={"source": SOURCE_INTEGRATION_DISCOVERY},
                 data=device,
             )
-        # The broadcast made our short-lived discovery socket every
-        # shade's "last UDP master", diverting async move feedback.
-        # Poll once from each coordinator to re-assert its socket.
+        # Re-assert each coordinator's socket after the broadcast scan,
+        # which temporarily diverts async status pushes.
         for entry in hass.config_entries.async_loaded_entries(DOMAIN):
             hass.async_create_task(entry.runtime_data.async_request_refresh())
 
-    # Scan once after startup, then periodically. Battery shades sleep,
-    # so a single scan can miss them — the interval catches stragglers.
     async_at_started(hass, _async_scan)
     async_track_time_interval(
         hass, _async_scan, DISCOVERY_INTERVAL, cancel_on_shutdown=True
