@@ -12,11 +12,8 @@ agent will refuse to resolve the new kind.
 from .models import CheckKind, CheckRunResult, CheckStatus, PackageChange
 
 MARKER = "<!-- requirements-check -->"
-# Hidden marker carrying the PR head commit the checks ran against. The agentic
-# stage's gate job parses it from the previous comment to decide whether any
-# tracked requirement file changed since then; if not, the agent is skipped.
-SHA_MARKER_PREFIX = "<!-- requirements-check-sha:"
 HEADER = "## Check requirements"
+REPO_URL = "https://github.com/home-assistant/core"
 
 # Column / bullet labels per check kind, in display order.
 _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
@@ -116,13 +113,12 @@ def _details_block(pkg: PackageChange) -> str:
 
 
 def _intro(result: CheckRunResult) -> str:
-    """Marker(s), header, and the optional visible commit line."""
-    markers = MARKER
+    """Marker, header, and the optional commit line the gate reads back."""
     parts: list[str] = []
     if result.head_sha:
-        markers = f"{MARKER}\n{SHA_MARKER_PREFIX} {result.head_sha} -->"
-        parts.append(f"Checked at commit `{result.head_sha[:7]}`.")
-    return "\n\n".join([f"{markers}\n{HEADER}", *parts])
+        commit = f"[`{result.head_sha[:7]}`]({REPO_URL}/commit/{result.head_sha})"
+        parts.append(f"Checked at commit {commit}.")
+    return "\n\n".join([f"{MARKER}\n{HEADER}", *parts])
 
 
 def render_comment(result: CheckRunResult) -> str:
