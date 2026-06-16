@@ -100,6 +100,18 @@ class GardenaBluetoothValveX(GardenaBluetoothEntity, ValveEntity):
     _attr_supported_features = ValveEntityFeature.OPEN | ValveEntityFeature.CLOSE
     _attr_device_class = ValveDeviceClass.WATER
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Derive the required characteristics from the concrete service."""
+        super().__init_subclass__(**kwargs)
+        cls.characteristics = {
+            cls._service.state.unique_id,
+            cls._service.manual_watering_duration.unique_id,
+            cls._service.remaining_time_open.unique_id,
+            cls._service.available.unique_id,
+            cls._service.start_watering.unique_id,
+            cls._service.stop_watering.unique_id,
+        }
+
     def __init__(
         self,
         coordinator: GardenaBluetoothCoordinator,
@@ -147,14 +159,6 @@ class GardenaBluetoothValve1(GardenaBluetoothValveX):
 
     _service = Valve1
     _attr_translation_key = "valve_1"
-    characteristics = {
-        Valve1.state.unique_id,
-        Valve1.manual_watering_duration.unique_id,
-        Valve1.remaining_time_open.unique_id,
-        Valve1.available.unique_id,
-        Valve1.start_watering.unique_id,
-        Valve1.stop_watering.unique_id,
-    }
 
 
 class GardenaBluetoothValve2(GardenaBluetoothValveX):
@@ -162,11 +166,3 @@ class GardenaBluetoothValve2(GardenaBluetoothValveX):
 
     _service = Valve2
     _attr_translation_key = "valve_2"
-    characteristics = {
-        Valve2.state.unique_id,
-        Valve2.manual_watering_duration.unique_id,
-        Valve2.remaining_time_open.unique_id,
-        Valve2.available.unique_id,
-        Valve2.start_watering.unique_id,
-        Valve2.stop_watering.unique_id,
-    }

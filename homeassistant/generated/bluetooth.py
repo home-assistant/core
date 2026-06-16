@@ -155,6 +155,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "connectable": True,
         "domain": "gardena_bluetooth",
+        "manufacturer_data_start": [
+            4,
+            6,
+            18,
+        ],
         "manufacturer_id": 1062,
     },
     {
