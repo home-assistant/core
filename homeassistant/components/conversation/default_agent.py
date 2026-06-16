@@ -889,10 +889,7 @@ class DefaultAgent(ConversationEntity):
             for name in intent.async_get_entity_aliases(
                 self.hass, entity_entry, state=state
             ):
-                # The input text is matched with punctuation removed (see
-                # remove_punctuation usage below), so the name must be stripped
-                # too or punctuated aliases never match. The original name is
-                # kept as the output value for matching against the registry.
+                # Strip punctuation so aliases match the cleaned input text.
                 yield (remove_punctuation(name).strip(), name, context)
 
     def _recognize_strict(
