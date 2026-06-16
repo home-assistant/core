@@ -3,7 +3,13 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from yoto_api import AMBIENT_PRESET_KEYS, PlayerConfig, YotoPlayer, caps_for
+from yoto_api import (
+    AMBIENT_PRESET_KEYS,
+    Capabilities,
+    PlayerConfig,
+    YotoPlayer,
+    caps_for,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
@@ -21,10 +27,13 @@ class YotoSelectEntityDescription(SelectEntityDescription):
     """Describes a Yoto select entity.
 
     ``config_field`` is the ``set_player_config`` kwarg written on change.
+    ``supported_fn`` gates setup on the device's capabilities.
     """
 
     value_fn: Callable[[PlayerConfig], str | None]
     config_field: str
+    options: list[str]
+    supported_fn: Callable[[Capabilities], bool]
 
 
 SELECTS: tuple[YotoSelectEntityDescription, ...] = (
@@ -34,6 +43,8 @@ SELECTS: tuple[YotoSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda config: config.day_ambient_preset,
         config_field="day_ambient_preset",
+        options=list(AMBIENT_PRESET_KEYS),
+        supported_fn=lambda caps: caps.has_ambient_light,
     ),
     YotoSelectEntityDescription(
         key="night_mode_color",
@@ -41,6 +52,8 @@ SELECTS: tuple[YotoSelectEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda config: config.night_ambient_preset,
         config_field="night_ambient_preset",
+        options=list(AMBIENT_PRESET_KEYS),
+        supported_fn=lambda caps: caps.has_ambient_light,
     ),
 )
 
@@ -55,8 +68,8 @@ async def async_setup_entry(
     async_add_entities(
         YotoSelect(coordinator, player, description)
         for player in coordinator.client.players.values()
-        if caps_for(player.device).has_ambient_light
         for description in SELECTS
+        if description.supported_fn(caps_for(player.device))
     )
 
 
@@ -64,7 +77,6 @@ class YotoSelect(YotoConfigEntity, SelectEntity):
     """Representation of a Yoto player config select."""
 
     entity_description: YotoSelectEntityDescription
-    _attr_options = list(AMBIENT_PRESET_KEYS)
 
     def __init__(
         self,
@@ -75,6 +87,7 @@ class YotoSelect(YotoConfigEntity, SelectEntity):
         """Initialize the select."""
         super().__init__(coordinator, player)
         self.entity_description = description
+        self._attr_options = description.options
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
