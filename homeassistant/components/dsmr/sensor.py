@@ -77,6 +77,7 @@ class DSMRSensorEntityDescription(SensorEntityDescription):
     is_gas: bool = False
     is_water: bool = False
     is_heat: bool = False
+    average: bool = False
     obis_reference: str
 
 
@@ -99,6 +100,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="current_electricity_usage",
+        average=True,
         translation_key="current_electricity_usage",
         obis_reference="CURRENT_ELECTRICITY_USAGE",
         device_class=SensorDeviceClass.POWER,
@@ -106,6 +108,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="current_electricity_delivery",
+        average=True,
         translation_key="current_electricity_delivery",
         obis_reference="CURRENT_ELECTRICITY_DELIVERY",
         device_class=SensorDeviceClass.POWER,
@@ -189,6 +192,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l1_positive",
+        average=True,
         translation_key="instantaneous_active_power_l1_positive",
         obis_reference="INSTANTANEOUS_ACTIVE_POWER_L1_POSITIVE",
         device_class=SensorDeviceClass.POWER,
@@ -197,6 +201,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l2_positive",
+        average=True,
         translation_key="instantaneous_active_power_l2_positive",
         obis_reference="INSTANTANEOUS_ACTIVE_POWER_L2_POSITIVE",
         device_class=SensorDeviceClass.POWER,
@@ -205,6 +210,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l3_positive",
+        average=True,
         translation_key="instantaneous_active_power_l3_positive",
         obis_reference="INSTANTANEOUS_ACTIVE_POWER_L3_POSITIVE",
         device_class=SensorDeviceClass.POWER,
@@ -213,6 +219,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l1_negative",
+        average=True,
         translation_key="instantaneous_active_power_l1_negative",
         obis_reference="INSTANTANEOUS_ACTIVE_POWER_L1_NEGATIVE",
         device_class=SensorDeviceClass.POWER,
@@ -221,6 +228,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l2_negative",
+        average=True,
         translation_key="instantaneous_active_power_l2_negative",
         obis_reference="INSTANTANEOUS_ACTIVE_POWER_L2_NEGATIVE",
         device_class=SensorDeviceClass.POWER,
@@ -229,6 +237,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_active_power_l3_negative",
+        average=True,
         translation_key="instantaneous_active_power_l3_negative",
         obis_reference="INSTANTANEOUS_ACTIVE_POWER_L3_NEGATIVE",
         device_class=SensorDeviceClass.POWER,
@@ -309,6 +318,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l1",
+        average=True,
         translation_key="instantaneous_voltage_l1",
         obis_reference="INSTANTANEOUS_VOLTAGE_L1",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -318,6 +328,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l2",
+        average=True,
         translation_key="instantaneous_voltage_l2",
         obis_reference="INSTANTANEOUS_VOLTAGE_L2",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -327,6 +338,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_voltage_l3",
+        average=True,
         translation_key="instantaneous_voltage_l3",
         obis_reference="INSTANTANEOUS_VOLTAGE_L3",
         device_class=SensorDeviceClass.VOLTAGE,
@@ -336,6 +348,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_current_l1",
+        average=True,
         translation_key="instantaneous_current_l1",
         obis_reference="INSTANTANEOUS_CURRENT_L1",
         device_class=SensorDeviceClass.CURRENT,
@@ -345,6 +358,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_current_l2",
+        average=True,
         translation_key="instantaneous_current_l2",
         obis_reference="INSTANTANEOUS_CURRENT_L2",
         device_class=SensorDeviceClass.CURRENT,
@@ -354,6 +368,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="instantaneous_current_l3",
+        average=True,
         translation_key="instantaneous_current_l3",
         obis_reference="INSTANTANEOUS_CURRENT_L3",
         device_class=SensorDeviceClass.CURRENT,
@@ -451,6 +466,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="eon_hu_instantaneous_power_factor_total",
+        average=True,
         translation_key="instantaneous_power_factor_total",
         obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_TOTAL",
         dsmr_versions={"5EONHU"},
@@ -461,6 +477,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="eon_hu_instantaneous_power_factor_l1",
+        average=True,
         translation_key="instantaneous_power_factor_l1",
         obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_L1",
         dsmr_versions={"5EONHU"},
@@ -471,6 +488,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="eon_hu_instantaneous_power_factor_l2",
+        average=True,
         translation_key="instantaneous_power_factor_l2",
         obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_L2",
         dsmr_versions={"5EONHU"},
@@ -481,6 +499,7 @@ SENSORS: tuple[DSMRSensorEntityDescription, ...] = (
     ),
     DSMRSensorEntityDescription(
         key="eon_hu_instantaneous_power_factor_l3",
+        average=True,
         translation_key="instantaneous_power_factor_l3",
         obis_reference="EON_HU_INSTANTANEOUS_POWER_FACTOR_L3",
         dsmr_versions={"5EONHU"},
@@ -815,9 +834,11 @@ async def async_setup_entry(
                 hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
             )
 
-        # Without an averaging window, publish on every telegram. Otherwise the
-        # periodic timer below publishes the averaged values on a fixed cadence.
-        if not min_time_between_updates:
+        # Publish immediately when there is no averaging window, or on an empty
+        # or missing telegram so connection state changes (unknown/unavailable)
+        # are reflected promptly instead of waiting for the next interval.
+        # Otherwise the periodic timer below publishes the averaged values.
+        if not min_time_between_updates or not telegram:
             _publish_updates()
 
     # With an averaging window, publish on a fixed cadence that is independent of
@@ -952,17 +973,10 @@ class DSMREntity(SensorEntity):
         self._dsmr_version = entry.data[CONF_DSMR_VERSION]
         self._value: StateType = None
 
-        # Average fluctuating measurements (power, current and voltage) over the
-        # update interval; all other sensors keep their last reading.
-        self._is_averaged_sensor = (
-            entity_description.state_class == SensorStateClass.MEASUREMENT
-            and device_class
-            in (
-                SensorDeviceClass.POWER,
-                SensorDeviceClass.CURRENT,
-                SensorDeviceClass.VOLTAGE,
-            )
-        )
+        # Fluctuating instantaneous measurements (flagged with `average`) are
+        # averaged over the update interval; all other sensors keep their last
+        # reading.
+        self._is_averaged_sensor = entity_description.average
         self._value_sum: Decimal = Decimal(0)
         self._value_count: int = 0
 
@@ -1022,9 +1036,10 @@ class DSMREntity(SensorEntity):
         if dsmr_object is None or dsmr_object.value is None:
             return
 
-        try:
+        value: Decimal | None = None
+        with suppress(ArithmeticError, TypeError, ValueError):
             value = Decimal(dsmr_object.value)
-        except ArithmeticError, TypeError, ValueError:
+        if value is None:
             LOGGER.debug(
                 "Could not convert %s value %s for averaging",
                 self.entity_description.key,
@@ -1046,6 +1061,14 @@ class DSMREntity(SensorEntity):
     @callback
     def calculate_value(self) -> None:
         """Recalculate the value to report from the data collected so far."""
+        # A missing telegram marks the entity unavailable; an empty telegram
+        # (just (re)connected, no data yet) reports unknown. Either way drop any
+        # partially accumulated average.
+        if not self.telegram:
+            self._reset_average()
+            self._value = None
+            return
+
         dsmr_object = get_dsmr_object(
             self.telegram, self._mbus_id, self.entity_description.obis_reference
         )
@@ -1061,10 +1084,10 @@ class DSMREntity(SensorEntity):
             return
         self._reset_average()
 
-        # Logic for non-averaged sensors (and averaged sensors without data):
-        # use the latest received value.
+        # The object is absent from this (non-empty) telegram: keep the last
+        # reported value so a partial telegram (one that omits this object) does
+        # not clear an otherwise valid state.
         if dsmr_object is None or dsmr_object.value is None:
-            self._value = None
             return
 
         value = dsmr_object.value

@@ -1906,6 +1906,46 @@ async def test_power_readings_are_averaged_over_the_update_interval(
     assert hass.states.get(POWER_ENTITY_ID).state == "10.0"
 
 
+async def test_averaged_sensor_without_new_telegrams_uses_last_reading(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test that an interval without telegrams reuses the last reading.
+
+    When no telegram arrives during an interval the averaged sensor must fall
+    back to the latest instantaneous reading instead of holding the previous
+    interval's average (a stale value) or producing a new mean from no data.
+    """
+    (connection_factory, _transport, protocol) = dsmr_connection_fixture
+
+    telegram_callback = await _setup_dsmr_for_averaging(
+        hass, request, connection_factory, protocol, time_between_update=UPDATE_INTERVAL
+    )
+
+    # Establish and publish an average for the first window: mean(2, 4, 6) == 4.
+    telegram_callback(_create_power_and_energy_telegram("1.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("2.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("4.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("6.0", "100.0"))
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == "4.0"
+
+    # No telegram arrives during the next interval: the sensor falls back to the
+    # latest reading (6) instead of keeping the previous average (4).
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == "6.0"
+
+    # A further empty interval keeps the latest reading; no new average is made.
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == "6.0"
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_current_and_voltage_readings_are_averaged(
     hass: HomeAssistant,
