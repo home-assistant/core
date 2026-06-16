@@ -5,7 +5,6 @@ from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field
 from decimal import Decimal
 from enum import Enum
-from functools import cache, partial
 from operator import attrgetter
 from typing import Any
 
@@ -14,12 +13,9 @@ import voluptuous as vol
 from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.components.calendar import DOMAIN as CALENDAR_DOMAIN
-from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
-from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.sensor import async_rounded_state
-from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util, yaml as yaml_util
@@ -53,13 +49,6 @@ Answer in plain text. Keep it simple and to the point.
 NO_ENTITIES_PROMPT = (
     "Only if the user wants to control a device, tell them to expose entities "
     "to their voice assistant in Home Assistant."
-)
-
-DEVICE_CONTROL_TOOL_USAGE_PROMPT = (
-    "When controlling Home Assistant always call the intent tools. "
-    "Use HassTurnOn to lock and HassTurnOff to unlock a lock. "
-    "When controlling a device, prefer passing just name and domain. "
-    "When controlling an area, prefer passing just area name and domain."
 )
 
 
@@ -499,28 +488,12 @@ class MergedAPI(API):
 class AssistAPI(API):
     """API exposing Assist API to LLMs."""
 
-    IGNORE_INTENTS = {
-        intent.INTENT_GET_TEMPERATURE,
-        INTENT_GET_WEATHER,
-        INTENT_OPEN_COVER,  # deprecated
-        INTENT_CLOSE_COVER,  # deprecated
-        intent.INTENT_GET_STATE,
-        intent.INTENT_NEVERMIND,
-        intent.INTENT_TOGGLE,
-        intent.INTENT_GET_CURRENT_DATE,
-        intent.INTENT_GET_CURRENT_TIME,
-        intent.INTENT_RESPOND,
-    }
-
     def __init__(self, hass: HomeAssistant) -> None:
         """Init the class."""
         super().__init__(
             hass=hass,
             id=LLM_API_ASSIST,
             name="Assist",
-        )
-        self.cached_slugify = cache(
-            partial(unicode_slug.slugify, separator="_", lowercase=False)
         )
 
     async def async_get_api_instance(self, llm_context: LLMContext) -> APIInstance:
@@ -558,22 +531,12 @@ class AssistAPI(API):
 
         # Collect all parts, filtering out any None values
         prompt_parts = [
-            DEVICE_CONTROL_TOOL_USAGE_PROMPT,
             *self._async_get_exposed_entities_prompt(exposed_entities),
             self._async_get_voice_satellite_area_prompt(llm_context),
-            self._async_get_no_timer_prompt(llm_context),
         ]
 
         # Filter out None and empty strings before joining
         return "\n".join([part for part in prompt_parts if part])
-
-    @callback
-    def _async_get_no_timer_prompt(self, llm_context: LLMContext) -> str | None:
-        if not llm_context.device_id or not async_device_supports_timers(
-            self.hass, llm_context.device_id
-        ):
-            return "This device is not able to start timers."
-        return None
 
     @callback
     def _async_get_voice_satellite_area_prompt(self, llm_context: LLMContext) -> str:
@@ -629,45 +592,7 @@ class AssistAPI(API):
         self, llm_context: LLMContext, exposed_entities: dict | None
     ) -> list[Tool]:
         """Return a list of LLM tools."""
-        ignore_intents = self.IGNORE_INTENTS
-        if not llm_context.device_id or not async_device_supports_timers(
-            self.hass, llm_context.device_id
-        ):
-            ignore_intents = ignore_intents | {
-                intent.INTENT_START_TIMER,
-                intent.INTENT_CANCEL_TIMER,
-                intent.INTENT_INCREASE_TIMER,
-                intent.INTENT_DECREASE_TIMER,
-                intent.INTENT_PAUSE_TIMER,
-                intent.INTENT_UNPAUSE_TIMER,
-                intent.INTENT_TIMER_STATUS,
-            }
-
-        intent_handlers = [
-            intent_handler
-            for intent_handler in intent.async_get(self.hass)
-            if intent_handler.intent_type not in ignore_intents
-        ]
-
-        exposed_domains: set[str] | None = None
-        if exposed_entities is not None:
-            exposed_domains = {
-                info["domain"] for info in exposed_entities["entities"].values()
-            }
-
-            intent_handlers = [
-                intent_handler
-                for intent_handler in intent_handlers
-                if intent_handler.platforms is None
-                or intent_handler.platforms & exposed_domains
-            ]
-
-        tools: list[Tool] = [
-            IntentTool(self.cached_slugify(intent_handler.intent_type), intent_handler)
-            for intent_handler in intent_handlers
-        ]
-
-        return tools
+        return []
 
 
 def _get_exposed_entities(

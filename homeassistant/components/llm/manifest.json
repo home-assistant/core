@@ -1,6 +1,7 @@
 {
   "domain": "llm",
   "name": "LLM",
+  "after_dependencies": ["intent"],
   "codeowners": ["@home-assistant/core"],
   "documentation": "https://www.home-assistant.io/integrations/llm",
   "integration_type": "system",

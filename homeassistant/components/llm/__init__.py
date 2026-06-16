@@ -17,6 +17,7 @@ from homeassistant.helpers.integration_platform import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .intents import intent_tools
 from .tools import DYNAMIC_CONTEXT_PROMPT, GetDateTimeTool, GetLiveContextTool
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
@@ -31,6 +32,9 @@ class LLMToolsPlatformProtocol(Protocol):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LLM integration."""
+    llm.async_register_tool_provider(
+        hass, intent_tools, apis={llm.LLM_API_ASSIST: None}
+    )
     llm.async_register_tool(hass, GetDateTimeTool(), apis={llm.LLM_API_ASSIST: None})
     llm.async_register_tool_provider(
         hass, _live_context_tools, apis={llm.LLM_API_ASSIST: None}

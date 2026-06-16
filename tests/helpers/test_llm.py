@@ -528,6 +528,8 @@ async def test_assist_api_get_timer_tools(
     """Test getting timer tools with Assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "llm", {})
+    await hass.async_block_till_done()
     api = await llm.async_get_api(hass, "assist", llm_context)
 
     assert "HassStartTimer" not in [tool.name for tool in api.tools]
@@ -982,9 +984,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
-        f"""{first_part_prompt}
-{stateless_exposed_entities_prompt}
+        f"""{stateless_exposed_entities_prompt}
 {area_prompt}
+{first_part_prompt}
 {no_timer_prompt}
 {dynamic_context_prompt}"""
     )
@@ -1007,9 +1009,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
-        f"""{first_part_prompt}
-{stateless_exposed_entities_prompt}
+        f"""{stateless_exposed_entities_prompt}
 {area_prompt}
+{first_part_prompt}
 {no_timer_prompt}
 {dynamic_context_prompt}"""
     )
@@ -1024,9 +1026,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
-        f"""{first_part_prompt}
-{stateless_exposed_entities_prompt}
+        f"""{stateless_exposed_entities_prompt}
 {area_prompt}
+{first_part_prompt}
 {no_timer_prompt}
 {dynamic_context_prompt}"""
     )
@@ -1037,9 +1039,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     # The no_timer_prompt is gone
     assert api.api_prompt == (
-        f"""{first_part_prompt}
-{stateless_exposed_entities_prompt}
+        f"""{stateless_exposed_entities_prompt}
 {area_prompt}
+{first_part_prompt}
 {dynamic_context_prompt}"""
     )
 
