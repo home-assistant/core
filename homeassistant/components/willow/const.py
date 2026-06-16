@@ -1,12 +1,12 @@
 """Constants for the Willow integration."""
 from datetime import timedelta
 import logging
-
+import os
 
 DOMAIN = "willow"
 LOGGER = logging.getLogger(__package__)
 MANUFACTURER = "PW Willow Pty Ltd"
-WILLOW_BASE_URL = "https://api.plantwithwillow.com.au"
+WILLOW_BASE_URL = os.environ.get("WILLOW_BASE_URL", "https://api.plantwithwillow.com.au")
 SCAN_INTERVAL = timedelta(minutes=15)
 
 OAUTH2_AUTHORIZE = f"{WILLOW_BASE_URL}/oauth/authorize/"

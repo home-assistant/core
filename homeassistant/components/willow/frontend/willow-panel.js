@@ -271,37 +271,59 @@ class WillowPanel extends HTMLElement {
     this._lastSignature = signature;
 
     const grid = this.shadowRoot.getElementById("grid");
+    grid.innerHTML = "";
+
     if (!devices.length) {
-      grid.innerHTML = `<div class="empty">No Willow sensors found yet. Once your Willow devices report data they will appear here.</div>`;
+      const empty = document.createElement("div");
+      empty.className = "empty";
+      empty.textContent =
+        "No Willow sensors found yet. Once your Willow devices report data they will appear here.";
+      grid.appendChild(empty);
       return;
     }
 
-    grid.innerHTML = devices
-      .map((device) => {
-        const rows = device.entities
-          .map((entry) => {
-            const key = this._readingKey(entry);
-            const meta = SENSOR_META[key] || { label: null, icon: "•" };
-            const state = this._hass.states[entry.entity_id];
-            const label =
-              meta.label ||
-              (state && state.attributes && state.attributes.friendly_name) ||
-              entry.entity_id;
-            return `
-              <div class="reading">
-                <span class="label">${meta.icon} ${label}</span>
-                <span class="value">${this._formatReading(entry)}</span>
-              </div>`;
-          })
-          .join("");
-        return `
-          <div class="card">
-            <h2>${device.name}</h2>
-            ${device.model ? `<p class="model">${device.model}</p>` : ""}
-            ${rows}
-          </div>`;
-      })
-      .join("");
+    for (const device of devices) {
+      const card = document.createElement("div");
+      card.className = "card";
+
+      const h2 = document.createElement("h2");
+      h2.textContent = device.name;
+      card.appendChild(h2);
+
+      if (device.model) {
+        const model = document.createElement("p");
+        model.className = "model";
+        model.textContent = device.model;
+        card.appendChild(model);
+      }
+
+      for (const entry of device.entities) {
+        const key = this._readingKey(entry);
+        const meta = SENSOR_META[key] || { label: null, icon: "•" };
+        const state = this._hass.states[entry.entity_id];
+        const label =
+          meta.label ||
+          (state && state.attributes && state.attributes.friendly_name) ||
+          entry.entity_id;
+
+        const reading = document.createElement("div");
+        reading.className = "reading";
+
+        const labelSpan = document.createElement("span");
+        labelSpan.className = "label";
+        labelSpan.textContent = `${meta.icon} ${label}`;
+
+        const valueSpan = document.createElement("span");
+        valueSpan.className = "value";
+        valueSpan.textContent = this._formatReading(entry);
+
+        reading.appendChild(labelSpan);
+        reading.appendChild(valueSpan);
+        card.appendChild(reading);
+      }
+
+      grid.appendChild(card);
+    }
   }
 }
 

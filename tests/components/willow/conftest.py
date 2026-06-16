@@ -1,6 +1,7 @@
 """Fixtures for the Willow integration tests."""
 
 from collections.abc import Generator
+import copy
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -66,8 +67,8 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_willow_client() -> Generator[MagicMock]:
     """Patch WillowClient wherever it is instantiated."""
     client = MagicMock()
-    client.get_profile = AsyncMock(return_value=dict(PROFILE))
-    client.get_devices = AsyncMock(return_value=[dict(device) for device in DEVICES])
+    client.get_profile = AsyncMock(return_value=dict(copy.deepcopy(PROFILE)))
+    client.get_devices = AsyncMock(return_value=[dict(copy.deepcopy(device)) for device in DEVICES])
     with (
         patch("homeassistant.components.willow.WillowClient", return_value=client),
         patch(

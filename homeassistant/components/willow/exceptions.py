@@ -1,5 +1,3 @@
-
-
 """Exceptions for the Willow integration."""
 
 
