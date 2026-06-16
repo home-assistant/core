@@ -64,20 +64,14 @@ class BmsEntityDescription(SensorEntityDescription, frozen_or_thawed=True):
     value_fn: Callable[[BMSSample], float | int | None]
 
 
-def _attr_pack(
-    data: BMSSample, key: BMSpackvalue, default: list[int | float]
-) -> dict[str, list[int | float]]:
-    """Return a dictionary with the given key and default value."""
-    return (
-        {str(key): cast(list[int | float], data.get(key, default))}
-        if key in data
-        else {}
-    )
+def _attr_pack(data: BMSSample, key: BMSpackvalue) -> dict[str, list[int | float]]:
+    """Return a dictionary with the given key or an empty dict if key is not in data."""
+    return {str(key): cast("list[int | float]", data.get(key))} if key in data else {}
 
 
 SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
     BmsEntityDescription(
-        attr_fn=lambda data: _attr_pack(data, "pack_voltages", [0.0]),
+        attr_fn=lambda data: _attr_pack(data, "pack_voltages"),
         device_class=SensorDeviceClass.VOLTAGE,
         key=ATTR_VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -86,7 +80,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
         value_fn=lambda data: data.get("voltage"),
     ),
     BmsEntityDescription(
-        attr_fn=lambda data: _attr_pack(data, "pack_battery_levels", [0.0]),
+        attr_fn=lambda data: _attr_pack(data, "pack_battery_levels"),
         device_class=SensorDeviceClass.BATTERY,
         key=ATTR_BATTERY_LEVEL,
         native_unit_of_measurement=PERCENTAGE,
@@ -123,7 +117,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
                 if "balance_current" in data
                 else {}
             )
-            | _attr_pack(data, "pack_currents", [0.0])
+            | _attr_pack(data, "pack_currents")
         ),
         device_class=SensorDeviceClass.CURRENT,
         key=ATTR_CURRENT,
@@ -141,7 +135,7 @@ SENSOR_TYPES: Final[list[BmsEntityDescription]] = [
         value_fn=lambda data: data.get("cycle_capacity"),
     ),
     BmsEntityDescription(
-        attr_fn=lambda data: _attr_pack(data, "pack_cycles", [0]),
+        attr_fn=lambda data: _attr_pack(data, "pack_cycles"),
         key=ATTR_CYCLES,
         state_class=SensorStateClass.TOTAL_INCREASING,
         translation_key=ATTR_CYCLES,
@@ -314,8 +308,10 @@ class RSSISensor(SensorEntity):
     async def async_update(self) -> None:
         """Update RSSI sensor value."""
 
-        self._attr_native_value = max(
-            min(self._bms.rssi or -self.LIMIT, self.LIMIT), -self.LIMIT
+        self._attr_native_value = (
+            max(min(self._bms.rssi, self.LIMIT), -self.LIMIT)
+            if self._bms.rssi is not None
+            else -self.LIMIT
         )
         self._attr_available = self._bms.rssi is not None
 
