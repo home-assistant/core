@@ -160,7 +160,11 @@ class UnifiAccessConfigFlow(ConfigFlow, domain=DOMAIN):
                     data=merged_input,
                 )
 
-        name = discovery_info.get("hostname") or discovery_info.get("platform")
+        name = (
+            discovery_info.get("name")
+            or discovery_info.get("hostname")
+            or discovery_info.get("product_name")
+        )
         if not name:
             short_mac = discovery_info["hw_addr"].replace(":", "").upper()[-6:]
             name = f"Access {short_mac}"
