@@ -84,8 +84,10 @@ async def test_device_registry_integration(
         device_registry, mock_config_entry.entry_id
     )
 
-    # Snapshot the devices to ensure they have the correct structure
-    assert device_entries == snapshot
+    sorted_devices = sorted(
+        device_entries, key=lambda dev_entry: dev_entry.serial_number
+    )
+    assert sorted_devices == snapshot
 
 
 async def test_setup_entry_auth_error_triggers_reauth(
@@ -130,6 +132,31 @@ async def test_autoremove_stale_devices(
 
     assert len(device_registry.devices) == 1
     assert hass.states.get("sensor.device_2_water_level") is None
+
+
+async def test_devices_multiple_created_count(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_aqvify_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that added devices are created."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert len(device_registry.devices) == 2
+    assert hass.states.get("sensor.device_3_water_level") is None
+
+    mock_aqvify_client.async_get_devices.return_value = AqvifyDevices(
+        await async_load_json_array_fixture(hass, "added_devices.json", DOMAIN)
+    )
+
+    freezer.tick(timedelta(seconds=240))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert len(device_registry.devices) == 3
+    assert hass.states.get("sensor.device_3_water_level").state == EXPECTED_WATER_LEVEL
 
 
 @pytest.mark.parametrize(
