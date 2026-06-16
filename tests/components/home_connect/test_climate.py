@@ -922,6 +922,7 @@ async def test_temperature_feature_supported(
     )
 
 
+@pytest.mark.parametrize("appliance", ["AirConditioner"], indirect=True)
 async def test_no_issue_with_null_temperature(
     hass: HomeAssistant,
     client: MagicMock,

@@ -248,7 +248,7 @@ async def _check_temperature_options(
     try:
         program_data = await method_call()
     except HomeConnectError:
-        LOGGER.debug("Failed to get information about temperature options, using ºC")
+        LOGGER.debug("Failed to get information about temperature options, using °C")
     else:
         checked_options = []
         for option in program_data.options or []:
@@ -260,10 +260,10 @@ async def _check_temperature_options(
                         UnitOfTemperature.CELSIUS,
                         UnitOfTemperature.FAHRENHEIT,
                     )
-        if checked_options != options_to_check.keys():
+        if set(checked_options) != options_to_check.keys():
             LOGGER.debug(
                 "Couldn't check all the temperature options units,"
-                " using ºC for the ones that couldn't be checked"
+                " using °C for the ones that couldn't be checked"
             )
 
 
