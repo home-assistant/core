@@ -1,9 +1,7 @@
 {
   "domain": "willow",
   "name": "Willow",
-  "codeowners": [
-    "@paxprz"
-  ],
+  "codeowners": ["@paxprz"],
   "config_flow": true,
   "dependencies": [
     "application_credentials",
