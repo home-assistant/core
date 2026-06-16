@@ -38,6 +38,9 @@ SWITCHBOT_ACTION_TO_HASS_HVAC_ACTION = {
     SwitchBotClimateAction.OFF: HVACAction.OFF,
 }
 
+_DEADBAND_CELSIUS = 0.5
+_DEADBAND_FAHRENHEIT = 1.0
+
 _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 0
 
@@ -105,30 +108,32 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
-        # Check thresholds to infer IDLE state since certain hardware profiles
-        # continue to broadcast active state constants when target is met.
-        if self.current_temperature is not None and self.target_temperature is not None:
-            # Fetch the underlying action to prevent overriding native OFF states
-            raw_action = SWITCHBOT_ACTION_TO_HASS_HVAC_ACTION.get(
-                self._device.hvac_action, HVACAction.OFF
-            )
-
-            if raw_action != HVACAction.OFF:
-                deadband = (
-                    0.5 if self.temperature_unit == UnitOfTemperature.CELSIUS else 1.0
-                )
-
-                if self.hvac_mode == HVACMode.HEAT:
-                    if self.current_temperature >= (self.target_temperature + deadband):
-                        return HVACAction.IDLE
-
-                elif self.hvac_mode == HVACMode.COOL:
-                    if self.current_temperature <= (self.target_temperature - deadband):
-                        return HVACAction.IDLE
-
-        return SWITCHBOT_ACTION_TO_HASS_HVAC_ACTION.get(
+        # Calculate the base hardware action once to avoid redundant dictionary mapping lookups
+        raw_action = SWITCHBOT_ACTION_TO_HASS_HVAC_ACTION.get(
             self._device.hvac_action, HVACAction.OFF
         )
+
+        # Check thresholds to infer IDLE state if the system isn't explicitly turned off
+        if (
+            raw_action != HVACAction.OFF
+            and self.current_temperature is not None
+            and self.target_temperature is not None
+        ):
+            deadband = (
+                _DEADBAND_CELSIUS
+                if self.temperature_unit == UnitOfTemperature.CELSIUS
+                else _DEADBAND_FAHRENHEIT
+            )
+
+            if self.hvac_mode == HVACMode.HEAT:
+                if self.current_temperature >= (self.target_temperature + deadband):
+                    return HVACAction.IDLE
+
+            elif self.hvac_mode == HVACMode.COOL:
+                if self.current_temperature <= (self.target_temperature - deadband):
+                    return HVACAction.IDLE
+
+        return raw_action
 
     @property
     def current_temperature(self) -> float | None:
