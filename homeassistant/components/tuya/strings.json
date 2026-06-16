@@ -991,6 +991,15 @@
       "water_time": {
         "name": "Water usage duration"
       },
+      "weather": {
+        "name": "Weather",
+        "state": {
+          "cloudy": "Cloudy",
+          "rainy": "Rainy",
+          "snowy": "Snowy",
+          "sunny": "Sunny"
+        }
+      },
       "wind_chill_index_temperature": {
         "name": "Wind chill index"
       },
