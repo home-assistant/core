@@ -79,8 +79,6 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             "name": f"{PRODUCT_NAMES[mfg.product_type]} ({discovery_info.name})",
             "address": discovery_info.address,
         }
-        await self.async_set_unique_id(self.address)
-        self._abort_if_unique_id_configured()
         return await self.async_step_confirm()
 
     async def async_step_confirm(
