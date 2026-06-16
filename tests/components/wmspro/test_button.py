@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from wmspro.destination import Action
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.number import (
@@ -115,12 +116,20 @@ async def test_button_rotation_reset_press(
     assert entity is not None
     assert float(entity.state) == original_value
 
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: range_entity_id, ATTR_VALUE: target_value},
-        blocking=True,
-    )
+    with patch.object(
+        Action,
+        "__setitem__",
+        side_effect=Action.__setitem__,
+        autospec=True,
+    ) as mock_action_setitem:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: range_entity_id, ATTR_VALUE: target_value},
+            blocking=True,
+        )
+
+    assert len(mock_action_setitem.mock_calls) == 1
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -132,12 +141,20 @@ async def test_button_rotation_reset_press(
 
     assert button_entity_id in hass.states.async_entity_ids(BUTTON_DOMAIN)
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: button_entity_id},
-        blocking=True,
-    )
+    with patch.object(
+        Action,
+        "__delitem__",
+        side_effect=Action.__delitem__,
+        autospec=True,
+    ) as mock_action_delitem:
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: button_entity_id},
+            blocking=True,
+        )
+
+    assert len(mock_action_delitem.mock_calls) == 2
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
