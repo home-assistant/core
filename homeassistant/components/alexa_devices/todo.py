@@ -116,7 +116,6 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         # For passing type checking, existence of summary
         # is already checked by voluptuous
         if TYPE_CHECKING:
-            assert item.uid is not None
             assert item.summary is not None
 
         async with alexa_api_call(self.coordinator):
