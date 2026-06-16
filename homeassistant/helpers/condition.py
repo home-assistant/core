@@ -115,6 +115,9 @@ from .trace import (
 )
 from .typing import UNDEFINED, ConfigType, TemplateVarsType, UndefinedType
 
+if TYPE_CHECKING:
+    from homeassistant.components.recorder import Recorder
+
 ASYNC_FROM_CONFIG_FORMAT = "async_{}_from_config"
 FROM_CONFIG_FORMAT = "{}_from_config"
 VALIDATE_CONFIG_FORMAT = "{}_validate_config"
@@ -201,6 +204,7 @@ async def async_setup(hass: HomeAssistant) -> None:
     hass.data[CONDITION_DISABLED_CONDITIONS] = set()
     hass.data[CONDITION_PLATFORM_SUBSCRIPTIONS] = []
     hass.data[CONDITIONS] = {}
+    hass.data[_DATA_HISTORY_PRIMING_MANAGER] = _HistoryPrimingManager(hass)
 
     async def new_triggers_conditions_listener(
         _event_data: labs.EventLabsUpdatedData,
@@ -469,6 +473,79 @@ ENTITY_STATE_CONDITION_SCHEMA_ANY_ALL = vol.Schema(
 )
 
 
+_DATA_HISTORY_PRIMING_MANAGER: HassKey[_HistoryPrimingManager] = HassKey(
+    "condition_history_priming_manager"
+)
+
+
+class _HistoryPrimingManager:
+    """Serialize and coalesce the recorder reads that prime condition durations.
+
+    At startup many conditions may prime at once. Letting each hit the recorder
+    independently would force a separate commit per condition and run every read
+    on the shared DB executor in parallel — a flood. So the reads run one at a
+    time, and a single commit flush is shared by each "generation" of conditions
+    that arrive while the previous flush is running.
+
+    The flush a condition relies on must begin after that condition started
+    tracking its entities, or the read could miss a change still queued in the
+    recorder and compute too generous an anchor. A condition therefore never
+    rides a flush that was already running when it arrived (the lobby); it waits
+    that one out and joins the next.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the manager."""
+        self._hass = hass
+        self._flush_condition = asyncio.Condition()
+        self._flushing = False
+        self._query_lock = asyncio.Lock()
+
+    async def async_prime[_T](
+        self, job: Callable[[Recorder], Coroutine[Any, Any, _T]]
+    ) -> _T:
+        """Flush the recorder, then run `job`, coordinated with other primings."""
+        await self._async_flush()
+        async with self._query_lock:
+            return await job(get_instance(self._hass))
+
+    async def _async_flush(self) -> None:
+        """Return once a recorder flush that began no earlier than this call ends.
+
+        The first condition of a generation performs the flush; the rest ride it.
+        """
+        async with self._flush_condition:
+            # Lobby: a flush already running began before we arrived, so it may
+            # not capture our entity's queued changes. Wait it out, don't ride it.
+            if self._flushing:
+                await self._flush_condition.wait()
+
+        do_flush = False
+        while True:
+            async with self._flush_condition:
+                if not self._flushing:
+                    # First past the lobby this generation: we run the flush.
+                    self._flushing = True
+                    do_flush = True
+                    break
+                # A peer began a fresh flush after we cleared the lobby; it
+                # covers us too, so wait for it and ride it.
+                await self._flush_condition.wait()
+                break
+
+        if not do_flush:
+            return
+
+        instance = get_instance(self._hass)
+        try:
+            if (commit_future := instance.async_get_commit_future()) is not None:
+                await commit_future
+        finally:
+            async with self._flush_condition:
+                self._flushing = False
+                self._flush_condition.notify_all()
+
+
 class EntityConditionBase(Condition):
     """Base class for entity conditions."""
 
@@ -668,28 +745,34 @@ class EntityConditionBase(Condition):
             assert self._duration is not None
         lookback = min(self._duration, MAX_HISTORY_PRIMING_LOOKBACK)
         start_time = dt_util.utcnow() - lookback
-        instance = get_instance(self._hass)
-        try:
-            async with asyncio.timeout(HISTORY_PRIMING_TIMEOUT):
-                # The history query only sees committed rows. Wait for the
-                # recorder to flush its queue first.
-                if (commit_future := instance.async_get_commit_future()) is not None:
-                    await commit_future
-                historical_states = await instance.async_add_executor_job(
-                    ft.partial(
-                        history.get_significant_states,
-                        self._hass,
-                        start_time,
-                        entity_ids=list(anchors),
-                        include_start_time_state=True,
-                        # Mandatory: the default (True) drops attribute-only
-                        # changes for entities outside SIGNIFICANT_DOMAINS, which
-                        # are exactly the transitions attribute-based conditions
-                        # depend on.
-                        significant_changes_only=False,
-                        minimal_response=False,
-                    )
+
+        async def _read_history(
+            instance: Recorder,
+        ) -> dict[str, list[State | dict[str, Any]]]:
+            # The history query only sees committed rows; the priming manager
+            # flushes the recorder queue before running this.
+            return await instance.async_add_executor_job(
+                ft.partial(
+                    history.get_significant_states,
+                    self._hass,
+                    start_time,
+                    entity_ids=list(anchors),
+                    include_start_time_state=True,
+                    # Mandatory: the default (True) drops attribute-only changes
+                    # for entities outside SIGNIFICANT_DOMAINS, which are exactly
+                    # the transitions attribute-based conditions depend on.
+                    significant_changes_only=False,
+                    minimal_response=False,
                 )
+            )
+
+        manager = self._hass.data[_DATA_HISTORY_PRIMING_MANAGER]
+        try:
+            # The timeout also covers waiting for our turn, so under a flood of
+            # primings a condition falls back to its conservative anchor rather
+            # than blocking on the queue indefinitely.
+            async with asyncio.timeout(HISTORY_PRIMING_TIMEOUT):
+                historical_states = await manager.async_prime(_read_history)
         except (SQLAlchemyError, TimeoutError) as err:
             # Best effort: keep the conservative anchors rather than failing.
             _LOGGER.debug("Error priming condition durations from history: %s", err)

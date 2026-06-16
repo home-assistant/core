@@ -59,6 +59,7 @@ from homeassistant.helpers.automation import (
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.condition import (
+    _DATA_HISTORY_PRIMING_MANAGER,
     ATTR_BEHAVIOR,
     BEHAVIOR_ALL,
     BEHAVIOR_ANY,
@@ -69,6 +70,7 @@ from homeassistant.helpers.condition import (
     EntityConditionBase,
     EntityNumericalConditionWithUnitBase,
     _async_get_condition_platform,
+    _HistoryPrimingManager,
     async_validate_condition_config,
     make_entity_numerical_condition,
     make_entity_numerical_condition_with_unit,
@@ -5860,6 +5862,152 @@ async def test_state_condition_attr_duration_history_flushes_before_query(
         )
 
     assert call_order == ["flush", "query"]
+
+
+async def test_async_setup_creates_history_priming_manager(
+    hass: HomeAssistant,
+) -> None:
+    """The priming manager is created during condition setup, not on demand."""
+    # condition.async_setup runs as part of the test hass fixture.
+    assert isinstance(hass.data[_DATA_HISTORY_PRIMING_MANAGER], _HistoryPrimingManager)
+
+
+async def test_history_priming_manager_serializes_queries(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Queries run one at a time even when many conditions prime together."""
+    manager = _HistoryPrimingManager(hass)
+    instance = get_instance(hass)
+
+    running = 0
+    max_running = 0
+    release = asyncio.Event()
+    started = asyncio.Event()
+
+    async def _job(_recorder: Recorder) -> str:
+        nonlocal running, max_running
+        running += 1
+        max_running = max(max_running, running)
+        started.set()
+        await release.wait()
+        running -= 1
+        return "ok"
+
+    # No pending commit, so flushing is instant and only query serialization
+    # is exercised.
+    with patch.object(instance, "async_get_commit_future", return_value=None):
+        tasks = [asyncio.create_task(manager.async_prime(_job)) for _ in range(5)]
+        # The first job holds the query lock; the rest must queue behind it.
+        await started.wait()
+        await asyncio.sleep(0)
+        assert running == 1
+        release.set()
+        results = await asyncio.gather(*tasks)
+
+    assert results == ["ok"] * 5
+    assert max_running == 1
+
+
+async def test_history_priming_manager_does_not_ride_in_flight_flush(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """A priming never rides a flush that began before it arrived (the lobby).
+
+    The flush commits changes still queued in the recorder so the history read
+    sees them. A condition that started tracking after an in-flight flush began
+    could miss its own just-queued change if it rode that flush, so it waits the
+    flush out and a fresh one is performed for it. Without the lobby step this
+    test fails: the late arrivals would ride the first flush (one flush total)
+    instead of sharing a second, fresh one.
+    """
+    manager = _HistoryPrimingManager(hass)
+    instance = get_instance(hass)
+
+    flush_futures: list[asyncio.Future[None]] = []
+
+    def _spy_commit_future() -> asyncio.Future[None]:
+        fut = hass.loop.create_future()
+        flush_futures.append(fut)
+        return fut
+
+    async def _job(_recorder: Recorder) -> str:
+        return "done"
+
+    with patch.object(instance, "async_get_commit_future", _spy_commit_future):
+        # C0 claims the flush and is mid-flush (its commit future is pending).
+        c0 = asyncio.create_task(manager.async_prime(_job))
+        for _ in range(10):
+            await asyncio.sleep(0)
+            if flush_futures:
+                break
+        assert len(flush_futures) == 1
+
+        # Two conditions arrive while C0's flush runs; they must not ride it.
+        c1 = asyncio.create_task(manager.async_prime(_job))
+        c2 = asyncio.create_task(manager.async_prime(_job))
+        for _ in range(5):
+            await asyncio.sleep(0)
+        # Parked in the lobby: no new flush yet, none finished.
+        assert len(flush_futures) == 1
+        assert not c1.done()
+        assert not c2.done()
+
+        # C0's flush completes; C1 now performs a fresh flush and C2 rides it.
+        flush_futures[0].set_result(None)
+        assert await c0 == "done"
+        for _ in range(10):
+            await asyncio.sleep(0)
+        # Exactly one fresh flush is shared by C1 and C2, not one each: this is
+        # the assertion that fails without the lobby (it would stay 1).
+        assert len(flush_futures) == 2
+        flush_futures[1].set_result(None)
+        assert await asyncio.gather(c1, c2) == ["done", "done"]
+
+
+async def test_history_priming_manager_cancelled_lobby_waiter(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """A priming cancelled while waiting in the lobby doesn't wedge later ones.
+
+    A condition whose timeout fires while it waits for an in-flight flush is
+    cancelled. That must leave the manager able to flush for the next priming.
+    """
+    manager = _HistoryPrimingManager(hass)
+    instance = get_instance(hass)
+
+    flush_futures: list[asyncio.Future[None]] = []
+
+    def _spy_commit_future() -> asyncio.Future[None]:
+        fut = hass.loop.create_future()
+        flush_futures.append(fut)
+        return fut
+
+    async def _job(_recorder: Recorder) -> str:
+        return "done"
+
+    with patch.object(instance, "async_get_commit_future", _spy_commit_future):
+        c0 = asyncio.create_task(manager.async_prime(_job))
+        for _ in range(10):
+            await asyncio.sleep(0)
+            if flush_futures:
+                break
+        # A second priming parks in the lobby, then its timeout cancels it.
+        waiter = asyncio.create_task(manager.async_prime(_job))
+        for _ in range(3):
+            await asyncio.sleep(0)
+        waiter.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await waiter
+
+        # C0 finishes; a later priming still flushes and completes normally.
+        flush_futures[0].set_result(None)
+        assert await c0 == "done"
+        later = asyncio.create_task(manager.async_prime(_job))
+        for _ in range(10):
+            await asyncio.sleep(0)
+        assert len(flush_futures) == 2
+        flush_futures[1].set_result(None)
+        assert await later == "done"
 
 
 async def test_state_condition_multi_state_duration_uses_history(
