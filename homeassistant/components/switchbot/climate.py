@@ -105,6 +105,12 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
+
+        # Simple threshold check
+        if self.current_temperature is not None and self.target_temperature is not None:
+            if self.current_temperature >= self.target_temperature:
+                return HVACAction.IDLE
+
         return SWITCHBOT_ACTION_TO_HASS_HVAC_ACTION.get(
             self._device.hvac_action, HVACAction.OFF
         )
