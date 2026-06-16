@@ -6,7 +6,7 @@ from typing import Any
 from rabbitair import Model
 
 from homeassistant.const import CONF_MAC
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -36,6 +36,7 @@ class RabbitAirBaseEntity(CoordinatorEntity[RabbitAirDataUpdateCoordinator]):
         self._attr_unique_id = entry.unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.data[CONF_MAC])},
+            connections={(CONNECTION_NETWORK_MAC, entry.data[CONF_MAC])},
             manufacturer="Rabbit Air",
             model=MODELS.get(coordinator.data.model),
             name=entry.title,
