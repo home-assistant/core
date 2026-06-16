@@ -63,7 +63,7 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
-        suggested_display_precision=0,
+        suggested_display_precision=1,
         value_fn=lambda value: value.temperature,
         entity_registry_enabled_default=False,
     ),
