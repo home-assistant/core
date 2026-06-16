@@ -528,9 +528,21 @@ async def async_flash_silabs_firmware(
 # plumbing lives here.
 BOARDS_WITH_RASPBERRYPI_FIRMWARE = frozenset({"rpi4-64", "rpi5-64", "yellow"})
 
-RPI_FIRMWARE_RELEASE_URL = (
+RPI_FIRMWARE_RELEASE_URL_DEFAULT = (
     "https://github.com/raspberrypi/rpi-eeprom/blob/master/releases.md"
 )
+
+# Per-SoC release notes. The Yellow can run both with a CM4 or CM5, so we don't
+# know the exact SoC.
+_RPI_FIRMWARE_RELEASE_URLS = {
+    "rpi4-64": "https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware-2711/release-notes.md",
+    "rpi5-64": "https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware-2712/release-notes.md",
+}
+
+
+def rpi_firmware_release_url(board: str) -> str:
+    """Return the RPi firmware release notes URL for a board."""
+    return _RPI_FIRMWARE_RELEASE_URLS.get(board, RPI_FIRMWARE_RELEASE_URL_DEFAULT)
 
 
 def humanize_rpi_firmware_version(version: str | None) -> str | None:

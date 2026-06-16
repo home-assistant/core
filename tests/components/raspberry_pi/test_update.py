@@ -79,6 +79,10 @@ async def test_rpi_firmware_update_entity(
     assert state.state == "on"
     assert state.attributes["installed_version"] == "2025-12-08"
     assert state.attributes["latest_version"] == "2026-05-11"
+    assert (
+        state.attributes["release_url"]
+        == "https://github.com/raspberrypi/rpi-eeprom/blob/master/firmware-2712/release-notes.md"
+    )
 
 
 async def test_rpi_firmware_entity_absent_on_older_supervisor(

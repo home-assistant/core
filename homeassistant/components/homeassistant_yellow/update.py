@@ -167,6 +167,7 @@ async def async_setup_entry(
                     manufacturer=MANUFACTURER,
                 ),
                 unique_id="yellow_rpi_firmware",
+                board="yellow",
             )
         )
 

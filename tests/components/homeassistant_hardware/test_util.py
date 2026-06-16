@@ -34,6 +34,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     humanize_rpi_firmware_version,
     probe_silabs_firmware_info,
     probe_silabs_firmware_type,
+    rpi_firmware_release_url,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -1057,3 +1058,29 @@ def test_humanize_rpi_firmware_version(
 ) -> None:
     """Test rendering raw Raspberry Pi firmware versions as readable strings."""
     assert humanize_rpi_firmware_version(version) == expected
+
+
+@pytest.mark.parametrize(
+    ("board", "expected"),
+    [
+        (
+            "rpi4-64",
+            "https://github.com/raspberrypi/rpi-eeprom/blob/master/"
+            "firmware-2711/release-notes.md",
+        ),
+        (
+            "rpi5-64",
+            "https://github.com/raspberrypi/rpi-eeprom/blob/master/"
+            "firmware-2712/release-notes.md",
+        ),
+        # The Yellow's SoC (CM4 vs CM5) is unknown, so it gets the generic index.
+        (
+            "yellow",
+            "https://github.com/raspberrypi/rpi-eeprom/blob/master/releases.md",
+        ),
+    ],
+    ids=["rpi4", "rpi5", "yellow_fallback"],
+)
+def test_rpi_firmware_release_url(board: str, expected: str) -> None:
+    """Test the per-SoC firmware release notes URL."""
+    assert rpi_firmware_release_url(board) == expected

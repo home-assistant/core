@@ -62,7 +62,7 @@ async def async_setup_entry(
     async_add_entities(
         [
             RaspberryPiFirmwareUpdateEntity(
-                firmware, device_info, unique_id=f"{board}_rpi_firmware"
+                firmware, device_info, unique_id=f"{board}_rpi_firmware", board=board
             )
         ]
     )

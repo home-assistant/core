@@ -26,7 +26,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .coordinator import FirmwareUpdateCoordinator
 from .helpers import async_register_firmware_info_callback
 from .util import (
-    RPI_FIRMWARE_RELEASE_URL,
     ApplicationType,
     FirmwareInfo,
     async_firmware_flashing_context,
@@ -34,6 +33,7 @@ from .util import (
     async_get_raspberry_pi_firmware_info,
     async_update_raspberry_pi_firmware,
     humanize_rpi_firmware_version,
+    rpi_firmware_release_url,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -321,11 +321,13 @@ class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
         firmware: RaspberryPiFirmwareInfo,
         device_info: DeviceInfo,
         unique_id: str,
+        board: str,
     ) -> None:
         """Initialize entity."""
         self._firmware = firmware
         self._attr_device_info = device_info
         self._attr_unique_id = unique_id
+        self._board = board
 
     @property
     def installed_version(self) -> str | None:
@@ -347,8 +349,8 @@ class RaspberryPiFirmwareUpdateEntity(UpdateEntity):
 
     @property
     def release_url(self) -> str | None:
-        """Return a link to the official Raspberry Pi bootloader docs."""
-        return RPI_FIRMWARE_RELEASE_URL
+        """Return the EEPROM release notes for this board's SoC."""
+        return rpi_firmware_release_url(self._board)
 
     async def async_release_notes(self) -> str | None:
         """Return the pre-install warning and reboot notice as ha-alert boxes."""
