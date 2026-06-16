@@ -28,6 +28,7 @@ from homeassistant.components.conversation.chat_log import (
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session, llm
+from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from tests.common import async_fire_time_changed
@@ -168,6 +169,11 @@ async def test_dynamic_time_injection(
     hass: HomeAssistant, mock_conversation_input: ConversationInput
 ) -> None:
     """Test that dynamic time injection works correctly."""
+    # The Assist API provides the GetDateTime tool via the llm integration, which
+    # suppresses the dynamic time prompt (case 3 below).
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "llm", {})
+    await hass.async_block_till_done()
 
     class MyAPI(llm.API):
         """Test API."""
