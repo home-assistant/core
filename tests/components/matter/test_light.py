@@ -117,6 +117,94 @@ async def test_light_turn_on_off(
 @pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
+        ("mock_dimmable_light", "light.mock_dimmable_light"),
+    ],
+)
+async def test_dimmable_light_turn_off_transition(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+) -> None:
+    """Test turning a dimmable light off with a transition."""
+
+    # A transition fades to the minimum level, which turns the light off
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {
+            "entity_id": entity_id,
+            "transition": 3,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+            level=1,
+            transitionTime=30,
+        ),
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # Without a transition the OnOff cluster is used
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {
+            "entity_id": entity_id,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.Off(),
+    )
+    matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_onoff_light", "light.mock_onoff_light"),
+    ],
+)
+async def test_onoff_light_turn_off_transition(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+) -> None:
+    """Test that a light without brightness ignores the off transition."""
+
+    await hass.services.async_call(
+        "light",
+        "turn_off",
+        {
+            "entity_id": entity_id,
+            "transition": 3,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.OnOff.Commands.Off(),
+    )
+    matter_client.send_device_command.reset_mock()
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
         ("extended_color_light", "light.mock_extended_color_light"),
         ("color_temperature_light", "light.mock_color_temperature_light"),
         ("mock_dimmable_light", "light.mock_dimmable_light"),

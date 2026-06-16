@@ -333,6 +333,24 @@ class MatterLight(MatterEntity, LightEntity):
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn light off."""
+        transition = kwargs.get(ATTR_TRANSITION, 0)
+        if self._transitions_disabled:
+            transition = 0
+
+        if transition > 0 and self._supports_brightness:
+            # Per the Matter spec, moving to the minimum level turns the
+            # light off, so this fades the light down and then turns it off.
+            level_control = self._endpoint.get_cluster(clusters.LevelControl)
+            assert level_control is not None
+            await self.send_device_command(
+                clusters.LevelControl.Commands.MoveToLevelWithOnOff(
+                    level=level_control.minLevel or 1,
+                    # transition in matter is measured in tenths of a second
+                    transitionTime=int(transition * 10),
+                )
+            )
+            return
+
         await self.send_device_command(
             clusters.OnOff.Commands.Off(),
         )
