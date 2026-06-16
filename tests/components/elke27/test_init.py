@@ -8,10 +8,7 @@ from elke27_lib import LinkKeys, PanelInfo, PanelSnapshot, TableInfo
 from elke27_lib.errors import Elke27LinkRequiredError, Elke27TimeoutError
 import pytest
 
-from homeassistant.components.elke27 import (
-    _async_disconnect_failed_setup,
-    async_unload_entry,
-)
+from homeassistant.components.elke27 import _async_disconnect_failed_setup
 from homeassistant.components.elke27.const import (
     CONF_LINK_KEYS_JSON,
     DEFAULT_PORT,
@@ -406,13 +403,14 @@ async def test_unload_keeps_runtime_when_platform_unload_fails(
     )
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.LOADED)
 
     with patch.object(
         hass.config_entries,
         "async_unload_platforms",
         AsyncMock(return_value=False),
     ):
-        assert not await async_unload_entry(hass, entry)
+        assert not await hass.config_entries.async_unload(entry.entry_id)
 
     coordinator.async_stop.assert_not_awaited()
     hub.async_disconnect.assert_not_awaited()
@@ -432,13 +430,14 @@ async def test_unload_suppresses_cleanup_errors(hass: HomeAssistant) -> None:
     )
     entry.runtime_data = Elke27RuntimeData(hub=hub, coordinator=coordinator)
     entry.add_to_hass(hass)
+    entry.mock_state(hass, ConfigEntryState.LOADED)
 
     with patch.object(
         hass.config_entries,
         "async_unload_platforms",
         AsyncMock(return_value=True),
     ):
-        assert await async_unload_entry(hass, entry)
+        assert await hass.config_entries.async_unload(entry.entry_id)
 
     coordinator.async_stop.assert_awaited_once()
     hub.async_disconnect.assert_awaited_once()
