@@ -548,12 +548,8 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     self.entity_id,
                 )
                 if recovered_from_invalid:
-                    # The source reset (e.g. a daily total_increasing sensor at
-                    # midnight) while recovering from an unavailable/unknown
-                    # state. The pre-reset window no longer applies to the new
-                    # baseline, so discard it and report a zero rate of change;
-                    # otherwise the sensor stays stuck in the unavailable/unknown
-                    # state until the next state change.
+                    # Reset while recovering from an invalid source: re-baseline
+                    # and report zero so the entity doesn't stay stuck unavailable.
                     self._state_list = []
                     self._last_valid_state_time = (new_state.state, new_timestamp)
                     self._write_native_value(Decimal(0))
