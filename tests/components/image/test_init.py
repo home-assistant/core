@@ -251,7 +251,7 @@ async def test_fetch_image_unauthenticated(
     assert body == b"Test"
 
     resp = await client.get("/api/image_proxy/image.unknown")
-    assert resp.status == HTTPStatus.NOT_FOUND
+    assert resp.status == HTTPStatus.UNAUTHORIZED
 
 
 @respx.mock
