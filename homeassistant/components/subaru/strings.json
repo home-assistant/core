@@ -67,14 +67,14 @@
       "ev_battery_level": {
         "name": "EV battery level"
       },
+      "ev_charge_mode": {
+        "name": "EV charge mode"
+      },
       "ev_charger_state": {
         "name": "EV charger state"
       },
       "ev_range": {
         "name": "EV range"
-      },
-      "ev_state_of_charge_mode": {
-        "name": "EV charge mode"
       },
       "ev_time_to_full_charge": {
         "name": "EV time to full charge"

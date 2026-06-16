@@ -212,7 +212,7 @@ EV_SENSORS = [
     ),
     SubaruSensorEntityDescription(
         key=API_KEY_EV_STATE_OF_CHARGE_MODE,
-        translation_key="ev_state_of_charge_mode",
+        translation_key="ev_charge_mode",
     ),
 ]
 
