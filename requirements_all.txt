@@ -3142,7 +3142,7 @@ tapsaff==0.2.1
 tellcore-net==0.4
 
 # homeassistant.components.tellstick
-tellcore-py==1.1.2
+tellcore-py==1.1.3
 
 # homeassistant.components.tellduslive
 tellduslive==0.10.12
