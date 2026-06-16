@@ -271,7 +271,7 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetLiveContext", "GetDateTime"]
+    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
 
     # Match all
     intent_handler.platforms = None
@@ -279,8 +279,8 @@ async def test_assist_api(
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert [tool.name for tool in api.tools] == [
         "test_intent",
-        "GetLiveContext",
         "GetDateTime",
+        "GetLiveContext",
     ]
 
     # Match specific domain
@@ -628,6 +628,7 @@ async def test_assist_api_prompt(
     """Test prompt for the assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "llm", {})
     context = Context()
     llm_context = llm.LLMContext(
         platform="test_platform",
@@ -636,6 +637,7 @@ async def test_assist_api_prompt(
         assistant="conversation",
         device_id=None,
     )
+    await hass.async_block_till_done()
     api = await llm.async_get_api(hass, "assist", llm_context)
 
     assert api.api_prompt == (
@@ -981,10 +983,10 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
 {area_prompt}
-{no_timer_prompt}"""
+{no_timer_prompt}
+{dynamic_context_prompt}"""
     )
 
     # Verify that the GetLiveContext tool returns the same results
@@ -1006,10 +1008,10 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
 {area_prompt}
-{no_timer_prompt}"""
+{no_timer_prompt}
+{dynamic_context_prompt}"""
     )
 
     # Add floor
@@ -1023,10 +1025,10 @@ Static Context: An overview of the areas and the devices in this smart home:
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
 {area_prompt}
-{no_timer_prompt}"""
+{no_timer_prompt}
+{dynamic_context_prompt}"""
     )
 
     # Register device for timers
@@ -1036,9 +1038,9 @@ Static Context: An overview of the areas and the devices in this smart home:
     # The no_timer_prompt is gone
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{dynamic_context_prompt}
 {stateless_exposed_entities_prompt}
-{area_prompt}"""
+{area_prompt}
+{dynamic_context_prompt}"""
     )
 
 
@@ -1051,6 +1053,7 @@ async def test_get_live_context_tool_filter(
     """Test the filter parameters of the GetLiveContext tool."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "llm", {})
     context = Context()
     llm_context = llm.LLMContext(
         platform="test_platform",
@@ -1147,6 +1150,7 @@ async def test_get_live_context_tool_filter(
     hass.states.async_set(office_ac.entity_id, "cool")
     hass.states.async_set(kitchen_ac.entity_id, "heat")
 
+    await hass.async_block_till_done()
     api = await llm.async_get_api(hass, "assist", llm_context)
 
     # Filter by area and domain (example 1)
