@@ -58,6 +58,38 @@
         "user": "Add sensor"
       },
       "step": {
+        "reconfigure": {
+          "data": {
+            "index": "[%key:component::scrape::config_subentries::entity::step::user::data::index%]",
+            "select": "[%key:component::scrape::config_subentries::entity::step::user::data::select%]"
+          },
+          "data_description": {
+            "index": "[%key:component::scrape::config_subentries::entity::step::user::data_description::index%]",
+            "select": "[%key:component::scrape::config_subentries::entity::step::user::data_description::select%]"
+          },
+          "sections": {
+            "advanced": {
+              "data": {
+                "attribute": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data::attribute%]",
+                "availability": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data::availability%]",
+                "device_class": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data::device_class%]",
+                "state_class": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data::state_class%]",
+                "unit_of_measurement": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data::unit_of_measurement%]",
+                "value_template": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data::value_template%]"
+              },
+              "data_description": {
+                "attribute": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data_description::attribute%]",
+                "availability": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data_description::availability%]",
+                "device_class": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data_description::device_class%]",
+                "state_class": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data_description::state_class%]",
+                "unit_of_measurement": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data_description::unit_of_measurement%]",
+                "value_template": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::data_description::value_template%]"
+              },
+              "description": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::description%]",
+              "name": "[%key:component::scrape::config_subentries::entity::step::user::sections::advanced::name%]"
+            }
+          }
+        },
         "user": {
           "data": {
             "index": "Index",
