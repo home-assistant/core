@@ -262,8 +262,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/braviatv/ @bieniu @Drafteed
 /homeassistant/components/bring/ @miaucl @tr4nt0r
 /tests/components/bring/ @miaucl @tr4nt0r
-/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
-/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am @eifinger
+/homeassistant/components/broadlink/ @danielhiversen @felipediel @L-I-Am
+/tests/components/broadlink/ @danielhiversen @felipediel @L-I-Am
 /homeassistant/components/brother/ @bieniu
 /tests/components/brother/ @bieniu
 /homeassistant/components/brottsplatskartan/ @gjohansson-ST
@@ -695,6 +695,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/gree/ @cmroche
 /homeassistant/components/green_planet_energy/ @petschni
 /tests/components/green_planet_energy/ @petschni
+/homeassistant/components/greencell/ @BrzezowskiGC
+/tests/components/greencell/ @BrzezowskiGC
 /homeassistant/components/greeneye_monitor/ @jkeljo
 /tests/components/greeneye_monitor/ @jkeljo
 /homeassistant/components/group/ @home-assistant/core
@@ -1890,6 +1892,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/unifi_access/ @imhotep @RaHehl
 /tests/components/unifi_access/ @imhotep @RaHehl
 /homeassistant/components/unifi_direct/ @tofuSCHNITZEL
+/tests/components/unifi_direct/ @tofuSCHNITZEL
 /homeassistant/components/unifi_discovery/ @RaHehl
 /tests/components/unifi_discovery/ @RaHehl
 /homeassistant/components/unifiled/ @florisvdk

@@ -561,46 +561,52 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         # and HA sets by default open/close as supported feature which conflicts
         supported_features = CoverEntityFeature(0)
 
-        if self.entity_description.open_command and self.executor.has_command(
+        if self.entity_description.open_command and self.device.supports_command(
             self.entity_description.open_command
         ):
             supported_features |= CoverEntityFeature.OPEN
 
-            if self.entity_description.stop_command and self.executor.has_command(
+            if self.entity_description.stop_command and self.device.supports_command(
                 self.entity_description.stop_command
             ):
                 supported_features |= CoverEntityFeature.STOP
 
-        if self.entity_description.close_command and self.executor.has_command(
+        if self.entity_description.close_command and self.device.supports_command(
             self.entity_description.close_command
         ):
             supported_features |= CoverEntityFeature.CLOSE
 
-        if self.entity_description.open_tilt_command and self.executor.has_command(
+        if self.entity_description.open_tilt_command and self.device.supports_command(
             self.entity_description.open_tilt_command
         ):
             supported_features |= CoverEntityFeature.OPEN_TILT
 
-            if self.entity_description.stop_tilt_command and self.executor.has_command(
+            if (
                 self.entity_description.stop_tilt_command
+                and self.device.supports_command(
+                    self.entity_description.stop_tilt_command
+                )
             ):
                 supported_features |= CoverEntityFeature.STOP_TILT
 
-        if self.entity_description.close_tilt_command and self.executor.has_command(
+        if self.entity_description.close_tilt_command and self.device.supports_command(
             self.entity_description.close_tilt_command
         ):
             supported_features |= CoverEntityFeature.CLOSE_TILT
 
         if (
             self.entity_description.set_tilt_position_command
-            and self.executor.has_command(
+            and self.device.supports_command(
                 self.entity_description.set_tilt_position_command
             )
         ):
             supported_features |= CoverEntityFeature.SET_TILT_POSITION
 
-        if self.entity_description.set_position_command and self.executor.has_command(
+        if (
             self.entity_description.set_position_command
+            and self.device.supports_command(
+                self.entity_description.set_position_command
+            )
         ):
             supported_features |= CoverEntityFeature.SET_POSITION
 
@@ -742,7 +748,7 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         motor to stop between commands on some devices (e.g.
         Somfy DynamicExteriorVenetianBlind).
         """
-        if not self.executor.has_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
+        if not self.device.supports_command(OverkizCommand.SET_CLOSURE_AND_ORIENTATION):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="unsupported_set_position_and_tilt",
