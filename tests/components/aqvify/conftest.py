@@ -98,7 +98,7 @@ def load_account_file() -> str:
 
 @pytest.fixture(scope="package")
 def load_aggr_data_file() -> str:
-    """Fixture for loading account file."""
+    """Fixture for loading aggregated data file."""
     return "default_aggregated.json"
 
 

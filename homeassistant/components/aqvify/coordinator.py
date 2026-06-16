@@ -175,7 +175,9 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
         return (new_devices, current_devices)
 
 
-class AqvifyAggrDataCoordinator(DataUpdateCoordinator):
+class AqvifyAggrDataCoordinator(
+    DataUpdateCoordinator[dict[str, AqvifyHourAggregatedValues]]
+):
     """Data update coordinator for Aqvify aggregated data."""
 
     config_entry: AqvifyConfigEntry
@@ -200,12 +202,12 @@ class AqvifyAggrDataCoordinator(DataUpdateCoordinator):
         beg_time = (
             (current_time - timedelta(hours=1))
             .replace(minute=0)
-            .strftime("%G-%m-%dT%H:%MZ")
+            .strftime("%Y-%m-%dT%H:%MZ")
         )
         end_time = (
             (current_time - timedelta(hours=1))
             .replace(minute=59)
-            .strftime("%G-%m-%dT%H:%MZ")
+            .strftime("%Y-%m-%dT%H:%MZ")
         )
         return beg_time, end_time
 
@@ -223,7 +225,9 @@ class AqvifyAggrDataCoordinator(DataUpdateCoordinator):
                     beg_time,
                     end_time,
                 )
-                device_data[device_key] = aggr_data.aggr_list[0]
+                device_data[device_key] = (
+                    aggr_data.aggr_list[0] if len(aggr_data.aggr_list) else {}
+                )
             except AqvifyAuthException:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,

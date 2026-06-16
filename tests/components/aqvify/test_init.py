@@ -24,9 +24,6 @@ from tests.common import (
 )
 
 WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
-EXPECTED_WATER_LEVEL = "-0.136786005"
-
-WATER_LEVEL_SENSOR = "sensor.device_1_water_level"
 IN_FLOW_SENSOR = "sensor.device_1_inflow"
 EXPECTED_WATER_LEVEL = "-0.136786005"
 EXPECTED_IN_FLOW = "24.4735918930962"
@@ -284,7 +281,7 @@ async def test_coordinator_async_get_hour_aggregation(
     log_message: str,
     expected_state: str,
 ) -> None:
-    """Tests that the coordinator handles errors from async_get_device_latest_data."""
+    """Tests that the coordinator handles errors from async_get_hour_aggregation."""
 
     await setup_integration(hass, mock_config_entry)
 
