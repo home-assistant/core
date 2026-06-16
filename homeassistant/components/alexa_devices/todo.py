@@ -194,11 +194,8 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             # Name has changed, update it
             _LOGGER.debug("Updating item %s with new name %s", item.uid, item.summary)
 
-            if has_completed_changed:
-                # Both have changed -> Item version increases, otherwise rejected by API
-                version = existing_item.version + 1
-            else:
-                version = existing_item.version
+            # If both have changed -> Increase item version by 1
+            version = existing_item.version + int(has_completed_changed)
 
             async with alexa_api_call(self.coordinator):
                 await self.coordinator.api.rename_todo_list_item(
