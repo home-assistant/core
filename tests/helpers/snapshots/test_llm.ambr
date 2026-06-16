@@ -1,77 +1,61 @@
 # serializer version: 1
 # name: test_assist_api_snapshot[prompt]
-  '''
-  When controlling Home Assistant always call the intent tools. Use HassTurnOn to lock and HassTurnOff to unlock a lock. When controlling a device, prefer passing just name and domain. When controlling an area, prefer passing just area name and domain.
-  You ARE equipped to answer questions about the current state of
-  the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
-  functionality if the question requires live data.
-  If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
-  from the static context below.
-  If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
-  "Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
-      1.  Recognize this requires live data.
-      2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
-      3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
-  For general knowledge questions not about the home: Answer truthfully from internal knowledge.
-  
-  Static Context: An overview of the areas and the devices in this smart home:
-  - names: Kitchen
-    domain: light
-  - names: Shopping
-    domain: todo
-  
-  You are in area Test Area and all generic commands like 'turn on the lights' should target this area.
-  '''
+  list([
+    '    1.  Recognize this requires live data.',
+    '    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).',
+    '    3.  Use the tool\'s response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").',
+    '  domain: light',
+    '  domain: todo',
+    '"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):',
+    '- names: Kitchen',
+    '- names: Shopping',
+    'For general knowledge questions not about the home: Answer truthfully from internal knowledge.',
+    'If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer',
+    'If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",',
+    'Static Context: An overview of the areas and the devices in this smart home:',
+    'When controlling Home Assistant always call the intent tools. Use HassTurnOn to lock and HassTurnOff to unlock a lock. When controlling a device, prefer passing just name and domain. When controlling an area, prefer passing just area name and domain.',
+    'You ARE equipped to answer questions about the current state of',
+    "You are in area Test Area and all generic commands like 'turn on the lights' should target this area.",
+    'from the static context below.',
+    'functionality if the question requires live data.',
+    'the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the',
+  ])
 # ---
 # name: test_assist_api_snapshot[tools]
-  list([
-    dict({
-      'description': "Turns on/opens/presses a device or entity. For locks, this performs a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.",
-      'name': 'HassTurnOn',
+  dict({
+    'GetDateTime': dict({
+      'description': 'Provides the current date and time.',
+      'parameters': dict({
+        'properties': dict({
+        }),
+        'required': list([
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'GetLiveContext': dict({
+      'description': "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. Use this tool for: 1. Answering questions about current conditions (e.g., 'Is the light on?'). 2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first). You may filter for devices by name, domain, and area, including combining those filters. Prefer filtering by domain when searching for multiple devices of the same type.",
       'parameters': dict({
         'properties': dict({
           'area': dict({
+            'description': 'Filter entities by area name or alias (case-insensitive).',
             'type': 'string',
-          }),
-          'device_class': dict({
-            'items': dict({
-              'enum': list([
-                'awning',
-                'blind',
-                'curtain',
-                'damper',
-                'door',
-                'garage',
-                'gas',
-                'gate',
-                'identify',
-                'outlet',
-                'projector',
-                'receiver',
-                'restart',
-                'shade',
-                'shutter',
-                'speaker',
-                'switch',
-                'tv',
-                'update',
-                'water',
-                'window',
-              ]),
-              'type': 'string',
-            }),
-            'type': 'array',
           }),
           'domain': dict({
-            'items': dict({
-              'type': 'string',
-            }),
-            'type': 'array',
-          }),
-          'floor': dict({
-            'type': 'string',
+            'anyOf': list([
+              dict({
+              }),
+              dict({
+                'items': dict({
+                  'type': 'string',
+                }),
+                'type': 'array',
+              }),
+            ]),
+            'description': "Filter entities by domain (e.g. 'light', 'sensor'). Accepts a single domain or a list.",
           }),
           'name': dict({
+            'description': 'Filter entities by name or alias (case-insensitive).',
             'type': 'string',
           }),
         }),
@@ -80,53 +64,11 @@
         'type': 'object',
       }),
     }),
-    dict({
-      'description': "Turns off/closes a device or entity. For locks, this performs an 'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable', or 'unlock'.",
-      'name': 'HassTurnOff',
+    'HassCancelAllTimers': dict({
+      'description': 'Cancels all timers',
       'parameters': dict({
         'properties': dict({
           'area': dict({
-            'type': 'string',
-          }),
-          'device_class': dict({
-            'items': dict({
-              'enum': list([
-                'awning',
-                'blind',
-                'curtain',
-                'damper',
-                'door',
-                'garage',
-                'gas',
-                'gate',
-                'identify',
-                'outlet',
-                'projector',
-                'receiver',
-                'restart',
-                'shade',
-                'shutter',
-                'speaker',
-                'switch',
-                'tv',
-                'update',
-                'water',
-                'window',
-              ]),
-              'type': 'string',
-            }),
-            'type': 'array',
-          }),
-          'domain': dict({
-            'items': dict({
-              'type': 'string',
-            }),
-            'type': 'array',
-          }),
-          'floor': dict({
-            'type': 'string',
-          }),
-          'name': dict({
             'type': 'string',
           }),
         }),
@@ -135,9 +77,161 @@
         'type': 'object',
       }),
     }),
-    dict({
+    'HassCancelTimer': dict({
+      'description': 'Cancels a timer',
+      'parameters': dict({
+        'properties': dict({
+          'area': dict({
+            'type': 'string',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
+          'start_hours': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_minutes': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_seconds': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+        }),
+        'required': list([
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'HassDecreaseTimer': dict({
+      'description': 'Removes time from a timer',
+      'parameters': dict({
+        'anyOf': list([
+          dict({
+            'required': list([
+              'hours',
+            ]),
+          }),
+          dict({
+            'required': list([
+              'minutes',
+            ]),
+          }),
+          dict({
+            'required': list([
+              'seconds',
+            ]),
+          }),
+        ]),
+        'properties': dict({
+          'area': dict({
+            'type': 'string',
+          }),
+          'hours': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'minutes': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
+          'seconds': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_hours': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_minutes': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_seconds': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+        }),
+        'required': list([
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'HassIncreaseTimer': dict({
+      'description': 'Adds more time to a timer',
+      'parameters': dict({
+        'properties': dict({
+          'area': dict({
+            'type': 'string',
+          }),
+          'hours': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'minutes': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
+          'seconds': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_hours': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_minutes': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_seconds': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+        }),
+        'required': list([
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'HassPauseTimer': dict({
+      'description': 'Pauses a running timer',
+      'parameters': dict({
+        'properties': dict({
+          'area': dict({
+            'type': 'string',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
+          'start_hours': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_minutes': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_seconds': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+        }),
+        'required': list([
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'HassStartTimer': dict({
       'description': 'Starts a new timer',
-      'name': 'HassStartTimer',
       'parameters': dict({
         'anyOf': list([
           dict({
@@ -181,209 +275,8 @@
         'type': 'object',
       }),
     }),
-    dict({
-      'description': 'Cancels a timer',
-      'name': 'HassCancelTimer',
-      'parameters': dict({
-        'properties': dict({
-          'area': dict({
-            'type': 'string',
-          }),
-          'name': dict({
-            'type': 'string',
-          }),
-          'start_hours': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_minutes': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_seconds': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-        }),
-        'required': list([
-        ]),
-        'type': 'object',
-      }),
-    }),
-    dict({
-      'description': 'Cancels all timers',
-      'name': 'HassCancelAllTimers',
-      'parameters': dict({
-        'properties': dict({
-          'area': dict({
-            'type': 'string',
-          }),
-        }),
-        'required': list([
-        ]),
-        'type': 'object',
-      }),
-    }),
-    dict({
-      'description': 'Adds more time to a timer',
-      'name': 'HassIncreaseTimer',
-      'parameters': dict({
-        'properties': dict({
-          'area': dict({
-            'type': 'string',
-          }),
-          'hours': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'minutes': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'name': dict({
-            'type': 'string',
-          }),
-          'seconds': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_hours': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_minutes': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_seconds': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-        }),
-        'required': list([
-        ]),
-        'type': 'object',
-      }),
-    }),
-    dict({
-      'description': 'Removes time from a timer',
-      'name': 'HassDecreaseTimer',
-      'parameters': dict({
-        'anyOf': list([
-          dict({
-            'required': list([
-              'hours',
-            ]),
-          }),
-          dict({
-            'required': list([
-              'minutes',
-            ]),
-          }),
-          dict({
-            'required': list([
-              'seconds',
-            ]),
-          }),
-        ]),
-        'properties': dict({
-          'area': dict({
-            'type': 'string',
-          }),
-          'hours': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'minutes': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'name': dict({
-            'type': 'string',
-          }),
-          'seconds': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_hours': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_minutes': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_seconds': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-        }),
-        'required': list([
-        ]),
-        'type': 'object',
-      }),
-    }),
-    dict({
-      'description': 'Pauses a running timer',
-      'name': 'HassPauseTimer',
-      'parameters': dict({
-        'properties': dict({
-          'area': dict({
-            'type': 'string',
-          }),
-          'name': dict({
-            'type': 'string',
-          }),
-          'start_hours': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_minutes': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_seconds': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-        }),
-        'required': list([
-        ]),
-        'type': 'object',
-      }),
-    }),
-    dict({
-      'description': 'Resumes a paused timer',
-      'name': 'HassUnpauseTimer',
-      'parameters': dict({
-        'properties': dict({
-          'area': dict({
-            'type': 'string',
-          }),
-          'name': dict({
-            'type': 'string',
-          }),
-          'start_hours': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_minutes': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-          'start_seconds': dict({
-            'minimum': 0,
-            'type': 'integer',
-          }),
-        }),
-        'required': list([
-        ]),
-        'type': 'object',
-      }),
-    }),
-    dict({
+    'HassTimerStatus': dict({
       'description': 'Reports the current status of timers',
-      'name': 'HassTimerStatus',
       'parameters': dict({
         'properties': dict({
           'area': dict({
@@ -410,20 +303,144 @@
         'type': 'object',
       }),
     }),
-    dict({
-      'description': 'Provides the current date and time.',
-      'name': 'GetDateTime',
+    'HassTurnOff': dict({
+      'description': "Turns off/closes a device or entity. For locks, this performs an 'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable', or 'unlock'.",
       'parameters': dict({
         'properties': dict({
+          'area': dict({
+            'type': 'string',
+          }),
+          'device_class': dict({
+            'items': dict({
+              'enum': list([
+                'awning',
+                'blind',
+                'curtain',
+                'damper',
+                'door',
+                'garage',
+                'gas',
+                'gate',
+                'identify',
+                'outlet',
+                'projector',
+                'receiver',
+                'restart',
+                'shade',
+                'shutter',
+                'speaker',
+                'switch',
+                'tv',
+                'update',
+                'water',
+                'window',
+              ]),
+              'type': 'string',
+            }),
+            'type': 'array',
+          }),
+          'domain': dict({
+            'items': dict({
+              'type': 'string',
+            }),
+            'type': 'array',
+          }),
+          'floor': dict({
+            'type': 'string',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
         }),
         'required': list([
         ]),
         'type': 'object',
       }),
     }),
-    dict({
+    'HassTurnOn': dict({
+      'description': "Turns on/opens/presses a device or entity. For locks, this performs a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.",
+      'parameters': dict({
+        'properties': dict({
+          'area': dict({
+            'type': 'string',
+          }),
+          'device_class': dict({
+            'items': dict({
+              'enum': list([
+                'awning',
+                'blind',
+                'curtain',
+                'damper',
+                'door',
+                'garage',
+                'gas',
+                'gate',
+                'identify',
+                'outlet',
+                'projector',
+                'receiver',
+                'restart',
+                'shade',
+                'shutter',
+                'speaker',
+                'switch',
+                'tv',
+                'update',
+                'water',
+                'window',
+              ]),
+              'type': 'string',
+            }),
+            'type': 'array',
+          }),
+          'domain': dict({
+            'items': dict({
+              'type': 'string',
+            }),
+            'type': 'array',
+          }),
+          'floor': dict({
+            'type': 'string',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
+        }),
+        'required': list([
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'HassUnpauseTimer': dict({
+      'description': 'Resumes a paused timer',
+      'parameters': dict({
+        'properties': dict({
+          'area': dict({
+            'type': 'string',
+          }),
+          'name': dict({
+            'type': 'string',
+          }),
+          'start_hours': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_minutes': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+          'start_seconds': dict({
+            'minimum': 0,
+            'type': 'integer',
+          }),
+        }),
+        'required': list([
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'calendar_get_events': dict({
       'description': "Get events from a calendar. When asked if something happens, search the whole week. Results are RFC 5545 which means 'end' is exclusive.",
-      'name': 'calendar_get_events',
       'parameters': dict({
         'properties': dict({
           'calendar': dict({
@@ -447,9 +464,25 @@
         'type': 'object',
       }),
     }),
-    dict({
+    'test_script': dict({
+      'description': "This is a test script. Aliases: ['test_script']",
+      'parameters': dict({
+        'properties': dict({
+          'beer': dict({
+            'description': 'Number of beers',
+            'type': 'string',
+          }),
+          'wine': dict({
+            'type': 'string',
+          }),
+        }),
+        'required': list([
+        ]),
+        'type': 'object',
+      }),
+    }),
+    'todo_get_items': dict({
       'description': "Query a to-do list to find out what items are on it. Use this to answer questions like 'What's on my task list?' or 'Read my grocery list'. Filters items by status (needs_action, completed, all).",
-      'name': 'todo_get_items',
       'parameters': dict({
         'properties': dict({
           'status': dict({
@@ -475,55 +508,5 @@
         'type': 'object',
       }),
     }),
-    dict({
-      'description': "This is a test script. Aliases: ['test_script']",
-      'name': 'test_script',
-      'parameters': dict({
-        'properties': dict({
-          'beer': dict({
-            'description': 'Number of beers',
-            'type': 'string',
-          }),
-          'wine': dict({
-            'type': 'string',
-          }),
-        }),
-        'required': list([
-        ]),
-        'type': 'object',
-      }),
-    }),
-    dict({
-      'description': "Provides real-time information about the CURRENT state, value, or mode of devices, sensors, entities, or areas. Use this tool for: 1. Answering questions about current conditions (e.g., 'Is the light on?'). 2. As the first step in conditional actions (e.g., 'If the weather is rainy, turn off sprinklers' requires checking the weather first). You may filter for devices by name, domain, and area, including combining those filters. Prefer filtering by domain when searching for multiple devices of the same type.",
-      'name': 'GetLiveContext',
-      'parameters': dict({
-        'properties': dict({
-          'area': dict({
-            'description': 'Filter entities by area name or alias (case-insensitive).',
-            'type': 'string',
-          }),
-          'domain': dict({
-            'anyOf': list([
-              dict({
-              }),
-              dict({
-                'items': dict({
-                  'type': 'string',
-                }),
-                'type': 'array',
-              }),
-            ]),
-            'description': "Filter entities by domain (e.g. 'light', 'sensor'). Accepts a single domain or a list.",
-          }),
-          'name': dict({
-            'description': 'Filter entities by name or alias (case-insensitive).',
-            'type': 'string',
-          }),
-        }),
-        'required': list([
-        ]),
-        'type': 'object',
-      }),
-    }),
-  ])
+  })
 # ---

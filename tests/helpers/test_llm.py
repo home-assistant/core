@@ -498,17 +498,24 @@ async def test_assist_api_snapshot(
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
 
-    assert api.api_prompt == snapshot(name="prompt")
-    assert [
-        {
-            "name": tool.name,
+    # Order-independent: the v1 refactor moves tools/prompt fragments out of
+    # AssistAPI into per-integration registrations, which changes their order but
+    # not their content. Compare tools as a name-keyed mapping and the prompt as a
+    # set of lines so each migration step verifies same-tools/same-content/
+    # same-prompt regardless of ordering. (Final ordering vs dev is checked
+    # separately at the end.)
+    assert sorted(
+        line for line in api.api_prompt.splitlines() if line.strip()
+    ) == snapshot(name="prompt")
+    assert {
+        tool.name: {
             "description": tool.description,
             "parameters": _normalize_schema(
                 convert(tool.parameters, custom_serializer=api.custom_serializer)
             ),
         }
         for tool in api.tools
-    ] == snapshot(name="tools")
+    } == snapshot(name="tools")
 
 
 async def test_assist_api_get_timer_tools(
