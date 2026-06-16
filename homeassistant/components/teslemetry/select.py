@@ -263,8 +263,10 @@ class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
         level = LEVEL[option]
         # AC must be on to turn on heaters
         if level and not self._climate:
-            await handle_vehicle_command(self.api.auto_conditioning_start())
-        await handle_vehicle_command(self.entity_description.select_fn(self.api, level))
+            await handle_vehicle_command(self.hass, self.api.auto_conditioning_start())
+        await handle_vehicle_command(
+            self.hass, self.entity_description.select_fn(self.api, level)
+        )
         self._attr_current_option = option
         self.async_write_ha_state()
 
@@ -381,7 +383,7 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
-        await handle_command(self.api.operation(option))
+        await handle_command(self.hass, self.api.operation(option))
         self._attr_current_option = option
         self.async_write_ha_state()
 
@@ -436,7 +438,8 @@ class TeslemetryExportRuleSelectEntity(
         """Change the selected option."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(
-            self.api.grid_import_export(customer_preferred_export_rule=option)
+            self.hass,
+            self.api.grid_import_export(customer_preferred_export_rule=option),
         )
         self._attr_current_option = option
         self.async_write_ha_state()

@@ -71,7 +71,7 @@ class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):
         """Lock the doors."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-        await handle_vehicle_command(self.api.door_lock())
+        await handle_vehicle_command(self.hass, self.api.door_lock())
         self._attr_is_locked = True
         self.async_write_ha_state()
 
@@ -80,7 +80,7 @@ class TeslemetryVehicleLockEntity(TeslemetryRootEntity, LockEntity):
         """Unlock the doors."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-        await handle_vehicle_command(self.api.door_unlock())
+        await handle_vehicle_command(self.hass, self.api.door_unlock())
         self._attr_is_locked = False
         self.async_write_ha_state()
 
@@ -156,7 +156,7 @@ class TeslemetryCableLockEntity(TeslemetryRootEntity, LockEntity):
         """Unlock charge cable lock."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
 
-        await handle_vehicle_command(self.api.charge_port_door_open())
+        await handle_vehicle_command(self.hass, self.api.charge_port_door_open())
         self._attr_is_locked = False
         self.async_write_ha_state()
 
