@@ -91,15 +91,25 @@ class HassEnforceDatetimeNowChecker(BaseChecker):
                                 self._utc_paths.add((local, "utc"))
                 case nodes.ImportFrom(modname="homeassistant.util", names=names):
                     # ``homeassistant.util.dt`` re-exports ``UTC`` from
-                    # ``datetime``, so ``dt_util.UTC`` must be flagged too.
+                    # ``datetime`` and exposes the ``datetime`` module as ``dt``
+                    # (via ``import datetime as dt``), so ``dt_util.UTC`` and
+                    # ``dt_util.dt.datetime.now(...)`` must be flagged too.
                     for name, alias in names:
                         if name == "dt":
                             local = alias or name
                             self._utc_paths.add((local, "UTC"))
+                            self._datetime_class_paths.add((local, "dt", "datetime"))
                 case nodes.ImportFrom(modname="homeassistant.util.dt", names=names):
                     for name, alias in names:
-                        if name == "UTC":
-                            self._utc_paths.add((alias or name,))
+                        match name:
+                            case "UTC":
+                                self._utc_paths.add((alias or name,))
+                            case "dt":
+                                # ``from homeassistant.util.dt import dt`` binds
+                                # the ``datetime`` module directly.
+                                self._datetime_class_paths.add(
+                                    (alias or name, "datetime")
+                                )
                 case nodes.Import(names=names):
                     for name, alias in names:
                         match name:
@@ -110,6 +120,9 @@ class HassEnforceDatetimeNowChecker(BaseChecker):
                                 self._utc_paths.add((local, "timezone", "utc"))
                             case "homeassistant.util.dt" if alias:
                                 self._utc_paths.add((alias, "UTC"))
+                                self._datetime_class_paths.add(
+                                    (alias, "dt", "datetime")
+                                )
 
     def visit_call(self, node: nodes.Call) -> None:
         """Check for ``datetime.now(...)`` calls matching the configured case."""

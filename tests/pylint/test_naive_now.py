@@ -123,6 +123,32 @@ def test_enforce_naive_now_good(
         """,
             id="kwarg_none",
         ),
+        pytest.param(
+            # The ``datetime`` class reached through ``homeassistant.util.dt``
+            # (which does ``import datetime as dt``) is still the stdlib class.
+            """
+        from homeassistant.util import dt as dt_util
+
+        now = dt_util.dt.datetime.now()
+        """,
+            id="util_dt_datetime_class",
+        ),
+        pytest.param(
+            """
+        import homeassistant.util.dt as dt_util
+
+        now = dt_util.dt.datetime.now()
+        """,
+            id="import_util_dt_datetime_class",
+        ),
+        pytest.param(
+            """
+        from homeassistant.util.dt import dt
+
+        now = dt.datetime.now()
+        """,
+            id="from_util_dt_import_dt",
+        ),
     ],
 )
 def test_enforce_naive_now_bad(
@@ -141,16 +167,35 @@ def test_enforce_naive_now_bad(
     assert messages[0].msg_id == "home-assistant-enforce-naive-now"
 
 
-def test_enforce_naive_now_skips_util_dt(
-    linter: UnittestLinter,
-    enforce_naive_now_checker: BaseChecker,
-) -> None:
-    """``homeassistant.util.dt`` defines ``naive_now`` itself, so it is skipped."""
-    code = """
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
         from datetime import datetime
 
         naive_now = datetime.now()
-        """
+        """,
+            id="from_import_datetime",
+        ),
+        pytest.param(
+            # The form actually used in ``homeassistant/util/dt.py``.
+            """
+        import datetime as dt
+
+        def naive_now() -> dt.datetime:
+            return dt.datetime.now()
+        """,
+            id="util_dt_source_form",
+        ),
+    ],
+)
+def test_enforce_naive_now_skips_util_dt(
+    linter: UnittestLinter,
+    enforce_naive_now_checker: BaseChecker,
+    code: str,
+) -> None:
+    """``homeassistant.util.dt`` defines ``naive_now`` itself, so it is skipped."""
     root_node = astroid.parse(code, "homeassistant.util.dt")
     walker = ASTWalker(linter)
     walker.add_checker(enforce_naive_now_checker)
