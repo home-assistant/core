@@ -153,7 +153,7 @@ class ItemTriggerBase(Trigger, abc.ABC):
             functools.partial(self._handle_item_change, run_action=run_action),
             self._handle_entities_updated,
         )
-        return listener.async_setup()
+        return await listener.async_setup()
 
     @callback
     @abc.abstractmethod

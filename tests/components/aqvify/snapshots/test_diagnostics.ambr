@@ -31,15 +31,19 @@
     }),
     'device_data': dict({
       'DeviceKey_1': dict({
-        'dateTime': '2026-06-04T09:36:06+00:00',
+        'dateTime': '2026-06-14T09:36:06+00:00',
         'meterValue': 0.823213995,
         'status': None,
+        'temperature': 12.3,
+        'volume': 345.0,
         'waterLevel': -0.136786005,
       }),
       'DeviceKey_2': dict({
-        'dateTime': '2026-06-04T09:36:06+00:00',
+        'dateTime': '2026-06-14T09:36:06+00:00',
         'meterValue': 0.823213995,
         'status': None,
+        'temperature': 12.3,
+        'volume': 345.0,
         'waterLevel': -0.136786005,
       }),
     }),
