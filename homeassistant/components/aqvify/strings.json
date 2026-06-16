@@ -46,6 +46,9 @@
       "out_volume": {
         "name": "Outflow"
       },
+      "stored_volume": {
+        "name": "Stored volume"
+      },
       "water_level": {
         "name": "Water level"
       }

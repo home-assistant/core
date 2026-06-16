@@ -131,7 +131,7 @@ async def test_autoremove_stale_devices(
         await async_load_json_array_fixture(hass, "removed_devices.json", DOMAIN)
     )
 
-    freezer.tick(timedelta(minutes=5))
+    freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -156,7 +156,7 @@ async def test_devices_multiple_created_count(
         await async_load_json_array_fixture(hass, "added_devices.json", DOMAIN)
     )
 
-    freezer.tick(timedelta(seconds=240))
+    freezer.tick(timedelta(minutes=6))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

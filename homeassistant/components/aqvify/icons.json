@@ -13,6 +13,9 @@
       "out_volume": {
         "default": "mdi:water-pump"
       },
+      "stored_volume": {
+        "default": "mdi:car-coolant-level"
+      },
       "water_level": {
         "default": "mdi:waves"
       }

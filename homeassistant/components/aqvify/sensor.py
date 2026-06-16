@@ -57,6 +57,24 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         suggested_display_precision=2,
         value_fn=lambda value: value.water_level,  # type: ignore[union-attr]
     ),
+    AqvifySensorEntityDescription(
+        key="stored_volume",
+        translation_key="stored_volume",
+        native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
+        suggested_display_precision=0,
+        value_fn=lambda value: value.volume,  # type: ignore[union-attr]
+    ),
+    AqvifySensorEntityDescription(
+        key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
+        value_fn=lambda value: value.temperature,  # type: ignore[union-attr]
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -87,23 +105,6 @@ ENTITIES_AGGR: tuple[AqvifySensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=2,
         value_fn=lambda value: value.valid_ground_water_level,  # type: ignore[union-attr]
-        entity_registry_enabled_default=False,
-    ),
-    AqvifySensorEntityDescription(
-        key="volume",
-        native_unit_of_measurement=UnitOfVolume.LITERS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.VOLUME_STORAGE,
-        suggested_display_precision=0,
-        value_fn=lambda value: value.volume,  # type: ignore[union-attr]
-    ),
-    AqvifySensorEntityDescription(
-        key="temperature",
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        state_class=SensorStateClass.MEASUREMENT,
-        device_class=SensorDeviceClass.TEMPERATURE,
-        suggested_display_precision=1,
-        value_fn=lambda value: value.temperature,  # type: ignore[union-attr]
         entity_registry_enabled_default=False,
     ),
 )

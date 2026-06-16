@@ -248,10 +248,10 @@ class AqvifyAggrDataCoordinator(DataUpdateCoordinator):
 
         return device_data
 
-    def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
-        """Return newly discovered device keys and the full current device set."""
+    # def async_add_devices(self, added_devices: set[str]) -> tuple[set[str], set[str]]:
+    #     """Return newly discovered device keys and the full current device set."""
 
-        # current_devices = set(self.data.devices.devices)
-        # new_devices: set[str] = current_devices - added_devices
-        # return (new_devices, current_devices)
-        return (set(), set())
+    #     # current_devices = set(self.data.devices.devices)
+    #     # new_devices: set[str] = current_devices - added_devices
+    #     # return (new_devices, current_devices)
+    #     return (set(), set())
