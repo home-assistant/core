@@ -128,8 +128,7 @@ async def test_button_rotation_reset_press(
             {ATTR_ENTITY_ID: range_entity_id, ATTR_VALUE: target_value},
             blocking=True,
         )
-
-    assert len(mock_action_setitem.mock_calls) == 1
+        assert len(mock_action_setitem.mock_calls) == 1
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
@@ -153,8 +152,7 @@ async def test_button_rotation_reset_press(
             {ATTR_ENTITY_ID: button_entity_id},
             blocking=True,
         )
-
-    assert len(mock_action_delitem.mock_calls) == 2
+        assert len(mock_action_delitem.mock_calls) == 2
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
