@@ -8,12 +8,10 @@ from homeassistant.core import HomeAssistant
 from .conftest import setup_integration
 
 
-async def test_create_sensors(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
-) -> None:
+async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
     """Test creation of sensors."""
 
-    await setup_integration(hass, mock_nexia_home)
+    await setup_integration(hass, patch_nexia_home)
 
     state = hass.states.get("sensor.nick_office_nick_office_temperature")
     assert state is not None

@@ -376,18 +376,18 @@ def mock_nexia_home() -> NonCallableMock[NexiaHome]:
 
 
 @pytest.fixture
-def patch_nexia_home(mock_nexia_home: NexiaHome):
+def patch_nexia_home(
+    mock_nexia_home: NonCallableMock[NexiaHome],
+) -> NonCallableMock[NexiaHome]:
     """Patches NexiaHome to return a mock instance for the duration of a test."""
     with patch(
         "homeassistant.components.nexia.NexiaHome", return_value=mock_nexia_home
     ):
-        yield
+        yield mock_nexia_home
 
 
 async def setup_integration(
-    hass: HomeAssistant,
-    nexia_home: NexiaHome,
-    unique_id: str = "123456",
+    hass: HomeAssistant, patch_nexia_home: NexiaHome, unique_id: str = "123456"
 ) -> MockConfigEntry:
     """Set up the nexia integration with a pre-configured mock NexiaHome."""
     entry = MockConfigEntry(
@@ -399,8 +399,8 @@ async def setup_integration(
     entry.add_to_hass(hass)
 
     # validate setup
-    for tid in nexia_home.get_thermostat_ids():
-        thermostat = nexia_home.get_thermostat_by_id(tid)
+    for tid in patch_nexia_home.get_thermostat_ids():
+        thermostat = patch_nexia_home.get_thermostat_by_id(tid)
         for zid in thermostat.get_zone_ids():
             assert thermostat.get_zone_by_id(zid).thermostat is thermostat
 

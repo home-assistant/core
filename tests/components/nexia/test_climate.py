@@ -8,12 +8,10 @@ from homeassistant.core import HomeAssistant
 from .conftest import setup_integration
 
 
-async def test_climate_zones(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
-) -> None:
+async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
     """Test creation climate zones."""
 
-    await setup_integration(hass, mock_nexia_home)
+    await setup_integration(hass, patch_nexia_home)
 
     state = hass.states.get("climate.nick_office_nick_office")
     assert state is not None

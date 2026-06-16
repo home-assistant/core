@@ -20,27 +20,25 @@ from tests.typing import WebSocketGenerator
 
 async def test_setup_retry_client_os_error(
     hass: HomeAssistant,
-    mock_nexia_home: NonCallableMock[NexiaHome],
-    patch_nexia_home,
+    patch_nexia_home: NonCallableMock[NexiaHome],
 ) -> None:
     """Verify we retry setup on aiohttp.ClientOSError."""
 
-    mock_nexia_home.login.side_effect = aiohttp.ClientOSError
-    config_entry = await setup_integration(hass, mock_nexia_home)
+    patch_nexia_home.login.side_effect = aiohttp.ClientOSError
+    config_entry = await setup_integration(hass, patch_nexia_home)
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_device_remove_devices(
     hass: HomeAssistant,
-    mock_nexia_home: NexiaHome,
-    patch_nexia_home,
+    patch_nexia_home: NexiaHome,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test we can only remove a device that no longer exists."""
     await async_setup_component(hass, "config", {})
-    config_entry = await setup_integration(hass, mock_nexia_home)
+    config_entry = await setup_integration(hass, patch_nexia_home)
     entry_id = config_entry.entry_id
 
     entity = entity_registry.entities["sensor.nick_office_nick_office_temperature"]

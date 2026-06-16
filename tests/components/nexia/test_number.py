@@ -13,11 +13,11 @@ from .conftest import setup_integration
 
 
 async def test_create_fan_speed_number_entities(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
+    hass: HomeAssistant, patch_nexia_home: NexiaHome
 ) -> None:
     """Test creation of fan speed number entities."""
 
-    await setup_integration(hass, mock_nexia_home)
+    await setup_integration(hass, patch_nexia_home)
 
     state = hass.states.get("number.master_suite_fan_speed")
     assert state is not None
@@ -50,12 +50,10 @@ async def test_create_fan_speed_number_entities(
     )
 
 
-async def test_set_fan_speed(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
-) -> None:
+async def test_set_fan_speed(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
     """Test setting fan speed."""
 
-    await setup_integration(hass, mock_nexia_home)
+    await setup_integration(hass, patch_nexia_home)
 
     state_before = hass.states.get("number.master_suite_fan_speed")
     assert state_before.state == "35.0"

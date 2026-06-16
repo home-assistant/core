@@ -9,11 +9,11 @@ from .conftest import setup_integration
 
 
 async def test_create_binary_sensors(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
+    hass: HomeAssistant, patch_nexia_home: NexiaHome
 ) -> None:
     """Test creation of binary sensors."""
 
-    await setup_integration(hass, mock_nexia_home)
+    await setup_integration(hass, patch_nexia_home)
 
     state = hass.states.get("binary_sensor.master_suite_blower_active")
     assert state is not None

@@ -20,12 +20,10 @@ from .conftest import setup_integration
 from tests.common import async_fire_time_changed
 
 
-async def test_hold_switch(
-    hass: HomeAssistant, mock_nexia_home: NexiaHome, patch_nexia_home
-) -> None:
+async def test_hold_switch(hass: HomeAssistant, patch_nexia_home: NexiaHome) -> None:
     """Test creation of the hold switch."""
 
-    await setup_integration(hass, mock_nexia_home)
+    await setup_integration(hass, patch_nexia_home)
 
     entity_state = hass.states.get("switch.nick_office_nick_office_hold")
     assert entity_state is not None
@@ -34,13 +32,12 @@ async def test_hold_switch(
 
 async def test_nexia_sensor_switch(
     hass: HomeAssistant,
-    mock_nexia_home: NexiaHome,
-    patch_nexia_home,
+    patch_nexia_home: NexiaHome,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test NexiaRoomIQSensorSwitch."""
 
-    await setup_integration(hass, mock_nexia_home)
+    await setup_integration(hass, patch_nexia_home)
 
     sw1_id = f"{Platform.SWITCH}.center_nativezone_center_nativezone_include_center"
     sw1 = {ATTR_ENTITY_ID: sw1_id}

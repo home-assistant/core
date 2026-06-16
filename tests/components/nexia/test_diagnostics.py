@@ -13,13 +13,12 @@ from tests.typing import ClientSessionGenerator
 
 async def test_diagnostics(
     hass: HomeAssistant,
-    mock_nexia_home: NexiaHome,
-    patch_nexia_home,
+    patch_nexia_home: NexiaHome,
     hass_client: ClientSessionGenerator,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test generating diagnostics for a config entry."""
-    entry = await setup_integration(hass, mock_nexia_home)
+    entry = await setup_integration(hass, patch_nexia_home)
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, entry)
     assert diag == snapshot
