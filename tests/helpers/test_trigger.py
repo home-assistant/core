@@ -4823,7 +4823,6 @@ def test_entity_state_trigger_schema_behavior_backwards_compatible(
     ],
 )
 async def test_entity_state_trigger_legacy_behavior_creates_repair_issue(
-    hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     behavior: str,
     expected: str,
@@ -4849,7 +4848,6 @@ async def test_entity_state_trigger_legacy_behavior_creates_repair_issue(
 
 @pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
 async def test_entity_state_trigger_new_behavior_no_repair_issue(
-    hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
     behavior: str,
 ) -> None:
