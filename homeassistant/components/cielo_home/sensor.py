@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SENSOR_HUMIDITY, SENSOR_TEMPERATURE
 from .coordinator import CieloDataUpdateCoordinator, CieloHomeConfigEntry
-from .entity import CieloDeviceEntity
+from .entity import CieloDeviceEntity, _normalize_temp_unit
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -26,14 +26,18 @@ class CieloSensorEntityDescription(SensorEntityDescription):
     """Describes a Cielo Home sensor entity."""
 
     value_fn: Callable[[CieloDeviceAPI, CieloDevice | None], float | int | None]
+    unit_fn: Callable[[CieloDeviceAPI, CieloDevice | None], str | None] | None = None
 
 
 SENSOR_DESCRIPTIONS: tuple[CieloSensorEntityDescription, ...] = (
     CieloSensorEntityDescription(
         key=SENSOR_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
+        suggested_display_precision=1,
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client, device_data: client.current_temperature(),
+        # Temperature unit is dynamic; see the native_unit_of_measurement property for limitations.
+        unit_fn=_normalize_temp_unit,
     ),
     CieloSensorEntityDescription(
         key=SENSOR_HUMIDITY,
@@ -95,6 +99,6 @@ class CieloSensor(CieloDeviceEntity, SensorEntity):
         statistics may be affected as the same numeric value will be interpreted
         differently. This is a known limitation of the device's API.
         """
-        if self.entity_description.key == SENSOR_TEMPERATURE:
-            return self.temperature_unit
+        if self.entity_description.unit_fn is not None:
+            return self.entity_description.unit_fn(self.client, self.device_data)
         return super().native_unit_of_measurement
