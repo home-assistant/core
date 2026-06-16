@@ -130,7 +130,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             extra_inputs[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
         self._username = extra_inputs[CONF_USERNAME]
-        self._password = extra_inputs[CONF_PASSWORD]
+        self._password = extra_inputs.get(CONF_PASSWORD, "")
         self._with_family = extra_inputs.get(CONF_WITH_FAMILY, DEFAULT_WITH_FAMILY)
         self._max_interval = extra_inputs.get(CONF_MAX_INTERVAL, DEFAULT_MAX_INTERVAL)
         self._gps_accuracy_threshold = extra_inputs.get(
