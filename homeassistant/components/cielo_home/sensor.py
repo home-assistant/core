@@ -1,5 +1,11 @@
 """Support for Cielo Home sensors."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
+
+from cieloconnectapi.device import CieloDeviceAPI
+from cieloconnectapi.model import CieloDevice
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -14,17 +20,29 @@ from .const import SENSOR_HUMIDITY, SENSOR_TEMPERATURE
 from .coordinator import CieloDataUpdateCoordinator, CieloHomeConfigEntry
 from .entity import CieloDeviceEntity
 
-SENSOR_DESCRIPTIONS: tuple[SensorEntityDescription, ...] = (
-    SensorEntityDescription(
+
+@dataclass(kw_only=True, frozen=True)
+class CieloSensorEntityDescription(SensorEntityDescription):
+    """Describes a Cielo Home sensor entity."""
+
+    value_fn: Callable[[CieloDeviceAPI, CieloDevice | None], float | int | None]
+
+
+SENSOR_DESCRIPTIONS: tuple[CieloSensorEntityDescription, ...] = (
+    CieloSensorEntityDescription(
         key=SENSOR_TEMPERATURE,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda client, device_data: client.current_temperature(),
     ),
-    SensorEntityDescription(
+    CieloSensorEntityDescription(
         key=SENSOR_HUMIDITY,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
+        value_fn=lambda client, device_data: (
+            device_data.humidity if device_data else None
+        ),
     ),
 )
 
@@ -50,13 +68,13 @@ async def async_setup_entry(
 class CieloSensor(CieloDeviceEntity, SensorEntity):
     """Representation of a Cielo Home sensor."""
 
-    entity_description: SensorEntityDescription
+    entity_description: CieloSensorEntityDescription
 
     def __init__(
         self,
         coordinator: CieloDataUpdateCoordinator,
         device_id: str,
-        entity_description: SensorEntityDescription,
+        entity_description: CieloSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator, device_id)
@@ -66,12 +84,7 @@ class CieloSensor(CieloDeviceEntity, SensorEntity):
     @property
     def native_value(self) -> float | int | None:
         """Return the native value of the sensor."""
-        if self.entity_description.key == SENSOR_TEMPERATURE:
-            # current_temperature() returns None when unavailable.
-            return self.client.current_temperature()
-        if self.entity_description.key == SENSOR_HUMIDITY:
-            return self.device_data.humidity if self.device_data else None
-        return None
+        return self.entity_description.value_fn(self.client, self.device_data)
 
     @property
     def native_unit_of_measurement(self) -> str | None:
