@@ -286,8 +286,9 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 form_data[CONF_API_KEY] = user_input[CONF_API_KEY]
 
         placeholders = {
-            "name": discovery_info["hostname"]
-            or discovery_info["platform"]
+            "name": discovery_info.get("name")
+            or discovery_info.get("hostname")
+            or discovery_info.get("product_name")
             or f"NVR {_async_short_mac(discovery_info['hw_addr'])}",
             "ip_address": discovery_info["source_ip"],
         }
