@@ -29,6 +29,7 @@ from . import get_device_info
 from .const import (
     API_GEN_2,
     API_GEN_3,
+    API_GEN_4,
     KEY_RECOMMENDED_TIRE_PRESSURE_FRONT,
     KEY_RECOMMENDED_TIRE_PRESSURE_REAR,
     VEHICLE_API_GEN,
@@ -234,10 +235,10 @@ def create_vehicle_sensors(
     sensor_descriptions_to_add = []
     sensor_descriptions_to_add.extend(SAFETY_SENSORS)
 
-    if vehicle_info[VEHICLE_API_GEN] in [API_GEN_2, API_GEN_3]:
+    if vehicle_info[VEHICLE_API_GEN] in [API_GEN_2, API_GEN_3, API_GEN_4]:
         sensor_descriptions_to_add.extend(API_GEN_2_SENSORS)
 
-    if vehicle_info[VEHICLE_API_GEN] == API_GEN_3:
+    if vehicle_info[VEHICLE_API_GEN] in [API_GEN_3, API_GEN_4]:
         sensor_descriptions_to_add.extend(API_GEN_3_SENSORS)
 
     if vehicle_info[VEHICLE_HAS_EV]:
