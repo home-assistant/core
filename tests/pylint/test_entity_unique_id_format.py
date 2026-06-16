@@ -178,6 +178,18 @@ class MySensor(Entity):
             True,
             id="self_assign_name_buried_in_call_args",
         ),
+        pytest.param(
+            """
+from .const import DOMAIN
+from homeassistant.helpers.entity import Entity
+
+class MySensor(Entity):
+    async def async_added_to_hass(self):
+        self._attr_unique_id = f"{DOMAIN}_{self._key}"
+""",
+            True,
+            id="async_method_self_assign",
+        ),
     ],
 )
 def test_redundant_domain_fires(
