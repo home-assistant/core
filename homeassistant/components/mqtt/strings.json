@@ -193,7 +193,7 @@
                 "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
                 "sw_version": "The software version of the device. E.g. '2025.1.0'."
               },
-              "name": "Advanced device settings"
+              "name": "Other device settings"
             },
             "mqtt_settings": {
               "data": {
@@ -293,7 +293,7 @@
               "data_description": {
                 "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)"
               },
-              "name": "Advanced options"
+              "name": "Other settings"
             }
           },
           "title": "Configure MQTT device \"{mqtt_device}\""
@@ -459,7 +459,7 @@
                 "off_delay": "For sensors that only send \"on\" state updates (like PIRs), this variable sets a delay in seconds after which the sensor’s state will be updated back to \"off\".",
                 "transition": "Enable the transition feature for this light"
               },
-              "name": "Advanced settings"
+              "name": "Other settings"
             },
             "alarm_control_panel_payload_settings": {
               "data": {
@@ -923,7 +923,7 @@
               "data_description": {
                 "command_off_template": "The [template]({command_templating_url}) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used.  [Learn more.]({url}#command_off_template)"
               },
-              "name": "Advanced siren settings"
+              "name": "Other siren settings"
             },
             "target_humidity_settings": {
               "data": {
@@ -998,7 +998,7 @@
                 "mode": "Mode of the text input",
                 "pattern": "A valid regex pattern"
               },
-              "name": "Advanced text entity settings"
+              "name": "Other text entity settings"
             },
             "valve_payload_settings": {
               "data": {
