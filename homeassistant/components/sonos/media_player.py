@@ -21,7 +21,6 @@ from sonos_websocket.exception import SonosWebsocketError
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ARTIST,
@@ -778,9 +777,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if self.media.queue_size:
             attributes["queue_size"] = self.media.queue_size
-
-        if self.source:
-            attributes[ATTR_INPUT_SOURCE] = self.source
 
         return attributes
 
