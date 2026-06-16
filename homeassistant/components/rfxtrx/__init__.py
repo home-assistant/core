@@ -1,7 +1,5 @@
 """Support for RFXtrx devices."""
 
-from __future__ import annotations
-
 import binascii
 from collections.abc import Callable, Mapping
 import copy
@@ -270,6 +268,8 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         _create_rfx, config, lambda event: hass.add_job(async_handle_receive, event)
     )
 
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     hass.data[DOMAIN][DATA_RFXOBJECT] = rfx_object
 
     entry.async_on_unload(
@@ -288,6 +288,7 @@ async def async_setup_internal(hass: HomeAssistant, entry: ConfigEntry) -> None:
         event = call.data[ATTR_EVENT]
         rfx_object.transport.send(event)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(DOMAIN, SERVICE_SEND, send, schema=SERVICE_SEND_SCHEMA)
 
 

@@ -1,10 +1,8 @@
 """Main Hub class."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from victron_mqtt import (
     AuthenticationError,
@@ -13,12 +11,15 @@ from victron_mqtt import (
     Hub as VictronVenusHub,
     Metric as VictronVenusMetric,
     MetricKind,
+    MetricType,
     OperationMode,
+    VictronEnum,
 )
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -29,7 +30,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.redact import async_redact_data
 
-from .const import CONF_INSTALLATION_ID, CONF_MODEL, CONF_SERIAL, DOMAIN
+from .const import CONF_INSTALLATION_ID, CONF_SERIAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,7 +40,7 @@ TO_REDACT = {CONF_USERNAME, CONF_PASSWORD}
 
 type VictronGxConfigEntry = ConfigEntry[Hub]
 
-NewMetricCallback = Callable[
+type NewMetricCallback = Callable[
     [VictronVenusDevice, VictronVenusMetric, DeviceInfo, str], None
 ]
 
@@ -87,11 +88,15 @@ class Hub:
             await self._hub.connect()
         except AuthenticationError as auth_error:
             raise ConfigEntryAuthFailed(
-                f"Authentication failed for {self.host}: {auth_error}"
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+                translation_placeholders={"host": self.host},
             ) from auth_error
         except CannotConnectError as connect_error:
             raise ConfigEntryNotReady(
-                f"Cannot connect to the hub at {self.host}: {connect_error}"
+                translation_domain=DOMAIN,
+                translation_key="cannot_connect",
+                translation_placeholders={"host": self.host},
             ) from connect_error
 
     async def stop(self) -> None:
@@ -135,10 +140,49 @@ class Hub:
             model=device.model,
             serial_number=device.serial_number,
         )
-        # Don't set via_device for the GX device itself
-        if device.unique_id != "system_0":
-            device_info["via_device"] = (DOMAIN, f"{installation_id}_system_0")
+        # Set via_device based on parent_device relationship
+        if device.parent_device is not None:
+            device_info["via_device"] = (
+                DOMAIN,
+                f"{installation_id}_{device.parent_device.unique_id}",
+            )
         return device_info
+
+    def is_device_connected(self, device_identifiers: set[tuple[str, str]]) -> bool:
+        """Check if a device is currently known to the hub."""
+        known_devices = self._hub.devices
+        return any(
+            identifier[1].removeprefix(f"{self._hub.installation_id}_") in known_devices
+            for identifier in device_identifiers
+            if identifier[0] == DOMAIN
+        )
+
+    def get_diagnostics_data(self) -> dict[str, Any]:
+        """Return diagnostics data for the hub's device and entity tree."""
+        return {
+            device_id: {
+                "name": device.name,
+                "model": device.model,
+                "manufacturer": device.manufacturer,
+                "firmware_version": device.firmware_version,
+                "device_type": device.device_type.string,
+                "metrics": {
+                    metric.short_id: {
+                        "name": metric.name,
+                        "value": "**REDACTED**"
+                        if metric.metric_type is MetricType.LOCATION
+                        else metric.value
+                        if not isinstance(metric.value, VictronEnum)
+                        else metric.value.id,
+                        "unit": metric.unit_of_measurement,
+                        "kind": metric.metric_kind.name,
+                        "type": metric.metric_type.name,
+                    }
+                    for metric in device.metrics
+                },
+            }
+            for device_id, device in self._hub.devices.items()
+        }
 
     def register_new_metric_callback(
         self, kind: MetricKind, new_metric_callback: NewMetricCallback

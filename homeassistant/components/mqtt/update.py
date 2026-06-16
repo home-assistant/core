@@ -1,7 +1,5 @@
 """Configure update platform in a device through MQTT topic."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

@@ -1,7 +1,5 @@
 """Support for Russound multizone controllers using RIO Protocol."""
 
-from __future__ import annotations
-
 import asyncio
 import datetime as dt
 import logging

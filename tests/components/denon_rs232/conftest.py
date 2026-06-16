@@ -1,6 +1,4 @@
-"""Test fixtures for the Denon RS232 integration."""
-
-from __future__ import annotations
+"""Test fixtures for the Denon RS-232 integration."""
 
 from typing import Literal
 from unittest.mock import AsyncMock, patch
@@ -27,7 +25,7 @@ from . import MOCK_DEVICE, MOCK_MODEL
 
 from tests.common import MockConfigEntry
 
-ZoneName = Literal["main", "zone_2", "zone_3"]
+type ZoneName = Literal["main", "zone_2", "zone_3"]
 
 
 class MockState(ReceiverState):

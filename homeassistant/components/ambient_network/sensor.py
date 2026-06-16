@@ -1,7 +1,5 @@
 """Support for Ambient Weather Network sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from homeassistant.components.sensor import (

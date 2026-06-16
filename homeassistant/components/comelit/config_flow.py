@@ -1,7 +1,5 @@
 """Config flow for Comelit integration."""
 
-from __future__ import annotations
-
 from asyncio.exceptions import TimeoutError
 from collections.abc import Mapping
 import re
@@ -70,7 +68,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         raise InvalidAuth(
             translation_domain=DOMAIN,
             translation_key="cannot_authenticate",
-            translation_placeholders={"error": repr(err)},
         ) from err
     finally:
         await api.logout()
@@ -94,6 +91,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Comelit."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

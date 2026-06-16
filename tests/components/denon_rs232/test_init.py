@@ -1,4 +1,4 @@
-"""Tests for the Denon RS232 integration init."""
+"""Tests for the Denon RS-232 integration init."""
 
 from unittest.mock import AsyncMock
 

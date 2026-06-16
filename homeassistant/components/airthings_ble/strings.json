@@ -54,5 +54,10 @@
         "name": "Radon longterm level"
       }
     }
+  },
+  "exceptions": {
+    "device_not_found": {
+      "message": "Could not find Airthings device with address {address}: {reason}"
+    }
   }
 }

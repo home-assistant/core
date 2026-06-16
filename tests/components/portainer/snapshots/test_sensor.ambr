@@ -1,4 +1,115 @@
 # serializer version: 1
+# name: test_all_entities[sensor.dashy_config_volume_driver-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.dashy_config_volume_driver',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume driver',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume driver',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume_driver',
+    'unique_id': 'portainer_test_entry_123_1_volume_dashy_config_volume_driver',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_config_volume_driver-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'dashy_config Volume driver',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_config_volume_driver',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'local',
+  })
+# ---
+# name: test_all_entities[sensor.dashy_config_volume_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.dashy_config_volume_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume size',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Volume size',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume_size',
+    'unique_id': 'portainer_test_entry_123_1_volume_dashy_config_volume_size',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.dashy_config_volume_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'dashy_config Volume size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.dashy_config_volume_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0029296875',
+  })
+# ---
 # name: test_all_entities[sensor.dashy_containers-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -467,6 +578,117 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'swarm',
+  })
+# ---
+# name: test_all_entities[sensor.db_data_volume_driver-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.db_data_volume_driver',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume driver',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume driver',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume_driver',
+    'unique_id': 'portainer_test_entry_123_1_volume_db_data_volume_driver',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.db_data_volume_driver-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'db_data Volume driver',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.db_data_volume_driver',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'local',
+  })
+# ---
+# name: test_all_entities[sensor.db_data_volume_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.db_data_volume_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume size',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Volume size',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume_size',
+    'unique_id': 'portainer_test_entry_123_1_volume_db_data_volume_size',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.db_data_volume_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'db_data Volume size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.db_data_volume_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.0625',
   })
 # ---
 # name: test_all_entities[sensor.focused_einstein_cpu_usage_total-entry]
@@ -1330,6 +1552,128 @@
     'state': '14',
   })
 # ---
+# name: test_all_entities[sensor.my_environment_container_disk_usage_reclaimable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_environment_container_disk_usage_reclaimable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Container disk usage reclaimable',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Container disk usage reclaimable',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_disk_usage_reclaimable',
+    'unique_id': 'portainer_test_entry_123_1_container_disk_usage_reclaimable',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_environment_container_disk_usage_reclaimable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my-environment Container disk usage reclaimable',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_environment_container_disk_usage_reclaimable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11.7737560272217',
+  })
+# ---
+# name: test_all_entities[sensor.my_environment_container_disk_usage_total_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_environment_container_disk_usage_total_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Container disk usage total size',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Container disk usage total size',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'container_disk_usage_total_size',
+    'unique_id': 'portainer_test_entry_123_1_container_disk_usage_total_size',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_environment_container_disk_usage_total_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my-environment Container disk usage total size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_environment_container_disk_usage_total_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '94.190055847168',
+  })
+# ---
 # name: test_all_entities[sensor.my_environment_containers_paused-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1590,6 +1934,128 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '508',
+  })
+# ---
+# name: test_all_entities[sensor.my_environment_image_disk_usage_reclaimable-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_environment_image_disk_usage_reclaimable',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Image disk usage reclaimable',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Image disk usage reclaimable',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image_disk_usage_reclaimable',
+    'unique_id': 'portainer_test_entry_123_1_image_disk_usage_reclaimable',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_environment_image_disk_usage_reclaimable-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my-environment Image disk usage reclaimable',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_environment_image_disk_usage_reclaimable',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '11.7737560272217',
+  })
+# ---
+# name: test_all_entities[sensor.my_environment_image_disk_usage_total_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_environment_image_disk_usage_total_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Image disk usage total size',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Image disk usage total size',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'image_disk_usage_total_size',
+    'unique_id': 'portainer_test_entry_123_1_image_disk_usage_total_size',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_environment_image_disk_usage_total_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my-environment Image disk usage total size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_environment_image_disk_usage_total_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '94.190055847168',
   })
 # ---
 # name: test_all_entities[sensor.my_environment_kernel_version-entry]
@@ -1854,6 +2320,178 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1998.7890625',
+  })
+# ---
+# name: test_all_entities[sensor.my_environment_volume_disk_usage_total_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.my_environment_volume_disk_usage_total_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume disk usage total size',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Volume disk usage total size',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume_disk_usage_total_size',
+    'unique_id': 'portainer_test_entry_123_1_volume_disk_usage_total',
+    'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.my_environment_volume_disk_usage_total_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'my-environment Volume disk usage total size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.MEBIBYTES: 'MiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.my_environment_volume_disk_usage_total_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '94.190055847168',
+  })
+# ---
+# name: test_all_entities[sensor.myvolume_volume_driver-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.myvolume_volume_driver',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume driver',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Volume driver',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume_driver',
+    'unique_id': 'portainer_test_entry_123_1_volume_myvolume_volume_driver',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.myvolume_volume_driver-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'myvolume Volume driver',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myvolume_volume_driver',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'local',
+  })
+# ---
+# name: test_all_entities[sensor.myvolume_volume_size-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.myvolume_volume_size',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Volume size',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DATA_SIZE: 'data_size'>,
+    'original_icon': None,
+    'original_name': 'Volume size',
+    'platform': 'portainer',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'volume_size',
+    'unique_id': 'portainer_test_entry_123_1_volume_myvolume_volume_size',
+    'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+  })
+# ---
+# name: test_all_entities[sensor.myvolume_volume_size-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'data_size',
+      'friendly_name': 'myvolume Volume size',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.myvolume_volume_size',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.09765625',
   })
 # ---
 # name: test_all_entities[sensor.practical_morse_cpu_usage_total-entry]

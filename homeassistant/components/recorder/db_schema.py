@@ -1,7 +1,5 @@
 """Models for SQLAlchemy."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -179,14 +177,15 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
 
 
 class NativeLargeBinary(LargeBinary):
-    """A faster version of LargeBinary for engines that support python bytes natively."""
+    """A faster version of LargeBinary for native bytes engines."""
 
     def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """No conversion needed for engines that support native bytes."""
         return None
 
 
-# Although all integers are same in SQLite, it does not allow an identity column to be BIGINT
+# Although all integers are same in SQLite, it does not allow
+# an identity column to be BIGINT
 # https://sqlite.org/forum/info/2dfa968a702e1506e885cb06d92157d492108b22bf39459506ab9f7125bca7fd
 ID_TYPE = BigInteger().with_variant(sqlite.INTEGER, "sqlite")
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
@@ -309,17 +308,17 @@ class Events(Base):
     def from_event(event: Event) -> Events:
         """Create an event database object from a native event."""
         context = event.context
+        # The unused legacy columns (event_type, event_data, time_fired,
+        # context_id, context_user_id, context_parent_id) are nullable with no
+        # default, so they are intentionally left unset here. Assigning them
+        # None would still insert NULL, but each assignment goes through
+        # SQLAlchemy's instrumented attribute machinery, which is a measurable
+        # cost when run for every recorded event.
         return Events(
-            event_type=None,
-            event_data=None,
             origin_idx=event.origin.idx,
-            time_fired=None,
             time_fired_ts=event.time_fired_timestamp,
-            context_id=None,
             context_id_bin=ulid_to_bytes_or_none(context.id),
-            context_user_id=None,
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
-            context_parent_id=None,
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
         )
 
@@ -492,19 +491,18 @@ class States(Base):
             else:
                 last_reported_ts = state.last_reported_timestamp
         context = event.context
+        # The unused legacy columns (entity_id, attributes, context_id,
+        # context_user_id, context_parent_id, last_updated, last_changed) are
+        # nullable with no default, so they are intentionally left unset here.
+        # Assigning them None would still insert NULL, but each assignment goes
+        # through SQLAlchemy's instrumented attribute machinery, which is a
+        # measurable cost when run for every recorded state change.
         return States(
             state=state_value,
-            entity_id=None,
-            attributes=None,
-            context_id=None,
             context_id_bin=ulid_to_bytes_or_none(context.id),
-            context_user_id=None,
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
-            context_parent_id=None,
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
             origin_idx=event.origin.idx,
-            last_updated=None,
-            last_changed=None,
             last_updated_ts=last_updated_ts,
             last_changed_ts=last_changed_ts,
             last_reported_ts=last_reported_ts,
@@ -561,8 +559,13 @@ class StateAttributes(Base):
         # None state means the state was removed from the state machine
         if (state := event.data["new_state"]) is None:
             return b"{}"
-        if state_info := state.state_info:
-            unrecorded_attributes = state_info["unrecorded_attributes"]
+        if (state_info := state.state_info) and (
+            unrecorded_attributes := state_info["unrecorded_attributes"]
+        ):
+            # The entity has unrecorded attributes, so a combined exclude set
+            # has to be built. The common case (no unrecorded attributes) falls
+            # through to the shared constant below without allocating a set per
+            # recorded state change.
             exclude_attrs = {
                 *ALL_DOMAIN_EXCLUDE_ATTRS,
                 *unrecorded_attributes,

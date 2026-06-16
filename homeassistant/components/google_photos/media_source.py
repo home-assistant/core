@@ -1,7 +1,5 @@
 """Media source for Google Photos."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
@@ -113,7 +111,8 @@ class GooglePhotosMediaSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media identifier to a url.
 
-        This will resolve a specific media item to a url for the full photo or video contents.
+        This will resolve a specific media item to a url for
+        the full photo or video contents.
         """
         try:
             identifier = PhotosIdentifier.of(item.identifier)
@@ -284,7 +283,9 @@ def _build_media_item(
 
 
 def _media_url(media_item: MediaItem, max_size: int) -> str:
-    """Return a media item url with the specified max thumbnail size on the longest edge.
+    """Return a media item url with the specified max thumbnail size.
+
+    The size applies to the longest edge.
 
     See https://developers.google.com/photos/library/guides/access-media-items#base-urls
     """

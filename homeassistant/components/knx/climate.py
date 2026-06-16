@@ -1,7 +1,5 @@
 """Support for KNX climate entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from xknx import XKNX
@@ -382,7 +380,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
                 self._attr_fan_modes = [fan_zero_mode, FAN_LOW, FAN_HIGH]
             elif fan_max_step == 1:
                 self._attr_fan_modes = [fan_zero_mode, FAN_ON]
-            elif device.fan_speed_mode == FanSpeedMode.STEP:
+            elif device.fan_speed_mode is FanSpeedMode.STEP:
                 self._attr_fan_modes = [fan_zero_mode] + [
                     str(i) for i in range(1, fan_max_step + 1)
                 ]
@@ -552,7 +550,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
         if not fan_speed or self._attr_fan_modes is None:
             return self.fan_zero_mode
 
-        if self._device.fan_speed_mode == FanSpeedMode.STEP:
+        if self._device.fan_speed_mode is FanSpeedMode.STEP:
             return self._attr_fan_modes[fan_speed]
 
         # Find the closest fan mode percentage
@@ -572,7 +570,7 @@ class _KnxClimate(ClimateEntity, _KnxEntityBase):
 
         fan_mode_index = self._attr_fan_modes.index(fan_mode)
 
-        if self._device.fan_speed_mode == FanSpeedMode.STEP:
+        if self._device.fan_speed_mode is FanSpeedMode.STEP:
             await self._device.set_fan_speed(fan_mode_index)
             return
 

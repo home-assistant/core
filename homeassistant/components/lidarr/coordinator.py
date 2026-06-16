@@ -1,7 +1,5 @@
 """Data update coordinator for the Lidarr integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
@@ -35,7 +33,7 @@ T = TypeVar("T", bound=list[LidarrRootFolder] | LidarrQueue | str | LidarrAlbum 
 type LidarrConfigEntry = ConfigEntry[LidarrData]
 
 
-class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class LidarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):  # noqa: UP046
     """Data update coordinator for the Lidarr integration."""
 
     config_entry: LidarrConfigEntry

@@ -1,7 +1,5 @@
 """Support for Neato Connected Vacuums switches."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -102,6 +100,7 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
                 self.robot.enable_schedule()
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
                 _LOGGER.error(
                     "Neato switch connection error '%s': %s", self.entity_id, ex
@@ -112,6 +111,7 @@ class NeatoConnectedSwitch(NeatoEntity, SwitchEntity):
         if self.type == SWITCH_TYPE_SCHEDULE:
             try:
                 self.robot.disable_schedule()
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except NeatoRobotException as ex:
                 _LOGGER.error(
                     "Neato switch connection error '%s': %s", self.entity_id, ex

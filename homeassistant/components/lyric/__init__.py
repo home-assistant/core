@@ -1,7 +1,5 @@
 """The Honeywell Lyric integration."""
 
-from __future__ import annotations
-
 from aiolyric import Lyric
 
 from homeassistant.const import Platform
@@ -23,7 +21,7 @@ from .coordinator import LyricConfigEntry, LyricDataUpdateCoordinator
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
+PLATFORMS = [Platform.CLIMATE, Platform.SELECT, Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> bool:

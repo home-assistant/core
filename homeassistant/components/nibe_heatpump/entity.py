@@ -1,7 +1,5 @@
 """The Nibe Heat Pump coordinator."""
 
-from __future__ import annotations
-
 from nibe.coil import Coil, CoilData
 
 from homeassistant.helpers.entity import async_generate_entity_id

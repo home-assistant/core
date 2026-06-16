@@ -57,7 +57,7 @@ async def test_setup_entry_login_failed_raises_configentryauthfailed(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state == entry_state
+    assert mock_config_entry.state is entry_state
 
 
 async def test_missing_devices_removed_at_startup(

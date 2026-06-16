@@ -378,7 +378,7 @@ class AirPurifier(Fan):
 
     @callback
     def _async_update_filter_change_indicator(self, new_state: State | None) -> None:
-        """Handle linked filter change indicator binary sensor state change to update HomeKit value."""
+        """Handle filter change indicator state change."""
         if new_state is None or new_state.state in IGNORED_STATES:
             return
 
@@ -408,7 +408,7 @@ class AirPurifier(Fan):
 
     @callback
     def _async_update_filter_life_level(self, new_state: State | None) -> None:
-        """Handle linked filter life level sensor state change to update HomeKit value."""
+        """Handle filter life level sensor state change."""
         if new_state is None or new_state.state in IGNORED_STATES:
             return
 

@@ -1,7 +1,5 @@
 """Support for monitoring an OpenEVSE Charger."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -77,7 +75,7 @@ SENSOR_TYPES: tuple[OpenEVSESensorDescription, ...] = (
             "1": "level_1",
             "2": "level_2",
             "a": "automatic",
-        }.get(ev.service_level.lower()),
+        }.get(str(ev.service_level).lower()),
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

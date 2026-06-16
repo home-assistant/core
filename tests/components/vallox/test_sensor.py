@@ -47,7 +47,7 @@ def _now_at_13():
 async def test_remaining_time_for_filter_none_returned_from_vallox(
     mock_entry: MockConfigEntry, hass: HomeAssistant, setup_fetch_metric_data_mock
 ) -> None:
-    """Test that the remaining time for filter sensor returns 'unknown' when Vallox returns None."""
+    """Test remaining time for filter returns 'unknown' when Vallox returns None."""
 
     class MockMetricData(MetricData):
         @property

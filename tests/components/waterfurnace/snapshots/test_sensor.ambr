@@ -278,7 +278,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '23.3333333333333',
   })
 # ---
 # name: test_sensors[sensor.test_abc_type_dehumidification_setpoint-entry]
@@ -333,7 +333,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '55',
   })
 # ---
 # name: test_sensors[sensor.test_abc_type_fan_power-entry]
@@ -549,7 +549,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '20.0',
   })
 # ---
 # name: test_sensors[sensor.test_abc_type_humidity-entry]

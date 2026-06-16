@@ -32,7 +32,7 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         }
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
-        """Override the create entry method to change to the step to find the heat pumps."""
+        """Override create entry to find heat pumps."""
         # get the user id and use that as unique id for this entry
         user_id = await async_get_user_id_from_token(
             API_URL,

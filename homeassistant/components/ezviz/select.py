@@ -1,7 +1,5 @@
 """Support for EZVIZ select controls."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
@@ -126,11 +124,11 @@ async def async_setup_entry(
 
     for camera in coordinator.data:
         device_category = coordinator.data[camera].get("device_category")
-        supportExt = coordinator.data[camera].get("supportExt")
+        support_ext = coordinator.data[camera].get("supportExt")
         if (
             device_category == DeviceCatagories.BATTERY_CAMERA_DEVICE_CATEGORY.value
-            and supportExt
-            and str(SupportExt.SupportBatteryManage.value) in supportExt
+            and support_ext
+            and str(SupportExt.SupportBatteryManage.value) in support_ext
         ):
             entities.append(
                 EzvizSelect(coordinator, camera, BATTERY_WORK_MODE_SELECT_TYPE)

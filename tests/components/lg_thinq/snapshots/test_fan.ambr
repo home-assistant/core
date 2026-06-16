@@ -1,0 +1,58 @@
+# serializer version: 1
+# name: test_fan_entities[hood][fan.test_hood_hood-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'preset_modes': None,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'fan',
+    'entity_category': None,
+    'entity_id': 'fan.test_hood_hood',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Hood',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Hood',
+    'platform': 'lg_thinq',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <FanEntityFeature: 49>,
+    'translation_key': <Property.FAN_SPEED: 'fan_speed'>,
+    'unique_id': 'MW2-2E247F93-B570-46A6-B827-920E9E10F966_fan_speed',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_fan_entities[hood][fan.test_hood_hood-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Test hood Hood',
+      'percentage': 20,
+      'percentage_step': 20.0,
+      'preset_mode': None,
+      'preset_modes': None,
+      'supported_features': <FanEntityFeature: 49>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'fan.test_hood_hood',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---

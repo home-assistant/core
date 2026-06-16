@@ -1,13 +1,17 @@
 """Support for powerwall sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from operator import attrgetter, methodcaller
 from typing import TYPE_CHECKING
 
-from tesla_powerwall import BatteryResponse, GridState, MeterResponse, MeterType
+from tesla_powerwall import (
+    BatteryResponse,
+    GridState,
+    MeterResponse,
+    MeterType,
+    OperationMode,
+)
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -217,6 +221,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the powerwall sensors."""
     powerwall_data = entry.runtime_data
+    base_info = powerwall_data["base_info"]
     coordinator = powerwall_data[POWERWALL_COORDINATOR]
     assert coordinator is not None
     data = coordinator.data
@@ -224,8 +229,11 @@ async def async_setup_entry(
         PowerWallChargeSensor(powerwall_data),
     ]
 
-    if data.backup_reserve is not None:
+    if not base_info.restricted and data.backup_reserve is not None:
         entities.append(PowerWallBackupReserveSensor(powerwall_data))
+
+    if data.operation_mode is not None:
+        entities.append(PowerWallOperationModeSensor(powerwall_data))
 
     for meter in data.meters.meters:
         entities.append(PowerWallExportSensor(powerwall_data, meter))
@@ -235,11 +243,12 @@ async def async_setup_entry(
             for description in POWERWALL_INSTANT_SENSORS
         )
 
-    for battery in data.batteries.values():
-        entities.extend(
-            PowerWallBatterySensor(powerwall_data, battery, description)
-            for description in BATTERY_INSTANT_SENSORS
-        )
+    if not base_info.restricted:
+        for battery in data.batteries.values():
+            entities.extend(
+                PowerWallBatterySensor(powerwall_data, battery, description)
+                for description in BATTERY_INSTANT_SENSORS
+            )
 
     async_add_entities(entities)
 
@@ -309,6 +318,26 @@ class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
         if self.data.backup_reserve is None:
             return None
         return round(self.data.backup_reserve)
+
+
+class PowerWallOperationModeSensor(PowerWallEntity, SensorEntity):
+    """Representation of the Powerwall operation mode."""
+
+    _attr_translation_key = "operation_mode"
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = [mode.value for mode in OperationMode]
+
+    @property
+    def unique_id(self) -> str:
+        """Device Uniqueid."""
+        return f"{self.base_unique_id}_operation_mode"
+
+    @property
+    def native_value(self) -> str | None:
+        """Get the current operation mode."""
+        if self.data.operation_mode is None:
+            return None
+        return self.data.operation_mode.value
 
 
 class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):

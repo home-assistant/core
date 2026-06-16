@@ -20,12 +20,12 @@ from homeassistant.components.backup import (
     OnProgressCallback,
     suggested_filename,
 )
+from homeassistant.const import CONF_PREFIX
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util.async_iterator import AsyncIteratorReader
 
 from . import BackblazeConfigEntry
 from .const import (
-    CONF_PREFIX,
     DATA_BACKUP_AGENT_LISTENERS,
     DOMAIN,
     METADATA_FILE_SUFFIX,
@@ -84,7 +84,10 @@ def _find_backup_file_for_metadata(
 def _create_backup_from_metadata(
     metadata_content: dict[str, Any], backup_file: FileVersion
 ) -> AgentBackup:
-    """Construct an AgentBackup from parsed metadata content and the associated backup file."""
+    """Construct an AgentBackup from parsed metadata content.
+
+    Uses the associated backup file to set the size.
+    """
     metadata = metadata_content["backup_metadata"]
     metadata["size"] = backup_file.size
     return AgentBackup.from_dict(metadata)
@@ -172,11 +175,13 @@ class BackblazeBackupAgent(BackupAgent):
             "Attempting to delete partially uploaded backup file %s",
             filename,
         )
+
+        def _delete_uploaded_file() -> None:
+            """Look up and delete the partially uploaded backup file."""
+            self._bucket.get_file_info_by_name(filename).delete()
+
         try:
-            uploaded_main_file_info = await self._hass.async_add_executor_job(
-                self._bucket.get_file_info_by_name, filename
-            )
-            await self._hass.async_add_executor_job(uploaded_main_file_info.delete)
+            await self._hass.async_add_executor_job(_delete_uploaded_file)
         except B2Error:
             _LOGGER.warning(
                 "Failed to clean up partially uploaded backup file %s;"
@@ -233,7 +238,8 @@ class BackblazeBackupAgent(BackupAgent):
     ) -> None:
         """Upload a backup to Backblaze B2.
 
-        This involves uploading the main backup archive and a separate metadata JSON file.
+        This involves uploading the main backup archive and a
+        separate metadata JSON file.
         """
         tar_filename, metadata_filename = suggested_filenames(backup)
         prefixed_tar_filename = self._prefix + tar_filename
@@ -381,8 +387,12 @@ class BackblazeBackupAgent(BackupAgent):
             metadata_file.file_name,
         )
 
-        await self._hass.async_add_executor_job(file.delete)
-        await self._hass.async_add_executor_job(metadata_file.delete)
+        def _delete_backup_files() -> None:
+            """Delete the backup file and its metadata file."""
+            file.delete()
+            metadata_file.delete()
+
+        await self._hass.async_add_executor_job(_delete_backup_files)
 
         self._invalidate_caches(
             backup_id,
@@ -393,7 +403,7 @@ class BackblazeBackupAgent(BackupAgent):
 
     @handle_b2_errors
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
-        """List all backups by finding their associated metadata files in Backblaze B2."""
+        """List all backups by finding metadata files in B2."""
         async with self._backup_list_cache_lock:
             if self._backup_list_cache and self._is_cache_valid(
                 self._backup_list_cache_expiration
@@ -402,7 +412,8 @@ class BackblazeBackupAgent(BackupAgent):
                 return list(self._backup_list_cache.values())
 
             _LOGGER.debug(
-                "Cache expired or empty, fetching all files from B2 to build backup list"
+                "Cache expired or empty, fetching all files"
+                " from B2 to build backup list"
             )
             all_files_in_prefix = await self._get_all_files_in_prefix()
 
@@ -482,7 +493,7 @@ class BackblazeBackupAgent(BackupAgent):
     async def _find_file_and_metadata_version_by_id(
         self, backup_id: str
     ) -> tuple[FileVersion | None, FileVersion | None]:
-        """Find the main backup file and its associated metadata file version by backup ID."""
+        """Find the backup file and metadata file version by ID."""
         all_files_in_prefix = await self._get_all_files_in_prefix()
 
         # Process metadata files sequentially to avoid exhausting executor pool
@@ -504,7 +515,8 @@ class BackblazeBackupAgent(BackupAgent):
                     )
                 except TimeoutError:
                     _LOGGER.warning(
-                        "Timeout downloading metadata file %s while searching for backup %s",
+                        "Timeout downloading metadata file %s"
+                        " while searching for backup %s",
                         file_name,
                         backup_id,
                     )
@@ -556,7 +568,8 @@ class BackblazeBackupAgent(BackupAgent):
         )
         if not found_backup_file:
             _LOGGER.warning(
-                "Found metadata file %s for backup ID %s, but no corresponding backup file",
+                "Found metadata file %s for backup ID %s,"
+                " but no corresponding backup file",
                 file_name,
                 target_backup_id,
             )
@@ -575,7 +588,8 @@ class BackblazeBackupAgent(BackupAgent):
 
         Uses a cache to minimize API calls.
 
-        This fetches a flat list of all files, including main backups and metadata files.
+        This fetches a flat list of all files, including main
+        backups and metadata files.
         """
         async with self._all_files_cache_lock:
             if self._is_cache_valid(self._all_files_cache_expiration):
@@ -603,7 +617,7 @@ class BackblazeBackupAgent(BackupAgent):
         file_version: FileVersion,
         all_files_in_prefix: dict[str, FileVersion],
     ) -> AgentBackup | None:
-        """Synchronously process a single metadata file and return an AgentBackup if valid."""
+        """Process a single metadata file and return an AgentBackup."""
         try:
             download_response = file_version.download().response
         except B2Error as err:
@@ -648,7 +662,8 @@ class BackblazeBackupAgent(BackupAgent):
             backup_id: The backup ID to remove from backup cache
             tar_filename: The tar filename to remove from files cache
             metadata_filename: The metadata filename to remove from files cache
-            remove_files: If True, remove specific files from cache; if False, expire entire cache
+            remove_files: If True, remove specific files from cache;
+                if False, expire entire cache
         """
         if remove_files:
             if self._is_cache_valid(self._all_files_cache_expiration):
@@ -659,7 +674,8 @@ class BackblazeBackupAgent(BackupAgent):
             if self._is_cache_valid(self._backup_list_cache_expiration):
                 self._backup_list_cache.pop(backup_id, None)
         else:
-            # For uploads, we can't easily add new FileVersion objects without API calls,
+            # For uploads, we can't easily add new FileVersion
+            # objects without API calls,
             # so we expire the entire cache for simplicity
             self._all_files_cache_expiration = 0.0
             self._backup_list_cache_expiration = 0.0

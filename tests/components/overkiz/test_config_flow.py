@@ -1,18 +1,16 @@
 """Tests for Overkiz config flow."""
 
-from __future__ import annotations
-
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp import ClientConnectorCertificateError, ClientError
 from pyoverkiz.exceptions import (
-    BadCredentialsException,
-    MaintenanceException,
-    NotSuchTokenException,
-    TooManyAttemptsBannedException,
-    TooManyRequestsException,
-    UnknownUserException,
+    BadCredentialsError,
+    MaintenanceError,
+    NoSuchTokenError,
+    TooManyAttemptsBannedError,
+    TooManyRequestsError,
+    UnknownUserError,
 )
 import pytest
 
@@ -207,13 +205,13 @@ async def test_form_local_happy_flow(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (BadCredentialsException, "invalid_auth"),
-        (TooManyRequestsException, "too_many_requests"),
+        (BadCredentialsError, "invalid_auth"),
+        (TooManyRequestsError, "too_many_requests"),
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
-        (MaintenanceException, "server_in_maintenance"),
-        (TooManyAttemptsBannedException, "too_many_attempts"),
-        (UnknownUserException, "unsupported_hardware"),
+        (MaintenanceError, "server_in_maintenance"),
+        (TooManyAttemptsBannedError, "too_many_attempts"),
+        (UnknownUserError, "unsupported_hardware"),
         (Exception, "unknown"),
     ],
 )
@@ -258,8 +256,8 @@ async def test_form_invalid_auth_cloud(
 @pytest.mark.parametrize(
     ("side_effect", "description_placeholder", "server"),
     [
-        (UnknownUserException, "CozyTouch", TEST_SERVER_COZYTOUCH),
-        (UnknownUserException, "Unknown", TEST_SERVER2),
+        (UnknownUserError, "CozyTouch", TEST_SERVER_COZYTOUCH),
+        (UnknownUserError, "Unknown", TEST_SERVER2),
     ],
 )
 async def test_form_invalid_hardware_cloud(
@@ -301,7 +299,7 @@ async def test_form_invalid_hardware_cloud(
 @pytest.mark.parametrize(
     ("side_effect", "description_placeholder", "server"),
     [
-        (UnknownUserException, "Somfy Protect", TEST_SERVER),
+        (UnknownUserError, "Somfy Protect", TEST_SERVER),
     ],
 )
 async def test_form_invalid_hardware_cloud_local(
@@ -348,18 +346,18 @@ async def test_form_invalid_hardware_cloud_local(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (BadCredentialsException, "invalid_auth"),
-        (TooManyRequestsException, "too_many_requests"),
+        (BadCredentialsError, "invalid_auth"),
+        (TooManyRequestsError, "too_many_requests"),
         (
             ClientConnectorCertificateError(Mock(host=TEST_HOST), Exception),
             "certificate_verify_failed",
         ),
         (TimeoutError, "cannot_connect"),
         (ClientError, "cannot_connect"),
-        (MaintenanceException, "server_in_maintenance"),
-        (TooManyAttemptsBannedException, "too_many_attempts"),
-        (UnknownUserException, "unsupported_hardware"),
-        (NotSuchTokenException, "invalid_auth"),
+        (MaintenanceError, "server_in_maintenance"),
+        (TooManyAttemptsBannedError, "too_many_attempts"),
+        (UnknownUserError, "unsupported_hardware"),
+        (NoSuchTokenError, "invalid_auth"),
         (Exception, "unknown"),
     ],
 )
@@ -408,7 +406,7 @@ async def test_form_invalid_auth_local(
 @pytest.mark.parametrize(
     ("side_effect", "error"),
     [
-        (BadCredentialsException, "unsupported_hardware"),
+        (BadCredentialsError, "unsupported_hardware"),
     ],
 )
 async def test_form_invalid_cozytouch_auth(
@@ -442,9 +440,7 @@ async def test_form_invalid_cozytouch_auth(
     assert result["step_id"] == "cloud"
 
 
-async def test_cloud_abort_on_duplicate_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_cloud_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     MockConfigEntry(
@@ -491,9 +487,7 @@ async def test_cloud_abort_on_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-async def test_local_abort_on_duplicate_entry(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_local_abort_on_duplicate_entry(hass: HomeAssistant) -> None:
     """Test local API configuration is aborted if gateway already exists."""
 
     MockConfigEntry(
@@ -550,9 +544,7 @@ async def test_local_abort_on_duplicate_entry(
     assert result["reason"] == "already_configured"
 
 
-async def test_cloud_allow_multiple_unique_entries(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
-) -> None:
+async def test_cloud_allow_multiple_unique_entries(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     MockConfigEntry(

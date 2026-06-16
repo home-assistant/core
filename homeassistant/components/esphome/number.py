@@ -1,7 +1,5 @@
 """Support for esphome numbers."""
 
-from __future__ import annotations
-
 from functools import partial
 
 from aioesphomeapi import (

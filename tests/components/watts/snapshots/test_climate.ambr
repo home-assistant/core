@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[climate.bedroom_thermostat-entry]
+# name: test_entities[climate.bedroom_bedroom_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,6 +13,12 @@
       ]),
       'max_temp': 30.0,
       'min_temp': 5.0,
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'defrost',
+        'timer',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -21,7 +27,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.bedroom_thermostat',
+    'entity_id': 'climate.bedroom_bedroom_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -38,17 +44,18 @@
     'platform': 'watts',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 1>,
-    'translation_key': None,
+    'supported_features': <ClimateEntityFeature: 17>,
+    'translation_key': 'thermostat',
     'unique_id': 'thermostat_456',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.bedroom_thermostat-state]
+# name: test_entities[climate.bedroom_bedroom_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 19.0,
       'friendly_name': 'Bedroom Thermostat',
+      'hvac_action': <HVACAction.IDLE: 'idle'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
@@ -56,18 +63,25 @@
       ]),
       'max_temp': 30.0,
       'min_temp': 5.0,
-      'supported_features': <ClimateEntityFeature: 1>,
+      'preset_mode': None,
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'defrost',
+        'timer',
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
       'temperature': 21.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.bedroom_thermostat',
+    'entity_id': 'climate.bedroom_bedroom_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_entities[climate.living_room_thermostat-entry]
+# name: test_entities[climate.living_room_living_room_thermostat-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -81,6 +95,12 @@
       ]),
       'max_temp': 30.0,
       'min_temp': 5.0,
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'defrost',
+        'timer',
+      ]),
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -89,7 +109,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.living_room_thermostat',
+    'entity_id': 'climate.living_room_living_room_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -106,17 +126,18 @@
     'platform': 'watts',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 1>,
-    'translation_key': None,
+    'supported_features': <ClimateEntityFeature: 17>,
+    'translation_key': 'thermostat',
     'unique_id': 'thermostat_123',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[climate.living_room_thermostat-state]
+# name: test_entities[climate.living_room_living_room_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 20.5,
       'friendly_name': 'Living Room Thermostat',
+      'hvac_action': <HVACAction.HEATING: 'heating'>,
       'hvac_modes': list([
         <HVACMode.HEAT: 'heat'>,
         <HVACMode.OFF: 'off'>,
@@ -124,11 +145,18 @@
       ]),
       'max_temp': 30.0,
       'min_temp': 5.0,
-      'supported_features': <ClimateEntityFeature: 1>,
+      'preset_mode': 'comfort',
+      'preset_modes': list([
+        'comfort',
+        'eco',
+        'defrost',
+        'timer',
+      ]),
+      'supported_features': <ClimateEntityFeature: 17>,
       'temperature': 22.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.living_room_thermostat',
+    'entity_id': 'climate.living_room_living_room_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

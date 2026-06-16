@@ -1,7 +1,5 @@
 """Integration for Redgtech switches."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from redgtech_api.api import RedgtechAuthError, RedgtechConnectionError

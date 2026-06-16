@@ -72,6 +72,8 @@ async def test_entry_diagnostics(
         ],
         "search": "UnSeen UnDeleted",
         "custom_event_data_template": "{{ 4 * 4 }}",
+        "ssl_cipher_list": "python_default",
+        "verify_ssl": True,
     }
     expected_event_data = {
         "date": "2023-03-24T13:52:00+01:00",

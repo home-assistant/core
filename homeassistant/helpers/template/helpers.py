@@ -1,7 +1,5 @@
 """Template helper functions for Home Assistant."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, NoReturn, overload
 
 import voluptuous as vol

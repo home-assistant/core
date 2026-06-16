@@ -1,7 +1,5 @@
 """Support for Overkiz lights."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
@@ -46,9 +44,9 @@ class OverkizLight(OverkizEntity, LightEntity):
 
         self._attr_supported_color_modes: set[ColorMode] = set()
 
-        if self.executor.has_command(OverkizCommand.SET_RGB):
+        if self.device.supports_command(OverkizCommand.SET_RGB):
             self._attr_color_mode = ColorMode.RGB
-        elif self.executor.has_command(OverkizCommand.SET_INTENSITY):
+        elif self.device.supports_command(OverkizCommand.SET_INTENSITY):
             self._attr_color_mode = ColorMode.BRIGHTNESS
         else:
             self._attr_color_mode = ColorMode.ONOFF

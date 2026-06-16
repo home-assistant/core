@@ -1,7 +1,5 @@
 """The Mealie integration."""
 
-from __future__ import annotations
-
 from aiomealie import MealieAuthenticationError, MealieClient, MealieError
 
 from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_VERIFY_SSL, Platform

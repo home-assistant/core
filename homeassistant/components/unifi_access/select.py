@@ -1,7 +1,5 @@
 """Select platform for the UniFi Access integration."""
 
-from __future__ import annotations
-
 from unifi_access_api import Door, DoorLockRuleType, UnifiAccessError
 
 from homeassistant.components.select import SelectEntity

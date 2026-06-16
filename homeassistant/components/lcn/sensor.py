@@ -144,7 +144,7 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
         """Set sensor value when LCN input object (command) is received."""
         if (
             not isinstance(input_obj, pypck.inputs.ModStatusVar)
-            or input_obj.get_var() != self.variable
+            or input_obj.get_var() is not self.variable
         ):
             return
         self._attr_available = True
@@ -175,7 +175,7 @@ class LcnLedLogicSensor(LcnEntity, SensorEntity):
     async def async_update(self) -> None:
         """Update the state of the entity."""
         self._attr_available = (
-            await self.device_connection.request_status_led_and_logic_ops(
+            await self.device_connection.request_status_leds_and_logic_ops(
                 SCAN_INTERVAL.seconds
             )
             is not None

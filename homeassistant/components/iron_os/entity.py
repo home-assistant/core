@@ -1,7 +1,5 @@
 """Base entity for IronOS integration."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
@@ -42,7 +40,10 @@ class IronOSBaseEntity(CoordinatorEntity[IronOSLiveDataCoordinator]):
             self._attr_device_info.update(
                 DeviceInfo(
                     sw_version=coordinator.device_info.build,
-                    serial_number=f"{coordinator.device_info.device_sn} (ID:{coordinator.device_info.device_id})",
+                    serial_number=(
+                        f"{coordinator.device_info.device_sn}"
+                        f" (ID:{coordinator.device_info.device_id})"
+                    ),
                 )
             )
 

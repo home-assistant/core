@@ -1,7 +1,5 @@
 """Fan representation of a Snooz device."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import timedelta
 from typing import Any
@@ -21,7 +19,7 @@ from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
 
@@ -87,7 +85,10 @@ class SnoozFan(FanEntity, RestoreEntity):
         """Initialize a Snooz fan entity."""
         self._device = data.device
         self._attr_unique_id = data.device.address
-        self._attr_device_info = DeviceInfo(identifiers={(DOMAIN, data.device.address)})
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, data.device.address)},
+            connections={(CONNECTION_BLUETOOTH, data.device.address)},
+        )
 
     @callback
     def _async_write_state_changed(self) -> None:
@@ -164,9 +165,9 @@ class SnoozFan(FanEntity, RestoreEntity):
     async def _async_execute_command(self, command: SnoozCommandData) -> None:
         result = await self._device.async_execute_command(command)
 
-        if result.status == SnoozCommandResultStatus.SUCCESSFUL:
+        if result.status is SnoozCommandResultStatus.SUCCESSFUL:
             self._async_write_state_changed()
-        elif result.status != SnoozCommandResultStatus.CANCELLED:
+        elif result.status is not SnoozCommandResultStatus.CANCELLED:
             raise HomeAssistantError(
                 f"Command {command} failed with status {result.status.name} after"
                 f" {result.duration}"

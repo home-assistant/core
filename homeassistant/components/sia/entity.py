@@ -1,7 +1,5 @@
 """Module for SIA Base Entity."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 import logging
@@ -118,7 +116,7 @@ class SIABaseEntity(RestoreEntity):
 
     @callback
     def async_handle_event(self, sia_event: SIAEvent) -> None:
-        """Listen to dispatcher events for this port and account and update state and attributes.
+        """Listen to dispatcher events for this port and account, update state.
 
         If the event is for either the zone or the 0 zone (hub zone),
         then handle it further.

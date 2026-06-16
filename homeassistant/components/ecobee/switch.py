@@ -1,7 +1,5 @@
 """Support for using switch with ecobee thermostats."""
 
-from __future__ import annotations
-
 from datetime import tzinfo
 import logging
 from typing import Any
@@ -53,9 +51,8 @@ async def async_setup_entry(
 
 
 class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
-    """A Switch class, representing 20 min timer for an ecobee thermostat with ventilator attached."""
+    """Represent 20 min timer for an ecobee thermostat with ventilator."""
 
-    _attr_has_entity_name = True
     _attr_name = "Ventilator 20m Timer"
 
     def __init__(
@@ -106,7 +103,6 @@ class EcobeeVentilator20MinSwitch(EcobeeBaseEntity, SwitchEntity):
 class EcobeeSwitchAuxHeatOnly(EcobeeBaseEntity, SwitchEntity):
     """Representation of a aux_heat_only ecobee switch."""
 
-    _attr_has_entity_name = True
     _attr_translation_key = "aux_heat_only"
 
     def __init__(

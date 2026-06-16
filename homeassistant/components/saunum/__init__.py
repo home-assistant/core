@@ -1,7 +1,5 @@
 """The Saunum Leil Sauna Control Unit integration."""
 
-from __future__ import annotations
-
 from pysaunum import SaunumClient, SaunumConnectionError, SaunumTimeoutError
 
 from homeassistant.config_entries import ConfigEntry
@@ -41,6 +39,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LeilSaunaConfigEntry) ->
     try:
         client = await SaunumClient.create(host)
     except (SaunumConnectionError, SaunumTimeoutError) as exc:
+        # pylint: disable-next=home-assistant-exception-not-translated
         raise ConfigEntryNotReady(f"Error connecting to {host}: {exc}") from exc
 
     entry.async_on_unload(client.async_close)

@@ -1,7 +1,5 @@
 """Message templates for websocket commands."""
 
-from __future__ import annotations
-
 from functools import lru_cache
 import logging
 from typing import Any, Final
@@ -245,7 +243,8 @@ def _state_diff_event(
             additions[COMPRESSED_STATE_ATTRIBUTES] = added
         if removed := old_attributes.keys() - new_attributes:
             # sets are not JSON serializable by default so we convert to list
-            # here if there are any values to avoid jumping into the json_encoder_default
+            # here if there are any values to avoid jumping
+            # into the json_encoder_default
             # for every state diff with a removed attribute
             diff[STATE_DIFF_REMOVALS] = {COMPRESSED_STATE_ATTRIBUTES: list(removed)}
     return {ENTITY_EVENT_CHANGE: {new_state.entity_id: diff}}

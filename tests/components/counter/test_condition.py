@@ -11,6 +11,7 @@ from tests.components.common import (
     assert_condition_behavior_all,
     assert_condition_behavior_any,
     assert_condition_gated_by_labs_flag,
+    assert_condition_options_supported,
     parametrize_condition_states_all,
     parametrize_condition_states_any,
     parametrize_target_entities,
@@ -24,11 +25,44 @@ async def target_counters(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "counter")
 
 
-async def test_counter_condition_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+@pytest.mark.parametrize(
+    "condition",
+    [
+        "counter.is_value",
+    ],
+)
+async def test_counter_conditions_gated_by_labs_flag(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
 ) -> None:
-    """Test the counter condition is gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, "counter.is_value")
+    """Test the counter conditions are gated by the labs flag."""
+    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
+
+
+_PLAIN_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
+@pytest.mark.usefixtures("enable_labs_preview_features")
+@pytest.mark.parametrize(
+    ("condition_key", "base_options", "supports_behavior", "supports_duration"),
+    [
+        ("counter.is_value", _PLAIN_THRESHOLD, True, True),
+    ],
+)
+async def test_counter_condition_options_validation(
+    hass: HomeAssistant,
+    condition_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
+) -> None:
+    """Test that counter conditions support the expected options."""
+    await assert_condition_options_supported(
+        hass,
+        condition_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 @pytest.mark.usefixtures("enable_labs_preview_features")
@@ -64,8 +98,8 @@ async def test_counter_condition_gated_by_labs_flag(
                     "value_max": {"number": 30},
                 },
             },
-            target_states=["11", "20", "29"],
-            other_states=["0", "10", "30", "100"],
+            target_states=["10", "11", "20", "29", "30"],
+            other_states=["0", "9", "31", "100"],
         ),
         *parametrize_condition_states_any(
             condition="counter.is_value",
@@ -76,8 +110,8 @@ async def test_counter_condition_gated_by_labs_flag(
                     "value_max": {"number": 30},
                 },
             },
-            target_states=["0", "10", "30", "100"],
-            other_states=["11", "20", "29"],
+            target_states=["0", "9", "31", "100"],
+            other_states=["10", "11", "20", "29", "30"],
         ),
     ],
 )
@@ -137,8 +171,8 @@ async def test_counter_is_value_condition_behavior_any(
                     "value_max": {"number": 30},
                 },
             },
-            target_states=["11", "20", "29"],
-            other_states=["0", "10", "30", "100"],
+            target_states=["10", "11", "20", "29", "30"],
+            other_states=["0", "9", "31", "100"],
         ),
         *parametrize_condition_states_all(
             condition="counter.is_value",
@@ -149,8 +183,8 @@ async def test_counter_is_value_condition_behavior_any(
                     "value_max": {"number": 30},
                 },
             },
-            target_states=["0", "10", "30", "100"],
-            other_states=["11", "20", "29"],
+            target_states=["0", "9", "31", "100"],
+            other_states=["10", "11", "20", "29", "30"],
         ),
     ],
 )

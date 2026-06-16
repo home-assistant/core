@@ -4,6 +4,8 @@ import asyncio
 from unittest.mock import AsyncMock
 
 from flexit_bacnet import (
+    OPERATION_MODE_COOKER_HOOD,
+    OPERATION_MODE_TEMPORARY_HIGH,
     VENTILATION_MODE_AWAY,
     VENTILATION_MODE_HOME,
     VENTILATION_MODE_STOP,
@@ -24,7 +26,10 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.flexit_bacnet.const import PRESET_TO_VENTILATION_MODE_MAP
+from homeassistant.components.flexit_bacnet.const import (
+    PRESET_HIGH,
+    PRESET_TO_VENTILATION_MODE_MAP,
+)
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -223,3 +228,27 @@ async def test_set_temperature(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("operation_mode", "expected_preset"),
+    [
+        pytest.param(OPERATION_MODE_TEMPORARY_HIGH, PRESET_HIGH, id="temporary_high"),
+        pytest.param(OPERATION_MODE_COOKER_HOOD, PRESET_HIGH, id="cooker_hood"),
+    ],
+)
+async def test_transient_operation_modes(
+    hass: HomeAssistant,
+    mock_flexit_bacnet: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    operation_mode: int,
+    expected_preset: str,
+) -> None:
+    """Test that transient operation modes report the correct preset."""
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.CLIMATE])
+
+    mock_flexit_bacnet.operation_mode = operation_mode
+    await entity_component.async_update_entity(hass, ENTITY_ID)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_PRESET_MODE] == expected_preset

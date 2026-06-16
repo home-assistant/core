@@ -131,7 +131,9 @@ async def async_setup_entry(
 
     entities.extend(
         LaMarzoccoAutoOnOffSwitchEntity(coordinator, wake_up_sleep_entry)
-        for wake_up_sleep_entry in coordinator.device.schedule.smart_wake_up_sleep.schedules
+        for wake_up_sleep_entry in (
+            coordinator.device.schedule.smart_wake_up_sleep.schedules
+        )
     )
 
     entities.append(

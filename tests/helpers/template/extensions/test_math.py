@@ -1,7 +1,5 @@
 """Test mathematical and statistical functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 import math
 
 import pytest
@@ -316,28 +314,36 @@ def test_min_max_attribute(hass: HomeAssistant, attribute) -> None:
     assert (
         render(
             hass,
-            f"{{{{ (state_attr('test.object', 'objects') | min(attribute='{attribute}'))['{attribute}']}}}}",
+            "{{ (state_attr('test.object', 'objects')"
+            f" | min(attribute='{attribute}'))"
+            f"['{attribute}']}}}}",
         )
         == 1
     )
     assert (
         render(
             hass,
-            f"{{{{ (min(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
+            "{{ (min(state_attr('test.object', 'objects'),"
+            f" attribute='{attribute}'))"
+            f"['{attribute}']}}}}",
         )
         == 1
     )
     assert (
         render(
             hass,
-            f"{{{{ (state_attr('test.object', 'objects') | max(attribute='{attribute}'))['{attribute}']}}}}",
+            "{{ (state_attr('test.object', 'objects')"
+            f" | max(attribute='{attribute}'))"
+            f"['{attribute}']}}}}",
         )
         == 3
     )
     assert (
         render(
             hass,
-            f"{{{{ (max(state_attr('test.object', 'objects'), attribute='{attribute}'))['{attribute}']}}}}",
+            "{{ (max(state_attr('test.object', 'objects'),"
+            f" attribute='{attribute}'))"
+            f"['{attribute}']}}}}",
         )
         == 3
     )

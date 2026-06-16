@@ -1,7 +1,5 @@
 """FRITZ image integration."""
 
-from __future__ import annotations
-
 from io import BytesIO
 import logging
 
@@ -78,7 +76,6 @@ class FritzGuestWifiQRImage(FritzBoxBaseEntity, ImageEntity):
 
     _attr_content_type = "image/png"
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_has_entity_name = True
     _attr_should_poll = True
 
     def __init__(

@@ -290,9 +290,9 @@ async def test_message_to_json_bytes(caplog: pytest.LogCaptureFixture) -> None:
 
     json_str2 = message_to_json_bytes({"id": 1, "message": _Unserializeable()})
 
-    assert (
-        json_str2
-        == b'{"id":1,"type":"result","success":false,"error":{"code":"unknown_error","message":"Invalid JSON in response"}}'
+    assert json_str2 == (
+        b'{"id":1,"type":"result","success":false,"error":'
+        b'{"code":"unknown_error","message":"Invalid JSON in response"}}'
     )
     assert "Unable to serialize to JSON" in caplog.text
 

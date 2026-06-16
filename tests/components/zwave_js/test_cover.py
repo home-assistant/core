@@ -1,7 +1,5 @@
 """Test the Z-Wave JS cover platform."""
 
-from __future__ import annotations
-
 import copy
 import logging
 from typing import Any
@@ -55,8 +53,8 @@ GDC_COVER_ENTITY = "cover.aeon_labs_garage_door_controller_gen5"
 BLIND_COVER_ENTITY = "cover.window_blind_controller"
 SHUTTER_COVER_ENTITY = "cover.flush_shutter"
 AEOTEC_SHUTTER_COVER_ENTITY = "cover.nano_shutter_v_3"
-FIBARO_FGR_222_SHUTTER_COVER_ENTITY = "cover.fgr_222_test_cover"
-FIBARO_FGR_223_SHUTTER_COVER_ENTITY = "cover.fgr_223_test_cover"
+FIBARO_FGR_222_SHUTTER_COVER_ENTITY = "cover.test_location_fgr_222_test_cover"
+FIBARO_FGR_223_SHUTTER_COVER_ENTITY = "cover.test_location_fgr_223_test_cover"
 SHELLY_WAVE_SHUTTER_COVER_ENTITY = "cover.shelly_fw_14_2_0_test_cover"
 LOGGER.setLevel(logging.DEBUG)
 
@@ -583,7 +581,7 @@ async def test_aeotec_nano_shutter_cover(
     aeotec_nano_shutter: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test movement of an Aeotec Nano Shutter cover entity. Useful to make sure the stop command logic is handled properly."""
+    """Test Aeotec Nano Shutter cover entity stop command logic."""
     node = aeotec_nano_shutter
     state = hass.states.get(AEOTEC_SHUTTER_COVER_ENTITY)
 
@@ -1525,7 +1523,7 @@ async def test_multilevel_switch_cover_moving_state_set_position(
     chain_actuator_zws12: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test moving state direction with set_cover_position on Multilevel Switch cover."""
+    """Test moving direction with set_cover_position on ML Switch."""
     node = chain_actuator_zws12
 
     # First set position to 50 (open)
@@ -1679,7 +1677,7 @@ async def test_multilevel_switch_cover_moving_state_none_result(
     chain_actuator_zws12: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test None result (node asleep) does not set moving state on Multilevel Switch cover."""
+    """Test None result (asleep) doesn't set moving on ML Switch."""
     state = hass.states.get(WINDOW_COVER_ENTITY)
     assert state
     assert state.state == CoverState.CLOSED
@@ -1706,7 +1704,7 @@ async def test_multilevel_switch_cover_v3_no_moving_state_supervised(
     chain_actuator_zws12_state: dict[str, Any],
     integration: MockConfigEntry,
 ) -> None:
-    """Test v3 Multilevel Switch cover never sets OPENING/CLOSING even with Supervision."""
+    """Test v3 ML Switch cover never sets OPENING/CLOSING with SV."""
     node_state = copy.deepcopy(chain_actuator_zws12_state)
     for value in node_state["values"]:
         if value["commandClass"] == CommandClass.SWITCH_MULTILEVEL:
@@ -1817,7 +1815,7 @@ async def test_multilevel_switch_cover_v3_no_moving_state_unsupervised(
     chain_actuator_zws12_state: dict[str, Any],
     integration: MockConfigEntry,
 ) -> None:
-    """Test v3 Multilevel Switch cover never sets OPENING/CLOSING without Supervision."""
+    """Test v3 ML Switch never sets OPENING/CLOSING without SV."""
     node_state = copy.deepcopy(chain_actuator_zws12_state)
     for value in node_state["values"]:
         if value["commandClass"] == CommandClass.SWITCH_MULTILEVEL:
@@ -2200,7 +2198,7 @@ async def test_window_covering_cover_moving_state_no_position(
     window_covering_outbound_bottom_no_position: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that moving state is never set for Window Covering without position support."""
+    """Test moving state not set for Window Covering without position."""
     entity_id = "cover.node_2_outbound_bottom"
 
     # No SET_POSITION feature — open_cover must NOT set OPENING.

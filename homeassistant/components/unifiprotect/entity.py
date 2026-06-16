@@ -1,7 +1,5 @@
 """Shared Entity definition for UniFi Protect Integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -371,7 +369,7 @@ class EventEntityMixin(ProtectDeviceEntity):
 
 
 @dataclass(frozen=True, kw_only=True)
-class ProtectEntityDescription(EntityDescription, Generic[T]):
+class ProtectEntityDescription(EntityDescription, Generic[T]):  # noqa: UP046
     """Base class for protect entity descriptions."""
 
     ufp_required_field: str | None = None
@@ -442,7 +440,7 @@ class ProtectSettableKeysMixin(ProtectEntityDescription[T]):
 
     async def ufp_set(self, obj: T, value: Any) -> None:
         """Set value for UniFi Protect device."""
-        _LOGGER.debug("Setting %s to %s for %s", self.name, value, obj.display_name)
+        _LOGGER.debug("Setting %s to %s for %s", self.key, value, obj.display_name)
         if self.ufp_set_method is not None:
             await getattr(obj, self.ufp_set_method)(value)
         elif self.ufp_set_method_fn is not None:

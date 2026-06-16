@@ -251,7 +251,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[centralite][update.dimmer_debian_firmware-entry]
+# name: test_all_entities[centralite][update.theater_dimmer_debian_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -265,7 +265,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.dimmer_debian_firmware',
+    'entity_id': 'update.theater_dimmer_debian_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -288,7 +288,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[centralite][update.dimmer_debian_firmware-state]
+# name: test_all_entities[centralite][update.theater_dimmer_debian_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -307,14 +307,14 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.dimmer_debian_firmware',
+    'entity_id': 'update.theater_dimmer_debian_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[contact_sensor][update.front_door_open_closed_sensor_firmware-entry]
+# name: test_all_entities[contact_sensor][update.theater_front_door_open_closed_sensor_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -328,7 +328,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.front_door_open_closed_sensor_firmware',
+    'entity_id': 'update.theater_front_door_open_closed_sensor_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -351,7 +351,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[contact_sensor][update.front_door_open_closed_sensor_firmware-state]
+# name: test_all_entities[contact_sensor][update.theater_front_door_open_closed_sensor_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -370,7 +370,7 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.front_door_open_closed_sensor_firmware',
+    'entity_id': 'update.theater_front_door_open_closed_sensor_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -692,7 +692,7 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[multipurpose_sensor][update.deck_door_firmware-entry]
+# name: test_all_entities[multipurpose_sensor][update.theater_deck_door_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -706,7 +706,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.deck_door_firmware',
+    'entity_id': 'update.theater_deck_door_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -729,7 +729,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[multipurpose_sensor][update.deck_door_firmware-state]
+# name: test_all_entities[multipurpose_sensor][update.theater_deck_door_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -748,14 +748,14 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.deck_door_firmware',
+    'entity_id': 'update.theater_deck_door_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[smart_plug][update.arlo_beta_basestation_firmware-entry]
+# name: test_all_entities[smart_plug][update.theater_arlo_beta_basestation_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -769,7 +769,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.arlo_beta_basestation_firmware',
+    'entity_id': 'update.theater_arlo_beta_basestation_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -792,7 +792,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[smart_plug][update.arlo_beta_basestation_firmware-state]
+# name: test_all_entities[smart_plug][update.theater_arlo_beta_basestation_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -811,14 +811,14 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.arlo_beta_basestation_firmware',
+    'entity_id': 'update.theater_arlo_beta_basestation_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[yale_push_button_deadbolt_lock][update.basement_door_lock_firmware-entry]
+# name: test_all_entities[yale_push_button_deadbolt_lock][update.theater_basement_door_lock_firmware-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -832,7 +832,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'update.basement_door_lock_firmware',
+    'entity_id': 'update.theater_basement_door_lock_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -855,7 +855,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[yale_push_button_deadbolt_lock][update.basement_door_lock_firmware-state]
+# name: test_all_entities[yale_push_button_deadbolt_lock][update.theater_basement_door_lock_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
@@ -874,7 +874,7 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.basement_door_lock_firmware',
+    'entity_id': 'update.theater_basement_door_lock_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

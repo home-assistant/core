@@ -1,7 +1,5 @@
 """Config flow for Snooz component."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from typing import Any
@@ -9,6 +7,7 @@ from typing import Any
 from pysnooz.advertisement import SnoozAdvertisementData
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothScanningMode,
     BluetoothServiceInfo,
@@ -96,6 +95,7 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
             return self._create_snooz_entry(discovered)
 
+        await bluetooth.async_request_active_scan(self.hass)
         configured_addresses = self._async_current_ids(include_ignore=False)
 
         for info in async_discovered_service_info(self.hass):
@@ -116,6 +116,8 @@ class SnoozConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(CONF_NAME): vol.In(
                         [
                             d.device.display_name

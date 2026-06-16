@@ -1,7 +1,5 @@
 """Data update coordinator for Snapcast server."""
 
-from __future__ import annotations
-
 import logging
 
 from snapcast.control.server import Snapserver

@@ -1,7 +1,5 @@
 """Config flow for Qube Heat Pump integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from python_qube_heatpump import QubeClient

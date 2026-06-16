@@ -1,7 +1,5 @@
 """Support for Litter-Robot sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -38,7 +36,7 @@ def icon_for_gauge_level(gauge_level: int | None = None, offset: int = 0) -> str
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEntityT]):
+class RobotSensorEntityDescription(SensorEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot sensor entities."""
 
     icon_fn: Callable[[Any], str | None] = lambda _: None
@@ -166,6 +164,22 @@ ROBOT_SENSOR_MAP: dict[
             device_class=SensorDeviceClass.WEIGHT,
             state_class=SensorStateClass.MEASUREMENT,
             value_fn=lambda robot: robot.pet_weight,
+        ),
+    ],
+    LitterRobot5: [
+        RobotSensorEntityDescription[LitterRobot5](
+            key="scoops_saved_count",
+            translation_key="scoops_saved_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda robot: robot.scoops_saved_count,
+        ),
+        RobotSensorEntityDescription[LitterRobot5](
+            key="next_filter_replacement",
+            translation_key="next_filter_replacement",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=lambda robot: robot.next_filter_replacement_date,
         ),
     ],
     FeederRobot: [

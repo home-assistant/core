@@ -1,7 +1,5 @@
 """Entity representing a Sonos battery level."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -197,6 +195,7 @@ class SonosFavoritesEntity(SensorEntity):
     """Representation of a Sonos favorites info entity."""
 
     _attr_entity_registry_enabled_default = False
+    _attr_has_entity_name = True
     _attr_name = "Sonos favorites"
     _attr_translation_key = "favorites"
     _attr_native_unit_of_measurement = "items"

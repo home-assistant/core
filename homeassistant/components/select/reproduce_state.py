@@ -1,16 +1,14 @@
 """Reproduce a Select entity state."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 import logging
 from typing import Any
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.core import Context, HomeAssistant, State
 
-from .const import ATTR_OPTION, ATTR_OPTIONS, DOMAIN, SERVICE_SELECT_OPTION
+from .const import ATTR_OPTIONS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
