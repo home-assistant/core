@@ -439,6 +439,24 @@ async def test_validate_2fa_code_failed(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "validate_verification_code"}
 
 
+@pytest.mark.usefixtures("service_2fa")
+async def test_validate_2fa_code_not_provided(hass: HomeAssistant) -> None:
+    """Test when we have errors during validate_verification_code if the user didn't provide a code."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+        data={CONF_USERNAME: USERNAME, CONF_PASSWORD: PASSWORD},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_VERIFICATION_CODE: ""}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == CONF_VERIFICATION_CODE
+    assert result["errors"] == {"base": "validate_verification_code"}
+
+
 async def test_2fa_code_failed_request(
     hass: HomeAssistant, service_2fa_failed_request: MagicMock
 ) -> None:
@@ -513,9 +531,12 @@ async def test_password_update(hass: HomeAssistant) -> None:
         domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
     )
     config_entry.add_to_hass(hass)
+    config_entry.runtime_data = MagicMock(api=None)
 
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: PASSWORD_2}
@@ -530,12 +551,18 @@ async def test_password_update(hass: HomeAssistant) -> None:
 async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
     """Test password reauthentication with wrong password returns error."""
     config_entry = MockConfigEntry(
-        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        entry_id="test",
+        unique_id=USERNAME,
     )
     config_entry.add_to_hass(hass)
+    config_entry.runtime_data = MagicMock(api=None)
 
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: PASSWORD_2}
@@ -545,9 +572,8 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
     assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
 
-async def test_create_icloud_storage_dir(
-    hass: HomeAssistant, service: MagicMock
-) -> None:
+@pytest.mark.usefixtures("service")
+async def test_create_icloud_storage_dir(hass: HomeAssistant) -> None:
     """Test that the iCloud storage directory is created if it does not exist."""
     with (
         patch(

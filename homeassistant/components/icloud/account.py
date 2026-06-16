@@ -7,6 +7,7 @@ from typing import Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
+    PyiCloud2FARequiredException,
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
@@ -107,18 +108,23 @@ class IcloudAccount:
 
             if self.api.requires_2fa:
                 # Trigger a new log in to ensure the user enters the 2FA code again.
-                raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
+                raise PyiCloud2FARequiredException(  # noqa: TRY301
+                    self._config_entry.data[CONF_USERNAME], None
+                )
 
-        except PyiCloudFailedLoginException:
-            # Login failed which means credentials need to be updated.
+        except (PyiCloudFailedLoginException, PyiCloud2FARequiredException) as err:
+            # Login failed which means credentials/2fa need to be updated.
             _LOGGER.error(
                 (
-                    "Your password for '%s' is no longer working; Go to the "
+                    "Your iCloud account for '%s' is no longer working; Go to the "
                     "Integrations menu and click on Configure on the discovered Apple "
                     "iCloud card to login again"
                 ),
                 self._config_entry.data[CONF_USERNAME],
             )
+
+            if not isinstance(err, PyiCloud2FARequiredException):
+                self.api = None
 
             self._require_reauth()
             return

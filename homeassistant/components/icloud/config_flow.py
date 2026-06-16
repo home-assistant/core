@@ -90,18 +90,6 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders=self._description_placeholders,
         )
 
-    async def _create_icloud_api(self) -> PyiCloudService:
-        """Create a PyiCloud API object in the executor."""
-        return await self.hass.async_add_executor_job(
-            PyiCloudService,
-            self._username,
-            self._password,
-            Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
-            True,
-            None,
-            self._with_family,
-        )
-
     async def _request_2fa_code(self, errors: dict[str, str]) -> dict[str, str]:
         """Request an Apple 2FA code."""
         if TYPE_CHECKING:
@@ -138,7 +126,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         if self._existing_entry_data:
             extra_inputs = self._existing_entry_data
 
-        if user_input is not None:
+        if user_input is not None and CONF_PASSWORD in user_input:
             extra_inputs[CONF_PASSWORD] = user_input[CONF_PASSWORD]
 
         self._username = extra_inputs[CONF_USERNAME]
@@ -156,7 +144,15 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         if self.api is None:
             try:
-                self.api = await self._create_icloud_api()
+                self.api = await self.hass.async_add_executor_job(
+                    PyiCloudService,
+                    self._username,
+                    self._password,
+                    Store(self.hass, STORAGE_VERSION, STORAGE_KEY).path,
+                    True,
+                    None,
+                    self._with_family,
+                )
             except PyiCloudFailedLoginException as error:
                 _LOGGER.error("Error logging into iCloud service: %s", error)
                 self.api = None
@@ -164,7 +160,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self._show_setup_form(user_input, errors, step_id)
 
         if self.api.requires_2fa:
-            return await self.async_step_verification_code(request_code=False)
+            return await self.async_step_verification_code()
 
         if self.api.requires_2sa:
             return await self.async_step_trusted_device()
@@ -222,11 +218,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(self.context["unique_id"])
         self._existing_entry_data = {**entry_data}
         self._description_placeholders = {"username": entry_data[CONF_USERNAME]}
-        self.api = (
-            self._get_reauth_entry().runtime_data.api
-            if hasattr(self._get_reauth_entry(), "runtime_data")
-            else None
-        )
+
+        # Get the API from the existing entry runtime data
+        self.api = self._get_reauth_entry().runtime_data.api
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
@@ -273,7 +267,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                 trusted_devices_for_form, errors
             )
 
-        return await self.async_step_verification_code(request_code=False)
+        return await self.async_step_verification_code()
 
     async def _show_trusted_device_form(
         self, trusted_devices, errors: dict[str, str] | None = None
@@ -296,21 +290,23 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         self,
         user_input: dict[str, Any] | None = None,
         errors: dict[str, str] | None = None,
-        request_code: bool = False,
     ) -> ConfigFlowResult:
         """Ask the verification code to the user."""
         if errors is None:
             errors = {}
 
-        if (
-            user_input is None
-            or user_input.get(CONF_REQUEST_NEW_CODE, False)
-            or user_input.get(CONF_VERIFICATION_CODE, None) is None
-        ):
-            if request_code or (
-                user_input and user_input.get(CONF_REQUEST_NEW_CODE, False)
-            ):
+        if user_input:
+            if user_input.get(CONF_REQUEST_NEW_CODE, False):
+                # If the user requested a new code, request it
                 errors = await self._request_2fa_code(errors)
+                user_input = None
+
+            elif user_input.get(CONF_VERIFICATION_CODE, "") == "":
+                # If the user didn't provide a code, show the form again with an error
+                errors["base"] = "validate_verification_code"
+                return await self.async_step_verification_code(errors=errors)
+
+        if user_input is None:
             return await self._show_verification_code_form(errors)
 
         if TYPE_CHECKING:
@@ -341,11 +337,9 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             errors["base"] = "validate_verification_code"
 
             if self.api.requires_2fa:
-                return await self.async_step_verification_code(
-                    None, errors, request_code=False
-                )
+                return await self.async_step_verification_code(errors=errors)
 
-            return await self.async_step_trusted_device(None, errors)
+            return await self.async_step_trusted_device(errors=errors)
 
         return await self.async_step_user(
             {
@@ -358,7 +352,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
     async def _show_verification_code_form(
-        self, errors: dict[str, str] | None = None
+        self, errors: dict[str, str]
     ) -> ConfigFlowResult:
         """Show the verification_code form to the user."""
 
@@ -370,5 +364,5 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_REQUEST_NEW_CODE, default=False): bool,
                 }
             ),
-            errors=errors or {},
+            errors=errors,
         )
