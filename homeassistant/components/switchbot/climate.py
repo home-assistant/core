@@ -105,14 +105,14 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action."""
-        # Simple threshold check
-        # Ensure the threshold checks are gated on the correct active HVAC mode
+        # --- CLIMATE SAFE ACTION PATCH WITH HYSTERESIS ---
+        # Add a 0.5 degree deadband buffer to prevent dashboard state flickering
         if self.hvac_mode == HVACMode.HEAT:
             if (
                 self.current_temperature is not None
                 and self.target_temperature is not None
             ):
-                if self.current_temperature >= self.target_temperature:
+                if self.current_temperature >= (self.target_temperature + 0.5):
                     return HVACAction.IDLE
 
         elif self.hvac_mode == HVACMode.COOL:
@@ -120,14 +120,13 @@ class SwitchBotClimateEntity(SwitchbotEntity, ClimateEntity):
                 self.current_temperature is not None
                 and self.target_temperature is not None
             ):
-                if self.current_temperature <= self.target_temperature:
+                if self.current_temperature <= (self.target_temperature - 0.5):
                     return HVACAction.IDLE
 
-        # Fall back to standard hardware tracking if thresholds aren't actively hit
+        # Fall back to standard hardware tracking if outside the deadband threshold
         return SWITCHBOT_ACTION_TO_HASS_HVAC_ACTION.get(
             self._device.hvac_action, HVACAction.OFF
         )
-
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
