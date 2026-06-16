@@ -1,16 +1,19 @@
 """Trigger entity."""
 
 from collections.abc import Callable
+import logging
 from typing import Any
 
-from homeassistant.const import CONF_VARIABLES
+from homeassistant.const import CONF_CONDITIONS, CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
+from homeassistant.helpers import condition
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import (
     _SENTINEL,
     render_complex as template_render_complex,
 )
+from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.trigger_template_entity import (
     TriggerBaseEntity,
     log_triggered_template_error,
@@ -19,6 +22,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
@@ -44,6 +49,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         self._entity_variables: ScriptVariables | None = config.get(CONF_VARIABLES)
         self._rendered_entity_variables: dict | None = None
         self._state_render_error = False
+        self._cond_func: condition.ConditionsChecker | None = None
 
         self._skip_rendered_result: list[str] = []
         if self.skip_rendered_result is not None:
@@ -52,6 +58,16 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
+
+        if condition_config := self._config.get(CONF_CONDITIONS):
+            self._cond_func = await condition.async_conditions_from_config(
+                self.hass,
+                condition_config,
+                _LOGGER,
+                self._attr_name or "template entity",
+            )
+            self.async_on_remove(self._cond_func.async_unload)
+
         if self.coordinator.data is not None:
             self._process_data()
 
@@ -237,6 +253,18 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
 
         return write_state
 
+    def _check_condition(self, run_variables: dict) -> bool:
+        if not self._cond_func:
+            return True
+        condition_result = self._cond_func.async_check(variables=run_variables)
+        if condition_result is False:
+            _LOGGER.debug(
+                "Conditions not met, aborting template"
+                " trigger update. Condition summary: %s",
+                trace_get(clear=False),
+            )
+        return condition_result
+
     @callback
     def _process_data(self) -> None:
         """Process new data."""
@@ -253,6 +281,9 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         else:
             self._rendered_entity_variables = coordinator_variables
         variables = self._template_variables(self._rendered_entity_variables)
+
+        if not self._check_condition(variables):
+            return
 
         self.async_set_context(self.coordinator.data["context"])
         if self._render_availability_template(variables):

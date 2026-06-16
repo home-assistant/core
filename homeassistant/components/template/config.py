@@ -111,6 +111,38 @@ def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
     return obj
 
 
+def validate_entity_condition_has_trigger(obj: dict) -> dict:
+    """Validate that binary sensors with auto_off have triggers."""
+    if CONF_TRIGGERS not in obj:
+        for platform in PLATFORMS:
+            if platform not in obj:
+                continue
+
+            for entity_config in obj[platform]:
+                if CONF_CONDITIONS not in entity_config:
+                    continue
+
+                identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
+                if (
+                    (name := entity_config.get(CONF_NAME))
+                    and isinstance(name, Template)
+                    and name.template != binary_sensor_platform.DEFAULT_NAME
+                ):
+                    identifier = f"{CONF_NAME}: {name.template}"
+                elif default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+                    identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+                elif unique_id := entity_config.get(CONF_UNIQUE_ID):
+                    identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
+
+                raise vol.Invalid(
+                    f"The condition option for template {platform}: {identifier} "
+                    "requires a trigger, remove the auto_off option or rewrite "
+                    "configuration to use a trigger"
+                )
+
+    return obj
+
+
 def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict], dict]:
     """Validate that config does not contain trigger and action."""
     domains = set(keys)
@@ -252,6 +284,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
         BUTTON_DOMAIN,
     ),
     validate_binary_sensor_auto_off_has_trigger,
+    validate_entity_condition_has_trigger,
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
