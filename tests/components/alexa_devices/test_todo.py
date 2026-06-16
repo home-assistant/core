@@ -3,6 +3,8 @@
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aioamazondevices import CannotAuthenticate, CannotConnect
+from aioamazondevices.exceptions import CannotRetrieveData
 from aioamazondevices.structures import (
     AmazonListEvent,
     AmazonListEventType,
@@ -24,6 +26,7 @@ from homeassistant.components.todo import (
     TodoItemStatus,
     TodoServices,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -393,3 +396,43 @@ async def test_remove_stale_todo_list_entities(
     assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
     assert hass.states.get(TODO_LIST_ENTITY_ID) is not None
     assert hass.states.get(CUSTOM_LIST_ENTITY_ID) is None
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_state"),
+    [
+        pytest.param(
+            CannotAuthenticate,
+            ConfigEntryState.SETUP_ERROR,
+            id="cannot_authenticate",
+        ),
+        pytest.param(
+            CannotConnect,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_connect",
+        ),
+        pytest.param(
+            CannotRetrieveData,
+            ConfigEntryState.SETUP_RETRY,
+            id="cannot_retrieve_data",
+        ),
+    ],
+)
+async def test_sync_todo_list_items_error(
+    hass: HomeAssistant,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: type[Exception],
+    expected_state: ConfigEntryState,
+) -> None:
+    """Test setup fails when syncing todo list items raises an error."""
+    mock_amazon_devices_client.get_todo_list_items.side_effect = side_effect
+    mock_amazon_devices_client.todo_lists = [
+        AmazonListInfo(id="shopping_list_id", name=None, list_type=AmazonListType.SHOP)
+    ]
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is expected_state
