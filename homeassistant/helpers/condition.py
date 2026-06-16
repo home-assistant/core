@@ -491,7 +491,10 @@ class _HistoryPrimingManager:
     tracking its entities, or the read could miss a change still queued in the
     recorder and compute too generous an anchor. A condition therefore never
     rides a flush that was already running when it arrived (the lobby); it waits
-    that one out and joins the next.
+    that one out and joins the next, and re-attempts if the flush it rode was
+    cancelled before completing. This mirrors `ReloadServiceHelper` minus its
+    target de-duplication, which does not apply because each condition reads its
+    own entities.
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -499,6 +502,7 @@ class _HistoryPrimingManager:
         self._hass = hass
         self._flush_condition = asyncio.Condition()
         self._flushing = False
+        self._flush_ok = False
         self._query_lock = asyncio.Lock()
 
     async def async_prime[_T](
@@ -520,29 +524,30 @@ class _HistoryPrimingManager:
             if self._flushing:
                 await self._flush_condition.wait()
 
-        do_flush = False
         while True:
             async with self._flush_condition:
                 if not self._flushing:
                     # First past the lobby this generation: we run the flush.
                     self._flushing = True
-                    do_flush = True
                     break
-                # A peer began a fresh flush after we cleared the lobby; it
-                # covers us too, so wait for it and ride it.
+                # A peer began a fresh flush after we cleared the lobby; ride it.
                 await self._flush_condition.wait()
-                break
-
-        if not do_flush:
-            return
+                if self._flush_ok:
+                    return
+                # The flush we waited for was cancelled before completing (its owner
+                # timed out): loop and start or wait for a fresh one rather than read
+                # against a queue that was never flushed.
 
         instance = get_instance(self._hass)
+        flushed = False
         try:
             if (commit_future := instance.async_get_commit_future()) is not None:
                 await commit_future
+            flushed = True
         finally:
             async with self._flush_condition:
                 self._flushing = False
+                self._flush_ok = flushed
                 self._flush_condition.notify_all()
 
 
@@ -670,7 +675,10 @@ class EntityConditionBase(Condition):
         self._on_unload.append(unsub)
 
     async def _async_on_entities_update(
-        self, added: set[str], removed: set[str]
+        self,
+        added: set[str],
+        removed: set[str],
+        _entity_states: Mapping[str, State | None],
     ) -> None:
         """Handle changes to the tracked entity set.
 
