@@ -982,7 +982,7 @@ eurotronic-cometblue-ha==1.4.0
 evohome-async==1.2.0
 
 # homeassistant.components.bryant_evolution
-evolutionhttp==0.0.18
+evolutionhttp==0.0.19
 
 # homeassistant.components.faa_delays
 faadelays==2023.9.1
