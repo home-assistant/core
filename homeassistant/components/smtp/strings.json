@@ -158,5 +158,33 @@
         "tls": "SSL/TLS"
       }
     }
+  },
+  "services": {
+    "send_message": {
+      "description": "Sends an email notification",
+      "fields": {
+        "bcc": {
+          "description": "Sends the notification to additional recipients as blind carbon copies (BCC). If BCC recipients are specified, send the notification to only one primary recipient. Otherwise, BCC recipients may receive duplicate emails.",
+          "name": "BCC recipients"
+        },
+        "cc": {
+          "description": "Sends the notification to additional recipients as carbon copies (CC). If CC recipients are specified, send the notification to only one primary recipient. Otherwise, CC recipients may receive duplicate emails.",
+          "name": "CC recipients"
+        },
+        "html": {
+          "description": "The HTML body of the email notification. Use HTML to create rich email content with formatting, images, links, tables, and custom styling.",
+          "name": "HTML message"
+        },
+        "message": {
+          "description": "The plain text message body of the email notification.",
+          "name": "Message"
+        },
+        "title": {
+          "description": "Subject for your email notification.",
+          "name": "Title"
+        }
+      },
+      "name": "Send message"
+    }
   }
 }

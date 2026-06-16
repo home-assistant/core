@@ -193,6 +193,25 @@ class MailNotifyEntity(NotifyEntity):
 
         self._send_email(msg=msg)
 
+    def smtp_send_message(
+        self,
+        message: str,
+        title: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        """Send an email message via smtp.send_message action."""
+        msg = MIMEMultipart("related")
+        msg["Subject"] = title or ATTR_TITLE_DEFAULT
+
+        alternative = MIMEMultipart("alternative")
+        alternative.attach(MIMEText(message, _charset="utf-8"))
+
+        if ATTR_HTML in kwargs:
+            alternative.attach(MIMEText(kwargs[ATTR_HTML], "html", _charset="utf-8"))
+
+        msg.attach(alternative)
+        self._send_email(msg=msg)
+
     def _send_email(self, msg: MIMEMultipart | MIMEText) -> None:
         """Send the message."""
         if TYPE_CHECKING:
