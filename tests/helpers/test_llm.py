@@ -235,6 +235,7 @@ async def test_assist_api(
 ) -> None:
     """Test Assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "llm", {})
 
     entity_registry.async_get_or_create(
         "light",
@@ -270,7 +271,7 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == ["GetLiveContext", "GetDateTime"]
 
     # Match all
     intent_handler.platforms = None
@@ -278,8 +279,8 @@ async def test_assist_api(
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert [tool.name for tool in api.tools] == [
         "test_intent",
-        "GetDateTime",
         "GetLiveContext",
+        "GetDateTime",
     ]
 
     # Match specific domain
@@ -445,6 +446,7 @@ async def test_assist_api_snapshot(
     """
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "llm", {})
     assert await async_setup_component(
         hass,
         "script",
@@ -542,6 +544,7 @@ async def test_assist_api_tools(
     """Test getting timer tools with Assist API."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(hass, "intent", {})
+    assert await async_setup_component(hass, "llm", {})
 
     llm_context.device_id = "test_device"
 
@@ -597,6 +600,7 @@ async def test_assist_api_description(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
     """Test intent description with Assist API."""
+    assert await async_setup_component(hass, "llm", {})
 
     class MyIntentHandler(intent.IntentHandler):
         intent_type = "test_intent"
@@ -2117,6 +2121,7 @@ async def test_get_date_time_tool(hass: HomeAssistant) -> None:
     """Test the GetDateTime tool."""
 
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "llm", {})
     context = Context()
     llm_context = llm.LLMContext(
         platform="test_platform",
@@ -2151,6 +2156,7 @@ async def test_get_date_time_tool(hass: HomeAssistant) -> None:
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "llm", {})
     context = Context()
     llm_context = llm.LLMContext(
         platform="test_platform",

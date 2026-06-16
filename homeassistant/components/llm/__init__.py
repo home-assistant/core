@@ -10,13 +10,14 @@ discovered here. The framework (registry, ``Tool``, the APIs) lives in
 from typing import Protocol
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, llm
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
 )
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .tools import GetDateTimeTool
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -30,6 +31,7 @@ class LLMToolsPlatformProtocol(Protocol):
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LLM integration."""
+    llm.async_register_tool(hass, GetDateTimeTool(), apis={llm.LLM_API_ASSIST: None})
     await async_process_integration_platforms(
         hass, DOMAIN, _async_process_llm_tools_platform
     )
