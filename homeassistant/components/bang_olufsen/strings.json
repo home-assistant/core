@@ -1,6 +1,6 @@
 {
   "common": {
-    "jid_options_description": "Advanced grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
+    "jid_options_description": "Additional grouping options, where devices' unique Beolink IDs (Called JIDs) are used directly. JIDs can be found in the state attributes of the media player entity.",
     "jid_options_name": "JID options",
     "key_press": "Press",
     "key_release": "Release",
