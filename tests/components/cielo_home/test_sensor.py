@@ -8,7 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -18,11 +18,10 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
 
 
-@pytest.mark.usefixtures("mock_cielo_device_api")
+@pytest.mark.usefixtures("mock_cielo_client", "mock_cielo_device_api")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_cielo_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -64,7 +63,7 @@ async def test_temperature_sensor_unit(
     mock_config_entry: MockConfigEntry,
     mock_cielo_device_api: MagicMock,
     temperature_unit: str | None,
-    hass_units: object | None,
+    hass_units: UnitSystem | None,
     expected_unit: str,
 ) -> None:
     """Test temperature sensor reports the correct unit."""
@@ -80,3 +79,8 @@ async def test_temperature_sensor_unit(
     state = hass.states.get("sensor.living_room_living_room_temperature")
     assert state is not None
     assert state.attributes.get("unit_of_measurement") == expected_unit
+
+    registry = er.async_get(hass)
+    entry = registry.async_get("sensor.living_room_living_room_temperature")
+    assert entry is not None
+    assert entry.unit_of_measurement == expected_unit

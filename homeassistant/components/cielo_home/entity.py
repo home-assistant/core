@@ -13,6 +13,28 @@ from .const import DOMAIN
 from .coordinator import CieloDataUpdateCoordinator
 
 
+def _normalize_temp_unit(
+    client: CieloDeviceAPI, _device_data: CieloDevice | None
+) -> str:
+    """Normalize a raw device temperature unit to a UnitOfTemperature value.
+
+    Unrecognized or empty values fall back to Celsius.
+    """
+    unit = client.temperature_unit()
+
+    if not unit:
+        return UnitOfTemperature.CELSIUS
+
+    normalized = unit.strip().lower()
+
+    if normalized in {"c", "°c", "celsius"}:
+        return UnitOfTemperature.CELSIUS
+    if normalized in {"f", "°f", "fahrenheit"}:
+        return UnitOfTemperature.FAHRENHEIT
+
+    return UnitOfTemperature.CELSIUS
+
+
 class CieloBaseEntity(CoordinatorEntity[CieloDataUpdateCoordinator]):
     """Representation of a Cielo base entity."""
 
@@ -85,16 +107,4 @@ class CieloDeviceEntity(CieloBaseEntity):
         nature means that if a user changes the device's temperature
         unit, historical statistics may be affected.
         """
-        unit = self.client.temperature_unit()
-
-        if not unit:
-            return UnitOfTemperature.CELSIUS
-
-        normalized = unit.strip().lower()
-
-        if normalized in {"c", "°c", "celsius"}:
-            return UnitOfTemperature.CELSIUS
-        if normalized in {"f", "°f", "fahrenheit"}:
-            return UnitOfTemperature.FAHRENHEIT
-
-        return UnitOfTemperature.CELSIUS
+        return _normalize_temp_unit(self.client, self.device_data)
