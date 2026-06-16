@@ -3,6 +3,7 @@
 from http import HTTPStatus
 from unittest.mock import patch
 
+from aiohttp import hdrs
 import pytest
 import voluptuous as vol
 
@@ -110,6 +111,47 @@ async def test_get_image_http(
         content = await resp.read()
 
     assert content == b"image"
+
+
+async def test_get_image_http_unauthenticated(
+    hass: HomeAssistant, hass_client_no_auth: ClientSessionGenerator
+) -> None:
+    """Test get image via http with an unauthenticated client."""
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    client = await hass_client_no_auth()
+
+    # Invalid token and no Authorization header: skip ban by 403
+    resp = await client.get(
+        "/api/media_player_proxy/media_player.bedroom?token=invalid_token"
+    )
+    assert resp.status == HTTPStatus.FORBIDDEN
+
+    # An invalid Bearer token is a real auth attempt, return 401 so the ban
+    # middleware can handle it.
+    resp = await client.get(
+        "/api/media_player_proxy/media_player.bedroom",
+        headers={hdrs.AUTHORIZATION: "blabla"},
+    )
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+    # Unknown entity while unauthenticated returns 401
+    resp = await client.get("/api/media_player_proxy/media_player.unknown")
+    assert resp.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_get_image_http_authenticated_unknown_entity(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test get image via http for an unknown entity with an authenticated client."""
+    await async_setup_component(hass, DOMAIN, {"media_player": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    resp = await client.get("/api/media_player_proxy/media_player.unknown")
+    assert resp.status == HTTPStatus.NOT_FOUND
 
 
 async def test_get_image_http_remote(
