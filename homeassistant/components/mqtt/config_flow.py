@@ -5421,7 +5421,7 @@ async def async_validate_broker_settings(
     ):
         entry_config_update[CONF_CLIENT_KEY] = client_key
 
-    # We temporary create the current and new uploaded certificate files
+    # We temporarily create the current and new uploaded certificate files
     # and we check the certificate chain.
     await async_create_certificate_temp_files(hass, entry_config_update)
     if error := await hass.async_add_executor_job(
