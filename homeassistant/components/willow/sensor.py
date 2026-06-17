@@ -22,7 +22,6 @@ from . import WillowConfigEntry
 from .const import DOMAIN, MANUFACTURER
 from .coordinator import WillowDataUpdateCoordinator, WillowDevice
 
-
 PARALLEL_UPDATES = 0
 
 
