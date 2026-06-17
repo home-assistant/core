@@ -162,12 +162,15 @@ async def test_device_legacy_firmware(
     device_registry: dr.DeviceRegistry,
     issue_registry: IssueRegistry,
 ) -> None:
-    """Test device setup for old firmware version that dont support required API."""
+    """Test device setup for old firmware on upgradable hardware creates issue."""
     LEGACY_VERSION = "v0.9.9"
     mock_smlight_client.get_sensors.side_effect = SmlightError
     mock_smlight_client.get_info.side_effect = None
     mock_smlight_client.get_info.return_value = Info(
-        legacy_api=2, sw_version=LEGACY_VERSION, MAC="AA:BB:CC:DD:EE:FF"
+        legacy_api=2,
+        sw_version=LEGACY_VERSION,
+        MAC="AA:BB:CC:DD:EE:FF",
+        psram_total=8192,
     )
     entry = await setup_integration(hass, mock_config_entry)
 
@@ -184,3 +187,23 @@ async def test_device_legacy_firmware(
     assert issue is not None
     assert issue.domain == DOMAIN
     assert issue.issue_id == "unsupported_firmware"
+
+
+async def test_device_legacy_firmware_first_gen_no_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+    issue_registry: IssueRegistry,
+) -> None:
+    """Test first-gen hardware with legacy firmware does not create issue."""
+    mock_smlight_client.get_sensors.side_effect = SmlightError
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        legacy_api=2, sw_version="v0.9.9", MAC="AA:BB:CC:DD:EE:FF"
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN, issue_id="unsupported_firmware"
+    )
+    assert issue is None
