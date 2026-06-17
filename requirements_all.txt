@@ -766,7 +766,7 @@ colorlog==6.10.1
 colorthief==0.2.1
 
 # homeassistant.components.compit
-compit-inext-api==0.8.0
+compit-inext-api==0.9.1
 
 # homeassistant.components.concord232
 concord232==0.15.1
@@ -1788,7 +1788,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
-opower==0.18.4
+opower==0.18.5
 
 # homeassistant.components.oralb
 oralb-ble==1.1.0
@@ -2027,7 +2027,7 @@ pyanglianwater==3.1.2
 pyaprilaire==0.9.1
 
 # homeassistant.components.aqvify
-pyaqvify==0.0.10
+pyaqvify==0.0.11
 
 # homeassistant.components.atag
 pyatag==0.3.5.3
