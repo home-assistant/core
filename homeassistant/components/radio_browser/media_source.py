@@ -56,7 +56,7 @@ class RadioMediaSource(MediaSource):
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve selected Radio station to a streaming URL."""
 
-        if self.entry.state != ConfigEntryState.LOADED:
+        if self.entry.state is not ConfigEntryState.LOADED:
             raise Unresolvable(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_ready",
@@ -86,7 +86,7 @@ class RadioMediaSource(MediaSource):
     ) -> BrowseMediaSource:
         """Return media."""
 
-        if self.entry.state != ConfigEntryState.LOADED:
+        if self.entry.state is not ConfigEntryState.LOADED:
             raise BrowseError(
                 translation_domain=DOMAIN,
                 translation_key="config_entry_not_ready",

@@ -14,6 +14,7 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import (
     CONF_API_KEY,
+    CONF_LANGUAGE,
     CONF_NAME,
     CONF_RECIPIENT,
     CONF_USERNAME,
@@ -29,8 +30,6 @@ BASE_API_URL = "https://rest.clicksend.com/v3"
 
 HEADERS = {"Content-Type": CONTENT_TYPE_JSON}
 
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_LANGUAGE = "language"
 CONF_VOICE = "voice"
 
 MALE_VOICE = "male"

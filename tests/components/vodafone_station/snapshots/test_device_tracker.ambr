@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -41,9 +43,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'LanDevice1',
       'host_name': 'LanDevice1',
+      'in_zones': list([
+      ]),
       'ip': '192.168.1.11',
       'mac': 'yy:yy:yy:yy:yy:yy',
       'source_type': <SourceType.ROUTER: 'router'>,
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.landevice1',
@@ -59,7 +64,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -95,9 +102,13 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'WifiDevice0',
       'host_name': 'WifiDevice0',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.1.10',
       'mac': 'xx:xx:xx:xx:xx:xx',
       'source_type': <SourceType.ROUTER: 'router'>,
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.wifidevice0',

@@ -79,7 +79,7 @@ def _plugged_in_value_lambda(
 ) -> bool | None:
     """Return true if the vehicle is plugged in."""
     if (plug_status := self.coordinator.data.get_plug_status()) is not None:
-        return plug_status == PlugState.PLUGGED
+        return plug_status is PlugState.PLUGGED
 
     if (
         charging_status := self.coordinator.data.get_charging_status()

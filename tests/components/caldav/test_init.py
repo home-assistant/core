@@ -67,7 +67,7 @@ async def test_client_failure(
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    assert config_entry.state == expected_state
+    assert config_entry.state is expected_state
 
     flows = hass.config_entries.flow.async_progress()
     assert [flow.get("step_id") for flow in flows] == expected_flows

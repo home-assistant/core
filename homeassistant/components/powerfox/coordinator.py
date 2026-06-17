@@ -95,7 +95,9 @@ class PowerfoxReportDataUpdateCoordinator(PowerfoxBaseCoordinator[DeviceReport])
 
     async def _async_fetch_data(self) -> DeviceReport:
         """Fetch report data from the Powerfox API."""
-        local_now = datetime.now(tz=dt_util.get_time_zone(self.hass.config.time_zone))
+        local_now = datetime.now(  # pylint: disable=home-assistant-enforce-now
+            tz=dt_util.get_time_zone(self.hass.config.time_zone)
+        )
         return await self.client.report(
             device_id=self.device.id,
             year=local_now.year,

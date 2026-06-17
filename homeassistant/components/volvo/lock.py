@@ -75,6 +75,10 @@ class VolvoLock(VolvoEntity, LockEntity):
 
     def _update_state(self, api_field: VolvoCarsApiBaseModel | None) -> None:
         """Update the state of the entity."""
+        if api_field is None:
+            self._attr_is_locked = None
+            return
+
         assert isinstance(api_field, VolvoCarsValue)
         self._attr_is_locked = api_field.value == "LOCKED"
 

@@ -6,7 +6,6 @@ from typing import Any
 from freebox_api.exceptions import InsufficientPermissionsError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -19,7 +18,6 @@ SWITCH_DESCRIPTIONS = [
     SwitchEntityDescription(
         key="wifi",
         translation_key="wifi",
-        entity_category=EntityCategory.CONFIG,
     )
 ]
 

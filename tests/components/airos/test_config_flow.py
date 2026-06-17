@@ -21,7 +21,7 @@ from homeassistant.components.airos.const import (
     HOSTNAME,
     IP_ADDRESS,
     MAC_ADDRESS,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 from homeassistant.config_entries import (
     SOURCE_DHCP,
@@ -48,7 +48,7 @@ NEW_PASSWORD = "new_password"
 REAUTH_STEP = "reauth_confirm"
 RECONFIGURE_STEP = "reconfigure"
 
-MOCK_ADVANCED_SETTINGS = {
+MOCK_ADDITIONAL_SETTINGS = {
     CONF_SSL: True,
     CONF_VERIFY_SSL: False,
 }
@@ -57,7 +57,7 @@ MOCK_CONFIG = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: DEFAULT_USERNAME,
     CONF_PASSWORD: "test-password",
-    SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
 }
 MOCK_CONFIG_REAUTH = {
     CONF_HOST: "1.1.1.1",
@@ -231,7 +231,7 @@ async def test_reauth_flow_scenario(
             data=mock_config_entry.data,
         )
 
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
 
     fw_major = int(ap_status_fixture.host.fwversion.lstrip("v").split(".", 1)[0])
@@ -305,7 +305,7 @@ async def test_reauth_flow_scenarios(
             data=mock_config_entry.data,
         )
 
-    assert flow["type"] == FlowResultType.FORM
+    assert flow["type"] is FlowResultType.FORM
     assert flow["step_id"] == REAUTH_STEP
 
     with patch(
@@ -337,7 +337,7 @@ async def test_reauth_flow_scenarios(
             user_input={CONF_PASSWORD: NEW_PASSWORD},
         )
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
 
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
@@ -410,7 +410,7 @@ async def test_successful_reconfigure(
 
     user_input = {
         CONF_PASSWORD: NEW_PASSWORD,
-        SECTION_ADVANCED_SETTINGS: {
+        SECTION_ADDITIONAL_SETTINGS: {
             CONF_SSL: True,
             CONF_VERIFY_SSL: True,
         },
@@ -426,8 +426,8 @@ async def test_successful_reconfigure(
 
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert updated_entry.data[CONF_PASSWORD] == NEW_PASSWORD
-    assert updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL] is True
-    assert updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL] is True
+    assert updated_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL] is True
+    assert updated_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL] is True
 
     assert updated_entry.data[CONF_HOST] == MOCK_CONFIG[CONF_HOST]
     assert updated_entry.data[CONF_USERNAME] == MOCK_CONFIG[CONF_USERNAME]
@@ -468,7 +468,7 @@ async def test_reconfigure_flow_failure(
 
     user_input = {
         CONF_PASSWORD: NEW_PASSWORD,
-        SECTION_ADVANCED_SETTINGS: {
+        SECTION_ADDITIONAL_SETTINGS: {
             CONF_SSL: True,
             CONF_VERIFY_SSL: True,
         },
@@ -525,7 +525,7 @@ async def test_reconfigure_unique_id_mismatch(
 
     user_input = {
         CONF_PASSWORD: NEW_PASSWORD,
-        SECTION_ADVANCED_SETTINGS: {
+        SECTION_ADDITIONAL_SETTINGS: {
             CONF_SSL: True,
             CONF_VERIFY_SSL: True,
         },
@@ -546,8 +546,8 @@ async def test_reconfigure_unique_id_mismatch(
     updated_entry = hass.config_entries.async_get_entry(mock_config_entry.entry_id)
     assert updated_entry.data[CONF_PASSWORD] == MOCK_CONFIG[CONF_PASSWORD]
     assert (
-        updated_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL]
-        == MOCK_CONFIG[SECTION_ADVANCED_SETTINGS][CONF_SSL]
+        updated_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL]
+        == MOCK_CONFIG[SECTION_ADDITIONAL_SETTINGS][CONF_SSL]
     )
 
 
@@ -611,7 +611,7 @@ async def test_discover_flow_one_device_found(
             {
                 CONF_USERNAME: DEFAULT_USERNAME,
                 CONF_PASSWORD: "test-password",
-                SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+                SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
             },
         )
 
@@ -687,7 +687,7 @@ async def test_discover_flow_multiple_devices_found(
             {
                 CONF_USERNAME: DEFAULT_USERNAME,
                 CONF_PASSWORD: "test-password",
-                SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+                SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
             },
         )
 
@@ -785,7 +785,7 @@ async def test_configure_device_flow_exceptions(
             {
                 CONF_USERNAME: "wrong-user",
                 CONF_PASSWORD: "wrong-password",
-                SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+                SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
             },
         )
 
@@ -801,7 +801,7 @@ async def test_configure_device_flow_exceptions(
             {
                 CONF_USERNAME: DEFAULT_USERNAME,
                 CONF_PASSWORD: "some-password",
-                SECTION_ADVANCED_SETTINGS: MOCK_ADVANCED_SETTINGS,
+                SECTION_ADDITIONAL_SETTINGS: MOCK_ADDITIONAL_SETTINGS,
             },
         )
 

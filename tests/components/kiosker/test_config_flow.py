@@ -14,8 +14,8 @@ from kiosker import (
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.kiosker.const import CONF_API_TOKEN, DOMAIN
-from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.components.kiosker.const import DOMAIN
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo

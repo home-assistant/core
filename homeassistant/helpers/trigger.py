@@ -5,7 +5,7 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import datetime, timedelta
 import functools
 import inspect
 import logging
@@ -75,7 +75,7 @@ from .automation import (
     get_relative_description_key,
     move_options_fields_to_top_level,
 )
-from .event import async_track_same_state
+from .event import async_call_later
 from .integration_platform import async_process_integration_platforms
 from .selector import (
     NumericThresholdMode,
@@ -327,8 +327,18 @@ class Trigger(abc.ABC):
 
 ATTR_BEHAVIOR: Final = "behavior"
 BEHAVIOR_FIRST: Final = "first"
-BEHAVIOR_LAST: Final = "last"
-BEHAVIOR_ANY: Final = "any"
+BEHAVIOR_ALL: Final = "all"
+BEHAVIOR_EACH: Final = "each"
+
+
+def _backwards_compatible_behavior(value: Any) -> Any:
+    """Convert legacy behavior values to new ones."""
+    if value == "any":
+        return BEHAVIOR_EACH
+    if value == "last":
+        return BEHAVIOR_ALL
+    return value
+
 
 ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     {
@@ -337,11 +347,12 @@ ENTITY_STATE_TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
-ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST = ENTITY_STATE_TRIGGER_SCHEMA.extend(
+ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR = ENTITY_STATE_TRIGGER_SCHEMA.extend(
     {
         vol.Required(CONF_OPTIONS, default={}): {
-            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_ANY): vol.In(
-                [BEHAVIOR_FIRST, BEHAVIOR_LAST, BEHAVIOR_ANY]
+            vol.Required(ATTR_BEHAVIOR, default=BEHAVIOR_EACH): vol.All(
+                _backwards_compatible_behavior,
+                vol.In([BEHAVIOR_FIRST, BEHAVIOR_ALL, BEHAVIOR_EACH]),
             ),
             vol.Optional(CONF_FOR): cv.positive_time_period,
         },
@@ -361,7 +372,7 @@ class EntityTriggerBase(Trigger):
     # `_excluded_states`. Subclasses can override to relax the origin
     # check.
     _excluded_from_states: ClassVar[frozenset[str]] = _excluded_states
-    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST
+    _schema: vol.Schema = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR
     # When True, indirect target expansion (via device/area/floor) skips
     # entities with an entity_category.
     _primary_entities_only: ClassVar[bool] = True
@@ -427,7 +438,11 @@ class EntityTriggerBase(Trigger):
         """
         return state.state not in self._excluded_states
 
-    def count_matches(self, entity_ids: set[str]) -> tuple[int, int]:
+    def count_matches(
+        self,
+        entity_ids: Iterable[str],
+        states: Mapping[str, State | None] | None = None,
+    ) -> tuple[int, int]:
         """Return (matches, included) for the entity set.
 
         `matches` is the number of entities that pass `_should_include` AND
@@ -436,11 +451,19 @@ class EntityTriggerBase(Trigger):
         Callers can use the pair to distinguish vacuous truth
         (`included == 0`) from a genuine all-match
         (`matches == included > 0`).
+
+        Entity states are read from `states` when provided, otherwise from
+        the live state machine. Pass the targeted entity states received
+        with a state change event to evaluate the event against the states
+        as they were when the event fired.
         """
         matches = 0
         included = 0
         for entity_id in entity_ids:
-            state = self._hass.states.get(entity_id)
+            if states is not None:
+                state = states[entity_id]
+            else:
+                state = self._hass.states.get(entity_id)
             if state is None or not self._should_include(state):
                 continue
             included += 1
@@ -448,14 +471,93 @@ class EntityTriggerBase(Trigger):
                 matches += 1
         return matches, included
 
+    @callback
+    def _cancel_invalidated_timers(
+        self,
+        behavior: str,
+        pending_timers: dict[str, CALLBACK_TYPE],
+        target_state_change_data: TargetStateChangedData,
+    ) -> None:
+        """Cancel pending duration timers invalidated by a state change.
+
+        Runs on every delivered state change, before the trigger's own
+        validity checks: an event which cannot fire the trigger, e.g. an
+        entity becoming unavailable, may still invalidate a pending timer.
+        The targeted entity states have already been updated with this
+        event, so the first/all check can simply recount.
+        """
+        event = target_state_change_data.state_change_event
+        if behavior == BEHAVIOR_EACH:
+            entity_id = event.data["entity_id"]
+            if entity_id not in pending_timers:
+                return
+            to_state = event.data["new_state"]
+            if (
+                to_state is None
+                or to_state.state in self._excluded_states
+                or not self.is_valid_state(to_state)
+            ):
+                pending_timers.pop(entity_id)()
+            return
+        if behavior not in pending_timers:
+            return
+        if not self._combined_state_still_valid(
+            behavior,
+            target_state_change_data.targeted_entity_ids,
+            target_state_change_data.targeted_entity_states,
+        ):
+            pending_timers.pop(behavior)()
+
+    def _combined_state_still_valid(
+        self,
+        behavior: str,
+        entity_ids: Iterable[str],
+        states: Mapping[str, State | None],
+    ) -> bool:
+        """Check the combined first/all state for a pending duration timer."""
+        matches, included = self.count_matches(entity_ids, states)
+        if behavior == BEHAVIOR_FIRST:
+            return matches >= 1
+        # Require at least one included entity to avoid keeping the timer
+        # alive when every targeted entity has been filtered out since it
+        # started — a vacuous all-match (`included == 0`) would otherwise
+        # let the action fire after `for:` even though no entity still
+        # matches.
+        return included > 0 and matches == included
+
     @override
     async def async_attach_runner(
         self, run_action: TriggerActionRunner
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
-        behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_ANY)
-        unsub_track_same: dict[str, Callable[[], None]] = {}
+        behavior: str = self._options.get(ATTR_BEHAVIOR, BEHAVIOR_EACH)
+        # Pending `for:` duration timers, keyed by entity_id for behavior
+        # each and by the behavior for first/all.
+        pending_timers: dict[str, CALLBACK_TYPE] = {}
+
+        @callback
+        def handle_entities_update(
+            added: set[str],
+            removed: set[str],
+            entity_states: Mapping[str, State | None],
+        ) -> None:
+            """Re-validate pending duration timers on target changes.
+
+            Timers of entities no longer targeted are cancelled, and the
+            combined first/all condition is recounted over the updated
+            target: e.g. a non-matching entity added to the target breaks a
+            pending all-match.
+            """
+            for entity_id in removed:
+                if (cancel := pending_timers.pop(entity_id, None)) is not None:
+                    cancel()
+            if behavior not in pending_timers:
+                return
+            if not self._combined_state_still_valid(
+                behavior, entity_states.keys(), entity_states
+            ):
+                pending_timers.pop(behavior)()
 
         @callback
         def state_change_listener(
@@ -467,35 +569,10 @@ class EntityTriggerBase(Trigger):
             from_state = event.data["old_state"]
             to_state = event.data["new_state"]
 
-            def state_still_valid(
-                _: str, from_state: State | None, to_state: State | None
-            ) -> bool:
-                """Check if the state is still valid during the duration wait.
-
-                Called by async_track_same_state on each state change to
-                determine whether to cancel the timer.
-                For behavior any, checks the individual entity's state.
-                For behavior first/last, checks the combined state.
-                """
-                if behavior == BEHAVIOR_LAST:
-                    matches, included = self.count_matches(
-                        target_state_change_data.targeted_entity_ids
-                    )
-                    # Require at least one included entity to avoid keeping
-                    # the timer alive when every targeted entity has been
-                    # filtered out since it started — a vacuous all-match
-                    # (`included == 0`) would otherwise let the action fire
-                    # after `for:` even though no entity still matches.
-                    return included > 0 and matches == included
-                if behavior == BEHAVIOR_FIRST:
-                    matches, _included = self.count_matches(
-                        target_state_change_data.targeted_entity_ids
-                    )
-                    return matches >= 1
-                # Behavior any: check the individual entity's state
-                if not to_state or to_state.state in self._excluded_states:
-                    return False
-                return self.is_valid_state(to_state)
+            if pending_timers:
+                self._cancel_invalidated_timers(
+                    behavior, pending_timers, target_state_change_data
+                )
 
             if not from_state or not to_state:
                 return
@@ -515,9 +592,15 @@ class EntityTriggerBase(Trigger):
             ):
                 return
 
-            if behavior == BEHAVIOR_LAST:
+            # Count against the targeted entity states as of this event, not
+            # the live state machine: state change events are dispatched one
+            # event loop iteration after the state machine is updated, so the
+            # state machine may already contain later changes to other
+            # targeted entities.
+            if behavior == BEHAVIOR_ALL:
                 matches, included = self.count_matches(
-                    target_state_change_data.targeted_entity_ids
+                    target_state_change_data.targeted_entity_ids,
+                    target_state_change_data.targeted_entity_states,
                 )
                 if matches != included:
                     return
@@ -526,7 +609,8 @@ class EntityTriggerBase(Trigger):
                 # were previously 2 matches the transition would not be valid and we
                 # would have returned already.
                 matches, _ = self.count_matches(
-                    target_state_change_data.targeted_entity_ids
+                    target_state_change_data.targeted_entity_ids,
+                    target_state_change_data.targeted_entity_states,
                 )
                 if matches != 1:
                     return
@@ -553,26 +637,28 @@ class EntityTriggerBase(Trigger):
                 call_action()
                 return
 
-            subscription_key = entity_id if behavior == BEHAVIOR_ANY else behavior
-            if subscription_key in unsub_track_same:
-                unsub_track_same.pop(subscription_key)()
-            unsub_track_same[subscription_key] = async_track_same_state(
-                self._hass,
-                self._duration,
-                call_action,
-                state_still_valid,
-                entity_ids=(
-                    entity_id
-                    if behavior == BEHAVIOR_ANY
-                    else target_state_change_data.targeted_entity_ids
-                ),
+            subscription_key = entity_id if behavior == BEHAVIOR_EACH else behavior
+            if (
+                previous_timer := pending_timers.pop(subscription_key, None)
+            ) is not None:
+                previous_timer()
+
+            @callback
+            def fire_after_duration(_now: datetime) -> None:
+                """Fire the action once the state has held for the duration."""
+                del pending_timers[subscription_key]
+                call_action()
+
+            pending_timers[subscription_key] = async_call_later(
+                self._hass, self._duration, fire_after_duration
             )
 
-        unsub = async_track_target_selector_state_change_event(
+        unsub = await async_track_target_selector_state_change_event(
             self._hass,
             self._target,
             state_change_listener,
             self.entity_filter,
+            handle_entities_update if self._duration else None,
             primary_entities_only=self._primary_entities_only,
         )
 
@@ -580,9 +666,9 @@ class EntityTriggerBase(Trigger):
         def async_remove() -> None:
             """Remove state listeners async."""
             unsub()
-            for async_remove in unsub_track_same.values():
-                async_remove()
-            unsub_track_same.clear()
+            for cancel_timer in pending_timers.values():
+                cancel_timer()
+            pending_timers.clear()
 
         return async_remove
 
@@ -760,7 +846,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         if lower_limit is None or upper_limit is None:
             # Entity not found or invalid number, don't trigger
             return False
-        between = lower_limit < current_value < upper_limit
+        between = lower_limit <= current_value <= upper_limit
         if self._threshold_type == NumericThresholdType.BETWEEN:
             return between
         return not between
@@ -871,7 +957,7 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
 
 
 NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA = (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
             vol.Required(CONF_OPTIONS): {
                 vol.Required("threshold"): NumericThresholdSelector(
@@ -905,7 +991,7 @@ def _make_numerical_state_crossed_threshold_with_unit_schema(
     This trigger only fires when the observed attribute
     changes from not within to within the defined threshold.
     """
-    return ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+    return ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
         {
             vol.Required(CONF_OPTIONS, default={}): {
                 vol.Required("threshold"): NumericThresholdSelector(
@@ -1714,7 +1800,14 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
         return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
 
     if trigger_conf[CONF_PLATFORM] == "zone":
-        return trigger_conf[CONF_ENTITY_ID] + [trigger_conf[CONF_ZONE]]  # type: ignore[no-any-return]
+        options = trigger_conf[CONF_OPTIONS]
+        return [*options[CONF_ENTITY_ID], options[CONF_ZONE]]
+
+    if trigger_conf[CONF_PLATFORM] in ("zone.entered", "zone.left"):
+        return [
+            *async_extract_targets(trigger_conf, CONF_ENTITY_ID),
+            trigger_conf[CONF_OPTIONS][CONF_ZONE],
+        ]
 
     if trigger_conf[CONF_PLATFORM] == "geo_location":
         return [trigger_conf[CONF_ZONE]]

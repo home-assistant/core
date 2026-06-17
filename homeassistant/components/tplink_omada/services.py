@@ -6,6 +6,7 @@ from tplink_omada_client.exceptions import OmadaClientException
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector
@@ -15,8 +16,6 @@ from .controller import OmadaSiteController
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
 
-# pylint: disable-next=home-assistant-duplicate-const
-ATTR_CONFIG_ENTRY_ID = "config_entry_id"
 ATTR_MAC = "mac"
 
 

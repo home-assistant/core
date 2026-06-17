@@ -15,11 +15,11 @@ from kiosker import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
+from homeassistant.const import CONF_API_TOKEN, CONF_HOST, CONF_SSL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import CONF_API_TOKEN, DEFAULT_SSL, DEFAULT_SSL_VERIFY, DOMAIN, PORT
+from .const import DEFAULT_SSL, DEFAULT_SSL_VERIFY, DOMAIN, PORT
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -287,3 +287,139 @@ async def test_user_unable_to_connect(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == f"Arcam FMJ ({MOCK_HOST})"
     assert result["data"] == MOCK_CONFIG_ENTRY
+
+
+async def test_reconfigure(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test reconfiguring an existing entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "old_host", CONF_PORT: MOCK_PORT},
+        title=MOCK_NAME,
+        unique_id=MOCK_UUID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    aioclient_mock.get(MOCK_UPNP_LOCATION, text=MOCK_UPNP_DEVICE)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert entry.data == MOCK_CONFIG_ENTRY
+    assert entry.unique_id == MOCK_UUID
+
+
+async def test_reconfigure_no_ssdp(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test reconfiguring when the new host does not respond to ssdp."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "old_host", CONF_PORT: MOCK_PORT},
+        title=MOCK_NAME,
+        unique_id=MOCK_UUID,
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    aioclient_mock.get(MOCK_UPNP_LOCATION, status=404)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert entry.data == MOCK_CONFIG_ENTRY
+    assert entry.unique_id == MOCK_UUID
+
+
+async def test_reconfigure_unique_id_mismatch(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test reconfiguring against a different device aborts."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "old_host", CONF_PORT: MOCK_PORT},
+        title=MOCK_NAME,
+        unique_id="other_uuid",
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    aioclient_mock.get(MOCK_UPNP_LOCATION, text=MOCK_UPNP_DEVICE)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+    assert entry.data == {CONF_HOST: "old_host", CONF_PORT: MOCK_PORT}
+
+
+@pytest.mark.parametrize(
+    ("connect_exception", "expected_error"),
+    [
+        pytest.param(ConnectionFailed, "cannot_connect", id="connection_failed"),
+        pytest.param(
+            ConnectionRefusedError, "connection_refused", id="connection_refused"
+        ),
+        pytest.param(OSError, "cannot_connect", id="os_error"),
+        pytest.param(socket.gaierror, "invalid_host", id="invalid_host"),
+        pytest.param(TimeoutError, "timeout_connect", id="timeout_connect"),
+    ],
+)
+async def test_reconfigure_unable_to_connect(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    dummy_client: MagicMock,
+    connect_exception: type[Exception],
+    expected_error: str,
+) -> None:
+    """Test reconfiguring when the device cannot be reached."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_HOST: "old_host", CONF_PORT: MOCK_PORT},
+        title=MOCK_NAME,
+        unique_id=MOCK_UUID,
+    )
+    entry.add_to_hass(hass)
+
+    dummy_client.start.side_effect = AsyncMock(side_effect=connect_exception)
+    aioclient_mock.get(MOCK_UPNP_LOCATION, status=404)
+
+    result = await entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    user_input = {CONF_HOST: MOCK_HOST, CONF_PORT: MOCK_PORT}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": expected_error}
+
+    dummy_client.start.side_effect = AsyncMock(return_value=None)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert entry.data == MOCK_CONFIG_ENTRY

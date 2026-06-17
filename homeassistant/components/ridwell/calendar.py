@@ -28,7 +28,7 @@ def async_get_calendar_event_from_pickup_event(
     calendar_preference = config_entry.options.get(CONF_CALENDAR_TITLE, False)
     for pickup in pickup_event.pickups:
         pickup_items.append(f"{pickup.name} (quantity: {pickup.quantity})")
-        if pickup.category == PickupCategory.ROTATING:
+        if pickup.category is PickupCategory.ROTATING:
             rotating_category = pickup.name
             break
 

@@ -51,7 +51,7 @@ def is_connected(hass: HomeAssistant, config_entry: config_entries.ConfigEntry) 
     """Check if an existing entry has a proper connection."""
     return (
         hasattr(config_entry, "runtime_data")
-        and config_entry.state == config_entries.ConfigEntryState.LOADED
+        and config_entry.state is config_entries.ConfigEntryState.LOADED
         and config_entry.runtime_data.device_coordinator.last_update_success
     )
 
@@ -100,6 +100,8 @@ def get_device_uid_and_ch(
     elif device_uid[1].startswith("chime"):
         ch = int(device_uid[1][5:])
         is_chime = True
+    elif device_uid[1].startswith("lens"):
+        ch = int(device_uid[1][4:])
     else:
         device_uid_part = "_".join(device_uid[1:])
         ch = host.api.channel_for_uid(device_uid_part)

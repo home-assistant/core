@@ -857,7 +857,7 @@ async def async_setup_entry(
                                 config_entry_id
                             )
                         )
-                        and config_entry.state == ConfigEntryState.LOADED
+                        and config_entry.state is ConfigEntryState.LOADED
                         for config_entry_id in device.config_entries
                     ):
                         continue

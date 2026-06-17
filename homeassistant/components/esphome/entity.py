@@ -53,7 +53,7 @@ def async_static_info_updated(
     platform: entity_platform.EntityPlatform,
     async_add_entities: AddEntitiesCallback,
     info_type: type[_InfoT],
-    entity_type: type[_EntityT],
+    entity_type: Callable[[RuntimeEntryData, EntityInfo, type[_StateT]], _EntityT],
     state_type: type[_StateT],
     infos: list[EntityInfo],
 ) -> None:
@@ -188,7 +188,7 @@ async def platform_async_setup_entry(
     async_add_entities: AddEntitiesCallback,
     *,
     info_type: type[_InfoT],
-    entity_type: type[_EntityT],
+    entity_type: Callable[[RuntimeEntryData, EntityInfo, type[_StateT]], _EntityT],
     state_type: type[_StateT],
     info_filter: Callable[[_InfoT], bool] | None = None,
 ) -> None:
@@ -196,6 +196,11 @@ async def platform_async_setup_entry(
 
     This method is in charge of receiving, distributing and storing
     info and state updates.
+
+    `entity_type` is any callable that builds an entity from
+    `(entry_data, info, state_type)`. A regular entity class satisfies this,
+    and platforms with multiple entity classes can pass a factory function
+    that picks the class per static info.
     """
     entry_data = entry.runtime_data
     entry_data.info[info_type] = {}
