@@ -12,15 +12,7 @@ async def test_entry_setup_unload(hass: HomeAssistant) -> None:
 
     config_entry = MockConfigEntry(domain=DOMAIN)
     config_entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.rpi_power.new_under_voltage", get=True
-        ) as mock_client,
-        patch(
-            "homeassistant.components.rpi_power.binary_sensor.new_under_voltage",
-            new=mock_client,
-        ),
-    ):
+    with patch("homeassistant.components.rpi_power.new_under_voltage", get=True):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 

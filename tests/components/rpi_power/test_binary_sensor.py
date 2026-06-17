@@ -35,12 +35,9 @@ async def _async_setup_component(hass: HomeAssistant, detected: bool) -> MagicMo
     type(mocked_under_voltage).get = MagicMock(return_value=detected)
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    with (
-        patch(
-            "homeassistant.components.rpi_power.binary_sensor.new_under_voltage",
-            return_value=mocked_under_voltage,
-        ) as mock_client,
-        patch("homeassistant.components.rpi_power.new_under_voltage", new=mock_client),
+    with patch(
+        "homeassistant.components.rpi_power.new_under_voltage",
+        return_value=mocked_under_voltage,
     ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -91,15 +88,9 @@ async def test_setup(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Snapshot test states of binary sensor platform."""
-    with (
-        patch(
-            "homeassistant.components.rpi_power.binary_sensor.new_under_voltage",
-            get=True,
-        ) as mock_client,
-        patch(
-            "homeassistant.components.rpi_power.new_under_voltage",
-            new=mock_client,
-        ),
+    with patch(
+        "homeassistant.components.rpi_power.new_under_voltage",
+        get=True,
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, entry_id="12345")
         config_entry.add_to_hass(hass)
