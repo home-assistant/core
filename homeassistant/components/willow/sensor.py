@@ -23,6 +23,9 @@ from .const import DOMAIN, MANUFACTURER
 from .coordinator import WillowDataUpdateCoordinator, WillowDevice
 
 
+PARALLEL_UPDATES = 0
+
+
 @dataclass(frozen=True, kw_only=True)
 class WillowSensorEntityDescription(SensorEntityDescription):
     """Describe a Willow sensor entity."""
