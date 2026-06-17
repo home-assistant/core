@@ -26,7 +26,7 @@ class SqueezeboxEntity(CoordinatorEntity[SqueezeBoxPlayerUpdateCoordinator]):
         self._player = coordinator.player
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, format_mac(self._player.player_id))},
-            connections={(CONNECTION_NETWORK_MAC, format_mac(self._player.player_id))},
+            connections={(CONNECTION_NETWORK_MAC, self._player.player_id)},
         )
 
     @property

@@ -45,4 +45,5 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id="user-uuid-1",
         title=MOCK_USER_INPUT[CONF_EMAIL],
         data=MOCK_USER_INPUT,
+        entry_id="config-entry-uuid-1",
     )
