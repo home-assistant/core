@@ -546,6 +546,11 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                     "%s: Dropping sample as source total_increasing sensor decreased",
                     self.entity_id,
                 )
+                self._last_valid_state_time = (
+                    new_state.state,
+                    new_timestamp,
+                )
+                self._write_native_value(Decimal(0))
                 return
 
             # add latest derivative to the window list

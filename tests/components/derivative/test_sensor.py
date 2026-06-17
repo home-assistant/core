@@ -864,8 +864,8 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
     """Test derivative with total_increasing input where it should ignore the reset."""
     times = [0, 20, 30, 35, 40, 50, 60]
     values = [0, 10, 30, 40, 0, 10, 40]
-    expected_times = [0, 20, 30, 35, 50, 60]
-    expected_values = ["0.00", "0.50", "2.00", "2.00", "1.00", "3.00"]
+    expected_times = [0, 20, 30, 35, 40, 50, 60]
+    expected_values = ["0.00", "0.50", "2.00", "2.00", "0.00", "1.00", "3.00"]
 
     _config, entity_id = await _setup_sensor(hass, {"unit_time": UnitOfTime.SECONDS})
 
