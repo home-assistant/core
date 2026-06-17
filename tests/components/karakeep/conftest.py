@@ -8,7 +8,7 @@ import pytest
 from homeassistant.components.karakeep.const import DOMAIN
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 
-from .const import TEST_STATS, TEST_TOKEN, TEST_URL
+from .const import TEST_STATS, TEST_TOKEN, TEST_URL, TEST_VERSION
 
 from tests.common import MockConfigEntry
 
@@ -38,6 +38,7 @@ def mock_karakeep_client() -> Generator[AsyncMock]:
     ):
         client = mock_client.return_value
         client.async_get_stats.return_value = TEST_STATS
+        client.async_get_version.return_value = TEST_VERSION
         yield client
 
 

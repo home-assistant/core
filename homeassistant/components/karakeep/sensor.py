@@ -95,4 +95,4 @@ class KarakeepStatSensor(KarakeepEntity, SensorEntity):
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
-        return self.entity_description.value_fn(self.coordinator.data)
+        return self.entity_description.value_fn(self.coordinator.data.stats)

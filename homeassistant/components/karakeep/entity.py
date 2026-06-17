@@ -23,4 +23,5 @@ class KarakeepEntity(CoordinatorEntity[KarakeepDataUpdateCoordinator]):
             manufacturer="Karakeep",
             entry_type=DeviceEntryType.SERVICE,
             configuration_url=url,
+            sw_version=coordinator.data.version,
         )

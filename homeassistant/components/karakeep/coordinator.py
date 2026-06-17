@@ -1,5 +1,6 @@
 """Data update coordinator for the Karakeep integration."""
 
+from dataclasses import dataclass
 import logging
 
 from aiokarakeep import (
@@ -7,6 +8,7 @@ from aiokarakeep import (
     KarakeepAuthError,
     KarakeepClient,
     KarakeepConnectionError,
+    KarakeepError,
     KarakeepInvalidResponseError,
     KarakeepStats,
 )
@@ -23,7 +25,15 @@ _LOGGER = logging.getLogger(__name__)
 type KarakeepConfigEntry = ConfigEntry[KarakeepDataUpdateCoordinator]
 
 
-class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepStats]):
+@dataclass
+class KarakeepData:
+    """Data fetched from Karakeep."""
+
+    stats: KarakeepStats
+    version: str | None
+
+
+class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepData]):
     """Class to manage fetching Karakeep data."""
 
     config_entry: KarakeepConfigEntry
@@ -45,13 +55,22 @@ class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepStats]):
             config_entry=entry,
         )
 
-    async def _async_update_data(self) -> KarakeepStats:
+    async def _async_update_data(self) -> KarakeepData:
         """Fetch data from Karakeep API."""
         try:
-            return await self.client.async_get_stats()
+            stats = await self.client.async_get_stats()
         except KarakeepAuthError as err:
             raise ConfigEntryAuthFailed("Invalid Karakeep API token") from err
         except KarakeepConnectionError as err:
             raise UpdateFailed(f"Error communicating with Karakeep: {err}") from err
         except (KarakeepApiError, KarakeepInvalidResponseError) as err:
             raise UpdateFailed(f"Invalid response from Karakeep: {err}") from err
+
+        # The version is optional and must never fail the data update.
+        try:
+            version = await self.client.async_get_version()
+        except KarakeepError as err:
+            _LOGGER.debug("Could not fetch Karakeep version: %s", err)
+            version = None
+
+        return KarakeepData(stats=stats, version=version)
