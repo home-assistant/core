@@ -1,6 +1,11 @@
 """Support for Motionblinds using their WLAN API."""
 
-from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway, ParseException
+from motionblinds import (
+    DEVICE_TYPES_GATEWAY,
+    DEVICE_TYPES_WIFI,
+    MotionGateway,
+    ParseException,
+)
 from motionblinds.motion_blinds import MotionBlind
 
 from homeassistant.core import CALLBACK_TYPE
@@ -112,7 +117,9 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
         try:
             async with self._api_lock:
                 if self._blind.device_type in DEVICE_TYPES_WIFI:
-                    await self.hass.async_add_executor_job(self._blind.Update_from_cache)
+                    await self.hass.async_add_executor_job(
+                        self._blind.Update_from_cache
+                    )
                 else:
                     await self.hass.async_add_executor_job(self._blind.Update)
         except (TimeoutError, ParseException):
