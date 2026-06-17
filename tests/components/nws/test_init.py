@@ -325,21 +325,10 @@ async def test_location_entity_becomes_unavailable_no_update(
     assert config_entry.runtime_data.longitude == -80.0
 
 
-@pytest.mark.parametrize(
-    ("action", "expected_state"),
-    [
-        pytest.param("remove", ConfigEntryState.SETUP_ERROR, id="removed"),
-        pytest.param("rename", ConfigEntryState.SETUP_RETRY, id="renamed"),
-    ],
-)
-async def test_entity_registry_change_triggers_reload(
-    hass: HomeAssistant,
-    mock_simple_nws,
-    entity_registry: er.EntityRegistry,
-    action: str,
-    expected_state: ConfigEntryState,
-) -> None:
-    """Test that removing or renaming the tracked entity triggers a config entry reload."""
+async def _setup_tracked_entity(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> tuple[er.RegistryEntry, MockConfigEntry]:
+    """Set up a config entry tracking a person entity and return both."""
     entry = entity_registry.async_get_or_create("person", "person", "test_user")
     entity_registry.async_get_or_create("person", "person", "other_user")
     hass.states.async_set(
@@ -358,15 +347,37 @@ async def test_entity_registry_change_triggers_reload(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    if action == "remove":
-        entity_registry.async_remove(entry.entity_id)
-    else:
-        entity_registry.async_update_entity(
-            entry.entity_id, new_entity_id="person.renamed_person"
-        )
+    return entry, config_entry
+
+
+async def test_entity_registry_removal_triggers_reload(
+    hass: HomeAssistant,
+    mock_simple_nws,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that removing the tracked entity triggers a config entry reload."""
+    entry, config_entry = await _setup_tracked_entity(hass, entity_registry)
+
+    entity_registry.async_remove(entry.entity_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state is expected_state
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
+
+
+async def test_entity_registry_rename_triggers_reload(
+    hass: HomeAssistant,
+    mock_simple_nws,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that renaming the tracked entity triggers a config entry reload."""
+    entry, config_entry = await _setup_tracked_entity(hass, entity_registry)
+
+    entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="person.renamed_person"
+    )
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unload_with_location_entity(
