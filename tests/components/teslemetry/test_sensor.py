@@ -97,6 +97,7 @@ async def test_sensors_streaming(
         }
     )
     await hass.async_block_till_done()
+    assert hass.states.get("sensor.teslemetry_command_quota").state == "21.2"
 
     # Reload the entry
     await hass.config_entries.async_reload(entry.entry_id)
