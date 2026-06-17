@@ -305,11 +305,11 @@ aioimaplib==2.0.1
 # homeassistant.components.immich
 aioimmich==0.16.1
 
-# homeassistant.components.karakeep
-aiokarakeep==0.1.0
-
 # homeassistant.components.apache_kafka
 aiokafka==0.10.0
+
+# homeassistant.components.karakeep
+aiokarakeep==0.3.0
 
 # homeassistant.components.kef
 aiokef==0.2.16
