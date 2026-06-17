@@ -2,6 +2,7 @@
 # pylint: disable=home-assistant-use-runtime-data
 
 import asyncio
+import contextlib
 import logging
 
 from motionblinds import AsyncMotionMulticast
@@ -54,24 +55,16 @@ async def async_setup_entry(
                         multicast_interface,
                         host,
                     )
-                    try:
+                    with contextlib.suppress(OSError):
                         test_multicast.Stop_listen()
-                    except OSError:
-                        pass
 
-                if working_interface is None:
+            if working_interface is None:
+                if multicast_interface not in (DEFAULT_INTERFACE, None):
                     _LOGGER.debug(
                         "Stored Motionblinds interface '%s' unavailable, reprobing for host %s",
                         multicast_interface,
                         host,
                     )
-                    check_multicast_class = ConnectMotionGateway(
-                        hass, interface=multicast_interface
-                    )
-                    working_interface = (
-                        await check_multicast_class.async_check_interface(host, key)
-                    )
-            else:
                 check_multicast_class = ConnectMotionGateway(
                     hass, interface=multicast_interface
                 )
