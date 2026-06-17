@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 from homeassistant.components.actiontec.const import DOMAIN
 from homeassistant.components.actiontec.device_tracker import async_setup_scanner
+from homeassistant.components.actiontec.model import Device
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_registry import EntityRegistry
@@ -99,7 +100,7 @@ async def test_coordinator_filters_expired_devices(
     entity_registry: EntityRegistry,
 ) -> None:
     """Test expired devices are not added as connected scanner entities."""
-    expired = MOCK_DEVICES[0].__class__("192.168.1.12", "22:33:44:55:66:77", -120)
+    expired = Device("192.168.1.12", "22:33:44:55:66:77", -120)
     mock_get_actiontec_data.return_value = [*MOCK_DEVICES, expired]
     mock_config_entry.add_to_hass(hass)
 
