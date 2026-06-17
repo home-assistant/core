@@ -1,6 +1,5 @@
 """Data update coordinator for the Karakeep integration."""
 
-from datetime import timedelta
 import logging
 
 from aiokarakeep import (
@@ -17,7 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import DOMAIN, UPDATE_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepStats]):
             hass,
             _LOGGER,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=UPDATE_INTERVAL,
             config_entry=entry,
         )
 
