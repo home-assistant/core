@@ -6,6 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
+from .const import TEST_VERSION
 
 from tests.common import MockConfigEntry
 
@@ -52,3 +53,4 @@ async def test_device_info(
     assert device_entry is not None
     assert device_entry.name == "Karakeep"
     assert device_entry.manufacturer == "Karakeep"
+    assert device_entry.sw_version == TEST_VERSION

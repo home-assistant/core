@@ -6,6 +6,7 @@ from aiokarakeep import (
     KarakeepApiError,
     KarakeepAuthError,
     KarakeepConnectionError,
+    KarakeepError,
     KarakeepInvalidResponseError,
 )
 import pytest
@@ -13,6 +14,7 @@ import pytest
 from homeassistant.components.karakeep.const import DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
@@ -75,6 +77,25 @@ async def test_setup_entry_update_failure(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_setup_entry_version_unavailable(
+    hass: HomeAssistant,
+    mock_karakeep_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setup succeeds without a version when the endpoint is unavailable."""
+    mock_karakeep_client.async_get_version.side_effect = KarakeepError("boom")
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    device_entry = device_registry.async_get_device(
+        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    )
+    assert device_entry is not None
+    assert device_entry.sw_version is None
 
 
 async def test_unload_entry(
