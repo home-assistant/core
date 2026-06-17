@@ -2,11 +2,7 @@
 
 import asyncio
 
-from motionblinds import (
-    DEVICE_TYPES_GATEWAY,
-    DEVICE_TYPES_WIFI,
-    MotionGateway,
-)
+from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
 from motionblinds.motion_blinds import MotionBlind
 
 from homeassistant.core import CALLBACK_TYPE
