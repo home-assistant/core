@@ -96,7 +96,7 @@ def _quit_smtp_client(client: SMTP_SSL | SMTP) -> None:
     """Close an SMTP client without masking the original send outcome."""
     try:
         client.quit()
-    except (OSError, SMTPException):
+    except OSError:
         _LOGGER.debug("Ignoring exception while closing SMTP connection", exc_info=True)
 
 
