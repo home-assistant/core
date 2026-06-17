@@ -58,7 +58,7 @@ rules:
   discovery-update-info:
     status: exempt
     comment: |
-      Discovery not possible
+      Discovery not possible, as device is connected via 4G only. No LAN connection.
   discovery:
     status: exempt
     comment: |
