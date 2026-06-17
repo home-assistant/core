@@ -113,8 +113,6 @@ async def test_sensors_streaming(
     assert hass.states.get("sensor.teslemetry_command_credits").state == "1980"
     assert (quota_state := hass.states.get("sensor.teslemetry_command_quota"))
     assert quota_state.state == "21.2"
-    assert quota_state.attributes["credits"] == 212
-    assert quota_state.attributes["reset"] == "2026-07-10T00:00:00.000Z"
 
 
 async def test_energy_history_no_time_series(

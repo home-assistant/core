@@ -1931,12 +1931,6 @@ class TeslemetryCreditQuotaSensor(RestoreSensor):
         if (sensor_data := await self.async_get_last_sensor_data()) is not None:
             self._attr_native_value = sensor_data.native_value
 
-        if (last_state := await self.async_get_last_state()) is not None:
-            self._attr_extra_state_attributes = {
-                "credits": last_state.attributes.get("credits"),
-                "reset": last_state.attributes.get("reset"),
-            }
-
         self.async_on_remove(self.stream.listen_Credits(self._async_update))
 
     def _async_update(self, credits: dict[str, Any]) -> None:
@@ -1950,8 +1944,4 @@ class TeslemetryCreditQuotaSensor(RestoreSensor):
             return
 
         self._attr_native_value = fraction * 100
-        self._attr_extra_state_attributes = {
-            "credits": quota.get("used"),
-            "reset": quota.get("reset_at"),
-        }
         self.async_write_ha_state()
