@@ -166,7 +166,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             name=MODEL,
             model=MODEL,
             manufacturer=MANUFACTURER,
-            sw_version=None,  # Radio FW exposed by the update entity, removed in 2026.6.0
+            sw_version=None,  # Radio FW exposed by the update entity, removed in 2026.7.0
         )
 
         # Use the cached firmware info if it exists
