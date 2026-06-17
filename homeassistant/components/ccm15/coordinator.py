@@ -70,6 +70,8 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             raise ConfigEntryAuthFailed("CCM15 rejected the configured password")
         if result is CCM15ReturnCode.OK:
             await self.async_request_refresh()
+            return
+        _LOGGER.warning("CCM15 set_state returned %s (no refresh scheduled)", result)
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
