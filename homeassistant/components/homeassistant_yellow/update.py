@@ -18,7 +18,7 @@ from homeassistant.components.homeassistant_hardware.util import (
 from homeassistant.components.update import UpdateDeviceClass
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -166,6 +166,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             name=MODEL,
             model=MODEL,
             manufacturer=MANUFACTURER,
+            sw_version=None,  # Radio FW exposed by the update entity, removed in 2026.6.0
         )
 
         # Use the cached firmware info if it exists
@@ -177,20 +178,6 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
                 owners=[],
                 source="homeassistant_yellow",
             )
-
-    def _update_attributes(self) -> None:
-        """Recompute the attributes of the entity."""
-        super()._update_attributes()
-
-        assert self.device_entry is not None
-        device_registry = dr.async_get(self.hass)
-        device_registry.async_update_device(
-            device_id=self.device_entry.id,
-            sw_version=(
-                f"{self.entity_description.firmware_name}"
-                f" {self._attr_installed_version}"
-            ),
-        )
 
     @callback
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
