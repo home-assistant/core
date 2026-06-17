@@ -56,6 +56,5 @@ class AqvifyEntity(AqvifyBaseEntity[AqvifyCoordinator]):
 class AqvifyAggrEntity(AqvifyBaseEntity[AqvifyAggrDataCoordinator]):
     """Defines a base Aqvify entity for aggregated data."""
 
-
-# There is no need to duplicate the code for DeviceInfo in this class since it is always
-# provided in AqvifyEntity.
+    # There is no need to duplicate the code for DeviceInfo in this class since it is always
+    # provided in AqvifyEntity.
