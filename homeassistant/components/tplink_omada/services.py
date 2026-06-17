@@ -15,6 +15,8 @@ from .const import DOMAIN
 from .controller import OmadaSiteController
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
+SERVICE_BLOCK_CLIENT = "block_client"
+SERVICE_UNBLOCK_CLIENT = "unblock_client"
 
 ATTR_MAC = "mac"
 
@@ -43,7 +45,7 @@ def _get_controller(call: ServiceCall) -> OmadaSiteController:
     return entry.runtime_data
 
 
-SCHEMA_RECONNECT_CLIENT = vol.Schema(
+SCHEMA_RECONNECT_CLIENT = SCHEMA_BLOCK_CLIENT = SCHEMA_UNBLOCK_CLIENT = vol.Schema(
     {
         vol.Optional(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
             {
@@ -66,9 +68,33 @@ async def _handle_reconnect_client(call: ServiceCall) -> None:
     except OmadaClientException as ex:
         raise HomeAssistantError(f"Failed to reconnect client with MAC {mac}") from ex
 
+async def _handle_block_client(call: ServiceCall) -> None:
+    """Handle the service action to block a network client."""
+    controller = _get_controller(call)
+
+    mac: str = call.data[ATTR_MAC]
+
+    try:
+        await controller.omada_client.block_client(mac)
+    except OmadaClientException as ex:
+        raise HomeAssistantError(f"Failed to blockconnect client with MAC {mac}") from ex
+
+async def _handle_unblock_client(call: ServiceCall) -> None:
+    """Handle the service action to unblock a network client."""
+    controller = _get_controller(call)
+
+    mac: str = call.data[ATTR_MAC]
+
+    try:
+        await controller.omada_client.unblock_client(mac)
+    except OmadaClientException as ex:
+        raise HomeAssistantError(f"Failed to unblock client with MAC {mac}") from ex
+
 
 SERVICES = [
-    (SERVICE_RECONNECT_CLIENT, SCHEMA_RECONNECT_CLIENT, _handle_reconnect_client)
+    (SERVICE_RECONNECT_CLIENT, SCHEMA_RECONNECT_CLIENT, _handle_reconnect_client),
+    (SERVICE_BLOCK_CLIENT, SCHEMA_BLOCK_CLIENT, _handle_block_client),
+    (SERVICE_UNBLOCK_CLIENT, SCHEMA_UNBLOCK_CLIENT, _handle_unblock_client)
 ]
 
 
