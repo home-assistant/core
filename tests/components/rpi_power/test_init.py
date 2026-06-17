@@ -23,8 +23,8 @@ async def test_entry_setup_unload(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_config_entry_not_ready(hass: HomeAssistant) -> None:
-    """Test config entry not ready."""
+async def test_config_entry_error(hass: HomeAssistant) -> None:
+    """Test config entry error."""
     with patch(
         "homeassistant.components.rpi_power.new_under_voltage", return_value=None
     ):
