@@ -41,11 +41,6 @@ class StarlineDeviceTracker(StarlineEntity, TrackerEntity, RestoreEntity):
         return self._account.gps_attrs(self._device)
 
     @property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the device."""
-        return self._device.battery_level
-
-    @property
     def location_accuracy(self) -> float:
         """Return the gps accuracy of the device."""
         return self._device.position.get("r", 0)
