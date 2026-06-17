@@ -107,12 +107,12 @@ async def test_job_manager_ws_updates(
     job_data: Job | None = None
 
     @callback
-    def mock_subcription_callback(job: Job) -> None:
+    def mock_subscription_callback(job: Job) -> None:
         nonlocal job_data
         job_data = job
 
     subscription = JobSubscription(
-        mock_subcription_callback, name="test_job", reference="test"
+        mock_subscription_callback, name="test_job", reference="test"
     )
     unsubscribe = data_coordinator.jobs.subscribe(subscription)
 
@@ -318,11 +318,11 @@ async def test_job_manager_reload_on_supervisor_restart(
     job_data: Job | None = None
 
     @callback
-    def mock_subcription_callback(job: Job) -> None:
+    def mock_subscription_callback(job: Job) -> None:
         nonlocal job_data
         job_data = job
 
-    subscription = JobSubscription(mock_subcription_callback, name="test_job")
+    subscription = JobSubscription(mock_subscription_callback, name="test_job")
     data_coordinator.jobs.subscribe(subscription)
 
     # Send supervisor restart signal
@@ -384,7 +384,7 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
     def mock_subscription_callback(job: Job) -> None:
         received.append(job)
 
-    subscription = JobSubscription(mock_subcription_callback, name="test_job")
+    subscription = JobSubscription(mock_subscription_callback, name="test_job")
     unsubscribe = data_coordinator.jobs.subscribe(subscription)
 
     # Existing matching job is delivered immediately, and a callable unsubscribe
