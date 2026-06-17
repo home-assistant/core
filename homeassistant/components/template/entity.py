@@ -267,15 +267,18 @@ class AbstractTemplateEntity(Entity):
         ):
             return
 
-        self.restore_last_state_state(last_state)
+        if not self.restore_last_state_state(last_state):
+            return
+
         self.restore_last_state_attributes(last_state)
 
         # Extra data should be loaded last
         if extra_data is not _SENTINEL:
             self.restore_extra_data(extra_data)
 
-    def restore_last_state_state(self, last_state: State) -> None:
+    def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
+        return True
 
     @abstractmethod
     def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
@@ -284,7 +287,6 @@ class AbstractTemplateEntity(Entity):
     def restore_last_state_attributes(self, last_state: State) -> None:
         """Restore attributes from the last state."""
         self._attr_extra_state_attributes = {}
-        gathered_attributes = []
         # Restore built-in attributes from templates
         for conf_key, attr, _attr in (
             (CONF_ICON, ATTR_ICON, "_attr_icon"),
@@ -293,7 +295,6 @@ class AbstractTemplateEntity(Entity):
         ):
             if conf_key not in self._config or attr not in last_state.attributes:
                 continue
-            gathered_attributes.append(attr)
             value = last_state.attributes[attr]
             self.restore_attribute(conf_key, _attr, value)
             self._attr_extra_state_attributes[attr] = value
@@ -303,5 +304,4 @@ class AbstractTemplateEntity(Entity):
             for attr in self._config[CONF_ATTRIBUTES]:
                 if attr not in last_state.attributes:
                     continue
-                gathered_attributes.append(attr)
                 self._attr_extra_state_attributes[attr] = last_state.attributes[attr]

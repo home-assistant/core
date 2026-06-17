@@ -267,10 +267,13 @@ class AbstractTemplateAlarmControlPanel(
             code=code,
         )
 
-    def restore_last_state_state(self, last_state: State) -> None:
+    def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
         if last_state.state in AlarmControlPanelState:
             self._attr_alarm_state = AlarmControlPanelState(last_state.state)
+            return True
+
+        return False
 
 
 class StateAlarmControlPanelEntity(TemplateEntity, AbstractTemplateAlarmControlPanel):

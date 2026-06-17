@@ -43,7 +43,7 @@ from homeassistant.helpers.template import (
 )
 from homeassistant.helpers.typing import ConfigType
 
-from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
+from .const import CONF_AVAILABILITY, CONF_PICTURE
 from .entity import AbstractTemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -161,7 +161,6 @@ class TemplateEntity(AbstractTemplateEntity):
         AbstractTemplateEntity.__init__(self, hass, config)
         self._template_attrs: dict[Template, list[_TemplateAttribute]] = {}
         self._template_result_info: TrackTemplateResultInfo | None = None
-        self._attr_extra_state_attributes = {}
         self._self_ref_update_count = 0
         self._attr_unique_id = unique_id
         self._preview_callback: (
@@ -177,7 +176,6 @@ class TemplateEntity(AbstractTemplateEntity):
             | None
         ) = None
         self._run_variables: ScriptVariables | dict
-        self._attribute_templates = config.get(CONF_ATTRIBUTES)
         self._availability_template = config.get(CONF_AVAILABILITY)
         self._run_variables = config.get(CONF_VARIABLES, {})
         self._blueprint_inputs = config.get("raw_blueprint_inputs")

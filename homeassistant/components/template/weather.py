@@ -629,9 +629,10 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
             last_wind_speed=self.native_wind_speed,
         )
 
-    def restore_last_state_state(self, last_state: State) -> None:
+    def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
         self._attr_condition = last_state.state
+        return True
 
     def restore_extra_data(self, extra_data: WeatherExtraStoredData) -> None:
         """Restore the extra data."""

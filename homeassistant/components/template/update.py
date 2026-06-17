@@ -240,10 +240,11 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             context=self._context,
         )
 
-    def restore_last_state_state(self, last_state: State) -> None:
+    def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
-        self._attr_installed_version = last_state.attributes.get(ATTR_INSTALLED_VERSION)
-        self._attr_latest_version = last_state.attributes.get(ATTR_LATEST_VERSION)
+        self._attr_installed_version = last_state.attributes[ATTR_INSTALLED_VERSION]
+        self._attr_latest_version = last_state.attributes[ATTR_LATEST_VERSION]
+        return True
 
 
 class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):

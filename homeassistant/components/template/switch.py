@@ -155,9 +155,10 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
             self._attr_is_on = False
             self.async_write_ha_state()
 
-    def restore_last_state_state(self, last_state: State) -> None:
+    def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
         self._attr_is_on = last_state.state == STATE_ON
+        return True
 
 
 class StateSwitchEntity(TemplateEntity, AbstractTemplateSwitch):

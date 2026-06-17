@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_ON,
 )
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
 from homeassistant.helpers import config_validation as cv, template
 from homeassistant.helpers.entity_platform import (
@@ -159,9 +159,10 @@ class AbstractTemplateBinarySensor(
         except vol.Invalid:
             self.setup_template(CONF_DELAY_OFF, "_delay_off", cv.positive_time_period)
 
-    def restore_last_state_state(self, last_state):
+    def restore_last_state_state(self, last_state: State) -> bool:
         """Restore the state from the last state."""
         self._attr_is_on = last_state.state == STATE_ON
+        return True
 
     @callback
     @abstractmethod
