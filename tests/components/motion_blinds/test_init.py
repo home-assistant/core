@@ -19,11 +19,11 @@ TEST_MAC = "ab:bb:cc:dd:ee:ff"
 TEST_STORED_INTERFACE = "192.168.1.10"
 
 
-def _make_multicast(start_raises=None):
+def _make_multicast(start_raises=None, stop_raises=None):
     """Build an AsyncMotionMulticast mock."""
     mc = MagicMock()
     mc.Start_listen = AsyncMock(side_effect=start_raises)
-    mc.Stop_listen = MagicMock()
+    mc.Stop_listen = MagicMock(side_effect=stop_raises)
     mc.Unregister_motion_gateway = MagicMock()
     return mc
 
@@ -107,6 +107,25 @@ async def test_setup_stored_interface_valid_skips_probe(
         hass,
         config_entry_stored_interface,
         lambda **_: mock_mc,
+        mock_gw_cls,
+    )
+
+    assert result is True
+    gw_instance.async_check_interface.assert_not_called()
+
+
+async def test_setup_stored_interface_stop_listen_oserror_skips_probe(
+    hass: HomeAssistant,
+    config_entry_stored_interface: MockConfigEntry,
+) -> None:
+    """When Start_listen succeeds but Stop_listen raises, the interface is still valid."""
+    calls = iter([_make_multicast(stop_raises=OSError), _make_multicast()])
+    mock_gw_cls = _make_gateway_class()
+
+    result, gw_instance = await _do_setup(
+        hass,
+        config_entry_stored_interface,
+        lambda **_: next(calls),
         mock_gw_cls,
     )
 
