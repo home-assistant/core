@@ -2,15 +2,12 @@
 
 from aiokarakeep import KarakeepClient
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_VERIFY_SSL, PLATFORMS
-from .coordinator import KarakeepDataUpdateCoordinator
-
-type KarakeepConfigEntry = ConfigEntry[KarakeepDataUpdateCoordinator]
+from .coordinator import KarakeepConfigEntry, KarakeepDataUpdateCoordinator
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: KarakeepConfigEntry) -> bool:

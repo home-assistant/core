@@ -44,7 +44,7 @@ async def test_full_flow(hass: HomeAssistant, mock_karakeep_client: AsyncMock) -
         CONF_TOKEN: TEST_TOKEN,
         CONF_VERIFY_SSL: False,
     }
-    assert result["result"].unique_id == TEST_URL
+    assert result["result"].unique_id is None
     mock_karakeep_client.async_get_stats.assert_awaited_once()
 
 
@@ -74,6 +74,7 @@ async def test_invalid_url(hass: HomeAssistant) -> None:
         (KarakeepAuthError("Invalid token", 401), "invalid_auth"),
         (KarakeepConnectionError("Cannot connect"), "cannot_connect"),
         (KarakeepApiError("API error", 500), "api_error"),
+        (Exception("Boom"), "unknown"),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -101,6 +102,24 @@ async def test_flow_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    mock_karakeep_client.async_get_stats.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_URL: TEST_URL,
+            CONF_TOKEN: TEST_TOKEN,
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_URL: TEST_URL,
+        CONF_TOKEN: TEST_TOKEN,
+        CONF_VERIFY_SSL: False,
+    }
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -135,7 +154,7 @@ async def test_reauth(
     mock_karakeep_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test reauthentication flow."""
+    """Test reauthentication flow recovers from an error."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -150,6 +169,23 @@ async def test_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
+    mock_karakeep_client.async_get_stats.side_effect = KarakeepAuthError(
+        "Invalid token", 401
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_TOKEN: "bad-token",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "invalid_auth"}
+
+    mock_karakeep_client.async_get_stats.side_effect = None
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -161,4 +197,3 @@ async def test_reauth(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert mock_config_entry.data[CONF_TOKEN] == "new-token"
-    assert mock_karakeep_client.async_get_stats.await_count == 2

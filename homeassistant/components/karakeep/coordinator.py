@@ -2,7 +2,6 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
 
 from aiokarakeep import (
     KarakeepApiError,
@@ -10,6 +9,7 @@ from aiokarakeep import (
     KarakeepClient,
     KarakeepConnectionError,
     KarakeepInvalidResponseError,
+    KarakeepStats,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -21,16 +21,18 @@ from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type KarakeepConfigEntry = ConfigEntry[KarakeepDataUpdateCoordinator]
 
-class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
+
+class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepStats]):
     """Class to manage fetching Karakeep data."""
 
-    config_entry: ConfigEntry
+    config_entry: KarakeepConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: KarakeepConfigEntry,
         client: KarakeepClient,
     ) -> None:
         """Initialize the coordinator."""
@@ -44,7 +46,7 @@ class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             config_entry=entry,
         )
 
-    async def _async_update_data(self) -> dict[str, Any]:
+    async def _async_update_data(self) -> KarakeepStats:
         """Fetch data from Karakeep API."""
         try:
             return await self.client.async_get_stats()

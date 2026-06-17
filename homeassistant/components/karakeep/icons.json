@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "bookmarks": {
+        "default": "mdi:bookmark"
+      },
+      "favorites": {
+        "default": "mdi:star"
+      },
+      "archived": {
+        "default": "mdi:archive"
+      },
+      "highlights": {
+        "default": "mdi:marker"
+      },
+      "lists": {
+        "default": "mdi:format-list-bulleted"
+      },
+      "tags": {
+        "default": "mdi:tag"
+      }
+    }
+  }
+}

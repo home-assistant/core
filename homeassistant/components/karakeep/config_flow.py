@@ -1,6 +1,7 @@
 """Config flow for Karakeep."""
 
 from collections.abc import Mapping
+import logging
 from typing import Any
 from urllib.parse import urlparse
 
@@ -19,6 +20,8 @@ from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DEFAULT_VERIFY_SSL, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_TOKEN): str})
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -50,8 +53,11 @@ class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors["base"] = "invalid_auth"
         except KarakeepConnectionError:
             errors["base"] = "cannot_connect"
-        except KarakeepApiError, KarakeepInvalidResponseError:
+        except (KarakeepApiError, KarakeepInvalidResponseError):
             errors["base"] = "api_error"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            errors["base"] = "unknown"
 
         return errors
 
@@ -69,8 +75,7 @@ class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not _is_valid_url(url):
                 errors["base"] = "invalid_url_format"
             else:
-                await self.async_set_unique_id(url)
-                self._abort_if_unique_id_configured()
+                self._async_abort_entries_match({CONF_URL: url})
 
                 errors = await self._async_validate_input(url, token, verify_ssl)
                 if not errors:
