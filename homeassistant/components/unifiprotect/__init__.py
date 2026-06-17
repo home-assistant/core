@@ -238,9 +238,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> boo
     """Migrate entry."""
     _LOGGER.debug("Migrating configuration from version %s", entry.version)
 
-    if entry.version > 1:
-        return False
-
     if entry.version == 1:
         options = dict(entry.options)
         if CONF_ALLOW_EA in options:

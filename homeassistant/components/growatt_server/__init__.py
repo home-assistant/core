@@ -238,15 +238,24 @@ def _login_classic_api(
         login_response = api.login(username, password)
     except (RequestException, JSONDecodeError) as ex:
         raise ConfigEntryError(
-            f"Error communicating with Growatt API during login: {ex}"
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+            translation_placeholders={"error": str(ex)},
         ) from ex
 
     if not login_response.get("success"):
         msg = login_response.get("msg", "Unknown error")
         _LOGGER.debug("Growatt login failed: %s", msg)
         if msg == LOGIN_INVALID_AUTH_CODE:
-            raise ConfigEntryAuthFailed("Username, Password or URL may be incorrect!")
-        raise ConfigEntryError(f"Growatt login failed: {msg}")
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            )
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="login_failed",
+            translation_placeholders={"message": msg},
+        )
 
     return login_response
 
@@ -266,15 +275,23 @@ def get_device_list_v1(
     except growattServer.GrowattV1ApiError as e:
         if e.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
             raise ConfigEntryAuthFailed(
-                f"Authentication failed for Growatt API: {e.error_msg or str(e)}"
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+                translation_placeholders={"error": e.error_msg or str(e)},
             ) from e
         if e.error_code == GrowattV1ApiErrorCode.RATE_LIMITED:
             raise ConfigEntryNotReady(
-                f"Growatt API rate limited, will retry: {e.error_msg or str(e)}"
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+                translation_placeholders={"error": e.error_msg or str(e)},
             ) from e
         raise ConfigEntryError(
-            f"API error during device list: {e.error_msg or str(e)}"
-            f" (Code: {e.error_code})"
+            translation_domain=DOMAIN,
+            translation_key="api_error_with_code",
+            translation_placeholders={
+                "error": e.error_msg or str(e),
+                "code": str(e.error_code),
+            },
         ) from e
     devices = devices_dict.get("devices", [])
     supported_devices = [
@@ -348,10 +365,15 @@ async def async_setup_entry(
             devices = await hass.async_add_executor_job(api.device_list, plant_id)
         except (RequestException, JSONDecodeError) as ex:
             raise ConfigEntryError(
-                f"Error communicating with Growatt API during device list: {ex}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(ex)},
             ) from ex
     else:
-        raise ConfigEntryError("Unknown authentication type in config entry.")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_auth_type",
+        )
 
     # Create a coordinator for the total sensors
     total_coordinator = GrowattCoordinator(

@@ -5,7 +5,6 @@ from unittest.mock import ANY, AsyncMock, patch
 from duco_connectivity import (
     BoardInfo,
     DiagComponent,
-    DiagStatus,
     DucoConnectionError,
     DucoError,
     DucoResponseError,
@@ -219,7 +218,7 @@ async def test_setup_entry_creates_http_client(
         mock_client_class.return_value.async_get_lan_info.return_value = mock_lan_info
         mock_client_class.return_value.async_get_nodes.return_value = mock_nodes
         mock_client_class.return_value.async_get_diagnostics.return_value = [
-            DiagComponent(component="Ventilation", status=DiagStatus.OK)
+            DiagComponent(component="Ventilation", status="Ok")
         ]
         (
             mock_client_class.return_value.async_get_write_requests_remaining
