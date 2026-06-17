@@ -44,12 +44,20 @@ async def _async_setup_component(hass: HomeAssistant, detected: bool) -> MagicMo
     return mocked_under_voltage
 
 
-async def test_new(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+async def test_new(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
+) -> None:
     """Test new entry."""
     await _async_setup_component(hass, False)
     state = hass.states.get(ENTITY_ID)
     assert state.state == STATE_OFF
     assert not any(x.levelno == logging.WARNING for x in caplog.records)
+    assert not issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="under_voltage_detected",
+    )
 
 
 async def test_new_detected(
