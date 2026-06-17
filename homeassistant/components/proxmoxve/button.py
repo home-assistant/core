@@ -26,6 +26,8 @@ from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, ProxmoxNodeData
 from .entity import ProxmoxContainerEntity, ProxmoxNodeEntity, ProxmoxVMEntity
 from .helpers import is_granted
 
+PARALLEL_UPDATES = 1
+
 NO_PERM_VM_LXC_POWER = "no_permission_vm_lxc_power"
 
 
