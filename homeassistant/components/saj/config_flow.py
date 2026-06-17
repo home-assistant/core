@@ -117,6 +117,8 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
             raise CannotConnect("Wrong connection type or cannot connect") from err
         except pysaj.UnexpectedResponseException as err:
             raise CannotConnect(f"Connection error: {err}") from err
+        except CannotConnect, InvalidAuth:
+            raise
         except Exception as err:
             raise CannotConnect(f"Connection failed: {err}") from err
 
