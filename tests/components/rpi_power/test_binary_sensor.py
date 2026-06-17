@@ -29,15 +29,19 @@ from tests.common import (
 
 ENTITY_ID = "binary_sensor.raspberry_pi_power_status"
 
-MODULE = "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
-
 
 async def _async_setup_component(hass: HomeAssistant, detected: bool) -> MagicMock:
     mocked_under_voltage = MagicMock()
     type(mocked_under_voltage).get = MagicMock(return_value=detected)
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    with patch(MODULE, return_value=mocked_under_voltage):
+    with (
+        patch(
+            "homeassistant.components.rpi_power.binary_sensor.new_under_voltage",
+            return_value=mocked_under_voltage,
+        ) as mock_client,
+        patch("homeassistant.components.rpi_power.new_under_voltage", new=mock_client),
+    ):
         await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
     return mocked_under_voltage
@@ -87,8 +91,15 @@ async def test_setup(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Snapshot test states of binary sensor platform."""
-    with patch(
-        "homeassistant.components.rpi_power.binary_sensor.new_under_voltage", get=True
+    with (
+        patch(
+            "homeassistant.components.rpi_power.binary_sensor.new_under_voltage",
+            get=True,
+        ) as mock_client,
+        patch(
+            "homeassistant.components.rpi_power.new_under_voltage",
+            new=mock_client,
+        ),
     ):
         config_entry = MockConfigEntry(domain=DOMAIN, entry_id="12345")
         config_entry.add_to_hass(hass)
