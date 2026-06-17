@@ -1474,6 +1474,82 @@ async def test_if_value_updated_value_fires_endpoint_sub_device(
     )
 
 
+async def test_if_notification_notification_fires_endpoint_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+) -> None:
+    """Test an event-based device trigger stays backwards compatible with sub-devices.
+
+    This node has colliding endpoint values that are split into endpoint sub-devices.
+    Notification events are always dispatched with the node device_id (not a sub-device
+    id), so an event.notification.notification trigger created before the sub-device change
+    (storing the node device_id) still fires.
+    """
+    node = shelly_qnsh_001P10_shutter
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "event.notification.notification",
+                        "command_class": CommandClass.NOTIFICATION.value,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "event.notification.notification - "
+                                "{{ trigger.platform}} - "
+                                "{{ trigger.event.data.command_class }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    node.receive_event(
+        Event(
+            type="notification",
+            data={
+                "source": "node",
+                "event": "notification",
+                "nodeId": node.node_id,
+                "endpointIndex": 1,
+                "ccId": 113,
+                "args": {
+                    "type": 6,
+                    "event": 2,
+                    "label": "Power Management",
+                    "eventLabel": "AC mains disconnected",
+                    "parameters": {},
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert (
+        service_calls[0].data["some"]
+        == f"event.notification.notification - device - {CommandClass.NOTIFICATION}"
+    )
+
+
 async def test_value_updated_value_no_driver(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,

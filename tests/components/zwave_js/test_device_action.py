@@ -657,6 +657,154 @@ async def test_reset_meter_action_endpoint_sub_device(
         assert args[1] == "reset"
 
 
+@pytest.mark.parametrize(
+    "device_endpoint",
+    [
+        pytest.param(None, id="node_device"),
+        pytest.param(1, id="sub_device"),
+    ],
+)
+async def test_refresh_value_action_endpoint_sub_device(
+    hass: HomeAssistant,
+    client: Client,
+    vision_security_zl7432: Node,
+    integration: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    device_endpoint: int | None,
+) -> None:
+    """Test refresh_value action for an entity moved to an endpoint sub-device.
+
+    The switch on endpoint 1 now lives on an endpoint sub-device. An automation created
+    before this change stored the node device_id together with the entity registry id.
+    Verify it still executes: the entity service resolves by entity_id, which is unchanged
+    by the device move.
+    """
+    node = vision_security_zl7432
+    driver = client.driver
+    assert driver
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(driver, node, device_endpoint)}
+    )
+    assert device
+
+    switch_entity = entity_registry.async_get(
+        "switch.in_wall_dual_relay_switch_binary_power_switch_1"
+    )
+    assert switch_entity
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_refresh_value",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "refresh_value",
+                        "device_id": device.id,
+                        "entity_id": switch_entity.id,
+                    },
+                },
+            ]
+        },
+    )
+
+    with patch("zwave_js_server.model.node.Node.async_poll_value") as mock_call:
+        hass.bus.async_fire("test_event_refresh_value")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 1
+        assert args[0].value_id == "7-37-1-currentValue"
+
+
+async def test_lock_actions_endpoint_sub_device(
+    hass: HomeAssistant,
+    client: Client,
+    lock_schlage_be469: Node,
+    integration: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test lock usercode actions remain backwards compatible with the node device.
+
+    Door Lock values are on the root endpoint, so the lock entity is never moved to an
+    endpoint sub-device. Confirm the lock stays on the node device and that automations
+    created before the sub-device change (storing the node device_id) still execute the
+    clear/set lock usercode actions.
+    """
+    node = lock_schlage_be469
+    driver = client.driver
+    assert driver
+    node_device = device_registry.async_get_device(
+        identifiers={get_device_id(driver, node)}
+    )
+    assert node_device
+    lock = entity_registry.async_get("lock.touchscreen_deadbolt")
+    assert lock
+    assert lock.device_id == node_device.id
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_clear_lock_usercode",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "clear_lock_usercode",
+                        "device_id": node_device.id,
+                        "entity_id": lock.id,
+                        "code_slot": 1,
+                    },
+                },
+                {
+                    "trigger": {
+                        "platform": "event",
+                        "event_type": "test_event_set_lock_usercode",
+                    },
+                    "action": {
+                        "domain": DOMAIN,
+                        "type": "set_lock_usercode",
+                        "device_id": node_device.id,
+                        "entity_id": lock.id,
+                        "code_slot": 1,
+                        "usercode": "1234",
+                    },
+                },
+            ]
+        },
+    )
+
+    with patch("homeassistant.components.zwave_js.lock.clear_usercode") as mock_call:
+        hass.bus.async_fire("test_event_clear_lock_usercode")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 2
+        assert args[0].node_id == node.node_id
+        assert args[1] == 1
+
+    with patch("homeassistant.components.zwave_js.lock.set_usercode") as mock_call:
+        hass.bus.async_fire("test_event_set_lock_usercode")
+        await hass.async_block_till_done()
+        mock_call.assert_called_once()
+        args = mock_call.call_args_list[0][0]
+        assert len(args) == 3
+        assert args[0].node_id == node.node_id
+        assert args[1] == 1
+        assert args[2] == "1234"
+
+
 async def test_get_actions_endpoint_sub_device(
     hass: HomeAssistant,
     client: Client,
