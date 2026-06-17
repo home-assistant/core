@@ -976,6 +976,50 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             return None
         return await self.async_trigger(run_variables, context, skip_condition)
 
+    async def _async_handle_not_triggered(
+        self,
+        run_variables: dict[str, Any],
+        info: trigger_helper.NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        """Record a trace for a trigger that evaluated a change but did not fire.
+
+        This is the diagnostic sibling of async_trigger: a trigger calls it - in
+        certain interesting cases - when it does not run the action, so the user
+        can see in the trace why the automation was not triggered.
+        """
+        if not self._is_enabled:
+            return
+
+        # Create a new context referring to the old context.
+        parent_id = None if context is None else context.id
+        trigger_context = Context(parent_id=parent_id)
+
+        with trace_automation(
+            self.hass,
+            self.unique_id,
+            self.raw_config,
+            self._blueprint_inputs,
+            trigger_context,
+            self._trace_config,
+            not_triggered=True,
+        ) as automation_trace:
+            automation_trace.set_trace(trace_get())
+
+            trigger_description = run_variables.get("trigger", {}).get("description")
+            automation_trace.set_trigger_description(trigger_description)
+
+            # Record the trigger and its diagnostics as the trigger step.
+            if "idx" in run_variables.get("trigger", {}):
+                trigger_path = f"trigger/{run_variables['trigger']['idx']}"
+            else:
+                trigger_path = "trigger"
+            trace_element = TraceElement(run_variables, trigger_path)
+            trace_element.set_result(**info.as_dict())
+            trace_append_element(trace_element)
+
+            script_execution_set("not_triggered")
+
     async def _async_attach_triggers(
         self, home_assistant_start: bool
     ) -> Callable[[], None] | None:
@@ -1004,6 +1048,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             self._log_callback,
             home_assistant_start,
             variables,
+            did_not_trigger=self._async_handle_not_triggered,
         )
 
 

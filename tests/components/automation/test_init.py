@@ -32,8 +32,10 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Context,
     CoreState,
+    Event,
     HomeAssistant,
     ServiceCall,
     State,
@@ -55,16 +57,26 @@ from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     _async_stop_scripts_at_shutdown,
 )
+from homeassistant.helpers.trigger import (
+    NotTriggeredInfo,
+    Trigger,
+    TriggerActionRunner,
+    TriggerNotTriggeredReporter,
+)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from tests.common import (
     MockConfigEntry,
+    MockModule,
     MockUser,
     assert_setup_component,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    mock_integration,
+    mock_platform,
     mock_restore_cache,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
@@ -4214,3 +4226,153 @@ async def test_automation_changed_entity_id(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+
+class _MockDiagnosticTrigger(Trigger):
+    """A new-style trigger that fires on demand and otherwise reports why not."""
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return config
+
+    async def async_attach_runner(
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
+    ) -> CALLBACK_TYPE:
+        """Fire on `mock_diag_event` with `fire`, else report not-triggered."""
+
+        @callback
+        def handle_event(event: Event) -> None:
+            if event.data.get("fire"):
+                run_action({"extra": "fired"}, "mock fired", event.context)
+            elif did_not_trigger is not None:
+                did_not_trigger(
+                    NotTriggeredInfo(reason="mock_reason", data={"x": 1}),
+                    event.context,
+                )
+
+        return self._hass.bus.async_listen("mock_diag_event", handle_event)
+
+
+async def _setup_diagnostic_automation(
+    hass: HomeAssistant, stored_traces: int | None = None
+) -> list[Any]:
+    """Set up an automation driven by the mock diagnostic trigger."""
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"diag": _MockDiagnosticTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    calls = async_mock_service(hass, "test", "automation")
+
+    config: dict[str, Any] = {
+        "id": "diag_auto",
+        "trigger": {"platform": "test.diag"},
+        "action": {"service": "test.automation"},
+    }
+    if stored_traces is not None:
+        config["trace"] = {"stored_traces": stored_traces}
+
+    assert await async_setup_component(
+        hass, automation.DOMAIN, {automation.DOMAIN: config}
+    )
+    await hass.async_block_till_done()
+    return calls
+
+
+async def test_automation_records_not_triggered_trace(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """A non-firing evaluation records a not-triggered trace with diagnostics."""
+    calls = await _setup_diagnostic_automation(hass)
+    client = await hass_ws_client()
+    msg_id = 0
+
+    def next_id() -> int:
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
+
+    hass.bus.async_fire("mock_diag_event", {"fire": False})
+    await hass.async_block_till_done()
+
+    # The action did not run, but a not-triggered trace was recorded.
+    assert len(calls) == 0
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/list",
+            "domain": "automation",
+            "item_id": "diag_auto",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    assert len(traces) == 1
+    assert traces[0]["not_triggered"] is True
+    assert traces[0]["script_execution"] == "not_triggered"
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/get",
+            "domain": "automation",
+            "item_id": "diag_auto",
+            "run_id": traces[0]["run_id"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    trace = response["result"]
+    assert trace["trace"]["trigger/0"][0]["result"] == {
+        "reason": "mock_reason",
+        "data": {"x": 1},
+    }
+
+
+async def test_not_triggered_traces_counted_separately(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Not-triggered traces are capped independently from run traces."""
+    calls = await _setup_diagnostic_automation(hass, stored_traces=2)
+    client = await hass_ws_client()
+    msg_id = 0
+
+    def next_id() -> int:
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
+
+    # Fire more non-firing and firing evaluations than the stored-traces limit.
+    for _ in range(3):
+        hass.bus.async_fire("mock_diag_event", {"fire": False})
+        await hass.async_block_till_done()
+    for _ in range(3):
+        hass.bus.async_fire("mock_diag_event", {"fire": True})
+        await hass.async_block_till_done()
+
+    assert len(calls) == 3
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/list",
+            "domain": "automation",
+            "item_id": "diag_auto",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    not_triggered = [trace for trace in traces if trace.get("not_triggered")]
+    runs = [trace for trace in traces if not trace.get("not_triggered")]
+    # Each bucket is capped at 2 independently; neither evicts the other.
+    assert len(not_triggered) == 2
+    assert len(runs) == 2

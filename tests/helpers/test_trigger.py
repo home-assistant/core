@@ -74,6 +74,7 @@ from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
+    TriggerNotTriggeredReporter,
     _async_get_trigger_platform,
     async_initialize_triggers,
     async_validate_trigger_config,
@@ -156,7 +157,9 @@ class _MockTrigger(Trigger):
         self._options = config.options or {}
 
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to a bus event."""
         raw_template = self._options.get("option_template")
@@ -809,7 +812,9 @@ async def test_platform_multiple_triggers(
         """Mock trigger 1."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunner
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
             run_action({"extra": "test_trigger_1"}, "trigger 1 desc")
@@ -818,7 +823,9 @@ async def test_platform_multiple_triggers(
         """Mock trigger 2."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunner
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
         ) -> CALLBACK_TYPE:
             """Attach a trigger."""
             run_action({"extra": "test_trigger_2"}, "trigger 2 desc")
@@ -968,7 +975,9 @@ async def test_get_trigger_platform_registers_triggers(
         """Mock trigger."""
 
         async def async_attach_runner(
-            self, run_action: TriggerActionRunner
+            self,
+            run_action: TriggerActionRunner,
+            did_not_trigger: TriggerNotTriggeredReporter | None = None,
         ) -> CALLBACK_TYPE:
             return lambda: None
 
