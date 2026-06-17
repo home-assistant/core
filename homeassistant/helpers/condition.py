@@ -490,11 +490,11 @@ class _HistoryPrimingManager:
     The flush a condition relies on must begin after that condition started
     tracking its entities, or the read could miss a change still queued in the
     recorder and compute too generous an anchor. A condition therefore never
-    rides a flush that was already running when it arrived (the lobby); it waits
-    that one out and joins the next, and re-attempts if the flush it rode was
-    cancelled before completing. This mirrors `ReloadServiceHelper` minus its
-    target de-duplication, which does not apply because each condition reads its
-    own entities.
+    relies on a flush that was already running when it arrived (the lobby); it
+    waits that one out and joins the next, re-attempting if the flush it waited
+    for was cancelled before completing. This mirrors `ReloadServiceHelper`
+    minus its target de-duplication, which does not apply because each condition
+    reads its own entities.
     """
 
     def __init__(self, hass: HomeAssistant) -> None:
@@ -516,11 +516,13 @@ class _HistoryPrimingManager:
     async def _async_flush(self) -> None:
         """Return once a recorder flush that began no earlier than this call ends.
 
-        The first condition of a generation performs the flush; the rest ride it.
+        The first condition of a generation performs the flush; the rest rely on
+        it.
         """
         async with self._flush_condition:
             # Lobby: a flush already running began before we arrived, so it may
-            # not capture our entity's queued changes. Wait it out, don't ride it.
+            # not capture our entity's queued changes. Wait it out, don't rely on
+            # it.
             if self._flushing:
                 await self._flush_condition.wait()
 
@@ -530,7 +532,8 @@ class _HistoryPrimingManager:
                     # First past the lobby this generation: we run the flush.
                     self._flushing = True
                     break
-                # A peer began a fresh flush after we cleared the lobby; ride it.
+                # A peer began a fresh flush after we cleared the lobby; wait for
+                # it.
                 await self._flush_condition.wait()
                 if self._flush_ok:
                     return
