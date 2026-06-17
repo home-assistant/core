@@ -1,8 +1,6 @@
 """Support for Motionblinds using their WLAN API."""
 
-import asyncio
-
-from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway
+from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, MotionGateway, ParseException
 from motionblinds.motion_blinds import MotionBlind
 
 from homeassistant.core import CALLBACK_TYPE
@@ -19,7 +17,6 @@ from .const import (
     MANUFACTURER,
     UPDATE_INTERVAL_MOVING,
     UPDATE_INTERVAL_MOVING_WIFI,
-    UPDATE_TRIGGER_RESPONSE_DELAY,
 )
 from .coordinator import DataUpdateCoordinatorMotionBlinds
 from .gateway import device_name
@@ -112,10 +109,14 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
 
     async def async_scheduled_update_request(self, *_) -> None:
         """Request a state update from the blind at a scheduled point in time."""
-        async with self._api_lock:
-            await self.hass.async_add_executor_job(self._blind.Update_trigger)
-
-        await asyncio.sleep(UPDATE_TRIGGER_RESPONSE_DELAY)
+        try:
+            async with self._api_lock:
+                if self._blind.device_type in DEVICE_TYPES_WIFI:
+                    await self.hass.async_add_executor_job(self._blind.Update_from_cache)
+                else:
+                    await self.hass.async_add_executor_job(self._blind.Update)
+        except (TimeoutError, ParseException):
+            pass
 
         # add the last position to the list and keep the list at max 2 items
         self._previous_positions.append(self._blind.position)
