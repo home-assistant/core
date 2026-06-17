@@ -769,8 +769,8 @@ class UnitOfDensity(StrEnum):
     MICROGRAMS_PER_CUBIC_FOOT = "μg/ft³"
 
 
-class UnitOfProportion(StrEnum):
-    """Proportion units."""
+class UnitOfRatio(StrEnum):
+    """Ratio units."""
 
     PARTS_PER_MILLION = "ppm"
     PARTS_PER_BILLION = "ppb"
@@ -791,9 +791,9 @@ CONCENTRATION_MICROGRAMS_PER_CUBIC_FOOT: Final = (
 _DEPRECATED_CONCENTRATION_PARTS_PER_CUBIC_METER = DeprecatedConstant(
     "p/m³", "p/m³", "2027.7"
 )
-CONCENTRATION_PARTS_PER_MILLION: Final = UnitOfProportion.PARTS_PER_MILLION.value
-CONCENTRATION_PARTS_PER_BILLION: Final = UnitOfProportion.PARTS_PER_BILLION.value
-PERCENTAGE: Final = UnitOfProportion.PERCENTAGE.value
+CONCENTRATION_PARTS_PER_MILLION: Final = UnitOfRatio.PARTS_PER_MILLION.value
+CONCENTRATION_PARTS_PER_BILLION: Final = UnitOfRatio.PARTS_PER_BILLION.value
+PERCENTAGE: Final = UnitOfRatio.PERCENTAGE.value
 
 
 class UnitOfBloodGlucoseConcentration(StrEnum):
