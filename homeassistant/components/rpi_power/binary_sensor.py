@@ -14,7 +14,10 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,8 +34,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up rpi_power binary sensor."""
-    under_voltage = await hass.async_add_executor_job(new_under_voltage)
-    async_add_entities([RaspberryChargerBinarySensor(under_voltage)], True)
+    if under_voltage := await hass.async_add_executor_job(new_under_voltage):
+        async_add_entities([RaspberryChargerBinarySensor(under_voltage)], True)
 
 
 class RaspberryChargerBinarySensor(BinarySensorEntity):
@@ -40,13 +43,18 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
 
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
     _attr_entity_category = EntityCategory.DIAGNOSTIC
-    _attr_icon = "mdi:raspberry-pi"
-    _attr_name = "RPi Power status"
+    _attr_translation_key = "rpi_power"
+    _attr_has_entity_name = True
     _attr_unique_id = "rpi_power"  # only one sensor possible
 
     def __init__(self, under_voltage: UnderVoltage) -> None:
         """Initialize the binary sensor."""
         self._under_voltage = under_voltage
+
+        self._attr_device_info = DeviceInfo(
+            manufacturer="Raspberry Pi",
+            identifiers={(DOMAIN, "rpi_power")},
+        )
 
     def update(self) -> None:
         """Update the state."""
