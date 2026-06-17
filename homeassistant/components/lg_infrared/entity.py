@@ -12,9 +12,17 @@ class LgIrEntity(Entity):
 
     _attr_has_entity_name = True
 
-    def __init__(self, entry: ConfigEntry, unique_id_suffix: str) -> None:
+    def __init__(
+        self,
+        entry: ConfigEntry,
+        unique_id_suffix: str,
+        device_name: str = "LG TV",
+    ) -> None:
         """Initialize LG IR entity."""
+        self._entry = entry
         self._attr_unique_id = f"{entry.entry_id}_{unique_id_suffix}"
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, entry.entry_id)}, name="LG TV", manufacturer="LG"
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=device_name,
+            manufacturer="LG",
         )

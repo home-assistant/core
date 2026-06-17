@@ -91,7 +91,7 @@ rules:
     status: exempt
     comment: |
       This integration does not use custom icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: |
