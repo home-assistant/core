@@ -40,20 +40,24 @@ async def async_setup_entry(
     # Create multicast Listener
     async with setup_lock:
         if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
+            working_interface = None
             if multicast_interface not in (DEFAULT_INTERFACE, None):
                 test_multicast = AsyncMotionMulticast(interface=multicast_interface)
-                working_interface = None
                 try:
                     await test_multicast.Start_listen()
-                    test_multicast.Stop_listen()
+                except OSError:
+                    pass
+                else:
                     working_interface = multicast_interface
                     _LOGGER.debug(
                         "Stored Motionblinds interface '%s' validated for host %s",
                         multicast_interface,
                         host,
                     )
-                except OSError:
-                    pass
+                    try:
+                        test_multicast.Stop_listen()
+                    except OSError:
+                        pass
 
                 if working_interface is None:
                     _LOGGER.debug(
