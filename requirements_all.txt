@@ -2949,6 +2949,9 @@ ruuvitag-ble==0.4.0
 # homeassistant.components.yamaha
 rxv==0.7.0
 
+# homeassistant.components.samsung_exlink
+samsung-exlink==1.1.0
+
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
 
