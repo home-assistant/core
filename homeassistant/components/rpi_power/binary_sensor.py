@@ -17,8 +17,6 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
-from .const import DOMAIN
-
 from . import RpiPowerConfigEntry
 from .const import DOMAIN
 
