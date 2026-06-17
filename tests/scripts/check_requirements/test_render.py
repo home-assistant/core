@@ -74,6 +74,31 @@ def test_render_empty_change_set() -> None:
     assert "No tracked requirement changes detected" in rendered
 
 
+def test_render_embeds_head_sha_as_commit_link() -> None:
+    """A head SHA renders a commit link whose URL carries the full SHA."""
+    pkg = PackageChange(
+        name="pkg",
+        old_version="1.0.0",
+        new_version="1.1.0",
+        repo_url="https://github.com/x/pkg",
+        checks={CheckKind.CI_UPLOAD: _pass("ok")},
+    )
+    sha = "abc1234def5678abc1234def5678abc1234def56"
+    rendered = render_comment(CheckRunResult(pr_number=1, head_sha=sha, packages=[pkg]))
+    # Short SHA shown to humans, full SHA recoverable from the link URL.
+    assert (
+        f"Checked at commit [`abc1234`]"
+        f"(https://github.com/home-assistant/core/commit/{sha})."
+    ) in rendered
+    assert rendered.startswith("<!-- requirements-check -->\n")
+
+
+def test_render_without_head_sha_omits_commit_line() -> None:
+    """With no head SHA, the commit line is absent entirely."""
+    rendered = render_comment(CheckRunResult(pr_number=1))
+    assert "Checked at commit" not in rendered
+
+
 def test_render_missing_check_renders_as_skipped() -> None:
     """A check kind absent from `pkg.checks` shows the skipped marker in both cells and bullets."""
     pkg = PackageChange(

@@ -447,7 +447,7 @@ class TadoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     async def set_meter_reading(self, reading: int) -> dict[str, Any]:
         """Send meter reading to Tado."""
-        dt: str = datetime.now().strftime("%Y-%m-%d")
+        dt: str = datetime.now().strftime("%Y-%m-%d")  # pylint: disable=home-assistant-enforce-naive-now
         if self._tado is None:
             raise HomeAssistantError("Tado client is not initialized")
 
