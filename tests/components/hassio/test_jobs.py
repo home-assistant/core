@@ -353,6 +353,7 @@ async def test_job_manager_reload_on_supervisor_restart(
 async def test_subscribe_returns_unsubscribe_when_job_already_matches(
     hass: HomeAssistant,
     jobs_info: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
 ) -> None:
     """Test subscribe returns a working unsubscribe even if a job already matches."""
     jobs_info.return_value = JobsInfo(
@@ -366,7 +367,7 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),
+                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 extra=None,
                 child_jobs=[],
             )
@@ -376,6 +377,7 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
     result = await async_setup_component(hass, DOMAIN, {})
     assert result
 
+    client = await hass_supervisor_ws_client()
     data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
 
     received: list[Job] = []
@@ -393,6 +395,30 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
     assert received[0].name == "test_job"
     assert callable(unsubscribe)
 
-    # Unsubscribe should remove the subscription without raising
+    # After unsubscribing, a new matching job update is no longer delivered
     unsubscribe()
-    assert subscription not in data_coordinator.jobs._subscriptions
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "job",
+                "data": {
+                    "name": "test_job",
+                    "reference": "test",
+                    "uuid": uuid4().hex,
+                    "progress": 50,
+                    "stage": None,
+                    "done": False,
+                    "errors": [],
+                    "created": datetime.now().isoformat(),  # pylint: disable=home-assistant-enforce-naive-now
+                    "extra": None,
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    assert len(received) == 1
