@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     SOURCE_USER,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     ConfigSubentryData,
@@ -46,6 +45,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util.ssl import create_client_context
 
+from . import SmtpConfigEntry
 from .const import (
     CONF_ENCRYPTION,
     CONF_SENDER_NAME,
@@ -120,14 +120,14 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
     @classmethod
     @callback
     def async_get_supported_subentry_types(
-        cls, config_entry: ConfigEntry
+        cls, config_entry: SmtpConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this integration."""
         return {SUBENTRY_TYPE_RECIPIENT: RecipientSubentryFlowHandler}
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(config_entry: SmtpConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
@@ -169,6 +169,37 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             subentry_result["flow_id"],
         )
         return result
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfigure flow."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._async_abort_entries_match(
+                {
+                    CONF_SERVER: user_input[CONF_SERVER],
+                    CONF_SENDER: user_input[CONF_SENDER],
+                    CONF_USERNAME: user_input.get(CONF_USERNAME),
+                }
+            )
+            errors = await self.hass.async_add_executor_job(validate_input, user_input)
+            if not errors:
+                return self.async_update_and_abort(
+                    entry,
+                    data=user_input,
+                )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA,
+                suggested_values=user_input or entry.data,
+            ),
+            errors=errors,
+        )
 
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import config from yaml."""

@@ -166,8 +166,10 @@ class HueLightLevelSensor(HueSensorBase):
     )
 
     @property
-    def native_value(self) -> int:
+    def native_value(self) -> int | None:
         """Return the value reported by the sensor."""
+        if self.resource.light.value is None:
+            return None
         # Light level in 10000 log10 (lux) +1 measured by sensor. Logarithm
         # scale used because the human eye adjusts to light levels and small
         # changes at low lux levels are more noticeable than at high lux

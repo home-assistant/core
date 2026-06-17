@@ -19,11 +19,19 @@ from .coordinator import DucoConfigEntry
 TO_REDACT = {
     CONF_HOST,
     "mac",
+    "Mac",
     "host_name",
+    "HostName",
     "serial_board_box",
+    "SerialBoardBox",
     "serial_board_comm",
+    "SerialBoardComm",
     "serial_duco_box",
+    "SerialDucoBox",
     "serial_duco_comm",
+    "SerialDucoComm",
+    "WifiApKey",
+    "WifiApSsid",
 }
 
 
