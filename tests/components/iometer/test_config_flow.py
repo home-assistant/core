@@ -3,7 +3,12 @@
 from ipaddress import ip_address
 from unittest.mock import MagicMock
 
-from iometer import IOmeterConnectionError, IOmeterNoStatusError, Status
+from iometer import (
+    IOmeterConnectionError,
+    IOmeterNoStatusError,
+    IOmeterTimeoutError,
+    Status,
+)
 import pytest
 
 from homeassistant.components.iometer.const import DOMAIN
@@ -39,7 +44,6 @@ async def test_user_flow(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -47,7 +51,6 @@ async def test_user_flow(
         result["flow_id"],
         user_input={CONF_HOST: IP_ADDRESS},
     )
-
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "IOmeter 1ISK0000000000"
@@ -66,7 +69,6 @@ async def test_zeroconf_flow(
         context={"source": SOURCE_ZEROCONF},
         data=ZEROCONF_DISCOVERY,
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
 
@@ -100,9 +102,10 @@ async def test_zeroconf_flow_abort_duplicate(
     ("exception", "reason"),
     [
         (IOmeterConnectionError(), "cannot_connect"),
+        (IOmeterTimeoutError(), "cannot_connect"),
         (IOmeterNoStatusError(), "no_status"),
     ],
-    ids=["status-connection", "status-missing"],
+    ids=["connection-error", "timeout", "status-missing"],
 )
 async def test_zeroconf_flow_abort_errors(
     hass: HomeAssistant,
@@ -110,8 +113,8 @@ async def test_zeroconf_flow_abort_errors(
     exception: Exception,
     reason: str,
 ) -> None:
-    """Test zeroconf flow aborts when the SSE client raises an exception."""
-    mock_iometer_client.watch_status.side_effect = exception
+    """Test zeroconf flow aborts when the HTTP client raises an exception."""
+    mock_iometer_client.get_current_status.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -130,11 +133,7 @@ async def test_zeroconf_flow_abort_no_meter(
     """Test zeroconf flow aborts when the status contains no meter info."""
     mock_status = MagicMock()
     mock_status.meter = None
-
-    async def no_meter_watch():
-        yield mock_status
-
-    mock_iometer_client.watch_status.side_effect = no_meter_watch
+    mock_iometer_client.get_current_status.return_value = mock_status
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -146,35 +145,14 @@ async def test_zeroconf_flow_abort_no_meter(
     assert result["reason"] == "no_readings"
 
 
-async def test_zeroconf_flow_abort_no_status_received(
-    hass: HomeAssistant,
-    mock_iometer_client: MagicMock,
-) -> None:
-    """Test zeroconf flow aborts when watch_status ends without yielding a status."""
-
-    async def empty_watch():
-        return
-        yield  # makes this an async generator
-
-    mock_iometer_client.watch_status.side_effect = empty_watch
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=ZEROCONF_DISCOVERY,
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
 @pytest.mark.parametrize(
     ("exception", "error_key"),
     [
         (IOmeterConnectionError(), "cannot_connect"),
+        (IOmeterTimeoutError(), "cannot_connect"),
         (IOmeterNoStatusError(), "no_status"),
     ],
-    ids=["status-connection", "status-missing"],
+    ids=["connection-error", "timeout", "status-missing"],
 )
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_user_flow_errors(
@@ -183,28 +161,16 @@ async def test_user_flow_errors(
     exception: Exception,
     error_key: str,
 ) -> None:
-    """Test user flow shows errors for SSE client exceptions and recovers on retry."""
-    call_count = {"n": 0}
+    """Test user flow shows errors for HTTP client exceptions and recovers on retry."""
     valid_status = Status.from_json(
         await async_load_fixture(hass, "status.json", DOMAIN)
     )
-
-    async def success_watch():
-        yield valid_status
-
-    def conditional_watch():
-        call_count["n"] += 1
-        if call_count["n"] == 1:
-            raise exception
-        return success_watch()
-
-    mock_iometer_client.watch_status.side_effect = conditional_watch
+    mock_iometer_client.get_current_status.side_effect = [exception, valid_status]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -230,27 +196,17 @@ async def test_user_flow_no_meter_error(
     mock_iometer_client: MagicMock,
 ) -> None:
     """Test user flow shows error when status contains no meter info."""
-    call_count = {"n": 0}
     mock_status = MagicMock()
     mock_status.meter = None
     valid_status = Status.from_json(
         await async_load_fixture(hass, "status.json", DOMAIN)
     )
-
-    async def conditional_watch():
-        call_count["n"] += 1
-        if call_count["n"] == 1:
-            yield mock_status
-        else:
-            yield valid_status
-
-    mock_iometer_client.watch_status.side_effect = conditional_watch
+    mock_iometer_client.get_current_status.side_effect = [mock_status, valid_status]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -283,7 +239,6 @@ async def test_flow_abort_duplicate(
         DOMAIN,
         context={"source": SOURCE_USER},
     )
-    await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
@@ -292,35 +247,5 @@ async def test_flow_abort_duplicate(
         {CONF_HOST: IP_ADDRESS},
     )
     await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow_no_status_received(
-    hass: HomeAssistant,
-    mock_iometer_client: MagicMock,
-) -> None:
-    """Test user flow shows error when watch_status ends without yielding a status."""
-
-    async def empty_watch():
-        return
-        yield  # makes this an async generator
-
-    mock_iometer_client.watch_status.side_effect = empty_watch
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {CONF_HOST: IP_ADDRESS},
-    )
-    await hass.async_block_till_done()
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}

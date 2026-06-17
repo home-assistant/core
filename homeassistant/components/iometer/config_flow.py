@@ -1,19 +1,18 @@
 """Config flow for the IOmeter integration."""
 
-import asyncio
 from typing import Any, Final
 
 from iometer import (
+    IOmeterClient,
     IOmeterConnectionError,
     IOmeterNoStatusError,
-    IOmeterSSEClient,
     IOmeterTimeoutError,
-    Status,
 )
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN
@@ -29,13 +28,6 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         self._host: str
         self._meter_number: str
 
-    async def _async_get_first_status(self, host: str) -> Status:
-        """Connect to the bridge and return the first status event."""
-        async with IOmeterSSEClient(host=host) as client:
-            async for status in client.watch_status():
-                return status
-        raise IOmeterConnectionError("No status received")
-
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -43,12 +35,13 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         self._host = host = discovery_info.host
         self._async_abort_entries_match({CONF_HOST: host})
 
+        session = async_get_clientsession(self.hass)
+        client = IOmeterClient(host=host, session=session)
         try:
-            async with asyncio.timeout(30):
-                status = await self._async_get_first_status(host)
+            status = await client.get_current_status()
         except IOmeterNoStatusError:
             return self.async_abort(reason="no_status")
-        except TimeoutError, IOmeterTimeoutError, IOmeterConnectionError:
+        except IOmeterTimeoutError, IOmeterConnectionError:
             return self.async_abort(reason="cannot_connect")
 
         if not status.meter:
@@ -81,12 +74,13 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             self._host = user_input[CONF_HOST]
+            session = async_get_clientsession(self.hass)
+            client = IOmeterClient(host=self._host, session=session)
             try:
-                async with asyncio.timeout(30):
-                    status = await self._async_get_first_status(self._host)
+                status = await client.get_current_status()
             except IOmeterNoStatusError:
                 errors["base"] = "no_status"
-            except TimeoutError, IOmeterTimeoutError, IOmeterConnectionError:
+            except IOmeterTimeoutError, IOmeterConnectionError:
                 errors["base"] = "cannot_connect"
             else:
                 if not status.meter:

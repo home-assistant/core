@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+import contextlib
 from dataclasses import dataclass
 import logging
 
@@ -62,6 +63,8 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
         self._first_data_event: asyncio.Event = asyncio.Event()
         self._cancel_readings: Callable[[], None] | None = None
         self._cancel_status: Callable[[], None] | None = None
+        self._readings_task: asyncio.Task | None = None
+        self._status_task: asyncio.Task | None = None
 
     async def async_start(self) -> None:
         """Register SSE subscriptions."""
@@ -69,19 +72,27 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
             self._on_reading,
             self._on_reading_error,
         )
+        self._readings_task = getattr(self._cancel_readings, "__self__", None)
         self._cancel_status = self.client.subscribe_status(
             self._on_status,
             self._on_status_error,
         )
+        self._status_task = getattr(self._cancel_status, "__self__", None)
 
     async def async_stop(self) -> None:
-        """Cancel SSE subscriptions."""
+        """Cancel SSE subscriptions and await task teardown."""
         if self._cancel_readings:
             self._cancel_readings()
             self._cancel_readings = None
         if self._cancel_status:
             self._cancel_status()
             self._cancel_status = None
+        for task in (self._readings_task, self._status_task):
+            if task and not task.done():
+                with contextlib.suppress(asyncio.CancelledError):
+                    await task
+        self._readings_task = None
+        self._status_task = None
 
     async def _async_update_data(self) -> IOmeterData:
         """Wait for first SSE data; subsequent updates arrive via async_set_updated_data."""
@@ -122,20 +133,22 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
         if isinstance(err, IOmeterTimeoutError):
             _LOGGER.debug("IOmeter reading stream timed out, reconnecting")
         elif isinstance(err, (IOmeterNoReadingsError, IOmeterConnectionError)):
+            self._async_set_unavailable()
             _LOGGER.warning("IOmeter reading stream error: %s", err)
         else:
+            self._async_set_unavailable()
             _LOGGER.exception("Unexpected error in reading stream")
-        self._async_set_unavailable()
 
     def _on_status_error(self, err: Exception) -> None:
         """Log status stream errors before the library reconnects."""
         if isinstance(err, IOmeterTimeoutError):
             _LOGGER.debug("IOmeter status stream timed out, reconnecting")
         elif isinstance(err, (IOmeterNoStatusError, IOmeterConnectionError)):
+            self._async_set_unavailable()
             _LOGGER.warning("IOmeter status stream error: %s", err)
         else:
+            self._async_set_unavailable()
             _LOGGER.exception("Unexpected error in status stream")
-        self._async_set_unavailable()
 
     def _async_set_unavailable(self) -> None:
         """Mark entities unavailable; skipped before first successful data."""
