@@ -1583,7 +1583,7 @@ lxml==6.1.2
 lyngdorf==2.2.0
 
 # homeassistant.components.marantz_rs232
-marantz-rs232==1.0.0
+marantz-rs232==2.0.0
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0

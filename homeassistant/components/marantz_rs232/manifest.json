@@ -9,5 +9,5 @@
   "iot_class": "local_push",
   "loggers": ["marantz_rs232"],
   "quality_scale": "bronze",
-  "requirements": ["marantz-rs232==1.0.0"]
+  "requirements": ["marantz-rs232==2.0.0"]
 }

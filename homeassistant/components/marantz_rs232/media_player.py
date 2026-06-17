@@ -145,7 +145,7 @@ async def async_setup_entry(
         entities = [
             MarantzV2003MediaPlayer(receiver, receiver.main, config_entry, "main")
         ]
-        if receiver.multi_room.enabled is not None:
+        if receiver.multi_room.power is not None:
             entities.append(
                 MarantzV2003MediaPlayer(
                     receiver, receiver.multi_room, config_entry, "multi_room"
@@ -261,7 +261,7 @@ class MarantzV2015MediaPlayer(MediaPlayerEntity):
 
     async def async_turn_off(self) -> None:
         """Turn the receiver off."""
-        await self._player.power_standby()
+        await self._player.power_off()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
@@ -297,7 +297,7 @@ class MarantzV2015MediaPlayer(MediaPlayerEntity):
         if input_source is None:
             raise HomeAssistantError("Invalid source")
 
-        await self._player.select_input_source(input_source)
+        await self._player.select_source(input_source)
 
 
 class MarantzV2007MediaPlayer(MediaPlayerEntity):
@@ -377,15 +377,8 @@ class MarantzV2007MediaPlayer(MediaPlayerEntity):
                 MediaPlayerState.ON if self._player.power else MediaPlayerState.OFF
             )
 
-        source_audio = self._player.source_audio
-        if source_audio is not None:
-            try:
-                v2007_source = V2007Source(source_audio)
-                self._attr_source = INPUT_SOURCE_V2007_TO_HA.get(v2007_source)
-            except ValueError:
-                self._attr_source = None
-        else:
-            self._attr_source = None
+        source = self._player.input_source
+        self._attr_source = INPUT_SOURCE_V2007_TO_HA.get(source) if source else None
 
         if isinstance(self._player, V2007MainPlayer):
             volume = self._player.volume
@@ -465,13 +458,6 @@ class MarantzV2003MediaPlayer(MediaPlayerEntity):
         self._receiver = receiver
         self._player = player
 
-        if isinstance(player, V2003MainPlayer):
-            self._power_on = player.power_on
-            self._power_off = player.power_off
-        else:
-            self._power_on = player.on
-            self._power_off = player.off
-
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="Marantz",
@@ -516,17 +502,13 @@ class MarantzV2003MediaPlayer(MediaPlayerEntity):
 
     @callback
     def _async_update_from_player(self) -> None:
-        if isinstance(self._player, V2003MainPlayer):
-            power = self._player.power
-        else:
-            power = self._player.enabled
-
+        power = self._player.power
         if power is None:
             self._attr_state = None
         else:
             self._attr_state = MediaPlayerState.ON if power else MediaPlayerState.OFF
 
-        source = self._player.audio_input
+        source = self._player.input_source
         self._attr_source = (
             INPUT_SOURCE_V2003_TO_HA.get(source) if source is not None else None
         )
@@ -542,11 +524,11 @@ class MarantzV2003MediaPlayer(MediaPlayerEntity):
 
     async def async_turn_on(self) -> None:
         """Turn the receiver on."""
-        await self._power_on()
+        await self._player.power_on()
 
     async def async_turn_off(self) -> None:
         """Turn the receiver off."""
-        await self._power_off()
+        await self._player.power_off()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1. Main zone only."""
