@@ -77,7 +77,13 @@ TEST_DEVICE_1 = AmazonDevice(
         ),
     },
     media_player_supported=True,
-    communication_settings={},
+    communication_settings={
+        "calling": None,
+        "communications": "ON",
+        "announcements": "ON",
+        "messaging": None,
+        "dropin": "All",
+    },
 )
 
 TEST_DEVICE_2_SN = "echo_test_2_serial_number"
