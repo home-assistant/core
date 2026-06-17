@@ -104,12 +104,20 @@ class OpenRouterAITaskEntity(
             raise HomeAssistantError("No image returned")
 
         # OpenRouter returns images as data URIs: `data:image/png;base64,<data>`
-        image_url: str = content.native[0]["image_url"]["url"]
-        metadata, _, encoded = image_url.partition(",")
+        try:
+            image_url: str = content.native[0]["image_url"]["url"]
+            metadata, _, encoded = image_url.partition(",")
+            image_data = base64.b64decode(encoded, validate=True)
+        except (LookupError, TypeError, ValueError) as err:
+            raise HomeAssistantError("Invalid image returned") from err
+
+        if not metadata.startswith("data:") or not image_data:
+            raise HomeAssistantError("Invalid image returned")
+
         mime_type = metadata.removeprefix("data:").split(";")[0]
 
         return ai_task.GenImageTaskResult(
-            image_data=base64.b64decode(encoded),
+            image_data=image_data,
             conversation_id=chat_log.conversation_id,
             mime_type=mime_type,
             model=self.model,

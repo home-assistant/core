@@ -21,7 +21,9 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-def _image_completion(images: list[dict] | None) -> ChatCompletion:
+def _image_completion(
+    images: list[dict] | None, content: str | None = None
+) -> ChatCompletion:
     """Build a chat completion carrying generated images."""
     return ChatCompletion(
         id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
@@ -30,7 +32,7 @@ def _image_completion(images: list[dict] | None) -> ChatCompletion:
                 finish_reason="stop",
                 index=0,
                 message=ChatCompletionMessage(
-                    content=None,
+                    content=content,
                     role="assistant",
                     function_call=None,
                     tool_calls=None,
@@ -405,16 +407,24 @@ async def test_generate_image(
         )
     )
 
-    result = await ai_task.async_generate_image(
-        hass,
-        task_name="Test Task",
-        entity_id="ai_task.gemini_1_5_pro",
-        instructions="Generate a test image",
-    )
+    with patch.object(
+        media_source.local_source.LocalSource,
+        "async_upload_media",
+        return_value="media-source://ai_task/image/2025-06-14_225900_test_task.png",
+    ) as mock_upload_media:
+        result = await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_1_5_pro",
+            instructions="Generate a test image",
+        )
 
-    assert result["image_data"] == b"hello"
     assert result["mime_type"] == "image/png"
     assert result["model"] == "google/gemini-1.5-pro"
+
+    image_data = mock_upload_media.call_args[0][1]
+    assert image_data.file.getvalue() == b"hello"
+    assert image_data.content_type == "image/png"
 
     call_kwargs = mock_openai_client.chat.completions.create.call_args[1]
     assert call_kwargs["extra_body"]["modalities"] == ["image", "text"]
@@ -429,10 +439,42 @@ async def test_generate_image_no_image(
     await setup_integration(hass, mock_config_entry)
 
     mock_openai_client.chat.completions.create = AsyncMock(
-        return_value=_image_completion(None)
+        return_value=_image_completion(None, content="I cannot generate that image")
     )
 
     with pytest.raises(HomeAssistantError, match="No image returned"):
+        await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_1_5_pro",
+            instructions="Generate a test image",
+        )
+
+
+@pytest.mark.parametrize(
+    "images",
+    [
+        pytest.param([{"type": "image_url"}], id="missing_url"),
+        pytest.param(
+            [{"type": "image_url", "image_url": {"url": "https://example.com/a.png"}}],
+            id="not_a_data_uri",
+        ),
+    ],
+)
+async def test_generate_image_invalid_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+    images: list[dict],
+) -> None:
+    """Test AI Task image generation raises on a malformed image response."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=_image_completion(images)
+    )
+
+    with pytest.raises(HomeAssistantError, match="Invalid image returned"):
         await ai_task.async_generate_image(
             hass,
             task_name="Test Task",

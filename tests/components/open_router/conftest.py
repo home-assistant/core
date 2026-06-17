@@ -86,6 +86,8 @@ def mock_config_entry(
     return MockConfigEntry(
         title="OpenRouter",
         domain=DOMAIN,
+        version=1,
+        minor_version=3,
         data={
             CONF_API_KEY: "bla",
         },
