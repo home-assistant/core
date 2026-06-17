@@ -16,5 +16,10 @@
       }
     }
   },
+  "exceptions": {
+    "under_voltage_not_supported": {
+      "message": "Under-voltage monitoring is not supported on this device."
+    }
+  },
   "title": "Raspberry Pi Power Supply Checker"
 }
