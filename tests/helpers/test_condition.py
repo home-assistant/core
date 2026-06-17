@@ -1462,13 +1462,8 @@ async def test_state_for_invalid_template(
         assert not test.async_check()
 
 
-async def test_state_for_not_allowed_with_attribute(hass: HomeAssistant) -> None:
-    """Test state condition rejects `for` combined with `attribute`.
-
-    The `for` duration is anchored to the entity's last_changed, which only
-    advances on state changes, not attribute changes. Pairing `for` with an
-    `attribute` is therefore unsupported and rejected during config validation.
-    """
+def test_state_for_not_allowed_with_attribute() -> None:
+    """Test state condition rejects `for` combined with `attribute` is rejected."""
     config = {
         "condition": "state",
         "entity_id": "sensor.temperature",
