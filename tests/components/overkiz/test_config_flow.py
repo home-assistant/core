@@ -10,7 +10,6 @@ from pyoverkiz.const import (
     REXEL_OAUTH_POLICY,
     REXEL_OAUTH_TOKEN_URL,
 )
-from pyoverkiz.enums import Server
 from pyoverkiz.exceptions import (
     BadCredentialsError,
     MaintenanceError,
@@ -27,6 +26,7 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow
@@ -1085,6 +1085,24 @@ async def _async_rexel_oauth_external_step(
     )
 
 
+async def _async_rexel_pick_cloud(
+    hass: HomeAssistant, flow_id: str
+) -> ConfigFlowResult:
+    """Select the Rexel hub and the cloud API, returning the OAuth2 external step.
+
+    Rexel is part of SERVERS_WITH_LOCAL_API, so the user is offered the
+    local/cloud choice before the OAuth2 flow starts.
+    """
+    result = await hass.config_entries.flow.async_configure(flow_id, {"hub": "rexel"})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    return await hass.config_entries.flow.async_configure(
+        flow_id, {"api_type": "cloud"}
+    )
+
+
 @pytest.mark.usefixtures("current_request_with_host", "setup_rexel_credentials")
 async def test_rexel_full_flow_single_gateway(
     hass: HomeAssistant,
@@ -1096,9 +1114,7 @@ async def test_rexel_full_flow_single_gateway(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"hub": "rexel"}
-    )
+    result = await _async_rexel_pick_cloud(hass, result["flow_id"])
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
     assert REXEL_OAUTH_AUTHORIZE_URL in result["url"]
@@ -1126,53 +1142,6 @@ async def test_rexel_full_flow_single_gateway(
 
 
 @pytest.mark.usefixtures("current_request_with_host", "setup_rexel_credentials")
-async def test_rexel_full_flow_local_or_cloud_choice(
-    hass: HomeAssistant,
-    hass_client_no_auth: ClientSessionGenerator,
-    aioclient_mock: AiohttpClientMocker,
-    mock_setup_entry: AsyncMock,
-) -> None:
-    """When Rexel offers a local API, choosing cloud still runs the OAuth2 flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    # Rexel is not in SERVERS_WITH_LOCAL_API yet; simulate the local API support
-    # so the user is offered the local/cloud choice before the OAuth2 flow.
-    with patch(
-        "homeassistant.components.overkiz.config_flow.SERVERS_WITH_LOCAL_API",
-        {Server.REXEL},
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"hub": "rexel"}
-        )
-
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "local_or_cloud"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"api_type": "cloud"}
-        )
-
-    assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert REXEL_OAUTH_AUTHORIZE_URL in result["url"]
-
-    await _async_rexel_oauth_external_step(
-        hass, hass_client_no_auth, aioclient_mock, result["flow_id"]
-    )
-
-    with patch(
-        "homeassistant.components.overkiz.config_flow.OverkizClient.discover_gateways",
-        return_value=[GatewayCandidate(gateway_id=TEST_GATEWAY_ID, label="My Home")],
-    ):
-        result = await hass.config_entries.flow.async_configure(result["flow_id"])
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["result"].unique_id == TEST_GATEWAY_ID
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-@pytest.mark.usefixtures("current_request_with_host", "setup_rexel_credentials")
 async def test_rexel_full_flow_multiple_gateways(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
@@ -1183,9 +1152,7 @@ async def test_rexel_full_flow_multiple_gateways(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"hub": "rexel"}
-    )
+    result = await _async_rexel_pick_cloud(hass, result["flow_id"])
     await _async_rexel_oauth_external_step(
         hass, hass_client_no_auth, aioclient_mock, result["flow_id"]
     )
@@ -1223,9 +1190,7 @@ async def test_rexel_flow_no_gateways(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"hub": "rexel"}
-    )
+    result = await _async_rexel_pick_cloud(hass, result["flow_id"])
     await _async_rexel_oauth_external_step(
         hass, hass_client_no_auth, aioclient_mock, result["flow_id"]
     )
@@ -1250,9 +1215,7 @@ async def test_rexel_flow_cannot_connect(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"hub": "rexel"}
-    )
+    result = await _async_rexel_pick_cloud(hass, result["flow_id"])
     await _async_rexel_oauth_external_step(
         hass, hass_client_no_auth, aioclient_mock, result["flow_id"]
     )
@@ -1277,9 +1240,15 @@ async def test_rexel_reauth_wrong_account(
     """Reauth with a different Rexel gateway aborts."""
     mock_rexel_config_entry.add_to_hass(hass)
 
-    # Reauth carries the stored hub, so the flow goes straight to the OAuth2
-    # external step without showing the server picker again.
+    # Reauth carries the stored hub, so the flow skips the server picker and
+    # goes to the local/cloud choice before re-running the OAuth2 flow.
     result = await mock_rexel_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
     await _async_rexel_oauth_external_step(
@@ -1307,6 +1276,12 @@ async def test_rexel_reauth_success(
     mock_rexel_config_entry.add_to_hass(hass)
 
     result = await mock_rexel_config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "local_or_cloud"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"api_type": "cloud"}
+    )
     assert result["type"] is FlowResultType.EXTERNAL_STEP
 
     await _async_rexel_oauth_external_step(
