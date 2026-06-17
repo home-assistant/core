@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for IOmeter."""
 
 import asyncio
-import contextlib
+from collections.abc import Callable
 from dataclasses import dataclass
 import logging
 
@@ -60,22 +60,28 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
         self._reading: Reading | None = None
         self._status: Status | None = None
         self._first_data_event: asyncio.Event = asyncio.Event()
-        self._stream_task: asyncio.Task | None = None
+        self._cancel_readings: Callable[[], None] | None = None
+        self._cancel_status: Callable[[], None] | None = None
 
     async def async_start(self) -> None:
-        """Start SSE listener tasks."""
-        self._stream_task = self.hass.async_create_background_task(
-            self._run_streams(),
-            "iometer_streams",
+        """Register SSE subscriptions."""
+        self._cancel_readings = self.client.subscribe_readings(
+            self._on_reading,
+            self._on_reading_error,
+        )
+        self._cancel_status = self.client.subscribe_status(
+            self._on_status,
+            self._on_status_error,
         )
 
     async def async_stop(self) -> None:
-        """Stop SSE listener tasks."""
-        if self._stream_task and not self._stream_task.done():
-            self._stream_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._stream_task
-        self._stream_task = None
+        """Cancel SSE subscriptions."""
+        if self._cancel_readings:
+            self._cancel_readings()
+            self._cancel_readings = None
+        if self._cancel_status:
+            self._cancel_status()
+            self._cancel_status = None
 
     async def _async_update_data(self) -> IOmeterData:
         """Wait for first SSE data; subsequent updates arrive via async_set_updated_data."""
@@ -101,6 +107,43 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
                 IOmeterData(reading=self._reading, status=self._status)
             )
 
+    def _on_reading(self, reading: Reading) -> None:
+        """Handle a new reading from the SSE stream."""
+        self._reading = reading
+        self._on_new_data()
+
+    def _on_status(self, status: Status) -> None:
+        """Handle a new status from the SSE stream."""
+        self._status = status
+        self._on_new_data()
+
+    def _on_reading_error(self, err: Exception) -> None:
+        """Log reading stream errors before the library reconnects."""
+        if isinstance(err, IOmeterTimeoutError):
+            _LOGGER.debug("IOmeter reading stream timed out, reconnecting")
+        elif isinstance(err, (IOmeterNoReadingsError, IOmeterConnectionError)):
+            _LOGGER.warning("IOmeter reading stream error: %s", err)
+        else:
+            _LOGGER.exception("Unexpected error in reading stream")
+        self._async_set_unavailable()
+
+    def _on_status_error(self, err: Exception) -> None:
+        """Log status stream errors before the library reconnects."""
+        if isinstance(err, IOmeterTimeoutError):
+            _LOGGER.debug("IOmeter status stream timed out, reconnecting")
+        elif isinstance(err, (IOmeterNoStatusError, IOmeterConnectionError)):
+            _LOGGER.warning("IOmeter status stream error: %s", err)
+        else:
+            _LOGGER.exception("Unexpected error in status stream")
+        self._async_set_unavailable()
+
+    def _async_set_unavailable(self) -> None:
+        """Mark entities unavailable; skipped before first successful data."""
+        if not self._first_data_event.is_set():
+            return
+        self.last_update_success = False
+        self.async_update_listeners()
+
     def _update_fw_version(self, status: Status) -> None:
         """Update device registry if firmware version changed."""
         fw_version = f"{status.device.core.version}/{status.device.bridge.version}"
@@ -115,43 +158,3 @@ class IOMeterCoordinator(DataUpdateCoordinator[IOmeterData]):
                     sw_version=fw_version,
                 )
         self.current_fw_version = fw_version
-
-    async def _run_streams(self) -> None:
-        """Run reading and status SSE streams concurrently."""
-        async with self.client, asyncio.TaskGroup() as tg:
-            tg.create_task(self._watch_readings())
-            tg.create_task(self._watch_status())
-
-    async def _watch_readings(self) -> None:
-        """Consume reading SSE events, reconnecting on transient errors."""
-        while True:
-            try:
-                async for reading in self.client.watch_readings():
-                    self._reading = reading
-                    self._on_new_data()
-            except IOmeterTimeoutError:
-                _LOGGER.debug("IOmeter reading stream timed out, reconnecting")
-                await asyncio.sleep(5)
-            except (IOmeterNoReadingsError, IOmeterConnectionError) as err:
-                _LOGGER.warning("IOmeter reading stream error: %s", err)
-                await asyncio.sleep(5)
-            except Exception:
-                _LOGGER.exception("Unexpected error in reading stream")
-                await asyncio.sleep(5)
-
-    async def _watch_status(self) -> None:
-        """Consume status SSE events, reconnecting on transient errors."""
-        while True:
-            try:
-                async for status in self.client.watch_status():
-                    self._status = status
-                    self._on_new_data()
-            except IOmeterTimeoutError:
-                _LOGGER.debug("IOmeter status stream timed out, reconnecting")
-                await asyncio.sleep(5)
-            except (IOmeterNoStatusError, IOmeterConnectionError) as err:
-                _LOGGER.warning("IOmeter status stream error: %s", err)
-                await asyncio.sleep(5)
-            except Exception:
-                _LOGGER.exception("Unexpected error in status stream")
-                await asyncio.sleep(5)

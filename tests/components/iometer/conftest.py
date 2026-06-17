@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant.components.iometer.const import DOMAIN
 from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -41,14 +42,29 @@ def status_queue() -> asyncio.Queue[Status]:
 
 @pytest.fixture
 def mock_iometer_client(
+    hass: HomeAssistant,
     reading_queue: asyncio.Queue[Reading],
     status_queue: asyncio.Queue[Status],
 ) -> Generator[MagicMock]:
     """Mock an IOmeter SSE client."""
 
-    async def watch_readings():
-        while True:
-            yield await reading_queue.get()
+    def subscribe_readings(on_reading, _on_error=None):
+        async def _feed():
+            while True:
+                reading = await reading_queue.get()
+                on_reading(reading)
+
+        task = hass.async_create_background_task(_feed(), "mock_reading_feed")
+        return task.cancel
+
+    def subscribe_status(on_status, _on_error=None):
+        async def _feed():
+            while True:
+                status = await status_queue.get()
+                on_status(status)
+
+        task = hass.async_create_background_task(_feed(), "mock_status_feed")
+        return task.cancel
 
     async def watch_status():
         while True:
@@ -56,17 +72,17 @@ def mock_iometer_client(
 
     with patch(
         "homeassistant.components.iometer.IOmeterSSEClient",
-        autospec=True,
     ) as mock_class:
         client = mock_class.return_value
         client.__aenter__ = AsyncMock(return_value=client)
         client.__aexit__ = AsyncMock(return_value=False)
-        client.watch_readings.side_effect = watch_readings
-        client.watch_status.side_effect = watch_status
+        client.subscribe_readings.side_effect = subscribe_readings
+        client.subscribe_status.side_effect = subscribe_status
         with patch(
             "homeassistant.components.iometer.config_flow.IOmeterSSEClient",
             new=mock_class,
         ):
+            client.watch_status.side_effect = watch_status
             yield client
 
 

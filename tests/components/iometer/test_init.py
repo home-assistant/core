@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from iometer import (
@@ -9,7 +10,6 @@ from iometer import (
     IOmeterNoReadingsError,
     IOmeterNoStatusError,
     IOmeterTimeoutError,
-    Reading,
     Status,
 )
 import pytest
@@ -97,68 +97,62 @@ async def test_first_data_timeout(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "expected_log"),
     [
-        pytest.param(IOmeterTimeoutError("timeout"), id="timeout"),
-        pytest.param(IOmeterNoReadingsError("no readings"), id="no-readings"),
-        pytest.param(IOmeterConnectionError("connection error"), id="connection-error"),
-        pytest.param(RuntimeError("unexpected"), id="unexpected"),
+        pytest.param(IOmeterTimeoutError("t"), "timed out", id="timeout"),
+        pytest.param(IOmeterNoReadingsError("n"), "stream error", id="no-readings"),
+        pytest.param(
+            IOmeterConnectionError("c"), "stream error", id="connection-error"
+        ),
+        pytest.param(
+            RuntimeError("u"), "Unexpected error in reading stream", id="unexpected"
+        ),
     ],
 )
-async def test_reading_stream_reconnects(
+async def test_reading_error_callback(
     hass: HomeAssistant,
     mock_iometer_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    reading_queue: asyncio.Queue[Reading],
     exception: Exception,
+    expected_log: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test reading stream reconnects after error."""
-    call_count = 0
+    """Test reading error callback logs correctly before the library reconnects."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    coordinator = mock_config_entry.runtime_data
 
-    async def watch_readings_with_error():
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            raise exception
-        yield await reading_queue.get()
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.iometer"):
+        coordinator._on_reading_error(exception)
 
-    mock_iometer_client.watch_readings.side_effect = watch_readings_with_error
-
-    with patch("homeassistant.components.iometer.coordinator.asyncio.sleep"):
-        await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
-
-    assert call_count >= 2
+    assert expected_log in caplog.text
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "expected_log"),
     [
-        pytest.param(IOmeterTimeoutError("timeout"), id="timeout"),
-        pytest.param(IOmeterNoStatusError("no status"), id="no-status"),
-        pytest.param(IOmeterConnectionError("connection error"), id="connection-error"),
-        pytest.param(RuntimeError("unexpected"), id="unexpected"),
+        pytest.param(IOmeterTimeoutError("t"), "timed out", id="timeout"),
+        pytest.param(IOmeterNoStatusError("n"), "stream error", id="no-status"),
+        pytest.param(
+            IOmeterConnectionError("c"), "stream error", id="connection-error"
+        ),
+        pytest.param(
+            RuntimeError("u"), "Unexpected error in status stream", id="unexpected"
+        ),
     ],
 )
-async def test_status_stream_reconnects(
+async def test_status_error_callback(
     hass: HomeAssistant,
     mock_iometer_client: MagicMock,
     mock_config_entry: MockConfigEntry,
-    status_queue: asyncio.Queue[Status],
     exception: Exception,
+    expected_log: str,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test status stream reconnects after error."""
-    call_count = 0
+    """Test status error callback logs correctly before the library reconnects."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    coordinator = mock_config_entry.runtime_data
 
-    async def watch_status_with_error():
-        nonlocal call_count
-        call_count += 1
-        if call_count == 1:
-            raise exception
-        yield await status_queue.get()
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.iometer"):
+        coordinator._on_status_error(exception)
 
-    mock_iometer_client.watch_status.side_effect = watch_status_with_error
-
-    with patch("homeassistant.components.iometer.coordinator.asyncio.sleep"):
-        await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
-
-    assert call_count >= 2
+    assert expected_log in caplog.text
