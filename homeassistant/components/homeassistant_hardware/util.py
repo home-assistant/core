@@ -587,8 +587,8 @@ async def async_update_raspberry_pi_firmware(hass: HomeAssistant) -> None:
     """Trigger the Raspberry Pi firmware (bootloader EEPROM and VL805) update.
 
     The Supervisor always raises a reboot-required issue and suggestion on
-    success on success. The new firmware only runs after the next reboot,
-    whether the flash was live (RPi5/CM5) or staged (RPi4/CM4/Yellow).
+    success. The new firmware only runs after the next reboot, whether the
+    flash was live (RPi5/CM5) or staged (RPi4/CM4/Yellow).
     """
     client = get_supervisor_client(hass)
     try:
