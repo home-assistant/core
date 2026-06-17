@@ -15,7 +15,7 @@ INSUFFICIENT_CREDITS_ISSUE = "insufficient_credits"
 
 # A credits event clears the insufficient credits issue when the account has
 # quota credits still available, or a balance topup has been applied.
-CREDITS_QUOTA_FRACTION_THRESHOLD = 0.99
+CREDITS_QUOTA_FRACTION_THRESHOLD = 0.95
 CREDITS_BALANCE_THRESHOLD = 25
 
 
