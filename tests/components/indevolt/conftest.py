@@ -64,6 +64,26 @@ def mock_config_entry(generation: int) -> MockConfigEntry:
         domain=DOMAIN,
         title=device_info["device"],
         version=1,
+        minor_version=2,
+        data={
+            CONF_HOST: device_info["host"],
+            CONF_SERIAL_NUMBER: device_info["sn"],
+            CONF_MODEL: device_info["device"],
+            CONF_GENERATION: device_info["generation"],
+        },
+        unique_id=device_info["sn"],
+    )
+
+
+@pytest.fixture
+def mock_config_entry_v1_1(generation: int) -> MockConfigEntry:
+    """Return a mocked config entry with version 1.1 for migration testing."""
+    device_info = DEVICE_MAPPING[generation]
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title=device_info["device"],
+        version=1,
+        minor_version=1,
         data={
             CONF_HOST: device_info["host"],
             CONF_SERIAL_NUMBER: device_info["sn"],
@@ -82,6 +102,7 @@ def alt_mock_config_entry(alt_generation: int) -> MockConfigEntry:
         domain=DOMAIN,
         title=device_info["device"],
         version=1,
+        minor_version=2,
         data={
             CONF_HOST: device_info["host"],
             CONF_SERIAL_NUMBER: device_info["sn"],

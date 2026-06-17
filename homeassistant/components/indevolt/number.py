@@ -136,7 +136,9 @@ class IndevoltNumberEntity(IndevoltEntity, NumberEntity):
         )
 
         if success:
-            await self.coordinator.async_request_refresh()
+            self.coordinator.async_optimistic_update(
+                self.entity_description.read_key, int_value
+            )
 
         else:
             raise HomeAssistantError(

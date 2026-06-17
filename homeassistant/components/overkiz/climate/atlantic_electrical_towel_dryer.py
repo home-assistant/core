@@ -64,7 +64,7 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
 
         # Not all AtlanticElectricalTowelDryer models support temporary presets,
         # thus we check if the command is available and then extend the presets
-        if self.executor.has_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):
+        if self.device.supports_command(OverkizCommand.SET_TOWEL_DRYER_TEMPORARY_STATE):
             # Extend preset modes with supported temporary presets, avoiding duplicates
             self._attr_preset_modes += [
                 mode
@@ -104,7 +104,9 @@ class AtlanticElectricalTowelDryer(OverkizEntity, ClimateEntity):
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return cast(float, temperature.value)
 

@@ -22,6 +22,7 @@ from homeassistant.components.cover import INTENT_CLOSE_COVER, INTENT_OPEN_COVER
 from homeassistant.components.homeassistant import async_should_expose
 from homeassistant.components.intent import async_device_supports_timers
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
+from homeassistant.components.sensor import async_rounded_state
 from homeassistant.components.todo import DOMAIN as TODO_DOMAIN, TodoServices
 from homeassistant.components.weather import INTENT_GET_WEATHER
 from homeassistant.const import (
@@ -699,7 +700,7 @@ def _get_exposed_entities(
             ):
                 # Entity is in area
                 area_names.append(area_entry.name)
-                area_names.extend(area_entry.aliases)
+                area_names.extend(sorted(area_entry.aliases))
             elif device_entry is not None:
                 # Check device area
                 if (
@@ -710,7 +711,7 @@ def _get_exposed_entities(
                     is not None
                 ):
                     area_names.append(area_entry.name)
-                    area_names.extend(area_entry.aliases)
+                    area_names.extend(sorted(area_entry.aliases))
 
         info: dict[str, Any] = {
             "names": ", ".join(names),
@@ -719,6 +720,10 @@ def _get_exposed_entities(
 
         if include_state:
             info["state"] = state.state
+
+            # Format numeric states with configured display precision
+            if state.domain == "sensor":
+                info["state"] = async_rounded_state(hass, state.entity_id, state)
 
             # Convert timestamp device_class states from UTC to local time
             if state.attributes.get("device_class") == "timestamp" and state.state:
@@ -957,9 +962,9 @@ def _get_cached_action_parameters(
                 aliases = er.async_get_entity_aliases(hass, entity_entry)
                 if aliases:
                     if description:
-                        description = description + ". Aliases: " + str(list(aliases))
+                        description = description + ". Aliases: " + str(sorted(aliases))
                     else:
-                        description = "Aliases: " + str(list(aliases))
+                        description = "Aliases: " + str(sorted(aliases))
 
         parameters_cache.setdefault(domain, {})[action] = (description, parameters)
 
@@ -1301,6 +1306,10 @@ class GetLiveContextTool(Tool):
                     name=name_filter,
                     area_name=area_filter,
                     domains=domain_filter,
+                    # This tool only returns context, so multiple entities
+                    # sharing a name (e.g. "AC" in two areas) should all be
+                    # returned rather than failing as an ambiguous match.
+                    allow_duplicate_names=True,
                 ),
                 states=exposed_states,
             )
