@@ -385,7 +385,7 @@ class DailyHistory:
 
     def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
-        day = (timestamp or datetime.now()).date()
+        day = (timestamp or datetime.now()).date()  # pylint: disable=home-assistant-enforce-naive-now
         if not isinstance(value, (int, float)):
             return
         if self._days is None:

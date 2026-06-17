@@ -139,11 +139,11 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
 
     @staticmethod
     def _parse_datetime_time(initial_time: datetime.time) -> str:
-        time = datetime.datetime.now().replace(
+        time = datetime.datetime.now().replace(  # pylint: disable=home-assistant-enforce-naive-now
             hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
-        if time < datetime.datetime.now():
+        if time < datetime.datetime.now():  # pylint: disable=home-assistant-enforce-naive-now
             time += datetime.timedelta(days=1)
 
         return time.isoformat()

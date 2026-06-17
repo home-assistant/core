@@ -230,7 +230,7 @@ def test_daily_history_one_day(hass: HomeAssistant) -> None:
 def test_daily_history_multiple_days(hass: HomeAssistant) -> None:
     """Test storing data for different days."""
     dh = plant.DailyHistory(3)
-    today = datetime.now()
+    today = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     today_minus_1 = today - timedelta(days=1)
     today_minus_2 = today_minus_1 - timedelta(days=1)
     today_minus_3 = today_minus_2 - timedelta(days=1)

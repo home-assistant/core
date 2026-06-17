@@ -342,7 +342,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
         hass = request.app[KEY_HASS]
 
-        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()
+        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()  # pylint: disable=home-assistant-enforce-naive-now
 
         device_id = data[ATTR_DEVICE_ID]
 

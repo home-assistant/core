@@ -239,11 +239,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.source = None
         if start_datetime := playing_info.get("startDateTime"):
             start_datetime = datetime.fromisoformat(start_datetime)
-            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)
+            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)  # pylint: disable=home-assistant-enforce-naive-now
             self.media_position = int(
                 (current_datetime - start_datetime).total_seconds()
             )
-            self.media_position_updated_at = datetime.now()
+            self.media_position_updated_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         else:
             self.media_position = None
             self.media_position_updated_at = None

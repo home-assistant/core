@@ -75,7 +75,7 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     if value is None:
         return None
     try:
-        last_reset = datetime.now() - timedelta(seconds=int(value))
+        last_reset = datetime.now() - timedelta(seconds=int(value))  # pylint: disable=home-assistant-enforce-naive-now
         last_reset.replace(microsecond=0)
     except ValueError:
         return None

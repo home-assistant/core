@@ -70,7 +70,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
         try:
             if (
                 self.ayla_api.token_expiring_soon
-                or datetime.now()
+                or datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
                 > self.ayla_api.auth_expiration - timedelta(seconds=600)
             ):
                 await self.ayla_api.async_refresh_auth()

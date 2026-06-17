@@ -153,7 +153,7 @@ async def test_reauth_flow(
     assert mock_config_entry.data[CONF_REFRESH_TOKEN] == "refresh-token"
     assert (
         mock_config_entry.data[CONF_REFRESH_TOKEN_CREATION_TIME]
-        == datetime.now().timestamp()
+        == datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
     )
 
 

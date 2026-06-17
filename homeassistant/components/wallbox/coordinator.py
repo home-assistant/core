@@ -101,7 +101,7 @@ def _require_authentication[_WallboxCoordinatorT: WallboxCoordinator, **_P](
 def check_token_validity(jwt_token_ttl: int, jwt_token_drift: int) -> bool:
     """Check if the jwtToken is still valid in order to reuse if possible."""
     return round((jwt_token_ttl / 1000) - jwt_token_drift, 0) > datetime.timestamp(
-        datetime.now()
+        datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     )
 
 

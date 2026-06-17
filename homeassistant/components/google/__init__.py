@@ -104,7 +104,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GoogleConfigEntry) -> bo
     # Force a token refresh to fix a bug where tokens were persisted with
     # expires_in (relative time delta) and expires_at (absolute time) swapped.
     # A google session token typically only lasts a few days between refresh.
-    now = datetime.now()
+    now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     if session.token["expires_at"] >= (now + timedelta(days=365)).timestamp():
         session.token["expires_in"] = 0
         session.token["expires_at"] = now.timestamp()

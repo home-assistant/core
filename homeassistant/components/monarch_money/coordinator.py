@@ -68,7 +68,7 @@ class MonarchMoneyDataUpdateCoordinator(DataUpdateCoordinator[MonarchData]):
     async def _async_update_data(self) -> MonarchData:
         """Fetch data for all accounts."""
 
-        now = datetime.now()
+        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
 
         account_data, cashflow_summary = await asyncio.gather(
             self.client.get_accounts_as_dict_with_id_key(),

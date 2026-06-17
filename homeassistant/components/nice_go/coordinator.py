@@ -150,7 +150,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 + REFRESH_TOKEN_EXPIRY_TIME.total_seconds()
             )
             try:
-                if datetime.now().timestamp() >= expiry_time:
+                if datetime.now().timestamp() >= expiry_time:  # pylint: disable=home-assistant-enforce-naive-now
                     await self.update_refresh_token()
                 else:
                     await self.api.authenticate_refresh(
@@ -194,7 +194,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         data = {
             **self.config_entry.data,
             CONF_REFRESH_TOKEN: refresh_token,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
         }
         self.hass.config_entries.async_update_entry(self.config_entry, data=data)
 

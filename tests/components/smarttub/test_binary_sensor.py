@@ -43,8 +43,8 @@ def mock_error(spa):
     error.title = "Flow Switch Stuck Open"
     error.description = None
     error.active = True
-    error.created_at = datetime.now()
-    error.updated_at = datetime.now()
+    error.created_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+    error.updated_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     error.error_type = "TUB_ERROR"
     return error
 

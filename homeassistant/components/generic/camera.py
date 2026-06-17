@@ -154,12 +154,12 @@ class GenericCamera(Camera):
                 self._last_image is not None
                 and url == self._last_url
                 and self._last_update + timedelta(0, self._attr_frame_interval)
-                > datetime.now()
+                > datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
             ):
                 return self._last_image
 
             try:
-                update_time = datetime.now()
+                update_time = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
                 async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
                 response = await async_client.get(
                     url,

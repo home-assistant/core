@@ -54,7 +54,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
         if (
             self.fyta.expiration is None
-            or self.fyta.expiration.timestamp() < datetime.now().timestamp()
+            or self.fyta.expiration.timestamp() < datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
         ):
             await self.renew_authentication()
 

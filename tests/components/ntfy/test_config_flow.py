@@ -450,7 +450,8 @@ async def test_flow_reauth(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken", last_access=datetime.now()
+        token="newtoken",
+        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
@@ -509,7 +510,8 @@ async def test_form_reauth_errors(
     )
     mock_aiontfy.account.side_effect = exception
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken", last_access=datetime.now()
+        token="newtoken",
+        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
@@ -595,7 +597,8 @@ async def test_flow_reconfigure(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken", last_access=datetime.now()
+        token="newtoken",
+        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
@@ -697,7 +700,8 @@ async def test_flow_reconfigure_errors(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken", last_access=datetime.now()
+        token="newtoken",
+        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
     )
     mock_aiontfy.account.side_effect = exception
 

@@ -1624,7 +1624,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # save the backup to a file just in case
         self.backup_filepath = Path(
             self.hass.config.path(
-                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"
+                f"zwavejs_nvm_backup_{datetime.now().strftime('%Y-%m-%d_%H-%M-%S')}.bin"  # pylint: disable=home-assistant-enforce-naive-now
             )
         )
         try:

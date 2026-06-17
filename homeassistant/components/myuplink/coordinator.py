@@ -70,5 +70,8 @@ class MyUplinkDataCoordinator(DataUpdateCoordinator[CoordinatorData]):
                 points[device_id] = point_info
 
             return CoordinatorData(
-                systems=systems, devices=devices, points=points, time=datetime.now()
+                systems=systems,
+                devices=devices,
+                points=points,
+                time=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
             )

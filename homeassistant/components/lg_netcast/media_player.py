@@ -214,7 +214,7 @@ class LgTVDevice(MediaPlayerEntity):
     def media_image_url(self):
         """URL for obtaining a screen capture."""
         return (
-            f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"
+            f"{self._client.url}data?target=screen_image&_={datetime.now().timestamp()}"  # pylint: disable=home-assistant-enforce-naive-now
         )
 
     def turn_off(self) -> None:

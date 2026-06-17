@@ -73,7 +73,7 @@ def mock_config_entry() -> MockConfigEntry:
         unique_id=TEST_CONFIG_ENTRY[CONF_EMAIL],
         data={
             **TEST_CONFIG_ENTRY,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
         },
     )
 
@@ -87,6 +87,6 @@ def mock_config_entry_without_brand() -> MockConfigEntry:
         unique_id=TEST_CONFIG_ENTRY[CONF_EMAIL],
         data={
             **TEST_CONFIG_ENTRY_WITHOUT_BRAND,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
         },
     )
