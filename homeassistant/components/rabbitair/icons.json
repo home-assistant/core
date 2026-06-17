@@ -12,6 +12,11 @@
           }
         }
       }
+    },
+    "sensor": {
+      "air_quality": {
+        "default": "mdi:air-filter"
+      }
     }
   }
 }
