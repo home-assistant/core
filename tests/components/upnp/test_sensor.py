@@ -30,24 +30,22 @@ async def test_upnp_sensors(
     assert hass.states.get("sensor.mock_name_packet_download_speed").state == "unknown"
     assert hass.states.get("sensor.mock_name_packet_upload_speed").state == "unknown"
     assert (
+        hass.states.get("sensor.mock_name_download_speed_no_rollover_handling").state
+        == "unknown"
+    )
+    assert (
+        hass.states.get("sensor.mock_name_upload_speed_no_rollover_handling").state
+        == "unknown"
+    )
+    assert (
         hass.states.get(
-            "sensor.mock_name_download_speed_without_rollover_handling"
+            "sensor.mock_name_packet_download_speed_no_rollover_handling"
         ).state
         == "unknown"
     )
     assert (
-        hass.states.get("sensor.mock_name_upload_speed_without_rollover_handling").state
-        == "unknown"
-    )
-    assert (
         hass.states.get(
-            "sensor.mock_name_packet_download_speed_without_rollover_handling"
-        ).state
-        == "unknown"
-    )
-    assert (
-        hass.states.get(
-            "sensor.mock_name_packet_upload_speed_without_rollover_handling"
+            "sensor.mock_name_packet_upload_speed_no_rollover_handling"
         ).state
         == "unknown"
     )
@@ -90,24 +88,22 @@ async def test_upnp_sensors(
     assert hass.states.get("sensor.mock_name_packet_download_speed").state == "30.0"
     assert hass.states.get("sensor.mock_name_packet_upload_speed").state == "40.0"
     assert (
-        hass.states.get(
-            "sensor.mock_name_download_speed_without_rollover_handling"
-        ).state
+        hass.states.get("sensor.mock_name_download_speed_no_rollover_handling").state
         == "10.0"
     )
     assert (
-        hass.states.get("sensor.mock_name_upload_speed_without_rollover_handling").state
+        hass.states.get("sensor.mock_name_upload_speed_no_rollover_handling").state
         == "20.0"
     )
     assert (
         hass.states.get(
-            "sensor.mock_name_packet_download_speed_without_rollover_handling"
+            "sensor.mock_name_packet_download_speed_no_rollover_handling"
         ).state
         == "30.0"
     )
     assert (
         hass.states.get(
-            "sensor.mock_name_packet_upload_speed_without_rollover_handling"
+            "sensor.mock_name_packet_upload_speed_no_rollover_handling"
         ).state
         == "40.0"
     )
@@ -119,11 +115,11 @@ async def test_upnp_sensors_no_rollover_disabled_by_default(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test no-rollover sensors are disabled by default and can be enabled."""
-    disabled_entity_id = "sensor.mock_name_download_speed_without_rollover_handling"
+    disabled_entity_id = "sensor.mock_name_download_speed_no_rollover_handling"
     other_disabled_entity_ids = (
-        "sensor.mock_name_upload_speed_without_rollover_handling",
-        "sensor.mock_name_packet_download_speed_without_rollover_handling",
-        "sensor.mock_name_packet_upload_speed_without_rollover_handling",
+        "sensor.mock_name_upload_speed_no_rollover_handling",
+        "sensor.mock_name_packet_download_speed_no_rollover_handling",
+        "sensor.mock_name_packet_upload_speed_no_rollover_handling",
     )
 
     assert hass.states.get(disabled_entity_id) is None
