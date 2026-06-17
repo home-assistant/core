@@ -1,6 +1,6 @@
 """Config flow for LG IR integration."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import voluptuous as vol
 
@@ -46,7 +46,7 @@ _DEFAULT_HVAC_MODES = [HVACMode.COOL, HVACMode.DRY]
 class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for LG IR."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize config flow."""
@@ -58,18 +58,29 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         return entry.name or entry.original_name or entity_id if entry else entity_id
 
     async def _async_create_device_entry(
-        self,
-        device_type: LGDeviceType,
-        entity_id: str,
-        user_input: dict[str, Any],
+        self, device_type: LGDeviceType, user_input: dict[str, Any]
     ) -> ConfigFlowResult:
-        """Set the unique ID and create the entry for the selected device."""
-        await self.async_set_unique_id(f"lg_ir_{device_type}_{entity_id}")
-        self._abort_if_unique_id_configured()
+        """Abort on a duplicate IR entity and create the entry for the device."""
+        emitter_id = user_input.get(CONF_INFRARED_ENTITY_ID)
+        receiver_id = user_input.get(CONF_INFRARED_RECEIVER_ENTITY_ID)
+        if emitter_id:
+            self._async_abort_entries_match(
+                {CONF_DEVICE_TYPE: device_type, CONF_INFRARED_ENTITY_ID: emitter_id}
+            )
+        if receiver_id:
+            self._async_abort_entries_match(
+                {
+                    CONF_DEVICE_TYPE: device_type,
+                    CONF_INFRARED_RECEIVER_ENTITY_ID: receiver_id,
+                }
+            )
 
-        name = self._entity_name(entity_id)
+        title_entity_id = emitter_id or receiver_id
+        if TYPE_CHECKING:
+            assert title_entity_id is not None
         return self.async_create_entry(
-            title=f"LG {DEVICE_TYPE_NAMES[device_type]} via {name}",
+            title=f"LG {DEVICE_TYPE_NAMES[device_type]} via "
+            f"{self._entity_name(title_entity_id)}",
             data={CONF_DEVICE_TYPE: device_type, **user_input},
         )
 
@@ -112,11 +123,11 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if entity_id := user_input.get(CONF_INFRARED_ENTITY_ID) or user_input.get(
+            if user_input.get(CONF_INFRARED_ENTITY_ID) or user_input.get(
                 CONF_INFRARED_RECEIVER_ENTITY_ID
             ):
                 return await self._async_create_device_entry(
-                    LGDeviceType.TV, entity_id, user_input
+                    LGDeviceType.TV, user_input
                 )
             errors["base"] = "missing_infrared_entity"
 
@@ -150,9 +161,9 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if emitter_id := user_input.get(CONF_INFRARED_ENTITY_ID):
+            if user_input.get(CONF_INFRARED_ENTITY_ID):
                 return await self._async_create_device_entry(
-                    LGDeviceType.AC, emitter_id, user_input
+                    LGDeviceType.AC, user_input
                 )
             errors[CONF_INFRARED_ENTITY_ID] = "infrared_entity_id"
 

@@ -1,5 +1,6 @@
 """Config flow for the SMTP integration."""
 
+from collections.abc import Mapping
 import logging
 from smtplib import SMTP, SMTP_SSL, SMTPAuthenticationError
 import socket
@@ -93,6 +94,22 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             ),
         ),
         vol.Required(CONF_VERIFY_SSL, default=True): cv.boolean,
+    }
+)
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_USERNAME): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.TEXT,
+                autocomplete="username",
+            ),
+        ),
+        vol.Optional(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.PASSWORD,
+                autocomplete="current-password",
+            ),
+        ),
     }
 )
 
@@ -197,6 +214,39 @@ class MailConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=self.add_suggested_values_to_schema(
                 data_schema=STEP_USER_DATA_SCHEMA,
                 suggested_values=user_input or entry.data,
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+
+        entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            errors = await self.hass.async_add_executor_job(
+                validate_input, {**entry.data, **user_input}
+            )
+            if not errors:
+                return self.async_update_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_REAUTH_DATA_SCHEMA,
+                suggested_values=user_input
+                or {CONF_USERNAME: entry.data.get(CONF_USERNAME)},
             ),
             errors=errors,
         )

@@ -26,12 +26,11 @@ from tests.components.infrared import (
 
 
 @pytest.mark.parametrize(
-    ("tv_config", "expected_title", "unique_id_entity_id"),
+    ("tv_config", "expected_title"),
     [
         pytest.param(
             {CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id},
             "LG TV via Test IR emitter",
-            mock_infrared_emitter_entity_id,
             id="emitter_only",
         ),
         pytest.param(
@@ -40,13 +39,11 @@ from tests.components.infrared import (
                 CONF_INFRARED_RECEIVER_ENTITY_ID: mock_infrared_receiver_entity_id,
             },
             "LG TV via Test IR emitter",
-            mock_infrared_emitter_entity_id,
             id="emitter_and_receiver",
         ),
         pytest.param(
             {CONF_INFRARED_RECEIVER_ENTITY_ID: mock_infrared_receiver_entity_id},
             "LG TV via Test IR receiver",
-            mock_infrared_receiver_entity_id,
             id="receiver_only",
         ),
     ],
@@ -58,7 +55,6 @@ async def test_user_flow_tv_success(
     hass: HomeAssistant,
     tv_config: dict[str, str],
     expected_title: str,
-    unique_id_entity_id: str,
 ) -> None:
     """Test successful TV config flow."""
     result = await hass.config_entries.flow.async_init(
@@ -82,7 +78,7 @@ async def test_user_flow_tv_success(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
     assert result["data"] == {CONF_DEVICE_TYPE: LGDeviceType.TV, **tv_config}
-    assert result["result"].unique_id == f"lg_ir_tv_{unique_id_entity_id}"
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -107,9 +103,33 @@ async def test_user_flow_tv_requires_emitter_or_receiver(
     assert result["errors"] == {"base": "missing_infrared_entity"}
 
 
-@pytest.mark.usefixtures("mock_infrared_emitter_entity")
-async def test_user_flow_tv_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity", "mock_infrared_receiver_entity"
+)
+@pytest.mark.parametrize(
+    "user_input",
+    [
+        pytest.param(
+            {CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id},
+            id="emitter_conflict",
+        ),
+        pytest.param(
+            {CONF_INFRARED_RECEIVER_ENTITY_ID: mock_infrared_receiver_entity_id},
+            id="receiver_conflict",
+        ),
+        pytest.param(
+            {
+                CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
+                CONF_INFRARED_RECEIVER_ENTITY_ID: mock_infrared_receiver_entity_id,
+            },
+            id="both_conflict",
+        ),
+    ],
+)
+async def test_user_flow_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    user_input: dict[str, str],
 ) -> None:
     """Test TV flow aborts when entry is already configured."""
     mock_config_entry.add_to_hass(hass)
@@ -121,8 +141,7 @@ async def test_user_flow_tv_already_configured(
         result["flow_id"], user_input={CONF_DEVICE_TYPE: LGDeviceType.TV}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input={CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id},
+        result["flow_id"], user_input=user_input
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -169,7 +188,6 @@ async def test_user_flow_tv_title_from_entity_name(
         result["flow_id"],
         user_input={CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id},
     )
-
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == expected_title
 
@@ -205,7 +223,7 @@ async def test_user_flow_ac_success(hass: HomeAssistant) -> None:
         CONF_INFRARED_ENTITY_ID: mock_infrared_emitter_entity_id,
         CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
     }
-    assert result["result"].unique_id == f"lg_ir_ac_{mock_infrared_emitter_entity_id}"
+    assert result["result"].unique_id is None
 
 
 @pytest.mark.usefixtures(

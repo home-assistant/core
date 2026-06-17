@@ -41,7 +41,6 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
             CONF_INFRARED_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
         },
-        unique_id=f"lg_ir_tv_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
     )
 
 
@@ -57,7 +56,6 @@ def mock_ac_config_entry() -> MockConfigEntry:
             CONF_INFRARED_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
             CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
         },
-        unique_id=f"lg_ir_ac_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
     )
 
 
@@ -78,7 +76,6 @@ def mock_ac_config_entry_all_modes() -> MockConfigEntry:
                 HVACMode.FAN_ONLY,
             ],
         },
-        unique_id=f"lg_ir_ac_all_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
     )
 
 
@@ -95,7 +92,6 @@ def mock_ac_config_entry_with_receiver() -> MockConfigEntry:
             CONF_INFRARED_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
             CONF_HVAC_MODES: [HVACMode.COOL, HVACMode.DRY],
         },
-        unique_id=f"lg_ir_ac_recv_{MOCK_INFRARED_EMITTER_ENTITY_ID}",
     )
 
 
