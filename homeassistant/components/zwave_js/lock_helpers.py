@@ -563,21 +563,11 @@ async def async_set_credential(
             translation_key="access_control_not_supported",
         )
 
-    cred_type_str = CREDENTIAL_TYPE_MAP.get(credential_type, str(credential_type))
     type_cap = await _validate_credential_data(node, credential_type, credential_data)
 
     if credential_slot is None:
         credential_slot = await _async_find_available_credential_slot(
             node, credential_type, type_cap
-        )
-    elif not 1 <= credential_slot <= type_cap.number_of_credential_slots:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="credential_slot_out_of_range",
-            translation_placeholders={
-                "credential_type": cred_type_str,
-                "max_slot": str(type_cap.number_of_credential_slots),
-            },
         )
 
     status = await node.access_control.set_credential(

@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock
 
-from aiowebdav2.exceptions import AccessDeniedError, UnauthorizedError
+from aiowebdav2.exceptions import (
+    AccessDeniedError,
+    ConnectionExceptionError,
+    NoConnectionError,
+    UnauthorizedError,
+)
 import pytest
 
 from homeassistant.components.webdav.const import CONF_BACKUP_PATH, DOMAIN
@@ -28,8 +33,29 @@ from tests.common import MockConfigEntry
             "Access denied to /access_denied",
             ConfigEntryState.SETUP_ERROR,
         ),
+        (
+            ConnectionExceptionError(ConnectionError("Connection refused")),
+            "Connection refused",
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            NoConnectionError("webdav.demo"),
+            "No connection with webdav.demo",
+            ConfigEntryState.SETUP_RETRY,
+        ),
+        (
+            TimeoutError(),
+            "",
+            ConfigEntryState.SETUP_RETRY,
+        ),
     ],
-    ids=["UnauthorizedError", "AccessDeniedError"],
+    ids=[
+        "UnauthorizedError",
+        "AccessDeniedError",
+        "ConnectionExceptionError",
+        "NoConnectionError",
+        "TimeoutError",
+    ],
 )
 async def test_error_during_setup(
     hass: HomeAssistant,
