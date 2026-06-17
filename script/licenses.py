@@ -69,6 +69,7 @@ OSI_APPROVED_LICENSES_SPDX = {
     "BSD-1-Clause",
     "BSD-2-Clause",
     "BSD-3-Clause",
+    "CNRI-Python",
     "EPL-1.0",
     "EPL-2.0",
     "GPL-2.0-only",
