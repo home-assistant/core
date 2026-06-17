@@ -898,7 +898,7 @@ ekey-bionyxpy==1.0.1
 electrickiwi-api==0.9.14
 
 # homeassistant.components.elevenlabs
-elevenlabs==2.3.0
+elevenlabs==2.51.0
 
 # homeassistant.components.elgato
 elgato==5.1.2
