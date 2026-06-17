@@ -97,10 +97,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
 
     async def _async_update_data(self) -> dict[str, YotoPlayer]:
         """Fetch fresh data from the Yoto cloud."""
-        # _async_setup already populated the client; skip the duplicate first fetch.
-        if self.data is None:
-            return self.client.players
-
         try:
             await self._session.async_ensure_token_valid()
         except OAuth2TokenRequestReauthError as err:
