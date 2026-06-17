@@ -74,8 +74,8 @@ def test_render_empty_change_set() -> None:
     assert "No tracked requirement changes detected" in rendered
 
 
-def test_render_embeds_head_sha_marker_and_visible_line() -> None:
-    """A head SHA produces the hidden marker (for the gate) and a visible line."""
+def test_render_embeds_head_sha_as_commit_link() -> None:
+    """A head SHA renders a commit link whose URL carries the full SHA."""
     pkg = PackageChange(
         name="pkg",
         old_version="1.0.0",
@@ -83,18 +83,19 @@ def test_render_embeds_head_sha_marker_and_visible_line() -> None:
         repo_url="https://github.com/x/pkg",
         checks={CheckKind.CI_UPLOAD: _pass("ok")},
     )
-    sha = "abc1234def5678"
+    sha = "abc1234def5678abc1234def5678abc1234def56"
     rendered = render_comment(CheckRunResult(pr_number=1, head_sha=sha, packages=[pkg]))
-    assert f"<!-- requirements-check-sha: {sha} -->" in rendered
-    assert "Checked at commit `abc1234`." in rendered
-    # The visible marker must still lead so add_comment dedup keeps working.
+    # Short SHA shown to humans, full SHA recoverable from the link URL.
+    assert (
+        f"Checked at commit [`abc1234`]"
+        f"(https://github.com/home-assistant/core/commit/{sha})."
+    ) in rendered
     assert rendered.startswith("<!-- requirements-check -->\n")
 
 
-def test_render_without_head_sha_omits_marker() -> None:
-    """With no head SHA, neither the hidden marker nor the visible line appears."""
+def test_render_without_head_sha_omits_commit_line() -> None:
+    """With no head SHA, the commit line is absent entirely."""
     rendered = render_comment(CheckRunResult(pr_number=1))
-    assert "requirements-check-sha" not in rendered
     assert "Checked at commit" not in rendered
 
 
