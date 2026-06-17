@@ -112,7 +112,6 @@ class ActiontecScannerEntity(
         """Initialize the tracked device."""
         super().__init__(coordinator)
         self._mac_address = mac_address
-        self._attr_unique_id = mac_address
         if (device := self._device) is not None:
             self._attr_name = device.ip_address
 
@@ -144,8 +143,3 @@ class ActiontecScannerEntity(
     def mac_address(self) -> str:
         """Return the MAC address of the device."""
         return self._mac_address
-
-    @property
-    def hostname(self) -> str | None:
-        """Return the hostname of the device."""
-        return None

@@ -26,15 +26,12 @@ class ActiontecConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def _async_can_connect(self, user_input: dict[str, Any]) -> bool:
         """Return true if the Actiontec router returns data."""
-        try:
-            devices = await self.hass.async_add_executor_job(
-                get_actiontec_data,
-                user_input[CONF_HOST],
-                user_input[CONF_USERNAME],
-                user_input[CONF_PASSWORD],
-            )
-        except OSError:
-            return False
+        devices = await self.hass.async_add_executor_job(
+            get_actiontec_data,
+            user_input[CONF_HOST],
+            user_input[CONF_USERNAME],
+            user_input[CONF_PASSWORD],
+        )
         return devices is not None
 
     async def async_step_user(
