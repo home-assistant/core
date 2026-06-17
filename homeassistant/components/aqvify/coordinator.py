@@ -198,17 +198,11 @@ class AqvifyAggrDataCoordinator(
 
     @staticmethod
     def _get_times() -> tuple[str, str]:
-        current_time = utcnow()
-        beg_time = (
-            (current_time - timedelta(hours=1))
-            .replace(minute=0)
-            .strftime("%Y-%m-%dT%H:%MZ")
-        )
-        end_time = (
-            (current_time - timedelta(hours=1))
-            .replace(minute=59)
-            .strftime("%Y-%m-%dT%H:%MZ")
-        )
+        """Determine strings for time parameters for aggregated data from API."""
+        date_time_fmt = "%Y-%m-%dT%H:%MZ"
+        base_time = utcnow() - timedelta(hours=1)
+        beg_time = base_time.replace(minute=0).strftime(date_time_fmt)
+        end_time = base_time.replace(minute=59).strftime(date_time_fmt)
         return beg_time, end_time
 
     async def _async_update_data(self) -> dict[str, AqvifyHourAggregatedValues]:

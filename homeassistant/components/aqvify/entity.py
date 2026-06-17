@@ -15,13 +15,6 @@ class AqvifyBaseEntity[
 
     _attr_has_entity_name = True
 
-    @staticmethod
-    def _get_unique_id(
-        account_id: str, device_key: str, description: EntityDescription
-    ) -> str:
-        """Generate a unique ID for the entity."""
-        return f"{account_id}_{device_key}_{description.key}"
-
     def __init__(
         self,
         coordinator: _AqvifyCoordinatorT,
@@ -37,9 +30,7 @@ class AqvifyBaseEntity[
             identifiers={(DOMAIN, f"{self.account_id}_{device_key}")},
         )
         self.entity_description = description
-        self._attr_unique_id = AqvifyBaseEntity._get_unique_id(
-            self.account_id, device_key, self.entity_description
-        )
+        self._attr_unique_id = f"{self.account_id}_{device_key}_{description.key}"
 
 
 class AqvifyEntity(AqvifyBaseEntity[AqvifyCoordinator]):
