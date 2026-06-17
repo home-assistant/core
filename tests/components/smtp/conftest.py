@@ -40,12 +40,23 @@ def mock_smtp() -> Generator[MagicMock]:
 
     with (
         patch(
-            "homeassistant.components.smtp.notify.smtplib.SMTP", autospec=True
+            "homeassistant.components.smtp.helpers.smtplib.SMTP", autospec=True
         ) as mock_client,
         patch("homeassistant.components.smtp.config_flow.SMTP", new=mock_client),
     ):
         client = mock_client.return_value
         yield client
+
+
+@pytest.fixture(name="make_msgid")
+def mock_make_msgid() -> Generator[None]:
+    """Mock email.utils.make_msgid."""
+
+    with patch(
+        "homeassistant.components.smtp.notify.email.utils.make_msgid",
+        return_value="<177777777700.12345.12345678901234567890@mock>",
+    ):
+        yield
 
 
 @pytest.fixture(name="smtp_ssl")
