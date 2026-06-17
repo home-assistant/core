@@ -200,7 +200,7 @@ class FreeboxRouter:
             "IPv6": connection_datas.get("ipv6"),
             "connection_type": connection_datas["media"],
             "uptime": datetime.fromtimestamp(
-                round(datetime.now().timestamp()) - syst_datas["uptime_val"]
+                round(datetime.now().timestamp()) - syst_datas["uptime_val"]  # pylint: disable=home-assistant-enforce-naive-now
             ),
             "firmware_version": self._sw_v,
             "serial": syst_datas["serial"],

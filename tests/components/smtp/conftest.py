@@ -24,6 +24,17 @@ from homeassistant.const import (
 
 from tests.common import MockConfigEntry
 
+USER_INPUT = {
+    CONF_SENDER: "email@example.com",
+    CONF_SENDER_NAME: "Home Assistant",
+    CONF_SERVER: "mail.example.com",
+    CONF_PORT: 587,
+    CONF_ENCRYPTION: "starttls",
+    CONF_USERNAME: "test-username",
+    CONF_PASSWORD: "test-password",
+    CONF_VERIFY_SSL: True,
+}
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -76,16 +87,7 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="Home Assistant",
-        data={
-            CONF_SENDER: "email@example.com",
-            CONF_SENDER_NAME: "Home Assistant",
-            CONF_SERVER: "mail.example.com",
-            CONF_PORT: 587,
-            CONF_ENCRYPTION: "starttls",
-            CONF_USERNAME: "test-username",
-            CONF_PASSWORD: "test-password",
-            CONF_VERIFY_SSL: True,
-        },
+        data=USER_INPUT,
         options={
             CONF_TIMEOUT: 5,
         },
