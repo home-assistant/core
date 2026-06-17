@@ -46,10 +46,6 @@ def make_test_trigger(*entities: str) -> dict:
                 "trigger": "state",
                 "entity_id": list(entities),
             },
-            {
-                "trigger": "state",
-                "entity_id": ["sensor.test_restore"],
-            },
             {"platform": "event", "event_type": "test_event"},
         ],
         "variables": {"triggering_entity": "{{ trigger.entity_id }}"},
