@@ -295,19 +295,18 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         if errors is None:
             errors = {}
 
-        if user_input:
-            if user_input[CONF_REQUEST_NEW_CODE]:
-                # If the user requested a new code, request it
-                errors = await self._request_2fa_code(errors)
-                user_input = None
-
-            elif user_input[CONF_VERIFICATION_CODE] == "":
-                # If the user didn't provide a code, show the form again with an error
-                errors["base"] = "validate_verification_code"
-                return await self.async_step_verification_code(errors=errors)
-
         if user_input is None:
             return await self._show_verification_code_form(errors)
+
+        if user_input[CONF_REQUEST_NEW_CODE]:
+            # If the user requested a new code, request it
+            errors = await self._request_2fa_code(errors)
+            return await self._show_verification_code_form(errors)
+
+        if user_input[CONF_VERIFICATION_CODE] == "":
+            # If the user didn't provide a code, show the form again with an error
+            errors["base"] = "validate_verification_code"
+            return await self.async_step_verification_code(errors=errors)
 
         if TYPE_CHECKING:
             assert self.api is not None
