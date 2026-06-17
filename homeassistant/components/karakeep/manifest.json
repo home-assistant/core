@@ -6,6 +6,6 @@
   "documentation": "https://www.home-assistant.io/integrations/karakeep",
   "integration_type": "service",
   "iot_class": "local_polling",
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["aiokarakeep==0.2.0"]
 }
