@@ -1318,7 +1318,7 @@ def async_track_template_result(
     evaluation is different from the previous run, the action is passed
     the result.
 
-    If the template results in an TemplateError, this will be returned to
+    If the template results in a TemplateError, this will be returned to
     the listener the first time this happens but not for subsequent errors.
     Once the template returns to a non-error condition the result is sent
     to the action as usual.

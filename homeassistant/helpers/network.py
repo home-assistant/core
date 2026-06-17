@@ -24,7 +24,7 @@ SUPERVISOR_NETWORK_HOST = "homeassistant"
 
 
 class NoURLAvailableError(HomeAssistantError):
-    """An URL to the Home Assistant instance is not available."""
+    """URL to the Home Assistant instance is not available."""
 
 
 def is_internal_request(hass: HomeAssistant) -> bool:
@@ -140,7 +140,7 @@ def get_url(
     if prefer_external:
         order.reverse()
 
-    # Try finding an URL in the order specified
+    # Try finding a URL in the order specified
     for url_type in order:
         if allow_internal and url_type == TYPE_URL_INTERNAL and not require_cloud:
             with suppress(NoURLAvailableError):

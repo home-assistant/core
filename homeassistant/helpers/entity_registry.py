@@ -355,7 +355,7 @@ class RegistryEntry:
 
     @under_cached_property
     def extended_dict(self) -> dict[str, Any]:
-        """Return a extended dict representation of the entry."""
+        """Return an extended dict representation of the entry."""
         # Convert sets and tuples to lists
         # so the JSON serializer does not have to do
         # it every time
@@ -1139,7 +1139,7 @@ class EntityRegistry(BaseRegistry):
 
     @callback
     def async_get(self, entity_id_or_uuid: str) -> RegistryEntry | None:
-        """Get EntityEntry for an entity_id or entity entry id.
+        """Get RegistryEntry for an entity or entity entry id.
 
         We retrieve the RegistryEntry from the underlying dict to avoid
         the overhead of the UserDict __getitem__.

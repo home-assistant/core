@@ -1720,7 +1720,7 @@ class ConfigEntriesFlowManager(
         # init to be done.
         self._set_pending_import_done(flow)
 
-        # Avoid adding a config entry for a integration
+        # Avoid adding a config entry for an integration
         # that only supports a single config entry, but already has an entry
         if (
             self.config_entries.async_has_entries(flow.handler, include_ignore=False)
@@ -3282,7 +3282,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         if self._async_current_entries():
             raise data_entry_flow.AbortFlow("already_configured")
 
-        # Use an special unique id to differentiate
+        # Use a special unique id to differentiate
         await self.async_set_unique_id(DEFAULT_DISCOVERY_UNIQUE_ID)
         self._abort_if_unique_id_configured()
 
