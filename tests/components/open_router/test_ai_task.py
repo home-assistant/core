@@ -1,6 +1,7 @@
 """Test AI Task structured data generation."""
 
 from pathlib import Path
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from openai.types import CompletionUsage
@@ -22,7 +23,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 def _image_completion(
-    images: list[dict] | None, content: str | None = None
+    images: list[dict[str, Any]] | None, content: str | None = None
 ) -> ChatCompletion:
     """Build a chat completion carrying generated images."""
     return ChatCompletion(
@@ -373,10 +374,10 @@ async def test_generate_data_with_attachments(
         (["text"], False),
     ],
 )
+@pytest.mark.usefixtures("mock_openai_client")
 async def test_generate_image_feature(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_openai_client: AsyncMock,
     supports_image: bool,
 ) -> None:
     """Test GENERATE_IMAGE is advertised only for image-capable models."""
@@ -469,7 +470,7 @@ async def test_generate_image_invalid_image(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_openai_client: AsyncMock,
-    images: list[dict],
+    images: list[dict[str, Any]],
 ) -> None:
     """Test AI Task image generation raises on a malformed image response."""
     await setup_integration(hass, mock_config_entry)
