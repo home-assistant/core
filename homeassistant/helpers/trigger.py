@@ -4,6 +4,7 @@ import abc
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping
+from contextvars import copy_context
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import functools
@@ -1303,12 +1304,13 @@ class TriggerNotTriggeredAction(Protocol):
     trigger evaluated a relevant change but reported it did not fire.
     """
 
+    @callback
     def __call__(
         self,
         run_variables: dict[str, Any],
         info: NotTriggeredInfo,
         context: Context | None = None,
-    ) -> Coroutine[Any, Any, Any] | Any:
+    ) -> None:
         """Define did_not_trigger consumer callback type."""
 
 
@@ -1632,10 +1634,10 @@ async def _async_attach_trigger_cls(
                     CONF_PLATFORM: trigger_key,
                 }
             }
-            hass.async_create_task(
-                not_triggered_action(run_variables, info, context),
-                eager_start=True,
-            )
+            # The consumer records a trace using the trace context variables.
+            # Run it in a copied context so it does not disturb the trace of the
+            # run that produced this state change (e.g. a chained automation).
+            copy_context().run(not_triggered_action, run_variables, info, context)
 
     # Wrap sync action so that it is always async.
     # This simplifies the Trigger action runner interface by

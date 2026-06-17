@@ -4000,7 +4000,8 @@ async def _arm_off_to_on_trigger_with_diagnostics(
     def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
         calls.append(run_variables["trigger"])
 
-    async def did_not_trigger(
+    @callback
+    def did_not_trigger(
         run_variables: dict[str, Any],
         info: NotTriggeredInfo,
         context: Context | None = None,

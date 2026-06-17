@@ -4376,3 +4376,99 @@ async def test_not_triggered_traces_counted_separately(
     # Each bucket is capped at 2 independently; neither evicts the other.
     assert len(not_triggered) == 2
     assert len(runs) == 2
+
+
+async def test_not_triggered_trace_isolated_from_chained_run(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """A not-triggered trace must not corrupt the trace of the run that caused it.
+
+    Automation "parent" fires the event that automation "child"'s trigger
+    evaluates and declines. The child's not-triggered handler runs inline in the
+    parent's context; without a copied context its ``trace_clear()`` would
+    redirect the parent's remaining action steps into the child's trace.
+    """
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"diag": _MockDiagnosticTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "id": "parent",
+                    "trigger": {"platform": "event", "event_type": "chain_start"},
+                    "action": [
+                        # The child trigger evaluates this and declines to fire.
+                        {"event": "mock_diag_event"},
+                        # The parent's own step after the chained evaluation.
+                        {"event": "chain_marker"},
+                    ],
+                },
+                {
+                    "id": "child",
+                    "trigger": {"platform": "test.diag"},
+                    "action": {"event": "child_ran"},
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    child_ran = async_capture_events(hass, "child_ran")
+    hass.bus.async_fire("chain_start")
+    await hass.async_block_till_done()
+
+    # The child trigger evaluated the event but did not fire.
+    assert len(child_ran) == 0
+
+    client = await hass_ws_client()
+    msg_id = 0
+
+    def next_id() -> int:
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
+
+    async def _get_only_trace(item_id: str) -> dict[str, Any]:
+        await client.send_json(
+            {
+                "id": next_id(),
+                "type": "trace/list",
+                "domain": "automation",
+                "item_id": item_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert len(response["result"]) == 1
+        run_id = response["result"][0]["run_id"]
+        await client.send_json(
+            {
+                "id": next_id(),
+                "type": "trace/get",
+                "domain": "automation",
+                "item_id": item_id,
+                "run_id": run_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        return response["result"]
+
+    # The parent keeps all of its own steps; action/1 must not leak away into
+    # the child's trace. This fails if the context is not copied.
+    parent_trace = await _get_only_trace("parent")
+    assert set(parent_trace["trace"]) == {"trigger/0", "action/0", "action/1"}
+
+    # The child's not-triggered trace holds only its own trigger step.
+    child_trace = await _get_only_trace("child")
+    assert child_trace["not_triggered"] is True
+    assert set(child_trace["trace"]) == {"trigger/0"}

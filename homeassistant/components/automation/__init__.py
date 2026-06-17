@@ -976,7 +976,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             return None
         return await self.async_trigger(run_variables, context, skip_condition)
 
-    async def _async_handle_not_triggered(
+    @callback
+    def _handle_not_triggered(
         self,
         run_variables: dict[str, Any],
         info: trigger_helper.NotTriggeredInfo,
@@ -1048,7 +1049,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             self._log_callback,
             home_assistant_start,
             variables,
-            did_not_trigger=self._async_handle_not_triggered,
+            did_not_trigger=self._handle_not_triggered,
         )
 
 
