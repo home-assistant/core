@@ -49,6 +49,8 @@ async def async_setup_scanner(
         )
         return False
 
+    # A previous failed import may have raised this issue; clear it on success.
+    ir.async_delete_issue(hass, DOMAIN, "yaml_import_cannot_connect")
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
