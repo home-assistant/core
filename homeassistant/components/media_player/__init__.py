@@ -16,7 +16,7 @@ from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 import aiohttp
-from aiohttp import web
+from aiohttp import hdrs, web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
@@ -1271,12 +1271,9 @@ class MediaPlayerImageView(HomeAssistantView):
     ) -> web.Response:
         """Start a get request."""
         if (player := self.component.get_entity(entity_id)) is None:
-            status = (
-                HTTPStatus.NOT_FOUND
-                if request[KEY_AUTHENTICATED]
-                else HTTPStatus.UNAUTHORIZED
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
             )
-            return web.Response(status=status)
 
         assert isinstance(player, MediaPlayerEntity)
         authenticated = (
@@ -1285,7 +1282,16 @@ class MediaPlayerImageView(HomeAssistantView):
         )
 
         if not authenticated:
-            return web.Response(status=HTTPStatus.UNAUTHORIZED)
+            if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
+                raise web.HTTPUnauthorized
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
+            raise web.HTTPForbidden
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")

@@ -8,7 +8,10 @@ consistent in how the current UTC time is obtained.
 
 from pylint.lint import PyLinter
 
-from pylint_home_assistant.helpers.datetime_now import HassEnforceDatetimeNowChecker
+from pylint_home_assistant.helpers.datetime_now import (
+    CASE_UTC,
+    HassEnforceDatetimeNowChecker,
+)
 
 
 class HassEnforceUtcnowChecker(HassEnforceDatetimeNowChecker):
@@ -27,7 +30,7 @@ class HassEnforceUtcnowChecker(HassEnforceDatetimeNowChecker):
     }
 
     message = "home-assistant-enforce-utcnow"
-    flags_utc = True
+    flagged_case = CASE_UTC
 
 
 def register(linter: PyLinter) -> None:
