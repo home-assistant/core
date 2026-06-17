@@ -330,12 +330,12 @@ async def test_notify_send_message_exceptions(
     assert e.value.translation_key == translation_key
 
 
+@pytest.mark.usefixtures("make_msgid")
 @pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
 async def test_notify_retry_on_disconnect_with_broken_quit(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     smtp: MagicMock,
-    make_msgid: None,
 ) -> None:
     """Test retry succeeds when quit() raises on a dead connection."""
 
