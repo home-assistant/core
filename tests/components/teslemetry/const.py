@@ -9,7 +9,6 @@ UNIQUE_ID = "abc-123"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
-WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN = load_json_object_fixture("products.json", DOMAIN)
