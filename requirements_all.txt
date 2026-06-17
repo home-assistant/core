@@ -1527,6 +1527,9 @@ lw12==0.9.2
 # homeassistant.components.scrape
 lxml==6.1.1
 
+# homeassistant.components.marantz_rs232
+marantz-rs232==1.0.0
+
 # homeassistant.components.matrix
 matrix-nio==0.25.2
 

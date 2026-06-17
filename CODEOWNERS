@@ -1063,6 +1063,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/madvr/ @iloveicedgreentea
 /homeassistant/components/marantz_infrared/ @balloob
 /tests/components/marantz_infrared/ @balloob
+/homeassistant/components/marantz_rs232/ @balloob
+/tests/components/marantz_rs232/ @balloob
 /homeassistant/components/mastodon/ @fabaff @andrew-codechimp
 /tests/components/mastodon/ @fabaff @andrew-codechimp
 /homeassistant/components/matrix/ @PaarthShah
