@@ -6,8 +6,6 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.select import (
-    ATTR_OPTION,
-    ATTR_OPTIONS,
     DOMAIN as SELECT_DOMAIN,
     ENTITY_ID_FORMAT,
     SelectEntity,
@@ -48,7 +46,7 @@ SCRIPT_FIELDS = (CONF_SELECT_OPTION,)
 
 SELECT_COMMON_SCHEMA = vol.Schema(
     {
-        vol.Required(ATTR_OPTIONS): cv.template,
+        vol.Required(CONF_OPTIONS): cv.template,
         vol.Optional(CONF_SELECT_OPTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_STATE): cv.template,
     }
@@ -147,7 +145,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity):
         if select_option := self._action_scripts.get(CONF_SELECT_OPTION):
             await self.async_run_script(
                 select_option,
-                run_variables={ATTR_OPTION: option},
+                run_variables={"option": option},
                 context=self._context,
             )
 
@@ -175,7 +173,7 @@ class TriggerSelectEntity(TriggerEntity, AbstractTemplateSelect):
     """Select entity based on trigger data."""
 
     domain = SELECT_DOMAIN
-    extra_template_keys_complex = (ATTR_OPTIONS,)
+    extra_template_keys_complex = (CONF_OPTIONS,)
 
     def __init__(
         self,
