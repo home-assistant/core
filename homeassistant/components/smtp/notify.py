@@ -92,6 +92,14 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
 )
 
 
+def _quit_smtp_client(client: SMTP_SSL | SMTP) -> None:
+    """Close an SMTP client without masking the original send outcome."""
+    try:
+        client.quit()
+    except (OSError, SMTPException):
+        _LOGGER.debug("Ignoring exception while closing SMTP connection", exc_info=True)
+
+
 async def async_get_service(
     hass: HomeAssistant,
     config: ConfigType,
@@ -236,7 +244,7 @@ class MailNotifyEntity(NotifyEntity):
                         translation_key="send_mail_connection_error",
                     ) from e
             finally:
-                client.quit()
+                _quit_smtp_client(client)
 
 
 class MailNotificationService(SmtpClient, BaseNotificationService):
@@ -316,10 +324,10 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
                 _LOGGER.warning(
                     "SMTPServerDisconnected sending mail: retrying connection"
                 )
-                mail.quit()
+                _quit_smtp_client(mail)
                 mail = self.connect()
             except SMTPException:
                 _LOGGER.warning("SMTPException sending mail: retrying connection")
-                mail.quit()
+                _quit_smtp_client(mail)
                 mail = self.connect()
-        mail.quit()
+        _quit_smtp_client(mail)

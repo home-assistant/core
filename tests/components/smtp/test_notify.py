@@ -1,5 +1,6 @@
 """The tests for the notify smtp platform."""
 
+from email.mime.text import MIMEText
 from pathlib import Path
 import re
 from smtplib import (
@@ -216,6 +217,36 @@ def test_send_target_message(target, hass: HomeAssistant, message) -> None:
 
         _, recipient = message.send_message(message_data, target=target)
         assert recipient == expected_recipient
+
+
+@pytest.mark.parametrize(
+    "quit_exception",
+    [
+        SMTPServerDisconnected("please run connect() first"),
+        ConnectionResetError("connection reset by peer"),
+    ],
+)
+def test_legacy_service_retries_when_quit_raises_after_disconnect(
+    message, quit_exception: Exception
+) -> None:
+    """Test a stale SMTP connection does not abort the retry cleanup."""
+    stale_client = MagicMock()
+    fresh_client = MagicMock()
+    stale_client.sendmail.side_effect = SMTPServerDisconnected(
+        "please run connect() first"
+    )
+    stale_client.quit.side_effect = quit_exception
+    fresh_client.quit.side_effect = quit_exception
+
+    with patch.object(message, "connect", side_effect=[stale_client, fresh_client]):
+        MailNotificationService._send_email(
+            message, MIMEText("Test msg"), ["recip1@example.com"]
+        )
+
+    stale_client.sendmail.assert_called_once()
+    stale_client.quit.assert_called_once()
+    fresh_client.sendmail.assert_called_once()
+    fresh_client.quit.assert_called_once()
 
 
 @pytest.mark.usefixtures("smtp")
