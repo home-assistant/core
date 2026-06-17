@@ -2062,7 +2062,7 @@ class State:
         a new one with the same id to ensure the old state
         can still be examined for comparison against the new state.
 
-        Since we are always going to fire a EVENT_STATE_CHANGED event
+        Since we are always going to fire an EVENT_STATE_CHANGED event
         after we remove a state from the state machine we need to make
         sure we don't end up holding a reference to the original context
         since it can never be garbage collected as each event would
