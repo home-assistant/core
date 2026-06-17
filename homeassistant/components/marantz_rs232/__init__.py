@@ -40,8 +40,8 @@ async def async_setup_entry(
         await receiver.query_state()
     except (ConnectionError, OSError, TimeoutError) as err:
         LOGGER.error("Error connecting to Marantz receiver at %s: %s", port, err)
-        # disconnect() is idempotent across all protocol receivers.
-        await receiver.disconnect()
+        if receiver.connected:
+            await receiver.disconnect()
         raise ConfigEntryNotReady from err
 
     entry.runtime_data = receiver
