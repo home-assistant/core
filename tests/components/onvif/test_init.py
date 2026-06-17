@@ -1,7 +1,8 @@
 """Tests for the ONVIF integration __init__ module."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from homeassistant.components.onvif import _async_stop_device
 from homeassistant.components.onvif.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -145,3 +146,20 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
     mock_onvif_camera_cls.assert_called_once()
     host, port, username, password = mock_onvif_camera_cls.call_args.args[:4]
     assert (host, port, username, password) == (HOST, PORT, USERNAME, PASSWORD)
+
+
+async def test_stop_device_stops_existing_event_manager(
+    hass: HomeAssistant,
+) -> None:
+    """Test stopping a device cleans up events even when not marked started."""
+    device = MagicMock()
+    device.name = NAME
+    device.capabilities.events = False
+    device.events.started = False
+    device.events.async_stop = AsyncMock()
+    device.device.close = AsyncMock()
+
+    await _async_stop_device(hass, device)
+
+    device.events.async_stop.assert_awaited_once()
+    device.device.close.assert_awaited_once()
