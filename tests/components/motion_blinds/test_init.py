@@ -185,7 +185,7 @@ def _make_entity(hass: HomeAssistant):
 
 
 async def test_position_polling_stops_when_stable(hass: HomeAssistant) -> None:
-    """Polling loop terminates once the position is the same for two consecutive reads."""
+    """Polling loop terminates once the position is the same for three consecutive reads."""
     entity, _ = _make_entity(hass)
 
     async def fake_update():
@@ -196,6 +196,10 @@ async def test_position_polling_stops_when_stable(hass: HomeAssistant) -> None:
             hass,
             "async_add_executor_job",
             side_effect=lambda fn: fake_update(),
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.entity.asyncio.sleep",
+            new=AsyncMock(),
         ),
         patch(
             "homeassistant.components.motion_blinds.entity.async_call_later"
@@ -228,6 +232,10 @@ async def test_position_polling_continues_while_moving(hass: HomeAssistant) -> N
             hass,
             "async_add_executor_job",
             side_effect=lambda fn: fake_update_and_move(),
+        ),
+        patch(
+            "homeassistant.components.motion_blinds.entity.asyncio.sleep",
+            new=AsyncMock(),
         ),
         patch(
             "homeassistant.components.motion_blinds.entity.async_call_later"
