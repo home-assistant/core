@@ -13,6 +13,7 @@ from .models import CheckKind, CheckRunResult, CheckStatus, PackageChange
 
 MARKER = "<!-- requirements-check -->"
 HEADER = "## Check requirements"
+REPO_URL = "https://github.com/home-assistant/core"
 
 # Column / bullet labels per check kind, in display order.
 _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
@@ -21,6 +22,7 @@ _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
     (CheckKind.REPO_PUBLIC, "Repo Public"),
     (CheckKind.CI_UPLOAD, "CI Upload"),
     (CheckKind.RELEASE_PIPELINE, "Release Pipeline"),
+    (CheckKind.SECURITY, "Security"),
     (CheckKind.PR_LINK, "PR Link"),
     (CheckKind.ASYNC_BLOCKING, "Async Safe"),
 )
@@ -110,13 +112,22 @@ def _details_block(pkg: PackageChange) -> str:
     )
 
 
+def _intro(result: CheckRunResult) -> str:
+    """Marker, header, and the optional commit line the gate reads back."""
+    parts: list[str] = []
+    if result.head_sha:
+        commit = f"[`{result.head_sha[:7]}`]({REPO_URL}/commit/{result.head_sha})"
+        parts.append(f"Checked at commit {commit}.")
+    return "\n\n".join([f"{MARKER}\n{HEADER}", *parts])
+
+
 def render_comment(result: CheckRunResult) -> str:
     """Build the full markdown comment, including placeholder markers."""
     if not result.packages:
-        return f"{MARKER}\n{HEADER}\n\nNo tracked requirement changes detected. ✅"
+        return f"{_intro(result)}\n\nNo tracked requirement changes detected. ✅"
     return "\n\n".join(
         [
-            f"{MARKER}\n{HEADER}\n\n{_summary_line(result.packages)}",
+            f"{_intro(result)}\n\n{_summary_line(result.packages)}",
             _table(result.packages),
             *[_details_block(p) for p in result.packages],
         ]

@@ -106,7 +106,9 @@ class IndevoltSelectEntity(IndevoltEntity, SelectEntity):
         )
 
         if success:
-            await self.coordinator.async_request_refresh()
+            self.coordinator.async_optimistic_update(
+                self.entity_description.read_key, value
+            )
 
         else:
             raise HomeAssistantError(
