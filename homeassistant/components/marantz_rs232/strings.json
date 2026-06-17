@@ -1,0 +1,96 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device": "[%key:common::config_flow::data::port%]",
+          "model": "Receiver model"
+        },
+        "data_description": {
+          "device": "Serial port path to connect to",
+          "model": "Determines the protocol used to communicate with the receiver"
+        }
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "receiver": {
+        "state_attributes": {
+          "source": {
+            "state": {
+              "am": "AM",
+              "aux1": "Aux 1",
+              "aux2": "Aux 2",
+              "aux3": "Aux 3",
+              "aux4": "Aux 4",
+              "aux5": "Aux 5",
+              "aux6": "Aux 6",
+              "aux7": "Aux 7",
+              "bd": "BD Player",
+              "bt": "Bluetooth",
+              "cd": "CD",
+              "cd_cdr": "CD/CDR",
+              "cdr": "CDR",
+              "dss": "DSS",
+              "dss_vcr2": "DSS/VCR 2",
+              "dvd": "DVD",
+              "dvdr": "DVDR",
+              "favorites": "Favorites",
+              "flickr": "Flickr",
+              "fm": "FM",
+              "game": "Game",
+              "hdradio": "HD Radio",
+              "iradio": "Internet Radio",
+              "lastfm": "Last.fm",
+              "ld": "LaserDisc",
+              "lw": "LW",
+              "m_xport": "M-XPort",
+              "mplay": "Media Player",
+              "mw": "MW",
+              "napster": "Napster",
+              "net": "Network",
+              "net_usb": "Network/USB",
+              "pandora": "Pandora",
+              "phono": "Phono",
+              "rhapsody": "Rhapsody",
+              "sat": "Sat",
+              "sat_cbl": "Satellite/Cable",
+              "server": "Server",
+              "sirius": "Sirius",
+              "siriusxm": "SiriusXM",
+              "spotify": "Spotify",
+              "tape": "Tape",
+              "tuner": "Tuner",
+              "tv": "TV Audio",
+              "usb_ipod": "USB/iPod",
+              "v_aux": "V. Aux",
+              "vcr": "VCR",
+              "vcr1": "VCR 1",
+              "vcr2_dvdr": "VCR 2/DVDR",
+              "xm": "XM"
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "model": {
+      "options": {
+        "modern": "Modern",
+        "sr7002": "SR7002",
+        "sr8002": "SR8002",
+        "sr8300": "SR8300",
+        "sr9300": "SR9300"
+      }
+    }
+  }
+}
