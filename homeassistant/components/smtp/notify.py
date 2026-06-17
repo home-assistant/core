@@ -1,5 +1,6 @@
 """Mail (SMTP) notification service."""
 
+import contextlib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import email.utils
@@ -90,6 +91,16 @@ PLATFORM_SCHEMA = NOTIFY_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_VERIFY_SSL, default=True): cv.boolean,
     }
 )
+
+
+def _close_connection(mail: SMTP_SSL | SMTP) -> None:
+    """Close an SMTP connection, ignoring errors from an already-dead socket.
+
+    quit() on a connection the server already dropped raises
+    SMTPServerDisconnected; that must not abort sending or mask a retry.
+    """
+    with contextlib.suppress(SMTPException):
+        mail.quit()
 
 
 async def async_get_service(
@@ -236,7 +247,7 @@ class MailNotifyEntity(NotifyEntity):
                         translation_key="send_mail_connection_error",
                     ) from e
             finally:
-                client.quit()
+                _close_connection(client)
 
 
 class MailNotificationService(SmtpClient, BaseNotificationService):
@@ -316,10 +327,10 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
                 _LOGGER.warning(
                     "SMTPServerDisconnected sending mail: retrying connection"
                 )
-                mail.quit()
+                _close_connection(mail)
                 mail = self.connect()
             except SMTPException:
                 _LOGGER.warning("SMTPException sending mail: retrying connection")
-                mail.quit()
+                _close_connection(mail)
                 mail = self.connect()
-        mail.quit()
+        _close_connection(mail)

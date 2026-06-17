@@ -3,6 +3,7 @@
 from pathlib import Path
 import re
 from smtplib import (
+    SMTP,
     SMTPAuthenticationError,
     SMTPHeloError,
     SMTPSenderRefused,
@@ -218,6 +219,40 @@ def test_send_target_message(target, hass: HomeAssistant, message) -> None:
         assert recipient == expected_recipient
 
 
+def test_send_message_recovers_after_disconnect() -> None:
+    """Verify a dropped connection is retried without quit() aborting the send.
+
+    quit() on a connection the server already closed raises
+    SMTPServerDisconnected("please run connect() first"). That must not be
+    re-raised, otherwise the retry never happens and the calling automation
+    aborts at the notify step.
+    """
+    service = MailNotificationService(
+        config={
+            CONF_SERVER: "localhost",
+            CONF_PORT: 25,
+            CONF_TIMEOUT: 5,
+            CONF_SENDER: "test@test.com",
+            CONF_ENCRYPTION: 1,
+            CONF_USERNAME: "testuser",
+            CONF_PASSWORD: "testpass",
+            CONF_RECIPIENT: ["recip1@example.com"],
+            CONF_SENDER_NAME: "Home Assistant",
+            CONF_VERIFY_SSL: True,
+        },
+        ssl_context=create_client_context(),
+    )
+
+    mock_mail = MagicMock(spec=SMTP)
+    mock_mail.sendmail.side_effect = [SMTPServerDisconnected(), None]
+    mock_mail.quit.side_effect = SMTPServerDisconnected("please run connect() first")
+
+    with patch.object(service, "connect", return_value=mock_mail):
+        service.send_message("Test msg")
+
+    assert mock_mail.sendmail.call_count == 2
+
+
 @pytest.mark.usefixtures("smtp")
 async def test_notify_platform(
     hass: HomeAssistant,
@@ -328,3 +363,41 @@ async def test_notify_send_message_exceptions(
         )
 
     assert e.value.translation_key == translation_key
+
+
+@pytest.mark.usefixtures("make_msgid")
+@pytest.mark.freeze_time("2026-05-03T03:09:37+00:00")
+async def test_notify_send_message_recovers_after_disconnect(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    smtp: MagicMock,
+) -> None:
+    """Test the notify entity retries after the connection was dropped.
+
+    quit() on the already-closed connection raises SMTPServerDisconnected; that
+    must not abort the retry or propagate out of the notify action.
+    """
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    smtp.sendmail.side_effect = [SMTPServerDisconnected(), None]
+    smtp.quit.side_effect = SMTPServerDisconnected("please run connect() first")
+
+    await hass.services.async_call(
+        NOTIFY_DOMAIN,
+        SERVICE_SEND_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.home_assistant_recipient",
+            ATTR_MESSAGE: "Hello World",
+        },
+        blocking=True,
+    )
+
+    assert smtp.sendmail.call_count == 2
+    state = hass.states.get("notify.home_assistant_recipient")
+    assert state
+    assert state.state == "2026-05-03T03:09:37+00:00"
