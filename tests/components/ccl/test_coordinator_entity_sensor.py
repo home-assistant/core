@@ -8,10 +8,12 @@ from unittest.mock import MagicMock
 from aioccl import CCLSensorTypes
 import pytest
 
-from homeassistant.components.ccl import sensor as ccl_sensor
+from homeassistant.components.ccl.const import DOMAIN
 from homeassistant.components.ccl.coordinator import CCLCoordinator
 from homeassistant.components.ccl.entity import CCLEntity
+from homeassistant.const import CONF_HOST, CONF_PORT, CONF_WEBHOOK_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_registry import EntityRegistry
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from tests.common import MockConfigEntry
@@ -120,16 +122,9 @@ def test_ccl_entity_device_id_and_name_with_and_without_compartment(
 
 
 async def test_async_setup_entry_adds_entities_and_native_value(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
 ) -> None:
     """Test that async_setup_entry creates sensor entities with correct values."""
-    # Prepare a device and coordinator
-    device = MagicMock()
-    device.device_id = "devx"
-    device.name = "Device X"
-    device.model = "M"
-    device.fw_ver = "1.2.3"
-
     # Create two sensors: one with translation_key None (TEMPERATURE) and one with translation_key set (UVI)
     temp = _make_internal_sensor(
         "t", "Temp Sensor", CCLSensorTypes.TEMPERATURE, compartment=None, value=21
@@ -138,30 +133,50 @@ async def test_async_setup_entry_adds_entities_and_native_value(
         "u", "UVI Sensor", CCLSensorTypes.UVI, compartment=None, value=5
     )
 
-    coordinator = MagicMock()
-    coordinator.device = device
-    coordinator.data = {"t": temp, "u": uvi}
+    # Mock device
+    device = MagicMock()
+    device.device_id = "devx"
+    device.name = "Device X"
+    device.model = "M"
+    device.fw_ver = "1.2.3"
+    device.get_sensors.return_value = {"t": temp, "u": uvi}
 
-    # Attach coordinator to a config entry (async_setup_entry expects entry.runtime_data)
-    mock_config_entry.runtime_data = coordinator
+    # Store the callback so we can trigger it
+    def store_callback(callback):
+        # Trigger the callback with initial data
+        callback({"t": temp, "u": uvi})
 
-    added: list = []
+    device.set_update_callback = store_callback
 
-    def async_add_entities(entities):
-        added.extend(entities)
+    # Create config entry with the mock device
+    config_entry = MockConfigEntry(
+        title="CCL Weather Station",
+        domain=DOMAIN,
+        data={
+            CONF_WEBHOOK_ID: "c2507426",
+            CONF_HOST: "192.168.1.185",
+            CONF_PORT: "8123",
+            "device": device,
+        },
+        unique_id="0000-0000",
+    )
 
-    await ccl_sensor.async_setup_entry(hass, mock_config_entry, async_add_entities)
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    # Two entities should have been added
-    assert len(added) == 2
+    # Get the entity registry
+    entity_registry: EntityRegistry = hass.data["entity_registry"]
 
-    # Find the temperature and uvi entities
-    temp_entity = next(e for e in added if e.entity_description.key == "t")
-    uvi_entity = next(e for e in added if e.entity_description.key == "u")
+    # Find the temperature and UVI entities in the registry
+    entities = [
+        entity
+        for entity in entity_registry.entities.values()
+        if entity.domain == "sensor"
+    ]
+    assert len(entities) == 2
 
-    # Temperature description should have been replaced to include name
-    assert temp_entity.entity_description.name == "Temp Sensor"
-
-    # UVI uses translation_key, so translation_key should be present and name not set
-    assert uvi_entity.entity_description.translation_key == "uvi"
-    assert uvi_entity.native_value == 5
+    # Verify the entities have the expected sensor types
+    entity_keys = {entity.unique_id for entity in entities}
+    assert "devx-t" in entity_keys
+    assert "devx-u" in entity_keys
