@@ -24,7 +24,7 @@ from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
-from tests.common import async_call_logger_set_level
+from tests.common import async_call_logger_set_level, async_mock_service
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -1205,12 +1205,15 @@ async def test_websocket_http_config(
 
     ws_client = await hass_ws_client(hass)
 
-    # On a fresh setup the stable slot is seeded with the schema defaults.
+    # Staging a new config triggers a restart so the pending config is applied.
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    # On a fresh setup the stable slot is seeded with the schema defaults and
+    # there is no pending config.
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"]["server_port"] == 8123
-    assert response["result"]["ip_ban_enabled"] is True
+    assert response["result"] == {"stable": _DEFAULT_CONFIG, "pending": None}
 
     new_config = {
         "server_port": 9123,
@@ -1227,15 +1230,19 @@ async def test_websocket_http_config(
     )
     response = await ws_client.receive_json()
     assert response["success"]
-    # Configure is an ack; verify pending state via storage.
+    assert response["result"] == {"restart": True}
     pending = hass_storage["http"]["data"]["pending"]
     assert pending["server_port"] == 9123
     assert pending["trusted_proxies"] == ["127.0.0.0/8"]
-    # Stable is unchanged until the user promotes.
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 1
+
+    # Stable is unchanged until the user promotes, but the pending config is
+    # now returned alongside it.
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"]["server_port"] == 8123
+    assert response["result"] == {"stable": _DEFAULT_CONFIG, "pending": new_config}
 
     # Promote: pending becomes stable, pending is cleared.
     await ws_client.send_json_auto_id({"type": "http/config/promote"})
@@ -1247,7 +1254,7 @@ async def test_websocket_http_config(
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"]["server_port"] == 9123
+    assert response["result"] == {"stable": new_config, "pending": None}
 
     # Promoting again with no pending is rejected.
     await ws_client.send_json_auto_id({"type": "http/config/promote"})
@@ -1255,19 +1262,35 @@ async def test_websocket_http_config(
     assert not response["success"]
     assert response["error"]["code"] == "not_allowed"
 
-    # Clearing pending leaves stable untouched.
+    # Staging a different config again changes the pending slot -> restart.
     await ws_client.send_json_auto_id(
         {"type": "http/config/configure", "config": {"server_port": 7000}}
     )
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {"restart": True}
     assert hass_storage["http"]["data"]["pending"]["server_port"] == 7000
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 2
 
+    # Clearing a previously staged config also changes the active config back
+    # to stable, so it must trigger a restart too.
     await ws_client.send_json_auto_id({"type": "http/config/configure", "config": None})
     response = await ws_client.receive_json()
     assert response["success"]
+    assert response["result"] == {"restart": True}
     assert hass_storage["http"]["data"]["pending"] is None
     assert hass_storage["http"]["data"]["stable"]["server_port"] == 9123
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 3
+
+    # Clearing again when there is no pending config is a no-op -> no restart.
+    await ws_client.send_json_auto_id({"type": "http/config/configure", "config": None})
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {"restart": False}
+    await hass.async_block_till_done()
+    assert len(restart_calls) == 3
 
 
 @pytest.mark.parametrize(
