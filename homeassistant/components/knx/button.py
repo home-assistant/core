@@ -3,9 +3,7 @@
 import logging
 from typing import Any, override
 
-from xknx.devices import ExposeSensor as XknxExposeSensor
-from xknx.devices import RawValue as XknxRawValue
-from xknx.exceptions import ConversionError
+from xknx.devices import ExposeSensor as XknxExposeSensor, RawValue as XknxRawValue
 
 from homeassistant import config_entries
 from homeassistant.components.button import ButtonEntity
@@ -49,16 +47,11 @@ async def async_setup_entry(
             KnxYamlButton(knx_module, entity_config)
             for entity_config in yaml_platform_config
         )
-    ui_config = knx_module.config_store.data["entities"].get(Platform.BUTTON, {})
-    for unique_id, config in ui_config.items():
-        try:
-            entities.append(KnxUiButton(knx_module, unique_id, config))
-        except ValueError as ex:
-            logger.error(
-                "Error creating KNX button with unique_id '%s': %s",
-                unique_id,
-                ex,
-            )
+    if ui_config := knx_module.config_store.data["entities"].get(Platform.BUTTON):
+        entities.extend(
+            KnxUiButton(knx_module, unique_id, config)
+            for unique_id, config in ui_config.items()
+        )
     if entities:
         async_add_entities(entities)
 
@@ -109,23 +102,7 @@ class KnxUiButton(_KnxButton, KnxUiEntity):
         """Initialize a KNX button."""
         knx_conf = ConfigExtractor(config[DOMAIN])
         button_data = knx_conf.get(CONF_DATA)
-        if CONF_VALUE in button_data and (dpt_string := knx_conf.get_dpt(CONF_GA_SEND)):
-            self._payload = button_data[CONF_VALUE]
-            self._device = XknxExposeSensor(
-                xknx=knx_module.xknx,
-                name=config[CONF_ENTITY][CONF_NAME],
-                value_type=dpt_string,
-                group_address=knx_conf.get_write(CONF_GA_SEND),
-                respond_to_read=False,
-            )
-            try:
-                # value setter validates payload for encodability
-                self._device.sensor_value.value = self._payload
-            except ConversionError as ex:
-                raise ValueError(
-                    f"Invalid button value {self._payload} for dpt {dpt_string}"
-                ) from ex
-        elif CONF_PAYLOAD in button_data and CONF_PAYLOAD_LENGTH in button_data:
+        if CONF_PAYLOAD in button_data and CONF_PAYLOAD_LENGTH in button_data:
             self._payload = button_data[CONF_PAYLOAD]
             self._device = XknxRawValue(
                 xknx=knx_module.xknx,
@@ -134,7 +111,15 @@ class KnxUiButton(_KnxButton, KnxUiEntity):
                 group_address=knx_conf.get_write(CONF_GA_SEND),
             )
         else:
-            raise ValueError("Invalid button data configuration")
+            dpt_string = knx_conf.get_dpt(CONF_GA_SEND)
+            self._payload = button_data[CONF_VALUE]
+            self._device = XknxExposeSensor(
+                xknx=knx_module.xknx,
+                name=config[CONF_ENTITY][CONF_NAME],
+                value_type=dpt_string,
+                group_address=knx_conf.get_write(CONF_GA_SEND),
+                respond_to_read=False,
+            )
 
         super().__init__(
             knx_module=knx_module,
