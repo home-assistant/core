@@ -104,7 +104,7 @@ async def test_full_flow(
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
-        "home_connect", context=ConfigFlowContext(source=config_entries.SOURCE_USER)
+        DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -159,7 +159,7 @@ async def test_prevent_reconfiguring_same_account(
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
-        "home_connect", context=ConfigFlowContext(source=config_entries.SOURCE_USER)
+        DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

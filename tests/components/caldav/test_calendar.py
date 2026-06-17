@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import MagicMock, Mock, patch
 import zoneinfo
 
+from caldav.lib.error import NotFoundError
 from caldav.objects import Event
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -1328,15 +1329,23 @@ async def test_add_vevent(
     assert calendars[0].add_event.call_args[1] == expected_ics_fields
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(KeyError(), id="key_error"),
+        pytest.param(NotFoundError(), id="not_found_error"),
+    ],
+)
 async def test_missing_supported_components(
     hass: HomeAssistant,
     calendars: list[Mock],
     setup_platform_cb: Callable[[], Awaitable[None]],
     caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
-    """Test setup works when calendar raises KeyError on get_supported_components."""
+    """Test setup works when calendar raises on get_supported_components."""
     caplog.set_level(logging.WARNING, logger="homeassistant.components.caldav.api")
-    calendars[0].get_supported_components.side_effect = KeyError()
+    calendars[0].get_supported_components.side_effect = exception
     await setup_platform_cb()
 
     assert hass.states.get(TEST_ENTITY)
@@ -1367,14 +1376,22 @@ async def test_missing_supported_components(
     assert vjournal_warning in caplog.text
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(KeyError(), id="key_error"),
+        pytest.param(NotFoundError(), id="not_found_error"),
+    ],
+)
 async def test_missing_supported_components_not_assumed(
     hass: HomeAssistant,
     calendars: list[Mock],
     caplog: pytest.LogCaptureFixture,
+    exception: Exception,
 ) -> None:
-    """Test get_calendars excludes calendars on KeyError."""
+    """Test get_calendars excludes calendars when components unavailable."""
     caplog.set_level(logging.WARNING, logger="homeassistant.components.caldav.api")
-    calendars[0].get_supported_components.side_effect = KeyError()
+    calendars[0].get_supported_components.side_effect = exception
     client = MagicMock()
     client.principal().calendars.return_value = calendars
 

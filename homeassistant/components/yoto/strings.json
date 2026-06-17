@@ -10,6 +10,8 @@
       "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "unique_id_mismatch": "The reauthorized account does not match the original Yoto account. Please log in with the same account.",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "create_entry": {
@@ -27,15 +29,82 @@
           "implementation": "[%key:common::config_flow::description::implementation%]"
         },
         "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "reauth_confirm": {
+        "description": "The Yoto integration needs to re-authenticate your account.",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      }
+    }
+  },
+  "entity": {
+    "binary_sensor": {
+      "bluetooth_audio": {
+        "name": "Bluetooth audio"
+      },
+      "headphones": {
+        "name": "Headphones"
+      }
+    },
+    "sensor": {
+      "card_insertion_state": {
+        "name": "Card slot",
+        "state": {
+          "none": "Empty",
+          "physical": "Physical card",
+          "remote": "Remote",
+          "streaming": "Streaming"
+        }
+      },
+      "day_mode": {
+        "name": "Day mode",
+        "state": {
+          "day": "Day",
+          "night": "Night"
+        }
+      }
+    },
+    "time": {
+      "day_mode_start": {
+        "name": "Day mode start"
+      },
+      "night_mode_start": {
+        "name": "Night mode start"
       }
     }
   },
   "exceptions": {
+    "authentication_failed": {
+      "message": "Yoto credentials are no longer valid. Please reauthenticate your account."
+    },
+    "card_detail_failed": {
+      "message": "Could not load Yoto card details: {error}"
+    },
     "command_failed": {
       "message": "Yoto command failed: {error}"
     },
+    "config_update_failed": {
+      "message": "Failed to update Yoto player settings: {error}"
+    },
+    "invalid_media_id": {
+      "message": "Not a Yoto media identifier: {media_id}"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
+    },
+    "play_failed": {
+      "message": "Failed to play Yoto media: {error}"
+    },
+    "unknown_card": {
+      "message": "Unknown Yoto card: {card_id}"
+    },
+    "unknown_chapter": {
+      "message": "Unknown chapter {chapter_key} on card {card_id}"
+    },
+    "unknown_group": {
+      "message": "Unknown Yoto group: {group_id}"
+    },
+    "unknown_track": {
+      "message": "Unknown track {track_key} on card {card_id}"
     },
     "update_error": {
       "message": "Error communicating with Yoto: {error}"

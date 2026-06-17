@@ -182,10 +182,6 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
         config_entry.minor_version,
     )
 
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     if config_entry.version == 1:
         # Migrate to version 2
         migrate_config_entry_and_identifiers(hass, config_entry)

@@ -348,6 +348,8 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
             # Use ffmpeg to convert to raw PCM audio with the appropriate format
             proc = await asyncio.create_subprocess_exec(
                 self._ffmpeg_manager.binary,
+                "-protocol_whitelist",
+                "http,https,file,tcp,tls",
                 "-i",
                 announcement.media_id,
                 "-f",
@@ -468,7 +470,7 @@ class WyomingAssistSatellite(WyomingSatelliteEntity, AssistSatelliteEntity):
 
     async def on_restart(self) -> None:
         """Block until pipeline loop will be restarted."""
-        _LOGGER.warning(
+        _LOGGER.debug(
             "Satellite has been disconnected. Reconnecting in %s second(s)",
             _RECONNECT_SECONDS,
         )

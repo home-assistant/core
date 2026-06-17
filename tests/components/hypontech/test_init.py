@@ -1,11 +1,14 @@
 """Test the Hypontech Cloud init."""
 
-from unittest.mock import AsyncMock
+from typing import cast
+from unittest.mock import AsyncMock, Mock
 
 from hyponcloud import AuthenticationError, RequestError
 import pytest
 
+from homeassistant.components.hypontech.const import CONF_OEM, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
@@ -33,6 +36,28 @@ async def test_setup_entry(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+
+
+async def test_setup_entry_uses_oem(
+    hass: HomeAssistant,
+    mock_hyponcloud: AsyncMock,
+) -> None:
+    """Test setup entry passes the stored OEM to the API."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_USERNAME: "test@example.com",
+            CONF_PASSWORD: "test-password",
+            CONF_OEM: 4,
+        },
+        unique_id="4:2123456789123456789",
+    )
+
+    await setup_integration(hass, config_entry)
+
+    assert config_entry.state is ConfigEntryState.LOADED
+    hyponcloud_class = cast(Mock, mock_hyponcloud.hyponcloud_class)
+    assert hyponcloud_class.call_args.kwargs["oem"] == 4
 
 
 async def test_setup_and_unload_entry(

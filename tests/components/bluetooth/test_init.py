@@ -467,7 +467,7 @@ async def test_discovery_match_by_service_uuid_and_short_local_name(
     mock_bleak_scanner_start: MagicMock,
 ) -> None:
     """Test bluetooth discovery match by service_uuid and short local name."""
-    entry = MockConfigEntry(domain="bluetooth", unique_id="00:00:00:00:00:01")
+    entry = MockConfigEntry(domain=DOMAIN, unique_id="00:00:00:00:00:01")
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -2666,21 +2666,26 @@ async def test_process_advertisements_timeout(
 
 
 @pytest.mark.usefixtures("enable_bluetooth", "mock_bleak_scanner_start")
-async def test_process_advertisements_wires_timeout_as_scan_duration(
+async def test_process_advertisements_triggers_active_scan_of_correct_duration(
     hass: HomeAssistant,
 ) -> None:
-    """async_process_advertisements forwards its timeout as scan_duration."""
+    """async_process_advertisements triggers active scan now."""
 
     def _callback(service_info: BluetoothServiceInfo) -> bool:
         return False
 
+    timeout = 0.001
     mock_cancel = Mock()
+
     with (
         patch.object(
             HomeAssistantBluetoothManager,
             "async_register_active_scan",
             return_value=mock_cancel,
         ) as mock_register,
+        patch.object(
+            HomeAssistantBluetoothManager, "async_request_active_scan"
+        ) as mock_request_active_scan,
         pytest.raises(TimeoutError),
     ):
         await async_process_advertisements(
@@ -2688,9 +2693,10 @@ async def test_process_advertisements_wires_timeout_as_scan_duration(
             _callback,
             {"address": "aa:44:33:11:23:45"},
             BluetoothScanningMode.ACTIVE,
-            0,
+            timeout,
         )
-    mock_register.assert_called_once_with("aa:44:33:11:23:45", None, 0)
+    mock_register.assert_called_once_with("aa:44:33:11:23:45", None, None)
+    mock_request_active_scan.assert_called_once_with(timeout)
     mock_cancel.assert_called_once()
 
 
@@ -3543,7 +3549,7 @@ async def test_title_updated_if_mac_address(
 ) -> None:
     """Test the title is updated if it is the mac address."""
     entry = MockConfigEntry(
-        domain="bluetooth", title="00:00:00:00:00:01", unique_id="00:00:00:00:00:01"
+        domain=DOMAIN, title="00:00:00:00:00:01", unique_id="00:00:00:00:00:01"
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)

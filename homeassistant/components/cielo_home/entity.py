@@ -3,11 +3,7 @@
 from cieloconnectapi.device import CieloDeviceAPI
 from cieloconnectapi.model import CieloDevice
 
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -69,7 +65,7 @@ class CieloDeviceEntity(CieloBaseEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.id)},
             name=device.name,
-            connections={(CONNECTION_NETWORK_MAC, format_mac(device.mac_address))},
+            connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
             manufacturer="Cielo",
             configuration_url="https://home.cielowigle.com/",
             suggested_area=device.name,

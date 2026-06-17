@@ -48,11 +48,13 @@ from .const import (
     ATTR_IP,
     ATTR_MAC,
     ATTR_SOURCE_TYPE,
+    ATTR_TRACKING_TYPE,
     CONF_ASSOCIATED_ZONE,
     CONNECTED_DEVICE_REGISTERED,
     DOMAIN,
     LOGGER,
     SourceType,
+    TrackingType,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -169,11 +171,35 @@ class BaseTrackerEntity(Entity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_source_type: SourceType
 
+    def __init_subclass__(cls, **kwargs: Any) -> None:
+        """Post initialisation processing."""
+        super().__init_subclass__(**kwargs)
+        if "battery_level" in cls.__dict__:
+            if cls.__module__.startswith("homeassistant.components."):
+                # Don't ask users to report issue for built in integrations,
+                # they already have issues opened on them.
+                return
+            report_issue = async_suggest_report_issue(
+                async_get_hass_or_none(), module=cls.__module__
+            )
+            _LOGGER.warning(
+                (
+                    "%s::%s is overriding the deprecated battery_level property on "
+                    "a subclass of BaseTrackerEntity, this will be unsupported from "
+                    "Home Assistant 2027.7, please %s"
+                ),
+                cls.__module__,
+                cls.__name__,
+                report_issue,
+            )
+
     @cached_property
     def battery_level(self) -> int | None:
         """Return the battery level of the device.
 
         Percentage from 0-100.
+
+        The property is deprecated and will be removed in Home Assistant 2027.7.
         """
         return None
 
@@ -214,6 +240,9 @@ class TrackerEntity(
     """Base class for a tracked device."""
 
     entity_description: TrackerEntityDescription
+    _attr_capability_attributes: dict[str, Any] = {
+        ATTR_TRACKING_TYPE: TrackingType.POSITION
+    }
     _attr_in_zones: list[str] | None = None
     _attr_latitude: float | None = None
     _attr_location_accuracy: float = 0
@@ -387,6 +416,9 @@ class BaseScannerEntity(BaseTrackerEntity):
     addresses being used to identify the device.
     """
 
+    _attr_capability_attributes: dict[str, Any] = {
+        ATTR_TRACKING_TYPE: TrackingType.CONNECTION
+    }
     _scanner_option_associated_zone: str = zone.ENTITY_ID_HOME
     _scanner_option_associated_zone_unsub: CALLBACK_TYPE | None = None
 

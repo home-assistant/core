@@ -274,7 +274,7 @@ async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) 
 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "rest",
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -324,7 +324,7 @@ async def test_reload_and_remove_all(
 
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "rest",
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
@@ -369,7 +369,7 @@ async def test_reload_fails_to_read_configuration(
     yaml_path = get_fixture_path("configuration_invalid.notyaml", "rest")
     with patch.object(hass_config, "YAML_CONFIG_FILE", yaml_path):
         await hass.services.async_call(
-            "rest",
+            DOMAIN,
             SERVICE_RELOAD,
             {},
             blocking=True,
