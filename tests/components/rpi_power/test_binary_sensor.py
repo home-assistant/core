@@ -16,7 +16,7 @@ from homeassistant.components.rpi_power.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -53,7 +53,9 @@ async def test_new(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> Non
 
 
 async def test_new_detected(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test new entry with under voltage detected."""
     mocked_under_voltage = await _async_setup_component(hass, True)
@@ -80,6 +82,11 @@ async def test_new_detected(
         logging.DEBUG,
         DESCRIPTION_NORMALIZED,
     ) in caplog.record_tuples
+
+    assert issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id="under_voltage_detected",
+    )
 
 
 async def test_setup(
