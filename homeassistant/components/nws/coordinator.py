@@ -99,10 +99,10 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             dist = location_util.distance(prev_lat, prev_lon, new_lat, new_lon)
             if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
                 return
+        client_session = async_get_clientsession(self.hass)
+        api_key = self.config_entry.data[CONF_API_KEY]
+        station = self.config_entry.data.get(CONF_STATION)
         try:
-            client_session = async_get_clientsession(self.hass)
-            api_key = self.config_entry.data[CONF_API_KEY]
-            station = self.config_entry.data.get(CONF_STATION)
             new_nws = SimpleNWS(new_lat, new_lon, api_key, client_session)
             await new_nws.set_station(station)
         except aiohttp.ClientError, NwsError:

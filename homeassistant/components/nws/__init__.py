@@ -108,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
     else:
         latitude = entry.data[CONF_LATITUDE]
         longitude = entry.data[CONF_LONGITUDE]
-        station = entry.data.get(CONF_STATION)
+        station = entry.data[CONF_STATION]
 
     client_session = async_get_clientsession(hass)
 
