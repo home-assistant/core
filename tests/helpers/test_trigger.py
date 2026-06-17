@@ -69,6 +69,7 @@ from homeassistant.helpers.trigger import (
     EntityNumericalStateChangedTriggerWithUnitBase,
     EntityNumericalStateCrossedThresholdTriggerWithUnitBase,
     EntityTriggerBase,
+    NotTriggeredInfo,
     PluggableAction,
     StatelessEntityTriggerBase,
     Trigger,
@@ -3969,6 +3970,131 @@ async def _arm_off_to_on_trigger(
         name="test_off_to_on",
         log_cb=log.log,
     )
+
+
+async def _arm_off_to_on_trigger_with_diagnostics(
+    hass: HomeAssistant,
+    entity_ids: list[str],
+    behavior: str,
+    calls: list[dict[str, Any]],
+    reports: list[tuple[dict[str, Any], NotTriggeredInfo]],
+) -> CALLBACK_TYPE:
+    """Set up _OffToOnTrigger with both an action and a did_not_trigger reporter."""
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"off_to_on": _OffToOnTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    trigger_config = {
+        CONF_PLATFORM: "test.off_to_on",
+        CONF_TARGET: {CONF_ENTITY_ID: entity_ids},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    log = logging.getLogger(__name__)
+
+    @callback
+    def action(run_variables: dict[str, Any], context: Context | None = None) -> None:
+        calls.append(run_variables["trigger"])
+
+    async def did_not_trigger(
+        run_variables: dict[str, Any],
+        info: NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        reports.append((run_variables["trigger"], info))
+
+    validated_config = await async_validate_trigger_config(hass, [trigger_config])
+    return await async_initialize_triggers(
+        hass,
+        validated_config,
+        action,
+        domain="test",
+        name="test_off_to_on",
+        log_cb=log.log,
+        did_not_trigger=did_not_trigger,
+    )
+
+
+async def test_entity_trigger_reports_did_not_trigger(hass: HomeAssistant) -> None:
+    """An entity trigger reports diagnostics for changes that do not fire it."""
+    entity_id = "test.entity"
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    reports: list[tuple[dict[str, Any], NotTriggeredInfo]] = []
+    unsub = await _arm_off_to_on_trigger_with_diagnostics(
+        hass, [entity_id], BEHAVIOR_EACH, calls, reports
+    )
+
+    # A matching change fires the action and reports nothing.
+    hass.states.async_set(entity_id, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert reports == []
+
+    # An invalid transition (already on) does not fire: "transition_not_a_match".
+    hass.states.async_set(entity_id, STATE_ON, {"brightness": 100})
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert len(reports) == 1
+    trigger_payload, info = reports[0]
+    assert trigger_payload[CONF_PLATFORM] == "test.off_to_on"
+    assert info.reason == "transition_not_a_match"
+    assert info.data == {
+        "entity_id": entity_id,
+        "from_state": STATE_ON,
+        "to_state": STATE_ON,
+    }
+
+    # A non-target new state does not fire: "new_state_not_a_match".
+    hass.states.async_set(entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert len(reports) == 2
+    _trigger_payload, info = reports[1]
+    assert info.reason == "new_state_not_a_match"
+    assert info.data == {"entity_id": entity_id, "to_state": STATE_OFF}
+
+    unsub()
+
+
+async def test_entity_trigger_reports_did_not_trigger_behavior_all(
+    hass: HomeAssistant,
+) -> None:
+    """Behavior 'all' reports when not every targeted entity matches."""
+    entity_1 = "test.entity_1"
+    entity_2 = "test.entity_2"
+    hass.states.async_set(entity_1, STATE_OFF)
+    hass.states.async_set(entity_2, STATE_OFF)
+    await hass.async_block_till_done()
+
+    calls: list[dict[str, Any]] = []
+    reports: list[tuple[dict[str, Any], NotTriggeredInfo]] = []
+    unsub = await _arm_off_to_on_trigger_with_diagnostics(
+        hass, [entity_1, entity_2], BEHAVIOR_ALL, calls, reports
+    )
+
+    # Only one of the two targets is on, so the trigger does not fire.
+    hass.states.async_set(entity_1, STATE_ON)
+    await hass.async_block_till_done()
+    assert calls == []
+    assert len(reports) == 1
+    _trigger_payload, info = reports[0]
+    assert info.reason == "not_all_targets_matched"
+    assert info.data == {"matches": 1, "included": 2}
+
+    # Now both are on: the trigger fires and reports nothing further.
+    hass.states.async_set(entity_2, STATE_ON)
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+    assert len(reports) == 1
+
+    unsub()
 
 
 def _set_or_remove_state(

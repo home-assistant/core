@@ -588,11 +588,25 @@ class EntityTriggerBase(Trigger):
             if not from_state or not to_state:
                 return
 
+            @callback
+            def report_not_triggered(reason: str, **data: Any) -> None:
+                """Report why this state change did not fire the trigger."""
+                if did_not_trigger is None:
+                    return
+                did_not_trigger(
+                    NotTriggeredInfo(reason=reason, data=data), event.context
+                )
+
             # The trigger should never fire if the new state is excluded
             # or not a target state.
             if to_state.state in self._excluded_states or not self.is_valid_state(
                 to_state
             ):
+                report_not_triggered(
+                    "new_state_not_a_match",
+                    entity_id=entity_id,
+                    to_state=to_state.state,
+                )
                 return
 
             # The trigger should never fire if the origin state is excluded
@@ -601,6 +615,12 @@ class EntityTriggerBase(Trigger):
                 from_state.state in self._excluded_from_states
                 or not self.is_valid_transition(from_state, to_state)
             ):
+                report_not_triggered(
+                    "transition_not_a_match",
+                    entity_id=entity_id,
+                    from_state=from_state.state,
+                    to_state=to_state.state,
+                )
                 return
 
             # Count against the targeted entity states as of this event, not
@@ -614,6 +634,9 @@ class EntityTriggerBase(Trigger):
                     target_state_change_data.targeted_entity_states,
                 )
                 if matches != included:
+                    report_not_triggered(
+                        "not_all_targets_matched", matches=matches, included=included
+                    )
                     return
             elif behavior == BEHAVIOR_FIRST:
                 # Note: It's enough to test for exactly 1 match here because if there
@@ -624,6 +647,9 @@ class EntityTriggerBase(Trigger):
                     target_state_change_data.targeted_entity_states,
                 )
                 if matches != 1:
+                    report_not_triggered(
+                        "behavior_first_not_satisfied", matches=matches
+                    )
                     return
 
             @callback
