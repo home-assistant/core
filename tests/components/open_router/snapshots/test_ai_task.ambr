@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[ai_task.gemini_1_5_pro-entry]
+# name: test_all_entities[ai_task.gemini_2_5_flash_image-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'ai_task',
     'entity_category': None,
-    'entity_id': 'ai_task.gemini_1_5_pro',
+    'entity_id': 'ai_task.gemini_2_5_flash_image',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -39,14 +39,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[ai_task.gemini_1_5_pro-state]
+# name: test_all_entities[ai_task.gemini_2_5_flash_image-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Gemini 1.5 Pro',
+      'friendly_name': 'Gemini 2.5 Flash Image',
       'supported_features': <AITaskEntityFeature: 7>,
     }),
     'context': <ANY>,
-    'entity_id': 'ai_task.gemini_1_5_pro',
+    'entity_id': 'ai_task.gemini_2_5_flash_image',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

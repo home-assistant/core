@@ -71,7 +71,7 @@ def output_modalities() -> list[str]:
 def ai_task_data_subentry_data(output_modalities: list[str]) -> dict[str, Any]:
     """Mock AI task subentry data."""
     return {
-        CONF_MODEL: "google/gemini-1.5-pro",
+        CONF_MODEL: "google/gemini-2.5-flash-image",
         CONF_OUTPUT_MODALITIES: output_modalities,
     }
 
@@ -103,7 +103,7 @@ def mock_config_entry(
                 data=ai_task_data_subentry_data,
                 subentry_id="ABCDEG",
                 subentry_type="ai_task_data",
-                title="Gemini 1.5 Pro",
+                title="Gemini 2.5 Flash Image",
                 unique_id=None,
             ),
         ],

@@ -41,7 +41,7 @@ def _image_completion(
             )
         ],
         created=1700000000,
-        model="google/gemini-1.5-pro",
+        model="google/gemini-2.5-flash-image",
         object="chat.completion",
         system_fingerprint=None,
         usage=CompletionUsage(completion_tokens=9, prompt_tokens=8, total_tokens=17),
@@ -73,7 +73,7 @@ async def test_generate_data(
     """Test AI Task data generation."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "ai_task.gemini_1_5_pro"
+    entity_id = "ai_task.gemini_2_5_flash_image"
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=ChatCompletion(
@@ -146,7 +146,7 @@ async def test_generate_structured_data(
     result = await ai_task.async_generate_data(
         hass,
         task_name="Test Task",
-        entity_id="ai_task.gemini_1_5_pro",
+        entity_id="ai_task.gemini_2_5_flash_image",
         instructions="Generate test data",
         structure=vol.Schema(
             {
@@ -222,7 +222,7 @@ async def test_generate_invalid_structured_data(
         await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.gemini_1_5_pro",
+            entity_id="ai_task.gemini_2_5_flash_image",
             instructions="Generate test data",
             structure=vol.Schema(
                 {
@@ -262,7 +262,7 @@ async def test_generate_data_empty_response(
         await ai_task.async_generate_data(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.gemini_1_5_pro",
+            entity_id="ai_task.gemini_2_5_flash_image",
             instructions="Generate test data",
         )
 
@@ -275,7 +275,7 @@ async def test_generate_data_with_attachments(
     """Test AI Task data generation with attachments."""
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = "ai_task.gemini_1_5_pro"
+    entity_id = "ai_task.gemini_2_5_flash_image"
 
     mock_openai_client.chat.completions.create = AsyncMock(
         return_value=ChatCompletion(
@@ -382,7 +382,7 @@ async def test_generate_image_feature(
     """Test GENERATE_IMAGE is advertised only for image-capable models."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("ai_task.gemini_1_5_pro")
+    state = hass.states.get("ai_task.gemini_2_5_flash_image")
     assert state is not None
     features = ai_task.AITaskEntityFeature(state.attributes["supported_features"])
     assert (ai_task.AITaskEntityFeature.GENERATE_IMAGE in features) is supports_image
@@ -415,12 +415,12 @@ async def test_generate_image(
         result = await ai_task.async_generate_image(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.gemini_1_5_pro",
+            entity_id="ai_task.gemini_2_5_flash_image",
             instructions="Generate a test image",
         )
 
     assert result["mime_type"] == "image/png"
-    assert result["model"] == "google/gemini-1.5-pro"
+    assert result["model"] == "google/gemini-2.5-flash-image"
 
     image_data = mock_upload_media.call_args[0][1]
     assert image_data.file.getvalue() == b"hello"
@@ -446,7 +446,7 @@ async def test_generate_image_no_image(
         await ai_task.async_generate_image(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.gemini_1_5_pro",
+            entity_id="ai_task.gemini_2_5_flash_image",
             instructions="Generate a test image",
         )
 
@@ -482,6 +482,6 @@ async def test_generate_image_invalid_image(
         await ai_task.async_generate_image(
             hass,
             task_name="Test Task",
-            entity_id="ai_task.gemini_1_5_pro",
+            entity_id="ai_task.gemini_2_5_flash_image",
             instructions="Generate a test image",
         )

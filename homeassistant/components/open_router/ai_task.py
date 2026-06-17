@@ -92,7 +92,7 @@ class OpenRouterAITaskEntity(
         chat_log: conversation.ChatLog,
     ) -> ai_task.GenImageTaskResult:
         """Handle a generate image task."""
-        await self._async_handle_chat_log(chat_log, task.name, force_image=True)
+        await self._async_handle_chat_log(chat_log, force_image=True)
 
         content = chat_log.content[-1]
         if not isinstance(content, conversation.AssistantContent):
