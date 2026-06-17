@@ -172,6 +172,11 @@ from .validators import (
 _LOGGER = logging.getLogger(__name__)
 
 
+FAN_MODE_VALUE_SCHEMA = vol.Any(
+    cv.positive_int,
+    vol.All(cv.ensure_list, vol.ExactSequence([cv.positive_int, cv.positive_int])),
+)
+
 BASE_SCHEMA = vol.Schema({vol.Optional(CONF_NAME, default=DEFAULT_HUB): cv.string})
 
 
@@ -371,16 +376,16 @@ CLIMATE_SCHEMA = vol.All(
                     {
                         vol.Required(CONF_ADDRESS): register_int_list_validator,
                         CONF_FAN_MODE_VALUES: {
-                            vol.Optional(CONF_FAN_MODE_ON): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_OFF): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_AUTO): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_LOW): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_MEDIUM): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_HIGH): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_TOP): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_MIDDLE): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_FOCUS): cv.positive_int,
-                            vol.Optional(CONF_FAN_MODE_DIFFUSE): cv.positive_int,
+                            vol.Optional(CONF_FAN_MODE_ON): FAN_MODE_VALUE_SCHEMA,
+                            vol.Optional(CONF_FAN_MODE_OFF): FAN_MODE_VALUE_SCHEMA,
+                            vol.Optional(CONF_FAN_MODE_AUTO): FAN_MODE_VALUE_SCHEMA,
+                            vol.Optional(CONF_FAN_MODE_LOW): FAN_MODE_VALUE_SCHEMA,
+                            vol.Optional(CONF_FAN_MODE_MEDIUM): FAN_MODE_VALUE_SCHEMA,
+                            vol.Optional(CONF_FAN_MODE_HIGH): FAN_MODE_VALUE_SCHEMA,
+                            vol.Optional(CONF_FAN_MODE_TOP): FAN_MODE_VALUE_SCHEMA,
+                            vol.Optional(CONF_FAN_MODE_MIDDLE): FAN_MODE_VALUE_SCHEMA,
+                            vol.Optional(CONF_FAN_MODE_FOCUS): FAN_MODE_VALUE_SCHEMA,
+                            vol.Optional(CONF_FAN_MODE_DIFFUSE): FAN_MODE_VALUE_SCHEMA,
                         },
                     },
                     duplicate_fan_mode_validator,

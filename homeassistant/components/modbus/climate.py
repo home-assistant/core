@@ -258,9 +258,13 @@ class ModbusThermostat(ModbusStructEntity, RestoreEntity, ClimateEntity):
                 (CONF_FAN_MODE_DIFFUSE, FAN_DIFFUSE),
             ):
                 if fan_mode_kw in mode_value_config:
-                    value = mode_value_config[fan_mode_kw]
-                    self._fan_mode_mapping_from_modbus[value] = fan_mode
-                    self._fan_mode_mapping_to_modbus[fan_mode] = value
+                    values = mode_value_config[fan_mode_kw]
+                    if isinstance(values, list):
+                        read_value, write_value = values
+                    else:
+                        read_value = write_value = values
+                    self._fan_mode_mapping_from_modbus[read_value] = fan_mode
+                    self._fan_mode_mapping_to_modbus[fan_mode] = write_value
                     self._attr_fan_modes.append(fan_mode)
         else:
             # No FAN modes defined
