@@ -145,6 +145,13 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             )
             if routine.domain == Platform.BUTTON
         }
+        self.previous_todo_lists: set[str] = {
+            todo_list.unique_id
+            for todo_list in er.async_entries_for_config_entry(
+                er.async_get(hass), entry.entry_id
+            )
+            if todo_list.domain == Platform.TODO
+        }
 
         self._todo_list_items: dict[str, dict[str, AmazonListItem]] = {}
         self.api.on_todo_event.append(self.todo_event_handler)
@@ -202,6 +209,14 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 await self._async_remove_routine_stale(stale_routines)
             self.previous_routines = current_routines
 
+            current_todo_lists = {
+                f"{slugify(self.config_entry.unique_id)}-{todo_list.id}"
+                for todo_list in self.api.todo_lists
+            }
+            if stale_todo_lists := self.previous_todo_lists - current_todo_lists:
+                await self._async_remove_todo_lists_stale(stale_todo_lists)
+            self.previous_todo_lists = current_todo_lists
+
             return data
 
     async def _async_remove_device_stale(
@@ -243,6 +258,28 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 f"{slugify(self.config_entry.unique_id)}-{slugify(routine)}",
             )
             if entity_id:
+                entity_registry.async_remove(entity_id)
+
+    async def _async_remove_todo_lists_stale(
+        self,
+        stale_todo_lists: set[str],
+    ) -> None:
+        """Remove stale todo lists."""
+        entity_registry = er.async_get(self.hass)
+
+        for todo_list_unique_id in stale_todo_lists:
+            entity_id = entity_registry.async_get_entity_id(
+                Platform.TODO,
+                DOMAIN,
+                todo_list_unique_id,
+            )
+            if entity_id:
+                _LOGGER.debug(
+                    "Detected change in todo lists: todo list %s removed",
+                    todo_list_unique_id.replace(
+                        f"{slugify(self.config_entry.unique_id)}-", ""
+                    ),
+                )
                 entity_registry.async_remove(entity_id)
 
     async def sync_todo_list_items(self) -> None:

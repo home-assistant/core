@@ -19,7 +19,6 @@ from homeassistant.helpers.entity import EntityDescription
 from .const import _LOGGER
 from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonServiceEntity
-from .utils import async_remove_stale_todo_list_entities
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -36,8 +35,6 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Alexa To-do Lists platform."""
     coordinator = entry.runtime_data
-
-    await async_remove_stale_todo_list_entities(hass, coordinator)
 
     known_list_ids: set[str] = set()
 
@@ -165,12 +162,9 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
 
         existing_item = list_items_lookup[item.uid]
 
-        has_completed_changed = (
+        if has_completed_changed := (
             existing_item.status == AmazonListItemStatus.COMPLETE
-        ) != (item.status == TodoItemStatus.COMPLETED)
-        has_summary_changed = existing_item.name != item.summary
-
-        if has_completed_changed:
+        ) != (item.status == TodoItemStatus.COMPLETED):
             # Update the checked status
             _LOGGER.debug(
                 "Updating item %s with checked status %s", item.uid, item.status
@@ -190,7 +184,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 item.status,
             )
 
-        if has_summary_changed:
+        if existing_item.name != item.summary:
             # Name has changed, update it
             _LOGGER.debug("Updating item %s with new name %s", item.uid, item.summary)
 

@@ -18,9 +18,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.alexa_devices.coordinator import SCAN_INTERVAL
-from homeassistant.components.alexa_devices.utils import (
-    async_remove_stale_todo_list_entities,
-)
 from homeassistant.components.todo import (
     DOMAIN as TODO_DOMAIN,
     TodoItemStatus,
@@ -38,20 +35,28 @@ from .const import TEST_USERNAME
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 LIST_ENTITY_ID_PREFIX = f"{TODO_DOMAIN.lower()}.{slugify(TEST_USERNAME)}_"
-SHOPPING_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}shopping_list"
-TODO_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}to_do_list"
-CUSTOM_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}concerts"
+MOCK_SHOPPING_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}shopping_list"
+MOCK_TODO_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}to_do_list"
+MOCK_CUSTOM_LIST_ENTITY_ID = f"{LIST_ENTITY_ID_PREFIX}concerts"
+
+MOCK_SHOPPING_LIST = AmazonListInfo(
+    id="shopping_list_id", name=None, list_type=AmazonListType.SHOP
+)
+MOCK_TODO_LIST = AmazonListInfo(
+    id="todo_list_id", name=None, list_type=AmazonListType.TODO
+)
+MOCK_CUSTOM_LIST = AmazonListInfo(
+    id="custom_list_id", name="Concerts", list_type=AmazonListType.CUSTOM
+)
 
 
 @pytest.fixture
 def mock_todo_lists():
     """Mock todo lists."""
     return [
-        AmazonListInfo(id="shopping_list_id", name=None, list_type=AmazonListType.SHOP),
-        AmazonListInfo(id="todo_list_id", name=None, list_type=AmazonListType.TODO),
-        AmazonListInfo(
-            id="custom_list_id", name="Concerts", list_type=AmazonListType.CUSTOM
-        ),
+        MOCK_SHOPPING_LIST,
+        MOCK_TODO_LIST,
+        MOCK_CUSTOM_LIST,
     ]
 
 
@@ -131,7 +136,7 @@ async def test_add_todo_item(
 
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = TODO_LIST_ENTITY_ID
+    entity_id = MOCK_TODO_LIST_ENTITY_ID
 
     await hass.services.async_call(
         TODO_DOMAIN,
@@ -160,7 +165,7 @@ async def test_delete_todo_item(
 
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = TODO_LIST_ENTITY_ID
+    entity_id = MOCK_TODO_LIST_ENTITY_ID
 
     # Delete item_2
     await hass.services.async_call(
@@ -190,7 +195,7 @@ async def test_update_todo_item(
 
     await setup_integration(hass, mock_config_entry)
 
-    entity_id = TODO_LIST_ENTITY_ID
+    entity_id = MOCK_TODO_LIST_ENTITY_ID
 
     # Update item_2 (ACTIVE -> COMPLETE)
     await hass.services.async_call(
@@ -249,42 +254,67 @@ async def test_update_todo_item(
     )
 
 
-async def test_dynamic_lists(
+@pytest.mark.parametrize(
+    ("initial_lists", "initial_entity_ids", "updated_lists", "updated_entity_ids"),
+    [
+        (
+            [MOCK_TODO_LIST],
+            [MOCK_TODO_LIST_ENTITY_ID],
+            [MOCK_TODO_LIST, MOCK_CUSTOM_LIST],
+            [MOCK_TODO_LIST_ENTITY_ID, MOCK_CUSTOM_LIST_ENTITY_ID],
+        ),  # Add a list
+        (
+            [MOCK_TODO_LIST, MOCK_CUSTOM_LIST],
+            [MOCK_TODO_LIST_ENTITY_ID, MOCK_CUSTOM_LIST_ENTITY_ID],
+            [MOCK_TODO_LIST],
+            [MOCK_TODO_LIST_ENTITY_ID],
+        ),  # Remove a list
+        (
+            [MOCK_TODO_LIST, MOCK_SHOPPING_LIST, MOCK_CUSTOM_LIST],
+            [
+                MOCK_TODO_LIST_ENTITY_ID,
+                MOCK_SHOPPING_LIST_ENTITY_ID,
+                MOCK_CUSTOM_LIST_ENTITY_ID,
+            ],
+            [],
+            [],
+        ),  # Remove all lists
+    ],
+)
+async def test_dynamic_entities(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    initial_lists: list[AmazonListInfo],
+    initial_entity_ids: list[str],
+    updated_lists: list[AmazonListInfo],
+    updated_entity_ids: list[str],
 ) -> None:
-    """Test entities are dynamically created."""
-    mock_amazon_devices_client.todo_lists = [
-        AmazonListInfo(
-            id="shopping_list_id",
-            name="Alexa Shopping List",
-            list_type=AmazonListType.SHOP,
-        ),
-    ]
+    """Test entities are dynamically created and deleted."""
+
+    mock_amazon_devices_client.todo_lists = initial_lists
     mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
-    assert hass.states.get(TODO_LIST_ENTITY_ID) is None
+    # Check initial list(s) exist
+    for entity_id in initial_entity_ids:
+        assert hass.states.get(entity_id) is not None
 
-    # Add a new list
-    mock_amazon_devices_client.todo_lists.append(
-        AmazonListInfo(
-            id="concert_list_id",
-            name="Concerts",
-            list_type=AmazonListType.CUSTOM,
-        )
-    )
+    mock_amazon_devices_client.todo_lists = updated_lists
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
-    assert hass.states.get(CUSTOM_LIST_ENTITY_ID) is not None
+    # After update, check which lists should exist
+    for entity_id in updated_entity_ids:
+        assert hass.states.get(entity_id) is not None
+
+    # Check lists that were removed no longer exist
+    for entity_id in set(initial_entity_ids) - set(updated_entity_ids):
+        assert hass.states.get(entity_id) is None
 
 
 async def test_todo_event_handler(
@@ -365,38 +395,6 @@ async def test_todo_event_handler(
     todo_items_before = coordinator.todo_list_items.copy()
     await coordinator.todo_event_handler(unknown_event)
     assert coordinator.todo_list_items == todo_items_before
-
-
-async def test_remove_stale_todo_list_entities(
-    hass: HomeAssistant,
-    mock_amazon_devices_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-    mock_todo_lists: list[AmazonListInfo],
-) -> None:
-    """Test removing stale todo list entities."""
-    mock_amazon_devices_client.todo_lists = mock_todo_lists
-    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
-    assert hass.states.get(TODO_LIST_ENTITY_ID) is not None
-    assert hass.states.get(CUSTOM_LIST_ENTITY_ID) is not None
-
-    # Remove custom list from the API
-    for i, amazon_list in enumerate(mock_amazon_devices_client.todo_lists):
-        if amazon_list.name == "Concerts":
-            mock_amazon_devices_client.todo_lists.pop(i)
-            break
-
-    # Call the utility function
-    await async_remove_stale_todo_list_entities(hass, mock_config_entry.runtime_data)
-    await hass.async_block_till_done()
-
-    # Verify custom list was deleted from state machine while others remain
-    assert hass.states.get(SHOPPING_LIST_ENTITY_ID) is not None
-    assert hass.states.get(TODO_LIST_ENTITY_ID) is not None
-    assert hass.states.get(CUSTOM_LIST_ENTITY_ID) is None
 
 
 @pytest.mark.parametrize(
