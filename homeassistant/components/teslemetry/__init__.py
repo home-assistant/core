@@ -52,7 +52,7 @@ from .coordinator import (
     TeslemetryMetadataCoordinator,
     TeslemetryVehicleDataCoordinator,
 )
-from .helpers import async_update_device_sw_version, flatten
+from .helpers import async_handle_credits, async_update_device_sw_version, flatten
 from .models import TeslemetryData, TeslemetryEnergyData, TeslemetryVehicleData
 from .services import async_setup_services
 
@@ -540,6 +540,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
 
     if stream:
         entry.async_on_unload(stream.close)
+        entry.async_on_unload(
+            stream.listen_Credits(partial(async_handle_credits, hass))
+        )
         entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 
     return True

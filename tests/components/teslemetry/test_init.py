@@ -20,7 +20,7 @@ from tesla_fleet_api.exceptions import (
 )
 
 from homeassistant.components.teslemetry import _get_access_token
-from homeassistant.components.teslemetry.const import CLIENT_ID, DOMAIN
+from homeassistant.components.teslemetry.const import CLIENT_ID, CREDITS_URL, DOMAIN
 
 # Coordinator constants
 from homeassistant.components.teslemetry.coordinator import (
@@ -48,7 +48,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -228,6 +228,74 @@ async def test_vehicle_asleep_polling(
     state = hass.states.get("binary_sensor.test_status")
     assert state is not None
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("credits", "resolved"),
+    [
+        pytest.param(
+            {"type": "topup", "cost": -100, "name": "topup", "balance": 100},
+            True,
+            id="balance_topup",
+        ),
+        pytest.param(
+            {
+                "type": "command",
+                "cost": 1,
+                "accounting": {
+                    "quota_fraction_used": 0.5,
+                    "quota_credits_used": 5,
+                    "balance_credits_used": 0,
+                },
+                "balance": 0,
+            },
+            True,
+            id="quota_available",
+        ),
+        pytest.param(
+            {
+                "type": "command",
+                "cost": 1,
+                "accounting": {
+                    "quota_fraction_used": 1.0,
+                    "quota_credits_used": 10,
+                    "balance_credits_used": 0,
+                },
+                "balance": 0,
+            },
+            False,
+            id="still_insufficient",
+        ),
+    ],
+)
+async def test_insufficient_credits_resolved_by_stream(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    mock_add_listener: AsyncMock,
+    credits: dict[str, object],
+    resolved: bool,
+) -> None:
+    """Test the insufficient credits issue is resolved by a credits event."""
+
+    await setup_platform(hass, [Platform.BINARY_SENSOR])
+
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "insufficient_credits",
+        is_fixable=False,
+        severity=ir.IssueSeverity.ERROR,
+        translation_key="insufficient_credits",
+        translation_placeholders={"credits_url": CREDITS_URL},
+    )
+
+    mock_add_listener.send(
+        {"credits": credits, "createdAt": "2024-10-04T10:45:17.537Z"}
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "insufficient_credits")
+    assert (issue is None) is resolved
 
 
 async def test_no_live_status(
