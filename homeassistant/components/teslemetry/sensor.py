@@ -1934,7 +1934,7 @@ class TeslemetryCreditQuotaSensor(RestoreSensor):
         self.async_on_remove(self.stream.listen_Credits(self._async_update))
 
     def _async_update(self, credits: dict[str, Any]) -> None:
-        """Handle updated data from the coordinator."""
+        """Handle updated data from the stream."""
         quota = credits.get("quota")
         if not isinstance(quota, dict):
             return
