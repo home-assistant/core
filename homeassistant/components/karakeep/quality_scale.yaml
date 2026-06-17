@@ -37,7 +37,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: todo
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow: done
   test-coverage: todo
 
@@ -65,7 +65,7 @@ rules:
   exception-translations:
     status: exempt
     comment: This integration does not raise translatable Home Assistant exceptions.
-  icon-translations: todo
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues: todo
   stale-devices:

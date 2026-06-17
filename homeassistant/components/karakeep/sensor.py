@@ -1,70 +1,67 @@
 """Sensor platform for Karakeep."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+
+from aiokarakeep import KarakeepStats
 
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import KarakeepConfigEntry
+from .coordinator import KarakeepConfigEntry
 from .entity import KarakeepEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
 class KarakeepSensorEntityDescription(SensorEntityDescription):
     """Describes a Karakeep sensor."""
 
-    value_key: str
+    value_fn: Callable[[KarakeepStats], int]
 
 
 SENSOR_DESCRIPTIONS: tuple[KarakeepSensorEntityDescription, ...] = (
     KarakeepSensorEntityDescription(
         key="bookmarks",
         translation_key="bookmarks",
-        icon="mdi:bookmark",
         state_class=SensorStateClass.MEASUREMENT,
-        value_key="numBookmarks",
+        value_fn=lambda stats: stats.num_bookmarks,
     ),
     KarakeepSensorEntityDescription(
         key="favorites",
         translation_key="favorites",
-        icon="mdi:star",
         state_class=SensorStateClass.MEASUREMENT,
-        value_key="numFavorites",
+        value_fn=lambda stats: stats.num_favorites,
     ),
     KarakeepSensorEntityDescription(
         key="archived",
         translation_key="archived",
-        icon="mdi:archive",
         state_class=SensorStateClass.MEASUREMENT,
-        value_key="numArchived",
+        value_fn=lambda stats: stats.num_archived,
     ),
     KarakeepSensorEntityDescription(
         key="highlights",
         translation_key="highlights",
-        icon="mdi:marker",
         state_class=SensorStateClass.MEASUREMENT,
-        value_key="numHighlights",
+        value_fn=lambda stats: stats.num_highlights,
     ),
     KarakeepSensorEntityDescription(
         key="lists",
         translation_key="lists",
-        icon="mdi:format-list-bulleted",
         state_class=SensorStateClass.MEASUREMENT,
-        value_key="numLists",
+        value_fn=lambda stats: stats.num_lists,
     ),
     KarakeepSensorEntityDescription(
         key="tags",
         translation_key="tags",
-        icon="mdi:tag",
         state_class=SensorStateClass.MEASUREMENT,
-        value_key="numTags",
+        value_fn=lambda stats: stats.num_tags,
     ),
 )
 
@@ -93,10 +90,9 @@ class KarakeepStatSensor(KarakeepEntity, SensorEntity):
         """Initialize the sensor."""
         super().__init__(entry.runtime_data)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{entry.data[CONF_URL]}_{entity_description.key}"
+        self._attr_unique_id = f"{entry.entry_id}_{entity_description.key}"
 
     @property
-    def native_value(self) -> int | None:
+    def native_value(self) -> int:
         """Return the state of the sensor."""
-        value: Any = self.coordinator.data.get(self.entity_description.value_key)
-        return value if isinstance(value, int) else None
+        return self.entity_description.value_fn(self.coordinator.data)

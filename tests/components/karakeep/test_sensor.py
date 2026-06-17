@@ -2,12 +2,10 @@
 
 from unittest.mock import AsyncMock
 
-from homeassistant.const import CONF_URL, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .const import TEST_STATS
 
 from tests.common import MockConfigEntry
 
@@ -35,24 +33,8 @@ async def test_sensors(
         registry_entry = entity_registry.async_get(entity_id)
         assert registry_entry is not None
         assert registry_entry.unique_id == (
-            f"{mock_config_entry.data[CONF_URL]}_{entity_id.removeprefix('sensor.karakeep_')}"
+            f"{mock_config_entry.entry_id}_{entity_id.removeprefix('sensor.karakeep_')}"
         )
-
-
-async def test_sensor_ignores_non_integer_values(
-    hass: HomeAssistant,
-    mock_karakeep_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test non-integer stat values render as unknown."""
-    mock_karakeep_client.async_get_stats.return_value = {
-        **TEST_STATS,
-        "numBookmarks": "10",
-    }
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert hass.states.get("sensor.karakeep_bookmarks").state == STATE_UNKNOWN
 
 
 async def test_device_info(
