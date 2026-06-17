@@ -34,11 +34,13 @@ def generate_site_selector_name(site: Site) -> str:
 
 
 def filter_sites(sites: list[Site]) -> list[Site]:
-    """Deduplicates the list of sites."""
+    """Filter out closed sites and deduplicate the list of sites."""
     filtered: list[Site] = []
     filtered_nmi: set[str] = set()
 
     for site in sorted(sites, key=lambda site: site.status):
+        if site.status == SiteStatus.CLOSED:
+            continue
         if site.status == SiteStatus.ACTIVE or site.nmi not in filtered_nmi:
             filtered.append(site)
             filtered_nmi.add(site.nmi)
