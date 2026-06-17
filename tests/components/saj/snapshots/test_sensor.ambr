@@ -5,7 +5,9 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -21,7 +23,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'saj_Current Power',
+    'object_id_base': 'saj_current_power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -29,13 +31,13 @@
     }),
     'original_device_class': <SensorDeviceClass.POWER: 'power'>,
     'original_icon': None,
-    'original_name': 'saj_Current Power',
+    'original_name': 'saj_current_power',
     'platform': 'saj',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'TEST123456789_Current Power',
+    'unique_id': 'TEST123456789_current_power',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })
 # ---
@@ -43,7 +45,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'power',
-      'friendly_name': 'saj_Current Power',
+      'friendly_name': 'saj_current_power',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
     }),
     'context': <ANY>,
@@ -76,7 +79,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'saj_Today Yield',
+    'object_id_base': 'saj_today_yield',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -84,13 +87,13 @@
     }),
     'original_device_class': <SensorDeviceClass.ENERGY: 'energy'>,
     'original_icon': None,
-    'original_name': 'saj_Today Yield',
+    'original_name': 'saj_today_yield',
     'platform': 'saj',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': None,
-    'unique_id': 'TEST123456789_Today Yield',
+    'unique_id': 'TEST123456789_today_yield',
     'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
   })
 # ---
@@ -98,7 +101,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'energy',
-      'friendly_name': 'saj_Today Yield',
+      'friendly_name': 'saj_today_yield',
       'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
     }),
     'context': <ANY>,

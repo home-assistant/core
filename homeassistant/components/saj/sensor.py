@@ -110,7 +110,7 @@ async def async_setup_platform(
     ir.async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,
-        "deprecated_yaml",
+        f"deprecated_yaml_{DOMAIN}",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
@@ -120,6 +120,7 @@ async def async_setup_platform(
             "integration_title": INTEGRATION_TITLE,
         },
     )
+
 
 class SAJsensor(SensorEntity):
     """Representation of a SAJ sensor."""
