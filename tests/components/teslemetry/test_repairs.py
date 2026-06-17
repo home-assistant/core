@@ -38,6 +38,20 @@ def _metadata_with_issue(issue: str | None) -> dict[str, Any]:
     return metadata
 
 
+def _metadata_without_vehicle() -> dict[str, Any]:
+    """Return a copy of the metadata without the vehicle."""
+    metadata = deepcopy(METADATA)
+    del metadata["vehicles"][VEHICLE_VIN]
+    return metadata
+
+
+def _metadata_with_vehicle_access(access: bool) -> dict[str, Any]:
+    """Return a copy of the metadata with the vehicle access set."""
+    metadata = _metadata_with_issue("key")
+    metadata["vehicles"][VEHICLE_VIN]["access"] = access
+    return metadata
+
+
 @pytest.mark.parametrize("issue_type", ["key", "streaming_toggle"])
 async def test_repair_issue_created(
     hass: HomeAssistant,
@@ -101,6 +115,42 @@ async def test_repair_issue_auto_resolves(
     with patch(
         "tesla_fleet_api.teslemetry.Teslemetry.metadata",
         return_value=_metadata_with_issue(None),
+    ):
+        freezer.tick(METADATA_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is None
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        pytest.param(_metadata_without_vehicle(), id="removed"),
+        pytest.param(
+            _metadata_with_vehicle_access(False),
+            id="access_revoked",
+        ),
+    ],
+)
+async def test_repair_issue_removed_when_vehicle_no_longer_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    issue_registry: ir.IssueRegistry,
+    metadata: dict[str, Any],
+) -> None:
+    """Test a repair issue is removed once the vehicle is no longer available."""
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=_metadata_with_issue("key"),
+    ):
+        entry = await setup_platform(hass)
+    assert entry.state is ConfigEntryState.LOADED
+    assert issue_registry.async_get_issue(DOMAIN, f"key_{VEHICLE_VIN}") is not None
+
+    with patch(
+        "tesla_fleet_api.teslemetry.Teslemetry.metadata",
+        return_value=metadata,
     ):
         freezer.tick(METADATA_INTERVAL)
         async_fire_time_changed(hass)

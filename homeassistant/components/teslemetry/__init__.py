@@ -176,11 +176,12 @@ def _async_update_vehicle_repairs(
     vehicle_metadata: dict[str, Any],
 ) -> None:
     """Create or remove repair issues based on each vehicle's metadata issue."""
-    for vin, info in vehicle_metadata.items():
+    for vin in vins | set(vehicle_metadata):
+        info = vehicle_metadata.get(vin, {})
         issue = info.get("issue")
         for issue_type, learn_more_url in VEHICLE_ISSUE_LEARN_MORE.items():
             issue_id = f"{issue_type}_{vin}"
-            if vin in vins and issue == issue_type:
+            if vin in vins and info.get("access") and issue == issue_type:
                 ir.async_create_issue(
                     hass,
                     DOMAIN,
