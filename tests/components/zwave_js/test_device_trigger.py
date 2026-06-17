@@ -1550,6 +1550,198 @@ async def test_if_notification_notification_fires_endpoint_sub_device(
     )
 
 
+@pytest.mark.parametrize(
+    ("trigger_extra", "event_type", "event_data"),
+    [
+        pytest.param(
+            {
+                "type": "event.notification.entry_control",
+                "command_class": CommandClass.ENTRY_CONTROL.value,
+                "event_type": 5,
+                "data_type": 2,
+            },
+            "notification",
+            {
+                "endpointIndex": 1,
+                "ccId": 111,
+                "args": {
+                    "eventType": 5,
+                    "eventTypeLabel": "label 1",
+                    "dataType": 2,
+                    "dataTypeLabel": "label 2",
+                    "eventData": "555",
+                },
+            },
+            id="entry_control",
+        ),
+        pytest.param(
+            {
+                "type": "event.value_notification.basic",
+                "command_class": CommandClass.BASIC.value,
+                "property": "event",
+                "property_key": None,
+                "endpoint": 1,
+                "subtype": "Endpoint 1",
+                "value": 0,
+            },
+            "value notification",
+            {
+                "args": {
+                    "commandClassName": "Basic",
+                    "commandClass": 32,
+                    "endpoint": 1,
+                    "property": "event",
+                    "propertyName": "event",
+                    "value": 0,
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "label": "Event value",
+                        "min": 0,
+                        "max": 255,
+                    },
+                    "ccVersion": 1,
+                },
+            },
+            id="basic",
+        ),
+        pytest.param(
+            {
+                "type": "event.value_notification.central_scene",
+                "command_class": CommandClass.CENTRAL_SCENE.value,
+                "property": "scene",
+                "property_key": "001",
+                "endpoint": 1,
+                "subtype": "Endpoint 1 Scene 001",
+                "value": 0,
+            },
+            "value notification",
+            {
+                "args": {
+                    "commandClassName": "Central Scene",
+                    "commandClass": 91,
+                    "endpoint": 1,
+                    "property": "scene",
+                    "propertyName": "scene",
+                    "propertyKey": "001",
+                    "value": 0,
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": False,
+                        "min": 0,
+                        "max": 255,
+                        "label": "Scene 004",
+                        "states": {
+                            "0": "KeyPressed",
+                            "1": "KeyReleased",
+                            "2": "KeyHeldDown",
+                        },
+                    },
+                    "ccVersion": 1,
+                },
+            },
+            id="central_scene",
+        ),
+        pytest.param(
+            {
+                "type": "event.value_notification.scene_activation",
+                "command_class": CommandClass.SCENE_ACTIVATION.value,
+                "property": "sceneId",
+                "property_key": None,
+                "endpoint": 1,
+                "subtype": "Endpoint 1",
+                "value": 1,
+            },
+            "value notification",
+            {
+                "args": {
+                    "commandClassName": "Scene Activation",
+                    "commandClass": 43,
+                    "endpoint": 1,
+                    "property": "sceneId",
+                    "propertyName": "sceneId",
+                    "value": 1,
+                    "metadata": {
+                        "type": "number",
+                        "readable": True,
+                        "writeable": True,
+                        "min": 1,
+                        "max": 255,
+                        "label": "Scene ID",
+                    },
+                    "ccVersion": 1,
+                },
+            },
+            id="scene_activation",
+        ),
+    ],
+)
+async def test_if_event_device_trigger_fires_endpoint_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    shelly_qnsh_001P10_shutter: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+    trigger_extra: dict[str, object],
+    event_type: str,
+    event_data: dict[str, object],
+) -> None:
+    """Test event-based device triggers stay backwards compatible with sub-devices.
+
+    This node has colliding endpoint values that are split into endpoint sub-devices.
+    Notification and value notification events are always dispatched with the node
+    device_id (not a sub-device id), even when they originate from a value on a non-root
+    endpoint. So event-based triggers created before the sub-device change (storing the
+    node device_id) still fire.
+    """
+    node = shelly_qnsh_001P10_shutter
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node)}
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        **trigger_extra,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": "{{ trigger.event.data.command_class }}"
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    node.receive_event(
+        Event(
+            type=event_type,
+            data={
+                "source": "node",
+                "event": event_type,
+                "nodeId": node.node_id,
+                **event_data,
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert service_calls[0].data["some"] == trigger_extra["command_class"]
+
+
 async def test_value_updated_value_no_driver(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
