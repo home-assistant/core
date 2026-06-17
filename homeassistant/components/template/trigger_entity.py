@@ -155,7 +155,6 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
 
     def restore_attribute(self, conf_attr: str, attr: str, restored_value: Any) -> None:
         """Restore an attribute from the last value."""
-        setattr(self, attr, restored_value)
         self._rendered[conf_attr] = restored_value
 
     @callback

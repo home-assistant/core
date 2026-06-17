@@ -286,7 +286,6 @@ class AbstractTemplateEntity(Entity):
 
     def restore_last_state_attributes(self, last_state: State) -> None:
         """Restore attributes from the last state."""
-        self._attr_extra_state_attributes = {}
         # Restore built-in attributes from templates
         for conf_key, attr, _attr in (
             (CONF_ICON, ATTR_ICON, "_attr_icon"),
@@ -297,8 +296,8 @@ class AbstractTemplateEntity(Entity):
                 continue
             value = last_state.attributes[attr]
             self.restore_attribute(conf_key, _attr, value)
-            self._attr_extra_state_attributes[attr] = value
 
+        self._attr_extra_state_attributes = {}
         # Restore attributes from template attributes
         if self._attribute_templates:
             for attr in self._config[CONF_ATTRIBUTES]:
