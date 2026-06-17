@@ -13,6 +13,11 @@ from .const import CREDITS_URL, DOMAIN, LOGGER
 
 INSUFFICIENT_CREDITS_ISSUE = "insufficient_credits"
 
+# A credits event clears the insufficient credits issue when the account has
+# quota credits still available, or a balance topup has been applied.
+CREDITS_QUOTA_FRACTION_THRESHOLD = 0.99
+CREDITS_BALANCE_THRESHOLD = 25
+
 
 def flatten(
     data: dict[str, Any],
@@ -100,6 +105,18 @@ async def handle_vehicle_command(
         )
     # Response with result of true
     return result
+
+
+@callback
+def async_handle_credits(hass: HomeAssistant, credits: dict[str, Any]) -> None:
+    """Clear the insufficient credits issue when credits become available."""
+    accounting = credits.get("accounting")
+    quota_available = (
+        accounting is not None
+        and accounting["quota_fraction_used"] < CREDITS_QUOTA_FRACTION_THRESHOLD
+    )
+    if quota_available or credits["balance"] > CREDITS_BALANCE_THRESHOLD:
+        ir.async_delete_issue(hass, DOMAIN, INSUFFICIENT_CREDITS_ISSUE)
 
 
 @callback
