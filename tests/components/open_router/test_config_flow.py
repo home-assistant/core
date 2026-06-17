@@ -151,6 +151,10 @@ async def test_create_conversation_agent(
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
+        {
+            "value": "google/gemini-2.5-flash-image",
+            "label": "Google: Gemini 2.5 Flash Image",
+        },
     ]
 
     result = await hass.config_entries.subentries.async_configure(
@@ -192,6 +196,10 @@ async def test_create_conversation_agent_no_control(
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-3.5-turbo", "label": "OpenAI: GPT-3.5 Turbo"},
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
+        {
+            "value": "google/gemini-2.5-flash-image",
+            "label": "Google: Gemini 2.5 Flash Image",
+        },
     ]
 
     result = await hass.config_entries.subentries.async_configure(
@@ -212,13 +220,22 @@ async def test_create_conversation_agent_no_control(
     }
 
 
+@pytest.mark.parametrize(
+    ("model", "expected_modalities"),
+    [
+        ("openai/gpt-4", ["text"]),
+        ("google/gemini-2.5-flash-image", ["text", "image"]),
+    ],
+)
 async def test_create_ai_task(
     hass: HomeAssistant,
     mock_open_router_client: AsyncMock,
     mock_openai_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    model: str,
+    expected_modalities: list[str],
 ) -> None:
-    """Test creating an AI Task."""
+    """Test creating an AI Task stores the model output modalities."""
     await setup_integration(hass, mock_config_entry)
 
     result = await hass.config_entries.subentries.async_init(
@@ -231,17 +248,21 @@ async def test_create_ai_task(
 
     assert result["data_schema"].schema["model"].config["options"] == [
         {"value": "openai/gpt-4", "label": "OpenAI: GPT-4"},
+        {
+            "value": "google/gemini-2.5-flash-image",
+            "label": "Google: Gemini 2.5 Flash Image",
+        },
     ]
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        {CONF_MODEL: "openai/gpt-4"},
+        {CONF_MODEL: model},
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
-        CONF_MODEL: "openai/gpt-4",
-        CONF_OUTPUT_MODALITIES: ["text"],
+        CONF_MODEL: model,
+        CONF_OUTPUT_MODALITIES: expected_modalities,
     }
 
 

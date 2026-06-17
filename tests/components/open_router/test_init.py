@@ -51,6 +51,15 @@ async def test_migrate_entry_from_v1_1_to_v1_3(
                 title="GPT-4",
                 unique_id=None,
             ),
+            ConfigSubentryData(
+                data={
+                    CONF_MODEL: "google/gemini-2.5-flash-image",
+                },
+                subentry_id="ai_task_image_subentry",
+                subentry_type="ai_task_data",
+                title="Gemini 2.5 Flash Image",
+                unique_id=None,
+            ),
         ],
     )
     entry.add_to_hass(hass)
@@ -77,6 +86,10 @@ async def test_migrate_entry_from_v1_1_to_v1_3(
     assert ai_task_subentry.data[CONF_MODEL] == "openai/gpt-4"
     assert ai_task_subentry.data[CONF_WEB_SEARCH] is False
     assert ai_task_subentry.data[CONF_OUTPUT_MODALITIES] == ["text"]
+
+    image_subentry = entry.subentries["ai_task_image_subentry"]
+    assert image_subentry.data[CONF_MODEL] == "google/gemini-2.5-flash-image"
+    assert image_subentry.data[CONF_OUTPUT_MODALITIES] == ["text", "image"]
 
 
 async def test_migrate_entry_v1_2_to_v1_3_unknown_model(

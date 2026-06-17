@@ -111,10 +111,9 @@ class OpenRouterAITaskEntity(
         except (LookupError, TypeError, ValueError) as err:
             raise HomeAssistantError("Invalid image returned") from err
 
-        if not metadata.startswith("data:") or not image_data:
-            raise HomeAssistantError("Invalid image returned")
-
         mime_type = metadata.removeprefix("data:").split(";")[0]
+        if not metadata.startswith("data:") or not mime_type or not image_data:
+            raise HomeAssistantError("Invalid image returned")
 
         return ai_task.GenImageTaskResult(
             image_data=image_data,

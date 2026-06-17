@@ -459,6 +459,10 @@ async def test_generate_image_no_image(
             [{"type": "image_url", "image_url": {"url": "https://example.com/a.png"}}],
             id="not_a_data_uri",
         ),
+        pytest.param(
+            [{"type": "image_url", "image_url": {"url": "data:;base64,aGVsbG8="}}],
+            id="empty_mime_type",
+        ),
     ],
 )
 async def test_generate_image_invalid_image(
