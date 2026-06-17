@@ -156,3 +156,20 @@ async def test_status_error_callback(
         coordinator._on_status_error(exception)
 
     assert expected_log in caplog.text
+
+
+async def test_error_before_first_data_does_not_mark_unavailable(
+    hass: HomeAssistant,
+    mock_iometer_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that stream errors before first data do not mark entities unavailable."""
+    await setup_platform(hass, mock_config_entry, [Platform.SENSOR])
+    coordinator = mock_config_entry.runtime_data
+
+    coordinator._first_data_event.clear()
+    coordinator.last_update_success = True
+
+    coordinator._on_reading_error(IOmeterConnectionError("err"))
+
+    assert coordinator.last_update_success is True
