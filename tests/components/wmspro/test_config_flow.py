@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from . import setup_config_entry
+from . import remove_config_entry, setup_config_entry, unload_config_entry
 
 from tests.common import MockConfigEntry
 
@@ -342,7 +342,7 @@ async def test_config_flow_duplicate_entries(
     mock_hub_configuration_test: AsyncMock,
 ) -> None:
     """Test we prevent creation of duplicate config entries."""
-    await setup_config_entry(hass, mock_config_entry)
+    assert await setup_config_entry(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.flow.async_init(
@@ -370,7 +370,7 @@ async def test_config_flow_multiple_entries(
     mock_hub_configuration_prod_awning_dimmer: AsyncMock,
 ) -> None:
     """Test we allow creation of different config entries."""
-    await setup_config_entry(hass, mock_config_entry)
+    assert await setup_config_entry(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     mock_hub_configuration_prod_awning_dimmer.return_value = (
@@ -394,3 +394,8 @@ async def test_config_flow_multiple_entries(
         CONF_HOST: "5.6.7.8",
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        assert entry.state is ConfigEntryState.LOADED
+        assert await unload_config_entry(hass, entry)
+        assert await remove_config_entry(hass, entry)

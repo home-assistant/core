@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_awning][device-19239]
+# name: test_device_setup[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_awning][device-19239]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
@@ -30,7 +30,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_awning][device-58717]
+# name: test_device_setup[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_awning][device-58717]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
@@ -61,7 +61,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_awning][device-97358]
+# name: test_device_setup[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_awning][device-97358]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
@@ -92,7 +92,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_dimmer][device-19239]
+# name: test_device_setup[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_dimmer][device-19239]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
@@ -123,7 +123,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_dimmer][device-58717]
+# name: test_device_setup[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_dimmer][device-58717]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
@@ -154,7 +154,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_dimmer][device-97358]
+# name: test_device_setup[mock_hub_configuration_prod_awning_dimmer-mock_hub_status_prod_dimmer][device-97358]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
@@ -185,7 +185,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-116682]
+# name: test_device_setup[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-116682]
   DeviceRegistryEntrySnapshot({
     'area_id': 'wohnbereich',
     'config_entries': <ANY>,
@@ -216,7 +216,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-172555]
+# name: test_device_setup[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-172555]
   DeviceRegistryEntrySnapshot({
     'area_id': 'wohnbereich',
     'config_entries': <ANY>,
@@ -247,7 +247,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-18894]
+# name: test_device_setup[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-18894]
   DeviceRegistryEntrySnapshot({
     'area_id': 'wohnbereich',
     'config_entries': <ANY>,
@@ -278,7 +278,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-230952]
+# name: test_device_setup[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-230952]
   DeviceRegistryEntrySnapshot({
     'area_id': 'wohnbereich',
     'config_entries': <ANY>,
@@ -309,7 +309,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-284942]
+# name: test_device_setup[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-284942]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
@@ -340,7 +340,7 @@
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_device[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-328518]
+# name: test_device_setup[mock_hub_configuration_prod_roller_shutter-mock_hub_status_prod_roller_shutter][device-328518]
   DeviceRegistryEntrySnapshot({
     'area_id': 'alle',
     'config_entries': <ANY>,
