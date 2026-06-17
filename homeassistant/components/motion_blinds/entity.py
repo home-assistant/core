@@ -1,10 +1,11 @@
 """Support for Motionblinds using their WLAN API."""
 
+import asyncio
+
 from motionblinds import (
     DEVICE_TYPES_GATEWAY,
     DEVICE_TYPES_WIFI,
     MotionGateway,
-    ParseException,
 )
 from motionblinds.motion_blinds import MotionBlind
 
@@ -22,6 +23,7 @@ from .const import (
     MANUFACTURER,
     UPDATE_INTERVAL_MOVING,
     UPDATE_INTERVAL_MOVING_WIFI,
+    UPDATE_TRIGGER_RESPONSE_DELAY,
 )
 from .coordinator import DataUpdateCoordinatorMotionBlinds
 from .gateway import device_name
@@ -114,34 +116,28 @@ class MotionCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinatorMotionBlind
 
     async def async_scheduled_update_request(self, *_) -> None:
         """Request a state update from the blind at a scheduled point in time."""
-        try:
-            async with self._api_lock:
-                if self._blind.device_type in DEVICE_TYPES_WIFI:
-                    await self.hass.async_add_executor_job(
-                        self._blind.Update_from_cache
-                    )
-                else:
-                    await self.hass.async_add_executor_job(self._blind.Update)
-        except (TimeoutError, ParseException):
-            pass
+        async with self._api_lock:
+            await self.hass.async_add_executor_job(self._blind.Update_trigger)
+
+        await asyncio.sleep(UPDATE_TRIGGER_RESPONSE_DELAY)
 
         # add the last position to the list and keep the list at max 2 items
         self._previous_positions.append(self._blind.position)
         self._previous_angles.append(self._blind.angle)
-        if len(self._previous_positions) > 2:
-            del self._previous_positions[: len(self._previous_positions) - 2]
-        if len(self._previous_angles) > 2:
-            del self._previous_angles[: len(self._previous_angles) - 2]
+        if len(self._previous_positions) > 3:
+            del self._previous_positions[: len(self._previous_positions) - 3]
+        if len(self._previous_angles) > 3:
+            del self._previous_angles[: len(self._previous_angles) - 3]
 
         self.coordinator.async_update_listeners()
 
         if (
-            len(self._previous_positions) < 2
+            len(self._previous_positions) < 3
             or not all(
                 self._blind.position == prev_position
                 for prev_position in self._previous_positions
             )
-            or len(self._previous_angles) < 2
+            or len(self._previous_angles) < 3
             or not all(
                 self._blind.angle == prev_angle for prev_angle in self._previous_angles
             )
