@@ -1,6 +1,6 @@
 """The tests for Z-Wave JS device triggers."""
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 from pytest_unordered import unordered
@@ -28,7 +28,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from tests.common import async_get_device_automations
+from tests.common import MockConfigEntry, async_get_device_automations
 
 
 async def test_no_controller_triggers(
@@ -1225,6 +1225,46 @@ async def test_get_value_updated_value_triggers(
     assert expected_trigger in triggers
 
 
+@pytest.mark.parametrize(
+    "device_endpoint",
+    [
+        pytest.param(None, id="node_device"),
+        pytest.param(1, id="sub_device"),
+    ],
+)
+async def test_get_triggers_endpoint_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+    device_endpoint: int | None,
+) -> None:
+    """Test node-level triggers are listed for both the node and its sub-devices.
+
+    Device triggers resolve to the node regardless of which endpoint device they are
+    requested for, so the generic value_updated trigger is available from the node device
+    and from each endpoint sub-device.
+    """
+    device = device_registry.async_get_device(
+        identifiers={
+            get_device_id(client.driver, vision_security_zl7432, device_endpoint)
+        }
+    )
+    assert device
+    expected_trigger = {
+        "platform": "device",
+        "domain": DOMAIN,
+        "type": "zwave_js.value_updated.value",
+        "device_id": device.id,
+        "metadata": {},
+    }
+    triggers = await async_get_device_automations(
+        hass, DeviceAutomationType.TRIGGER, device.id
+    )
+    assert expected_trigger in triggers
+
+
 async def test_if_value_updated_value_fires(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -1318,6 +1358,119 @@ async def test_if_value_updated_value_fires(
     assert (
         service_calls[0].data["some"]
         == "zwave_js.value_updated.value - zwave_js.value_updated - open"
+    )
+
+
+@pytest.mark.parametrize(
+    "device_endpoint",
+    [
+        pytest.param(None, id="node_device"),
+        pytest.param(1, id="sub_device"),
+    ],
+)
+async def test_if_value_updated_value_fires_endpoint_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+    service_calls: list[ServiceCall],
+    device_endpoint: int | None,
+) -> None:
+    """Test value_updated.value trigger for a value moved to an endpoint sub-device.
+
+    The Binary Switch values on endpoints 1 and 2 collide, so their entities now live
+    on endpoint sub-devices instead of the node device. Automations created before this
+    change stored the node device_id. Verify the trigger fires whether it references the
+    node device_id (backward compatibility) or the new endpoint sub-device device_id, and
+    that it stays scoped to its own endpoint.
+    """
+    node = vision_security_zl7432
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, node, device_endpoint)}
+    )
+    assert device
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "device",
+                        "domain": DOMAIN,
+                        "device_id": device.id,
+                        "type": "zwave_js.value_updated.value",
+                        "command_class": CommandClass.SWITCH_BINARY.value,
+                        "property": "currentValue",
+                        "property_key": None,
+                        "endpoint": 1,
+                        "from": False,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": (
+                                "zwave_js.value_updated.value - "
+                                "{{ trigger.platform }} - "
+                                "{{ trigger.previous_value }}"
+                            )
+                        },
+                    },
+                },
+            ]
+        },
+    )
+
+    # A value update on the colliding endpoint 2 value must not fire the endpoint 1
+    # trigger.
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Binary Switch",
+                    "commandClass": 37,
+                    "endpoint": 2,
+                    "property": "currentValue",
+                    "newValue": True,
+                    "prevValue": False,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 0
+
+    node.receive_event(
+        Event(
+            type="value updated",
+            data={
+                "source": "node",
+                "event": "value updated",
+                "nodeId": node.node_id,
+                "args": {
+                    "commandClassName": "Binary Switch",
+                    "commandClass": 37,
+                    "endpoint": 1,
+                    "property": "currentValue",
+                    "newValue": True,
+                    "prevValue": False,
+                    "propertyName": "currentValue",
+                },
+            },
+        )
+    )
+    await hass.async_block_till_done()
+    assert len(service_calls) == 1
+    assert (
+        service_calls[0].data["some"]
+        == "zwave_js.value_updated.value - zwave_js.value_updated - False"
     )
 
 
