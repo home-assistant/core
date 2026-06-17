@@ -162,7 +162,7 @@ class AtlanticPassAPCZoneControlZone(AtlanticPassAPCHeatingZone):
     def is_using_derogated_temperature_fallback(self) -> bool:
         """Check if the device behave like the Pass APC Heating Zone."""
 
-        return self.executor.has_command(
+        return self.device.supports_command(
             OverkizCommand.SET_DEROGATED_TARGET_TEMPERATURE
         )
 
