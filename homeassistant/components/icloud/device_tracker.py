@@ -88,11 +88,6 @@ class IcloudTrackerEntity(TrackerEntity):
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
 
     @property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the device."""
-        return self._device.battery_level
-
-    @property
     def icon(self) -> str:
         """Return the icon."""
         return icon_for_icloud_device(self._device)
