@@ -78,10 +78,8 @@ TEST_DEVICE_1 = AmazonDevice(
     },
     media_player_supported=True,
     communication_settings={
-        "calling": None,
-        "communications": "ON",
         "announcements": "ON",
-        "messaging": None,
+        "communications": "ON",
         "dropin": "All",
     },
 )

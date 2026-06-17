@@ -189,10 +189,8 @@ async def test_switch_communication(
 
     device_data = deepcopy(TEST_DEVICE_1)
     device_data.communication_settings = {
-        "calling": None,
-        "communications": "OFF",
         "announcements": "ON",
-        "messaging": None,
+        "communications": "OFF",
         "dropin": "All",
     }
 
@@ -214,10 +212,8 @@ async def test_switch_communication(
         blocking=True,
     )
     device_data.communication_settings = {
-        "calling": None,
-        "communications": "ON",
         "announcements": "ON",
-        "messaging": None,
+        "communications": "ON",
         "dropin": "All",
     }
 

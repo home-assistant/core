@@ -10,10 +10,8 @@
         ]),
         'communication_settings': dict({
           'announcements': 'ON',
-          'calling': None,
           'communications': 'ON',
           'dropin': 'All',
-          'messaging': None,
         }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
@@ -88,10 +86,8 @@
         ]),
         'communication_settings': dict({
           'announcements': 'ON',
-          'calling': None,
           'communications': 'ON',
           'dropin': 'All',
-          'messaging': None,
         }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
@@ -166,10 +162,8 @@
         ]),
         'communication_settings': dict({
           'announcements': 'ON',
-          'calling': None,
           'communications': 'ON',
           'dropin': 'All',
-          'messaging': None,
         }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
