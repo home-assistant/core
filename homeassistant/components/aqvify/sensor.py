@@ -33,9 +33,14 @@ PARALLEL_UPDATES = 0
 class AqvifySensorEntityDescription(SensorEntityDescription):
     """Description of an Aqvify sensor entity."""
 
-    value_fn: Callable[
-        [AqvifyDeviceData | AqvifyHourAggregatedValues], float | int | None
-    ]
+    value_fn: Callable[[AqvifyDeviceData], float | int | None]
+
+
+@dataclass(frozen=True, kw_only=True)
+class AqvifySensorAggrEntityDescription(SensorEntityDescription):
+    """Description of an Aqvify sensor entity for aggregated data."""
+
+    value_fn: Callable[[AqvifyHourAggregatedValues], float | int | None]
 
 
 ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
@@ -46,7 +51,7 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=2,
-        value_fn=lambda value: value.meter_value,  # type: ignore[union-attr]
+        value_fn=lambda value: value.meter_value,
     ),
     AqvifySensorEntityDescription(
         key="water_level",
@@ -55,7 +60,7 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=2,
-        value_fn=lambda value: value.water_level,  # type: ignore[union-attr]
+        value_fn=lambda value: value.water_level,
     ),
     AqvifySensorEntityDescription(
         key="stored_volume",
@@ -64,7 +69,7 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_STORAGE,
         suggested_display_precision=0,
-        value_fn=lambda value: value.volume,  # type: ignore[union-attr]
+        value_fn=lambda value: value.volume,
     ),
     AqvifySensorEntityDescription(
         key="temperature",
@@ -72,39 +77,39 @@ ENTITIES: tuple[AqvifySensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.TEMPERATURE,
         suggested_display_precision=1,
-        value_fn=lambda value: value.temperature,  # type: ignore[union-attr]
+        value_fn=lambda value: value.temperature,
         entity_registry_enabled_default=False,
     ),
 )
 
 
-ENTITIES_AGGR: tuple[AqvifySensorEntityDescription, ...] = (
-    AqvifySensorEntityDescription(
+ENTITIES_AGGR: tuple[AqvifySensorAggrEntityDescription, ...] = (
+    AqvifySensorAggrEntityDescription(
         key="in_flow",
         translation_key="in_flow",
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_HOUR,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         suggested_display_precision=0,
-        value_fn=lambda value: value.in_flow,  # type: ignore[union-attr]
+        value_fn=lambda value: value.in_flow,
     ),
-    AqvifySensorEntityDescription(
+    AqvifySensorAggrEntityDescription(
         key="out_volume",
         translation_key="out_volume",
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.WATER,
         suggested_display_precision=1,
-        value_fn=lambda value: value.out_volume,  # type: ignore[union-attr]
+        value_fn=lambda value: value.out_volume,
     ),
-    AqvifySensorEntityDescription(
+    AqvifySensorAggrEntityDescription(
         key="ground_water_level",
         translation_key="ground_water_level",
         native_unit_of_measurement=UnitOfLength.METERS,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.DISTANCE,
         suggested_display_precision=2,
-        value_fn=lambda value: value.valid_ground_water_level,  # type: ignore[union-attr]
+        value_fn=lambda value: value.valid_ground_water_level,
         entity_registry_enabled_default=False,
     ),
 )
@@ -157,7 +162,7 @@ class AqvifySensor(AqvifyEntity, SensorEntity):
 class AqvifyAggrSensor(AqvifyAggrEntity, SensorEntity):
     """Representation of an Aqvify aggregation sensor entity."""
 
-    entity_description: AqvifySensorEntityDescription
+    entity_description: AqvifySensorAggrEntityDescription
 
     @property
     def native_value(self) -> StateType | datetime | None:
