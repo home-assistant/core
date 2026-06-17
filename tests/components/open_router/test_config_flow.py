@@ -6,6 +6,7 @@ import pytest
 from python_open_router import OpenRouterError
 
 from homeassistant.components.open_router.const import (
+    CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
     CONF_WEB_SEARCH,
     DOMAIN,
@@ -238,7 +239,10 @@ async def test_create_ai_task(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"] == {CONF_MODEL: "openai/gpt-4"}
+    assert result["data"] == {
+        CONF_MODEL: "openai/gpt-4",
+        CONF_OUTPUT_MODALITIES: ["text"],
+    }
 
 
 @pytest.mark.parametrize(
@@ -331,6 +335,10 @@ async def test_reconfigure_ai_task(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+    subentry = mock_config_entry.subentries[subentry_id]
+    assert subentry.data[CONF_MODEL] == "openai/gpt-4"
+    assert subentry.data[CONF_OUTPUT_MODALITIES] == ["text"]
 
 
 @pytest.mark.parametrize(

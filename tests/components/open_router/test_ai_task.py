@@ -21,6 +21,31 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+def _image_completion(images: list[dict] | None) -> ChatCompletion:
+    """Build a chat completion carrying generated images."""
+    return ChatCompletion(
+        id="chatcmpl-1234567890ABCDEFGHIJKLMNOPQRS",
+        choices=[
+            Choice(
+                finish_reason="stop",
+                index=0,
+                message=ChatCompletionMessage(
+                    content=None,
+                    role="assistant",
+                    function_call=None,
+                    tool_calls=None,
+                    images=images,
+                ),
+            )
+        ],
+        created=1700000000,
+        model="google/gemini-1.5-pro",
+        object="chat.completion",
+        system_fingerprint=None,
+        usage=CompletionUsage(completion_tokens=9, prompt_tokens=8, total_tokens=17),
+    )
+
+
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -337,3 +362,80 @@ async def test_generate_data_with_attachments(
             "image_url": {"url": "data:application/pdf;base64,ZmFrZV9pbWFnZV9kYXRh"},
         },
     ]
+
+
+@pytest.mark.parametrize(
+    ("output_modalities", "supports_image"),
+    [
+        (["text", "image"], True),
+        (["text"], False),
+    ],
+)
+async def test_generate_image_feature(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+    supports_image: bool,
+) -> None:
+    """Test GENERATE_IMAGE is advertised only for image-capable models."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("ai_task.gemini_1_5_pro")
+    assert state is not None
+    features = ai_task.AITaskEntityFeature(state.attributes["supported_features"])
+    assert (ai_task.AITaskEntityFeature.GENERATE_IMAGE in features) is supports_image
+
+
+async def test_generate_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task image generation."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=_image_completion(
+            [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": "data:image/png;base64,aGVsbG8="},
+                }
+            ]
+        )
+    )
+
+    result = await ai_task.async_generate_image(
+        hass,
+        task_name="Test Task",
+        entity_id="ai_task.gemini_1_5_pro",
+        instructions="Generate a test image",
+    )
+
+    assert result["image_data"] == b"hello"
+    assert result["mime_type"] == "image/png"
+    assert result["model"] == "google/gemini-1.5-pro"
+
+    call_kwargs = mock_openai_client.chat.completions.create.call_args[1]
+    assert call_kwargs["extra_body"]["modalities"] == ["image", "text"]
+
+
+async def test_generate_image_no_image(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_openai_client: AsyncMock,
+) -> None:
+    """Test AI Task image generation raises when no image is returned."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_openai_client.chat.completions.create = AsyncMock(
+        return_value=_image_completion(None)
+    )
+
+    with pytest.raises(HomeAssistantError, match="No image returned"):
+        await ai_task.async_generate_image(
+            hass,
+            task_name="Test Task",
+            entity_id="ai_task.gemini_1_5_pro",
+            instructions="Generate a test image",
+        )

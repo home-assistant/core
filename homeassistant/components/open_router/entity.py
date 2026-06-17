@@ -168,6 +168,10 @@ async def _transform_response(
             for tool_call in message.tool_calls
             if tool_call.type == "function"
         ]
+    # OpenRouter returns generated images in a non-standard `images` field that
+    # the OpenAI SDK preserves as an extra attribute.
+    if message.model_extra and (images := message.model_extra.get("images")):
+        data["native"] = images
     yield data
 
 
@@ -230,6 +234,7 @@ class OpenRouterEntity(Entity):
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
         structure: vol.Schema | None = None,
+        force_image: bool = False,
     ) -> None:
         """Generate an answer for the chat log."""
 
@@ -238,6 +243,8 @@ class OpenRouterEntity(Entity):
             model = f"{model}:online"
 
         extra_body: dict[str, Any] = {"require_parameters": True}
+        if force_image:
+            extra_body["modalities"] = ["image", "text"]
 
         model_args = {
             "model": model,
