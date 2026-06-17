@@ -154,7 +154,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self._async_create_device_entry(
                     LGDeviceType.AC, emitter_id, user_input
                 )
-            errors[CONF_INFRARED_ENTITY_ID] = "missing_infrared_entity"
+            errors[CONF_INFRARED_ENTITY_ID] = "infrared_entity_id"
 
         return self.async_show_form(
             step_id="ac",
@@ -234,7 +234,7 @@ class LgIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_update_reload_and_abort(
                         entry, data_updates=user_input
                     )
-                errors[CONF_INFRARED_ENTITY_ID] = "missing_infrared_entity"
+                errors[CONF_INFRARED_ENTITY_ID] = "infrared_entity_id"
 
         if device_type == LGDeviceType.TV:
             schema = vol.Schema(

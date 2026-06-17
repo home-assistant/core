@@ -121,7 +121,7 @@ async def test_set_hvac_mode_off(
             24,
             FAN_MEDIUM,
             lambda: ac_encoder.encode_dry(FAN_MEDIUM),
-            id="dry_auto",
+            id="dry_medium",
         ),
     ],
 )
