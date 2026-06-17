@@ -41,7 +41,7 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),
+                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 extra=None,
                 child_jobs=[
                     Job(
@@ -52,7 +52,7 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
                         stage=None,
                         done=False,
                         errors=[],
-                        created=datetime.now(),
+                        created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                         extra=None,
                         child_jobs=[],
                     )
@@ -131,7 +131,7 @@ async def test_job_manager_ws_updates(
                     "stage": None,
                     "done": False,
                     "errors": [],
-                    "created": (created := datetime.now().isoformat()),
+                    "created": (created := datetime.now().isoformat()),  # pylint: disable=home-assistant-enforce-naive-now
                     "extra": None,
                 },
             },
@@ -295,7 +295,7 @@ async def test_job_manager_reload_on_supervisor_restart(
                 stage=None,
                 done=False,
                 errors=[],
-                created=datetime.now(),
+                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
                 extra=None,
                 child_jobs=[],
             )
