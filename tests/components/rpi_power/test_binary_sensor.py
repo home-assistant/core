@@ -19,7 +19,7 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry, async_fire_time_changed, patch
 
-ENTITY_ID = "binary_sensor.mock_title_power_status"
+ENTITY_ID = "binary_sensor.raspberry_pi_power_status"
 
 MODULE = "homeassistant.components.rpi_power.binary_sensor.new_under_voltage"
 

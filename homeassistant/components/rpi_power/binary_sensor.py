@@ -54,6 +54,7 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
         self._attr_device_info = DeviceInfo(
             manufacturer="Raspberry Pi",
             identifiers={(DOMAIN, "rpi_power")},
+            name="Raspberry Pi",
         )
 
     def update(self) -> None:
