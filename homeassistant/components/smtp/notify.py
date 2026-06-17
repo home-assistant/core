@@ -41,7 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -208,7 +208,7 @@ class MailNotifyEntity(NotifyEntity):
             try:
                 client = self._client.connect()
             except SMTPAuthenticationError as e:
-                raise HomeAssistantError(
+                raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="authentication_error",
                 ) from e

@@ -17,7 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import discovery
 from homeassistant.util.ssl import create_client_context
 
@@ -75,7 +75,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmtpConfigEntry) -> bool
     try:
         await hass.async_add_executor_job(lambda: client.connect().quit())
     except SMTPAuthenticationError as e:
-        raise ConfigEntryError(
+        raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="authentication_error",
         ) from e
