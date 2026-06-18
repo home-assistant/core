@@ -294,7 +294,7 @@ class XboxTitleHistoryCoordinator(XboxBaseCoordinator[dict[str, Title]]):
 
         title_history = await self.client.titlehub.get_title_history(
             self.client.xuid,
-            [TitleFields.ACHIEVEMENT],
+            [TitleFields.ACHIEVEMENT, TitleFields.DETAIL],
             max_items=1000,
         )
 
