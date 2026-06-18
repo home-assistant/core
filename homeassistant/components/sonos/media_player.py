@@ -130,7 +130,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.SEEK
-        | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -143,6 +142,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         """Initialize the media player entity."""
         super().__init__(speaker, config_entry)
         self._attr_unique_id = self.soco.uid
+
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        features = self._attr_supported_features
+        if self.source_list:
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        return features
 
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""

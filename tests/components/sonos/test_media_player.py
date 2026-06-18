@@ -36,6 +36,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
+    MediaPlayerEntityFeature,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
@@ -723,6 +724,7 @@ async def test_play_sonos_playlist(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_line_in_tv(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -825,6 +827,7 @@ async def test_select_source_line_in_tv(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_play_uri(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -866,6 +869,7 @@ async def test_select_source_play_uri(
         ),
     ],
 )
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_play_queue(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -897,6 +901,7 @@ async def test_select_source_play_queue(
     soco_mock.play_from_queue.assert_called_with(0)
 
 
+@pytest.mark.parametrize("speaker_model", ["Sonos Amp"], indirect=True)
 async def test_select_source_error(
     hass: HomeAssistant,
     soco_factory: SoCoMockFactory,
@@ -1426,15 +1431,15 @@ async def test_media_get_queue(
 
 
 @pytest.mark.parametrize(
-    ("speaker_model", "source_list"),
+    ("speaker_model", "source_list", "select_source"),
     [
-        ("Sonos Arc Ultra", [SOURCE_TV]),
-        ("Sonos Arc", [SOURCE_TV]),
-        ("Sonos Playbar", [SOURCE_TV]),
-        ("Sonos Connect", [SOURCE_LINEIN]),
-        ("Sonos Play:5", [SOURCE_LINEIN]),
-        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
-        ("Sonos Era", None),
+        ("Sonos Arc Ultra", [SOURCE_TV], True),
+        ("Sonos Arc", [SOURCE_TV], True),
+        ("Sonos Playbar", [SOURCE_TV], True),
+        ("Sonos Connect", [SOURCE_LINEIN], True),
+        ("Sonos Play:5", [SOURCE_LINEIN], True),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV], True),
+        ("Sonos Era", None, False),
     ],
     indirect=["speaker_model"],
 )
@@ -1443,10 +1448,13 @@ async def test_media_source_list(
     async_autosetup_sonos,
     speaker_model: str,
     source_list: list[str] | None,
+    select_source: bool,
 ) -> None:
     """Test the mapping between the speaker model name and source_list."""
     state = hass.states.get("media_player.zone_a")
     assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert bool(features & MediaPlayerEntityFeature.SELECT_SOURCE) is select_source
 
 
 async def test_service_update_alarm(
