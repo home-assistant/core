@@ -96,7 +96,7 @@ _DESC_SET_POINT_COOLING = BlancoSensorEntityDescription(
     ),
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # range: 4–10 °C
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # range: 4-10 °C
     suggested_display_precision=0,
 )
 _DESC_SET_POINT_HEATING = BlancoSensorEntityDescription(
@@ -107,7 +107,7 @@ _DESC_SET_POINT_HEATING = BlancoSensorEntityDescription(
     ),
     device_class=SensorDeviceClass.TEMPERATURE,
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # range: 65–100 °C
+    native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # range: 65-100 °C
     suggested_display_precision=0,
 )
 _DESC_CO2_REST = BlancoSensorEntityDescription(
@@ -115,7 +115,7 @@ _DESC_CO2_REST = BlancoSensorEntityDescription(
     translation_key="co2_rest",
     value_fn=lambda data: data.get("status", {}).get("params", {}).get("co2_rest"),
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,  # range: 0–100 %
+    native_unit_of_measurement=PERCENTAGE,  # range: 0-100 %
     suggested_display_precision=0,
 )
 _DESC_FILTER_REST = BlancoSensorEntityDescription(
@@ -123,7 +123,7 @@ _DESC_FILTER_REST = BlancoSensorEntityDescription(
     translation_key="filter_rest",
     value_fn=lambda data: data.get("status", {}).get("params", {}).get("filter_rest"),
     state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,  # range: 0–100 %
+    native_unit_of_measurement=PERCENTAGE,  # range: 0-100 %
     suggested_display_precision=0,
 )
 
