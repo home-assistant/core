@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import AsyncGenerator
-from datetime import datetime, timedelta
+from datetime import timedelta
 from http import HTTPStatus
 from unittest.mock import patch
 
@@ -37,7 +37,7 @@ async def setup_push_receiver(
     """Fixture that sets up a mocked push receiver."""
     push_url = "https://mobile-push.home-assistant.dev/push"
 
-    now = datetime.now() + timedelta(hours=24)  # pylint: disable=home-assistant-enforce-naive-now
+    now = dt_util.naive_now() + timedelta(hours=24)
     iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     aioclient_mock.post(
@@ -135,7 +135,7 @@ async def setup_apple_push_receiver(
     """
     push_url = "https://mobile-push.home-assistant.dev/push"
 
-    now = datetime.now() + timedelta(hours=24)
+    now = dt_util.naive_now() + timedelta(hours=24)
     iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     aioclient_mock.post(
@@ -569,7 +569,7 @@ async def test_notify_multiple_targets(
                 "total": 1,
                 "maximum": 150,
                 "remaining": 149,
-                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(  # pylint: disable=home-assistant-enforce-naive-now
+                "resetsAt": (dt_util.naive_now() + timedelta(hours=24)).strftime(
                     "%Y-%m-%dT%H:%M:%SZ"
                 ),
             }
@@ -647,7 +647,7 @@ async def test_notify_multiple_targets_if_any_disconnected(
                 "total": 1,
                 "maximum": 150,
                 "remaining": 149,
-                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(  # pylint: disable=home-assistant-enforce-naive-now
+                "resetsAt": (dt_util.naive_now() + timedelta(hours=24)).strftime(
                     "%Y-%m-%dT%H:%M:%SZ"
                 ),
             }
@@ -933,7 +933,7 @@ async def test_notify_live_activity_uses_stored_token(
 
     await hass.services.async_call(
         "notify",
-        "mobile_app_test",
+        "mobile_app_apple_test_device",
         {
             "message": "45 minutes remaining",
             "target": ["mock-webhook_id"],
@@ -978,7 +978,7 @@ async def test_notify_live_activity_start(
     starts a fresh activity using the device's push-to-start token.
     """
     push_url = "https://mobile-push.home-assistant.dev/push"
-    now = datetime.now() + timedelta(hours=24)
+    now = dt_util.naive_now() + timedelta(hours=24)
     iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     aioclient_mock.post(
@@ -1057,7 +1057,7 @@ async def test_notify_live_activity_without_tag_uses_fcm(
     """Test that live_update without a tag falls through to normal FCM push."""
     await hass.services.async_call(
         "notify",
-        "mobile_app_test",
+        "mobile_app_apple_test_device",
         {
             "message": "No tag here",
             "target": ["mock-webhook_id"],
@@ -1096,7 +1096,7 @@ async def test_notify_normal_notification_ignores_live_activity_tokens(
 
     await hass.services.async_call(
         "notify",
-        "mobile_app_test",
+        "mobile_app_apple_test_device",
         {
             "message": "Normal notification",
             "target": ["mock-webhook_id"],
@@ -1128,7 +1128,7 @@ async def test_notify_clear_notification_allows_same_tag_to_start_again(
 ) -> None:
     """Test clear_notification removes the tag token so recurring automations restart."""
     push_url = "https://mobile-push.home-assistant.dev/push"
-    now = datetime.now() + timedelta(hours=24)
+    now = dt_util.naive_now() + timedelta(hours=24)
     iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     aioclient_mock.post(
@@ -1232,7 +1232,7 @@ async def test_notify_clear_notification_without_stored_token_passes_through(
     """Test clear_notification with no matching live activity is unmodified."""
     await hass.services.async_call(
         "notify",
-        "mobile_app_test",
+        "mobile_app_apple_test_device",
         {
             "message": "clear_notification",
             "target": ["mock-webhook_id"],
@@ -1267,7 +1267,7 @@ async def test_notify_clear_notification_without_tag_passes_through(
 
     await hass.services.async_call(
         "notify",
-        "mobile_app_test",
+        "mobile_app_apple_test_device",
         {
             "message": "clear_notification",
             "target": ["mock-webhook_id"],
@@ -1294,7 +1294,7 @@ async def test_notify_non_apple_device_skips_live_activity(
 ) -> None:
     """Test that a non-Apple device never enters the Live Activity code path."""
     push_url = "https://mobile-push.home-assistant.dev/push"
-    now = datetime.now() + timedelta(hours=24)
+    now = dt_util.naive_now() + timedelta(hours=24)
     iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     aioclient_mock.post(
