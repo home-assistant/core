@@ -1,0 +1,13 @@
+upload_art_frame_image:
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: switchbot_cloud
+          model: AI Art Frame
+          multiple: true
+    image_url:
+      required: true
+      selector:
+        text:
