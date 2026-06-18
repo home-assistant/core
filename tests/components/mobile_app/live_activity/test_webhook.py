@@ -141,7 +141,12 @@ async def test_webhook_live_activity_token_cleanup_reschedules_for_remaining(
     )
 
     tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
-    assert set(tokens[webhook_id]) == {"first", "second"}
+    assert tokens == {
+        webhook_id: {
+            "first": {"token": "a" * 64, "expires_at": first_expires_at},
+            "second": {"token": "b" * 64, "expires_at": second_expires_at},
+        },
+    }
 
     # Fire just past the first token's expiry. The originally scheduled sweep
     # runs, removes the first token, and reschedules itself for the second.
@@ -149,7 +154,11 @@ async def test_webhook_live_activity_token_cleanup_reschedules_for_remaining(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert set(tokens[webhook_id]) == {"second"}
+    assert tokens == {
+        webhook_id: {
+            "second": {"token": "b" * 64, "expires_at": second_expires_at},
+        },
+    }
 
     # Fire past the second token's expiry. The rescheduled sweep should run
     # and remove the second token, draining the store.
@@ -157,7 +166,7 @@ async def test_webhook_live_activity_token_cleanup_reschedules_for_remaining(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert webhook_id not in tokens
+    assert tokens == {}
 
 
 async def test_webhook_live_activity_dismissed(

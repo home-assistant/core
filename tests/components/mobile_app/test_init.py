@@ -728,7 +728,6 @@ async def test_storage_migration_adds_live_activity_tokens(
     await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
     await hass.async_block_till_done()
 
-    assert DATA_LIVE_ACTIVITY_TOKENS in hass.data[DOMAIN]
     assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
 
 
