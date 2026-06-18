@@ -35,11 +35,11 @@ async def test_entry_setup_unload(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "setup_state"),
     [
-        MelCloudHomeAuthenticationError("bad creds"),
-        MelCloudHomeConnectionError("cannot connect"),
-        MelCloudHomeTimeoutError("timeout"),
+        (MelCloudHomeAuthenticationError("bad creds"), ConfigEntryState.SETUP_ERROR),
+        (MelCloudHomeConnectionError("cannot connect"), ConfigEntryState.SETUP_RETRY),
+        (MelCloudHomeTimeoutError("timeout"), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_entry_setup_retry_on_update_failure(
@@ -47,6 +47,7 @@ async def test_entry_setup_retry_on_update_failure(
     mock_config_entry: MockConfigEntry,
     mock_melcloud_client: AsyncMock,
     exception: Exception,
+    setup_state: ConfigEntryState,
 ) -> None:
     """Test setup retries when initial coordinator refresh fails."""
     mock_melcloud_client.get_context.side_effect = exception
@@ -55,7 +56,7 @@ async def test_entry_setup_retry_on_update_failure(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is setup_state
 
 
 async def test_new_ata_unit_callback(
