@@ -43,11 +43,7 @@ rules:
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
-  parallel-updates:
-    status: exempt
-    comment: |
-      The integration only polls through a coordinator and has no entities that
-      perform actions.
+  parallel-updates: todo
   reauthentication-flow:
     status: exempt
     comment: The openSenseMap API requires no authentication.
