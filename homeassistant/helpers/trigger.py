@@ -44,11 +44,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Context,
     HassJob,
     HassJobType,
     HomeAssistant,
     State,
+    async_get_hass_or_none,
     callback,
     get_hassjob_callable_job_type,
     is_callback,
@@ -331,11 +333,37 @@ BEHAVIOR_ALL: Final = "all"
 BEHAVIOR_EACH: Final = "each"
 
 
+def _create_deprecated_behavior_issue(deprecated: str, replacement: str) -> None:
+    """Inform the user a renamed trigger behavior value is still in use."""
+    # Returns None when called from the wrong thread or before hass is set up
+    # (e.g. a `check_config` run), in which case there's nothing to report to.
+    if (hass := async_get_hass_or_none()) is None:
+        return
+
+    from .issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
+
+    async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        f"deprecated_trigger_behavior_{deprecated}",
+        breaks_in_ha_version="2027.1",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="deprecated_trigger_behavior",
+        translation_placeholders={
+            "deprecated_behavior": deprecated,
+            "new_behavior": replacement,
+        },
+    )
+
+
 def _backwards_compatible_behavior(value: Any) -> Any:
     """Convert legacy behavior values to new ones."""
     if value == "any":
+        _create_deprecated_behavior_issue("any", BEHAVIOR_EACH)
         return BEHAVIOR_EACH
     if value == "last":
+        _create_deprecated_behavior_issue("last", BEHAVIOR_ALL)
         return BEHAVIOR_ALL
     return value
 
