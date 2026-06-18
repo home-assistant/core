@@ -59,16 +59,16 @@ ATA_SWITCHES: tuple[ATASwitchEntityDescription, ...] = (
             unit.frost_protection.enabled if unit.frost_protection else None
         ),
         turn_on_fn=lambda client, unit: client.set_frost_protection(
-            unit.id,
             enabled=True,
             min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
             max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
+            ata_unit_ids=[unit.id],
         ),
         turn_off_fn=lambda client, unit: client.set_frost_protection(
-            unit.id,
             enabled=False,
             min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
             max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
+            ata_unit_ids=[unit.id],
         ),
     ),
     ATASwitchEntityDescription(
@@ -81,16 +81,16 @@ ATA_SWITCHES: tuple[ATASwitchEntityDescription, ...] = (
             unit.overheat_protection.enabled if unit.overheat_protection else None
         ),
         turn_on_fn=lambda client, unit: client.set_overheat_protection(
-            unit.id,
             enabled=True,
             min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
             max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
+            ata_unit_ids=[unit.id],
         ),
         turn_off_fn=lambda client, unit: client.set_overheat_protection(
-            unit.id,
             enabled=False,
             min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
             max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
+            ata_unit_ids=[unit.id],
         ),
     ),
 )
@@ -106,16 +106,16 @@ ATW_SWITCHES: tuple[ATWSwitchEntityDescription, ...] = (
             unit.frost_protection.enabled if unit.frost_protection else None
         ),
         turn_on_fn=lambda client, unit: client.set_frost_protection(
-            unit.id,
             enabled=True,
             min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
             max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
+            atw_unit_ids=[unit.id],
         ),
         turn_off_fn=lambda client, unit: client.set_frost_protection(
-            unit.id,
             enabled=False,
             min_temp=unit.frost_protection.min if unit.frost_protection else 0.0,
             max_temp=unit.frost_protection.max if unit.frost_protection else 0.0,
+            atw_unit_ids=[unit.id],
         ),
     ),
     ATWSwitchEntityDescription(
@@ -128,16 +128,16 @@ ATW_SWITCHES: tuple[ATWSwitchEntityDescription, ...] = (
             unit.overheat_protection.enabled if unit.overheat_protection else None
         ),
         turn_on_fn=lambda client, unit: client.set_overheat_protection(
-            unit.id,
             enabled=True,
             min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
             max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
+            atw_unit_ids=[unit.id],
         ),
         turn_off_fn=lambda client, unit: client.set_overheat_protection(
-            unit.id,
             enabled=False,
             min_temp=unit.overheat_protection.min if unit.overheat_protection else 0.0,
             max_temp=unit.overheat_protection.max if unit.overheat_protection else 0.0,
+            atw_unit_ids=[unit.id],
         ),
     ),
 )
