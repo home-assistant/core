@@ -13,7 +13,7 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
-      "additional_account": {
+      "add_account": {
         "data": {
           "account": "[%key:component::sia::config::step::user::data::account%]",
           "additional_account": "[%key:component::sia::config::step::user::data::additional_account%]",

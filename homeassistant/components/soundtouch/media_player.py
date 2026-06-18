@@ -19,11 +19,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SoundTouchConfigEntry
@@ -89,9 +85,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._attr_unique_id = device.config.device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.config.device_id)},
-            connections={
-                (CONNECTION_NETWORK_MAC, format_mac(device.config.mac_address))
-            },
+            connections={(CONNECTION_NETWORK_MAC, device.config.mac_address)},
             manufacturer="Bose Corporation",
             model=device.config.type,
             name=device.config.name,
