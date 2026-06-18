@@ -7,6 +7,7 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD
+from homeassistant.helpers import config_validation as cv
 
 from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE
 from ..dpt import HaDptClass, get_supported_dpts
@@ -162,7 +163,11 @@ class GroupSelect(KNXSelectorBase):
 
 
 class GASelector(KNXSelectorBase):
-    """Selector for a KNX group address structure."""
+    """Selector for a KNX group address structure.
+
+    `dpt_required` optional dpt only apply to dpt-class lists, enums are always required.
+    `valid_dpt` is used in frontend to filter dropdown menu - no validation is done.
+    """
 
     selector_type = "knx_group_address"
 
@@ -174,6 +179,7 @@ class GASelector(KNXSelectorBase):
         write_required: bool = False,
         state_required: bool = False,
         dpt: type[Enum] | list[HaDptClass] | None = None,
+        dpt_required: bool = True,
         valid_dpt: str | Iterable[str] | None = None,
     ) -> None:
         """Initialize the group address selector."""
@@ -183,7 +189,7 @@ class GASelector(KNXSelectorBase):
         self.write_required = write_required
         self.state_required = state_required
         self.dpt = dpt
-        # valid_dpt is used in frontend to filter dropdown menu - no validation is done
+        self.dpt_required = dpt_required
         self.valid_dpt = (valid_dpt,) if isinstance(valid_dpt, str) else valid_dpt
 
         self.schema = self.build_schema()
@@ -199,6 +205,7 @@ class GASelector(KNXSelectorBase):
         }
         if self.dpt is not None:
             if isinstance(self.dpt, list):
+                # optional / required is not passed to FE - only validated in BE
                 options["dptClasses"] = self.dpt
             else:
                 options["dptSelect"] = [
@@ -270,7 +277,8 @@ class GASelector(KNXSelectorBase):
         """Add DPT validator to the schema."""
         if self.dpt is not None:
             if isinstance(self.dpt, list):
-                schema[vol.Required(CONF_DPT)] = vol.In(get_supported_dpts())
+                marker = vol.Required if self.dpt_required else vol.Optional
+                schema[marker(CONF_DPT)] = vol.In(get_supported_dpts())
             else:
                 schema[vol.Required(CONF_DPT)] = vol.In(
                     {item.value for item in self.dpt}
@@ -313,8 +321,8 @@ class KnxPayloadSelector(KNXSelectorBase):
             vol.Optional(CONF_VALUE): object,
         },
         {
-            vol.Required(CONF_PAYLOAD): list[int],
-            vol.Required(CONF_PAYLOAD_LENGTH): int,
+            vol.Required(CONF_PAYLOAD): cv.positive_int,
+            vol.Required(CONF_PAYLOAD_LENGTH): vol.All(int, vol.Range(min=0, max=14)),
         },
     )
     selector_type = "knx_payload"
@@ -329,3 +337,25 @@ class KnxPayloadSelector(KNXSelectorBase):
             "type": self.selector_type,
             "ga_path": self.ga_path,
         }
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed data."""
+        validated = self.schema(data)
+        if CONF_PAYLOAD in validated and CONF_PAYLOAD_LENGTH in validated:
+            payload = validated[CONF_PAYLOAD]
+            payload_length = validated[CONF_PAYLOAD_LENGTH]
+            if payload_length == 0:
+                # DPT 1,2,3 is marked length 0, has 6 bit size
+                if payload > 63:
+                    raise vol.Invalid(
+                        f"Payload exceeds DPT 1,2,3 limit of 63: {payload}"
+                    )
+            else:
+                max_payload = (1 << (payload_length * 8)) - 1
+                if payload > max_payload:
+                    raise vol.Invalid(
+                        f"Payload {payload} exceeds possible maximum for "
+                        f"length {payload_length}: {max_payload}"
+                    )
+        # CONF_VALUE branch needs subvalidator as we don't have the DPT available here
+        return validated
