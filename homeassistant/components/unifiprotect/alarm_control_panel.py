@@ -74,14 +74,14 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
         arm_mode = api.public_bootstrap.arm_mode if api.has_public_bootstrap else None
         if arm_mode is None:
             # No alarm data available — force unavailable regardless of the
-            # private WebSocket state managed by the base class.
+            # websocket state managed by the base class.
             self._attr_available = False
             self._attr_alarm_state = None
             return
-        # Do NOT set _attr_available = True here.  Availability when alarm data
-        # is present is determined exclusively by the base class via
-        # last_update_success (private WebSocket health). Only force it to
-        # False as an additional condition when alarm data is missing.
+        # arm_mode is delivered over the public devices websocket, so
+        # availability tracks the public WS health (like relay/siren), not the
+        # private connection the base class would otherwise apply for the NVR.
+        self._attr_available = self.data.last_public_update_success
         # Fall back to DISARMED for unknown future status values rather than
         # rendering the entity as ``unknown``.
         self._attr_alarm_state = _UIPROTECT_TO_HA.get(
