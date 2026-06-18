@@ -9,6 +9,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import (
     CONF_MAX_TEMP,
@@ -66,7 +67,10 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = err
             else:
                 ccm15 = CCM15Device(
-                    user_input[CONF_HOST], user_input[CONF_PORT], DEFAULT_TIMEOUT
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    DEFAULT_TIMEOUT,
+                    client=get_async_client(self.hass),
                 )
                 try:
                     if not await ccm15.async_test_connection():
@@ -107,7 +111,10 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = err
             else:
                 ccm15 = CCM15Device(
-                    user_input[CONF_HOST], user_input[CONF_PORT], DEFAULT_TIMEOUT
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    DEFAULT_TIMEOUT,
+                    client=get_async_client(self.hass),
                 )
                 try:
                     if not await ccm15.async_test_connection():
