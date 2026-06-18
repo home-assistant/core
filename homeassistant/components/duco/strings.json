@@ -111,10 +111,10 @@
   },
   "exceptions": {
     "api_error": {
-      "message": "Unexpected error from the Duco API: {error}"
+      "message": "Unexpected error from the Duco API."
     },
     "cannot_connect": {
-      "message": "An error occurred while trying to connect to the Duco instance: {error}"
+      "message": "Could not connect to the Duco device."
     },
     "connection_error": {
       "message": "Could not connect to the Duco device."

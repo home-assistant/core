@@ -10,6 +10,7 @@ from duco_connectivity import (
     DucoResponseError,
     LanInfo,
     Node,
+    NodeListActionItemList,
 )
 import pytest
 
@@ -44,14 +45,14 @@ from tests.common import MockConfigEntry
             DucoError("Unexpected API error"),
             ConfigEntryState.SETUP_ERROR,
             "api_error",
-            True,
+            False,
         ),
         (
             "async_get_board_info",
             DucoResponseError(500, "/info"),
             ConfigEntryState.SETUP_ERROR,
             "api_error",
-            True,
+            False,
         ),
         (
             "async_get_nodes",
@@ -212,7 +213,7 @@ async def test_setup_entry_creates_http_client(
     mock_config_entry: MockConfigEntry,
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
-    mock_node_actions,
+    mock_node_actions: NodeListActionItemList,
     mock_nodes: list[Node],
 ) -> None:
     """Test that setup creates the Duco client with the provided host."""
