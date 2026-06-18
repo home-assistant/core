@@ -23,7 +23,7 @@ class AmazonNotifyEntityDescription(NotifyEntityDescription):
     """Alexa Devices notify entity description."""
 
     is_supported: Callable[[AmazonDevice], bool] = lambda _device: True
-    is_available_fn: Callable[[AmazonDevice], bool] | None = None
+    is_available_fn: Callable[[AmazonDevice], bool] = lambda _device: True
     method: Callable[[AmazonEchoApi, AmazonDevice, str], Awaitable[None]]
     subkey: str
 
@@ -86,9 +86,8 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and (
-            self.entity_description.is_available_fn is None
-            or self.entity_description.is_available_fn(self.device)
+        return (
+            self.entity_description.is_available_fn(self.device) and super().available
         )
 
     async def async_send_message(
