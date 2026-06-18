@@ -941,7 +941,7 @@ async def test_notify_live_activity_start(
             "app_data": {
                 "push_token": "FCM_TOKEN",
                 "push_url": push_url,
-                "push_to_start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+                "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
             },
             "app_id": "io.robbie.HomeAssistant",
             "app_name": "Home Assistant",
@@ -1184,7 +1184,7 @@ async def test_notify_clear_notification_allows_same_tag_to_start_again(
             "app_data": {
                 "push_token": "FCM_TOKEN",
                 "push_url": push_url,
-                "push_to_start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+                "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
             },
             "app_id": "io.robbie.HomeAssistant",
             "app_name": "Home Assistant",
@@ -1350,7 +1350,7 @@ async def test_notify_non_apple_device_skips_live_activity(
             "app_data": {
                 "push_token": "FCM_TOKEN",
                 "push_url": push_url,
-                "push_to_start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
+                "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
             },
             "app_id": "io.homeassistant.companion.android",
             "app_name": "Home Assistant",

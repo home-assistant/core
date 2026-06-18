@@ -16,7 +16,7 @@ from ..const import (
     ATTR_LIVE_ACTIVITY_EXPIRES_AT,
     ATTR_LIVE_ACTIVITY_TOKEN,
     ATTR_LIVE_UPDATE,
-    ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN,
+    ATTR_START_LIVE_ACTIVITY_TOKEN,
     ATTR_TAG,
     ATTR_TOKEN,
     ATTR_WEBHOOK_ID,
@@ -111,7 +111,7 @@ def resolve_live_activity_push(
     if stored_token_valid:
         return LiveActivityPush(stored[ATTR_TOKEN], LiveActivityEvent.UPDATE, tag)
 
-    if token := registration[ATTR_APP_DATA].get(ATTR_PUSH_TO_START_LIVE_ACTIVITY_TOKEN):
+    if token := registration[ATTR_APP_DATA].get(ATTR_START_LIVE_ACTIVITY_TOKEN):
         return LiveActivityPush(token, LiveActivityEvent.START, tag)
 
     return None
