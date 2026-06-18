@@ -1,8 +1,11 @@
 """DataUpdateCoordinator for the blanco integration."""
 
+import base64
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
+import json
 import logging
+import time
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -30,6 +33,23 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=30)
 """Poll interval for the BLANCO device data endpoints."""
+
+
+def _jwt_expires_at(token: str) -> float:
+    """Return the exp claim from a JWT as a Unix timestamp.
+
+    Returns float("inf") when the token cannot be decoded as a JWT, which
+    disables proactive renewal and lets the reactive BlancoTokenExpiredError
+    path act as the fallback.
+    """
+    try:
+        payload_b64 = token.split(".")[1]
+        # Restore base64url padding that is stripped during JWT encoding.
+        payload_b64 += "=" * (-len(payload_b64) % 4)
+        payload = json.loads(base64.urlsafe_b64decode(payload_b64))
+        return float(payload["exp"])
+    except (IndexError, KeyError, ValueError):
+        return float("inf")
 
 
 class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
@@ -60,6 +80,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self.dev_id = dev_id
         self.serial = serial
+        self._token = token
         try:
             self.dev_type = BlancoDeviceType(dev_type) if dev_type is not None else None
         except ValueError:
@@ -87,6 +108,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         new_token = auth["token"]
         new_token_type = auth["token_type"]
+        self._token = new_token
         # Persist renewed token in entry.data.
         self.hass.config_entries.async_update_entry(
             self.config_entry,
@@ -106,11 +128,19 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         api_method: Callable[..., Coroutine[Any, Any, Any]],
         *args: Any,
     ) -> Any:
-        """Call an api client GET method; retry once after token renewal on 401."""
+        """Call an api client GET method, proactively renewing the token if expired."""
+        if _jwt_expires_at(self._token) <= time.time():
+            _LOGGER.debug("Token expired, proactively renewing before request")
+            if not await self._async_renew_token():
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="token_expired",
+                ) from None
         try:
             return await api_method(*args)
         except BlancoTokenExpiredError:
-            _LOGGER.warning("Token expired, attempting renewal")
+            # Safety net: token expired between the expiry check and the request.
+            _LOGGER.warning("Token expired mid-request, attempting renewal")
             if not await self._async_renew_token():
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,

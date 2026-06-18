@@ -1,15 +1,33 @@
 """Tests for coordinator.py — BlancoDataUpdateCoordinator and helpers."""
 
+import base64
+import json
+import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from blanco_smart_home_api_client import BlancoApiClient
 from blanco_smart_home_api_client.mask import mask_dev_id, mask_headers
 import pytest
 
+from homeassistant.components.blanco.coordinator import _jwt_expires_at
 from homeassistant.components.blanco.definitions import BlancoDeviceType
 from homeassistant.config_entries import ConfigEntryAuthFailed
 
 from .conftest import make_coordinator, make_get_response
+
+
+# ── JWT test helper ────────────────────────────────────────────────────────────
+
+
+def _make_jwt(exp_offset: int) -> str:
+    """Return a minimal unsigned JWT with exp = now + exp_offset seconds."""
+    header = base64.urlsafe_b64encode(
+        b'{"alg":"none","typ":"JWT"}'
+    ).rstrip(b"=").decode()
+    payload = base64.urlsafe_b64encode(
+        json.dumps({"exp": int(time.time()) + exp_offset}).encode()
+    ).rstrip(b"=").decode()
+    return f"{header}.{payload}."
 
 # ── Sample API response payloads ───────────────────────────────────────────────
 
@@ -199,6 +217,30 @@ class TestMaskDevId:
         assert mask_dev_id("") == ""
 
 
+# ── _jwt_expires_at ───────────────────────────────────────────────────────────
+
+
+class TestJwtExpiresAt:
+    """Tests for the _jwt_expires_at coordinator helper."""
+
+    def test_valid_jwt_returns_exp_timestamp(self) -> None:
+        """A well-formed JWT returns its exp claim as a float."""
+        token = _make_jwt(3600)
+        result = _jwt_expires_at(token)
+        assert result == pytest.approx(time.time() + 3600, abs=2)
+
+    def test_expired_jwt_returns_past_timestamp(self) -> None:
+        """An expired JWT returns an exp value in the past."""
+        token = _make_jwt(-1)
+        assert _jwt_expires_at(token) < time.time()
+
+    def test_non_jwt_returns_inf(self) -> None:
+        """A non-JWT string returns float('inf'), disabling proactive renewal."""
+        assert _jwt_expires_at("not-a-jwt") == float("inf")
+        assert _jwt_expires_at("test-bearer-token") == float("inf")
+        assert _jwt_expires_at("") == float("inf")
+
+
 # ── _async_update_data ─────────────────────────────────────────────────────────
 
 
@@ -311,6 +353,52 @@ class TestAsyncUpdateData:
         # SYSTEM_RESPONSE has dev_type=2 (AIO).
         assert coord.dev_type == BlancoDeviceType.AIO
 
+    async def test_expired_jwt_triggers_proactive_renewal(
+        self, mock_hass: MagicMock
+    ) -> None:
+        """An expired JWT is detected before the first API call; renewal is proactive."""
+        session = self._make_session(
+            make_get_response(200, SYSTEM_RESPONSE),
+            make_get_response(200, STATUS_RESPONSE),
+            make_get_response(200, SETTINGS_RESPONSE),
+            make_get_response(200, ERRORS_RESPONSE),
+        )
+        coord = make_coordinator(mock_hass, session=session)
+        coord._token = _make_jwt(-3600)
+
+        async def _mock_renew() -> bool:
+            # After renewal, use a non-JWT so subsequent calls don't re-renew.
+            coord._token = "renewed-bearer-token"
+            return True
+
+        renew_mock = AsyncMock(side_effect=_mock_renew)
+        with patch.object(coord, "_async_renew_token", renew_mock):
+            data = await coord._async_update_data()
+
+        renew_mock.assert_called_once()
+        assert "system" in data
+
+    async def test_valid_jwt_skips_proactive_renewal(
+        self, mock_hass: MagicMock
+    ) -> None:
+        """A non-expired JWT does not trigger proactive renewal."""
+        session = self._make_session(
+            make_get_response(200, SYSTEM_RESPONSE),
+            make_get_response(200, STATUS_RESPONSE),
+            make_get_response(200, SETTINGS_RESPONSE),
+            make_get_response(200, ERRORS_RESPONSE),
+        )
+        coord = make_coordinator(mock_hass, session=session)
+        coord._token = _make_jwt(3600)
+
+        with patch.object(
+            coord, "_async_renew_token", AsyncMock(return_value=True)
+        ) as renew_mock:
+            data = await coord._async_update_data()
+
+        renew_mock.assert_not_called()
+        assert "system" in data
+
 
 # ── _async_renew_token ─────────────────────────────────────────────────────────
 
@@ -341,6 +429,7 @@ class TestAsyncRenewToken:
 
         assert result is True
         assert coord._api._auth_headers()["Authorization"] == "Bearer new-token-value"
+        assert coord._token == "new-token-value"
 
     async def test_non_200_post_returns_false(self, mock_hass: MagicMock) -> None:
         """A non-200 renewal response returns False."""
