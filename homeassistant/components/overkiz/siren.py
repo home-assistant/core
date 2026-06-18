@@ -45,7 +45,7 @@ class OverkizSiren(OverkizEntity, SirenEntity):
     def is_on(self) -> bool:
         """Get whether the siren is in on state."""
         return (
-            self.executor.select_state(OverkizState.CORE_ON_OFF)
+            self.device.states.get_value(OverkizState.CORE_ON_OFF)
             == OverkizCommandParam.ON
         )
 
