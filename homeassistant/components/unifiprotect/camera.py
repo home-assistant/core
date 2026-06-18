@@ -78,6 +78,24 @@ def _create_public_stream_repair(
 
 
 @callback
+def _skip_if_no_channels(
+    data: ProtectData, camera: UFPCamera, ufp_device: UFPCamera | None
+) -> bool:
+    """Mark a channel-less camera pending (warning on startup) and signal a skip."""
+    if camera.channels:
+        return False
+    if ufp_device is None:
+        # only warn on startup
+        _LOGGER.warning(
+            "Camera does not have any channels: %s (id: %s)",
+            camera.display_name,
+            camera.id,
+        )
+    data.async_add_pending_camera_id(camera.id)
+    return True
+
+
+@callback
 def _get_camera_channels(
     hass: HomeAssistant,
     entry: UFPConfigEntry,
@@ -88,15 +106,7 @@ def _get_camera_channels(
 
     cameras = data.get_cameras() if ufp_device is None else [ufp_device]
     for camera in cameras:
-        if not camera.channels:
-            if ufp_device is None:
-                # only warn on startup
-                _LOGGER.warning(
-                    "Camera does not have any channels: %s (id: %s)",
-                    camera.display_name,
-                    camera.id,
-                )
-            data.async_add_pending_camera_id(camera.id)
+        if _skip_if_no_channels(data, camera, ufp_device):
             continue
 
         # Private mode supersedes the public-stream repair (mirror of the
@@ -142,15 +152,7 @@ def _async_public_camera_entities(
     entities: list[ProtectDeviceEntity] = []
     cameras = data.get_cameras() if ufp_device is None else [ufp_device]
     for camera in cameras:
-        if not camera.channels:
-            if ufp_device is None:
-                # only warn on startup
-                _LOGGER.warning(
-                    "Camera does not have any channels: %s (id: %s)",
-                    camera.display_name,
-                    camera.id,
-                )
-            data.async_add_pending_camera_id(camera.id)
+        if _skip_if_no_channels(data, camera, ufp_device):
             continue
 
         # Public mode supersedes the private per-channel RTSP repair.
@@ -162,14 +164,28 @@ def _async_public_camera_entities(
         for channel in camera.channels:
             if channel.is_package:
                 # package camera provides snapshots only; 2 FPS streams buffer
-                entities.append(ProtectCamera(data, camera, channel, True, True, True))
+                entities.append(
+                    ProtectCamera(
+                        data,
+                        camera,
+                        channel,
+                        is_default=True,
+                        secure=True,
+                        disable_stream=True,
+                    )
+                )
                 continue
             # The first active quality becomes the default (enabled) entity;
             # inactive qualities are skipped so an enabled entity always streams.
             if _QUALITY_BY_CHANNEL_ID.get(channel.id) in active:
                 entities.append(
                     ProtectCamera(
-                        data, camera, channel, not has_stream, True, disable_stream
+                        data,
+                        camera,
+                        channel,
+                        is_default=not has_stream,
+                        secure=True,
+                        disable_stream=disable_stream,
                     )
                 )
                 has_stream = True
@@ -185,7 +201,14 @@ def _async_public_camera_entities(
         # offline — a disconnected camera has no stream because it is offline (the
         # library primes connected cameras only), not because it needs activating.
         entities.append(
-            ProtectCamera(data, camera, camera.channels[0], True, True, disable_stream)
+            ProtectCamera(
+                data,
+                camera,
+                camera.channels[0],
+                is_default=True,
+                secure=True,
+                disable_stream=disable_stream,
+            )
         )
         if (
             disable_stream
