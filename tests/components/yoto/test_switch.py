@@ -1,7 +1,6 @@
 """Tests for the Yoto switch platform."""
 
 from dataclasses import replace
-from typing import Any
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -111,7 +110,7 @@ async def test_turn_on(
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
-    expected_fields: dict[str, Any],
+    expected_fields: dict[str, bool],
 ) -> None:
     """Turning a switch on writes the matching player config field."""
     await _setup(hass, mock_config_entry)
@@ -159,7 +158,7 @@ async def test_turn_off(
     mock_yoto_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_id: str,
-    expected_fields: dict[str, Any],
+    expected_fields: dict[str, bool],
 ) -> None:
     """Turning a switch off writes the matching player config field."""
     await _setup(hass, mock_config_entry)
