@@ -1,11 +1,14 @@
 """Generic entity for the WMS WebControl pro API integration."""
 
+import asyncio
+
 from wmspro.destination import Destination
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
+from homeassistant.util import Throttle
 
-from .const import ATTRIBUTION, DOMAIN, MANUFACTURER
+from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MIN_TIME_BETWEEN_UPDATES
 
 
 class WebControlProGenericEntity(Entity):
@@ -34,7 +37,16 @@ class WebControlProGenericEntity(Entity):
 
     async def async_update(self) -> None:
         """Update the entity."""
-        await self._dest.refresh()
+        while True:
+            if await self._dest_refresh() is None:
+                await asyncio.sleep(MIN_TIME_BETWEEN_UPDATES.total_seconds())
+            else:
+                break
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    async def _dest_refresh(self) -> bool:
+        """Refresh the destination data."""
+        return await self._dest.refresh()
 
     @property
     def available(self) -> bool:
