@@ -63,6 +63,7 @@ from .const import (
     MODELS_TV_ONLY,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_FAVORITES_UPDATED,
     SONOS_MEDIA_UPDATED,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
@@ -159,6 +160,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 self.hass,
                 SONOS_MEDIA_UPDATED,
                 self.async_write_media_state,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_FAVORITES_UPDATED}-{self.speaker.household_id}",
+                self.async_write_ha_state,
             )
         )
 

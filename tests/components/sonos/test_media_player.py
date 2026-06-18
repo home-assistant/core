@@ -46,7 +46,6 @@ from homeassistant.components.media_player import (
 from homeassistant.components.sonos.const import (
     DOMAIN,
     MEDIA_TYPE_DIRECTORY,
-    SONOS_MEDIA_UPDATED,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
@@ -88,13 +87,10 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_UPNP,
     DeviceRegistry,
 )
-from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
-
-from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -1471,53 +1467,59 @@ async def test_media_source_list(
 
 
 @pytest.mark.parametrize(
-    ("speaker_model", "physical_sources"),
+    ("speaker_model", "expected_sources", "expected_after_clear"),
     [
-        ("Model Name", []),
-        ("Sonos Arc Ultra", [SOURCE_TV]),
-        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
+        ("Model Name", FAVORITE_TITLES, None),
+        ("Sonos Arc Ultra", [SOURCE_TV, *FAVORITE_TITLES], [SOURCE_TV]),
+        (
+            "Sonos Amp",
+            [SOURCE_LINEIN, SOURCE_TV, *FAVORITE_TITLES],
+            [SOURCE_LINEIN, SOURCE_TV],
+        ),
     ],
     indirect=["speaker_model"],
 )
-async def test_source_list_favorite_changes(
+async def test_source_list_favorites_cleared(
     hass: HomeAssistant,
-    config_entry: MockConfigEntry,
+    soco: MockSoCo,
     async_autosetup_sonos,
     speaker_model: str,
-    physical_sources: list[str],
+    expected_sources: list[str],
+    expected_after_clear: list[str] | None,
 ) -> None:
-    """Test source_list and SELECT_SOURCE update when favorites change at runtime."""
+    """Test source_list and SELECT_SOURCE update when favorites are cleared."""
     entity_id = "media_player.zone_a"
-    sonos_data = config_entry.runtime_data
-    favorites = sonos_data.favorites["test_household_id"]
-    saved_favorites = list(favorites)
-
-    # Clear all favorites
-    favorites._favorites.clear()
-    async_dispatcher_send(hass, SONOS_MEDIA_UPDATED, "RINCON_test")
-    await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == expected_sources
     features = MediaPlayerEntityFeature(state.attributes["supported_features"])
-    if physical_sources:
-        assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == physical_sources
-        assert features & MediaPlayerEntityFeature.SELECT_SOURCE
-    else:
-        assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) is None
-        assert not features & MediaPlayerEntityFeature.SELECT_SOURCE
-
-    # Restore favorites
-    favorites._favorites = saved_favorites
-    async_dispatcher_send(hass, SONOS_MEDIA_UPDATED, "RINCON_test")
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
-    assert (
-        state.attributes.get(ATTR_INPUT_SOURCE_LIST)
-        == physical_sources + FAVORITE_TITLES
-    )
     assert features & MediaPlayerEntityFeature.SELECT_SOURCE
+
+    # Clear favorites via the music library mock
+    empty_favorites = SearchResult([], "favorites", 0, 0, 2)
+    soco.music_library.get_sonos_favorites.return_value = empty_favorites
+    soco.music_library.get_music_library_information.side_effect = None
+    soco.music_library.get_music_library_information.return_value = SearchResult(
+        [], "sonos_playlists", 0, 0, 0
+    )
+
+    # Trigger a favorites cache update via the content directory event
+    service = soco.contentDirectory
+    subscription = service.subscribe.return_value
+    favorites_event = SonosMockEvent(
+        soco,
+        service,
+        {"favorites_update_id": "2", "container_update_i_ds": "FV:2,2"},
+    )
+    subscription.callback(event=favorites_event)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == expected_after_clear
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert bool(features & MediaPlayerEntityFeature.SELECT_SOURCE) == (
+        expected_after_clear is not None
+    )
 
 
 async def test_service_update_alarm(
