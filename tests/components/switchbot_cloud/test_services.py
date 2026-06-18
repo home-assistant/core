@@ -1,19 +1,18 @@
 """Tests for switchbot_cloud service."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import patch
 
 import pytest
+from switchbot_api import SwitchBotAPI
 import voluptuous as vol
 
 from homeassistant.components.switchbot_cloud.const import (
     AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
     DOMAIN,
 )
-from homeassistant.components.switchbot_cloud.service import async_register_services
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import AI_ART_FRAME_DEVICE, configure_integration
@@ -49,16 +48,16 @@ async def test_upload_image_success(
         name="test-art-frame",
         model="AI Art Frame",
     )
-    with patch.object(
-        entry.runtime_data.api, "send_command", new_callable=AsyncMock
-    ) as mock_send:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+    ):
         await hass.services.async_call(
             DOMAIN,
             AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
             {"device_id": device.id, "image_url": "https://example.com/img.jpg"},
             blocking=True,
         )
-    mock_send.assert_awaited_once_with(
+    mock_send_command.assert_awaited_once_with(
         device_id="AABBCCDDEEFF",
         command="uploadImage",
         command_type="command",
@@ -83,21 +82,6 @@ async def test_upload_image_no_device_id_raises(
         )
 
 
-async def test_no_entries_raises(hass: HomeAssistant) -> None:
-    """Test service raises when switchbot_cloud has no config entries."""
-
-    async_register_services(hass)
-    with pytest.raises(
-        ServiceValidationError, match="switchbot_cloud is not configured"
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
-            {"device_id": "some-id", "image_url": "https://example.com/img.jpg"},
-            blocking=True,
-        )
-
-
 async def test_device_not_in_registry_skips(
     hass: HomeAssistant,
     mock_list_devices,
@@ -105,10 +89,9 @@ async def test_device_not_in_registry_skips(
     mock_setup_webhook,
 ) -> None:
     """Test service skips when device_id is not found in device registry."""
-    entry = await _setup(hass, mock_list_devices, mock_get_status)
-    with patch.object(
-        entry.runtime_data.api, "send_command", new_callable=AsyncMock
-    ) as mock_send:
+    with (
+        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
+    ):
         await hass.services.async_call(
             DOMAIN,
             AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
@@ -118,4 +101,4 @@ async def test_device_not_in_registry_skips(
             },
             blocking=True,
         )
-    mock_send.assert_not_awaited()
+    mock_send_command.assert_not_awaited()

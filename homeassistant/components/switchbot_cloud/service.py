@@ -38,19 +38,17 @@ async def handle_upload_image(call: ServiceCall) -> None:
         device_mac = next(
             (iid[1] for iid in device.identifiers if iid[0] == DOMAIN), None
         )
-        if device_mac is None:
-            continue
+        if device_mac:
+            entry_id = next(iter(device.config_entries))
 
-        entry_id = next(iter(device.config_entries))
-
-        entry = hass.config_entries.async_get_entry(entry_id)
-        assert entry is not None
-        await entry.runtime_data.api.send_command(
-            device_id=device_mac,
-            command=ArtFrameCommands.UPLOAD.value,
-            command_type="command",
-            parameters={"imageUrl": image_url},
-        )
+            entry = hass.config_entries.async_get_entry(entry_id)
+            assert entry is not None
+            await entry.runtime_data.api.send_command(
+                device_id=device_mac,
+                command=ArtFrameCommands.UPLOAD.value,
+                command_type="command",
+                parameters={"imageUrl": image_url},
+            )
 
 
 def async_register_services(hass: HomeAssistant) -> None:
