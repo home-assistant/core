@@ -21,20 +21,13 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_ASSUMED_STATE,
-    ATTR_ATTRIBUTION,
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
     ATTR_GROUP_ENTITIES,
-    ATTR_ICON,
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_UNIT_OF_MEASUREMENT,
     DEVICE_DEFAULT_NAME,
     STATE_OFF,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    BaseEntityAttribute,
     EntityCategory,
 )
 from homeassistant.core import (
@@ -158,7 +151,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
     First try the statemachine, then entity registry.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(ATTR_DEVICE_CLASS)
+        return state.attributes.get(BaseEntityAttribute.DEVICE_CLASS)
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -183,7 +176,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     First try the statemachine, then entity registry.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)  # type: ignore[no-any-return]
+        return state.attributes.get(BaseEntityAttribute.SUPPORTED_FEATURES, 0)  # type: ignore[no-any-return]
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -198,7 +191,7 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
     First try the statemachine, then entity registry.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -1119,25 +1112,25 @@ class Entity(
                 attr |= extra_state_attributes
 
         if (unit_of_measurement := self.unit_of_measurement) is not None:
-            attr[ATTR_UNIT_OF_MEASUREMENT] = unit_of_measurement
+            attr[BaseEntityAttribute.UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         if assumed_state := self.assumed_state:
-            attr[ATTR_ASSUMED_STATE] = assumed_state
+            attr[BaseEntityAttribute.ASSUMED_STATE] = assumed_state
 
         if (attribution := self.attribution) is not None:
-            attr[ATTR_ATTRIBUTION] = attribution
+            attr[BaseEntityAttribute.ATTRIBUTION] = attribution
 
         original_device_class = self.device_class
         if (
             device_class := (entry and entry.device_class) or original_device_class
         ) is not None:
-            attr[ATTR_DEVICE_CLASS] = str(device_class)
+            attr[BaseEntityAttribute.DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:
-            attr[ATTR_ENTITY_PICTURE] = entity_picture
+            attr[BaseEntityAttribute.ENTITY_PICTURE] = entity_picture
 
         if (icon := (entry and entry.icon) or self.icon) is not None:
-            attr[ATTR_ICON] = icon
+            attr[BaseEntityAttribute.ICON] = icon
 
         original_name = self.name
         if original_name is UNDEFINED:
@@ -1159,10 +1152,10 @@ class Entity(
             self._cached_friendly_name = (original_name, name)
 
         if name:
-            attr[ATTR_FRIENDLY_NAME] = name
+            attr[BaseEntityAttribute.FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
-            attr[ATTR_SUPPORTED_FEATURES] = supported_features
+            attr[BaseEntityAttribute.SUPPORTED_FEATURES] = supported_features
 
         return (
             state,
@@ -1492,7 +1485,7 @@ class Entity(
             #
             and not self._removed_from_registry
         ):
-            # Set the entity's state will to unavailable + ATTR_RESTORED: True
+            # Set the entity's state will to unavailable + BaseEntityAttribute.RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
         else:
             self.hass.states.async_remove(self.entity_id, context=self._context)
