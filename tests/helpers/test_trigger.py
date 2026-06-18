@@ -37,6 +37,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     Context,
     Event,
     EventStateChangedData,
@@ -49,6 +50,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
     entity_registry as er,
+    issue_registry as ir,
     label_registry as lr,
     trigger,
 )
@@ -5697,6 +5699,52 @@ def test_entity_state_trigger_schema_behavior_backwards_compatible(
     }
     validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
     assert validated[CONF_OPTIONS][ATTR_BEHAVIOR] == expected
+
+
+@pytest.mark.parametrize(
+    ("behavior", "expected"),
+    [
+        ("any", BEHAVIOR_EACH),
+        ("last", BEHAVIOR_ALL),
+    ],
+)
+async def test_entity_state_trigger_legacy_behavior_creates_repair_issue(
+    issue_registry: ir.IssueRegistry,
+    behavior: str,
+    expected: str,
+) -> None:
+    """Test a repair issue is raised when a legacy behavior value is used."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    validated = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+    assert validated[CONF_OPTIONS][ATTR_BEHAVIOR] == expected
+
+    issue = issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_trigger_behavior_{behavior}"
+    )
+    assert issue is not None
+    assert issue.translation_key == "deprecated_trigger_behavior"
+    assert issue.translation_placeholders == {
+        "deprecated_behavior": behavior,
+        "new_behavior": expected,
+    }
+
+
+@pytest.mark.parametrize("behavior", [BEHAVIOR_EACH, BEHAVIOR_FIRST, BEHAVIOR_ALL])
+async def test_entity_state_trigger_new_behavior_no_repair_issue(
+    issue_registry: ir.IssueRegistry,
+    behavior: str,
+) -> None:
+    """Test no repair issue is raised when a current behavior value is used."""
+    config = {
+        CONF_TARGET: {CONF_ENTITY_ID: "test.entity"},
+        CONF_OPTIONS: {ATTR_BEHAVIOR: behavior},
+    }
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR(config)
+
+    assert not issue_registry.issues
 
 
 def test_entity_state_trigger_schema_behavior_default() -> None:
