@@ -536,6 +536,11 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         """Return if the cover is closed."""
         return self.positions.tilt <= CLOSED_POSITION
 
+    @property
+    def available(self) -> bool:
+        """Return True if shade position data is available."""
+        return super().available and self.positions.tilt is not None
+
 
 class PowerViewShadeTopDown(PowerViewShadeBase):
     """Representation of a shade that lowers from the roof to the floor.

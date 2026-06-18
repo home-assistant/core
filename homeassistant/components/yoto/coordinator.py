@@ -97,10 +97,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
 
     async def _async_update_data(self) -> dict[str, YotoPlayer]:
         """Fetch fresh data from the Yoto cloud."""
-        # _async_setup already populated the client; skip the duplicate first fetch.
-        if self.data is None:
-            return self.client.players
-
         try:
             await self._session.async_ensure_token_valid()
         except OAuth2TokenRequestReauthError as err:
@@ -148,8 +144,6 @@ class YotoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, YotoPlayer]]):
         """Ask each player to push a fresh status snapshot over MQTT."""
         if not self.client.is_mqtt_connected:
             return
-        # Fire-and-forget: the data/status response lands via the on_update
-        # callback later, which already triggers async_set_updated_data.
         for device_id in list(self.client.players):
             await self.client.request_player_status(device_id)
 

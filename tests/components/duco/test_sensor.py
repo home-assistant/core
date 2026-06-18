@@ -159,32 +159,46 @@ async def test_lan_info_failures_keep_node_entities_available(
 
 
 @pytest.mark.parametrize(
-    ("node_id", "expected_unique_id_suffix", "expected_state"),
+    (
+        "node_id",
+        "expected_unique_id_suffix",
+        "expected_state",
+        "expected_disabled_entity_id",
+    ),
     [
         (
             200,
             "200_humidity",
             "55.0",
+            "sensor.new_rh_sensor_humidity_air_quality_index",
         ),
         (
             201,
             "201_co2",
             "575",
+            "sensor.new_valve_co2_air_quality_index",
+        ),
+        (
+            202,
+            "202_co2",
+            "421",
+            "sensor.new_box_co2_sensor_co2_air_quality_index",
         ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
 async def test_new_node_added_dynamically(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     dynamic_sensor_nodes: dict[int, Node],
-    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
     node_id: int,
     expected_unique_id_suffix: str,
     expected_state: str,
+    expected_disabled_entity_id: str,
 ) -> None:
     """Test a new node appearing in coordinator data creates entities automatically."""
     unique_id = f"{mock_config_entry.unique_id}_{expected_unique_id_suffix}"
@@ -206,6 +220,10 @@ async def test_new_node_added_dynamically(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected_state
+
+    entry = entity_registry.async_get(expected_disabled_entity_id)
+    assert entry is not None
+    assert entry.disabled_by == er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("init_integration")

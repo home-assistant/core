@@ -105,7 +105,12 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         value_fn=lambda node: node.sensor.co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2, NodeType.VLVCO2, NodeType.VLVCO2RH),
+        node_types=(
+            NodeType.BSCO2,
+            NodeType.UCCO2,
+            NodeType.VLVCO2,
+            NodeType.VLVCO2RH,
+        ),
     ),
     DucoSensorEntityDescription(
         key="iaq_co2",
@@ -114,7 +119,12 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2, NodeType.VLVCO2, NodeType.VLVCO2RH),
+        node_types=(
+            NodeType.BSCO2,
+            NodeType.UCCO2,
+            NodeType.VLVCO2,
+            NodeType.VLVCO2RH,
+        ),
     ),
     DucoSensorEntityDescription(
         key="humidity",

@@ -527,13 +527,13 @@ async def test_registry_not_enabled_by_default(
     assert entry.disabled
 
 
-async def test_registry_enable_not_enabled_by_default_entity(
+async def test_registry_enable_not_enabled_or_visible_by_default_entity(
     hass: HomeAssistant,
     mqtt_mock_entry: MqttMockHAClientGenerator,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test enabling an entity that was not enabled by default."""
+    """Test enabling an entity that was not enabled or not visible by default."""
     await mqtt_mock_entry()
 
     discovery_topic = "homeassistant/sensor/bla/config"
@@ -542,6 +542,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
             "name": None,
             "state_topic": "state-topic",
             "enabled_by_default": False,
+            "visible_by_default": True,
             "unique_id": "very_unique",
             "default_entity_id": "sensor.test",
             "device": {"identifiers": "very_unique_device", "name": "test"},
@@ -552,6 +553,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
             "name": None,
             "state_topic": "state-topic",
             "enabled_by_default": True,
+            "visible_by_default": False,
             "unique_id": "very_unique",
             "default_entity_id": "sensor.test",
             "device": {"identifiers": "very_unique_device", "name": "test"},
@@ -562,6 +564,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
             "name": None,
             "state_topic": "state-topic",
             "enabled_by_default": True,
+            "visible_by_default": True,
             "unique_id": "very_unique",
             "default_entity_id": "sensor.test_new",
             "device": {"identifiers": "very_unique_device", "name": "test"},
@@ -575,6 +578,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
     entry = entity_registry.async_get("sensor.test")
     assert entry is not None
     assert entry.disabled
+    assert entry.hidden is False
     assert (device_id := entry.device_id)
     assert device_registry.async_get(device_id) is not None
 
@@ -588,6 +592,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
     assert device_registry.async_get(device_id) is None
 
     # Rediscover the previous deleted entity and allow it to be enabled
+    # but not visible by default
     async_fire_mqtt_message(hass, discovery_topic, config_enabled)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test")
@@ -595,10 +600,12 @@ async def test_registry_enable_not_enabled_by_default_entity(
     entry = entity_registry.async_get("sensor.test")
     assert entry is not None
     assert not entry.disabled
+    assert entry.hidden is True
     assert device_registry.async_get(device_id) is not None
 
     # Update entity to not be enabled by default
     # The entity should stay available as it was enabled before
+    # Also it should remain hidden
     async_fire_mqtt_message(hass, discovery_topic, config_disabled)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test")
@@ -606,6 +613,7 @@ async def test_registry_enable_not_enabled_by_default_entity(
     entry = entity_registry.async_get("sensor.test")
     assert entry is not None
     assert not entry.disabled
+    assert entry.hidden is True
     assert device_registry.async_get(device_id) is not None
 
     # Delete the entity again
@@ -617,12 +625,14 @@ async def test_registry_enable_not_enabled_by_default_entity(
     assert device_registry.async_get(device_id) is None
 
     # Repeat the re-discovery, with a new entity name
+    # The entity should be enabled and visible by default now
     async_fire_mqtt_message(hass, discovery_topic, config_enabled_new_entity_name)
     await hass.async_block_till_done()
     state = hass.states.get("sensor.test_new")
     assert state is not None
     entry = entity_registry.async_get("sensor.test_new")
     assert entry is not None
+    assert entry.hidden is False
     assert not entry.disabled
     assert device_registry.async_get(device_id) is not None
 
@@ -645,7 +655,172 @@ async def test_registry_enable_not_enabled_by_default_entity(
     entry = entity_registry.async_get("sensor.test_new")
     assert entry is not None
     assert entry.disabled
+    assert entry.hidden is False
     assert device_registry.async_get(device_id) is not None
+
+
+async def test_visible_by_default_with_user_override(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test visible_by_default is respected but user hidden_by override is preserved."""
+    await mqtt_mock_entry()
+
+    discovery_topic = "homeassistant/sensor/bla/config"
+    config_visible = json.json_dumps(
+        {
+            "name": None,
+            "state_topic": "state-topic",
+            "visible_by_default": True,
+            "unique_id": "very_unique",
+            "default_entity_id": "sensor.test",
+            "device": {"identifiers": "very_unique_device", "name": "test"},
+        }
+    )
+    config_hidden = json.json_dumps(
+        {
+            "name": None,
+            "state_topic": "state-topic",
+            "visible_by_default": False,
+            "unique_id": "very_unique",
+            "default_entity_id": "sensor.test",
+            "device": {"identifiers": "very_unique_device", "name": "test"},
+        }
+    )
+
+    async_fire_mqtt_message(hass, discovery_topic, config_hidden)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is not None
+    assert not entry.disabled
+    assert entry.hidden
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
+    assert (device_id := entry.device_id)
+    assert device_registry.async_get(device_id) is not None
+
+    # Remove the entity and device
+    # At this stage no entry existed during the initialization
+    async_fire_mqtt_message(hass, discovery_topic, "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is None
+    # Assert device is cleaned up
+    assert device_registry.async_get(device_id) is None
+
+    # Rediscover the previous deleted entity, now visible by default
+    async_fire_mqtt_message(hass, discovery_topic, config_visible)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is not None
+    assert not entry.hidden
+    assert entry.hidden_by is None
+    assert device_registry.async_get(device_id) is not None
+
+    # Mock the user hides the entity
+    entity_registry.async_update_entity(
+        "sensor.test", hidden_by=er.RegistryEntryHider.USER
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Remove the entity and device,
+    # the hidden by user flag should be preserved in the deleted entities registry
+    async_fire_mqtt_message(hass, discovery_topic, "")
+    await hass.async_block_till_done(wait_background_tasks=True)
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is None
+    # Assert device is cleaned up
+    assert device_registry.async_get(device_id) is None
+
+    # Rediscover again and assert the entity remains hidden
+    # because it was hidden by the user, even though visible_by_default is True
+    async_fire_mqtt_message(hass, discovery_topic, config_visible)
+    await hass.async_block_till_done()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    entry = entity_registry.async_get("sensor.test")
+    assert entry is not None
+    assert entry.hidden
+    assert entry.hidden_by is er.RegistryEntryHider.USER
+    assert device_registry.async_get(device_id) is not None
+    assert (
+        "Restored entity sensor.test was configured as visible by default, "
+        "but was hidden by the user before, and will remain hidden" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "unique_id": "very_unique",
+                }
+            }
+        },
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "visible_by_default": True,
+                    "unique_id": "very_unique",
+                }
+            }
+        },
+    ],
+)
+async def test_registry_visible_by_default(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity is visible with visible_by_default set or without."""
+    await mqtt_mock_entry()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    entry = entity_registry.async_get("sensor.test")
+    assert not entry.disabled
+    assert entry.hidden is False
+    assert entry.hidden_by is None
+
+
+@pytest.mark.parametrize(
+    "hass_config",
+    [
+        {
+            mqtt.DOMAIN: {
+                sensor.DOMAIN: {
+                    "name": "test",
+                    "state_topic": "state-topic",
+                    "visible_by_default": False,
+                    "unique_id": "very_unique",
+                }
+            }
+        },
+    ],
+)
+async def test_registry_not_visible_by_default(
+    hass: HomeAssistant,
+    mqtt_mock_entry: MqttMockHAClientGenerator,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test an entity that is not visible by default."""
+    await mqtt_mock_entry()
+    state = hass.states.get("sensor.test")
+    assert state is not None
+    entry = entity_registry.async_get("sensor.test")
+    assert entry.hidden is True
+    assert entry.hidden_by is er.RegistryEntryHider.INTEGRATION
 
 
 @pytest.mark.parametrize(

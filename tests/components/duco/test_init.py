@@ -14,6 +14,7 @@ from duco_connectivity import (
     InfoZonesOverview,
     LanInfo,
     Node,
+    NodeListActionItemList,
 )
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -50,19 +51,26 @@ from tests.common import MockConfigEntry, async_fire_time_changed
             DucoError("Unexpected API error"),
             ConfigEntryState.SETUP_ERROR,
             "api_error",
-            True,
+            False,
         ),
         (
             "async_get_board_info",
             DucoResponseError(500, "/info"),
             ConfigEntryState.SETUP_ERROR,
             "api_error",
-            True,
+            False,
         ),
         (
             "async_get_nodes",
             DucoConnectionError("Connection refused"),
             ConfigEntryState.SETUP_RETRY,
+            None,
+            False,
+        ),
+        (
+            "async_get_node_actions",
+            DucoConnectionError("Connection refused"),
+            ConfigEntryState.LOADED,
             None,
             False,
         ),
@@ -445,6 +453,7 @@ async def test_setup_entry_creates_http_client(
     mock_config_entry: MockConfigEntry,
     mock_board_info: BoardInfo,
     mock_lan_info: LanInfo,
+    mock_node_actions: NodeListActionItemList,
     mock_nodes: list[Node],
     mock_zones_info: InfoZonesOverview,
 ) -> None:
@@ -460,6 +469,9 @@ async def test_setup_entry_creates_http_client(
         mock_client_class.return_value.async_get_nodes.return_value = mock_nodes
         mock_client_class.return_value.async_get_zones_info.return_value = (
             mock_zones_info
+        )
+        mock_client_class.return_value.async_get_node_actions.return_value = (
+            mock_node_actions
         )
         mock_client_class.return_value.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
