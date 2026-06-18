@@ -4771,7 +4771,6 @@ async def test_recorded_entities_ws(
     hass: HomeAssistant,
     async_setup_recorder_instance: RecorderInstanceGenerator,
     hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test recorded entities WS commands."""
     client = await hass_ws_client()
@@ -4786,6 +4785,7 @@ async def test_recorded_entities_ws(
         }
     )
     response = await client.receive_json()
+    assert response["success"]
     assert response["result"] == {"recording_disabled_by": None}
 
     await client.send_json_auto_id(
@@ -4805,4 +4805,5 @@ async def test_recorded_entities_ws(
         }
     )
     response = await client.receive_json()
+    assert response["success"]
     assert response["result"] == {"recording_disabled_by": None}

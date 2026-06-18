@@ -8,9 +8,22 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv
+
+from .util import get_instance
 
 
-async def async_setup(hass: HomeAssistant) -> None:
+def is_entity_recorded(hass: HomeAssistant, entity_id: str) -> bool:
+    """Check if an entity is being recorded.
+
+    Async friendly.
+    """
+    instance = get_instance(hass)
+    return instance.entity_filter is None or instance.entity_filter(entity_id)
+
+
+@callback
+def async_setup(hass: HomeAssistant) -> None:
     """Set up the recorded entities."""
     websocket_api.async_register_command(hass, ws_get_recorded_entity)
 
@@ -39,15 +52,13 @@ class RecordedEntity:
 @websocket_api.websocket_command(
     {
         vol.Required("type"): "recorder/recorded_entities/get",
-        vol.Required("entity_id"): str,
+        vol.Required("entity_id"): cv.strict_entity_id,
     }
 )
 def ws_get_recorded_entity(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict[str, Any]
 ) -> None:
     """Get recorder settings for a single entity."""
-    from . import is_entity_recorded  # noqa: PLC0415
-
     entity_id: str = msg["entity_id"]
     recording_disabled = (
         None if is_entity_recorded(hass, entity_id) else EntityRecordingDisabler.USER
