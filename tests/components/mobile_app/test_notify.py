@@ -37,7 +37,7 @@ async def setup_push_receiver(
     """Fixture that sets up a mocked push receiver."""
     push_url = "https://mobile-push.home-assistant.dev/push"
 
-    now = datetime.now() + timedelta(hours=24)
+    now = datetime.now() + timedelta(hours=24)  # pylint: disable=home-assistant-enforce-naive-now
     iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
 
     aioclient_mock.post(
@@ -569,7 +569,7 @@ async def test_notify_multiple_targets(
                 "total": 1,
                 "maximum": 150,
                 "remaining": 149,
-                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(
+                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(  # pylint: disable=home-assistant-enforce-naive-now
                     "%Y-%m-%dT%H:%M:%SZ"
                 ),
             }
@@ -647,7 +647,7 @@ async def test_notify_multiple_targets_if_any_disconnected(
                 "total": 1,
                 "maximum": 150,
                 "remaining": 149,
-                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(
+                "resetsAt": (datetime.now() + timedelta(hours=24)).strftime(  # pylint: disable=home-assistant-enforce-naive-now
                     "%Y-%m-%dT%H:%M:%SZ"
                 ),
             }
