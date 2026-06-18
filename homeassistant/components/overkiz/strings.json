@@ -2,8 +2,20 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
+      "missing_credentials": "[%key:common::config_flow::abort::oauth2_missing_credentials%]",
+      "no_gateways": "No gateways were found for your account.",
+      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
+      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
+      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
+      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
+      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
+      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub"
+      "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -51,6 +63,18 @@
           "api_type": "Local API is only supported by TaHoma Connexoon, TaHoma v2, and TaHoma Switch. Climate devices and scenarios are **not** available via the local API."
         },
         "description": "Choose how you want to connect to your gateway."
+      },
+      "pick_implementation": {
+        "title": "[%key:common::config_flow::title::oauth2_pick_implementation%]"
+      },
+      "select_gateway": {
+        "data": {
+          "gateway_id": "Gateway"
+        },
+        "data_description": {
+          "gateway_id": "Select the gateway you want to add."
+        },
+        "description": "Select the gateway you want to control with Home Assistant."
       },
       "user": {
         "data": {
@@ -176,6 +200,15 @@
           "closed": "[%key:common::state::closed%]",
           "open": "[%key:common::state::open%]",
           "tilt": "Tilt"
+        }
+      }
+    },
+    "water_heater": {
+      "overkiz": {
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "manual": "[%key:common::state::manual%]",
+          "performance": "Boost"
         }
       }
     }
