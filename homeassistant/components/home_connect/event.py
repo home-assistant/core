@@ -244,7 +244,7 @@ def _get_entities_for_appliance(
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     return [
-        HomeConnectEventSensor(appliance_coordinator, description)
+        HomeConnectEventEntity(appliance_coordinator, description)
         for description in EVENTS
         if appliance_coordinator.data.info.type in description.appliance_types
     ]
@@ -264,14 +264,14 @@ async def async_setup_entry(
     )
 
 
-class HomeConnectEventSensor(HomeConnectEntity, EventEntity):
+class HomeConnectEventEntity(HomeConnectEntity, EventEntity):
     """Event class for Home Connect events."""
 
     _attr_entity_registry_enabled_default = False
     _attr_event_types = list(EVENT_MAPPING.values())
 
     def update_native_value(self) -> None:
-        """Update the sensor's status."""
+        """Set the value of the entity."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event and (event_type := EVENT_MAPPING.get(cast(str, event.value))):
             self._trigger_event(event_type)
