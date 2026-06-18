@@ -41,6 +41,7 @@ from .const import (
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_PAUSE,
     DOMAIN,
+    FAVORITE_PROGRAMS,
 )
 from .utils import get_dict_from_home_connect_error
 
@@ -530,14 +531,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
                         )
                         current_program_key = program.key
                         program_options = program.options
-                        if (
-                            current_program_key
-                            in (
-                                ProgramKey.BSH_COMMON_FAVORITE_001,
-                                ProgramKey.BSH_COMMON_FAVORITE_002,
-                            )
-                            and program_options
-                        ):
+                        if current_program_key in FAVORITE_PROGRAMS and program_options:
                             # The API doesn't allow to fetch the
                             # options from the favorite program.
                             # We can attempt to get the base program and get the options
@@ -619,11 +613,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         options_to_notify = options.copy()
         options.clear()
         if (
-            program_key
-            in (
-                ProgramKey.BSH_COMMON_FAVORITE_001,
-                ProgramKey.BSH_COMMON_FAVORITE_002,
-            )
+            program_key in FAVORITE_PROGRAMS
             and (event := events.get(EventKey.BSH_COMMON_OPTION_BASE_PROGRAM))
             and isinstance(event.value, str)
         ):

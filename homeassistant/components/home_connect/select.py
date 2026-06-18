@@ -27,6 +27,7 @@ from .const import (
     COFFEE_TEMPERATURE_OPTIONS,
     DOMAIN,
     DRYING_TARGET_OPTIONS,
+    FAVORITE_PROGRAMS,
     FLOW_RATE_OPTIONS,
     HOT_WATER_TEMPERATURE_OPTIONS,
     INTENSIVE_LEVEL_OPTIONS,
@@ -438,11 +439,7 @@ class HomeConnectProgramSelectEntity(HomeConnectEntity, SelectEntity):
             else None
         )
         if (
-            program_key
-            in (
-                ProgramKey.BSH_COMMON_FAVORITE_001,
-                ProgramKey.BSH_COMMON_FAVORITE_002,
-            )
+            program_key in FAVORITE_PROGRAMS
             and (
                 base_program_event := self.appliance.events.get(
                     EventKey.BSH_COMMON_OPTION_BASE_PROGRAM
