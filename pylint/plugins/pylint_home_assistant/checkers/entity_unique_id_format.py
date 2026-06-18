@@ -110,16 +110,14 @@ def _redundant_domain_value_nodes(
             ) and _value_references_domain(value, domain):
                 hits.append(value)
     for method in class_node.body:
-        if not isinstance(method, nodes.FunctionDef | nodes.AsyncFunctionDef):
+        if not isinstance(method, nodes.FunctionDef):
             continue
         if method.name == _PROPERTY_NAME:
-            if isinstance(method, nodes.FunctionDef):
-                hits.extend(
-                    ret.value
-                    for ret in method.nodes_of_class(nodes.Return)
-                    if ret.value is not None
-                    and _value_references_domain(ret.value, domain)
-                )
+            hits.extend(
+                ret.value
+                for ret in method.nodes_of_class(nodes.Return)
+                if ret.value is not None and _value_references_domain(ret.value, domain)
+            )
             continue
         for stmt in method.nodes_of_class((nodes.Assign, nodes.AnnAssign)):
             match stmt:
