@@ -279,6 +279,7 @@ def _mock_client_response_error(status: int) -> ClientResponseError:
         (429, OAuth2TokenRequestTransientError),
         (500, OAuth2TokenRequestTransientError),
         (503, OAuth2TokenRequestTransientError),
+        (302, OAuth2TokenRequestError),
     ],
 )
 async def test_refresh_token_error(
