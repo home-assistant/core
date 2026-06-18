@@ -5,7 +5,6 @@ from typing import Any
 from pyoverkiz.enums import OverkizCommand, Protocol
 from pyoverkiz.exceptions import BaseOverkizError
 from pyoverkiz.models import Action, Command, Device, StateDefinition
-from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.exceptions import HomeAssistantError
 
@@ -45,40 +44,11 @@ class OverkizExecutor:
             f"{self.device.identifier.base_device_url}#{index}"
         )
 
-    def select_command(self, *commands: str) -> str | None:
-        """Select first existing command in a list of commands."""
-        existing_commands = self.device.definition.commands
-        return next((c for c in commands if c in existing_commands), None)
-
-    def has_command(self, *commands: str) -> bool:
-        """Return True if a command exists in a list of commands."""
-        return self.select_command(*commands) is not None
-
     def select_definition_state(self, *states: str) -> StateDefinition | None:
         """Select first existing definition state in a list of states."""
         for state_name in states:
             if state_name in self.device.definition.states:
                 return self.device.definition.states[state_name]
-        return None
-
-    def select_state(self, *states: str) -> OverkizStateType:
-        """Select first existing active state in a list of states."""
-        for state in states:
-            if current_state := self.device.states.get(state):
-                return current_state.value
-
-        return None
-
-    def has_state(self, *states: str) -> bool:
-        """Return True if a state exists in self."""
-        return self.select_state(*states) is not None
-
-    def select_attribute(self, *attributes: str) -> OverkizStateType:
-        """Select first existing active state in a list of states."""
-        for attribute in attributes:
-            if current_attribute := self.device.attributes.get(attribute):
-                return current_attribute.value
-
         return None
 
     async def async_execute_command(
