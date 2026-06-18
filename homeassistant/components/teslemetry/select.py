@@ -2,7 +2,6 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from itertools import chain
 from typing import Any
 
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
@@ -172,8 +171,8 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Teslemetry select platform from a config entry."""
 
-    async_add_entities(
-        chain(
+    for vehicle in entry.runtime_data.vehicles:
+        async_add_entities(
             (
                 TeslemetryVehiclePollingSelectEntity(
                     vehicle, description, entry.runtime_data.scopes
@@ -185,22 +184,24 @@ async def async_setup_entry(
                     vehicle, description, entry.runtime_data.scopes
                 )
                 for description in VEHICLE_DESCRIPTIONS
-                for vehicle in entry.runtime_data.vehicles
                 if description.supported_fn(vehicle.coordinator.data)
             ),
-            (
-                TeslemetryOperationSelectEntity(energysite, entry.runtime_data.scopes)
-                for energysite in entry.runtime_data.energysites
-                if energysite.info_coordinator.data.get("components_battery")
-            ),
-            (
-                TeslemetryExportRuleSelectEntity(energysite, entry.runtime_data.scopes)
-                for energysite in entry.runtime_data.energysites
-                if energysite.info_coordinator.data.get("components_battery")
-                and energysite.info_coordinator.data.get("components_solar")
-            ),
+            config_subentry_id=vehicle.subentry_id,
         )
-    )
+
+    for energysite in entry.runtime_data.energysites:
+        entities: list[SelectEntity] = []
+        if energysite.info_coordinator.data.get("components_battery"):
+            entities.append(
+                TeslemetryOperationSelectEntity(energysite, entry.runtime_data.scopes)
+            )
+            if energysite.info_coordinator.data.get("components_solar"):
+                entities.append(
+                    TeslemetryExportRuleSelectEntity(
+                        energysite, entry.runtime_data.scopes
+                    )
+                )
+        async_add_entities(entities, config_subentry_id=energysite.subentry_id)
 
 
 class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
