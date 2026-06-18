@@ -1073,11 +1073,8 @@ class DSMREntity(SensorEntity):
             self._available = self.telegram is not None
             return
 
-        # Averaged sensors report the mean of the values collected during the
-        # interval. An interval that collected no reading at all — no telegram
-        # arrived, or every telegram omitted this object — has no mean to
-        # report; rather than keep publishing the previous interval's value,
-        # which would be misleading, the sensor becomes unavailable.
+        # No readings collected during the interval → unavailable.
+
         if self._is_averaged_sensor:
             self._available = bool(self._value_count)
             if self._value_count:
