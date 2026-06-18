@@ -20,13 +20,18 @@ from .conftest import make_coordinator, make_get_response
 
 def _make_jwt(exp_offset: int) -> str:
     """Return a minimal unsigned JWT with exp = now + exp_offset seconds."""
-    header = base64.urlsafe_b64encode(
-        b'{"alg":"none","typ":"JWT"}'
-    ).rstrip(b"=").decode()
-    payload = base64.urlsafe_b64encode(
-        json.dumps({"exp": int(time.time()) + exp_offset}).encode()
-    ).rstrip(b"=").decode()
+    header = (
+        base64.urlsafe_b64encode(b'{"alg":"none","typ":"JWT"}').rstrip(b"=").decode()
+    )
+    payload = (
+        base64.urlsafe_b64encode(
+            json.dumps({"exp": int(time.time()) + exp_offset}).encode()
+        )
+        .rstrip(b"=")
+        .decode()
+    )
     return f"{header}.{payload}."
+
 
 # ── Sample API response payloads ───────────────────────────────────────────────
 
