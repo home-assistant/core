@@ -200,11 +200,16 @@ def _async_public_camera_entities(
         # RTSP is globally disabled, the camera is third-party, or the camera is
         # offline — a disconnected camera has no stream because it is offline (the
         # library primes connected cameras only), not because it needs activating.
+        # First non-package channel (the high stream on Protect hardware); fall
+        # back to channels[0] only if a camera ever reports package-only.
+        fallback = next(
+            (c for c in camera.channels if not c.is_package), camera.channels[0]
+        )
         entities.append(
             ProtectCamera(
                 data,
                 camera,
-                camera.channels[0],
+                fallback,
                 is_default=True,
                 secure=True,
                 disable_stream=disable_stream,

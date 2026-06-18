@@ -333,8 +333,10 @@ class ProtectData:
             try:
                 await self.api.update_public()
             except Exception:  # noqa: BLE001
-                # Keep going (the reconnect refresh will retry) but warn, since
-                # setup raises ConfigEntryNotReady for the same failure.
+                # A runtime adopt can't retry like setup (ConfigEntryNotReady).
+                # The stream source self-heals on the next device update, but the
+                # entity set and public_stream_disabled repair are built once here
+                # and only correct on a reload.
                 _LOGGER.warning(
                     "Public bootstrap refresh failed on camera adopt", exc_info=True
                 )
