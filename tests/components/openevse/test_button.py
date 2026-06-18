@@ -46,7 +46,7 @@ async def test_entities(
             id="restart_wifi",
         ),
         pytest.param(
-            "button.openevse_mock_config_restart_evse",
+            "button.openevse_mock_config_restart",
             "restart_evse",
             id="restart_evse",
         ),
