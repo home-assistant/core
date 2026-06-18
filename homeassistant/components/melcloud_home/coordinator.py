@@ -13,6 +13,7 @@ from aiomelcloudhome.exceptions import (
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -106,22 +107,19 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
         try:
             data = await self.client.get_context()
         except MelCloudHomeAuthenticationError as err:
-            raise UpdateFailed(
+            raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except MelCloudHomeConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except MelCloudHomeTimeoutError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         else:
             return data

@@ -36,6 +36,42 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "bluetooth_audio": {
+        "name": "Bluetooth audio"
+      },
+      "headphones": {
+        "name": "Headphones"
+      }
+    },
+    "sensor": {
+      "card_insertion_state": {
+        "name": "Card slot",
+        "state": {
+          "none": "Empty",
+          "physical": "Physical card",
+          "remote": "Remote",
+          "streaming": "Streaming"
+        }
+      },
+      "day_mode": {
+        "name": "Day mode",
+        "state": {
+          "day": "Day",
+          "night": "Night"
+        }
+      }
+    },
+    "time": {
+      "day_mode_start": {
+        "name": "Day mode start"
+      },
+      "night_mode_start": {
+        "name": "Night mode start"
+      }
+    }
+  },
   "exceptions": {
     "authentication_failed": {
       "message": "Yoto credentials are no longer valid. Please reauthenticate your account."
@@ -45,6 +81,9 @@
     },
     "command_failed": {
       "message": "Yoto command failed: {error}"
+    },
+    "config_update_failed": {
+      "message": "Failed to update Yoto player settings: {error}"
     },
     "invalid_media_id": {
       "message": "Not a Yoto media identifier: {media_id}"
