@@ -117,6 +117,9 @@
     "no_access_to_path": {
       "message": "Cannot read {filename}, no access to path; `allowlist_external_dirs` may need to be adjusted in `configuration.yaml`"
     },
+    "no_files_match_pattern": {
+      "message": "No files match the following patterns: {patterns}"
+    },
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
@@ -179,7 +182,7 @@
           "name": "Destination folder"
         },
         "filename": {
-          "description": "One or more paths to files to upload.",
+          "description": "One or more paths to files to upload. Supports wildcards, for example `/config/www/*.jpg` to upload all JPG files in a folder, or `/config/www/**/*.jpg` to also include subfolders. Subfolders matched by a wildcard are recreated inside the destination folder.",
           "example": "{example_image_path}",
           "name": "Filenames"
         }

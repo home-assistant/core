@@ -98,6 +98,119 @@ async def test_upload_service(
     assert cast(list[dict[str, Any]], response["files"])[0]["id"] == "metadata_id"
 
 
+async def test_upload_service_wildcard(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test service call to upload content using a wildcard pattern."""
+    await setup_integration(hass, mock_config_entry)
+
+    matched_files = ["image1.jpg", "image2.jpg"]
+    with (
+        patch(
+            "homeassistant.components.onedrive.services.glob.glob",
+            return_value=matched_files,
+        ) as mock_glob,
+        patch(
+            "homeassistant.components.onedrive.services.Path.is_file",
+            return_value=True,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            UPLOAD_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_FILENAME: "/config/www/*.jpg",
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+            },
+            blocking=True,
+        )
+
+    mock_glob.assert_called_once_with("*.jpg", root_dir="/config/www", recursive=True)
+    assert mock_onedrive_client.upload_file.call_count == len(matched_files)
+    uploaded_names = [
+        call.args[1] for call in mock_onedrive_client.upload_file.call_args_list
+    ]
+    assert uploaded_names == ["image1.jpg", "image2.jpg"]
+
+
+async def test_upload_service_wildcard_recursive(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test service call to upload content using a recursive wildcard pattern."""
+    await setup_integration(hass, mock_config_entry)
+
+    matched_files = ["image1.jpg", "sub/image2.jpg"]
+    with (
+        patch(
+            "homeassistant.components.onedrive.services.glob.glob",
+            return_value=matched_files,
+        ) as mock_glob,
+        patch(
+            "homeassistant.components.onedrive.services.Path.is_file",
+            return_value=True,
+        ),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            UPLOAD_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_FILENAME: "/config/www/**/*.jpg",
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+            },
+            blocking=True,
+        )
+
+    mock_glob.assert_called_once_with(
+        "**/*.jpg", root_dir="/config/www", recursive=True
+    )
+    assert mock_onedrive_client.upload_file.call_count == len(matched_files)
+    # the "sub" subfolder is created under the destination folder
+    created_folders = [
+        call.args[1] for call in mock_onedrive_client.create_folder.call_args_list
+    ]
+    assert "sub" in created_folders
+    # the nested file keeps its base name and is routed through the subfolder
+    uploaded_names = [
+        call.args[1] for call in mock_onedrive_client.upload_file.call_args_list
+    ]
+    assert uploaded_names == ["image1.jpg", "image2.jpg"]
+
+
+async def test_upload_service_wildcard_no_match(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test upload service call with a wildcard pattern that matches no files."""
+    await setup_integration(hass, mock_config_entry)
+
+    pattern = "/config/www/*.jpg"
+    with (
+        patch(
+            "homeassistant.components.onedrive.services.glob.glob",
+            return_value=[],
+        ),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            UPLOAD_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_FILENAME: pattern,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "no_files_match_pattern"
+    assert pattern in exc_info.value.translation_placeholders["patterns"]
+
+
 async def test_upload_service_no_response(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
