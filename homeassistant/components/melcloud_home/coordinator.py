@@ -105,8 +105,8 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                             from_dt=start_of_month,
                             to_dt=utcnow(),
                         )
-                        self.ata_energy[ata_unit.id] = (
-                            sum(float(e.value) for e in energy) / 1000
+                        self.ata_energy[ata_unit.id] = sum(
+                            float(e.value) for e in energy
                         )
                 for atw_unit in building.air_to_water_units:
                     self.atw_units[atw_unit.id] = atw_unit
@@ -119,8 +119,8 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
                             from_dt=start_of_month,
                             to_dt=utcnow(),
                         )
-                        self.atw_energy[atw_unit.id] = (
-                            sum(float(e.value) for e in energy) / 1000
+                        self.atw_energy[atw_unit.id] = sum(
+                            float(e.value) for e in energy
                         )
         except MelCloudHomeAuthenticationError as err:
             raise UpdateFailed(

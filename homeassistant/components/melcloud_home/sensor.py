@@ -69,7 +69,8 @@ ATA_SENSORS: tuple[ATASensorEntityDescription, ...] = (
         translation_key="energy_consumed",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda unit, coordinator: coordinator.ata_energy.get(unit.id),
         exists_fn=lambda unit: bool(
             unit.capabilities and unit.capabilities.has_energy_consumed_meter
@@ -123,7 +124,8 @@ ATW_SENSORS: tuple[ATWSensorEntityDescription, ...] = (
         translation_key="energy_consumed",
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL,
-        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         value_fn=lambda unit, coordinator: coordinator.atw_energy.get(unit.id),
         exists_fn=lambda unit: bool(
             unit.capabilities and unit.capabilities.has_energy_consumed_meter
