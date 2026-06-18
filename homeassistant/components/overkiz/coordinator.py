@@ -28,7 +28,11 @@ from pyoverkiz.models import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.decorator import Registry
@@ -87,8 +91,14 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
         """Fetch Overkiz data via event listener."""
         try:
             events = await self.client.fetch_events()
-        except (BadCredentialsError, NotAuthenticatedError) as exception:
+        except (
+            BadCredentialsError,
+            NotAuthenticatedError,
+            OAuth2TokenRequestReauthError,
+        ) as exception:
             raise ConfigEntryAuthFailed("Invalid authentication.") from exception
+        except OAuth2TokenRequestError as exception:
+            raise UpdateFailed("Failed to refresh OAuth2 token.") from exception
         except TooManyConcurrentRequestsError as exception:
             raise UpdateFailed("Too many concurrent requests.") from exception
         except TooManyRequestsError as exception:

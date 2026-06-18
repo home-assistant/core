@@ -3,6 +3,7 @@
   "name": "Overkiz",
   "codeowners": ["@imicknl"],
   "config_flow": true,
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "gateway*",
