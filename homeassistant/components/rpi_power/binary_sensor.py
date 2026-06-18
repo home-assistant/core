@@ -15,6 +15,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.issue_registry import IssueSeverity, create_issue
 
 from . import RpiPowerConfigEntry
 from .const import DOMAIN
@@ -63,6 +64,15 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
         if self._attr_is_on != value:
             if value:
                 _LOGGER.warning(DESCRIPTION_UNDER_VOLTAGE)
+                create_issue(
+                    self.hass,
+                    DOMAIN,
+                    "under_voltage_detected",
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=IssueSeverity.CRITICAL,
+                    translation_key="under_voltage_detected",
+                )
             else:
                 _LOGGER.debug(DESCRIPTION_NORMALIZED)
             self._attr_is_on = value
