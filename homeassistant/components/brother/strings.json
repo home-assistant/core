@@ -31,7 +31,7 @@
               "community": "A simple password for devices to communicate to each other.",
               "port": "The SNMP port of the Brother printer."
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         }
       },
@@ -54,7 +54,7 @@
               "community": "A simple password for devices to communicate to each other.",
               "port": "The SNMP port of the Brother printer."
             },
-            "name": "Advanced settings"
+            "name": "Additional settings"
           }
         }
       },
@@ -76,7 +76,7 @@
               "community": "A simple password for devices to communicate to each other.",
               "port": "The SNMP port of the Brother printer."
             },
-            "name": "Advanced settings"
+            "name": "[%key:component::brother::config::step::user::sections::advanced_settings::name%]"
           }
         },
         "title": "Discovered Brother Printer"
