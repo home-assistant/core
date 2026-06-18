@@ -1,5 +1,7 @@
 """Defines a base Aqvify entity."""
 
+from typing import TYPE_CHECKING
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -24,7 +26,10 @@ class AqvifyBaseEntity[
         """Initialize the Aqvify entity."""
         super().__init__(coordinator)
 
-        self.account_id = str(self.coordinator.config_entry.unique_id)
+        self.account_id = self.coordinator.config_entry.unique_id
+        if TYPE_CHECKING:
+            assert self.account_id is not None
+
         self.device_key = device_key
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self.account_id}_{device_key}")},

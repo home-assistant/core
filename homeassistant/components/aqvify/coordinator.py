@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
 from aiohttp import ClientResponseError
 from pyaqvify import (
@@ -136,7 +137,9 @@ class AqvifyCoordinator(DataUpdateCoordinator[AqvifyCoordinatorData]):
         device_data = {}
         for aqvify_device in devices.devices.values():
             try:
-                device_key = str(aqvify_device.device_key)
+                device_key = aqvify_device.device_key
+                if TYPE_CHECKING:
+                    assert device_key is not None
                 device_data[
                     device_key
                 ] = await self.api_client.async_get_device_latest_data(device_key)
@@ -212,7 +215,9 @@ class AqvifyAggrDataCoordinator(
         device_data: dict[str, AqvifyHourAggregatedValues] = {}
         for device in devices.devices.values():
             try:
-                device_key = str(device.device_key)
+                device_key = device.device_key
+                if TYPE_CHECKING:
+                    assert device_key is not None
                 beg_time, end_time = self._get_times()
                 aggr_data = await self.api_client.async_get_hour_aggregation(
                     device_key,
