@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PORT,
     CONF_UUID,
@@ -79,6 +80,9 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_HOST, default=DEFAULT_HOST): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
         vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
+        vol.Optional(CONF_MONITORED_CONDITIONS, default=["average"]): vol.All(
+            cv.ensure_list, [vol.In(SENSOR_KEYS)]
+        ),
     }
 )
 

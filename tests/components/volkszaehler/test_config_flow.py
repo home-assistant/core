@@ -12,6 +12,7 @@ from homeassistant.components.volkszaehler import sensor
 from homeassistant.components.volkszaehler.const import DOMAIN
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MONITORED_CONDITIONS,
     CONF_NAME,
     CONF_PLATFORM,
     CONF_PORT,
@@ -80,6 +81,7 @@ async def test_import(hass: HomeAssistant) -> None:
         CONF_HOST: "importhost",
         CONF_NAME: "2.8.0",
         CONF_PLATFORM: "volkszaehler",
+        CONF_MONITORED_CONDITIONS: ["consumption"],
     }
     await sensor.async_setup_platform(hass, import_data, None)
 
