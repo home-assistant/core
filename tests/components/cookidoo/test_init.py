@@ -240,11 +240,11 @@ async def test_migration_from(
     )
 
 
+@pytest.mark.usefixtures("mock_cookidoo_client")
 async def test_migration_from_partial_duplicate_unique_ids(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mock_cookidoo_client: AsyncMock,
 ) -> None:
     """Test migration handles stale entities when the target unique_id exists."""
     config_entry = MockConfigEntry(
