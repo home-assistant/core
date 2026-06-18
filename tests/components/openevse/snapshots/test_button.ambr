@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_entities[button.openevse_mock_config_restart_evse-entry]
+# name: test_entities[button.openevse_mock_config_restart-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.openevse_mock_config_restart_evse',
+    'entity_id': 'button.openevse_mock_config_restart',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,29 +21,29 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Restart EVSE',
+    'object_id_base': 'Restart',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.RESTART: 'restart'>,
     'original_icon': None,
-    'original_name': 'Restart EVSE',
+    'original_name': 'Restart',
     'platform': 'openevse',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'restart_evse',
+    'translation_key': 'restart',
     'unique_id': 'deadbeeffeed-restart_evse',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_entities[button.openevse_mock_config_restart_evse-state]
+# name: test_entities[button.openevse_mock_config_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'restart',
-      'friendly_name': 'openevse_mock_config Restart EVSE',
+      'friendly_name': 'openevse_mock_config Restart',
     }),
     'context': <ANY>,
-    'entity_id': 'button.openevse_mock_config_restart_evse',
+    'entity_id': 'button.openevse_mock_config_restart',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
