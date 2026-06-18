@@ -13,6 +13,7 @@ from homeassistant.components.switchbot_cloud.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import device_registry as dr
 
 from . import AI_ART_FRAME_DEVICE, configure_integration
@@ -103,3 +104,31 @@ async def test_device_not_in_registry_skips(
             blocking=True,
         )
     mock_send.assert_not_awaited()
+
+
+async def test_device_without_mac_raises_service_validation_error(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_list_devices,
+    mock_get_status,
+    mock_setup_webhook,
+) -> None:
+    """Test service device without mac."""
+    entry = await _setup(hass, mock_list_devices, mock_get_status)
+
+    device_no_mac = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={("other_integration", "some-id")},
+        name="no-mac-device",
+    )
+
+    with pytest.raises(ServiceValidationError, match="No valid MAC address obtained"):
+        await hass.services.async_call(
+            DOMAIN,
+            AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
+            {
+                "device_id": [device_no_mac.id],
+                "image_url": "https://example.com/img.jpg",
+            },
+            blocking=True,
+        )
