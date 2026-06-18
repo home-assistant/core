@@ -396,8 +396,6 @@ class AsusWrtRouter:
             serial_number=self._api.serial_number,
             manufacturer="Asus",
         )
-        # Source the MAC from the bridge identity (already normalized via
-        # format_mac); a router queried purely by host may not report one.
         if label_mac := self._api.label_mac:
             info["connections"] = {(CONNECTION_NETWORK_MAC, label_mac)}
         if self._api.firmware:
