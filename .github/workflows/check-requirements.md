@@ -22,8 +22,69 @@ safe-outputs:
   needs:
     - extract_pr_number
 jobs:
-  extract_pr_number:
+  gate:
+    # Skip the (token-spending) agent when no tracked requirement file changed
     if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      pull-requests: read
+    outputs:
+      skip: ${{ steps.gate.outputs.skip }}
+    steps:
+      - name: Download deterministic-results artifact
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: check-requirements-deterministic
+          path: /tmp/gate
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Decide whether requirements changed since the last comment
+        id: gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PR=$(jq -r '.pr_number' /tmp/gate/results.json)
+          HEAD=$(jq -r '.head_sha // empty' /tmp/gate/results.json)
+          if [ -z "${HEAD}" ]; then
+            echo "Artifact has no head_sha; running the agent."
+            exit 0
+          fi
+          # Recover the commit recorded in the most recent requirements-check
+          # comment from the "Checked at commit" link
+          PRIOR=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
+            --jq '.[] | select(.body | contains("<!-- requirements-check -->")) | .body' \
+            | grep -oiE '/commit/[0-9a-f]{40}' \
+            | grep -oiE '[0-9a-f]{40}' | tail -1 || true)
+          if [ -z "${PRIOR}" ]; then
+            echo "No previous comment with a recorded commit; running the agent."
+            exit 0
+          fi
+          if [ "${PRIOR}" = "${HEAD}" ]; then
+            echo "Head ${HEAD} unchanged since the last comment; skipping the agent."
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          # List files changed between the recorded commit and the current head.
+          # Tracked patterns mirror script/check_requirements/diff.py TRACKED_PATTERNS.
+          CHANGED=$(gh api "repos/${GITHUB_REPOSITORY}/compare/${PRIOR}...${HEAD}" \
+            --jq '.files[].filename' 2>/dev/null) || {
+            echo "Could not compare ${PRIOR}...${HEAD}; running the agent."
+            exit 0
+          }
+          TRACKED=$(printf '%s\n' "${CHANGED}" \
+            | grep -Ex 'requirements.*\.txt|homeassistant/package_constraints\.txt' || true)
+          if [ -z "${TRACKED}" ]; then
+            echo "No tracked requirement files changed since ${PRIOR}; skipping the agent."
+            echo "skip=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "Tracked requirement files changed since ${PRIOR}; running the agent:"
+            printf '%s\n' "${TRACKED}"
+          fi
+  extract_pr_number:
+    needs: gate
+    if: needs.gate.outputs.skip != 'true' && github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
       actions: read

@@ -802,7 +802,7 @@ def test_date() -> None:
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    schema(datetime.now().date())
+    schema(datetime.now().date())  # pylint: disable=home-assistant-enforce-naive-now
     schema("2016-11-23")
 
 
@@ -814,7 +814,7 @@ def test_time() -> None:
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    schema(datetime.now().time())
+    schema(datetime.now().time())  # pylint: disable=home-assistant-enforce-naive-now
     schema("23:42:00")
     schema("23:42")
 
@@ -826,7 +826,7 @@ def test_datetime() -> None:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    schema(datetime.now())
+    schema(datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
     schema("2016-11-23T18:59:08")
 
 

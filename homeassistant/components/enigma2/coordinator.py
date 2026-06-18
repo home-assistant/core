@@ -93,7 +93,7 @@ class Enigma2UpdateCoordinator(DataUpdateCoordinator[OpenWebIfStatus]):
                 if "mac" in iface and iface["mac"] is not None
             }
             self.device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, format_mac(iface["mac"]))
+                (CONNECTION_NETWORK_MAC, iface["mac"])
                 for iface in about["info"]["ifaces"]
                 if "mac" in iface and iface["mac"] is not None
             }
