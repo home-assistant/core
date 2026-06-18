@@ -8,6 +8,7 @@ from homeassistant.util.hass_dict import HassKey
 from .entity import RadioFrequencyTransmitterEntity
 
 DOMAIN: Final = "radio_frequency"
+
 DATA_COMPONENT: HassKey[EntityComponent[RadioFrequencyTransmitterEntity]] = HassKey(
     DOMAIN
 )

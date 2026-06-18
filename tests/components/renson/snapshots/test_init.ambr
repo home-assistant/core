@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_device_registry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+      tuple(
+        'mac',
+        '80:7d:3a:bd:1e:32',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '8.0',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'renson',
+        '80:7d:3a:bd:1e:32',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Renson',
+    'model': 'Endura Delta',
+    'model_id': None,
+    'name': 'Ventilation',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'Firmware version 4.9.1',
+    'via_device_id': None,
+  })
+# ---

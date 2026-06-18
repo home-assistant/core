@@ -46,6 +46,7 @@ async def async_setup_entry(
 class RabbitAirFanEntity(RabbitAirBaseEntity, FanEntity):
     """Fan control functions of the Rabbit Air air purifier."""
 
+    _attr_name = None
     _attr_translation_key = "rabbitair"
     _attr_supported_features = (
         FanEntityFeature.PRESET_MODE

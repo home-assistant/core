@@ -12,6 +12,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
 
+from . import websocket_api
 from .const import DATA_COMPONENT, DOMAIN
 from .entity import (
     RadioFrequencyTransmitterEntity,
@@ -20,6 +21,7 @@ from .entity import (
 from .helpers import RadioFrequencyTransmitterConsumerEntity, async_send_command
 
 __all__ = [
+    "DATA_COMPONENT",
     "DOMAIN",
     "ModulationType",
     "RadioFrequencyCommand",
@@ -44,6 +46,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         RadioFrequencyTransmitterEntity
     ](_LOGGER, DOMAIN, hass, SCAN_INTERVAL)
     await component.async_setup(config)
+
+    websocket_api.async_setup(hass)
 
     return True
 
