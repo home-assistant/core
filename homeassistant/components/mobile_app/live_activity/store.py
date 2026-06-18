@@ -43,14 +43,14 @@ def store_live_activity_token(
 @callback
 def remove_live_activity_token(
     hass: HomeAssistant, webhook_id: str, activity_tag: str
-) -> bool:
+) -> None:
     """Remove a stored Live Activity token, returning whether one existed."""
     live_activity_tokens = hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]
 
-    if (device_tokens := live_activity_tokens.get(webhook_id)) is None:
-        return False
-    if device_tokens.pop(activity_tag, None) is None:
-        return False
+    if (
+        device_tokens := live_activity_tokens.get(webhook_id)
+    ) is None or device_tokens.pop(activity_tag, None) is None:
+        return
 
     if not device_tokens:
         del live_activity_tokens[webhook_id]
@@ -59,7 +59,6 @@ def remove_live_activity_token(
         partial(savable_state, hass), STORAGE_SAVE_DELAY_SECONDS
     )
     async_schedule_next_cleanup(hass)
-    return True
 
 
 @callback
