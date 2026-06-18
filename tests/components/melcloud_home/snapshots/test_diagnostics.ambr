@@ -48,11 +48,23 @@
                 'min_temp_heat': 10.0,
                 'number_of_fan_speeds': 5,
               }),
+              'frost_protection': dict({
+                'active': False,
+                'enabled': True,
+                'max': 12.0,
+                'min': 10.0,
+              }),
               'id': '**REDACTED**',
               'in_standby_mode': False,
               'is_in_error': False,
               'name': 'Living Room AC',
               'operation_mode': 'Heat',
+              'overheat_protection': dict({
+                'active': False,
+                'enabled': True,
+                'max': 37.0,
+                'min': 35.0,
+              }),
               'power': True,
               'raw_settings': list([
                 dict({
