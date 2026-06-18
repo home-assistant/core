@@ -1,4 +1,4 @@
-"""Support for Droplet."""
+"""Support for Droplet sensors."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
