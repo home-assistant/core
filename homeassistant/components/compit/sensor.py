@@ -228,14 +228,6 @@ DESCRIPTIONS: dict[CompitParameter, SensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
-    CompitParameter.DHW_CURRENT_TEMPERATURE: SensorEntityDescription(
-        key=CompitParameter.DHW_CURRENT_TEMPERATURE.value,
-        translation_key="dhw_current_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-    ),
     CompitParameter.DHW_MEASURED_TEMPERATURE: SensorEntityDescription(
         key=CompitParameter.DHW_MEASURED_TEMPERATURE.value,
         translation_key="dhw_measured_temperature",
@@ -867,9 +859,6 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
         parameters={
             CompitParameter.ACTUAL_BUFFER_TEMP: DESCRIPTIONS[
                 CompitParameter.ACTUAL_BUFFER_TEMP
-            ],
-            CompitParameter.DHW_CURRENT_TEMPERATURE: DESCRIPTIONS[
-                CompitParameter.DHW_CURRENT_TEMPERATURE
             ],
             CompitParameter.ACTUAL_HC1_TEMPERATURE: DESCRIPTIONS[
                 CompitParameter.ACTUAL_HC1_TEMPERATURE
