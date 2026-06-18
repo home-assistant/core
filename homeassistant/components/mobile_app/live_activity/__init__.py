@@ -4,6 +4,7 @@
 from collections.abc import Mapping
 from dataclasses import dataclass
 from enum import StrEnum
+from functools import partial
 from typing import Any
 
 from homeassistant.components.notify import ATTR_DATA, ATTR_MESSAGE
@@ -60,15 +61,12 @@ def prepare_live_activity_remote_push(
 
     success_callback: CALLBACK_TYPE | None = None
     if resolved.event is LiveActivityEvent.END:
-
-        def on_success() -> None:
-            remove_live_activity_token(
-                hass,
-                registration[ATTR_WEBHOOK_ID],
-                resolved.tag,
-            )
-
-        success_callback = on_success
+        success_callback = partial(
+            remove_live_activity_token,
+            hass,
+            registration[ATTR_WEBHOOK_ID],
+            resolved.tag,
+        )
 
     return (
         {
