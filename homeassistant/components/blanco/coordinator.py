@@ -22,7 +22,7 @@ from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_DEV_ID, CONF_DEV_TYPE, CONF_TOKEN_TYPE
+from .const import CONF_DEV_ID, CONF_DEV_TYPE, CONF_TOKEN_TYPE, DOMAIN
 from .definitions import BlancoDeviceType
 
 _LOGGER = logging.getLogger(__name__)
@@ -113,7 +113,8 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.warning("Token expired, attempting renewal")
             if not await self._async_renew_token():
                 raise ConfigEntryAuthFailed(
-                    "Token renewal failed — reauthentication required"
+                    translation_domain=DOMAIN,
+                    translation_key="token_expired",
                 ) from None
             return await api_method(*args)
 
@@ -191,7 +192,10 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             errors_data = prev.get("errors", {"errors": [], "info": {}})
 
         if fresh_count == 0:
-            raise UpdateFailed("All BLANCO API endpoints are unreachable")
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            )
 
         # ── dev_type discovery ────────────────────────────────────────────────
         if self.dev_type is None:

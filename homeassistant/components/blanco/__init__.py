@@ -47,7 +47,10 @@ async def _async_ensure_app_registered(
     try:
         reg = await client.register_app(locale)
     except BlancoConnectionError as err:
-        raise ConfigEntryNotReady(str(err)) from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect",
+        ) from err
 
     hass.config_entries.async_update_entry(
         entry,

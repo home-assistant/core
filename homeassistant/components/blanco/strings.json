@@ -1,4 +1,15 @@
 {
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Unable to connect to the BLANCO API."
+    },
+    "token_expired": {
+      "message": "Authentication failed. Please reconfigure the integration."
+    },
+    "update_failed": {
+      "message": "Failed to update data from the BLANCO API."
+    }
+  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
