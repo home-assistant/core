@@ -87,7 +87,6 @@ class YotoSelect(YotoConfigEntity, SelectEntity):
         """Initialize the select."""
         super().__init__(coordinator, player)
         self.entity_description = description
-        self._attr_options = description.options
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
