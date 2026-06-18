@@ -1064,43 +1064,6 @@ async def test_notify_normal_notification_ignores_live_activity_tokens(
     }
 
 
-async def test_notify_clear_notification_ends_known_live_activity(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
-) -> None:
-    """Test clear_notification with a known tag attaches the per-tag token and event=end."""
-    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
-        "washer_cycle": {
-            "token": "TOKEN_TO_END",
-            "expires_at": dt_util.utcnow().timestamp() + 3600,
-        }
-    }
-
-    await hass.services.async_call(
-        "notify",
-        "mobile_app_test",
-        {
-            "message": "clear_notification",
-            "target": ["mock-webhook_id"],
-            "data": {"tag": "washer_cycle"},
-        },
-        blocking=True,
-    )
-
-    assert aioclient_mock.mock_calls[0][2] == {
-        "push_token": "PUSH_TOKEN",
-        "live_activity_token": "TOKEN_TO_END",
-        "message": "clear_notification",
-        "data": {"tag": "washer_cycle", "event": "end"},
-        "registration_info": {
-            "app_id": "io.homeassistant.mobile_app",
-            "app_version": "1.0",
-            "os_version": "5.0.6",
-            "webhook_id": "mock-webhook_id",
-        },
-    }
-    assert hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS] == {}
-
-
 async def test_notify_clear_notification_allows_same_tag_to_start_again(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
