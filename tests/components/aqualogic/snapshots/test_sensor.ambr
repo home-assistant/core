@@ -1,0 +1,123 @@
+# serializer version: 1
+# name: test_sensors
+  dict({
+    'sensor.aqualogic_air_temperature': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'temperature',
+        'friendly_name': 'AquaLogic Air Temperature',
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_air_temperature',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '25.5',
+    }),
+    'sensor.aqualogic_pool_chlorinator': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'AquaLogic Pool Chlorinator',
+        'icon': 'mdi:gauge',
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_pool_chlorinator',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '50.0',
+    }),
+    'sensor.aqualogic_pool_temperature': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'temperature',
+        'friendly_name': 'AquaLogic Pool Temperature',
+        'icon': 'mdi:oil-temperature',
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_pool_temperature',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '28.0',
+    }),
+    'sensor.aqualogic_pump_power': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'power',
+        'friendly_name': 'AquaLogic Pump Power',
+        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_pump_power',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '1000.0',
+    }),
+    'sensor.aqualogic_pump_speed': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'AquaLogic Pump Speed',
+        'icon': 'mdi:speedometer',
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_pump_speed',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '100.0',
+    }),
+    'sensor.aqualogic_salt_level': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'AquaLogic Salt Level',
+        'icon': 'mdi:gauge',
+        'unit_of_measurement': 'g/L',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_salt_level',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '3.5',
+    }),
+    'sensor.aqualogic_spa_chlorinator': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'AquaLogic Spa Chlorinator',
+        'icon': 'mdi:gauge',
+        'unit_of_measurement': '%',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_spa_chlorinator',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '50.0',
+    }),
+    'sensor.aqualogic_spa_temperature': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'device_class': 'temperature',
+        'friendly_name': 'AquaLogic Spa Temperature',
+        'icon': 'mdi:oil-temperature',
+        'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_spa_temperature',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': '30.0',
+    }),
+    'sensor.aqualogic_status': StateSnapshot({
+      'attributes': ReadOnlyDict({
+        'friendly_name': 'AquaLogic Status',
+        'icon': 'mdi:alert',
+      }),
+      'context': <ANY>,
+      'entity_id': 'sensor.aqualogic_status',
+      'last_changed': <ANY>,
+      'last_reported': <ANY>,
+      'last_updated': <ANY>,
+      'state': 'OK',
+    }),
+  })
+# ---
