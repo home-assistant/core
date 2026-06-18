@@ -154,6 +154,36 @@ async def test_reauth_cannot_connect(hass: HomeAssistant) -> None:
     assert result3["reason"] == "reauth_successful"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_unknown_error(hass: HomeAssistant) -> None:
+    """An unexpected probe exception during reauth surfaces as unknown."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={
+            CONF_HOST: "1.1.1.1",
+            CONF_PORT: 80,
+            CONF_PASSWORD: "stale",
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await entry.start_reauth_flow(hass)
+
+    with patch(
+        "ccm15.CCM15Device.CCM15Device.async_test_connection",
+        side_effect=Exception(),
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_PASSWORD: "123456"},
+        )
+
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "reauth_confirm"
+    assert result2["errors"] == {"base": "unknown"}
+
+
 async def test_form_invalid_host(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:

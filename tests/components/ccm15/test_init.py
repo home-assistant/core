@@ -94,6 +94,38 @@ async def test_coordinator_set_state_ok_requests_refresh(
     mock_refresh.assert_awaited_once()
 
 
+@pytest.mark.usefixtures("ccm15_device")
+async def test_coordinator_set_state_other_codes_log_and_skip_refresh(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Any non-OK / non-WRONG_PASSWORD code logs a warning, no refresh fires."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1.1.1.1",
+        data={CONF_HOST: "1.1.1.1", CONF_PORT: 80},
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = entry.runtime_data
+
+    with (
+        patch.object(
+            coordinator._ccm15,
+            "async_set_state",
+            AsyncMock(return_value=CCM15ReturnCode.CONNECTION_ERROR),
+        ),
+        patch.object(coordinator, "async_request_refresh", AsyncMock()) as mock_refresh,
+        caplog.at_level("WARNING"),
+    ):
+        await coordinator.async_set_state(0, coordinator.data.devices[0])
+
+    mock_refresh.assert_not_awaited()
+    assert "CCM15 set_state returned" in caplog.text
+
+
 async def test_non_contiguous_slots(hass: HomeAssistant) -> None:
     """Entities for sparse slot indices, including >= 32, are available.
 
