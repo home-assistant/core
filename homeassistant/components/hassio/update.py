@@ -18,14 +18,13 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import ADDONS_COORDINATOR, ATTR_VERSION_LATEST, MAIN_COORDINATOR
-from .coordinator import AddonData
+from .coordinator import AddonData, JobSubscription
 from .entity import (
     HassioAddonEntity,
     HassioCoreEntity,
     HassioOSEntity,
     HassioSupervisorEntity,
 )
-from .jobs import JobSubscription
 from .update_helper import update_addon, update_core, update_os
 
 ENTITY_DESCRIPTION = UpdateEntityDescription(
