@@ -289,10 +289,10 @@ async def test_migrate_future_version_aborts(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
+@pytest.mark.usefixtures("mock_wolflink")
 async def test_setup_fetch_parameters_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_wolflink: MagicMock,
 ) -> None:
     """Test a device whose parameter fetch fails is skipped, not the whole entry."""
     mock_config_entry.add_to_hass(hass)
