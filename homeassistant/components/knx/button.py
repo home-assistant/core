@@ -106,7 +106,7 @@ class KnxUiButton(_KnxButton, KnxUiEntity):
             self._payload = button_data[CONF_PAYLOAD]
             self._device = XknxRawValue(
                 xknx=knx_module.xknx,
-                name=config[CONF_NAME],
+                name=config[CONF_ENTITY][CONF_NAME],
                 payload_length=button_data[CONF_PAYLOAD_LENGTH],
                 group_address=knx_conf.get_write(CONF_GA_SEND),
             )

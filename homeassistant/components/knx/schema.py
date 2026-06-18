@@ -99,7 +99,10 @@ def _max_payload_value(payload_length: int) -> int:
 
 
 def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
-    """Validate a button entity payload configuration."""
+    """Validate a button entity payload configuration.
+
+    Returns raw payload and length from value and type (DPT), if given.
+    """
     if _type := entity_config.get(CONF_TYPE):
         _payload = entity_config[CONF_VALUE]
         if (transcoder := DPTBase.parse_transcoder(_type)) is None:
