@@ -1037,14 +1037,14 @@ class DSMREntity(SensorEntity):
         if dsmr_object is None or dsmr_object.value is None:
             return
 
-        value: Decimal | None = None
-        with suppress(ArithmeticError, TypeError, ValueError):
+        try:
             value = Decimal(dsmr_object.value)
-        if value is None:
+        except (ArithmeticError, TypeError, ValueError) as err:
             LOGGER.debug(
-                "Could not convert %s value %s for averaging",
+                "Could not convert %s value %s for averaging: %s",
                 self.entity_description.key,
                 dsmr_object.value,
+                err,
             )
             return
 
