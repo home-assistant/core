@@ -214,18 +214,15 @@ class AqvifyAggrDataCoordinator(
 
         device_data: dict[str, AqvifyHourAggregatedValues] = {}
         for device in devices.devices.values():
+            device_key = device.device_key
+            if TYPE_CHECKING:
+                assert device_key is not None
+            beg_time, end_time = self._get_times()
             try:
-                device_key = device.device_key
-                if TYPE_CHECKING:
-                    assert device_key is not None
-                beg_time, end_time = self._get_times()
                 aggr_data = await self.api_client.async_get_hour_aggregation(
                     device_key,
                     beg_time,
                     end_time,
-                )
-                device_data[device_key] = (
-                    aggr_data.aggr_list[0] if len(aggr_data.aggr_list) else {}
                 )
             except AqvifyAuthException:
                 raise ConfigEntryAuthFailed(
@@ -248,5 +245,8 @@ class AqvifyAggrDataCoordinator(
                         "entry": self.config_entry.title,
                     },
                 ) from err
+            device_data[device_key] = (
+                aggr_data.aggr_list[0] if len(aggr_data.aggr_list) else {}
+            )
 
         return device_data
