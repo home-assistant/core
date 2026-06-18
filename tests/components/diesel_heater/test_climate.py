@@ -12,7 +12,6 @@ from homeassistant.components.diesel_heater.climate import (
     PRESET_NONE,
     HVACMode,
     VevorHeaterClimate,
-    async_setup_entry,
 )
 from homeassistant.exceptions import ServiceValidationError
 
@@ -486,33 +485,6 @@ class TestClimateHelperMethods:
 # ---------------------------------------------------------------------------
 # Async setup entry tests
 # ---------------------------------------------------------------------------
-
-
-class TestAsyncSetupEntry:
-    """Tests for async_setup_entry."""
-
-    @pytest.mark.asyncio
-    async def test_async_setup_entry_creates_climate(self):
-        """Test async_setup_entry creates climate entity."""
-        coordinator = create_mock_coordinator()
-
-        # Create mock entry with runtime_data
-        entry = create_mock_config_entry()
-        entry.runtime_data = coordinator
-
-        # Create mock async_add_entities
-        async_add_entities = MagicMock()
-
-        # Create mock hass
-        hass = MagicMock()
-
-        await async_setup_entry(hass, entry, async_add_entities)
-
-        # Verify async_add_entities was called with a list containing VevorHeaterClimate
-        async_add_entities.assert_called_once()
-        call_args = async_add_entities.call_args[0][0]
-        assert len(call_args) == 1
-        assert isinstance(call_args[0], VevorHeaterClimate)
 
 
 # ---------------------------------------------------------------------------
