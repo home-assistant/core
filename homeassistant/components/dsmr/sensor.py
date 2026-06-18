@@ -1017,7 +1017,6 @@ class DSMREntity(SensorEntity):
         else:
             self._attr_unique_id = f"{device_serial}_{entity_description.key}"
 
-        # Calculate initial value
         self.accumulate_data(telegram)
         self.calculate_value()
 
