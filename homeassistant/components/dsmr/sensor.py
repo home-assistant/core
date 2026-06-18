@@ -1015,20 +1015,26 @@ class DSMREntity(SensorEntity):
 
     @callback
     def accumulate_data(self, telegram: Telegram | None) -> None:
-        """Store the telegram and accumulate values for averaged sensors."""
+        """Store the telegram and update the value from it.
+
+        Non-averaged sensors cache their reading as soon as the object appears,
+        so a later partial telegram that omits it cannot drop the value at
+        publish time. Averaged sensors keep a running sum and count instead.
+        """
         self.telegram = telegram
 
         if not telegram:
             self._reset_average()
             return
 
-        if not self._is_averaged_sensor:
-            return
-
         dsmr_object = get_dsmr_object(
             telegram, self._mbus_id, self.entity_description.obis_reference
         )
         if dsmr_object is None or dsmr_object.value is None:
+            return
+
+        if not self._is_averaged_sensor:
+            self._value = self._convert_value(dsmr_object.value)
             return
 
         try:
@@ -1063,43 +1069,34 @@ class DSMREntity(SensorEntity):
             self._available = self.telegram is not None
             return
 
-        # No readings collected during the interval → unavailable.
-
-        if self._is_averaged_sensor:
-            self._available = bool(self._value_count)
-            if self._value_count:
-                self._value = round(
-                    float(self._value_sum / self._value_count), DEFAULT_PRECISION
-                )
-            self._reset_average()
+        # Non-averaged sensors cache their latest value in accumulate_data as
+        # telegrams arrive, so it is already up to date and survives a partial
+        # telegram that omits the object.
+        if not self._is_averaged_sensor:
+            self._available = True
             return
+
+        # Averaged sensors report the mean of the values collected during the
+        # interval; with no readings collected the sensor is unavailable.
+        self._available = bool(self._value_count)
+        if self._value_count:
+            self._value = round(
+                float(self._value_sum / self._value_count), DEFAULT_PRECISION
+            )
         self._reset_average()
-        self._available = True
 
-        dsmr_object = get_dsmr_object(
-            self.telegram, self._mbus_id, self.entity_description.obis_reference
-        )
-
-        # The object is absent from this (non-empty) telegram: keep the last
-        # reported value so a partial telegram (one that omits this object) does
-        # not clear an otherwise valid state.
-        if dsmr_object is None or dsmr_object.value is None:
-            return
-
-        value = dsmr_object.value
-
+    def _convert_value(self, value: str | float) -> StateType:
+        """Convert a raw telegram reading into the value reported by the sensor."""
         if self.entity_description.obis_reference == "ELECTRICITY_ACTIVE_TARIFF":
-            self._value = self.translate_tariff(value, self._dsmr_version)
-            return
+            return self.translate_tariff(str(value), self._dsmr_version)
 
         with suppress(TypeError, ValueError):
             value = round(float(value), DEFAULT_PRECISION)
 
         # Make sure we do not return a zero value for an energy sensor
         if not value and self.state_class == SensorStateClass.TOTAL_INCREASING:
-            self._value = None
-        else:
-            self._value = value
+            return None
+        return value
 
     @property
     def available(self) -> bool:

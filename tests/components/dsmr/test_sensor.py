@@ -1825,6 +1825,24 @@ def _create_energy_only_telegram(energy: str) -> Telegram:
     return telegram
 
 
+def _create_power_only_telegram(power: str) -> Telegram:
+    """Create a telegram with a power reading but no energy reading.
+
+    Used to exercise a non-averaged sensor (energy) whose object is absent from
+    a telegram arriving later in the interval.
+    """
+    telegram = Telegram()
+    telegram.add(
+        CURRENT_ELECTRICITY_USAGE,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal(power), "unit": UnitOfPower.WATT}],
+        ),
+        "CURRENT_ELECTRICITY_USAGE",
+    )
+    return telegram
+
+
 async def _setup_dsmr_for_averaging(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
@@ -2077,6 +2095,43 @@ async def test_non_power_readings_are_not_averaged(
 
     # The power sensor on the very same telegrams *is* averaged: mean(2, 4, 6).
     assert hass.states.get(POWER_ENTITY_ID).state == "4.0"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_non_averaged_value_survives_later_partial_telegram(
+    hass: HomeAssistant,
+    request: pytest.FixtureRequest,
+    freezer: FrozenDateTimeFactory,
+    dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
+) -> None:
+    """Test a non-averaged reading is kept when a later telegram omits its object.
+
+    A non-averaged value that appears earlier in the interval must be published
+    at the timer tick even if the last telegram of the interval is a partial one
+    that omits the object, instead of falling back to the previous value.
+    """
+    (connection_factory, _transport, protocol) = dsmr_connection_fixture
+
+    telegram_callback = await _setup_dsmr_for_averaging(
+        hass, request, connection_factory, protocol, time_between_update=UPDATE_INTERVAL
+    )
+
+    # First telegram creates the entities and sets the initial energy value.
+    telegram_callback(_create_power_and_energy_telegram("1.0", "10.0"))
+    await hass.async_block_till_done()
+    assert hass.states.get(ENERGY_ENTITY_ID).state == "10.0"
+
+    # A new energy reading (50) arrives within the interval, followed by a
+    # partial telegram that omits the energy object before the timer fires.
+    telegram_callback(_create_power_and_energy_telegram("2.0", "50.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_only_telegram("4.0"))
+    await hass.async_block_till_done()
+
+    # The latest energy value seen during the interval (50) is published, not
+    # the stale 10 from before: the partial telegram must not drop the reading.
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(ENERGY_ENTITY_ID).state == "50.0"
 
 
 async def test_no_averaging_when_update_interval_is_zero(
