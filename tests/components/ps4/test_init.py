@@ -168,7 +168,7 @@ async def test_config_flow_entry_migrate(
             return_value=entity_registry,
         ),
     ):
-        await ps4.async_migrate_entry(hass, mock_entry)
+        await hass.config_entries.async_setup(mock_entry.entry_id)
 
     await hass.async_block_till_done()
 

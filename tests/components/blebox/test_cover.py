@@ -4,6 +4,7 @@ import logging
 from unittest.mock import AsyncMock, PropertyMock
 
 import blebox_uniapi
+from blebox_uniapi.cover import UnifiedCoverType
 import pytest
 
 from homeassistant.components.cover import (
@@ -15,6 +16,7 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
     CoverState,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
@@ -30,7 +32,9 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
-from .conftest import async_setup_entity, mock_feature
+from .conftest import async_setup_config_entry, async_setup_entity, mock_feature
+
+from tests.common import MockConfigEntry
 
 ALL_COVER_FIXTURES = ["gatecontroller", "shutterbox", "gatebox"]
 FIXTURES_SUPPORTING_STOP = ["gatecontroller", "shutterbox"]
@@ -50,14 +54,16 @@ def shutterbox_fixture():
         state=None,
         has_stop=True,
         has_tilt=True,
+        is_calibrated=True,
         is_slider=True,
         is_position_inverted=True,
+        cover_type=None,
         tilt_only=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My shutter")
     type(product).model = PropertyMock(return_value="shutterBox")
-    return (feature, "cover.my_shutter_shutterbox_position")
+    return (feature, "cover.my_shutter")
 
 
 @pytest.fixture(name="gatebox")
@@ -74,12 +80,13 @@ def gatebox_fixture():
         has_stop=False,
         is_slider=False,
         is_position_inverted=False,
+        cover_type=None,
         tilt_only=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gatebox")
     type(product).model = PropertyMock(return_value="gateBox")
-    return (feature, "cover.my_gatebox_gatebox_position")
+    return (feature, "cover.my_gatebox")
 
 
 @pytest.fixture(name="gatecontroller")
@@ -96,12 +103,13 @@ def gate_fixture():
         has_stop=True,
         is_slider=True,
         is_position_inverted=True,
+        cover_type=None,
         tilt_only=False,
     )
     product = feature.product
     type(product).name = PropertyMock(return_value="My gate controller")
     type(product).model = PropertyMock(return_value="gateController")
-    return (feature, "cover.my_gate_controller_gatecontroller_position")
+    return (feature, "cover.my_gate_controller")
 
 
 async def test_init_gatecontroller(
@@ -114,7 +122,7 @@ async def test_init_gatecontroller(
     assert entry.unique_id == "BleBox-gateController-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My gate controller gateController-position"
+    assert state.name == "My gate controller"
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.GATE
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -145,7 +153,7 @@ async def test_init_shutterbox(
     assert entry.unique_id == "BleBox-shutterBox-2bee34e750b8-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My shutter shutterBox-position"
+    assert state.name == "My shutter"
     assert entry.original_device_class == CoverDeviceClass.SHUTTER
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -176,7 +184,7 @@ async def test_init_gatebox(
     assert entry.unique_id == "BleBox-gateBox-1afe34db9437-position"
 
     state = hass.states.get(entity_id)
-    assert state.name == "My gatebox gateBox-position"
+    assert state.name == "My gatebox"
     assert state.attributes[ATTR_DEVICE_CLASS] == CoverDeviceClass.DOOR
 
     supported_features = state.attributes[ATTR_SUPPORTED_FEATURES]
@@ -199,25 +207,66 @@ async def test_init_gatebox(
     assert device.sw_version == "1.23"
 
 
+@pytest.mark.parametrize(
+    ("cover_type", "expected_device_class"),
+    [
+        pytest.param(UnifiedCoverType.AWNING, CoverDeviceClass.AWNING, id="awning"),
+        pytest.param(UnifiedCoverType.BLIND, CoverDeviceClass.BLIND, id="blind"),
+        pytest.param(UnifiedCoverType.CURTAIN, CoverDeviceClass.CURTAIN, id="curtain"),
+        pytest.param(UnifiedCoverType.DAMPER, CoverDeviceClass.DAMPER, id="damper"),
+        pytest.param(UnifiedCoverType.DOOR, CoverDeviceClass.DOOR, id="door"),
+        pytest.param(UnifiedCoverType.GARAGE, CoverDeviceClass.GARAGE, id="garage"),
+        pytest.param(UnifiedCoverType.GATE, CoverDeviceClass.GATE, id="gate"),
+        pytest.param(UnifiedCoverType.SHADE, CoverDeviceClass.SHADE, id="shade"),
+        pytest.param(UnifiedCoverType.SHUTTER, CoverDeviceClass.SHUTTER, id="shutter"),
+        pytest.param(UnifiedCoverType.WINDOW, CoverDeviceClass.WINDOW, id="window"),
+    ],
+)
+async def test_device_class_from_unified_cover_type(
+    hass: HomeAssistant,
+    cover_type: UnifiedCoverType,
+    expected_device_class: CoverDeviceClass,
+) -> None:
+    """Test that device class is resolved from unified cover type when available."""
+    feature = mock_feature(
+        "covers",
+        blebox_uniapi.cover.Cover,
+        unique_id="BleBox-shutterBox-2bee34e750b8-position",
+        full_name="shutterBox-position",
+        device_class="shutter",
+        current=None,
+        tilt_current=None,
+        state=None,
+        has_stop=True,
+        has_tilt=False,
+        tilt_only=False,
+        is_slider=True,
+        is_position_inverted=True,
+        cover_type=cover_type,
+    )
+    product = feature.product
+    type(product).name = PropertyMock(return_value="My shutter")
+    type(product).model = PropertyMock(return_value="shutterBox")
+
+    entity_id = "cover.my_shutter"
+    entry = await async_setup_entity(hass, entity_id)
+    assert entry.original_device_class == expected_device_class
+
+
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
 async def test_open(feature, hass: HomeAssistant) -> None:
     """Test cover opening."""
 
     feature_mock, entity_id = feature
 
-    def initial_update():
-        feature_mock.state = 3  # manually stopped
+    feature_mock.state = 3  # manually stopped
+    await async_setup_entity(hass, entity_id)
+    assert hass.states.get(entity_id).state == CoverState.CLOSED
 
     def open_gate():
         feature_mock.state = 1  # opening
 
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_open = AsyncMock(side_effect=open_gate)
-
-    await async_setup_entity(hass, entity_id)
-    assert hass.states.get(entity_id).state == CoverState.CLOSED
-
-    feature_mock.async_update = AsyncMock()
     await hass.services.async_call(
         "cover",
         SERVICE_OPEN_COVER,
@@ -233,36 +282,18 @@ async def test_close(feature, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = feature
 
-    def initial_update():
-        feature_mock.state = 4  # open
+    feature_mock.state = 4  # open
+    await async_setup_entity(hass, entity_id)
+    assert hass.states.get(entity_id).state == CoverState.OPEN
 
     def close():
         feature_mock.state = 0  # closing
 
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_close = AsyncMock(side_effect=close)
-
-    await async_setup_entity(hass, entity_id)
-    assert hass.states.get(entity_id).state == CoverState.OPEN
-
-    feature_mock.async_update = AsyncMock()
     await hass.services.async_call(
         "cover", SERVICE_CLOSE_COVER, {"entity_id": entity_id}, blocking=True
     )
     assert hass.states.get(entity_id).state == CoverState.CLOSING
-
-
-def opening_to_stop_feature_mock(feature_mock):
-    """Return an mocked feature which can be updated and stopped."""
-
-    def initial_update():
-        feature_mock.state = 1  # opening
-
-    def stop():
-        feature_mock.state = 2  # manually stopped
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
-    feature_mock.async_stop = AsyncMock(side_effect=stop)
 
 
 @pytest.mark.parametrize("feature", FIXTURES_SUPPORTING_STOP, indirect=["feature"])
@@ -270,12 +301,15 @@ async def test_stop(feature, hass: HomeAssistant) -> None:
     """Test cover stopping."""
 
     feature_mock, entity_id = feature
-    opening_to_stop_feature_mock(feature_mock)
 
+    feature_mock.state = 1  # opening
     await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == CoverState.OPENING
 
-    feature_mock.async_update = AsyncMock()
+    def stop():
+        feature_mock.state = 2  # manually stopped
+
+    feature_mock.async_stop = AsyncMock(side_effect=stop)
     await hass.services.async_call(
         "cover", SERVICE_STOP_COVER, {"entity_id": entity_id}, blocking=True
     )
@@ -290,12 +324,8 @@ async def test_update_inverted(feature, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = feature
 
-    def initial_update():
-        feature_mock.current = 29  # device: 29% closed = 71% open
-        feature_mock.state = 2  # manually stopped
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
-
+    feature_mock.current = 29  # device: 29% closed = 71% open
+    feature_mock.state = 2  # manually stopped
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -308,12 +338,8 @@ async def test_update_not_inverted(gatebox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = gatebox
 
-    def initial_update():
-        feature_mock.current = 100  # fully open
-        feature_mock.state = 4  # open
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
-
+    feature_mock.current = 100  # fully open
+    feature_mock.state = 4  # open
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -329,21 +355,16 @@ async def test_set_position(feature, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = feature
 
-    def initial_update():
-        feature_mock.state = 3  # closed
+    feature_mock.state = 3  # closed
+    await async_setup_entity(hass, entity_id)
+    assert hass.states.get(entity_id).state == CoverState.CLOSED
 
     def set_position(position):
         assert position == 99  # inverted
         feature_mock.state = 1  # opening
         # feature_mock.current = position
 
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_set_position = AsyncMock(side_effect=set_position)
-
-    await async_setup_entity(hass, entity_id)
-    assert hass.states.get(entity_id).state == CoverState.CLOSED
-
-    feature_mock.async_update = AsyncMock()
     await hass.services.async_call(
         "cover",
         SERVICE_SET_COVER_POSITION,
@@ -358,12 +379,8 @@ async def test_unknown_position(shutterbox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = shutterbox
 
-    def initial_update():
-        feature_mock.state = 4  # opening
-        feature_mock.current = -1
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
-
+    feature_mock.state = 4  # opening
+    feature_mock.current = -1
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -375,9 +392,9 @@ async def test_with_stop(gatebox, hass: HomeAssistant) -> None:
     """Test stop capability is available."""
 
     feature_mock, entity_id = gatebox
-    opening_to_stop_feature_mock(feature_mock)
-    feature_mock.has_stop = True
 
+    feature_mock.state = 1  # opening
+    feature_mock.has_stop = True
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -389,9 +406,9 @@ async def test_with_no_stop(gatebox, hass: HomeAssistant) -> None:
     """Test stop capability is not available."""
 
     feature_mock, entity_id = gatebox
-    opening_to_stop_feature_mock(feature_mock)
-    feature_mock.has_stop = False
 
+    feature_mock.state = 1  # opening
+    feature_mock.has_stop = False
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -436,19 +453,41 @@ async def test_tilt_with_position_supported_features(
     assert supported_features & CoverEntityFeature.SET_TILT_POSITION
 
 
+async def test_tilt_not_calibrated_no_set_tilt_position(
+    shutterbox, hass: HomeAssistant
+) -> None:
+    """Test that SET_TILT_POSITION is absent when tilt is present but not calibrated."""
+    feature_mock, entity_id = shutterbox
+    feature_mock.is_calibrated = False
+
+    await async_setup_entity(hass, entity_id)
+
+    supported_features = hass.states.get(entity_id).attributes[ATTR_SUPPORTED_FEATURES]
+    assert supported_features & CoverEntityFeature.OPEN_TILT
+    assert supported_features & CoverEntityFeature.CLOSE_TILT
+    assert not supported_features & CoverEntityFeature.SET_TILT_POSITION
+
+
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
 async def test_update_failure(
-    feature, hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+    feature,
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that update failures are logged."""
+    """Test that update failures cause config entry setup retry."""
 
     caplog.set_level(logging.ERROR)
 
-    feature_mock, entity_id = feature
-    feature_mock.async_update = AsyncMock(side_effect=blebox_uniapi.error.ClientError)
-    await async_setup_entity(hass, entity_id)
+    feature_mock, _entity_id = feature
+    feature_mock.product.async_update_data = AsyncMock(
+        side_effect=blebox_uniapi.error.ClientError
+    )
 
-    assert f"Updating '{feature_mock.full_name}' failed: " in caplog.text
+    await async_setup_config_entry(hass, config_entry)
+
+    feature_mock.product.async_update_data.assert_called()
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 @pytest.mark.parametrize("feature", ALL_COVER_FIXTURES, indirect=["feature"])
@@ -457,10 +496,7 @@ async def test_opening_state(feature, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = feature
 
-    def initial_update():
-        feature_mock.state = 1  # opening
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.state = 1  # opening
     await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == CoverState.OPENING
 
@@ -471,10 +507,7 @@ async def test_closing_state(feature, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = feature
 
-    def initial_update():
-        feature_mock.state = 0  # closing
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.state = 0  # closing
     await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == CoverState.CLOSING
 
@@ -485,10 +518,7 @@ async def test_closed_state(feature, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = feature
 
-    def initial_update():
-        feature_mock.state = 3  # closed
-
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
+    feature_mock.state = 3  # closed
     await async_setup_entity(hass, entity_id)
     assert hass.states.get(entity_id).state == CoverState.CLOSED
 
@@ -498,11 +528,7 @@ async def test_tilt_position(shutterbox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = shutterbox
 
-    def tilt_update():
-        feature_mock.tilt_current = 90
-
-    feature_mock.async_update = AsyncMock(side_effect=tilt_update)
-
+    feature_mock.tilt_current = 90
     await async_setup_entity(hass, entity_id)
 
     state = hass.states.get(entity_id)
@@ -514,20 +540,15 @@ async def test_set_tilt_position(shutterbox, hass: HomeAssistant) -> None:
 
     feature_mock, entity_id = shutterbox
 
-    def initial_update():
-        feature_mock.state = 3
+    feature_mock.state = 3
+    await async_setup_entity(hass, entity_id)
+    assert hass.states.get(entity_id).state == CoverState.CLOSED
 
     def set_tilt(tilt_position):
         assert tilt_position == 20
         feature_mock.state = 1
 
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_set_tilt_position = AsyncMock(side_effect=set_tilt)
-
-    await async_setup_entity(hass, entity_id)
-    assert hass.states.get(entity_id).state == CoverState.CLOSED
-
-    feature_mock.async_update = AsyncMock()
     await hass.services.async_call(
         "cover",
         SERVICE_SET_COVER_TILT_POSITION,
@@ -554,19 +575,14 @@ async def test_open_tilt(
     """Test opening tilt for 90-degree and 180-degree tilt shutters."""
     feature_mock, entity_id = shutterbox
     feature_mock.is_tilt_180 = is_tilt_180
-
-    def initial_update():
-        feature_mock.tilt_current = 100
+    feature_mock.tilt_current = 100
+    await async_setup_entity(hass, entity_id)
 
     def set_tilt_position(tilt_position):
         assert tilt_position == expected_tilt_position
         feature_mock.tilt_current = tilt_position
 
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_set_tilt_position = AsyncMock(side_effect=set_tilt_position)
-
-    await async_setup_entity(hass, entity_id)
-    feature_mock.async_update = AsyncMock()
 
     await hass.services.async_call(
         "cover",
@@ -584,18 +600,14 @@ async def test_close_tilt(shutterbox, hass: HomeAssistant) -> None:
     """Test closing tilt."""
     feature_mock, entity_id = shutterbox
 
-    def initial_update():
-        feature_mock.tilt_current = 0
+    feature_mock.tilt_current = 0
+    await async_setup_entity(hass, entity_id)
 
     def set_tilt_position(tilt_position):
         assert tilt_position == 100
         feature_mock.tilt_current = tilt_position
 
-    feature_mock.async_update = AsyncMock(side_effect=initial_update)
     feature_mock.async_set_tilt_position = AsyncMock(side_effect=set_tilt_position)
-
-    await async_setup_entity(hass, entity_id)
-    feature_mock.async_update = AsyncMock()
 
     await hass.services.async_call(
         "cover",

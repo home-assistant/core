@@ -72,8 +72,7 @@ async def _resolve_attachments(
             resolved_attachments.append(
                 conversation.Attachment(
                     media_content_id=media_content_id,
-                    mime_type=attachment.get("media_content_type")
-                    or image_data.content_type,
+                    mime_type=image_data.content_type,
                     path=temp_filename,
                 )
             )
@@ -211,7 +210,7 @@ async def async_generate_image(
 
     source = hass.data[DATA_MEDIA_SOURCE]
 
-    current_time = datetime.now()
+    current_time = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
     ext = mimetypes.guess_extension(task_result.mime_type, False) or ".png"
     sanitized_task_name = RE_SANITIZE_FILENAME.sub("", slugify(task_name))
 

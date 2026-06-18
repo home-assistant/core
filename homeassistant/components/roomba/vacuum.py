@@ -130,7 +130,10 @@ class IRobotVacuum(IRobotEntity, StateVacuumEntity):
             state = STATE_MAP[phase]
         except KeyError:
             return VacuumActivity.ERROR
-        if cycle != "none" and state in (VacuumActivity.IDLE, VacuumActivity.DOCKED):
+        # A robot stopped in the middle of a mission is paused, but one that is
+        # docked to recharge mid-mission stays docked (the charging binary
+        # sensor distinguishes it from a user-initiated pause on the floor).
+        if cycle != "none" and state is VacuumActivity.IDLE:
             state = VacuumActivity.PAUSED
         return state
 
