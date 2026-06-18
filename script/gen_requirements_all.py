@@ -17,7 +17,7 @@ from script.hassfest.model import Config, Integration
 # Requirements which can't be installed on all systems because they
 # rely on additional system packages. Requirements listed in
 # EXCLUDED_REQUIREMENTS_ALL will be commented-out in
-# requirements_all.txt and requirements_test_all.txt.
+# requirements_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
     "avion",

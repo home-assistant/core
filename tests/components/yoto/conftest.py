@@ -98,6 +98,12 @@ def _build_player() -> YotoPlayer:
             headphones_volume_limited=True,
             day_display_brightness_auto=False,
             night_display_brightness_auto=True,
+            day_ambient_colour="#ff0000",
+            night_ambient_colour="#40bfd9",
+            day_display_brightness=100,
+            night_display_brightness=50,
+            day_max_volume_limit=16,
+            night_max_volume_limit=8,
         ),
     )
     player.status = PlayerStatus(
