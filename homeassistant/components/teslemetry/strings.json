@@ -579,7 +579,7 @@
         "unit_of_measurement": "credits"
       },
       "credit_quota": {
-        "name": "Teslemetry command quota"
+        "name": "Teslemetry command quota used"
       },
       "cruise_follow_distance": {
         "name": "Cruise follow distance"
