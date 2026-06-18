@@ -31,8 +31,6 @@ from typing import (
 import voluptuous as vol
 
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ABOVE,
     CONF_AFTER,
     CONF_ATTRIBUTE,
@@ -56,6 +54,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     WEEKDAYS,
+    BaseEntityAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.exceptions import (
@@ -1010,7 +1009,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
             # Entity not found
             return None
         if not self._is_valid_unit(
-            entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            entity_state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
         ):
             # Entity unit does not match the expected unit
             return None
@@ -1028,7 +1027,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
         domain_spec = self._domain_specs[entity_state.domain]
         if domain_spec.value_source is None:
             if not self._is_valid_unit(
-                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                entity_state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
             ):
                 return None
             return entity_state.state
@@ -1114,7 +1113,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
 
     def _get_entity_unit(self, entity_state: State) -> str | None:
         """Get the unit of an entity from its state."""
-        return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return entity_state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
 
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
@@ -1139,7 +1138,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
         try:
             return self._unit_converter.convert(
                 value,
-                entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+                entity_state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT),
                 self._base_unit,
             )
         except HomeAssistantError:
@@ -1874,7 +1873,7 @@ def time(
         ):
             after = datetime.strptime(after_entity.state, "%H:%M:%S").time()
         elif (
-            after_entity.attributes.get(ATTR_DEVICE_CLASS)
+            after_entity.attributes.get(BaseEntityAttribute.DEVICE_CLASS)
             in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and after_entity.state not in (
             STATE_UNAVAILABLE,
@@ -1904,7 +1903,7 @@ def time(
             except ValueError:
                 return False
         elif (
-            before_entity.attributes.get(ATTR_DEVICE_CLASS)
+            before_entity.attributes.get(BaseEntityAttribute.DEVICE_CLASS)
             in (SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME)
         ) and before_entity.state not in (
             STATE_UNAVAILABLE,

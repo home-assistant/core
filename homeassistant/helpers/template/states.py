@@ -9,7 +9,7 @@ from typing import Any
 from lru import LRU
 from propcache.api import under_cached_property
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, BaseEntityAttribute
 from homeassistant.core import (
     Context,
     HomeAssistant,
@@ -399,7 +399,9 @@ class TemplateStateBase(State):
             state = async_rounded_state(self._hass, self._entity_id, self._state)
         else:
             state = self._state.state
-        if with_unit and (unit := self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+        if with_unit and (
+            unit := self._state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
+        ):
             return f"{state} {unit}"
         return state
 

@@ -18,14 +18,12 @@ from homeassistant.components.sensor.helpers import (  # pylint: disable=home-as
     async_parse_date_datetime,
 )
 from homeassistant.const import (
-    ATTR_ENTITY_PICTURE,
-    ATTR_FRIENDLY_NAME,
-    ATTR_ICON,
     CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
+    BaseEntityAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
@@ -48,9 +46,9 @@ CONF_ATTRIBUTES = "attributes"
 CONF_PICTURE = "picture"
 
 CONF_TO_ATTRIBUTE = {
-    CONF_ICON: ATTR_ICON,
-    CONF_NAME: ATTR_FRIENDLY_NAME,
-    CONF_PICTURE: ATTR_ENTITY_PICTURE,
+    CONF_ICON: BaseEntityAttribute.ICON,
+    CONF_NAME: BaseEntityAttribute.FRIENDLY_NAME,
+    CONF_PICTURE: BaseEntityAttribute.ENTITY_PICTURE,
 }
 
 TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(

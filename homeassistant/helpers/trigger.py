@@ -25,7 +25,6 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ALIAS,
     CONF_DEVICE_ID,
     CONF_ENABLED,
@@ -41,6 +40,7 @@ from homeassistant.const import (
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    BaseEntityAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -820,7 +820,9 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         if not (state := self._hass.states.get(threshold.entity)):  # type: ignore[arg-type]
             # Entity not found
             return None
-        if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+        if not self._is_valid_unit(
+            state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
+        ):
             # Entity unit does not match the expected unit
             return None
         try:
@@ -834,7 +836,9 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         domain_spec = self._domain_specs[state.domain]
         raw_value: Any
         if domain_spec.value_source is None:
-            if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+            if not self._is_valid_unit(
+                state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
+            ):
                 return None
             raw_value = state.state
         else:
@@ -888,7 +892,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the unit of an entity from its state."""
-        return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
 
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
@@ -912,7 +916,9 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
         try:
             return self._unit_converter.convert(
-                value, state.attributes.get(ATTR_UNIT_OF_MEASUREMENT), self._base_unit
+                value,
+                state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT),
+                self._base_unit,
             )
         except HomeAssistantError:
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
