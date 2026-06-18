@@ -4,6 +4,7 @@ from copy import deepcopy
 from unittest.mock import AsyncMock
 
 from uiprotect.data import Camera, CloudAccount, Version
+from uiprotect.exceptions import NvrError
 
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.config_entries import SOURCE_REAUTH
@@ -254,6 +255,77 @@ async def test_rtsp_writable_fix_when_not_setup(
     assert data["type"] == "create_entry"
 
     ufp.api.create_camera_rtsps_streams.assert_called_with(doorbell.id, "high")
+
+
+async def test_rtsp_fix_aborts_if_camera_missing_from_bootstrap(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test RTSP disabled repair aborts if the camera is unavailable."""
+
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+
+    await init_entry(hass, ufp, [doorbell])
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    issue_id = f"rtsp_disabled_{doorbell.id}"
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert any(i["issue_id"] == issue_id for i in msg["result"]["issues"])
+
+    del ufp.api.bootstrap.cameras[doorbell.id]
+
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "camera_unavailable"
+
+
+async def test_rtsp_fix_aborts_if_camera_missing_on_submit(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test RTSP disabled repair aborts if the camera disappears on submit."""
+
+    for channel in doorbell.channels:
+        channel.is_rtsp_enabled = False
+
+    await init_entry(hass, ufp, [doorbell])
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+    client = await hass_client()
+
+    issue_id = f"rtsp_disabled_{doorbell.id}"
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    assert any(i["issue_id"] == issue_id for i in msg["result"]["issues"])
+
+    data = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    flow_id = data["flow_id"]
+    assert data["step_id"] == "start"
+
+    ufp.api.get_camera = AsyncMock(side_effect=NvrError("Camera not found"))
+
+    data = await process_repair_fix_flow(client, flow_id)
+
+    assert data["type"] == "abort"
+    assert data["reason"] == "camera_unavailable"
 
 
 async def test_rtsp_no_fix_if_third_party(

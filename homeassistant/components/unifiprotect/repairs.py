@@ -4,6 +4,7 @@ from typing import cast
 
 from uiprotect import ProtectApiClient
 from uiprotect.data import Bootstrap, Camera
+from uiprotect.exceptions import NvrError
 import voluptuous as vol
 
 from homeassistant.components.repairs import (
@@ -105,16 +106,23 @@ class RTSPRepair(ProtectRepair):
 
         return self._bootstrap
 
-    async def _get_camera(self) -> Camera:
+    async def _get_camera(self) -> Camera | None:
         if self._camera is None:
             bootstrap = await self._get_boostrap()
             self._camera = bootstrap.cameras.get(self._camera_id)
-            assert self._camera is not None
         return self._camera
 
     async def _enable_rtsp(self) -> None:
         camera = await self._get_camera()
+        if camera is None:
+            return
         await camera.create_rtsps_streams(qualities="high")
+
+    async def _get_updated_camera(self) -> Camera | None:
+        try:
+            return await self._api.get_camera(self._camera_id)
+        except NvrError:
+            return None
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
@@ -130,7 +138,8 @@ class RTSPRepair(ProtectRepair):
 
         if user_input is None:
             # make sure camera object is loaded for placeholders
-            await self._get_camera()
+            if await self._get_camera() is None:
+                return self.async_abort(reason="camera_unavailable")
             placeholders = self._async_get_placeholders()
             return self.async_show_form(
                 step_id="start",
@@ -138,11 +147,13 @@ class RTSPRepair(ProtectRepair):
                 description_placeholders=placeholders,
             )
 
-        updated_camera = await self._api.get_camera(self._camera_id)
+        if (updated_camera := await self._get_updated_camera()) is None:
+            return self.async_abort(reason="camera_unavailable")
         if not any(c.is_rtsp_enabled for c in updated_camera.channels):
             await self._enable_rtsp()
 
-        updated_camera = await self._api.get_camera(self._camera_id)
+        if (updated_camera := await self._get_updated_camera()) is None:
+            return self.async_abort(reason="camera_unavailable")
         if any(c.is_rtsp_enabled for c in updated_camera.channels):
             await self.hass.config_entries.async_reload(self._entry.entry_id)
             return self.async_create_entry(data={})
