@@ -1112,25 +1112,25 @@ class Entity(
                 attr |= extra_state_attributes
 
         if (unit_of_measurement := self.unit_of_measurement) is not None:
-            attr[EntityStateAttribute.UNIT_OF_MEASUREMENT] = unit_of_measurement
+            attr[EntityStateAttribute.UNIT_OF_MEASUREMENT.value] = unit_of_measurement
 
         if assumed_state := self.assumed_state:
-            attr[EntityStateAttribute.ASSUMED_STATE] = assumed_state
+            attr[EntityStateAttribute.ASSUMED_STATE.value] = assumed_state
 
         if (attribution := self.attribution) is not None:
-            attr[EntityStateAttribute.ATTRIBUTION] = attribution
+            attr[EntityStateAttribute.ATTRIBUTION.value] = attribution
 
         original_device_class = self.device_class
         if (
             device_class := (entry and entry.device_class) or original_device_class
         ) is not None:
-            attr[EntityStateAttribute.DEVICE_CLASS] = str(device_class)
+            attr[EntityStateAttribute.DEVICE_CLASS.value] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:
-            attr[EntityStateAttribute.ENTITY_PICTURE] = entity_picture
+            attr[EntityStateAttribute.ENTITY_PICTURE.value] = entity_picture
 
         if (icon := (entry and entry.icon) or self.icon) is not None:
-            attr[EntityStateAttribute.ICON] = icon
+            attr[EntityStateAttribute.ICON.value] = icon
 
         original_name = self.name
         if original_name is UNDEFINED:
@@ -1152,10 +1152,10 @@ class Entity(
             self._cached_friendly_name = (original_name, name)
 
         if name:
-            attr[EntityStateAttribute.FRIENDLY_NAME] = name
+            attr[EntityStateAttribute.FRIENDLY_NAME.value] = name
 
         if (supported_features := self.supported_features) is not None:
-            attr[EntityStateAttribute.SUPPORTED_FEATURES] = supported_features
+            attr[EntityStateAttribute.SUPPORTED_FEATURES.value] = supported_features
 
         return (
             state,
