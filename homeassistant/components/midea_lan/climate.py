@@ -211,7 +211,7 @@ class MideaClimate(MideaEntity, ClimateEntity):
             if self._device.get_attribute(attr):
                 return preset
 
-        return PRESET_NONE
+        return None
 
     def turn_on(self, **kwargs: Any) -> None:
         """Midea Climate turn on."""
@@ -330,22 +330,22 @@ class MideaACClimate(MideaClimate):
         )
 
     @property
-    def fan_mode(self) -> str:
+    def fan_mode(self) -> str | None:
         """Midea AC Climate fan mode."""
         fan_speed = self._device.get_attribute(ACAttributes.fan_speed)
         if not isinstance(fan_speed, int):
-            return FAN_SILENT
+            return None
         for threshold, mode in self._fan_thresholds:
             if fan_speed > threshold:
                 return mode
         return FAN_SILENT
 
     @property
-    def swing_mode(self) -> str:
+    def swing_mode(self) -> str | None:
         """Midea AC Climate swing mode."""
         vertical = bool(self._device.get_attribute(ACAttributes.swing_vertical))
         horizontal = bool(self._device.get_attribute(ACAttributes.swing_horizontal))
-        return _SWING_STATE_MAP.get((vertical, horizontal), SWING_OFF)
+        return _SWING_STATE_MAP.get((vertical, horizontal))
 
     @property
     def current_humidity(self) -> float | None:
@@ -415,10 +415,13 @@ class MideaCCClimate(MideaClimate):
         return self._float_attribute(CCAttributes.temperature_precision)
 
     @property
-    def swing_mode(self) -> str:
+    def swing_mode(self) -> str | None:
         """Midea CC Climate swing mode."""
+        swing = self._device.get_attribute(CCAttributes.swing)
+        if not isinstance(swing, bool):
+            return None
         return str(
-            SWING_ON if self._device.get_attribute(CCAttributes.swing) else SWING_OFF,
+            SWING_ON if swing else SWING_OFF,
         )
 
     def set_fan_mode(self, fan_mode: str) -> None:
@@ -636,17 +639,16 @@ class MideaFBClimate(MideaClimate):
         """Midea FB Climate preset mode."""
         preset_mode = self._device.get_attribute(attr=FBAttributes.mode)
         if not isinstance(preset_mode, str):
-            return PRESET_NONE
+            return None
         return preset_mode
 
     @property
-    def hvac_mode(self) -> HVACMode:
+    def hvac_mode(self) -> HVACMode | None:
         """Midea FB Climate hvac mode."""
-        return (
-            HVACMode.HEAT
-            if self._device.get_attribute(attr=FBAttributes.power)
-            else HVACMode.OFF
-        )
+        hvac_mode = self._device.get_attribute(attr=FBAttributes.power)
+        if not isinstance(hvac_mode, bool):
+            return None
+        return HVACMode.HEAT if hvac_mode else HVACMode.OFF
 
     @property
     def current_temperature(self) -> float | None:

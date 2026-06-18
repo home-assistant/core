@@ -125,7 +125,7 @@ def test_midea_climate_base_methods() -> None:
     ent.device.attributes["power"] = True
     assert ent.target_temperature == 22.0
     assert ent.current_temperature == 21.0
-    assert ent.preset_mode == PRESET_NONE
+    assert ent.preset_mode is None
 
     ent.device.attributes.update({"comfort_mode": True, "eco_mode": False})
     assert ent.preset_mode == PRESET_COMFORT
@@ -287,6 +287,7 @@ def test_midea_c3_specific() -> None:
         C3Attributes.mode: 1,
         C3Attributes.zone1_power: True,
         C3Attributes.target_temperature: [22, 23],
+        C3Attributes.temp_tw_in: [21.5, 22.5],
     }
     with patch.object(climate, "CLIMATE_ENTITIES", _climate_entities()):
         description = _get_description(DeviceType.C3, "named")
@@ -308,6 +309,8 @@ def test_midea_c3_specific() -> None:
     ent.device.attributes[C3Attributes.mode] = None
     assert ent.hvac_mode is None
     assert ent.target_temperature == 22
+    assert ent.current_temperature == 21.5
+    ent.device.attributes[C3Attributes.temp_tw_in] = None
     assert ent.current_temperature is None
 
     ent.turn_on()
@@ -366,7 +369,7 @@ def test_midea_climate_fallback_paths() -> None:
         )
         assert ac.target_temperature is None
         assert ac.current_temperature is None
-        assert ac.fan_mode == climate.FAN_SILENT
+        assert ac.fan_mode is None
         assert ac.outdoor_temperature is None
 
         cc = climate.MideaCCClimate(
@@ -428,7 +431,7 @@ def test_midea_climate_fallback_paths() -> None:
             ),
             _get_description(DeviceType.FB, "named"),
         )
-        assert fb.preset_mode == PRESET_NONE
+        assert fb.preset_mode is None
         assert fb.current_temperature is None
 
 
