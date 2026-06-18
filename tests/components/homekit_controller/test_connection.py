@@ -157,7 +157,7 @@ async def test_migrate_device_id_no_serial(
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         title="test",
@@ -191,7 +191,7 @@ async def test_migrate_ble_unique_id(hass: HomeAssistant) -> None:
     await fake_controller.add_paired_device(accessories, "02:03:EF:02:03:EF")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "02:03:EF:02:03:EF"},
         title="test",
@@ -215,7 +215,7 @@ async def test_thread_provision_no_creds(hass: HomeAssistant) -> None:
     await fake_controller.add_paired_device(accessories, "02:03:EF:02:03:EF")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "02:03:EF:02:03:EF"},
         title="test",
@@ -262,7 +262,7 @@ async def test_thread_provision(
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         title="test",
@@ -328,7 +328,7 @@ async def test_thread_provision_migration_failed(hass: HomeAssistant) -> None:
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00", "Connection": "BLE"},
         title="test",
@@ -521,7 +521,7 @@ async def test_poll_all_on_startup_refreshes_stale_values(
     await fake_controller.add_paired_device(accessories, "00:00:00:00:00:00")
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         title="test",
@@ -659,7 +659,7 @@ async def test_async_setup_handles_unparsable_response(
 
     config_entry = MockConfigEntry(
         version=1,
-        domain="homekit_controller",
+        domain=DOMAIN,
         entry_id="TestData",
         data={"AccessoryPairingID": "00:00:00:00:00:00"},
         title="test",
