@@ -46,6 +46,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 def mock_hass() -> HomeAssistant:
     """Return a minimal HomeAssistant-like mock sufficient for coordinator tests."""
     hass = MagicMock(spec=HomeAssistant)
+    hass.config = MagicMock()
     hass.config.components = set()
     hass.config_entries.async_update_entry = MagicMock()
     hass.config.time_zone = "UTC"
