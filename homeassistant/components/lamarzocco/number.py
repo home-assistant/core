@@ -121,7 +121,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
         native_min_value=0,
-        native_max_value=10,
+        native_max_value=30,
         entity_category=EntityCategory.CONFIG,
         set_value_fn=(
             lambda machine, value: machine.set_pre_extraction_times(
@@ -163,7 +163,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
         native_min_value=0,
-        native_max_value=10,
+        native_max_value=30,
         entity_category=EntityCategory.CONFIG,
         set_value_fn=(
             lambda machine, value: machine.set_pre_extraction_times(
@@ -207,7 +207,7 @@ ENTITIES: tuple[LaMarzoccoNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_step=PRECISION_TENTHS,
         native_min_value=0,
-        native_max_value=10,
+        native_max_value=30,
         entity_category=EntityCategory.CONFIG,
         set_value_fn=(
             lambda machine, value: machine.set_pre_extraction_times(

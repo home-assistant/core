@@ -248,7 +248,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'MR012345 Prebrew off time',
-      'max': 10,
+      'max': 30,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
@@ -269,7 +269,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
+      'max': 30,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
@@ -309,7 +309,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'MR012345 Prebrew on time',
-      'max': 10,
+      'max': 30,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
@@ -330,7 +330,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
+      'max': 30,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
@@ -370,7 +370,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
       'friendly_name': 'MR012345 Preinfusion time',
-      'max': 10,
+      'max': 30,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
@@ -391,7 +391,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
+      'max': 30,
       'min': 0,
       'mode': <NumberMode.AUTO: 'auto'>,
       'step': 0.1,
