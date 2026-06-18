@@ -94,6 +94,8 @@ def _build_player() -> YotoPlayer:
         config=PlayerConfig(
             day_time=dt_time(7, 0),
             night_time=dt_time(19, 0),
+            day_ambient_colour="#ff0000",
+            night_ambient_colour="#40bfd9",
             day_display_brightness=100,
             night_display_brightness=50,
             day_max_volume_limit=16,

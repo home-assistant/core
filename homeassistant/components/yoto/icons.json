@@ -22,6 +22,14 @@
         "default": "mdi:volume-high"
       }
     },
+    "select": {
+      "day_mode_color": {
+        "default": "mdi:palette"
+      },
+      "night_mode_color": {
+        "default": "mdi:palette"
+      }
+    },
     "sensor": {
       "card_insertion_state": {
         "default": "mdi:card-bulleted-outline",
