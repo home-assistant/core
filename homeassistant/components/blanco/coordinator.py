@@ -42,13 +42,15 @@ def _jwt_expires_at(token: str) -> float:
     disables proactive renewal and lets the reactive BlancoTokenExpiredError
     path act as the fallback.
     """
+    parts = token.split(".")
+    if len(parts) < 2:
+        return float("inf")
     try:
-        payload_b64 = token.split(".")[1]
         # Restore base64url padding that is stripped during JWT encoding.
-        payload_b64 += "=" * (-len(payload_b64) % 4)
+        payload_b64 = parts[1] + "=" * (-len(parts[1]) % 4)
         payload = json.loads(base64.urlsafe_b64decode(payload_b64))
-        return float(payload["exp"])
-    except (IndexError, KeyError, ValueError):
+        return float(payload.get("exp", float("inf")))
+    except ValueError:
         return float("inf")
 
 

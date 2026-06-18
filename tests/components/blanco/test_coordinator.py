@@ -15,7 +15,6 @@ from homeassistant.config_entries import ConfigEntryAuthFailed
 
 from .conftest import make_coordinator, make_get_response
 
-
 # ── JWT test helper ────────────────────────────────────────────────────────────
 
 
