@@ -46,6 +46,12 @@
       "dust_alert": {
         "name": "Dust alert"
       },
+      "ground_heat_exchanger_attached": {
+        "name": "Ground Heat Exchanger attached"
+      },
+      "mixer_pump_status": {
+        "name": "Mixer pump"
+      },
       "pump_status": {
         "name": "Pump status"
       },
@@ -279,6 +285,9 @@
       },
       "collector_temperature": {
         "name": "Collector temperature"
+      },
+      "dhw_current_temperature": {
+        "name": "DHW current temperature"
       },
       "dhw_measured_temperature": {
         "name": "DHW measured temperature"

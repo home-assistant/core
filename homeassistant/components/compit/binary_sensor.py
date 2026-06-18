@@ -20,13 +20,25 @@ from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
 PARALLEL_UPDATES = 0
 NO_SENSOR = "no_sensor"
-ON_STATES = ["on", "yes", "charging", "alert", "exceeded"]
+ON_STATES = ["on", "yes", "charging", "alert", "exceeded", "open"]
 
 DESCRIPTIONS: dict[CompitParameter, BinarySensorEntityDescription] = {
     CompitParameter.AIRING: BinarySensorEntityDescription(
         key=CompitParameter.AIRING.value,
         translation_key="airing",
         device_class=BinarySensorDeviceClass.WINDOW,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CompitParameter.GWC: BinarySensorEntityDescription(
+        key=CompitParameter.GWC.value,
+        translation_key="ground_heat_exchanger_attached",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    CompitParameter.MIXER_PUMP_STATUS: BinarySensorEntityDescription(
+        key=CompitParameter.MIXER_PUMP_STATUS.value,
+        translation_key="mixer_pump_status",
+        device_class=BinarySensorDeviceClass.RUNNING,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     CompitParameter.BATTERY_CHARGE_STATUS: BinarySensorEntityDescription(
@@ -76,10 +88,20 @@ class CompitDeviceDescription:
 
 
 DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
+    3: CompitDeviceDescription(
+        name="R810",
+        parameters={
+            CompitParameter.MIXER_PUMP_STATUS: DESCRIPTIONS[
+                CompitParameter.MIXER_PUMP_STATUS
+            ],
+        },
+    ),
     12: CompitDeviceDescription(
         name="Nano Color",
         parameters={
+            CompitParameter.AIRING: DESCRIPTIONS[CompitParameter.AIRING],
             CompitParameter.CO2_LEVEL: DESCRIPTIONS[CompitParameter.CO2_LEVEL],
+            CompitParameter.GWC: DESCRIPTIONS[CompitParameter.GWC],
         },
     ),
     78: CompitDeviceDescription(
@@ -97,6 +119,7 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
         parameters={
             CompitParameter.AIRING: DESCRIPTIONS[CompitParameter.AIRING],
             CompitParameter.CO2_LEVEL: DESCRIPTIONS[CompitParameter.CO2_LEVEL],
+            CompitParameter.GWC: DESCRIPTIONS[CompitParameter.GWC],
         },
     ),
     225: CompitDeviceDescription(
