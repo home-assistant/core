@@ -68,8 +68,9 @@ class RaspberryChargerBinarySensor(BinarySensorEntity):
                     self.hass,
                     DOMAIN,
                     "under_voltage_detected",
-                    is_fixable=False,
-                    severity=IssueSeverity.WARNING,
+                    is_fixable=True,
+                    is_persistent=True,
+                    severity=IssueSeverity.CRITICAL,
                     translation_key="under_voltage_detected",
                 )
             else:
