@@ -22,10 +22,10 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 
     with (
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.checkNetworkConnection"
+            "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.ConexaSMGW.buildCompleteUrl",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
             return_value="http://test.url",
         ),
     ):
@@ -60,10 +60,10 @@ async def test_form_invalid_auth(
 
     with (
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.checkNetworkConnection"
+            "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.ConexaSMGW.buildCompleteUrl",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
             side_effect=asyncio.TimeoutError,
         ),
     ):
@@ -84,10 +84,10 @@ async def test_form_invalid_auth(
     # we can show the config flow is able to recover from an error.
     with (
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.checkNetworkConnection"
+            "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.ConexaSMGW.buildCompleteUrl",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
             return_value="http://test.url",
         ),
     ):
@@ -121,7 +121,7 @@ async def test_form_cannot_connect(
     )
 
     with patch(
-        "homeassistant.components.thebenconexasmgw.config_flow.checkNetworkConnection",
+        "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection",
         side_effect=aiohttp.ClientError,
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -142,10 +142,10 @@ async def test_form_cannot_connect(
 
     with (
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.checkNetworkConnection"
+            "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.ConexaSMGW.buildCompleteUrl",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
             return_value="http://test.url",
         ),
     ):
@@ -182,10 +182,10 @@ async def test_form_already_configured(
 
     with (
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.checkNetworkConnection"
+            "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.ConexaSMGW.buildCompleteUrl",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
             return_value="http://test.url",
         ),
     ):
@@ -240,10 +240,10 @@ async def test_form_unknown_err(
 
     with (
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.checkNetworkConnection"
+            "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.ConexaSMGW.buildCompleteUrl",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
             side_effect=ValueError,
         ),
     ):
@@ -264,10 +264,10 @@ async def test_form_unknown_err(
     # we can show the config flow is able to recover from an error.
     with (
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.checkNetworkConnection"
+            "homeassistant.components.theben_conexa.config_flow.checkNetworkConnection"
         ),
         patch(
-            "homeassistant.components.thebenconexasmgw.config_flow.ConexaSMGW.buildCompleteUrl",
+            "homeassistant.components.theben_conexa.config_flow.ConexaSMGW.buildCompleteUrl",
             return_value="http://test.url",
         ),
     ):

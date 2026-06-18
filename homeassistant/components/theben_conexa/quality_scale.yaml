@@ -8,18 +8,14 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: exempt
-    comment: "Will do after first review of draft PR"
-  docs-high-level-description:
-    status: exempt
-    comment: "Will do after first review of draft PR"
-  docs-installation-instructions:
-    status: exempt
-    comment: "Will do after first review of draft PR"
-  docs-removal-instructions:
-    status: exempt
-    comment: "Will do after first review of draft PR"
-  entity-event-setup: done
+    status: done
+    comment: "Integration doesn't provide service actions"
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: done
+    comment: "Integration doesn't register events"
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
