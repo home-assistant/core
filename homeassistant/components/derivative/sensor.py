@@ -17,13 +17,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_SOURCE,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    BaseEntityAttribute,
     Platform,
     UnitOfTime,
 )
@@ -242,7 +241,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         if not source_state:
             return
 
-        source_class_raw = source_state.attributes.get(ATTR_DEVICE_CLASS)
+        source_class_raw = source_state.attributes.get(BaseEntityAttribute.DEVICE_CLASS)
         source_class: SensorDeviceClass | None = None
         if isinstance(source_class_raw, str):
             try:
@@ -251,7 +250,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
                 source_class = None
         if self._string_unit_prefix is not None and self._string_unit_time is not None:
             original_unit = self._attr_native_unit_of_measurement
-            source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            source_unit = source_state.attributes.get(
+                BaseEntityAttribute.UNIT_OF_MEASUREMENT
+            )
             if (
                 (
                     source_class
@@ -365,7 +366,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
 
         last_state = await self.async_get_last_state()
         if last_state:
-            self._attr_device_class = last_state.attributes.get(ATTR_DEVICE_CLASS)
+            self._attr_device_class = last_state.attributes.get(
+                BaseEntityAttribute.DEVICE_CLASS
+            )
 
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
