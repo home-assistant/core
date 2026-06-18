@@ -14,6 +14,7 @@ from aiomelcloudhome.exceptions import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -82,6 +83,24 @@ class MelCloudHomeCoordinator(DataUpdateCoordinator[UserContext]):
             self.known_atw.update(unit.id for unit in new_atw_units)
             for atw_callback in self.new_atw_callbacks:
                 atw_callback(new_atw_units)
+
+        self._async_remove_stale_devices(current_ata_ids | current_atw_ids)
+
+    @callback
+    def _async_remove_stale_devices(self, current_ids: set[str]) -> None:
+        """Remove devices for units that are no longer in the account."""
+        registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            registry, self.config_entry.entry_id
+        ):
+            if not any(
+                identifier[0] == DOMAIN and identifier[1] in current_ids
+                for identifier in device.identifiers
+            ):
+                _LOGGER.debug("Removing stale device: %s", device.identifiers)
+                registry.async_update_device(
+                    device.id, remove_config_entry_id=self.config_entry.entry_id
+                )
 
     async def _async_update_data(self) -> UserContext:
         """Fetch data from the MELCloud Home API."""
