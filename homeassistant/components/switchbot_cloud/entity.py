@@ -36,8 +36,11 @@ class SwitchBotCloudEntity(CoordinatorEntity[SwitchBotCoordinator]):
         self._api = api
         self._attr_unique_id = device.device_id
         _sw_version = None
-        if self.coordinator.data is not None:
-            _sw_version = self.coordinator.data.get("version")
+        if (
+            self.coordinator.data is not None
+            and (_version := self.coordinator.data.get("version")) is not None
+        ):
+            _sw_version = str(_version)
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},
             name=device.device_name,
