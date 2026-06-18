@@ -1385,15 +1385,25 @@ async def test_state_raises(hass: HomeAssistant) -> None:
         test.async_check()
 
 
-async def test_state_for(hass: HomeAssistant) -> None:
-    """Test state with duration."""
+@pytest.mark.parametrize(
+    "req_state",
+    [
+        pytest.param("100", id="scalar"),
+        pytest.param(["100"], id="single_item_list"),
+    ],
+)
+async def test_state_for(hass: HomeAssistant, req_state: str | list[str]) -> None:
+    """Test state with duration.
+
+    A single-element list `state` is equivalent to the scalar form.
+    """
     config = {
         "condition": "and",
         "conditions": [
             {
                 "condition": "state",
                 "entity_id": ["sensor.temperature"],
-                "state": "100",
+                "state": req_state,
                 "for": {"seconds": 5},
             },
         ],
@@ -1476,18 +1486,30 @@ async def test_state_for_invalid_template(
             id="list_of_states",
         ),
         pytest.param(
+            {"state": []},
+            r"Cannot use 'for' with a list of states",
+            id="empty_list",
+        ),
+        pytest.param(
             {"state": "input_number.threshold"},
             r"Cannot use 'for' with a state referencing an entity",
             id="state_from_entity",
+        ),
+        pytest.param(
+            {"state": ["input_number.threshold"]},
+            r"Cannot use 'for' with a state referencing an entity",
+            id="single_item_list_from_entity",
         ),
     ],
 )
 def test_state_for_not_allowed(extra_config: dict[str, Any], error: str) -> None:
     """Test state condition rejects `for` with unsupported `state`/`attribute`.
 
-    `for` is anchored to the entity's last_changed, which only advances on state
-    changes and reflects a single current state. It therefore cannot be combined
-    with an attribute, a list of states, or a state resolved from another entity.
+    `for` is anchored to the entity's last_changed, which reflects a single
+    current state. It therefore cannot be combined with an attribute, a list
+    that is not a single state, or a state resolved from another entity (even as
+    a single-element list). A single-element literal list behaves like the
+    scalar form (see `test_state_for`).
     """
     config = {
         "condition": "state",

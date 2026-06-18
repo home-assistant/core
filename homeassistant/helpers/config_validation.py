@@ -1592,15 +1592,18 @@ def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
     validated = key_dependency("for", "state")(validated)
 
     if CONF_FOR in validated:
-        # `for` measures how long the entity has held its current state via
-        # last_changed, so it only supports a single literal state. It cannot
-        # track an attribute, a list of states, or a state resolved from
-        # another entity.
+        # `for` is anchored to the entity's last_changed, which only reflects a
+        # single current state. It therefore can't track an attribute, multiple
+        # states, or a state resolved from another entity.
         if CONF_ATTRIBUTE in validated:
             raise vol.Invalid("Cannot use 'for' with an attribute")
         state = validated[CONF_STATE]
+        # A single-element list is just that one state; unwrap it so the
+        # input-entity check below also rejects `state: [input_select.x]`.
         if isinstance(state, list):
-            raise vol.Invalid("Cannot use 'for' with a list of states")
+            if len(state) != 1:
+                raise vol.Invalid("Cannot use 'for' with a list of states")
+            state = state[0]
         if INPUT_ENTITY_ID.match(state):
             raise vol.Invalid("Cannot use 'for' with a state referencing an entity")
 
