@@ -112,7 +112,7 @@ class KarakeepConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors = await self._async_validate_input(
                 reauth_entry.data[CONF_URL],
                 token,
-                reauth_entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+                reauth_entry.data[CONF_VERIFY_SSL],
             )
 
             if not errors:
