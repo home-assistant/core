@@ -36,7 +36,7 @@ from homeassistant.util import slugify
 
 from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
 
-SCAN_INTERVAL = 10
+SCAN_INTERVAL = 300
 
 
 @asynccontextmanager
