@@ -27,14 +27,19 @@ from homeassistant.helpers.restore_state import STORAGE_KEY as RESTORE_STATE_KEY
 from homeassistant.helpers.typing import ConfigType
 
 from .conftest import (
+    RESTORE_STATE_SAVED_ATTRIBUTES,
+    RESTORE_STATE_UPDATED_ATTRIBUTES,
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import (
@@ -803,6 +808,66 @@ async def test_template_icon_validation_error(
 
     state = hass.states.get(TEST_BINARY_SENSOR.entity_id)
     assert state.attributes.get("icon") is None
+
+
+@pytest.mark.parametrize(
+    ("restored_state", "expected_state"),
+    [
+        (STATE_ON, STATE_ON),
+        (STATE_OFF, STATE_OFF),
+    ],
+)
+async def test_modern_restore_state_attributes(
+    hass: HomeAssistant,
+    restored_state: str,
+    expected_state: str,
+) -> None:
+    """Test restoring template binary sensor attributes."""
+    # Ensure the initial state is None so that restore data is honored
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, None)
+
+    restored_attributes = {
+        "plus_one": 55,
+    }
+    setup_mock_template_entity_restore_state(
+        hass, TEST_BINARY_SENSOR, restored_state, saved_attributes=restored_attributes
+    )
+    await setup_restore_template_entity(
+        hass,
+        TEST_BINARY_SENSOR,
+        ConfigurationStyle.MODERN,
+        {
+            "state": "{{ states('sensor.test_state') }}",
+            "attributes": {
+                "plus_one": "{{ states('sensor.test_attribute') | int(0) + 1 }}",
+                "plus_two": "{{ states('sensor.test_attribute') | int(0) + 2 }}",
+            },
+        },
+        "is_state('sensor.test_attribute', '2')",
+    )
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_BINARY_SENSOR,
+        restored_state,
+        {**restored_attributes, **RESTORE_STATE_SAVED_ATTRIBUTES},
+    )
+    assert "plus_two" not in state.attributes
+
+    next_state = STATE_ON if expected_state == STATE_OFF else STATE_OFF
+    await async_trigger(hass, TEST_STATE_ENTITY_ID, next_state)
+    await async_trigger(hass, TEST_ATTRIBUTE_ENTITY_ID, 2)
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_BINARY_SENSOR,
+        next_state,
+        expected_attributes={
+            "plus_one": 3,
+            "plus_two": 4,
+            **RESTORE_STATE_UPDATED_ATTRIBUTES,
+        },
+    )
 
 
 @pytest.mark.parametrize("extra_config", [{}, {"delay_on": 5}, {"delay_off": 5}])
