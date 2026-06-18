@@ -69,19 +69,16 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except DucoConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except DucoError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
     async def _async_update_data(self) -> DucoData:
@@ -92,13 +89,11 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except DucoError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
         try:
