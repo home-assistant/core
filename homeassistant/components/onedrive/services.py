@@ -67,7 +67,7 @@ def _expand_filenames(filenames: list[str]) -> list[tuple[str, str]]:
     expanded: dict[str, str] = {}
     no_matches: list[str] = []
     for filename in filenames:
-        if not glob.has_magic(filename):
+        if not glob.has_magic(filename) or Path(filename).is_file():
             expanded.setdefault(filename, Path(filename).name)
             continue
         base, relative_pattern = _split_glob_pattern(filename)
