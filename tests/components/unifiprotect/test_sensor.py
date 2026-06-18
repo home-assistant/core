@@ -263,6 +263,33 @@ async def test_sensor_battery_unavailable_on_public_ws_disconnect(
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
+async def test_sensor_battery_refreshes_on_public_ws_reconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """Battery re-reads the bootstrap on public websocket reconnect."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SENSOR, sensor_all, SENSE_SENSORS_WRITE[0]
+    )
+    assert hass.states.get(entity_id).state == "10"
+
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+    # Value changes while the socket is down; the bootstrap holds the new value.
+    sensor_all.battery_status.percentage = 55
+    ufp.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "55"
+
+
 def test_sensor_description_rounds_public_value() -> None:
     """A migrated sensor description rounds the public value when precision is set."""
     description = ProtectSensorEntityDescription(

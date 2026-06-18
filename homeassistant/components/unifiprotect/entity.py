@@ -277,11 +277,14 @@ class BaseProtectEntity(Entity):
     def _async_public_updated(self, obj: PublicDeviceModel | None) -> None:
         """Handle a public devices WS update for a migrated value.
 
-        ``obj`` is the refreshed public object, or ``None`` to recompute from
-        the cached object (e.g. on a public websocket state change).
+        ``obj`` is the refreshed public object from a WS message; ``None`` on a
+        public websocket state change (e.g. reconnect), where the cached object
+        is re-read from the bootstrap so a value that changed during the outage
+        is picked up — mirroring the relay/siren re-signal.
         """
-        if obj is not None:
-            self._ufp_public_obj = obj
+        self._ufp_public_obj = (
+            obj if obj is not None else self.data.async_get_public_device(self.device)
+        )
         self._async_updated_event(self.device)
 
     async def async_added_to_hass(self) -> None:
