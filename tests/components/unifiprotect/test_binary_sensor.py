@@ -48,6 +48,7 @@ from .utils import (
     ids_from_device_description,
     init_entry,
     remove_entities,
+    setup_public_sensor,
 )
 
 from tests.common import async_capture_events
@@ -218,6 +219,7 @@ async def test_binary_sensor_setup_sensor(
 ) -> None:
     """Test binary_sensor entity setup for sensor devices."""
 
+    setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
@@ -251,6 +253,7 @@ async def test_binary_sensor_setup_sensor_leak(
     """Test binary_sensor entity setup for sensor with most leak mounting type."""
 
     sensor.mount_type = MountType.LEAK
+    setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 

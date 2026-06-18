@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, TypeVar
 
 from uiprotect.data import (
     NVR,
@@ -55,6 +55,10 @@ _LOGGER = logging.getLogger(__name__)
 OBJECT_TYPE_NONE = "none"
 PARALLEL_UPDATES = 0
 
+# Ties a rounding getter's input to the object it is called with; the public
+# getter takes a PublicDeviceModel, outside the private-model bound of ``T``.
+_ObjT = TypeVar("_ObjT")
+
 
 @dataclass(frozen=True, kw_only=True)
 class ProtectSensorEntityDescription(
@@ -73,8 +77,16 @@ class ProtectSensorEntityDescription(
                 "get_ufp_value",
                 partial(self._rounded_value, precision, self.get_ufp_value),
             )
+            if (public_getter := self.get_ufp_public_value) is not None:
+                object.__setattr__(
+                    self,
+                    "get_ufp_public_value",
+                    partial(self._rounded_value, precision, public_getter),
+                )
 
-    def _rounded_value(self, precision: int, getter: Callable[[T], Any], obj: T) -> Any:
+    def _rounded_value(
+        self, precision: int, getter: Callable[[_ObjT], Any], obj: _ObjT
+    ) -> Any:
         """Round value to precision if set."""
         return None if (v := getter(obj)) is None else round(v, precision)
 
@@ -300,7 +312,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="battery_status.percentage",
+        ufp_public_value="wireless_connection_state.battery_status.percentage",
     ),
     ProtectSensorEntityDescription(
         key="light_level",
@@ -647,7 +659,9 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
 
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+        self._attr_native_value = self.entity_description.get_value(
+            self.device, self._ufp_public_obj
+        )
 
 
 class ProtectDeviceSensor(BaseProtectSensor, ProtectDeviceEntity):

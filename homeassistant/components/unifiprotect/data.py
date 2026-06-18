@@ -17,6 +17,7 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    PublicDeviceModel,
     Relay,
     Siren,
     WSSubscriptionMessage,
@@ -89,6 +90,9 @@ class ProtectData:
         self._siren_subscriptions: defaultdict[str, set[Callable[[Siren], None]]] = (
             defaultdict(set)
         )
+        self._public_subscriptions: defaultdict[
+            str, set[Callable[[PublicDeviceModel | None], None]]
+        ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
@@ -209,6 +213,15 @@ class ProtectData:
             return
         if new_obj.model is ModelType.SIREN:
             self._async_signal_siren_update(cast(Siren, new_obj))
+            return
+        # Generic public-device dispatch (e.g. sensor) keyed by mac, for
+        # descriptions migrated to the public path via ``ufp_public_value``.
+        if isinstance(new_obj, PublicDeviceModel) and (
+            public_subscriptions := self._public_subscriptions.get(new_obj.mac)
+        ):
+            _LOGGER.debug("Updating public device: %s (%s)", new_obj.id, new_obj.mac)
+            for update_callback in public_subscriptions:
+                update_callback(new_obj)
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
@@ -236,6 +249,10 @@ class ProtectData:
             self._async_signal_relay_update(relay)
         for siren in api.public_bootstrap.sirens.values():
             self._async_signal_siren_update(siren)
+        # Migrated entities (e.g. battery) recompute from their cached object.
+        for subscriptions in self._public_subscriptions.values():
+            for update_callback in subscriptions:
+                update_callback(None)
 
     def _async_update_change(
         self,
@@ -469,6 +486,38 @@ class ProtectData:
         self._siren_subscriptions[mac].remove(update_callback)
         if not self._siren_subscriptions[mac]:
             del self._siren_subscriptions[mac]
+
+    @callback
+    def async_subscribe_public(
+        self, mac: str, update_callback: Callable[[PublicDeviceModel | None], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for public devices WS updates by mac."""
+        self._public_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_public, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_public(
+        self, mac: str, update_callback: Callable[[PublicDeviceModel | None], None]
+    ) -> None:
+        """Remove a public callback subscriber."""
+        self._public_subscriptions[mac].remove(update_callback)
+        if not self._public_subscriptions[mac]:
+            del self._public_subscriptions[mac]
+
+    @callback
+    def async_get_public_device(
+        self, device: ProtectDeviceType
+    ) -> PublicDeviceModel | None:
+        """Return the public-API object matching a device, if available."""
+        api = self.api
+        if not api.has_public_bootstrap or device.model is None:
+            return None
+        # Migrated entities target dedicated public device models, which all
+        # inherit from PublicDeviceModel (carrying mac/state).
+        return cast(
+            "PublicDeviceModel | None",
+            api.public_bootstrap.get(device.model, device.id),
+        )
 
     @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
