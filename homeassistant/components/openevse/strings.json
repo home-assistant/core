@@ -63,7 +63,7 @@
       }
     },
     "button": {
-      "restart_evse": {
+      "restart": {
         "name": "Restart EVSE"
       },
       "restart_wifi": {
