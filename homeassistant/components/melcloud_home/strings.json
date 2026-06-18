@@ -100,6 +100,14 @@
       "tank_water_temperature": {
         "name": "Tank water temperature"
       }
+    },
+    "switch": {
+      "frost_protection": {
+        "name": "Frost protection"
+      },
+      "overheat_protection": {
+        "name": "Overheat protection"
+      }
     }
   },
   "exceptions": {
