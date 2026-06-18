@@ -1257,7 +1257,6 @@ async def test_notify_non_apple_device_skips_live_activity(
             "app_data": {
                 "push_token": "FCM_TOKEN",
                 "push_url": push_url,
-                "start_live_activity_token": "PUSH_TO_START_HEX_TOKEN",
             },
             "app_id": "io.homeassistant.companion.android",
             "app_name": "Home Assistant",
