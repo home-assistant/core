@@ -142,7 +142,6 @@ class TestStaticHeaders:
                 f"got {auth_headers.get(key)!r}"
             )
 
-    @pytest.mark.asyncio
     async def test_renewal_request_includes_static_headers(
         self, mock_hass: MagicMock
     ) -> None:
@@ -212,7 +211,6 @@ class TestAsyncUpdateData:
         session.get.side_effect = list(responses)
         return session
 
-    @pytest.mark.asyncio
     async def test_all_endpoints_200_returns_structured_data(
         self, mock_hass: MagicMock
     ) -> None:
@@ -237,7 +235,6 @@ class TestAsyncUpdateData:
         assert data["settings"]["params"]["set_point_cooling"] == 8
         assert data["errors"]["errors"] == []
 
-    @pytest.mark.asyncio
     async def test_one_endpoint_500_uses_previous_data_for_that_key(
         self, mock_hass: MagicMock
     ) -> None:
@@ -263,7 +260,6 @@ class TestAsyncUpdateData:
         # Other endpoints still return fresh data.
         assert data["system"]["params"]["dev_name"] == "My BLANCO"
 
-    @pytest.mark.asyncio
     async def test_401_with_successful_renewal_retries_and_succeeds(
         self, mock_hass: MagicMock
     ) -> None:
@@ -281,7 +277,6 @@ class TestAsyncUpdateData:
 
         assert data["system"]["params"]["dev_name"] == "My BLANCO"
 
-    @pytest.mark.asyncio
     async def test_401_with_failed_renewal_raises_config_entry_auth_failed(
         self, mock_hass: MagicMock
     ) -> None:
@@ -296,7 +291,6 @@ class TestAsyncUpdateData:
         ):
             await coord._async_update_data()
 
-    @pytest.mark.asyncio
     async def test_dev_type_discovered_from_system_info(
         self, mock_hass: MagicMock
     ) -> None:
@@ -324,7 +318,6 @@ class TestAsyncUpdateData:
 class TestAsyncRenewToken:
     """Async tests for BlancoDataUpdateCoordinator._async_renew_token."""
 
-    @pytest.mark.asyncio
     async def test_successful_post_returns_true_and_updates_auth_header(
         self, mock_hass: MagicMock
     ) -> None:
@@ -349,7 +342,6 @@ class TestAsyncRenewToken:
         assert result is True
         assert coord._api._auth_headers()["Authorization"] == "Bearer new-token-value"
 
-    @pytest.mark.asyncio
     async def test_non_200_post_returns_false(self, mock_hass: MagicMock) -> None:
         """A non-200 renewal response returns False."""
         mock_resp = AsyncMock()

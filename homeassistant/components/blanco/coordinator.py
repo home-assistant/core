@@ -63,7 +63,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         try:
             self.dev_type = BlancoDeviceType(dev_type) if dev_type is not None else None
         except ValueError:
-            self.dev_type = BlancoDeviceType.UNDEF
+            self.dev_type = None
 
         session = async_get_clientsession(hass)
         self._api = BlancoApiClient(
@@ -210,7 +210,7 @@ class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     try:
                         self.dev_type = BlancoDeviceType(raw)
                     except ValueError:
-                        self.dev_type = BlancoDeviceType.UNDEF
+                        self.dev_type = None
                     self.hass.config_entries.async_update_entry(
                         self.config_entry,
                         data={**self.config_entry.data, CONF_DEV_TYPE: raw},
