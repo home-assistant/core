@@ -242,11 +242,13 @@ async def test_k10_plus_webhook_updates_state_after_reload(
     mock_get_status.side_effect = [
         {
             "battery": 71,
+            "deviceId": "360TY420703038421",
             "onlineStatus": "online",
             "workingStatus": "Paused",
         },
         {
             "battery": 71,
+            "deviceId": "360TY420703038421",
             "onlineStatus": "online",
             "workingStatus": "Paused",
         },

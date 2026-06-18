@@ -257,6 +257,7 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
     ]
     mock_get_status.return_value = {
         "battery": 71,
+        "deviceId": "vacuum-1",
         "onlineStatus": "online",
         "workingStatus": "Paused",
     }
@@ -275,6 +276,7 @@ async def test_polling_is_only_disabled_after_webhook_delivery(
     # Change API return values and wait for update
     mock_get_status.return_value = {
         "battery": 60,
+        "deviceId": "vacuum-1",
         "onlineStatus": "online",
         "workingStatus": "Paused",
     }
