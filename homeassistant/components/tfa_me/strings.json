@@ -74,5 +74,13 @@
         "name": "Wind speed"
       }
     }
+  },
+  "exceptions": {
+    "connection_error": {
+      "message": "Failed to connect to the station."
+    },
+    "invalid_response_error": {
+      "message": "The station returned invalid data."
+    }
   }
 }

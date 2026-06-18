@@ -68,18 +68,19 @@ async def test_get_identifier_success_station_id(hass: HomeAssistant) -> None:
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize(
-    ("side_effect", "return_value", "expected_prefix"),
+    ("side_effect", "return_value", "expected_exception", "expected_text"),
     [
-        # Device responds but response is invalid -> invalid_response
-        (TFAmeHTTPError("bad json"), None, "invalid_response"),
-        (TFAmeJSONError("bad json"), None, "invalid_response"),
-        # Timeout / connection error -> cannot_connect
-        (TFAmeTimeoutError("timeout"), None, "cannot_connect"),
-        (TFAmeConnectionError("connection failed"), None, "cannot_connect"),
-        # Unexpected error -> unknown
-        (ValueError("boom"), None, "unknown"),
-        # No gateway_id field in JSON -> missing_identifier
-        (None, {}, "missing_identifier"),
+        (TFAmeHTTPError("bad json"), None, TFAmeHTTPError, "bad json"),
+        (TFAmeJSONError("bad json"), None, TFAmeJSONError, "bad json"),
+        (TFAmeTimeoutError("timeout"), None, TFAmeTimeoutError, "timeout"),
+        (
+            TFAmeConnectionError("connection failed"),
+            None,
+            TFAmeConnectionError,
+            "connection failed",
+        ),
+        (ValueError("boom"), None, TFAmeException, "unknown"),
+        (None, {}, TFAmeException, "missing_identifier"),
     ],
     ids=[
         "http-error-invalid-response",
@@ -94,14 +95,14 @@ async def test_get_identifier_error_mapping(
     hass: HomeAssistant,
     side_effect: Exception | None,
     return_value: dict | None,
-    expected_prefix: str,
+    expected_exception: type[Exception],
+    expected_text: str,
 ) -> None:
-    """Test get_identifier() maps various client errors to TFAmeException types."""
+    """Test get_identifier() preserves client errors and maps unknown errors."""
 
     with patch("homeassistant.components.tfa_me.data.TFAmeClient") as mock_client_cls:
         mock_client = mock_client_cls.return_value
 
-        # Configure async_get_sensors either to raise or return a value
         if side_effect is not None:
             mock_client.async_get_sensors = AsyncMock(side_effect=side_effect)
         else:
@@ -109,8 +110,7 @@ async def test_get_identifier_error_mapping(
 
         data = TFAmeUniqueID(hass, "192.168.1.10")
 
-        with pytest.raises(TFAmeException) as excinfo:
+        with pytest.raises(expected_exception) as excinfo:
             await data.get_identifier()
 
-        # For all cases we only care that the mapped error prefix appears
-        assert expected_prefix in str(excinfo.value)
+        assert expected_text in str(excinfo.value)

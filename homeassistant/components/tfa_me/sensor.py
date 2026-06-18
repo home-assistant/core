@@ -15,6 +15,7 @@ from homeassistant.components.sensor import (
     StateType,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -135,7 +136,7 @@ TFA_ME_ENTITY_DESCRIPTIONS: dict[str, TFAmeSensorEntityDescription] = {
     # Wind direction in degrees: calculated from the 16-level index
     "wind_direction_deg": TFAmeSensorEntityDescription(
         key="wind_direction_deg",
-        translation_key="wind_direction",
+        translation_key="wind_direction_deg",
         device_class=None,
         state_class=SensorStateClass.MEASUREMENT,
         suggested_display_precision=1,
@@ -295,27 +296,20 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
             self.sensor_id = sensor_id
 
             ids_str = f"{sensor_id}_{self.gateway_id}"
-            self._attr_device_info = {
-                "identifiers": {
-                    (
-                        DOMAIN,
-                        ids_str,
-                    )  # Entities for sensors
-                },  # Unique ID for device/sensor
-                "name": self.format_string_tfa_id(
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, ids_str)},
+                name=self.format_string_tfa_id(
                     self.sensor_id, self.gateway_id, self.name_with_station_id
-                ),  # 'TFA.me XXX-XXX-XXX'
-                "manufacturer": "TFA/Dostmann",
-                "model": self.format_string_tfa_type(
-                    sensor_id
-                ),  # 'Sensor/Station type XX'
-            }
+                ),
+                manufacturer="TFA/Dostmann",
+                model=self.format_string_tfa_type(sensor_id),
+            )
+
             self.measure_name = self.uid.removeprefix("sensor.").split("_", 2)[2]
 
             # Some rain specials
             if self.measure_name == "rain_1_hour":
                 self.rain_history = SensorHistory(max_age_minutes=60)
-
             if self.measure_name == "rain_24_hours":
                 self.rain_history_24 = SensorHistory(max_age_minutes=24 * 60)
 
@@ -337,12 +331,12 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
                 )
 
             # Add init value & description
-            self.init_measure_value: float = 0
-            self.init_measure_value = self.coordinator.data.entities[self.uid]["value"]
-
+            self.init_measure_value: str = self.coordinator.data.entities[self.uid][
+                "value"
+            ]
             self.entity_description = self._get_entity_description(self.measure_name)
 
-        except (ValueError, TypeError, KeyError) as err:
+        except (ValueError, TypeError, KeyError, IndexError) as err:
             raise ValueError("entity_error") from err
 
     def _get_entity_description(
@@ -469,7 +463,6 @@ class TFAmeSensorEntity(CoordinatorEntity[TFAmeUpdateCoordinator], SensorEntity)
                 "Unique ID": self.format_string_tfa_id_only(self.uid[17:26].upper()),
                 "Measurement": self.uid[27:],  # measurement type
                 "Timestamp": dt,
-                "icon": self._attr_icon,
                 "Via TFA.me station": self.format_string_tfa_id_only(
                     self.gateway_id.upper()
                 ),

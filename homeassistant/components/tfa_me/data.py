@@ -58,14 +58,15 @@ class TFAmeUniqueID:
         try:
             # Fetch the raw JSON once, just like the coordinator does.
             json_data: dict[str, Any] = await client.async_get_sensors()
-        except (TFAmeHTTPError, TFAmeJSONError) as err:
-            # Device responds but data is invalid
-            raise TFAmeException(f"invalid_response: {err}") from err
-        except (TFAmeTimeoutError, TFAmeConnectionError) as err:
-            # Timeout or connection error
-            raise TFAmeException(f"cannot_connect: {err}") from err
+        except (
+            TFAmeTimeoutError,
+            TFAmeConnectionError,
+            TFAmeHTTPError,
+            TFAmeJSONError,
+        ):
+            raise
         except Exception as err:
-            # Catch-all for unknown errors
+            # Catch for all unknown errors
             raise TFAmeException(f"unknown: {err}") from err
 
         # Extract the actual station/gateway ID from json_data

@@ -37,10 +37,12 @@ type TFAmeConfigEntry = ConfigEntry[TFAmeUpdateCoordinator]
 class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
     """Class for managing data updates."""
 
+    config_entry: TFAmeConfigEntry
+
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: TFAmeConfigEntry,
     ) -> None:
         """Initialize data update coordinator."""
 
@@ -62,6 +64,7 @@ class TFAmeUpdateCoordinator(DataUpdateCoordinator[TFAmeCoordinatorData]):
         super().__init__(
             hass,
             _LOGGER,
+            config_entry=config_entry,
             name=DOMAIN,
             update_interval=timedelta(seconds=LOCAL_POLL_INTERVAL),
         )
