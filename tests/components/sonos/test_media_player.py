@@ -36,11 +36,11 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_TITLE,
     ATTR_MEDIA_VOLUME_LEVEL,
     DOMAIN as MP_DOMAIN,
-    MediaPlayerEntityFeature,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOURCE,
     MediaPlayerEnqueue,
+    MediaPlayerEntityFeature,
     RepeatMode,
 )
 from homeassistant.components.sonos.const import (
