@@ -10,9 +10,9 @@ from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     parametrize_target_entities,
@@ -38,9 +38,16 @@ async def target_covers(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     "trigger_key",
     [
-        trigger
-        for _, opened, closed in DEVICE_CLASS_TRIGGERS
-        for trigger in (opened, closed)
+        "cover.awning_closed",
+        "cover.awning_opened",
+        "cover.blind_closed",
+        "cover.blind_opened",
+        "cover.curtain_closed",
+        "cover.curtain_opened",
+        "cover.shade_closed",
+        "cover.shade_opened",
+        "cover.shutter_closed",
+        "cover.shutter_opened",
     ],
 )
 async def test_cover_triggers_gated_by_labs_flag(
@@ -132,7 +139,7 @@ async def test_cover_trigger_options_validation(
         )
     ],
 )
-async def test_cover_trigger_behavior_any(
+async def test_cover_trigger_behavior_each(
     hass: HomeAssistant,
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -143,7 +150,7 @@ async def test_cover_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test cover trigger fires for cover entities with matching device_class."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,
@@ -276,7 +283,7 @@ async def test_cover_trigger_behavior_first(
         )
     ],
 )
-async def test_cover_trigger_behavior_last(
+async def test_cover_trigger_behavior_all(
     hass: HomeAssistant,
     target_covers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -286,8 +293,8 @@ async def test_cover_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test cover trigger fires when the last cover changes state."""
-    await assert_trigger_behavior_last(
+    """Test cover trigger fires when all covers have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_covers,
         trigger_target_config=trigger_target_config,

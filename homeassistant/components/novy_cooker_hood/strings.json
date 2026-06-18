@@ -2,10 +2,22 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_compatible_transmitters": "No radio frequency transmitter supports 433.92 MHz OOK transmissions. Please add a compatible transmitter first.",
-      "no_transmitters": "No radio frequency transmitters are available. Please set up a transmitter first."
+      "no_compatible_transmitters": "[%key:common::config_flow::abort::no_compatible_radio_frequency_transmitters%]",
+      "no_transmitters": "[%key:common::config_flow::abort::no_radio_frequency_transmitters%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "code": "[%key:component::novy_cooker_hood::config::step::user::data::code%]",
+          "transmitter": "[%key:common::config_flow::data::radio_frequency_transmitter%]"
+        },
+        "data_description": {
+          "code": "[%key:component::novy_cooker_hood::config::step::user::data_description::code%]",
+          "transmitter": "[%key:common::config_flow::data_description::radio_frequency_transmitter%]"
+        },
+        "description": "[%key:component::novy_cooker_hood::config::step::user::description%]"
+      },
       "test_failed": {
         "description": "Could not send the test command for code {code}. Check that your radio frequency transmitter is online, then press Retry.",
         "menu_options": {
@@ -24,11 +36,11 @@
       "user": {
         "data": {
           "code": "Code",
-          "transmitter": "Radio frequency transmitter"
+          "transmitter": "[%key:common::config_flow::data::radio_frequency_transmitter%]"
         },
         "data_description": {
           "code": "The code your hood is paired with (1-10). Code 1 is the factory default.",
-          "transmitter": "The radio frequency transmitter used to control the Novy cooker hood."
+          "transmitter": "[%key:common::config_flow::data_description::radio_frequency_transmitter%]"
         },
         "description": "After you submit, Home Assistant will toggle the hood light on and off to verify the code works."
       }

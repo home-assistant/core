@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 import logging
 
-from duco.models import Node, NodeType, VentilationState
+from duco_connectivity.models import Node, NodeType, VentilationState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -18,14 +18,13 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
-    UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import BOX_NODE_ID, DOMAIN
 from .coordinator import DucoConfigEntry, DucoCoordinator
 from .entity import DucoEntity
 
@@ -54,19 +53,17 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         key="ventilation_state",
         translation_key="ventilation_state",
         device_class=SensorDeviceClass.ENUM,
-        options=[s.lower() for s in VentilationState],
+        options=[
+            state.lower()
+            for state in VentilationState
+            if state != VentilationState.UNKNOWN
+        ],
         value_fn=lambda node: (
-            node.ventilation.state.lower() if node.ventilation else None
+            node.ventilation.state.lower()
+            if node.ventilation and node.ventilation.state != VentilationState.UNKNOWN
+            else None
         ),
         node_types=(NodeType.BOX,),
-    ),
-    DucoSensorEntityDescription(
-        key="temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_fn=lambda node: node.sensor.temp if node.sensor else None,
-        node_types=(NodeType.UCCO2, NodeType.BSRH, NodeType.UCRH),
     ),
     DucoSensorEntityDescription(
         key="target_flow_level",
@@ -93,23 +90,17 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         node_types=(NodeType.BOX,),
     ),
     DucoSensorEntityDescription(
-        key="box_temperature",
-        translation_key="box_temperature",
-        device_class=SensorDeviceClass.TEMPERATURE,
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-        value_fn=lambda node: node.sensor.temp if node.sensor else None,
-        node_types=(NodeType.BOX,),
-    ),
-    DucoSensorEntityDescription(
         key="co2",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         value_fn=lambda node: node.sensor.co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2,),
+        node_types=(
+            NodeType.BSCO2,
+            NodeType.UCCO2,
+            NodeType.VLVCO2,
+            NodeType.VLVCO2RH,
+        ),
     ),
     DucoSensorEntityDescription(
         key="iaq_co2",
@@ -118,7 +109,12 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2,),
+        node_types=(
+            NodeType.BSCO2,
+            NodeType.UCCO2,
+            NodeType.VLVCO2,
+            NodeType.VLVCO2RH,
+        ),
     ),
     DucoSensorEntityDescription(
         key="humidity",
@@ -126,7 +122,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda node: node.sensor.rh if node.sensor else None,
-        node_types=(NodeType.BSRH, NodeType.UCRH),
+        node_types=(NodeType.BSRH, NodeType.UCRH, NodeType.VLVRH, NodeType.VLVCO2RH),
     ),
     DucoSensorEntityDescription(
         key="iaq_rh",
@@ -135,7 +131,7 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_rh if node.sensor else None,
-        node_types=(NodeType.BSRH, NodeType.UCRH),
+        node_types=(NodeType.BSRH, NodeType.UCRH, NodeType.VLVRH, NodeType.VLVCO2RH),
     ),
 )
 
@@ -172,7 +168,13 @@ async def async_setup_entry(
         # The firmware removes deregistered RF/wired nodes automatically.
         # BSRH box sensors that are physically unplugged from the PCB are
         # not deregistered by the firmware and will never appear here as stale.
-        stale_node_ids = known_nodes - coordinator.data.nodes.keys()
+        # The BOX node can transiently disappear from the API response, so keep
+        # node 1 to avoid removing the main controller device.
+        stale_node_ids = {
+            node_id
+            for node_id in known_nodes - coordinator.data.nodes.keys()
+            if node_id != BOX_NODE_ID
+        }
         if stale_node_ids:
             device_reg = dr.async_get(hass)
             mac = entry.unique_id

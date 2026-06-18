@@ -676,10 +676,10 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated(
     assert mock_config.data[CONF_HOST] == DIRECT_CONNECT_DOMAIN
 
 
-async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_using_direct_connect(
+async def test_discovered_by_unifi_discovery_dc_updated_but_not_using_dc(
     hass: HomeAssistant,
 ) -> None:
-    """Test a discovery from unifi-discovery updates the host but not direct connect if its not in use."""
+    """Test discovery updates the host but not direct connect if not in use."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -713,10 +713,10 @@ async def test_discovered_by_unifi_discovery_direct_connect_updated_but_not_usin
     assert mock_config.data[CONF_HOST] == "127.0.0.1"
 
 
-async def test_discovered_by_unifi_discovery_does_not_update_ip_when_console_is_still_online(
+async def test_discovered_by_unifi_discovery_no_update_ip_when_console_online(
     hass: HomeAssistant,
 ) -> None:
-    """Test a discovery from unifi-discovery does not update the ip unless the console at the old ip is offline."""
+    """Test discovery does not update IP unless old console is offline."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -918,6 +918,38 @@ async def test_discovered_by_unifi_discovery_partial(
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("overrides", "expected_name"),
+    [
+        (
+            {"name": "Front Gate", "hostname": "unvr", "product_name": "UNVR"},
+            "Front Gate",
+        ),
+        ({"name": None, "hostname": "unvr", "product_name": "UNVR"}, "unvr"),
+        (
+            {"name": None, "hostname": None, "product_name": "Dream Machine"},
+            "Dream Machine",
+        ),
+    ],
+    ids=["console-name", "hostname", "product-name"],
+)
+async def test_discovery_name_resolution(
+    hass: HomeAssistant, overrides: dict[str, str | None], expected_name: str
+) -> None:
+    """Test the discovery title prefers the console name over raw platform codes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={**UNIFI_DISCOVERY_DICT, **overrides},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert flows[0]["context"]["title_placeholders"]["name"] == expected_name
+
+
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface(
     hass: HomeAssistant,
 ) -> None:
@@ -948,10 +980,10 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     assert result["reason"] == "already_configured"
 
 
-async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_ip_matches(
+async def test_discovered_by_unifi_discovery_dc_different_interface_ip_matches(
     hass: HomeAssistant,
 ) -> None:
-    """Test a discovery from unifi-discovery from an alternate interface when the ip matches."""
+    """Test discovery from alternate interface when the IP matches."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -978,10 +1010,10 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     assert result["reason"] == "already_configured"
 
 
-async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_resolver(
+async def test_discovered_by_unifi_discovery_dc_different_interface_resolver(
     hass: HomeAssistant,
 ) -> None:
-    """Test a discovery from unifi-discovery from an alternate interface when direct connect domain resolves to host ip."""
+    """Test discovery from alternate interface when direct connect resolves."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1019,10 +1051,10 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     assert result["reason"] == "already_configured"
 
 
-async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_resolver_fails(
+async def test_discovered_by_unifi_discovery_dc_different_interface_resolver_fails(
     hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR
 ) -> None:
-    """Test we can still configure if the resolver fails."""
+    """Test we can still configure when the resolver fails."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={
@@ -1110,10 +1142,10 @@ async def test_discovered_by_unifi_discovery_direct_connect_on_different_interfa
     assert len(mock_setup.mock_calls) == 1
 
 
-async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface_resolver_no_result(
+async def test_discovered_by_unifi_discovery_dc_different_interface_resolver_no_result(
     hass: HomeAssistant,
 ) -> None:
-    """Test a discovery from unifi-discovery from an alternate interface when direct connect domain resolve has no result."""
+    """Test discovery from alternate interface when resolve has no result."""
     mock_config = MockConfigEntry(
         domain=DOMAIN,
         data={

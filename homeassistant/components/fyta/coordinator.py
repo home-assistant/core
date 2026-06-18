@@ -54,7 +54,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
 
         if (
             self.fyta.expiration is None
-            or self.fyta.expiration.timestamp() < datetime.now().timestamp()
+            or self.fyta.expiration.timestamp() < datetime.now().timestamp()  # pylint: disable=home-assistant-enforce-naive-now
         ):
             await self.renew_authentication()
 
@@ -66,7 +66,8 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
             ) from err
         _LOGGER.debug("Data successfully updated")
 
-        # data must be assigned before _async_add_remove_devices, as it is uses to set-up possible new devices
+        # data must be assigned before _async_add_remove_devices,
+        # as it is uses to set-up possible new devices
         self.data = data
         self._async_add_remove_devices()
 

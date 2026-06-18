@@ -118,7 +118,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
         if port == DEFAULT_PORT:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, format_mac(sync_status.mac))},
-                connections={(CONNECTION_NETWORK_MAC, format_mac(sync_status.mac))},
+                connections={(CONNECTION_NETWORK_MAC, sync_status.mac)},
                 name=sync_status.name,
                 manufacturer=sync_status.brand,
                 model=sync_status.model_name,
@@ -330,7 +330,8 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
         if self._status.input_id is not None:
             for input_ in self._inputs:
-                # the input might not have an id => also try to match on the stream_url/url
+                # the input might not have an id
+                # => also try to match on the stream_url/url
                 # we have to use both because neither matches all the time
                 if (
                     input_.id == self._status.input_id
@@ -689,7 +690,7 @@ class BluesoundPlayer(CoordinatorEntity[BluesoundCoordinator], MediaPlayerEntity
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Send volume_up command to media player."""
-        volume = int(round(volume * 100))
+        volume = round(volume * 100)
         volume = min(100, volume)
         volume = max(0, volume)
 

@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 import logging
@@ -49,6 +49,7 @@ from homeassistant.helpers.event import (
     async_track_state_report_event,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_MAX_SUB_INTERVAL,
@@ -244,7 +245,8 @@ async def async_setup_entry(
     )
 
     if (unit_prefix := config_entry.options.get(CONF_UNIT_PREFIX)) == "none":
-        # Before we had support for optional selectors, "none" was used for selecting nothing
+        # Before we had support for optional selectors,
+        # "none" was used for selecting nothing
         unit_prefix = None
 
     if max_sub_interval_dict := config_entry.options.get(CONF_MAX_SUB_INTERVAL, None):
@@ -338,7 +340,7 @@ class IntegrationSensor(RestoreSensor):
             else max_sub_interval
         )
         self._max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: None
-        self._last_integration_time: datetime = datetime.now(tz=UTC)
+        self._last_integration_time: datetime = dt_util.utcnow()
         self._last_integration_trigger = _IntegrationTrigger.StateEvent
         self._attr_suggested_display_precision = round_digits or 2
 
@@ -390,7 +392,9 @@ class IntegrationSensor(RestoreSensor):
             source_state.attributes.get(ATTR_DEVICE_CLASS), self.unit_of_measurement
         )
         if self._attr_device_class:
-            self._attr_icon = None  # Remove this sensors icon default and allow to fallback to the device class default
+            # Remove this sensors icon default and allow
+            # to fallback to the device class default
+            self._attr_icon = None
         else:
             self._attr_icon = "mdi:chart-histogram"
 
@@ -495,7 +499,7 @@ class IntegrationSensor(RestoreSensor):
                 old_timestamp, new_timestamp, old_state, new_state
             )
             self._last_integration_trigger = _IntegrationTrigger.StateEvent
-            self._last_integration_time = datetime.now(tz=UTC)
+            self._last_integration_time = dt_util.utcnow()
         finally:
             # When max_sub_interval exceeds without state change the source is assumed
             # constant with the last known state (new_state).
@@ -564,7 +568,7 @@ class IntegrationSensor(RestoreSensor):
             assert old_timestamp is not None
         elapsed_seconds = Decimal(
             (new_timestamp - old_timestamp).total_seconds()
-            if self._last_integration_trigger == _IntegrationTrigger.StateEvent
+            if self._last_integration_trigger is _IntegrationTrigger.StateEvent
             else (new_timestamp - self._last_integration_time).total_seconds()
         )
 
@@ -603,7 +607,7 @@ class IntegrationSensor(RestoreSensor):
                 self._update_integral(area)
                 self.async_write_ha_state()
 
-                self._last_integration_time = datetime.now(tz=UTC)
+                self._last_integration_time = dt_util.utcnow()
                 self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
 
                 self._schedule_max_sub_interval_exceeded_if_state_is_numeric(

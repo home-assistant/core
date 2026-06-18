@@ -19,6 +19,7 @@ from uiprotect.data import (
     NvrArmModeStatus,
     PTZPatrol,
     PublicBootstrap,
+    PublicHdrMode,
     RecordingMode,
     Viewer,
 )
@@ -454,7 +455,7 @@ async def test_select_set_option_camera_doorbell_custom(
     )
 
     with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
+        doorbell, "set_lcd_message_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "select",
@@ -480,9 +481,14 @@ async def test_select_set_option_camera_doorbell_unifi(
         hass, Platform.SELECT, doorbell, CAMERA_SELECTS[2]
     )
 
-    with patch_ufp_method(
-        doorbell, "set_lcd_text", new_callable=AsyncMock
-    ) as mock_method:
+    with (
+        patch_ufp_method(
+            doorbell, "set_lcd_message_public", new_callable=AsyncMock
+        ) as mock_public,
+        patch_ufp_method(
+            doorbell, "set_lcd_text", new_callable=AsyncMock
+        ) as mock_legacy,
+    ):
         await hass.services.async_call(
             "select",
             "select_option",
@@ -493,7 +499,7 @@ async def test_select_set_option_camera_doorbell_unifi(
             blocking=True,
         )
 
-        mock_method.assert_called_once_with(DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR)
+        mock_public.assert_called_once_with(DoorbellMessageType.LEAVE_PACKAGE_AT_DOOR)
 
         await hass.services.async_call(
             "select",
@@ -505,7 +511,7 @@ async def test_select_set_option_camera_doorbell_unifi(
             blocking=True,
         )
 
-        mock_method.assert_called_with(None)
+        mock_legacy.assert_called_once_with(None)
 
 
 async def test_select_set_option_camera_doorbell_default(
@@ -534,6 +540,44 @@ async def test_select_set_option_camera_doorbell_default(
         )
 
         mock_method.assert_called_once_with(None)
+
+
+@pytest.mark.parametrize(
+    ("option", "expected"),
+    [
+        pytest.param("auto", PublicHdrMode.AUTO, id="auto"),
+        pytest.param("always", PublicHdrMode.ON, id="always"),
+        pytest.param("off", PublicHdrMode.OFF, id="off"),
+    ],
+)
+async def test_select_set_option_camera_hdr_mode(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    option: str,
+    expected: PublicHdrMode,
+) -> None:
+    """Test HDR mode select calls public API with mapped value."""
+
+    await init_entry(hass, ufp, [doorbell])
+    assert_entity_counts(hass, Platform.SELECT, 5, 5)
+
+    description = next(d for d in CAMERA_SELECTS if d.key == "hdr_mode")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SELECT, doorbell, description
+    )
+
+    with patch_ufp_method(
+        doorbell, "set_hdr_mode_public", new_callable=AsyncMock
+    ) as mock_method:
+        await hass.services.async_call(
+            "select",
+            "select_option",
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+            blocking=True,
+        )
+
+        mock_method.assert_called_once_with(expected)
 
 
 async def test_select_set_option_viewer(

@@ -43,7 +43,7 @@ async def test_valve(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test valve entity is created for a Matter ValveConfigurationAndControl Cluster."""
+    """Test valve entity for Matter ValveConfigurationAndControl."""
     entity_id = "valve.mock_valve"
     state = hass.states.get(entity_id)
     assert state

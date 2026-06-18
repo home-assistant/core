@@ -1,4 +1,16 @@
 {
+  "entity": {
+    "button": {
+      "stop": {
+        "default": "mdi:stop"
+      }
+    },
+    "select": {
+      "energy_mode": {
+        "default": "mdi:home-lightning-bolt"
+      }
+    }
+  },
   "services": {
     "charge": {
       "service": "mdi:battery-arrow-up"

@@ -16,7 +16,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .config_flow import ConfigFlow
+from .config_flow import PrusaLinkConfigFlow
 from .const import DOMAIN
 from .coordinator import (
     InfoUpdateCoordinator,
@@ -67,7 +67,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PrusaLinkConfigEntry) ->
 
 async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
     """Migrate old entry."""
-    if config_entry.version > ConfigFlow.VERSION:
+    if (config_entry.version, config_entry.minor_version) > (
+        PrusaLinkConfigFlow.VERSION,
+        PrusaLinkConfigFlow.MINOR_VERSION,
+    ):
         # This means the user has downgraded from a future version
         return False
 
@@ -104,7 +107,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                         "prusa_mk4_xl_firmware_update": "https://help.prusa3d.com/article/how-to-update-firmware-mk4-xl_453086",
                     },
                 )
-                # There is a check in the async_setup_entry to prevent the setup if minor_version < 2
+                # There is a check in the async_setup_entry to
+                # prevent the setup if minor_version < 2
                 # Currently we can't reload the config entry
                 # if the migration returns False.
                 # Return True here to workaround that.

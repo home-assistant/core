@@ -21,6 +21,8 @@ from homeassistant.components.mastodon.const import (
     ATTR_AVATAR_MIME_TYPE,
     ATTR_BOT,
     ATTR_CONTENT_WARNING,
+    ATTR_DELETE_AVATAR,
+    ATTR_DELETE_HEADER,
     ATTR_DISCOVERABLE,
     ATTR_DISPLAY_NAME,
     ATTR_DURATION,
@@ -30,7 +32,6 @@ from homeassistant.components.mastodon.const import (
     ATTR_HIDE_NOTIFICATIONS,
     ATTR_IDEMPOTENCY_KEY,
     ATTR_LANGUAGE,
-    ATTR_LOCKED,
     ATTR_MEDIA,
     ATTR_MEDIA_DESCRIPTION,
     ATTR_NOTE,
@@ -47,7 +48,7 @@ from homeassistant.components.mastodon.services import (
     SERVICE_UPDATE_PROFILE,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_LOCKED
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.setup import async_setup_component
@@ -617,7 +618,7 @@ async def test_post_path_not_whitelisted(
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the post service raising an error because the file path is not whitelisted."""
+    """Test post service error when file path is not whitelisted."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -641,7 +642,7 @@ async def test_idempotency_key_too_short(
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the post service raising an error because the idempotency key is too short."""
+    """Test post service error when idempotency key is too short."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -793,12 +794,14 @@ async def test_service_entry_availability(
         ),
     ],
 )
+@pytest.mark.parametrize("return_response", [True, False])
 async def test_service_update_profile(
     hass: HomeAssistant,
     mock_mastodon_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     payload: dict[str, str],
     kwargs: dict[str, str | None],
+    return_response: bool,
 ) -> None:
     """Test the update profile service."""
     assert await async_setup_component(hass, "media_source", {})
@@ -815,15 +818,50 @@ async def test_service_update_profile(
             return_value=image.Image(content_type="image/png", content=b"\x89PNG"),
         ),
     ):
-        await hass.services.async_call(
+        response = await hass.services.async_call(
             DOMAIN,
             SERVICE_UPDATE_PROFILE,
             {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
             blocking=True,
-            return_response=True,
+            return_response=return_response,
         )
 
     mock_mastodon_client.account_update_credentials.assert_called_with(**kwargs)
+    assert bool(response) is return_response
+
+
+@pytest.mark.parametrize(
+    ("payload", "call_method"),
+    [
+        ({ATTR_DELETE_HEADER: True}, "account_delete_header"),
+        ({ATTR_DELETE_AVATAR: True}, "account_delete_avatar"),
+    ],
+)
+@pytest.mark.parametrize("return_response", [True, False])
+async def test_service_update_profile_delete_pictures(
+    hass: HomeAssistant,
+    mock_mastodon_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    payload: dict[str, str],
+    call_method: str,
+    return_response: bool,
+) -> None:
+    """Test the update profile service for deleting pictures."""
+    assert await async_setup_component(hass, "media_source", {})
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_UPDATE_PROFILE,
+        {ATTR_CONFIG_ENTRY_ID: mock_config_entry.entry_id, **payload},
+        blocking=True,
+        return_response=return_response,
+    )
+
+    getattr(mock_mastodon_client, call_method).assert_called_once()
+    assert bool(response) is return_response
 
 
 @pytest.mark.parametrize(

@@ -45,6 +45,9 @@
     },
     "started": {
       "trigger": "mdi:timer-play"
+    },
+    "time_remaining": {
+      "trigger": "mdi:timer-alert-outline"
     }
   }
 }

@@ -149,6 +149,7 @@ class HorizonDevice(MediaPlayerEntity):
             try:
                 self._select_channel(int(media_id))
                 self._attr_state = MediaPlayerState.PLAYING
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except ValueError:
                 _LOGGER.error("Invalid channel: %s", media_id)
         else:

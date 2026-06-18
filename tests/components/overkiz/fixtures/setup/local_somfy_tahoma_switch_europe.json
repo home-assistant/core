@@ -3,7 +3,7 @@
     {
       "subsystemId": 0,
       "synced": true,
-      "label": "**",
+      "label": "TaHoma",
       "states": [
         {
           "name": "core:CountryCodeState",
@@ -23,7 +23,7 @@
         {
           "name": "core:NameState",
           "type": 3,
-          "value": "**"
+          "value": "TaHoma"
         }
       ],
       "attributes": [],
@@ -120,7 +120,7 @@
     {
       "subsystemId": 0,
       "synced": true,
-      "label": "** *(**/**)*",
+      "label": "TaHoma (WiFi/Ethernet)",
       "states": [
         {
           "name": "internal:WifiModeState",
@@ -784,7 +784,7 @@
         {
           "name": "core:Memorized1PositionState",
           "type": 1,
-          "value": 100
+          "value": 85
         },
         {
           "name": "core:Memorized1OrientationState",
@@ -3331,7 +3331,7 @@
     {
       "subsystemId": 0,
       "synced": true,
-      "label": "** *(**)*",
+      "label": "TaHoma (IO)",
       "states": [],
       "attributes": [],
       "available": true,
@@ -5488,7 +5488,7 @@
     {
       "deviceURL": "zigbee://1234-5678-6508/65535",
       "synced": true,
-      "label": "** *(**)*",
+      "label": "TaHoma (Zigbee)",
       "states": [],
       "attributes": [],
       "available": true,

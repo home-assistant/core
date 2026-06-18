@@ -66,11 +66,10 @@
       "battery_mode": {
         "name": "Mode",
         "state": {
-          "charged": "Charged",
+          "connected_solar_panels": "Connected solar panels",
           "dynamic": "Dynamic",
           "fast_charge": "Fast charge",
           "fast_discharge": "Fast discharge",
-          "idle": "[%key:common::state::idle%]",
           "self_use": "Self-use"
         }
       }

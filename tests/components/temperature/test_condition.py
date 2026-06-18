@@ -180,6 +180,7 @@ async def test_temperature_sensor_condition_behavior_all(
         HVACMode.AUTO,
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        attribute_required=True,
     ),
 )
 async def test_temperature_climate_condition_behavior_any(
@@ -217,6 +218,7 @@ async def test_temperature_climate_condition_behavior_any(
         HVACMode.AUTO,
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        attribute_required=True,
     ),
 )
 async def test_temperature_climate_condition_behavior_all(
@@ -254,6 +256,7 @@ async def test_temperature_climate_condition_behavior_all(
         "eco",
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        attribute_required=True,
     ),
 )
 async def test_temperature_water_heater_condition_behavior_any(
@@ -291,6 +294,7 @@ async def test_temperature_water_heater_condition_behavior_any(
         "eco",
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        attribute_required=True,
     ),
 )
 async def test_temperature_water_heater_condition_behavior_all(
@@ -329,6 +333,7 @@ async def test_temperature_water_heater_condition_behavior_all(
         "temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
         unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+        attribute_required=True,
     ),
 )
 async def test_temperature_weather_condition_behavior_any(
@@ -367,6 +372,7 @@ async def test_temperature_weather_condition_behavior_any(
         "temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
         unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+        attribute_required=True,
     ),
 )
 async def test_temperature_weather_condition_behavior_all(

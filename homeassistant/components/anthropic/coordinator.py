@@ -1,7 +1,6 @@
 """Coordinator for the Anthropic integration."""
 
 import datetime
-import re
 
 import anthropic
 
@@ -20,21 +19,18 @@ UPDATE_INTERVAL_DISCONNECTED = datetime.timedelta(minutes=1)
 type AnthropicConfigEntry = ConfigEntry[AnthropicCoordinator]
 
 
-_model_short_form = re.compile(r"[^\d]-\d$")
-
-
 @callback
 def model_alias(model_id: str) -> str:
     """Resolve alias from versioned model name."""
     if model_id[-2:-1] != "-" and not model_id.endswith("-preview"):
         model_id = model_id[:-9]
-    if _model_short_form.search(model_id):
+    if model_id.endswith("-4"):
         return model_id + "-0"
     return model_id
 
 
 class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]]):
-    """DataUpdateCoordinator which uses different intervals after successful and unsuccessful updates."""
+    """Coordinator using different intervals after success and failure."""
 
     client: anthropic.AsyncAnthropic
 

@@ -8,11 +8,14 @@ from unittest.mock import MagicMock, Mock, patch
 
 from onedrive_personal_sdk.exceptions import OneDriveException
 import pytest
+import voluptuous as vol
 
-from homeassistant.components.onedrive.const import DOMAIN
+from homeassistant.components.onedrive.const import CONF_DELETE_PERMANENTLY, DOMAIN
 from homeassistant.components.onedrive.services import (
     CONF_CONFIG_ENTRY_ID,
     CONF_DESTINATION_FOLDER,
+    CONF_DESTINATION_PATH,
+    DELETE_SERVICE,
     UPLOAD_SERVICE,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -25,7 +28,8 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 TEST_FILENAME = "doorbell_snapshot.jpg"
-DESINATION_FOLDER = "TestFolder"
+TEST_DESTINATION_PATH = "photos/snapshots/image.jpg"
+DESTINATION_FOLDER = "TestFolder"
 
 
 @dataclass
@@ -83,7 +87,7 @@ async def test_upload_service(
         {
             CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             CONF_FILENAME: TEST_FILENAME,
-            CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+            CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
         },
         blocking=True,
         return_response=True,
@@ -109,7 +113,7 @@ async def test_upload_service_no_response(
         {
             CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
             CONF_FILENAME: TEST_FILENAME,
-            CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+            CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
         },
         blocking=True,
     )
@@ -130,7 +134,7 @@ async def test_upload_service_config_entry_not_found(
             {
                 CONF_CONFIG_ENTRY_ID: "invalid-config-entry-id",
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -156,7 +160,7 @@ async def test_config_entry_not_loaded(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -180,7 +184,7 @@ async def test_path_is_not_allowed(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -201,7 +205,7 @@ async def test_filename_does_not_exist(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -225,7 +229,7 @@ async def test_multiple_filenames_do_not_exist(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: [TEST_FILENAME, second_filename],
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -251,7 +255,7 @@ async def test_upload_service_fails_upload(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -275,7 +279,7 @@ async def test_upload_size_limit(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
@@ -300,8 +304,294 @@ async def test_create_album_failed(
             {
                 CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
                 CONF_FILENAME: TEST_FILENAME,
-                CONF_DESTINATION_FOLDER: DESINATION_FOLDER,
+                CONF_DESTINATION_FOLDER: DESTINATION_FOLDER,
             },
             blocking=True,
             return_response=True,
+        )
+
+
+async def test_delete_service_config_entry_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test delete service call with a config entry that does not exist."""
+    await setup_integration(hass, mock_config_entry)
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: "invalid-config-entry-id",
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "service_config_entry_not_found"
+
+
+async def test_delete_service_config_entry_not_loaded(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test delete service call with a config entry that is not loaded."""
+    await setup_integration(hass, mock_config_entry)
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+            },
+            blocking=True,
+        )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_delete_service(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service call removes the remote file."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.services.has_service(DOMAIN, DELETE_SERVICE)
+
+    await hass.services.async_call(
+        DOMAIN,
+        DELETE_SERVICE,
+        {
+            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+        },
+        blocking=True,
+    )
+
+    mock_onedrive_client.delete_drive_item.assert_called_once()
+    call_args = mock_onedrive_client.delete_drive_item.call_args
+    assert call_args.args[0] == f"id:/{TEST_DESTINATION_PATH}:"
+    assert call_args.args[1] is False
+
+
+async def test_delete_service_delete_permanently(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service passes delete_permanently=True when option is set."""
+    await setup_integration(hass, mock_config_entry)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_DELETE_PERMANENTLY: True}
+    )
+
+    await hass.services.async_call(
+        DOMAIN,
+        DELETE_SERVICE,
+        {
+            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+        },
+        blocking=True,
+    )
+
+    call_args = mock_onedrive_client.delete_drive_item.call_args
+    assert call_args.args[0] == f"id:/{TEST_DESTINATION_PATH}:"
+    assert call_args.args[1] is True
+
+
+async def test_delete_service_multiple_files(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service removes multiple remote files in parallel."""
+    await setup_integration(hass, mock_config_entry)
+    second_path = "photos/snapshots/image2.jpg"
+
+    await hass.services.async_call(
+        DOMAIN,
+        DELETE_SERVICE,
+        {
+            CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+            CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH, second_path],
+        },
+        blocking=True,
+    )
+
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
+    called_paths = {
+        c.args[0] for c in mock_onedrive_client.delete_drive_item.call_args_list
+    }
+    assert called_paths == {
+        f"id:/{TEST_DESTINATION_PATH}:",
+        f"id:/{second_path}:",
+    }
+
+
+async def test_delete_service_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service raises HomeAssistantError on OneDriveException."""
+    await setup_integration(hass, mock_config_entry)
+    mock_onedrive_client.delete_drive_item.side_effect = OneDriveException("api error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "delete_error"
+    assert TEST_DESTINATION_PATH in exc_info.value.translation_placeholders["paths"]
+
+
+async def test_delete_service_multiple_files_all_fail(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service aggregates errors from multiple failed deletions."""
+    await setup_integration(hass, mock_config_entry)
+    second_path = "photos/snapshots/image2.jpg"
+    mock_onedrive_client.delete_drive_item.side_effect = [
+        OneDriveException("error one"),
+        OneDriveException("error two"),
+    ]
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH, second_path],
+            },
+            blocking=True,
+        )
+
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
+    assert isinstance(exc_info.value.__cause__, ExceptionGroup)
+    assert len(exc_info.value.__cause__.exceptions) == 2
+    assert TEST_DESTINATION_PATH in exc_info.value.translation_placeholders["paths"]
+    assert second_path in exc_info.value.translation_placeholders["paths"]
+
+
+async def test_delete_service_multiple_files_partial_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service attempts all deletions before raising on partial failure."""
+    await setup_integration(hass, mock_config_entry)
+    second_path = "photos/snapshots/image2.jpg"
+    mock_onedrive_client.delete_drive_item.side_effect = [
+        None,
+        OneDriveException("error two"),
+    ]
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH, second_path],
+            },
+            blocking=True,
+        )
+
+    assert mock_onedrive_client.delete_drive_item.call_count == 2
+    called_paths = {
+        c.args[0] for c in mock_onedrive_client.delete_drive_item.call_args_list
+    }
+    assert called_paths == {
+        f"id:/{TEST_DESTINATION_PATH}:",
+        f"id:/{second_path}:",
+    }
+    assert exc_info.value.translation_key == "delete_error"
+    assert second_path in exc_info.value.translation_placeholders["paths"]
+
+
+async def test_delete_service_get_approot_fails(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_onedrive_client: MagicMock,
+) -> None:
+    """Test delete service raises HomeAssistantError when get_approot fails."""
+    await setup_integration(hass, mock_config_entry)
+    mock_onedrive_client.get_approot.side_effect = OneDriveException("network error")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [TEST_DESTINATION_PATH],
+            },
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "connection_error"
+
+
+async def test_delete_empty_destination_path(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test delete service raises when destination_path is an empty list."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: [],
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "bad_path",
+    [
+        "",
+        "/",
+        "//",
+        "photos/../secrets",
+        "photos/file:name.jpg",
+        "../escape",
+    ],
+)
+async def test_delete_invalid_destination_path(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    bad_path: str,
+) -> None:
+    """Test delete service raises HomeAssistantError for invalid destination paths."""
+    await setup_integration(hass, mock_config_entry)
+
+    with pytest.raises(HomeAssistantError, match="Invalid destination path"):
+        await hass.services.async_call(
+            DOMAIN,
+            DELETE_SERVICE,
+            {
+                CONF_CONFIG_ENTRY_ID: mock_config_entry.entry_id,
+                CONF_DESTINATION_PATH: bad_path,
+            },
+            blocking=True,
         )

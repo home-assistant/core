@@ -84,7 +84,7 @@ async def async_setup_entry(
 
 @dataclass(frozen=True, kw_only=True)
 class OmadaDeviceSensorEntityDescription(SensorEntityDescription):
-    """Entity description for a status derived from an Omada device in the device list."""
+    """Entity description for status from an Omada device."""
 
     exists_func: Callable[[OmadaListDevice], bool] = lambda _: True
     update_func: Callable[[OmadaListDevice], StateType]

@@ -67,7 +67,7 @@ class RoborockSelectDescription(SelectEntityDescription):
     """Function to get the current value of the select entity."""
 
     options_lambda: Callable[[PropertiesApi], list[str] | None]
-    """Function to get all options of the select entity or returns None if not supported."""
+    """Get all options or return None if not supported."""
 
     parameter_lambda: Callable[[str, PropertiesApi], list[int]]
     """Function to get the parameters for the api command."""
@@ -87,7 +87,7 @@ class RoborockB01SelectDescription(SelectEntityDescription):
     """Function to get the current value of the select entity."""
 
     options_lambda: Callable[[Q7PropertiesApi], list[str] | None]
-    """Function to get all options of the select entity or returns None if not supported."""
+    """Get all options or return None if not supported."""
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -326,7 +326,7 @@ class RoborockB01SelectEntity(RoborockCoordinatedEntityB01Q7, SelectEntity):
 
 
 class RoborockSelectEntity(RoborockCoordinatedEntityV1, SelectEntity):
-    """A class to let you set options on a Roborock vacuum where the potential options are fixed."""
+    """A class to set options on a Roborock vacuum with fixed options."""
 
     entity_description: RoborockSelectDescription
 

@@ -31,7 +31,10 @@ def test_integration_with_config_flow_and_integration_type(config: Config) -> No
 
 @pytest.mark.usefixtures("mock_core_integration")
 def test_integration_with_config_flow_missing_integration_type(config: Config) -> None:
-    """Integration with config_flow but no integration_type and not in allowlist should error."""
+    """Integration with config_flow but no integration_type.
+
+    Not in allowlist should error.
+    """
     integrations = {
         "test": _get_integration(
             "test",
@@ -46,7 +49,10 @@ def test_integration_with_config_flow_missing_integration_type(config: Config) -
 
 @pytest.mark.usefixtures("mock_core_integration")
 def test_integration_with_config_flow_in_allowlist(config: Config) -> None:
-    """Integration with config_flow but no integration_type and in allowlist should pass."""
+    """Integration with config_flow but no integration_type.
+
+    In allowlist should pass.
+    """
     domain = next(iter(integration_type.MISSING_INTEGRATION_TYPE))
     integrations = {
         domain: _get_integration(
@@ -80,7 +86,7 @@ def test_integration_with_integration_type_still_in_allowlist(config: Config) ->
 
 @pytest.mark.usefixtures("mock_core_integration")
 def test_integration_without_config_flow_skipped(config: Config) -> None:
-    """Integration without config_flow should be skipped regardless of integration_type."""
+    """Integration without config_flow should be skipped."""
     integrations = {
         "test": _get_integration(
             "test",

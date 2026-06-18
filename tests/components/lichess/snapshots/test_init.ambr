@@ -14,7 +14,7 @@
     'identifiers': set({
       tuple(
         'lichess',
-        'drnykterstien',
+        'drnykterstein',
       ),
     }),
     'labels': set({

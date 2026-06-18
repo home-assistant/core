@@ -21,6 +21,12 @@
   },
   "entity": {
     "sensor": {
+      "emergent_vegetation_cover": {
+        "name": "Emergent vegetation cover"
+      },
+      "floating_vegetation_cover": {
+        "name": "Floating vegetation cover"
+      },
       "hydrological_alert": {
         "name": "Hydrological alert",
         "state": {
@@ -61,6 +67,9 @@
       },
       "ice_phenomena": {
         "name": "Ice phenomena"
+      },
+      "submerged_vegetation_cover": {
+        "name": "Submerged vegetation cover"
       },
       "water_flow": {
         "name": "Water flow"

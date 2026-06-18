@@ -52,7 +52,8 @@ class NormalizedNameBaseRegistryItems[_VT: NormalizedNameBaseRegistryEntry](
             and normalized_name in self._normalized_names
         ):
             raise ValueError(
-                f"The name {replacement_entry.name} ({normalized_name}) is already in use"
+                f"The name {replacement_entry.name}"
+                f" ({normalized_name}) is already in use"
             )
         del self._normalized_names[old_entry.normalized_name]
 

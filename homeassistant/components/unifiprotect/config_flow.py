@@ -87,7 +87,7 @@ async def _async_clear_session_if_credentials_changed(
     entry: UFPConfigEntry,
     new_data: Mapping[str, Any],
 ) -> None:
-    """Clear stored session if credentials have changed to force fresh authentication."""
+    """Clear stored session if credentials changed."""
     existing_data = entry.data
     if existing_data.get(CONF_USERNAME) != new_data.get(
         CONF_USERNAME
@@ -286,8 +286,9 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                 form_data[CONF_API_KEY] = user_input[CONF_API_KEY]
 
         placeholders = {
-            "name": discovery_info["hostname"]
-            or discovery_info["platform"]
+            "name": discovery_info.get("name")
+            or discovery_info.get("hostname")
+            or discovery_info.get("product_name")
             or f"NVR {_async_short_mac(discovery_info['hw_addr'])}",
             "ip_address": discovery_info["source_ip"],
         }
@@ -296,8 +297,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="discovery_confirm",
             description_placeholders={
                 **placeholders,
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(
@@ -431,8 +432,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reauth_confirm",
             description_placeholders={
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(REAUTH_SCHEMA, form_data),
@@ -481,8 +482,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="reconfigure",
             description_placeholders={
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 ),
             },
             data_schema=self.add_suggested_values_to_schema(
@@ -509,8 +510,8 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             description_placeholders={
-                "local_user_documentation_url": await async_local_user_documentation_url(
-                    self.hass
+                "local_user_documentation_url": (
+                    await async_local_user_documentation_url(self.hass)
                 )
             },
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),

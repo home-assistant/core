@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_select[load_platforms0][select.hallway_light-entry]
+# name: test_select[load_platforms0][select.hallway_hallway_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.hallway_light',
+    'entity_id': 'select.hallway_hallway_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -41,7 +41,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select[load_platforms0][select.hallway_light-state]
+# name: test_select[load_platforms0][select.hallway_hallway_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Hallway Light',
@@ -51,14 +51,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.hallway_light',
+    'entity_id': 'select.hallway_hallway_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_select[load_platforms0][select.kitchen_light-entry]
+# name: test_select[load_platforms0][select.kitchen_kitchen_light-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -78,7 +78,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.kitchen_light',
+    'entity_id': 'select.kitchen_kitchen_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -101,7 +101,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_select[load_platforms0][select.kitchen_light-state]
+# name: test_select[load_platforms0][select.kitchen_kitchen_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Kitchen Light',
@@ -112,7 +112,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.kitchen_light',
+    'entity_id': 'select.kitchen_kitchen_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -165,6 +165,15 @@
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
     },
+    "no_device_found": {
+      "message": "No valid SMLIGHT device found for the given targets."
+    },
+    "not_supported_buzzer": {
+      "message": "The selected SMLIGHT device does not support the buzzer feature. This feature is only available on Ultima models."
+    },
+    "play_tone_failed": {
+      "message": "Failed to play tone on {device_name}: {error}."
+    },
     "send_ir_code_failed": {
       "message": "Failed to send IR code: {error}."
     }
@@ -173,6 +182,34 @@
     "unsupported_firmware": {
       "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
       "title": "SLZB core firmware update required"
+    }
+  },
+  "services": {
+    "play_rtttl": {
+      "description": "Play an RTTTL melody on the SMLIGHT device buzzer.",
+      "fields": {
+        "bpm": {
+          "description": "Tempo in beats per minute. Omit to use the RTTTL default of 63.",
+          "name": "BPM"
+        },
+        "device_id": {
+          "description": "The SMLIGHT device.",
+          "name": "Device"
+        },
+        "duration": {
+          "description": "Default note duration (1, 2, 4, 8, 16 or 32). Omit to use the RTTTL default of 4.",
+          "name": "Duration"
+        },
+        "notes": {
+          "description": "The note sequence in RTTTL format, e.g. 8d,8d#,8e,c6.",
+          "name": "Notes"
+        },
+        "octave": {
+          "description": "Default octave (4–7).",
+          "name": "Octave"
+        }
+      },
+      "name": "Play RTTTL tone"
     }
   }
 }

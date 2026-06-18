@@ -434,8 +434,9 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             tasks.append(self.async_turn_on())
 
         mode = STATE_TO_AC_MODE[hvac_mode]
-        # If new hvac_mode is HVAC_MODE_FAN_ONLY and AirConditioner support "wind" or "fan" mode the AirConditioner
-        # new mode has to be "wind" or "fan"
+        # If new hvac_mode is HVAC_MODE_FAN_ONLY and
+        # AirConditioner supports "wind" or "fan" mode,
+        # the AirConditioner new mode has to be "wind" or "fan"
         if hvac_mode == HVACMode.FAN_ONLY:
             for fan_mode in (WIND, FAN):
                 if fan_mode in self.get_attribute_value(

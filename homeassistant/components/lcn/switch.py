@@ -200,7 +200,7 @@ class LcnRegulatorLockSwitch(LcnEntity, SwitchEntity):
         """Set switch state when LCN input object (command) is received."""
         if (
             not isinstance(input_obj, pypck.inputs.ModStatusVar)
-            or input_obj.get_var() != self.setpoint_variable
+            or input_obj.get_var() is not self.setpoint_variable
         ):
             return
         self._attr_available = True
