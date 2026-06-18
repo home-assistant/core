@@ -1,6 +1,6 @@
 """Tests for switchbot_cloud service."""
 
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from switchbot_api import SwitchBotAPI
@@ -89,9 +89,10 @@ async def test_device_not_in_registry_skips(
     mock_setup_webhook,
 ) -> None:
     """Test service skips when device_id is not found in device registry."""
-    with (
-        patch.object(SwitchBotAPI, "send_command") as mock_send_command,
-    ):
+    entry = await _setup(hass, mock_list_devices, mock_get_status)
+    with patch.object(
+        entry.runtime_data.api, "send_command", new_callable=AsyncMock
+    ) as mock_send:
         await hass.services.async_call(
             DOMAIN,
             AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,
@@ -101,4 +102,4 @@ async def test_device_not_in_registry_skips(
             },
             blocking=True,
         )
-    mock_send_command.assert_not_awaited()
+    mock_send.assert_not_awaited()
