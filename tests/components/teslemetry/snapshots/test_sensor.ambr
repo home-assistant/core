@@ -2530,7 +2530,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.teslemetry_command_quota-entry]
+# name: test_sensors[sensor.teslemetry_command_quota_used-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -2546,7 +2546,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.teslemetry_command_quota',
+    'entity_id': 'sensor.teslemetry_command_quota_used',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2554,7 +2554,7 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Teslemetry command quota',
+    'object_id_base': 'Teslemetry command quota used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -2562,7 +2562,7 @@
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Teslemetry command quota',
+    'original_name': 'Teslemetry command quota used',
     'platform': 'teslemetry',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -2572,30 +2572,30 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensors[sensor.teslemetry_command_quota-state]
+# name: test_sensors[sensor.teslemetry_command_quota_used-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Teslemetry command quota',
+      'friendly_name': 'Teslemetry command quota used',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.teslemetry_command_quota',
+    'entity_id': 'sensor.teslemetry_command_quota_used',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_sensors[sensor.teslemetry_command_quota-statealt]
+# name: test_sensors[sensor.teslemetry_command_quota_used-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Teslemetry command quota',
+      'friendly_name': 'Teslemetry command quota used',
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.teslemetry_command_quota',
+    'entity_id': 'sensor.teslemetry_command_quota_used',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

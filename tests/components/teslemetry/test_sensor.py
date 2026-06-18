@@ -97,7 +97,7 @@ async def test_sensors_streaming(
         }
     )
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.teslemetry_command_quota").state == "21.2"
+    assert hass.states.get("sensor.teslemetry_command_quota_used").state == "21.2"
 
     # Reload the entry
     await hass.config_entries.async_reload(entry.entry_id)
@@ -112,7 +112,7 @@ async def test_sensors_streaming(
     assert hass.states.get("sensor.test_time_to_full_charge").state == "unknown"
     assert hass.states.get("sensor.test_time_to_arrival").state == "unknown"
     assert hass.states.get("sensor.teslemetry_command_credits").state == "1980"
-    assert (quota_state := hass.states.get("sensor.teslemetry_command_quota"))
+    assert (quota_state := hass.states.get("sensor.teslemetry_command_quota_used"))
     assert quota_state.state == "21.2"
 
 
