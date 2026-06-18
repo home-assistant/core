@@ -11,10 +11,10 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create flow."""
 
-    return UnverVoltageRepairFlow()
+    return UnderVoltageRepairFlow()
 
 
-class UnverVoltageRepairFlow(RepairsFlow):
+class UnderVoltageRepairFlow(RepairsFlow):
     """Handler for issue fixing flow."""
 
     async def async_step_init(
