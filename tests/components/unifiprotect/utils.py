@@ -53,7 +53,6 @@ def reset_objects(bootstrap: Bootstrap):
     bootstrap.sensors = {}
     bootstrap.viewers = {}
     bootstrap.events = {}
-    bootstrap.doorlocks = {}
     bootstrap.chimes = {}
 
 

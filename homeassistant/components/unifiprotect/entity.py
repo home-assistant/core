@@ -122,7 +122,6 @@ _ALL_MODEL_TYPES = (
     ModelType.LIGHT,
     ModelType.SENSOR,
     ModelType.VIEWPORT,
-    ModelType.DOORLOCK,
     ModelType.CHIME,
 )
 
