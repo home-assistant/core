@@ -835,10 +835,7 @@ async def async_setup_entry(
                 hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
             )
 
-        # Publish immediately when there is no averaging window, or on an empty
-        # or missing telegram so connection state changes (unknown/unavailable)
-        # are reflected promptly instead of waiting for the next interval.
-        # Otherwise the periodic timer below publishes the averaged values.
+        # Publish immediately when not averaging, or on connection state change
         if not min_time_between_updates or not telegram:
             _publish_updates()
 
@@ -974,10 +971,7 @@ class DSMREntity(SensorEntity):
         self._value: StateType = None
         self._available: bool = True
 
-        # Fluctuating instantaneous measurements (flagged with `average`) are
-        # averaged over the update interval; all other sensors keep their last
-        # reading. Averaging only applies when an interval is configured; with a
-        # zero interval every telegram is published as-is.
+        # Only average when a non-zero update interval is configured
         self._is_averaged_sensor = entity_description.average and bool(
             entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
         )
@@ -1028,8 +1022,6 @@ class DSMREntity(SensorEntity):
             self._reset_average()
             return
 
-        # Non-averaged sensors report their latest value, so there is nothing to
-        # accumulate; calculate_value reads it from the stored telegram.
         if not self._is_averaged_sensor:
             return
 
@@ -1050,8 +1042,6 @@ class DSMREntity(SensorEntity):
             )
             return
 
-        # Keep only a running sum and count so memory stays constant regardless
-        # of how many telegrams arrive during the interval.
         self._value_sum += value
         self._value_count += 1
 
