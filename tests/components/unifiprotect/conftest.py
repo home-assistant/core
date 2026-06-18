@@ -31,7 +31,6 @@ from uiprotect.data import (
 )
 from uiprotect.websocket import WebsocketState
 
-from homeassistant.components.unifiprotect.camera import _QUALITY_BY_CHANNEL_ID
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.components.unifiprotect.utils import _async_unifi_mac_from_hass
 from homeassistant.const import (
@@ -59,9 +58,11 @@ def _public_rtsps_for(camera: Any) -> RTSPSStreams | None:
     camera with none is left streamless (``None``).
     """
     urls = {
-        _QUALITY_BY_CHANNEL_ID[channel.id]: channel.rtsps_url
+        channel.rtsps_quality: channel.rtsps_url
         for channel in camera.channels
-        if channel.is_rtsp_enabled and channel.id in _QUALITY_BY_CHANNEL_ID
+        if channel.is_rtsp_enabled
+        and not channel.is_package
+        and channel.rtsps_quality is not None
     }
     return RTSPSStreams(**urls) if urls else None
 

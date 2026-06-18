@@ -177,7 +177,7 @@ def _async_public_camera_entities(
                 continue
             # The first active quality becomes the default (enabled) entity;
             # inactive qualities are skipped so an enabled entity always streams.
-            if _QUALITY_BY_CHANNEL_ID.get(channel.id) in active:
+            if channel.rtsps_quality in active:
                 entities.append(
                     ProtectCamera(
                         data,
@@ -296,14 +296,6 @@ async def async_setup_entry(
 _DISABLE_FEATURE = CameraEntityFeature(0)
 _ENABLE_FEATURE = CameraEntityFeature.STREAM
 
-# Maps a private channel id to its public-API RTSPS quality name (the keys
-# consumed by ``RTSPSStreams.get_stream_url``). Keyed on channel id on purpose:
-# the camera unique_id is ``{mac}_{channel.id}`` in both the public and private
-# paths, so the use_public_api_streams toggle stays reversible without entity
-# churn. When the private API (and the toggle) are removed, switch to the
-# channel/quality names and migrate unique_ids.
-_QUALITY_BY_CHANNEL_ID = {0: "high", 1: "medium", 2: "low"}
-
 
 class ProtectCamera(ProtectDeviceEntity, Camera):
     """A Ubiquiti UniFi Protect Camera."""
@@ -329,8 +321,6 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         self._secure = secure
         self._disable_stream = disable_stream
         self._last_image: bytes | None = None
-        # None for the package channel (snapshot only) and any non-standard id
-        self._quality = _QUALITY_BY_CHANNEL_ID.get(channel.id)
         super().__init__(data, camera)
         device = self.device
 
@@ -366,12 +356,13 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
     @callback
     def _async_public_stream_source(self) -> str | None:
         """Return the public-API RTSPS stream URL (SRTP stripped for go2rtc)."""
-        if self._disable_stream or self.channel.is_package or self._quality is None:
+        quality = self.channel.rtsps_quality
+        if self._disable_stream or self.channel.is_package or quality is None:
             return None
         streams = self.data.get_rtsps_streams(self.device.id)
         if streams is None:
             return None
-        return streams.get_stream_url(self._quality, srtp=False)
+        return streams.get_stream_url(quality, srtp=False)
 
     @callback
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
