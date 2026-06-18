@@ -130,17 +130,22 @@ async def async_setup_entry(
         nonlocal added_devices
         new_devices_set, current_devices = coordinator.async_add_devices(added_devices)
         added_devices = current_devices
+        entities: list[AqvifySensor | AqvifyAggrSensor] = []
 
-        async_add_entities(
+        entities = [
             AqvifySensor(coordinator, device_key, description)
             for description in ENTITIES
             for device_key in new_devices_set
+        ]
+
+        entities.extend(
+            [
+                AqvifyAggrSensor(aggr_data_coordinator, device_key, description)
+                for description in ENTITIES_AGGR
+                for device_key in new_devices_set
+            ]
         )
-        async_add_entities(
-            AqvifyAggrSensor(aggr_data_coordinator, device_key, description)
-            for description in ENTITIES_AGGR
-            for device_key in new_devices_set
-        )
+        async_add_entities(entities)
 
     entry.async_on_unload(coordinator.async_add_listener(_async_add_new_devices))
     _async_add_new_devices()
