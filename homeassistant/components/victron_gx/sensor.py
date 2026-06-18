@@ -94,6 +94,7 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(device, metric, device_info, installation_id)
+        self._attr_native_unit_of_measurement = None
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
         # Enum sensors must not have a state class
         if self._attr_device_class == SensorDeviceClass.ENUM:
@@ -102,7 +103,6 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
             self._attr_state_class = METRIC_NATURE_TO_STATE_CLASS.get(
                 metric.metric_nature
             )
-        self._attr_native_unit_of_measurement = self._native_unit_of_measurement()
         self._attr_native_value = VictronSensor._normalize_value(metric.value)
 
     @callback
@@ -117,3 +117,8 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         if isinstance(value, VictronEnum):
             return value.id
         return value
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self._attr_native_unit_of_measurement = self._native_unit_of_measurement()
+        await super().async_added_to_hass()
