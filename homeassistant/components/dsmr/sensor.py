@@ -969,7 +969,6 @@ class DSMREntity(SensorEntity):
         self.entity_description = entity_description
         self._attr_device_class = device_class
         self._attr_native_unit_of_measurement = native_unit_of_measurement
-        self._entry = entry
         self.telegram: Telegram | None = telegram
         self._dsmr_version = entry.data[CONF_DSMR_VERSION]
         self._value: StateType = None
