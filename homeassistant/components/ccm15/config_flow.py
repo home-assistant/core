@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DEFAULT_TIMEOUT, DOMAIN
 
@@ -48,6 +49,7 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_HOST],
                 user_input[CONF_PORT],
                 DEFAULT_TIMEOUT,
+                client=get_async_client(self.hass),
                 password=user_input.get(CONF_PASSWORD) or None,
             )
             try:
@@ -83,6 +85,7 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
                 entry.data[CONF_HOST],
                 entry.data[CONF_PORT],
                 DEFAULT_TIMEOUT,
+                client=get_async_client(self.hass),
                 password=user_input.get(CONF_PASSWORD) or None,
             )
             try:

@@ -10,6 +10,7 @@ from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -43,7 +44,13 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             name=host,
             update_interval=datetime.timedelta(seconds=DEFAULT_INTERVAL),
         )
-        self._ccm15 = CCM15Device(host, port, DEFAULT_TIMEOUT, password=password)
+        self._ccm15 = CCM15Device(
+            host,
+            port,
+            DEFAULT_TIMEOUT,
+            client=get_async_client(hass),
+            password=password,
+        )
         self._host = host
 
     def get_host(self) -> str:
@@ -75,10 +82,8 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
-        if ac_index < 0 or ac_index >= len(self.data.devices):
-            # Network latency may return an empty or incomplete array
-            return None
-        return self.data.devices[ac_index]
+        # Slot indices can be sparse and reach >= 32, so look up by key.
+        return self.data.devices.get(ac_index)
 
     async def async_set_hvac_mode(
         self, ac_index: int, data: CCM15SlaveDevice, hvac_mode: HVACMode

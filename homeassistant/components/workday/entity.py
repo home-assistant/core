@@ -86,6 +86,13 @@ class BaseWorkdayEntity(Entity):
         """Set up first update."""
         self._update_state_and_setup_listener()
 
+    async def async_will_remove_from_hass(self) -> None:
+        """Cancel pending listener when entity is removed."""
+        await super().async_will_remove_from_hass()
+        if self.unsub:
+            self.unsub()
+            self.unsub = None
+
     @abstractmethod
     def update_data(self, now: datetime) -> None:
         """Update data."""
