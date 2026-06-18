@@ -63,9 +63,9 @@ async def setup_push_receiver(
             "app_version": "1.0",
             "device_id": "4d5e6f",
             "device_name": "Test",
-            "manufacturer": "Apple",
+            "manufacturer": "Home Assistant",
             "model": "mobile_app",
-            "os_name": "iOS",
+            "os_name": "Linux",
             "os_version": "5.0.6",
             "secret": "123abc",
             "supports_encryption": False,
@@ -122,6 +122,63 @@ async def setup_push_receiver(
 
     assert hass.services.has_service("notify", "mobile_app_test")
     assert hass.services.has_service("notify", "mobile_app_loaded_late")
+
+
+@pytest.fixture
+async def setup_apple_push_receiver(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, hass_admin_user: MockUser
+) -> None:
+    """Set up a mocked push receiver on an Apple device for Live Activity tests.
+
+    Live Activity routing only runs for Apple devices, so these tests need the
+    receiver registered as one instead of the generic ``setup_push_receiver``.
+    """
+    push_url = "https://mobile-push.home-assistant.dev/push"
+
+    now = datetime.now() + timedelta(hours=24)
+    iso_time = now.strftime("%Y-%m-%dT%H:%M:%SZ")
+
+    aioclient_mock.post(
+        push_url,
+        json={
+            "rateLimits": {
+                "attempts": 1,
+                "successful": 1,
+                "errors": 0,
+                "total": 1,
+                "maximum": 150,
+                "remaining": 149,
+                "resetsAt": iso_time,
+            }
+        },
+    )
+
+    entry = MockConfigEntry(
+        data={
+            "app_data": {"push_token": "PUSH_TOKEN", "push_url": push_url},
+            "app_id": "io.homeassistant.mobile_app",
+            "app_name": "mobile_app tests",
+            "app_version": "1.0",
+            "device_id": "4d5e6f",
+            "device_name": "Apple test device",
+            "manufacturer": "Apple",
+            "model": "mobile_app",
+            "os_name": "iOS",
+            "os_version": "5.0.6",
+            "secret": "123abc",
+            "supports_encryption": False,
+            "user_id": hass_admin_user.id,
+            "webhook_id": "mock-webhook_id",
+        },
+        domain=DOMAIN,
+        source="registration",
+        title="mobile_app Apple device test entry",
+        version=1,
+    )
+    entry.add_to_hass(hass)
+
+    await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
+    await hass.async_block_till_done()
 
 
 @pytest.fixture
@@ -863,7 +920,7 @@ async def test_send_message_local_push_exception(hass: HomeAssistant) -> None:
 
 
 async def test_notify_live_activity_uses_stored_token(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_apple_push_receiver
 ) -> None:
     """Test that live_update notifications include live_activity_token in the relay payload."""
     # Simulate the iOS app having registered a per-activity token via webhook.
@@ -995,7 +1052,7 @@ async def test_notify_live_activity_start(
 
 
 async def test_notify_live_activity_without_tag_uses_fcm(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_apple_push_receiver
 ) -> None:
     """Test that live_update without a tag falls through to normal FCM push."""
     await hass.services.async_call(
@@ -1026,7 +1083,7 @@ async def test_notify_live_activity_without_tag_uses_fcm(
 
 
 async def test_notify_normal_notification_ignores_live_activity_tokens(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_apple_push_receiver
 ) -> None:
     """Test that normal notifications don't route through live activity tokens."""
     # Store a live activity token — it should be ignored for non-live-activity pushes.
@@ -1170,7 +1227,7 @@ async def test_notify_clear_notification_allows_same_tag_to_start_again(
 
 
 async def test_notify_clear_notification_without_stored_token_passes_through(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_apple_push_receiver
 ) -> None:
     """Test clear_notification with no matching live activity is unmodified."""
     await hass.services.async_call(
@@ -1198,7 +1255,7 @@ async def test_notify_clear_notification_without_stored_token_passes_through(
 
 
 async def test_notify_clear_notification_without_tag_passes_through(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_apple_push_receiver
 ) -> None:
     """Test clear_notification without a tag never enters the live activity path."""
     hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
