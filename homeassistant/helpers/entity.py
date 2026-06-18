@@ -1485,7 +1485,7 @@ class Entity(
             #
             and not self._removed_from_registry
         ):
-            # Set the entity's state will to unavailable + BaseEntityAttribute.RESTORED: True
+            # Set the entity's state will to unavailable + ATTR_RESTORED: True
             self.registry_entry.write_unavailable_state(self.hass)
         else:
             self.hass.states.async_remove(self.entity_id, context=self._context)
