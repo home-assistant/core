@@ -1549,6 +1549,10 @@ NUMERIC_STATE_CONDITION_SCHEMA = vol.All(
     has_at_least_one_key(CONF_BELOW, CONF_ABOVE),
 )
 
+INPUT_ENTITY_ID = re.compile(
+    r"^input_(?:select|text|number|boolean|datetime)\.(?!.+__)(?!_)[\da-z_]+(?<!_)$"
+)
+
 STATE_CONDITION_BASE_SCHEMA = {
     **CONDITION_BASE_SCHEMA,
     vol.Required(CONF_CONDITION): "state",
@@ -1557,13 +1561,13 @@ STATE_CONDITION_BASE_SCHEMA = {
         vol.Lower, vol.Any(ENTITY_MATCH_ALL, ENTITY_MATCH_ANY)
     ),
     vol.Optional(CONF_ATTRIBUTE): str,
+    vol.Optional(CONF_FOR): positive_time_period_template,
 }
 
 STATE_CONDITION_STATE_SCHEMA = vol.Schema(
     {
         **STATE_CONDITION_BASE_SCHEMA,
         vol.Required(CONF_STATE): vol.Any(str, [str]),
-        vol.Optional(CONF_FOR): positive_time_period_template,
     }
 )
 
@@ -1585,7 +1589,22 @@ def STATE_CONDITION_SCHEMA(value: Any) -> dict[str, Any]:
     else:
         validated = STATE_CONDITION_STATE_SCHEMA(value)
 
-    return key_dependency("for", "state")(validated)
+    validated = key_dependency("for", "state")(validated)
+
+    if CONF_FOR in validated:
+        # `for` measures how long the entity has held its current state via
+        # last_changed, so it only supports a single literal state. It cannot
+        # track an attribute, a list of states, or a state resolved from
+        # another entity.
+        if CONF_ATTRIBUTE in validated:
+            raise vol.Invalid("Cannot use 'for' with an attribute")
+        state = validated[CONF_STATE]
+        if isinstance(state, list):
+            raise vol.Invalid("Cannot use 'for' with a list of states")
+        if INPUT_ENTITY_ID.match(state):
+            raise vol.Invalid("Cannot use 'for' with a state referencing an entity")
+
+    return validated
 
 
 TEMPLATE_CONDITION_SCHEMA = vol.Schema(
