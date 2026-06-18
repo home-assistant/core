@@ -9,7 +9,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.entity import get_supported_features
 from homeassistant.helpers.trigger import (
-    ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST,
+    ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR,
     EntityTargetStateTriggerBase,
     Trigger,
     TriggerConfig,
@@ -18,7 +18,7 @@ from homeassistant.helpers.trigger import (
 
 from .const import ATTR_ACTION, DOMAIN, HumidifierAction, HumidifierEntityFeature
 
-MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_FIRST_LAST.extend(
+MODE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA_WITH_BEHAVIOR.extend(
     {
         vol.Required(CONF_OPTIONS): {
             vol.Required(CONF_MODE): vol.All(cv.ensure_list, vol.Length(min=1), [str]),

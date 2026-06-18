@@ -55,6 +55,9 @@
     },
     "supervisor_not_connected": {
       "message": "Not connected with the supervisor / system too busy"
+    },
+    "supervisor_update_pending": {
+      "message": "Supervisor was out-of-date during onboarding. Update triggered, will retry when complete"
     }
   },
   "issues": {

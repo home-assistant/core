@@ -785,7 +785,9 @@ class CameraView(HomeAssistantView):
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (camera := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
+            )
 
         authenticated = (
             request[KEY_AUTHENTICATED]
@@ -793,11 +795,15 @@ class CameraView(HomeAssistantView):
         )
 
         if not authenticated:
-            # Attempt with invalid bearer token, raise unauthorized
-            # so ban middleware can handle it.
             if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
                 raise web.HTTPUnauthorized
-            # Invalid sigAuth or camera access token
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
             raise web.HTTPForbidden
 
         if not camera.is_on:

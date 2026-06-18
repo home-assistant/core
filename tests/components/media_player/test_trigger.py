@@ -15,9 +15,9 @@ from homeassistant.core import HomeAssistant
 from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
     assert_trigger_gated_by_labs_flag,
     assert_trigger_ignores_limit_entities_with_wrong_unit,
     assert_trigger_options_supported,
@@ -226,7 +226,7 @@ async def test_media_player_trigger_options_validation(
         ),
     ],
 )
-async def test_media_player_state_trigger_behavior_any(
+async def test_media_player_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
@@ -237,7 +237,7 @@ async def test_media_player_state_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test media player state trigger fires for any state change."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_media_players,
         trigger_target_config=trigger_target_config,
@@ -322,7 +322,7 @@ async def test_media_player_state_trigger_behavior_first(
         ),
     ],
 )
-async def test_media_player_state_trigger_behavior_last(
+async def test_media_player_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
@@ -332,8 +332,8 @@ async def test_media_player_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test media player state trigger fires on last entity change."""
-    await assert_trigger_behavior_last(
+    """Test media player state trigger fires when all entities have changed."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_media_players,
         trigger_target_config=trigger_target_config,
@@ -369,7 +369,7 @@ async def test_media_player_state_trigger_behavior_last(
         ),
     ],
 )
-async def test_media_player_volume_trigger_behavior_any(
+async def test_media_player_volume_trigger_behavior_each(
     hass: HomeAssistant,
     target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
@@ -380,7 +380,7 @@ async def test_media_player_volume_trigger_behavior_any(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test the media_player volume triggers fire when any entity matches."""
-    await assert_trigger_behavior_any(
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_media_players,
         trigger_target_config=trigger_target_config,
@@ -449,7 +449,7 @@ async def test_media_player_volume_trigger_behavior_first(
         ),
     ],
 )
-async def test_media_player_volume_trigger_behavior_last(
+async def test_media_player_volume_trigger_behavior_all(
     hass: HomeAssistant,
     target_media_players: dict[str, list[str]],
     trigger_target_config: dict,
@@ -460,7 +460,7 @@ async def test_media_player_volume_trigger_behavior_last(
     states: list[TriggerStateDescription],
 ) -> None:
     """Test volume crossed threshold trigger fires for last entity."""
-    await assert_trigger_behavior_last(
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_media_players,
         trigger_target_config=trigger_target_config,
