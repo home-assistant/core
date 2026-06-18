@@ -1405,3 +1405,34 @@ def async_get_config_entry(
             },
         )
     return config_entry
+
+
+@callback
+def get_single_loaded_config_entry(hass: HomeAssistant, domain: str) -> ConfigEntry:
+    """Retrieve single loaded config entry."""
+    config_entries = hass.config_entries.async_entries(
+        domain, include_ignore=False, include_disabled=False
+    )
+    if not config_entries:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_found_no_config_entry_for_domain",
+            translation_placeholders={"domain": domain},
+        )
+    if len(config_entries) > 1:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_found_multiple_config_entry_for_domain",
+            translation_placeholders={"domain": domain},
+        )
+    config_entry = config_entries[0]
+    if config_entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="service_config_entry_not_loaded",
+            translation_placeholders={
+                "domain": domain,
+                "entry_title": config_entry.title,
+            },
+        )
+    return config_entry
