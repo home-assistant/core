@@ -400,14 +400,18 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
+        sources: list[str] = []
         model = self.coordinator.model_name.split()[-1].upper()
         if model in MODELS_LINEIN_ONLY:
-            return [SOURCE_LINEIN]
-        if model in MODELS_TV_ONLY:
-            return [SOURCE_TV]
-        if model in MODELS_LINEIN_AND_TV:
-            return [SOURCE_LINEIN, SOURCE_TV]
-        return []
+            sources = [SOURCE_LINEIN]
+        elif model in MODELS_TV_ONLY:
+            sources = [SOURCE_TV]
+        elif model in MODELS_LINEIN_AND_TV:
+            sources = [SOURCE_LINEIN, SOURCE_TV]
+        sources.extend(
+            fav.title for fav in self.speaker.favorites if fav.title not in sources
+        )
+        return sources
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def media_play(self) -> None:

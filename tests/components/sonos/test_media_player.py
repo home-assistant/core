@@ -46,6 +46,7 @@ from homeassistant.components.media_player import (
 from homeassistant.components.sonos.const import (
     DOMAIN,
     MEDIA_TYPE_DIRECTORY,
+    SONOS_MEDIA_UPDATED,
     SOURCE_LINEIN,
     SOURCE_TV,
 )
@@ -87,10 +88,13 @@ from homeassistant.helpers.device_registry import (
     CONNECTION_UPNP,
     DeviceRegistry,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
 from .conftest import MockMusicServiceItem, MockSoCo, SoCoMockFactory, SonosMockEvent
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
@@ -1430,16 +1434,26 @@ async def test_media_get_queue(
     assert result == snapshot
 
 
+FAVORITE_TITLES = [
+    "66 - Watercolors",
+    "Les P'tits Bateaux",
+    "James Taylor Radio",
+    "1984",
+    "American Tall Tales",
+    "sample playlist",
+]
+
+
 @pytest.mark.parametrize(
-    ("speaker_model", "source_list", "select_source"),
+    ("speaker_model", "source_list"),
     [
-        ("Sonos Arc Ultra", [SOURCE_TV], True),
-        ("Sonos Arc", [SOURCE_TV], True),
-        ("Sonos Playbar", [SOURCE_TV], True),
-        ("Sonos Connect", [SOURCE_LINEIN], True),
-        ("Sonos Play:5", [SOURCE_LINEIN], True),
-        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV], True),
-        ("Sonos Era", None, False),
+        ("Sonos Arc Ultra", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Arc", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Playbar", [SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Connect", [SOURCE_LINEIN, *FAVORITE_TITLES]),
+        ("Sonos Play:5", [SOURCE_LINEIN, *FAVORITE_TITLES]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV, *FAVORITE_TITLES]),
+        ("Sonos Era", FAVORITE_TITLES),
     ],
     indirect=["speaker_model"],
 )
@@ -1447,14 +1461,63 @@ async def test_media_source_list(
     hass: HomeAssistant,
     async_autosetup_sonos,
     speaker_model: str,
-    source_list: list[str] | None,
-    select_source: bool,
+    source_list: list[str],
 ) -> None:
     """Test the mapping between the speaker model name and source_list."""
     state = hass.states.get("media_player.zone_a")
     assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == source_list
     features = MediaPlayerEntityFeature(state.attributes["supported_features"])
-    assert bool(features & MediaPlayerEntityFeature.SELECT_SOURCE) is select_source
+    assert features & MediaPlayerEntityFeature.SELECT_SOURCE
+
+
+@pytest.mark.parametrize(
+    ("speaker_model", "physical_sources"),
+    [
+        ("Model Name", []),
+        ("Sonos Arc Ultra", [SOURCE_TV]),
+        ("Sonos Amp", [SOURCE_LINEIN, SOURCE_TV]),
+    ],
+    indirect=["speaker_model"],
+)
+async def test_source_list_favorite_changes(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    async_autosetup_sonos,
+    speaker_model: str,
+    physical_sources: list[str],
+) -> None:
+    """Test source_list and SELECT_SOURCE update when favorites change at runtime."""
+    entity_id = "media_player.zone_a"
+    sonos_data = config_entry.runtime_data
+    favorites = sonos_data.favorites["test_household_id"]
+    saved_favorites = list(favorites)
+
+    # Clear all favorites
+    favorites._favorites.clear()
+    async_dispatcher_send(hass, SONOS_MEDIA_UPDATED, "RINCON_test")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    if physical_sources:
+        assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) == physical_sources
+        assert features & MediaPlayerEntityFeature.SELECT_SOURCE
+    else:
+        assert state.attributes.get(ATTR_INPUT_SOURCE_LIST) is None
+        assert not features & MediaPlayerEntityFeature.SELECT_SOURCE
+
+    # Restore favorites
+    favorites._favorites = saved_favorites
+    async_dispatcher_send(hass, SONOS_MEDIA_UPDATED, "RINCON_test")
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    features = MediaPlayerEntityFeature(state.attributes["supported_features"])
+    assert (
+        state.attributes.get(ATTR_INPUT_SOURCE_LIST)
+        == physical_sources + FAVORITE_TITLES
+    )
+    assert features & MediaPlayerEntityFeature.SELECT_SOURCE
 
 
 async def test_service_update_alarm(
