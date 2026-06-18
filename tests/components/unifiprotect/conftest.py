@@ -20,7 +20,6 @@ from uiprotect.data import (
     Camera,
     Chime,
     CloudAccount,
-    Doorlock,
     Light,
     Liveview,
     Sensor,
@@ -156,7 +155,6 @@ def bootstrap_fixture(nvr: NVR):
     data["viewers"] = []
     data["liveviews"] = []
     data["events"] = []
-    data["doorlocks"] = []
     data["chimes"] = []
     data["aiports"] = []
 
@@ -472,29 +470,6 @@ def sensor_all_fixture(sensor: Sensor):
     all_sensor.motion_settings.is_enabled = True
 
     return all_sensor
-
-
-@pytest.fixture(name="doorlock")
-def doorlock_fixture():
-    """Mock UniFi Protect Doorlock device."""
-
-    # disable pydantic validation so mocking can happen
-    Doorlock.model_config["validate_assignment"] = False
-
-    data = load_json_object_fixture("sample_doorlock.json", DOMAIN)
-    yield Doorlock.from_unifi_dict(**data)
-
-    Doorlock.model_config["validate_assignment"] = True
-
-
-@pytest.fixture
-def unadopted_doorlock(doorlock: Doorlock):
-    """Mock UniFi Protect Light device (unadopted)."""
-
-    no_doorlock = doorlock.model_copy()
-    no_doorlock.name = "Unadopted Lock"
-    no_doorlock.is_adopted = False
-    return no_doorlock
 
 
 @pytest.fixture
