@@ -332,18 +332,19 @@ async def async_get_flow_preview_state(
 def assert_state_and_attributes(
     hass: HomeAssistant,
     platform_setup: TemplatePlatformSetup,
-    expected_state: str,
+    expected_state: str | None = None,
     expected_attributes: ConfigType | None = None,
-) -> None:
+) -> State:
     """Assert expected state and attributes."""
 
     state = hass.states.get(platform_setup.entity_id)
     assert state is not None
-    assert state.state == expected_state
+    assert state.state == expected_state or expected_state is None
 
     expected_attributes = expected_attributes or {}
     for attribute, value in expected_attributes.items():
         assert state.attributes.get(attribute) == value
+    return state
 
 
 RESTORE_STATE_SAVED_ATTRIBUTES = {
@@ -373,11 +374,10 @@ def setup_mock_template_entity_restore_state(
     saved_state: str,
     saved_extra_data: ConfigType | None = None,
     saved_attributes: ConfigType | None = None,
-    built_in_attributes: ConfigType | None = None,
 ) -> None:
     """Setup an entity and verify state is restored."""
     saved_attributes = {
-        **(built_in_attributes or RESTORE_STATE_SAVED_ATTRIBUTES),
+        **RESTORE_STATE_SAVED_ATTRIBUTES,
         **(saved_attributes or {}),
     }
 
