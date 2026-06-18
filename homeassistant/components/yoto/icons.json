@@ -8,6 +8,20 @@
         "default": "mdi:headphones"
       }
     },
+    "number": {
+      "day_mode_brightness": {
+        "default": "mdi:brightness-7"
+      },
+      "day_mode_max_volume": {
+        "default": "mdi:volume-high"
+      },
+      "night_mode_brightness": {
+        "default": "mdi:brightness-4"
+      },
+      "night_mode_max_volume": {
+        "default": "mdi:volume-high"
+      }
+    },
     "sensor": {
       "card_insertion_state": {
         "default": "mdi:card-bulleted-outline",
