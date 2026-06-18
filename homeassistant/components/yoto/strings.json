@@ -45,6 +45,20 @@
         "name": "Headphones"
       }
     },
+    "number": {
+      "day_mode_brightness": {
+        "name": "Day mode brightness"
+      },
+      "day_mode_max_volume": {
+        "name": "Day mode maximum volume"
+      },
+      "night_mode_brightness": {
+        "name": "Night mode brightness"
+      },
+      "night_mode_max_volume": {
+        "name": "Night mode maximum volume"
+      }
+    },
     "select": {
       "day_mode_color": {
         "name": "Day mode color",

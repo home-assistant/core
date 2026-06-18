@@ -372,7 +372,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN20CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_20_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -380,7 +380,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN15CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_15_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -388,7 +388,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN10CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_10_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -396,7 +396,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN5CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_5_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",

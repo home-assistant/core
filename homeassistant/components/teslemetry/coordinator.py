@@ -129,7 +129,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.api = api
         self.data = flatten(product)
-        self.last_active = datetime.now()
+        self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
