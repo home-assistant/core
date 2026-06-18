@@ -29,6 +29,11 @@ METRIC_TYPE_TO_DEVICE_CLASS: dict[MetricType, NumberDeviceClass] = {
     MetricType.FREQUENCY: NumberDeviceClass.FREQUENCY,
     MetricType.ELECTRIC_STORAGE_PERCENTAGE: NumberDeviceClass.BATTERY,
     MetricType.TEMPERATURE: NumberDeviceClass.TEMPERATURE,
+    MetricType.HUMIDITY: NumberDeviceClass.HUMIDITY,
+    MetricType.PRESSURE: NumberDeviceClass.PRESSURE,
+    MetricType.DISTANCE: NumberDeviceClass.DISTANCE,
+    MetricType.POWER_FACTOR: NumberDeviceClass.POWER_FACTOR,
+    MetricType.COST: NumberDeviceClass.MONETARY,
     MetricType.SPEED: NumberDeviceClass.SPEED,
     MetricType.LIQUID_VOLUME: NumberDeviceClass.VOLUME_STORAGE,
     MetricType.DURATION: NumberDeviceClass.DURATION,
@@ -71,8 +76,8 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
     ) -> None:
         """Initialize the number entity."""
         super().__init__(device, metric, device_info, installation_id)
+        self._attr_native_unit_of_measurement = None
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
-        self._attr_native_unit_of_measurement = self._native_unit_of_measurement()
         self._attr_native_value = metric.value
         if metric.min_value is not None:
             self._attr_native_min_value = metric.min_value
@@ -85,6 +90,11 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
     def _on_update_cb(self, value: Any) -> None:
         self._attr_native_value = value
         self.async_write_ha_state()
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+        self._attr_native_unit_of_measurement = self._native_unit_of_measurement()
+        await super().async_added_to_hass()
 
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""

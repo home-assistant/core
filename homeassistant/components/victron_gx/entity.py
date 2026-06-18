@@ -62,6 +62,9 @@ class VictronBaseEntity(Entity):
         )
 
     def _native_unit_of_measurement(self) -> str | None:
+        if self._metric.metric_type == MetricType.COST:
+            return self.hass.config.currency
+
         unit_of_measurement = self._metric.unit_of_measurement
         # We need to provide a native unit in three cases:
         if (
