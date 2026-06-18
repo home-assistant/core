@@ -181,7 +181,7 @@ class StateTranslated:
 
         state_value = state.state
         domain = state.domain
-        device_class = state.attributes.get("device_class")
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         entry = er.async_get(self._hass).async_get(entity_id)
         platform = None if entry is None else entry.platform
         translation_key = None if entry is None else entry.translation_key
@@ -217,7 +217,7 @@ class StateAttrTranslated:
             return attr_value
 
         domain = state.domain
-        device_class = state.attributes.get("device_class")
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         entry = er.async_get(self._hass).async_get(entity_id)
         platform = None if entry is None else entry.platform
         translation_key = None if entry is None else entry.translation_key
