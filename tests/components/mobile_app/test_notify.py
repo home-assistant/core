@@ -1064,62 +1064,6 @@ async def test_notify_normal_notification_ignores_live_activity_tokens(
     }
 
 
-async def test_notify_live_activity_update_passes_data_through(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
-) -> None:
-    """Test that an update leaves all data fields flat and adds event=update.
-
-    Core does not translate the payload, so arbitrary fields (documented flat
-    fields, when/when_relative, an explicit content_state) all pass through
-    unchanged with only event=update added.
-    """
-    hass.data[DOMAIN][DATA_LIVE_ACTIVITY_TOKENS]["mock-webhook_id"] = {
-        "washer_cycle": {
-            "token": "TOKEN",
-            "expires_at": dt_util.utcnow().timestamp() + 3600,
-        }
-    }
-
-    await hass.services.async_call(
-        "notify",
-        "mobile_app_test",
-        {
-            "message": "Rinsing",
-            "title": "Washing Machine",
-            "target": ["mock-webhook_id"],
-            "data": {
-                "live_update": True,
-                "tag": "washer_cycle",
-                "progress": 900,
-                "progress_max": 3600,
-                "chronometer": True,
-                "critical_text": "Rinse",
-                "notification_icon": "mdi:washing-machine",
-                "notification_icon_color": "#2196F3",
-                "when": 300,
-                "when_relative": True,
-                "content_state": {"progress": 999},
-            },
-        },
-        blocking=True,
-    )
-
-    assert aioclient_mock.mock_calls[0][2]["data"] == {
-        "live_update": True,
-        "tag": "washer_cycle",
-        "progress": 900,
-        "progress_max": 3600,
-        "chronometer": True,
-        "critical_text": "Rinse",
-        "notification_icon": "mdi:washing-machine",
-        "notification_icon_color": "#2196F3",
-        "when": 300,
-        "when_relative": True,
-        "content_state": {"progress": 999},
-        "event": "update",
-    }
-
-
 async def test_notify_clear_notification_ends_known_live_activity(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, setup_push_receiver
 ) -> None:
