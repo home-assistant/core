@@ -144,13 +144,13 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Wolf Platform."""
-    for coordinator in config_entry.runtime_data.values():
-        async_add_entities(
-            WolfLinkSensor(coordinator, parameter, description)
-            for parameter in coordinator.parameters
-            for description in SENSOR_DESCRIPTIONS
-            if description.supported_fn(parameter)
-        )
+    async_add_entities(
+        WolfLinkSensor(coordinator, parameter, description)
+        for coordinator in config_entry.runtime_data.values()
+        for parameter in coordinator.parameters
+        for description in SENSOR_DESCRIPTIONS
+        if description.supported_fn(parameter)
+    )
 
 
 class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):

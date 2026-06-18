@@ -110,8 +110,8 @@ def _migrate_v1_to_v2(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """Migrate a v1 device-oriented entry to v2.2 hub.
 
     Multiple v1 entries for the same account are merged into a single hub
-    entry — the surviving entry is reattached to all device/entity registry
-    rows, and the duplicates are removed.
+    entry — devices and entities are reattached to the surviving entry first,
+    then the duplicate entry is scheduled for removal.
     """
     username = entry.data[CONF_USERNAME]
     target_unique_id = username.lower()
@@ -127,15 +127,10 @@ def _migrate_v1_to_v2(hass: HomeAssistant, entry: ConfigEntry) -> None:
     )
     if sibling is not None:
         # An entry for this account already migrated — reattach our device
-        # and drop ourselves.
+        # to it, then schedule ourselves for removal. We can't await the
+        # removal here because we're inside async_migrate_entry; the entry
+        # is still mid-setup and async_remove waits for setup to finish.
         _reattach_device_to_hub(hass, sibling, entry, legacy_device_id)
-        hass.config_entries.async_update_entry(
-            entry,
-            data={CONF_USERNAME: username, CONF_PASSWORD: entry.data[CONF_PASSWORD]},
-            version=2,
-            minor_version=2,
-        )
-        hass.async_create_task(hass.config_entries.async_reload(sibling.entry_id))
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return
 

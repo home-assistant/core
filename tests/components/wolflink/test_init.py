@@ -1,16 +1,24 @@
 """Test the Wolf SmartSet Service."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from httpx import RequestError
+import pytest
+from wolf_comm.models import Device
+from wolf_comm.token_auth import InvalidAuth
+from wolf_comm.wolf_client import FetchFailed, ParameterReadError
 
 from homeassistant.components.wolflink.const import DOMAIN, MANUFACTURER
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import setup_integration
+
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 LEGACY_CONFIG = {
     "device_name": "test-device",
@@ -32,22 +40,53 @@ def _assert_v2_hub(entry: MockConfigEntry) -> None:
     }
 
 
-async def test_migration_v1_1_to_v2(
-    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+@pytest.mark.parametrize(
+    ("stored_unique_id", "minor_version"),
+    [
+        pytest.param(1234, 1, id="v1.1_int_unique_id"),
+        pytest.param("1234", 2, id="v1.2_str_unique_id"),
+    ],
+)
+async def test_migration_v1_to_v2(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    stored_unique_id: int | str,
+    minor_version: int,
 ) -> None:
-    """Test migration from v1.1 (int unique_id, device-oriented) to v2 hub."""
+    """Test full v1 → v2.2 migration: entry, device, and entity reattachment.
+
+    Covers v1.1 (int unique_id) and v1.2 (str unique_id) starting points,
+    pre-existing devices/entities (including disabled-by-config-entry rows
+    that must be re-flagged USER/DEVICE), and unique_id rewriting.
+    """
     config_entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=1234, data=LEGACY_CONFIG, version=1, minor_version=1
+        domain=DOMAIN,
+        unique_id=stored_unique_id,
+        data=LEGACY_CONFIG,
+        version=1,
+        minor_version=minor_version,
     )
     config_entry.add_to_hass(hass)
 
-    device_id = device_registry.async_get_or_create(
+    device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, 1234)},
+        identifiers={(DOMAIN, stored_unique_id)},
         configuration_url="https://www.wolf-smartset.com/",
         manufacturer=MANUFACTURER,
         name="test-device",
-    ).id
+    )
+    device_registry.async_update_device(
+        device.id, disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY
+    )
+    entity = entity_registry.async_get_or_create(
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id="1234:6005200000",
+        config_entry=config_entry,
+        device_id=device.id,
+        disabled_by=er.RegistryEntryDisabler.CONFIG_ENTRY,
+    )
 
     with patch(
         "homeassistant.components.wolflink.WolfClient",
@@ -60,18 +99,27 @@ async def test_migration_v1_1_to_v2(
 
     _assert_v2_hub(config_entry)
 
-    # The device-registry identifier was rewritten to a string.
-    device = device_registry.async_get(device_id)
-    assert device is not None
-    assert device.identifiers == {(DOMAIN, "1234")}
-    assert device.config_entries == {config_entry.entry_id}
+    # Device identifier was rewritten to a string and remains attached to
+    # the (now-migrated) hub entry; CONFIG_ENTRY disabled_by was rewritten
+    # to USER (device) / DEVICE (entity) so disabled state survives.
+    migrated_device = device_registry.async_get(device.id)
+    assert migrated_device is not None
+    assert migrated_device.identifiers == {(DOMAIN, "1234")}
+    assert migrated_device.config_entries == {config_entry.entry_id}
+    assert migrated_device.disabled_by is dr.DeviceEntryDisabler.USER
+
+    migrated_entity = entity_registry.async_get(entity.entity_id)
+    assert migrated_entity is not None
+    assert migrated_entity.config_entry_id == config_entry.entry_id
+    assert migrated_entity.config_subentry_id is None
+    assert migrated_entity.disabled_by is er.RegistryEntryDisabler.DEVICE
 
 
-async def test_migration_v1_2_to_v2(hass: HomeAssistant) -> None:
-    """Test migration from v1.2 (str unique_id, device-oriented) to v2.
+async def test_migration_v1_2_to_v2_without_device(hass: HomeAssistant) -> None:
+    """Test migration when the device-registry row is missing.
 
-    Also exercises the path where the device-registry row is missing
-    (e.g. the integration never finished its first setup).
+    This happens when the integration never finished its first setup —
+    the migration must still bump the entry to v2.2 cleanly.
     """
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -92,50 +140,6 @@ async def test_migration_v1_2_to_v2(hass: HomeAssistant) -> None:
         await hass.config_entries.async_setup(config_entry.entry_id)
 
     _assert_v2_hub(config_entry)
-
-
-async def test_migration_v1_reattaches_entities(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test v1 migration moves existing entities onto the hub entry."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1234",
-        data=LEGACY_CONFIG,
-        version=1,
-        minor_version=2,
-    )
-    config_entry.add_to_hass(hass)
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1234")},
-        manufacturer=MANUFACTURER,
-        name="test-device",
-    )
-    entity = entity_registry.async_get_or_create(
-        domain="sensor",
-        platform=DOMAIN,
-        unique_id="1234:6005200000",
-        config_entry=config_entry,
-        device_id=device.id,
-    )
-
-    with patch(
-        "homeassistant.components.wolflink.WolfClient",
-        autospec=True,
-    ) as wolf_mock:
-        wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
-            "Unable to connect"
-        )
-        await hass.config_entries.async_setup(config_entry.entry_id)
-
-    updated = entity_registry.async_get(entity.entity_id)
-    assert updated is not None
-    assert updated.config_entry_id == config_entry.entry_id
-    assert updated.config_subentry_id is None
 
 
 async def test_migration_skips_entity_from_other_entry(
@@ -183,57 +187,6 @@ async def test_migration_skips_entity_from_other_entry(
     assert (
         entity_registry.async_get(other_entity.entity_id).config_entry_id
         == other_entry.entry_id
-    )
-
-
-async def test_migration_v1_disabled_by_fixup(
-    hass: HomeAssistant,
-    device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test CONFIG_ENTRY-disabled rows are converted to USER/DEVICE on migration."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="1234",
-        data=LEGACY_CONFIG,
-        version=1,
-        minor_version=2,
-    )
-    config_entry.add_to_hass(hass)
-
-    device = device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id,
-        identifiers={(DOMAIN, "1234")},
-        manufacturer=MANUFACTURER,
-        name="test-device",
-    )
-    device_registry.async_update_device(
-        device.id, disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY
-    )
-    entity = entity_registry.async_get_or_create(
-        domain="sensor",
-        platform=DOMAIN,
-        unique_id="1234:6005200000",
-        config_entry=config_entry,
-        device_id=device.id,
-        disabled_by=er.RegistryEntryDisabler.CONFIG_ENTRY,
-    )
-
-    with patch(
-        "homeassistant.components.wolflink.WolfClient",
-        autospec=True,
-    ) as wolf_mock:
-        wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
-            "Unable to connect"
-        )
-        await hass.config_entries.async_setup(config_entry.entry_id)
-
-    assert (
-        device_registry.async_get(device.id).disabled_by is dr.DeviceEntryDisabler.USER
-    )
-    assert (
-        entity_registry.async_get(entity.entity_id).disabled_by
-        is er.RegistryEntryDisabler.DEVICE
     )
 
 
@@ -313,7 +266,7 @@ async def test_setup_no_devices_on_account(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data == {}
+    assert not hass.states.async_entity_ids("sensor")
 
 
 async def test_migrate_future_version_aborts(hass: HomeAssistant) -> None:
@@ -352,4 +305,112 @@ async def test_setup_fetch_parameters_fails(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert mock_config_entry.runtime_data == {}
+    assert not hass.states.async_entity_ids("sensor")
+
+
+async def test_system_share_id_forwarded_to_state_list(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test system_share_id is forwarded to fetch_system_state_list for shared systems."""
+    mock_wolflink.fetch_system_list.return_value = [
+        Device(1234, 5678, "test-device", system_share_id=9999),
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_wolflink.fetch_system_state_list.assert_called_with(1234, 5678, 9999)
+
+
+async def test_update_skipped_when_device_offline(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an offline device makes its entities unavailable.
+
+    On the next successful poll, parameters must be re-fetched because the
+    cached value IDs may have rotated while the device was unreachable.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    mock_wolflink.fetch_parameters.reset_mock()
+    mock_wolflink.fetch_system_state_list.return_value = False
+
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.test_device_energy_parameter").state
+        == STATE_UNAVAILABLE
+    )
+
+    mock_wolflink.fetch_system_state_list.return_value = True
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_wolflink.fetch_parameters.call_count == 1
+    assert hass.states.get("sensor.test_device_energy_parameter").state == "183"
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        RequestError("boom"),
+        FetchFailed("boom"),
+        InvalidAuth,
+    ],
+)
+async def test_update_failure_modes(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+) -> None:
+    """Test recoverable update errors mark entities as unavailable."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_wolflink.fetch_value.side_effect = side_effect
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.test_device_energy_parameter").state
+        == STATE_UNAVAILABLE
+    )
+
+
+async def test_parameter_read_error_triggers_refetch(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test ParameterReadError flags parameters for re-fetch on the next cycle."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_wolflink.fetch_parameters.reset_mock()
+    mock_wolflink.fetch_value.side_effect = ParameterReadError("stale")
+
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.test_device_energy_parameter").state
+        == STATE_UNAVAILABLE
+    )
+
+    mock_wolflink.fetch_value.side_effect = None
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_wolflink.fetch_parameters.call_count == 1
+    assert hass.states.get("sensor.test_device_energy_parameter").state == "183"

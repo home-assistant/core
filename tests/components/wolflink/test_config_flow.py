@@ -92,15 +92,11 @@ async def test_no_devices_abort(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_devices"
 
 
-async def test_already_configured_aborts(hass: HomeAssistant) -> None:
+async def test_already_configured_aborts(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
     """Test entries with the same username can't be configured twice."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        unique_id="test-username",
-        data=CONFIG,
-        version=2,
-        minor_version=2,
-    ).add_to_hass(hass)
+    mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}, data=INPUT_CONFIG
