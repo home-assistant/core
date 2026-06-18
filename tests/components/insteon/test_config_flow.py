@@ -16,7 +16,7 @@ from homeassistant.components.insteon.config_flow import (
 )
 from homeassistant.components.insteon.const import CONF_HUB_VERSION, DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE, CONF_HOST
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -24,10 +24,13 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
 from .const import (
     MOCK_DEVICE,
+    MOCK_HOSTNAME,
+    MOCK_PORT,
     MOCK_USER_INPUT_HUB_V1,
     MOCK_USER_INPUT_HUB_V2,
     MOCK_USER_INPUT_PLM,
     MOCK_USER_INPUT_PLM_MANUAL,
+    MOCK_USERNAME,
     PATCH_ASYNC_SETUP_ENTRY,
     PATCH_CONNECTION,
     PATCH_USB_LIST,
@@ -318,3 +321,91 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+@pytest.mark.parametrize(
+    ("entry_data", "step_id", "user_input", "expected_data"),
+    [
+        pytest.param(
+            {**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
+            STEP_HUB_V2,
+            {**MOCK_USER_INPUT_HUB_V2, CONF_HOST: "2.3.4.5"},
+            {**MOCK_USER_INPUT_HUB_V2, CONF_HOST: "2.3.4.5", CONF_HUB_VERSION: 2},
+            id="hub_v2",
+        ),
+        pytest.param(
+            {**MOCK_USER_INPUT_HUB_V1, CONF_HUB_VERSION: 1},
+            STEP_HUB_V1,
+            {**MOCK_USER_INPUT_HUB_V1, CONF_HOST: "2.3.4.5"},
+            {**MOCK_USER_INPUT_HUB_V1, CONF_HOST: "2.3.4.5", CONF_HUB_VERSION: 1},
+            id="hub_v1",
+        ),
+        pytest.param(
+            MOCK_USER_INPUT_PLM,
+            STEP_PLM,
+            {CONF_DEVICE: "/dev/ttyUSB0"},
+            {CONF_DEVICE: "/dev/ttyUSB0"},
+            id="plm",
+        ),
+    ],
+)
+async def test_reconfigure(
+    hass: HomeAssistant,
+    entry_data: dict[str, Any],
+    step_id: str,
+    user_input: dict[str, Any],
+    expected_data: dict[str, Any],
+) -> None:
+    """Test reconfiguring the modem connection updates the existing entry."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == step_id
+
+    result2, mock_setup_entry = await _device_form(
+        hass, result["flow_id"], mock_successful_connection, user_input
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert config_entry.data == expected_data
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_reconfigure_hub_keeps_existing_values(hass: HomeAssistant) -> None:
+    """Test the reconfigure form is pre-filled with the current connection info."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2}
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == STEP_HUB_V2
+
+    defaults = {
+        field["name"]: field.get("default") for field in convert(result["data_schema"])
+    }
+    assert defaults[CONF_HOST] == MOCK_HOSTNAME
+    assert defaults[CONF_PORT] == MOCK_PORT
+    assert defaults[CONF_USERNAME] == MOCK_USERNAME
+
+
+async def test_reconfigure_failed_connection(hass: HomeAssistant) -> None:
+    """Test a failed connection while reconfiguring keeps the existing entry."""
+    entry_data = {**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2}
+    config_entry = MockConfigEntry(domain=DOMAIN, data=entry_data)
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reconfigure_flow(hass)
+
+    result2, _ = await _device_form(
+        hass,
+        result["flow_id"],
+        mock_failed_connection,
+        {**MOCK_USER_INPUT_HUB_V2, CONF_HOST: "2.3.4.5"},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["errors"] == {"base": "cannot_connect"}
+    assert config_entry.data == entry_data

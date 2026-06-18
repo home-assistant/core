@@ -8,6 +8,7 @@ from pyinsteon import async_connect
 from homeassistant.components import usb
 from homeassistant.config_entries import (
     DEFAULT_DISCOVERY_UNIQUE_ID,
+    SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -62,6 +63,25 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         modem_types = [STEP_PLM, STEP_HUB_V1, STEP_HUB_V2]
         return self.async_show_menu(step_id="user", menu_options=modem_types)
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Reconfigure the connection to the existing Insteon modem."""
+        data = self._get_reconfigure_entry().data
+        if CONF_DEVICE in data:
+            return await self.async_step_plm()
+        if data[CONF_HUB_VERSION] == 1:
+            return await self.async_step_hubv1()
+        return await self.async_step_hubv2()
+
+    def _async_finish_flow(self, data: dict[str, Any]) -> ConfigFlowResult:
+        """Update the existing entry when reconfiguring, otherwise create one."""
+        if self.source == SOURCE_RECONFIGURE:
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=data
+            )
+        return self.async_create_entry(title="", data=data)
+
     async def async_step_plm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -71,9 +91,13 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             if user_input[CONF_DEVICE] == PLM_MANUAL:
                 return await self.async_step_plm_manually()
             if await _async_connect(**user_input):
-                return self.async_create_entry(title="", data=user_input)
+                return self._async_finish_flow(user_input)
             errors["base"] = "cannot_connect"
-        schema_defaults = user_input if user_input is not None else {}
+            schema_defaults = user_input
+        elif self.source == SOURCE_RECONFIGURE:
+            schema_defaults = dict(self._get_reconfigure_entry().data)
+        else:
+            schema_defaults = {}
         ports = await async_get_usb_ports(self.hass)
         if not ports:
             return await self.async_step_plm_manually()
@@ -88,10 +112,13 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Set up the PLM modem type manually."""
         errors = {}
-        schema_defaults = {}
+        if self.source == SOURCE_RECONFIGURE:
+            schema_defaults = dict(self._get_reconfigure_entry().data)
+        else:
+            schema_defaults = {}
         if user_input is not None:
             if await _async_connect(**user_input):
-                return self.async_create_entry(title="", data=user_input)
+                return self._async_finish_flow(user_input)
             errors["base"] = "cannot_connect"
             schema_defaults = user_input
         data_schema = build_plm_manual_schema(**schema_defaults)
@@ -119,10 +146,15 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             user_input[CONF_HUB_VERSION] = hub_version
             if await _async_connect(**user_input):
-                return self.async_create_entry(title="", data=user_input)
+                return self._async_finish_flow(user_input)
             user_input.pop(CONF_HUB_VERSION)
             errors["base"] = "cannot_connect"
-        schema_defaults = user_input if user_input is not None else self.discovered_conf
+            schema_defaults = user_input
+        elif self.source == SOURCE_RECONFIGURE:
+            schema_defaults = dict(self._get_reconfigure_entry().data)
+            schema_defaults.pop(CONF_HUB_VERSION, None)
+        else:
+            schema_defaults = self.discovered_conf
         data_schema = build_hub_schema(hub_version=hub_version, **schema_defaults)
         step_id = STEP_HUB_V2 if hub_version == 2 else STEP_HUB_V1
         return self.async_show_form(
