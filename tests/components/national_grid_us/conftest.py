@@ -21,6 +21,12 @@ MOCK_ACCOUNT_ID_2 = "0987654321"
 MOCK_SERVICE_POINT = "SP001"
 MOCK_SERVICE_POINT_2 = "SP002"
 
+# Device names embed "<account_id>-<service_point>" so entity_ids carry both.
+ENTITY_ELECTRIC_USAGE = "sensor.electric_meter_1234567890_sp001_last_billing_usage"
+ENTITY_ELECTRIC_COST = "sensor.electric_meter_1234567890_sp001_last_billing_cost"
+ENTITY_GAS_USAGE = "sensor.gas_meter_1234567890_sp002_last_billing_usage"
+ENTITY_GAS_COST = "sensor.gas_meter_1234567890_sp002_last_billing_cost"
+
 
 @pytest.fixture
 def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
@@ -78,10 +84,14 @@ def mock_usages() -> list[dict]:
 
 
 def mock_costs() -> list[dict]:
-    """Return mock energy costs."""
+    """Return mock energy costs.
+
+    The API returns "month" as 1-12 (not year-aware) and "date" as the
+    year-aware YYYY-MM-DD billing date.
+    """
     return [
-        {"fuelType": "ELECTRIC", "month": 202501, "amount": 120.50},
-        {"fuelType": "GAS", "month": 202501, "amount": 45.00},
+        {"fuelType": "ELECTRIC", "month": 1, "date": "2025-01-01", "amount": 120.50},
+        {"fuelType": "GAS", "month": 1, "date": "2025-01-01", "amount": 45.00},
     ]
 
 

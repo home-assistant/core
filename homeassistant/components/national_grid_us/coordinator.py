@@ -199,4 +199,7 @@ class NationalGridDataUpdateCoordinator(
         filtered = [c for c in costs if c["fuelType"] == fuel_type]
         if not filtered:
             return None
-        return max(filtered, key=lambda c: c["month"])
+        # "month" is 1-12 only (not year-aware), so sorting by it returns the
+        # previous year's December over a more recent January. The "date" field
+        # is in YYYY-MM-DD format and sorts correctly across year boundaries.
+        return max(filtered, key=lambda c: c["date"])

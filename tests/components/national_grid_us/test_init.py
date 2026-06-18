@@ -7,7 +7,7 @@ from py_nationalgrid.exceptions import CannotConnectError, InvalidAuthError
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
-from .conftest import make_api_mock
+from .conftest import ENTITY_ELECTRIC_COST, ENTITY_ELECTRIC_USAGE, make_api_mock
 
 from tests.common import MockConfigEntry
 
@@ -96,10 +96,10 @@ async def test_sensor_missing_usage_data(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("sensor.electric_meter_last_billing_usage")
+    state = hass.states.get(ENTITY_ELECTRIC_USAGE)
     assert state is not None
     assert state.state == "unknown"
 
-    state = hass.states.get("sensor.electric_meter_last_billing_cost")
+    state = hass.states.get(ENTITY_ELECTRIC_COST)
     assert state is not None
     assert state.state == "unknown"

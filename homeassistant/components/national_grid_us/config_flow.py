@@ -55,6 +55,9 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected error")
                 errors["base"] = "unknown"
             else:
+                if not self._accounts:
+                    _LOGGER.error("Login succeeded but no accounts returned")
+                    return self.async_abort(reason="no_accounts_found")
                 await self.async_set_unique_id(slugify(self._username))
                 self._abort_if_unique_id_configured()
 

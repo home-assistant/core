@@ -106,6 +106,20 @@ async def test_user_step_errors(
     assert result["errors"]["base"] == expected_error
 
 
+async def test_user_step_no_accounts_aborts(hass: HomeAssistant) -> None:
+    """Test user step aborts when login succeeds but no accounts are returned."""
+    client = _mock_client([])
+    with patch(PATCH_CLIENT, return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_accounts_found"
+
+
 async def test_select_accounts_step(hass: HomeAssistant) -> None:
     """Test selecting accounts creates entry."""
     client = _mock_client(

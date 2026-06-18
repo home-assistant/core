@@ -39,8 +39,14 @@ class NationalGridEntity(CoordinatorEntity[NationalGridDataUpdateCoordinator]):
 
         return DeviceInfo(
             identifiers={(DOMAIN, self._service_point_number)},
+            via_device=(DOMAIN, meter_data.account_id),
             serial_number=str(meter["meterNumber"]),
-            name=f"{fuel_type.title()} Meter",
+            # account_id + service point keeps the name unique across accounts
+            # that may reuse the same service point number.
+            name=(
+                f"{fuel_type.title()} Meter "
+                f"{meter_data.account_id}-{self._service_point_number}"
+            ),
             manufacturer="National Grid",
             model=f"{fuel_type.title()} {'AMI Smart Meter' if meter['hasAmiSmartMeter'] else 'Meter'}",
             configuration_url="https://myaccount.nationalgrid.com",

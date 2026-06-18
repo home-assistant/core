@@ -8,5 +8,5 @@
   "iot_class": "cloud_polling",
   "loggers": ["py_nationalgrid"],
   "quality_scale": "bronze",
-  "requirements": ["py-nationalgrid==0.5.1"]
+  "requirements": ["py-nationalgrid==0.6.4"]
 }
