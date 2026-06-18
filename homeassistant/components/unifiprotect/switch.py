@@ -636,7 +636,7 @@ class ProtectRelayOutputSwitch(SwitchEntity):
             self._attr_available = False
             self._attr_is_on = None
             return
-        self._attr_available = self.data.last_update_success
+        self._attr_available = self.data.last_public_update_success
         self._attr_is_on = (
             _RELAY_STATE_MAP.get(output.state) if output.state is not None else None
         )
