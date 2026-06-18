@@ -71,8 +71,8 @@ class IsraelRailDataUpdateCoordinator(DataUpdateCoordinator[list[DataConnection]
                 self._train_schedule.query,
                 self._start,
                 self._destination,
-                datetime.now().strftime("%Y-%m-%d"),
-                datetime.now().strftime("%H:%M"),
+                datetime.now().strftime("%Y-%m-%d"),  # pylint: disable=home-assistant-enforce-naive-now
+                datetime.now().strftime("%H:%M"),  # pylint: disable=home-assistant-enforce-naive-now
             )
         except Exception as e:
             raise UpdateFailed(
