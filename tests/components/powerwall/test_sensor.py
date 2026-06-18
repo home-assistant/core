@@ -16,6 +16,7 @@ from homeassistant.const import (
     CONF_IP_ADDRESS,
     PERCENTAGE,
     STATE_UNKNOWN,
+    UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -128,6 +129,28 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
     for key, value in expected_attributes.items():
         assert state.attributes[key] == value
 
+    state = hass.states.get("sensor.mysite_max_charge_power")
+    assert state.state == "7000"
+    expected_attributes = {
+        "unit_of_measurement": UnitOfPower.WATT,
+        "device_class": "power",
+        "state_class": "measurement",
+        "friendly_name": "MySite Max charge power",
+    }
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value
+
+    state = hass.states.get("sensor.mysite_max_discharge_power")
+    assert state.state == "8380"
+    expected_attributes = {
+        "unit_of_measurement": UnitOfPower.WATT,
+        "device_class": "power",
+        "state_class": "measurement",
+        "friendly_name": "MySite Max discharge power",
+    }
+    for key, value in expected_attributes.items():
+        assert state.attributes[key] == value
+
     state = hass.states.get("sensor.mysite_operation_mode")
     assert state.state == "self_consumption"
     assert state.attributes[ATTR_DEVICE_CLASS] == "enum"
@@ -229,6 +252,48 @@ async def test_sensor_backup_reserve_unavailable(hass: HomeAssistant) -> None:
 
     state = hass.states.get("sensor.powerwall_backup_reserve")
     assert state is None
+
+
+@pytest.mark.parametrize(
+    ("method_name", "attribute", "entity_id"),
+    [
+        (
+            "get_instantaneous_max_charge_power",
+            "instantaneous_max_charge_power",
+            "sensor.mysite_max_charge_power",
+        ),
+        (
+            "get_instantaneous_max_discharge_power",
+            "instantaneous_max_discharge_power",
+            "sensor.mysite_max_discharge_power",
+        ),
+    ],
+)
+async def test_sensor_max_power_unavailable(
+    hass: HomeAssistant, method_name: str, attribute: str, entity_id: str
+) -> None:
+    """Confirm max power sensors are not added if unavailable."""
+
+    mock_powerwall = await _mock_powerwall_with_fixtures(hass)
+    getattr(mock_powerwall, method_name).side_effect = MissingAttributeError(
+        Mock(), attribute, "system_status"
+    )
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data={CONF_IP_ADDRESS: "1.2.3.4"})
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.powerwall.config_flow.Powerwall",
+            return_value=mock_powerwall,
+        ),
+        patch(
+            "homeassistant.components.powerwall.Powerwall", return_value=mock_powerwall
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id) is None
 
 
 async def test_sensor_operation_mode_unavailable(hass: HomeAssistant) -> None:

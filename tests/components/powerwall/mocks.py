@@ -50,6 +50,8 @@ async def _mock_powerwall_with_fixtures(
         device_type=DeviceType(device_type.result()["device_type"]),
         serial_numbers=["TG0123456789AB", "TG9876543210BA"],
         backup_reserve_percentage=15.0,
+        max_charge_power=7000,
+        max_discharge_power=8380,
         operation_mode=OperationMode.SELF_CONSUMPTION,
         batteries=[
             BatteryResponse.from_dict(battery) for battery in batteries.result()
@@ -68,6 +70,8 @@ async def _mock_powerwall_return_value(
     device_type=None,
     serial_numbers=None,
     backup_reserve_percentage=None,
+    max_charge_power=None,
+    max_discharge_power=None,
     operation_mode=None,
     batteries=None,
 ):
@@ -84,6 +88,10 @@ async def _mock_powerwall_return_value(
     powerwall_mock.get_serial_numbers.return_value = serial_numbers
     powerwall_mock.get_backup_reserve_percentage.return_value = (
         backup_reserve_percentage
+    )
+    powerwall_mock.get_instantaneous_max_charge_power.return_value = max_charge_power
+    powerwall_mock.get_instantaneous_max_discharge_power.return_value = (
+        max_discharge_power
     )
     powerwall_mock.get_operation_mode.return_value = operation_mode
     powerwall_mock.is_grid_services_active.return_value = grid_services_active
