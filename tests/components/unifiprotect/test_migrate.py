@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from uiprotect.data import Camera
+from uiprotect.data import Camera, Chime
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
@@ -221,5 +221,89 @@ async def test_deprecate_entity_script(
     issue = None
     for i in msg["result"]["issues"]:
         if i["issue_id"] == "deprecate_hdr_switch":
+            issue = i
+    assert issue is None
+
+
+async def test_remove_chime_volume(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """Test the removed chime master-volume number raises a repair when used."""
+    entry = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        f"{chime.mac}_volume",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, entry.entity_id)
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "remove_chime_volume":
+            issue = i
+    assert issue is not None
+
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={AUTOMATION_DOMAIN: []},
+    ):
+        await hass.services.async_call(AUTOMATION_DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    await hass.config_entries.async_reload(ufp.entry.entry_id)
+    await hass.async_block_till_done()
+
+    await ws_client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "remove_chime_volume":
+            issue = i
+    assert issue is None
+
+
+async def test_remove_chime_volume_ignores_ring_volume(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    hass_ws_client: WebSocketGenerator,
+    chime: Chime,
+    doorbell: Camera,
+) -> None:
+    """Test a used per-camera ring volume number does not trip the repair."""
+    entry = entity_registry.async_get_or_create(
+        Platform.NUMBER,
+        DOMAIN,
+        f"{chime.mac}_ring_volume_{doorbell.id}",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, entry.entity_id)
+    await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
+
+    await async_process_repairs_platforms(hass)
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+
+    assert msg["success"]
+    issue = None
+    for i in msg["result"]["issues"]:
+        if i["issue_id"] == "remove_chime_volume":
             issue = i
     assert issue is None

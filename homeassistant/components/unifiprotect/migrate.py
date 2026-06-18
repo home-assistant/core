@@ -109,6 +109,10 @@ async def async_migrate_data(
     async_deprecate_hdr(hass, entry)
     _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
 
+    _LOGGER.debug("Start Migrate: async_remove_chime_volume")
+    async_remove_chime_volume(hass, entry, bootstrap)
+    _LOGGER.debug("Completed Migrate: async_remove_chime_volume")
+
 
 @callback
 def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
@@ -128,3 +132,50 @@ def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
         "2024.10.0",
         {"hdr_switch": {"id": "hdr_mode", "platform": Platform.SWITCH}},
     )
+
+
+@callback
+def async_remove_chime_volume(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Raise a repair if the removed chime master-volume number is still used.
+
+    The chime "Volume" number (``number.<chime>_volume``) read the master
+    volume but its setter wrote the per-camera ring volumes, so writing it was
+    a silent no-op on the master field, and the public API has no master-volume
+    setter. It has been removed in favour of the per-camera ring-volume numbers
+    (``number.<chime>_ring_volume_<camera>``).
+
+    The master-volume unique IDs (``<mac>_volume``) are matched exactly so the
+    repair never trips on the ring-volume entities, which share the substring.
+
+    Removed in 2026.7.0
+    """
+
+    master_unique_ids = {f"{chime.mac}_volume" for chime in bootstrap.chimes.values()}
+    entity_registry = er.async_get(hass)
+    items: set[str] = set()
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if (
+            entity.domain == Platform.NUMBER
+            and entity.disabled_by is None
+            and entity.unique_id in master_unique_ids
+        ):
+            items.update(automations_with_entity(hass, entity.entity_id))
+            items.update(scripts_with_entity(hass, entity.entity_id))
+
+    issue_id = "remove_chime_volume"
+    if items:
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=IssueSeverity.WARNING,
+            translation_key=issue_id,
+            translation_placeholders={
+                "items": "* `" + "`\n* `".join(sorted(items)) + "`\n"
+            },
+        )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
