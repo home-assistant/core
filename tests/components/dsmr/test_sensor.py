@@ -45,6 +45,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
     ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
@@ -1806,6 +1807,24 @@ def _create_current_and_voltage_telegram(current: str, voltage: str) -> Telegram
     return telegram
 
 
+def _create_energy_only_telegram(energy: str) -> Telegram:
+    """Create a telegram with an energy reading but no power reading.
+
+    Used to exercise an averaged sensor (power) whose object is absent from the
+    telegrams arriving during an interval.
+    """
+    telegram = Telegram()
+    telegram.add(
+        ELECTRICITY_USED_TARIFF_1,
+        CosemObject(
+            (0, 0),
+            [{"value": Decimal(energy), "unit": UnitOfEnergy.KILO_WATT_HOUR}],
+        ),
+        "ELECTRICITY_USED_TARIFF_1",
+    )
+    return telegram
+
+
 async def _setup_dsmr_for_averaging(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
@@ -1906,17 +1925,19 @@ async def test_power_readings_are_averaged_over_the_update_interval(
     assert hass.states.get(POWER_ENTITY_ID).state == "10.0"
 
 
-async def test_averaged_sensor_without_new_telegrams_uses_last_reading(
+async def test_averaged_sensor_unavailable_without_readings_in_interval(
     hass: HomeAssistant,
     request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,
     dsmr_connection_fixture: tuple[MagicMock, MagicMock, MagicMock],
 ) -> None:
-    """Test that an interval without telegrams reuses the last reading.
+    """Test that an averaged sensor with no reading for an interval is unavailable.
 
-    When no telegram arrives during an interval the averaged sensor must fall
-    back to the latest instantaneous reading instead of holding the previous
-    interval's average (a stale value) or producing a new mean from no data.
+    A whole interval can pass without any reading either because no telegram
+    arrives or because the telegrams that do arrive omit the averaged object.
+    In both cases keeping the previous interval's value would be misleading, so
+    the sensor becomes unavailable; it recovers once a reading returns. A
+    non-averaged sensor present in the same telegrams keeps reporting throughout.
     """
     (connection_factory, _transport, protocol) = dsmr_connection_fixture
 
@@ -1936,14 +1957,29 @@ async def test_averaged_sensor_without_new_telegrams_uses_last_reading(
     await _advance_to_next_update(hass, freezer)
     assert hass.states.get(POWER_ENTITY_ID).state == "4.0"
 
-    # No telegram arrives during the next interval: the sensor falls back to the
-    # latest reading (6) instead of keeping the previous average (4).
+    # No telegram arrives during the next interval: there is no reading to
+    # report, so the sensor is unavailable instead of holding the previous value.
     await _advance_to_next_update(hass, freezer)
-    assert hass.states.get(POWER_ENTITY_ID).state == "6.0"
+    assert hass.states.get(POWER_ENTITY_ID).state == STATE_UNAVAILABLE
 
-    # A further empty interval keeps the latest reading; no new average is made.
+    # Telegrams keep arriving but omit the power object for the whole interval:
+    # the averaged sensor stays unavailable, while the non-averaged energy sensor
+    # carried by the same telegrams keeps reporting its latest value.
+    telegram_callback(_create_energy_only_telegram("110.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_energy_only_telegram("120.0"))
+    await hass.async_block_till_done()
     await _advance_to_next_update(hass, freezer)
-    assert hass.states.get(POWER_ENTITY_ID).state == "6.0"
+    assert hass.states.get(POWER_ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENERGY_ENTITY_ID).state == "120.0"
+
+    # A power reading restores the sensor: mean(8, 10) == 9.
+    telegram_callback(_create_power_and_energy_telegram("8.0", "100.0"))
+    await hass.async_block_till_done()
+    telegram_callback(_create_power_and_energy_telegram("10.0", "100.0"))
+    await hass.async_block_till_done()
+    await _advance_to_next_update(hass, freezer)
+    assert hass.states.get(POWER_ENTITY_ID).state == "9.0"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

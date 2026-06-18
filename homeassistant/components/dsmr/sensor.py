@@ -973,11 +973,15 @@ class DSMREntity(SensorEntity):
         self.telegram: Telegram | None = telegram
         self._dsmr_version = entry.data[CONF_DSMR_VERSION]
         self._value: StateType = None
+        self._available: bool = True
 
         # Fluctuating instantaneous measurements (flagged with `average`) are
         # averaged over the update interval; all other sensors keep their last
-        # reading.
-        self._is_averaged_sensor = entity_description.average
+        # reading. Averaging only applies when an interval is configured; with a
+        # zero interval every telegram is published as-is.
+        self._is_averaged_sensor = entity_description.average and bool(
+            entry.options.get(CONF_TIME_BETWEEN_UPDATE, DEFAULT_TIME_BETWEEN_UPDATE)
+        )
         self._value_sum: Decimal = Decimal(0)
         self._value_count: int = 0
 
@@ -1068,22 +1072,28 @@ class DSMREntity(SensorEntity):
         if not self.telegram:
             self._reset_average()
             self._value = None
+            self._available = self.telegram is not None
             return
+
+        # Averaged sensors report the mean of the values collected during the
+        # interval. An interval that collected no reading at all — no telegram
+        # arrived, or every telegram omitted this object — has no mean to
+        # report; rather than keep publishing the previous interval's value,
+        # which would be misleading, the sensor becomes unavailable.
+        if self._is_averaged_sensor:
+            self._available = bool(self._value_count)
+            if self._value_count:
+                self._value = round(
+                    float(self._value_sum / self._value_count), DEFAULT_PRECISION
+                )
+            self._reset_average()
+            return
+        self._reset_average()
+        self._available = True
 
         dsmr_object = get_dsmr_object(
             self.telegram, self._mbus_id, self.entity_description.obis_reference
         )
-
-        # Averaged sensors report the mean of the values collected during the
-        # interval. When no values were collected (for example when the meter
-        # paused) fall back to the latest reading below instead of reporting a
-        # stale average.
-        if self._is_averaged_sensor and self._value_count:
-            average = self._value_sum / self._value_count
-            self._reset_average()
-            self._value = round(float(average), DEFAULT_PRECISION)
-            return
-        self._reset_average()
 
         # The object is absent from this (non-empty) telegram: keep the last
         # reported value so a partial telegram (one that omits this object) does
@@ -1108,8 +1118,8 @@ class DSMREntity(SensorEntity):
 
     @property
     def available(self) -> bool:
-        """Entity is only available if there is a telegram."""
-        return self.telegram is not None
+        """Return whether the last publish produced a value to report."""
+        return self._available
 
     @property
     def native_value(self) -> StateType:
