@@ -34,6 +34,14 @@ _ICONS: dict[CheckStatus, str] = {
 }
 SKIPPED = "—"
 
+SUMMARY_PASS = "All requirements checks passed. ✅"
+SUMMARY_ATTENTION = "⚠️ Some checks require attention — see the details below."
+# Emitted when at least one check still needs the agent. The agent resolves it
+# to one of the two lines above once it has replaced the cell/detail
+# placeholders, so the summary reflects the final verdicts rather than the
+# deterministic-stage state.
+SUMMARY_PLACEHOLDER = "{{SUMMARY}}"
+
 
 def _placeholder(slot: str, pkg: PackageChange, kind: CheckKind) -> str:
     """Placeholder marker the agent replaces before posting."""
@@ -57,9 +65,12 @@ def _overall_status(pkg: PackageChange) -> CheckStatus | None:
 
 
 def _summary_line(packages: list[PackageChange]) -> str:
-    if all(_overall_status(p) == CheckStatus.PASS for p in packages):
-        return "All requirements checks passed. ✅"
-    return "⚠️ Some checks require attention — see the details below."
+    statuses = [_overall_status(p) for p in packages]
+    if None in statuses:
+        return SUMMARY_PLACEHOLDER
+    if all(status == CheckStatus.PASS for status in statuses):
+        return SUMMARY_PASS
+    return SUMMARY_ATTENTION
 
 
 def _cell(pkg: PackageChange, kind: CheckKind) -> str:
