@@ -74,16 +74,18 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             )
 
         manufacturer = (
-            self.executor.select_attribute(OverkizAttribute.CORE_MANUFACTURER)
-            or self.executor.select_state(OverkizState.CORE_MANUFACTURER_NAME)
+            self.device.attributes.get_value(OverkizAttribute.CORE_MANUFACTURER)
+            or self.device.states.get_value(OverkizState.CORE_MANUFACTURER_NAME)
             or self.coordinator.client.server_config.manufacturer
         )
 
         model = (
-            self.executor.select_state(
-                OverkizState.CORE_MODEL,
-                OverkizState.CORE_PRODUCT_MODEL_NAME,
-                OverkizState.IO_MODEL,
+            self.device.states.first_value(
+                [
+                    OverkizState.CORE_MODEL,
+                    OverkizState.CORE_PRODUCT_MODEL_NAME,
+                    OverkizState.IO_MODEL,
+                ]
             )
             or self.device.ui_class.value
         )
@@ -101,7 +103,9 @@ class OverkizEntity(CoordinatorEntity[OverkizDataUpdateCoordinator]):
             model=str(model),
             sw_version=cast(
                 str,
-                self.executor.select_attribute(OverkizAttribute.CORE_FIRMWARE_REVISION),
+                self.device.attributes.get_value(
+                    OverkizAttribute.CORE_FIRMWARE_REVISION
+                ),
             ),
             model_id=self.device.widget,
             hw_version=self.device.controllable_name,

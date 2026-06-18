@@ -34,7 +34,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
         if self.is_boost_mode_on:
             return cast(
                 float,
-                self.executor.select_state(
+                self.device.states.get_value(
                     OverkizState.CORE_COMFORT_TARGET_DWH_TEMPERATURE
                 ),
             )
@@ -42,14 +42,14 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
         if self.is_eco_mode_on:
             return cast(
                 float,
-                self.executor.select_state(
+                self.device.states.get_value(
                     OverkizState.CORE_ECO_TARGET_DWH_TEMPERATURE
                 ),
             )
 
         return cast(
             float,
-            self.executor.select_state(OverkizState.CORE_TARGET_DWH_TEMPERATURE),
+            self.device.states.get_value(OverkizState.CORE_TARGET_DWH_TEMPERATURE),
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -78,7 +78,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
     def is_boost_mode_on(self) -> bool:
         """Return true if boost mode is on."""
         return (
-            self.executor.select_state(OverkizState.CORE_BOOST_ON_OFF)
+            self.device.states.get_value(OverkizState.CORE_BOOST_ON_OFF)
             == OverkizCommandParam.ON
         )
 
@@ -86,7 +86,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
     def is_eco_mode_on(self) -> bool:
         """Return true if eco mode is on."""
         return (
-            self.executor.select_state(OverkizState.IO_PASS_APCDWH_MODE)
+            self.device.states.get_value(OverkizState.IO_PASS_APCDWH_MODE)
             == OverkizCommandParam.ECO
         )
 
@@ -94,7 +94,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
         return (
-            self.executor.select_state(OverkizState.CORE_DWH_ON_OFF)
+            self.device.states.get_value(OverkizState.CORE_DWH_ON_OFF)
             == OverkizCommandParam.OFF
         )
 
