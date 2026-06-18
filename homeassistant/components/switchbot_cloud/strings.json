@@ -104,18 +104,18 @@
   },
   "services": {
     "upload_art_frame_image": {
-      "description": "Upload third-party web images to the device.",
+      "description": "Upload web images to the device.",
       "fields": {
         "device_id": {
           "description": "The target AI Art Frame device.",
-          "name": "Device"
+          "name": "Devices"
         },
         "image_url": {
           "description": "The URL of the image to upload.",
           "name": "Image URL"
         }
       },
-      "name": "AI Art Frame Upload Image"
+      "name": "Upload AI Art Frame Image"
     }
   }
 }
