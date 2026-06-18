@@ -970,6 +970,6 @@ async def test_validate_raise_on_attempted_legacy(
     assert mock_async_get_firmware_data.await_count == 2
     mock_client_session.assert_called_once()
     mock_build_legacy_context.assert_called_once_with(
-        verify_ssl=MOCK_CONFIG[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL]
+        verify_ssl=MOCK_CONFIG[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL]
     )
     legacy_session.close.assert_awaited_once()
