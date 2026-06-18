@@ -36,7 +36,7 @@ from homeassistant.util import slugify
 
 from .const import _LOGGER, CONF_LOGIN_DATA, DOMAIN
 
-SCAN_INTERVAL = 300
+SCAN_INTERVAL = 10
 
 
 @asynccontextmanager
@@ -280,12 +280,14 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             )
             if entity_id:
                 _LOGGER.debug(
-                    "Detected change in todo lists: todo list %s removed",
-                    todo_list_unique_id.replace(
-                        f"{slugify(self.config_entry.unique_id)}-", ""
-                    ),
+                    "Detected change in todo lists: todo list entity %s removed",
+                    entity_id,
                 )
                 entity_registry.async_remove(entity_id)
+                list_id = todo_list_unique_id.replace(
+                    f"{slugify(self.config_entry.unique_id)}-", ""
+                )
+                self._todo_list_items.pop(list_id, None)
 
     async def sync_todo_list_items(self) -> None:
         """Sync todo items. Only used for initial sync."""
@@ -297,22 +299,16 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
         """Handle changes on To-Do lists."""
-        if list_event.list_id not in self._todo_list_items:
-            _LOGGER.warning(
-                "To-do list has not been synced to Home Assistant yet. "
-                "Please restart or try again later: list_id=%s item_id=%s event_type=%s",
-                list_event.list_id,
-                list_event.item_id,
-                list_event.type,
-            )
-            return
-
         if list_event.type == AmazonListEventType.DELETED:
             self._todo_list_items[list_event.list_id].pop(list_event.item_id, None)
         elif (
             list_event.type
             in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)
         ) and list_event.items:
+            if list_event.list_id not in self._todo_list_items:
+                # List was newly created after initial sync
+                self._todo_list_items[list_event.list_id] = {}
+
             self._todo_list_items[list_event.list_id][list_event.item_id] = (
                 list_event.items
             )

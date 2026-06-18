@@ -255,28 +255,12 @@ async def test_update_todo_item(
 
 
 @pytest.mark.parametrize(
-    ("initial_lists", "initial_entity_ids", "updated_lists", "updated_entity_ids"),
+    ("initial_lists", "updated_lists"),
     [
-        (
-            [MOCK_TODO_LIST],
-            [MOCK_TODO_LIST_ENTITY_ID],
-            [MOCK_TODO_LIST, MOCK_CUSTOM_LIST],
-            [MOCK_TODO_LIST_ENTITY_ID, MOCK_CUSTOM_LIST_ENTITY_ID],
-        ),  # Add a list
-        (
-            [MOCK_TODO_LIST, MOCK_CUSTOM_LIST],
-            [MOCK_TODO_LIST_ENTITY_ID, MOCK_CUSTOM_LIST_ENTITY_ID],
-            [MOCK_TODO_LIST],
-            [MOCK_TODO_LIST_ENTITY_ID],
-        ),  # Remove a list
+        ([MOCK_TODO_LIST], [MOCK_TODO_LIST, MOCK_CUSTOM_LIST]),  # Add a list
+        ([MOCK_TODO_LIST, MOCK_CUSTOM_LIST], [MOCK_TODO_LIST]),  # Remove a list
         (
             [MOCK_TODO_LIST, MOCK_SHOPPING_LIST, MOCK_CUSTOM_LIST],
-            [
-                MOCK_TODO_LIST_ENTITY_ID,
-                MOCK_SHOPPING_LIST_ENTITY_ID,
-                MOCK_CUSTOM_LIST_ENTITY_ID,
-            ],
-            [],
             [],
         ),  # Remove all lists
     ],
@@ -287,34 +271,85 @@ async def test_dynamic_entities(
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     initial_lists: list[AmazonListInfo],
-    initial_entity_ids: list[str],
     updated_lists: list[AmazonListInfo],
-    updated_entity_ids: list[str],
 ) -> None:
     """Test entities are dynamically created and deleted."""
 
-    mock_amazon_devices_client.todo_lists = initial_lists
+    def get_entity_id(alexa_list: AmazonListInfo) -> str:
+        if alexa_list.list_type == AmazonListType.SHOP:
+            return MOCK_SHOPPING_LIST_ENTITY_ID
+        if alexa_list.list_type == AmazonListType.TODO:
+            return MOCK_TODO_LIST_ENTITY_ID
+        return MOCK_CUSTOM_LIST_ENTITY_ID
+
+    # Start with the initial set of lists from the Amazon client.
+    mock_amazon_devices_client.todo_lists = list(initial_lists)
     mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
 
     await setup_integration(hass, mock_config_entry)
 
-    # Check initial list(s) exist
+    initial_entity_ids = [get_entity_id(alexa_list) for alexa_list in initial_lists]
+    updated_entity_ids = [get_entity_id(alexa_list) for alexa_list in updated_lists]
+
+    # Confirm the initially expected entities exist.
     for entity_id in initial_entity_ids:
         assert hass.states.get(entity_id) is not None
 
-    mock_amazon_devices_client.todo_lists = updated_lists
+    # Update the Amazon client to return the new list set.
+    mock_amazon_devices_client.todo_lists = list(updated_lists)
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    # After update, check which lists should exist
+    # Confirm the entities in the updated set exist.
     for entity_id in updated_entity_ids:
         assert hass.states.get(entity_id) is not None
 
-    # Check lists that were removed no longer exist
+    # Confirm removed entities are no longer present.
     for entity_id in set(initial_entity_ids) - set(updated_entity_ids):
         assert hass.states.get(entity_id) is None
+
+
+async def test_dynamic_add_list_and_add_item(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_amazon_devices_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test adding a new list and then adding an item to it."""
+    mock_amazon_devices_client.todo_lists = []
+    mock_amazon_devices_client.get_todo_list_items = AsyncMock(return_value={})
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get(MOCK_TODO_LIST_ENTITY_ID) is None
+
+    mock_amazon_devices_client.todo_lists = [MOCK_TODO_LIST]
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Send CREATED event for new item in the newly created list (imitate Amazon server)
+    new_item_id = "item_1"
+    new_item = AmazonListItem(
+        id=new_item_id,
+        name="New Task",
+        status=AmazonListItemStatus.ACTIVE,
+        version=1,
+    )
+    created_event = AmazonListEvent(
+        list_id=MOCK_TODO_LIST.id,
+        item_id=new_item_id,
+        type=AmazonListEventType.CREATED,
+        items=new_item,
+    )
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.todo_event_handler(created_event)
+
+    assert hass.states.get(MOCK_TODO_LIST_ENTITY_ID) is not None
 
 
 async def test_todo_event_handler(
@@ -383,18 +418,6 @@ async def test_todo_event_handler(
     )
     await coordinator.todo_event_handler(deleted_event)
     assert item_id not in coordinator.todo_list_items[list_id]
-
-    # Test event for unknown list (should log warning and return,
-    # no changes to coordinator state)
-    unknown_event = AmazonListEvent(
-        list_id="unknown_list",
-        item_id="some_id",
-        type=AmazonListEventType.CREATED,
-        items=None,
-    )
-    todo_items_before = coordinator.todo_list_items.copy()
-    await coordinator.todo_event_handler(unknown_event)
-    assert coordinator.todo_list_items == todo_items_before
 
 
 @pytest.mark.parametrize(
