@@ -1080,16 +1080,20 @@ class NodeEvents:
         driver = self.controller_events.driver_events.driver
         disc_info = value_updates_disc_info[value.value_id]
 
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, value.node)}
-        )
-        # We assert because we know the device exists
-        assert device
-
         unique_id = get_unique_id(driver, disc_info.primary_value.value_id)
         entity_id = self.ent_reg.async_get_entity_id(
             disc_info.platform, DOMAIN, unique_id
         )
+
+        # Use the device the entity belongs to, which may be an endpoint sub-device, so
+        # the event's device_id matches where the entity lives.
+        device = None
+        if (
+            entity_id
+            and (entity_entry := self.ent_reg.async_get(entity_id))
+            and entity_entry.device_id
+        ):
+            device = self.dev_reg.async_get(entity_entry.device_id)
 
         raw_value = value_ = value.value
         if value.metadata.states:
@@ -1101,7 +1105,7 @@ class NodeEvents:
                 ATTR_NODE_ID: value.node.node_id,
                 ATTR_HOME_ID: driver.controller.home_id,
                 ATTR_HOME_ID_HEX: format_home_id_for_display(driver.controller.home_id),
-                ATTR_DEVICE_ID: device.id,
+                ATTR_DEVICE_ID: device.id if device else None,
                 ATTR_ENTITY_ID: entity_id,
                 ATTR_COMMAND_CLASS: value.command_class,
                 ATTR_COMMAND_CLASS_NAME: value.command_class_name,
