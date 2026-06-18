@@ -2,9 +2,7 @@ rules:
   # Bronze
   action-setup: done
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: Brand assets submitted via home-assistant/brands#10139
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
