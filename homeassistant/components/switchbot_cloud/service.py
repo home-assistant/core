@@ -6,6 +6,7 @@ from switchbot_api import ArtFrameCommands
 import voluptuous as vol
 
 from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 
 from .const import AI_ART_FRAME_UPLOAD_IMAGE_SERVICE, DOMAIN
@@ -49,6 +50,8 @@ async def handle_upload_image(call: ServiceCall) -> None:
                 command_type="command",
                 parameters={"imageUrl": image_url},
             )
+        else:
+            raise ServiceValidationError("No valid MAC address obtained.")
 
 
 def async_register_services(hass: HomeAssistant) -> None:
