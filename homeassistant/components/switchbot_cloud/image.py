@@ -57,7 +57,7 @@ class SwitchBotCloudImage(SwitchBotCloudEntity, ImageEntity):
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-        self._attr_image_last_updated = datetime.datetime.now()
+        self._attr_image_last_updated = datetime.datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         self._attr_image_url = self.coordinator.data.get("imageUrl")
 
 

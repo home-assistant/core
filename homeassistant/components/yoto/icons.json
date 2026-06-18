@@ -1,0 +1,52 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "bluetooth_audio": {
+        "default": "mdi:bluetooth-audio"
+      },
+      "headphones": {
+        "default": "mdi:headphones"
+      }
+    },
+    "number": {
+      "day_mode_brightness": {
+        "default": "mdi:brightness-7"
+      },
+      "day_mode_max_volume": {
+        "default": "mdi:volume-high"
+      },
+      "night_mode_brightness": {
+        "default": "mdi:brightness-4"
+      },
+      "night_mode_max_volume": {
+        "default": "mdi:volume-high"
+      }
+    },
+    "sensor": {
+      "card_insertion_state": {
+        "default": "mdi:card-bulleted-outline",
+        "state": {
+          "none": "mdi:card-bulleted-off-outline",
+          "physical": "mdi:card-bulleted",
+          "remote": "mdi:cast-audio",
+          "streaming": "mdi:radio-tower"
+        }
+      },
+      "day_mode": {
+        "default": "mdi:theme-light-dark",
+        "state": {
+          "day": "mdi:weather-sunny",
+          "night": "mdi:weather-night"
+        }
+      }
+    },
+    "time": {
+      "day_mode_start": {
+        "default": "mdi:weather-sunny"
+      },
+      "night_mode_start": {
+        "default": "mdi:weather-night"
+      }
+    }
+  }
+}

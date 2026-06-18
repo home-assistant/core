@@ -74,7 +74,7 @@ ATTR_QUERY_RESULT = "query_result"
 
 _LOGGER = logging.getLogger(__name__)
 
-PARALLEL_UPDATES = 1
+PARALLEL_UPDATES = 0
 
 ATTR_OTHER_PLAYER = "other_player"
 
@@ -160,7 +160,7 @@ async def async_setup_entry(
             model=model,
             manufacturer=manufacturer,
             model_id=model_id,
-            hw_version=player.firmware,
+            hw_version=str(player.firmware) if player.firmware is not None else None,
             sw_version=sw_version,
             via_device=(DOMAIN, coordinator.server_uuid),
         )
