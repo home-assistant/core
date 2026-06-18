@@ -974,10 +974,10 @@ PRECISION_HALVES: Final = 0.5
 PRECISION_TENTHS: Final = 0.1
 
 
-class BaseEntityAttribute(StrEnum):
-    """Base entity attributes.
+class EntityStateAttribute(StrEnum):
+    """State attribute for the base entity.
 
-    Used to read or write base attributes of an entity.
+    Used to read or write base state attributes of an entity.
     """
 
     ASSUMED_STATE = "assumed_state"

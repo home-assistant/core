@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    BaseEntityAttribute,
+    EntityStateAttribute,
     Platform,
     UnitOfTime,
 )
@@ -241,7 +241,9 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         if not source_state:
             return
 
-        source_class_raw = source_state.attributes.get(BaseEntityAttribute.DEVICE_CLASS)
+        source_class_raw = source_state.attributes.get(
+            EntityStateAttribute.DEVICE_CLASS
+        )
         source_class: SensorDeviceClass | None = None
         if isinstance(source_class_raw, str):
             try:
@@ -251,7 +253,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         if self._string_unit_prefix is not None and self._string_unit_time is not None:
             original_unit = self._attr_native_unit_of_measurement
             source_unit = source_state.attributes.get(
-                BaseEntityAttribute.UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
             if (
                 (
@@ -367,7 +369,7 @@ class DerivativeSensor(RestoreSensor, SensorEntity):
         last_state = await self.async_get_last_state()
         if last_state:
             self._attr_device_class = last_state.attributes.get(
-                BaseEntityAttribute.DEVICE_CLASS
+                EntityStateAttribute.DEVICE_CLASS
             )
 
     async def async_added_to_hass(self) -> None:

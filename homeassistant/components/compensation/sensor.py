@@ -22,7 +22,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    BaseEntityAttribute,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -169,11 +169,11 @@ class CompensationSensor(SensorEntity):
 
         if self.native_unit_of_measurement is None and self._source_attribute is None:
             self._attr_native_unit_of_measurement = new_state.attributes.get(
-                BaseEntityAttribute.UNIT_OF_MEASUREMENT
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
             )
 
         if self._attr_device_class is None and (
-            device_class := new_state.attributes.get(BaseEntityAttribute.DEVICE_CLASS)
+            device_class := new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         ):
             self._attr_device_class = device_class
 

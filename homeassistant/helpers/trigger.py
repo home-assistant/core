@@ -40,7 +40,7 @@ from homeassistant.const import (
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    BaseEntityAttribute,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -821,7 +821,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             # Entity not found
             return None
         if not self._is_valid_unit(
-            state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
+            state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         ):
             # Entity unit does not match the expected unit
             return None
@@ -837,7 +837,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         raw_value: Any
         if domain_spec.value_source is None:
             if not self._is_valid_unit(
-                state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
+                state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
             ):
                 return None
             raw_value = state.state
@@ -892,7 +892,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the unit of an entity from its state."""
-        return state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
+        return state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
@@ -917,7 +917,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
         try:
             return self._unit_converter.convert(
                 value,
-                state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT),
+                state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT),
                 self._base_unit,
             )
         except HomeAssistantError:

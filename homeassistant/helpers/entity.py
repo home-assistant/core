@@ -27,8 +27,8 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
-    BaseEntityAttribute,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -151,7 +151,7 @@ def get_device_class(hass: HomeAssistant, entity_id: str) -> str | None:
     First try the statemachine, then entity registry.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(BaseEntityAttribute.DEVICE_CLASS)
+        return state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -176,7 +176,7 @@ def get_supported_features(hass: HomeAssistant, entity_id: str) -> int:
     First try the statemachine, then entity registry.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(BaseEntityAttribute.SUPPORTED_FEATURES, 0)  # type: ignore[no-any-return]
+        return state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)  # type: ignore[no-any-return]
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -191,7 +191,7 @@ def get_unit_of_measurement(hass: HomeAssistant, entity_id: str) -> str | None:
     First try the statemachine, then entity registry.
     """
     if state := hass.states.get(entity_id):
-        return state.attributes.get(BaseEntityAttribute.UNIT_OF_MEASUREMENT)
+        return state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
     entity_registry = er.async_get(hass)
     if not (entry := entity_registry.async_get(entity_id)):
@@ -1112,25 +1112,25 @@ class Entity(
                 attr |= extra_state_attributes
 
         if (unit_of_measurement := self.unit_of_measurement) is not None:
-            attr[BaseEntityAttribute.UNIT_OF_MEASUREMENT] = unit_of_measurement
+            attr[EntityStateAttribute.UNIT_OF_MEASUREMENT] = unit_of_measurement
 
         if assumed_state := self.assumed_state:
-            attr[BaseEntityAttribute.ASSUMED_STATE] = assumed_state
+            attr[EntityStateAttribute.ASSUMED_STATE] = assumed_state
 
         if (attribution := self.attribution) is not None:
-            attr[BaseEntityAttribute.ATTRIBUTION] = attribution
+            attr[EntityStateAttribute.ATTRIBUTION] = attribution
 
         original_device_class = self.device_class
         if (
             device_class := (entry and entry.device_class) or original_device_class
         ) is not None:
-            attr[BaseEntityAttribute.DEVICE_CLASS] = str(device_class)
+            attr[EntityStateAttribute.DEVICE_CLASS] = str(device_class)
 
         if (entity_picture := self.entity_picture) is not None:
-            attr[BaseEntityAttribute.ENTITY_PICTURE] = entity_picture
+            attr[EntityStateAttribute.ENTITY_PICTURE] = entity_picture
 
         if (icon := (entry and entry.icon) or self.icon) is not None:
-            attr[BaseEntityAttribute.ICON] = icon
+            attr[EntityStateAttribute.ICON] = icon
 
         original_name = self.name
         if original_name is UNDEFINED:
@@ -1152,10 +1152,10 @@ class Entity(
             self._cached_friendly_name = (original_name, name)
 
         if name:
-            attr[BaseEntityAttribute.FRIENDLY_NAME] = name
+            attr[EntityStateAttribute.FRIENDLY_NAME] = name
 
         if (supported_features := self.supported_features) is not None:
-            attr[BaseEntityAttribute.SUPPORTED_FEATURES] = supported_features
+            attr[EntityStateAttribute.SUPPORTED_FEATURES] = supported_features
 
         return (
             state,

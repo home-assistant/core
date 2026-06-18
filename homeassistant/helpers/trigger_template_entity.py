@@ -23,7 +23,7 @@ from homeassistant.const import (
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
-    BaseEntityAttribute,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.exceptions import TemplateError
@@ -46,9 +46,9 @@ CONF_ATTRIBUTES = "attributes"
 CONF_PICTURE = "picture"
 
 CONF_TO_ATTRIBUTE = {
-    CONF_ICON: BaseEntityAttribute.ICON,
-    CONF_NAME: BaseEntityAttribute.FRIENDLY_NAME,
-    CONF_PICTURE: BaseEntityAttribute.ENTITY_PICTURE,
+    CONF_ICON: EntityStateAttribute.ICON,
+    CONF_NAME: EntityStateAttribute.FRIENDLY_NAME,
+    CONF_PICTURE: EntityStateAttribute.ENTITY_PICTURE,
 }
 
 TEMPLATE_ENTITY_BASE_SCHEMA = vol.Schema(
