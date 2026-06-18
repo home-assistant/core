@@ -10,8 +10,10 @@ from aiohasupervisor.models import Job, JobsInfo
 import pytest
 
 from homeassistant.components.hassio.const import DOMAIN, MAIN_COORDINATOR
-from homeassistant.components.hassio.coordinator import HassioMainDataUpdateCoordinator
-from homeassistant.components.hassio.jobs import JobSubscription
+from homeassistant.components.hassio.coordinator import (
+    HassioMainDataUpdateCoordinator,
+    JobSubscription,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
 
