@@ -974,6 +974,22 @@ PRECISION_HALVES: Final = 0.5
 PRECISION_TENTHS: Final = 0.1
 
 
+class BaseEntityAttribute(StrEnum):
+    """Base entity attributes.
+
+    Used to read or write base attributes of an entity.
+    """
+
+    ASSUMED_STATE = "assumed_state"
+    ATTRIBUTION = "attribution"
+    DEVICE_CLASS = "device_class"
+    ENTITY_PICTURE = "entity_picture"
+    FRIENDLY_NAME = "friendly_name"
+    ICON = "icon"
+    SUPPORTED_FEATURES = "supported_features"
+    UNIT_OF_MEASUREMENT = "unit_of_measurement"
+
+
 class EntityCategory(StrEnum):
     """Category of an entity.
 
