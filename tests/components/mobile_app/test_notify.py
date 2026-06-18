@@ -944,10 +944,8 @@ async def test_notify_live_activity_uses_stored_token(
 
     assert len(aioclient_mock.mock_calls) == 1
     call_json = aioclient_mock.mock_calls[0][2]
-    # FCM token stays as push_token; live activity APNs token is a separate
-    # field. A stored per-tag token means the activity is already running, so
-    # the outbound payload carries event=update and leaves flat fields for
-    # the relay or local app to translate.
+    # A stored per-tag token means the activity is already running, so
+    # it should be used together with the event update
     assert call_json == {
         "push_token": "PUSH_TOKEN",
         "live_activity_token": "LIVE_ACTIVITY_TOKEN_HEX",
