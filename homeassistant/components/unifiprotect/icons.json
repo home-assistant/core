@@ -192,9 +192,6 @@
       }
     },
     "number": {
-      "auto_lock_timeout": {
-        "default": "mdi:walk"
-      },
       "auto_shutoff_duration": {
         "default": "mdi:camera-timer"
       },

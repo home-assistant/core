@@ -5,14 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from uiprotect.data import (
-    Camera,
-    Chime,
-    Doorlock,
-    Light,
-    ModelType,
-    ProtectAdoptableDeviceModel,
-)
+from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
@@ -52,14 +45,6 @@ def _get_pir_duration(obj: Light) -> int:
 
 async def _set_pir_duration(obj: Light, value: float) -> None:
     await obj.set_duration(timedelta(seconds=value))
-
-
-def _get_auto_close(obj: Doorlock) -> int:
-    return int(obj.auto_close_time.total_seconds())
-
-
-async def _set_auto_close(obj: Doorlock, value: float) -> None:
-    await obj.set_auto_close_time(timedelta(seconds=value))
 
 
 def _get_chime_duration(obj: Camera) -> int:
@@ -213,21 +198,6 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
 )
 
-DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
-    ProtectNumberEntityDescription[Doorlock](
-        key="auto_lock_time",
-        translation_key="auto_lock_timeout",
-        entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        ufp_min=0,
-        ufp_max=3600,
-        ufp_step=15,
-        ufp_value_fn=_get_auto_close,
-        ufp_set_method_fn=_set_auto_close,
-        ufp_perm=PermRequired.WRITE,
-    ),
-)
-
 CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription[Chime](
         key="volume",
@@ -246,7 +216,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_NUMBERS,
     ModelType.LIGHT: LIGHT_NUMBERS,
     ModelType.SENSOR: SENSE_NUMBERS,
-    ModelType.DOORLOCK: DOORLOCK_NUMBERS,
     ModelType.CHIME: CHIME_NUMBERS,
 }
 
