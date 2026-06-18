@@ -169,10 +169,33 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_steering_wheel_heat_level_request(
             level
         ),
+        supported_fn=lambda self: self.get("has_seat_cooling"),
         streaming_listener=lambda x, y: x.listen_HvacSteeringWheelHeatLevel(y),
         options=[
             OFF,
             LOW,
+            HIGH,
+        ],
+    ),
+    TeslemetrySelectEntityDescription(
+        key="climate_state_seat_cooler_left",
+        select_fn=lambda api, level: api.remote_seat_cooler_request(1, level),
+        streaming_listener=lambda x, y: x.listen_ClimateSeatCoolingFrontLeft(y),
+        options=[
+            OFF,
+            LOW,
+            MEDIUM,
+            HIGH,
+        ],
+    ),
+    TeslemetrySelectEntityDescription(
+        key="climate_state_seat_cooler_right",
+        select_fn=lambda api, level: api.remote_seat_cooler_request(2, level),
+        streaming_listener=lambda x, y: x.listen_ClimateSeatCoolingFrontRight(y),
+        options=[
+            OFF,
+            LOW,
+            MEDIUM,
             HIGH,
         ],
     ),
