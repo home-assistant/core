@@ -16,11 +16,6 @@ from .entity import YotoConfigEntity
 
 PARALLEL_UPDATES = 1
 
-# Auto-brightness has no standalone "off": the API toggles it off by writing a
-# manual brightness instead. Fall back to full brightness, then the matching
-# number entity becomes available for the user to adjust.
-_BRIGHTNESS_WHEN_AUTO_OFF = 100
-
 
 @dataclass(frozen=True, kw_only=True)
 class YotoSwitchEntityDescription(SwitchEntityDescription):
@@ -56,11 +51,7 @@ SWITCHES: tuple[YotoSwitchEntityDescription, ...] = (
         translation_key="day_mode_auto_brightness",
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda config: config.day_display_brightness_auto,
-        write_fn=lambda on: (
-            {"day_display_brightness_auto": True}
-            if on
-            else {"day_display_brightness": _BRIGHTNESS_WHEN_AUTO_OFF}
-        ),
+        write_fn=lambda on: {"day_display_brightness_auto": on},
         supported_fn=lambda caps: caps.has_light_sensor,
     ),
     YotoSwitchEntityDescription(
@@ -68,11 +59,7 @@ SWITCHES: tuple[YotoSwitchEntityDescription, ...] = (
         translation_key="night_mode_auto_brightness",
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda config: config.night_display_brightness_auto,
-        write_fn=lambda on: (
-            {"night_display_brightness_auto": True}
-            if on
-            else {"night_display_brightness": _BRIGHTNESS_WHEN_AUTO_OFF}
-        ),
+        write_fn=lambda on: {"night_display_brightness_auto": on},
         supported_fn=lambda caps: caps.has_light_sensor,
     ),
 )

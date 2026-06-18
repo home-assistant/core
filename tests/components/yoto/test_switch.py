@@ -144,12 +144,12 @@ async def test_turn_on(
         ),
         pytest.param(
             "switch.nursery_yoto_day_mode_automatic_brightness",
-            {"day_display_brightness": 100},
+            {"day_display_brightness_auto": False},
             id="day-auto-brightness",
         ),
         pytest.param(
             "switch.nursery_yoto_night_mode_automatic_brightness",
-            {"night_display_brightness": 100},
+            {"night_display_brightness_auto": False},
             id="night-auto-brightness",
         ),
     ],
@@ -161,10 +161,7 @@ async def test_turn_off(
     entity_id: str,
     expected_fields: dict[str, Any],
 ) -> None:
-    """Turning a switch off writes the matching player config field.
-
-    Auto-brightness has no standalone off, so it writes a manual brightness.
-    """
+    """Turning a switch off writes the matching player config field."""
     await _setup(hass, mock_config_entry)
 
     await hass.services.async_call(
