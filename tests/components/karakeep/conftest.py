@@ -53,4 +53,5 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_TOKEN: TEST_TOKEN,
             CONF_VERIFY_SSL: False,
         },
+        entry_id="01KVCW3ET6GZ025S7ARE8D5M8W",
     )

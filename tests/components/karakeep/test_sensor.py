@@ -1,41 +1,33 @@
 """Tests for the Karakeep sensor platform."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 from .const import TEST_VERSION
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_karakeep_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test Karakeep sensors."""
-    await setup_integration(hass, mock_config_entry)
+    with patch("homeassistant.components.karakeep.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
 
-    expected_states = {
-        "sensor.karakeep_archived": "3",
-        "sensor.karakeep_bookmarks": "10",
-        "sensor.karakeep_favorites": "2",
-        "sensor.karakeep_highlights": "4",
-        "sensor.karakeep_lists": "5",
-        "sensor.karakeep_tags": "6",
-    }
-
-    for entity_id, state in expected_states.items():
-        assert hass.states.get(entity_id).state == state
-        registry_entry = entity_registry.async_get(entity_id)
-        assert registry_entry is not None
-        assert registry_entry.unique_id == (
-            f"{mock_config_entry.entry_id}_{entity_id.removeprefix('sensor.karakeep_')}"
-        )
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_device_info(
