@@ -49,6 +49,13 @@ from .const import (
     LOGGER,
 )
 
+LOCAL_API_DOCS_URL = (
+    "https://www.home-assistant.io/integrations/overkiz/#local-api-support"
+)
+TOKEN_DOCS_URL = (
+    "https://www.home-assistant.io/integrations/overkiz/#login-to-overkiz-local-api"
+)
+
 
 class OverkizConfigFlow(
     config_entry_oauth2_flow.AbstractOAuth2FlowHandler, domain=DOMAIN
@@ -166,9 +173,7 @@ class OverkizConfigFlow(
                     ),
                 }
             ),
-            description_placeholders={
-                "local_api_docs": "https://www.home-assistant.io/integrations/overkiz/#local-api-support"
-            },
+            description_placeholders={"local_api_docs": LOCAL_API_DOCS_URL},
         )
 
     async def async_step_cloud(
@@ -264,8 +269,8 @@ class OverkizConfigFlow(
         """Handle the local authentication step via config flow."""
         errors = {}
         description_placeholders = {
-            "local_api_docs": "https://www.home-assistant.io/integrations/overkiz/#local-api-support",
-            "token_docs": "https://www.home-assistant.io/integrations/overkiz/#login-to-overkiz-local-api",
+            "local_api_docs": LOCAL_API_DOCS_URL,
+            "token_docs": TOKEN_DOCS_URL,
         }
 
         if user_input:
