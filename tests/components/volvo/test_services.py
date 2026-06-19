@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from httpx import AsyncClient, HTTPError, HTTPStatusError, Request, Response
 import pytest
 
+from homeassistant.components.homeassistant import DOMAIN as HOMEASSISTANT_DOMAIN
 from homeassistant.components.volvo.const import DOMAIN
 from homeassistant.components.volvo.services import (
     CONF_CONFIG_ENTRY_ID,
@@ -141,7 +142,7 @@ async def test_invalid_config_entry(
             return_response=True,
         )
 
-    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_domain == HOMEASSISTANT_DOMAIN
     assert exc_info.value.translation_key == translation_key
 
 
