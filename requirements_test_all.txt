@@ -2511,7 +2511,7 @@ tesla-wall-connector==1.1.0
 teslemetry-stream==0.9.0
 
 # homeassistant.components.tessie
-tessie-api==0.1.1
+tessie-api==0.1.3
 
 # homeassistant.components.tfa_me
 tfa-me-ha-local==1.0.6
