@@ -39,12 +39,12 @@ class EconetFanModeSelect(EcoNetEntity[Thermostat], SelectEntity):
     @property
     def options(self) -> list[str]:
         """Return available select options."""
-        return [e.value for e in self._econet.fan_modes]
+        return [e.name for e in self._econet.fan_modes]
 
     @property
     def current_option(self) -> str:
         """Return current select option."""
-        return self._econet.fan_mode.value
+        return self._econet.fan_mode.name
 
     def select_option(self, option: str) -> None:
         """Set the selected option."""
