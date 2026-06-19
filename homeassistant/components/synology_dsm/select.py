@@ -15,9 +15,9 @@ from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigE
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 FAN_SPEED_MAP = {
+    FanSpeed.QUIET: "quiet",
     FanSpeed.COOL: "cool",
     FanSpeed.FULL: "full_speed",
-    FanSpeed.QUIET: "quiet",
 }
 FAN_SPEED_MAP_INVERSE = {v: k for k, v in FAN_SPEED_MAP.items()}
 
