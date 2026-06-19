@@ -512,7 +512,7 @@ async def test_entity_conditions_variables(hass: HomeAssistant) -> None:
 async def test_entity_remove_unloads_condition(
     hass: HomeAssistant,
 ) -> None:
-    """Test that coordinator shutdown stops and unloads script and condition."""
+    """Test that removing the entity unloads the condition."""
     coordinator = TriggerUpdateCoordinator(hass, {})
 
     mock_cond = Mock(spec=condition.ConditionsChecker)

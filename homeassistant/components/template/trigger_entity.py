@@ -13,14 +13,13 @@ from homeassistant.helpers.template import (
     _SENTINEL,
     render_complex as template_render_complex,
 )
-from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.trigger_template_entity import (
     TriggerBaseEntity,
     log_triggered_template_error,
 )
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import TriggerUpdateCoordinator
+from .coordinator import TriggerUpdateCoordinator, check_conditions
 from .entity import AbstractTemplateEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -258,18 +257,6 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
 
         return write_state
 
-    def _check_condition(self, run_variables: dict) -> bool:
-        if not self._cond_func:
-            return True
-        condition_result = self._cond_func.async_check(variables=run_variables)
-        if condition_result is False:
-            _LOGGER.debug(
-                "Conditions not met, aborting template"
-                " trigger update. Condition summary: %s",
-                trace_get(clear=False),
-            )
-        return condition_result
-
     @callback
     def _process_data(self) -> None:
         """Process new data."""
@@ -287,7 +274,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             self._rendered_entity_variables = coordinator_variables
         variables = self._template_variables(self._rendered_entity_variables)
 
-        if not self._check_condition(variables):
+        if not check_conditions(self._cond_func, variables):
             return
 
         self.async_set_context(self.coordinator.data["context"])

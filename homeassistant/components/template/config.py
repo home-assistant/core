@@ -105,9 +105,10 @@ _DEFAULT_NAMES = {
 }
 
 
-def _identify_invalid_entity_config(
+def _identify_entity_config_requires_trigger(
     platform: Platform, option: str, entity_config: ConfigType
 ) -> None:
+    """Raise vol.Invalid if an entity sets an option that requires a trigger."""
     if option not in entity_config:
         return
 
@@ -135,7 +136,7 @@ def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
     if CONF_TRIGGERS not in obj and BINARY_SENSOR_DOMAIN in obj:
         binary_sensors: list[ConfigType] = obj[BINARY_SENSOR_DOMAIN]
         for binary_sensor in binary_sensors:
-            _identify_invalid_entity_config(
+            _identify_entity_config_requires_trigger(
                 Platform.BINARY_SENSOR,
                 binary_sensor_platform.CONF_AUTO_OFF,
                 binary_sensor,
@@ -152,7 +153,7 @@ def validate_entity_config_with_conditions_has_trigger(obj: dict) -> dict:
                 continue
 
             for entity_config in obj[platform]:
-                _identify_invalid_entity_config(
+                _identify_entity_config_requires_trigger(
                     platform,
                     CONF_CONDITIONS,
                     entity_config,

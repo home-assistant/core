@@ -136,7 +136,7 @@ async def validate_actions_and_conditions_config(
     config: ConfigType,
     script_options: tuple[str, ...] | None = None,
 ) -> None:
-    """Validate template scripts."""
+    """Validate template entity actions and conditions."""
 
     def _humanize(err: Exception, data: Any) -> str:
         """Humanize vol.Invalid, stringify other exceptions."""
