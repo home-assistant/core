@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -13,9 +14,16 @@ from homeassistant.components.knx.const import (
     KNX_MODULE_KEY,
 )
 from homeassistant.components.knx.schema import ButtonSchema
-from homeassistant.const import CONF_NAME, CONF_PAYLOAD, CONF_TYPE
+from homeassistant.const import (
+    CONF_NAME,
+    CONF_PAYLOAD,
+    CONF_TYPE,
+    STATE_UNKNOWN,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import async_capture_events, async_fire_time_changed
@@ -140,3 +148,121 @@ async def test_button_invalid(
         assert "Setup failed for 'knx': Invalid config." in record.message
     assert hass.states.get("button.test") is None
     assert hass.data.get(KNX_MODULE_KEY) is None
+
+
+@pytest.mark.parametrize(
+    "knx_config",
+    [
+        (
+            {
+                "ga_send": {"write": "1/1/1"},
+                "data": {"payload": 1, "payload_length": 1},  # raw payload
+            }
+        ),
+        (
+            {
+                "ga_send": {"write": "1/1/1", "dpt": "5"},  # generic 1byte uint
+                "data": {"payload": 1, "payload_length": 1},  # raw payload
+            }
+        ),
+        (
+            {
+                "ga_send": {"write": "1/1/1", "dpt": "5"},  # generic 1byte uint
+                "data": {"value": 1},  # typed value
+            }
+        ),
+    ],
+)
+async def test_button_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    knx_config: dict[str, Any],
+) -> None:
+    """Test creating a button."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.BUTTON,
+        entity_data={"name": "test"},
+        knx_data=knx_config,
+    )
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.test"}, blocking=True
+    )
+    await knx.assert_write("1/1/1", (1,))
+
+
+async def test_button_ui_load(hass: HomeAssistant, knx: KNXTestKit) -> None:
+    """Test loading a button from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_button.json")
+
+    # Raw button configuration
+    knx.assert_state(
+        "button.test_raw",
+        STATE_UNKNOWN,
+    )
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.test_raw"}, blocking=True
+    )
+    await knx.assert_write("1/1/1", (1,))
+
+    # Typed button configuration
+    knx.assert_state(
+        "button.test_typed",
+        STATE_UNKNOWN,
+    )
+    await hass.services.async_call(
+        "button", "press", {"entity_id": "button.test_typed"}, blocking=True
+    )
+    await knx.assert_write("1/1/2", True)
+
+
+@pytest.mark.parametrize(
+    "knx_config",
+    [
+        {  # missing data
+            "ga_send": {"write": "1/1/1", "dpt": "9.001"},
+        },
+        {  # missing DPT
+            "ga_send": {"write": "1/1/1"},
+            "data": {"value": 1},
+        },
+        {  # invalid value for DPT
+            "ga_send": {"write": "1/1/1", "dpt": "9.001"},
+            "data": {"value": "not_valid"},
+        },
+        {  # invalid length for DPT
+            "ga_send": {"write": "1/1/1", "dpt": "9.001"},
+            "data": {"payload": 1, "payload_length": 1},
+        },
+        {  # out of bound value for DPT
+            "ga_send": {"write": "1/1/1", "dpt": "5.001"},
+            "data": {"value": 101},
+        },
+        {  # out of bound value for length
+            "ga_send": {"write": "1/1/1"},
+            "data": {"payload": 256, "payload_length": 1},
+        },
+        {  # out of bound value for zero-length
+            "ga_send": {"write": "1/1/1"},
+            "data": {"payload": 64, "payload_length": 0},
+        },
+    ],
+)
+async def test_button_ui_create_data_validation(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+    knx_config: dict[str, Any],
+) -> None:
+    """Test creating a button with invalid data."""
+    await knx.setup_integration()
+    with pytest.raises(AssertionError) as err:
+        await create_ui_entity(
+            platform=Platform.BUTTON,
+            entity_data={"name": "test"},
+            knx_data=knx_config,
+        )
+    assert "success" in err.value.args[0]
+    assert "error_base" in err.value.args[0]
+    assert "path" in err.value.args[0]
