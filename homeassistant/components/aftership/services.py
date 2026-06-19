@@ -27,8 +27,7 @@ async def handle_add_tracking(call: ServiceCall) -> None:
     entry: AfterShipConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, None
     )
-    aftership = entry.runtime_data
-    await aftership.trackings.add(
+    await entry.runtime_data.trackings.add(
         tracking_number=call.data[CONF_TRACKING_NUMBER],
         title=call.data.get(CONF_TITLE),
         slug=call.data.get(CONF_SLUG),
@@ -41,8 +40,7 @@ async def handle_remove_tracking(call: ServiceCall) -> None:
     entry: AfterShipConfigEntry = service.async_get_config_entry(
         call.hass, DOMAIN, None
     )
-    aftership = entry.runtime_data
-    await aftership.trackings.remove(
+    await entry.runtime_data.trackings.remove(
         tracking_number=call.data[CONF_TRACKING_NUMBER],
         slug=call.data[CONF_SLUG],
     )
