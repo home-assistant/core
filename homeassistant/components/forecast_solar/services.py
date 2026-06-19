@@ -2,7 +2,8 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
+from zoneinfo import ZoneInfo
 
 import voluptuous as vol
 
@@ -95,33 +96,38 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
         estimate = entry.runtime_data.data
 
-        watts: dict[datetime, int] = dict(estimate.watts)
+        watts: dict[datetime, float] = dict(estimate.watts)
         wh_period: dict[datetime, int] = dict(estimate.wh_period)
 
         if call.data[ATTR_RESOLUTION] == RESOLUTION_HOURLY:
-            watts, wh_period = _aggregate_hourly(watts, wh_period)
+            watts, wh_period = _aggregate_hourly(dict(estimate.watts), wh_period)
 
         start: datetime | None = call.data.get(ATTR_START)
         end: datetime | None = call.data.get(ATTR_END)
 
-        # Validate / normalise the optional time-range filter.
+        # Validate / normalise the optional time-range filter. The
+        # Forecast.Solar library exposes ``timezone`` as the IANA zone
+        # name string for the configured location; convert it to a
+        # ``ZoneInfo`` so naive inputs from the service call can be
+        # interpreted in the same zone as the forecast series.
+        tz = ZoneInfo(estimate.timezone) if estimate.timezone else None
         if start is not None and start.tzinfo is None:
-            start = start.replace(tzinfo=estimate.timezone or None)
+            start = start.replace(tzinfo=tz)
         if end is not None and end.tzinfo is None:
-            end = end.replace(tzinfo=estimate.timezone or None)
+            end = end.replace(tzinfo=tz)
         if start is not None and end is not None and end < start:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="end_before_start",
             )
 
-        forecast: list[dict[str, str | float | int]] = []
+        forecast: list[dict[str, Any]] = []
         for ts in sorted(watts):
             if start is not None and ts < start:
                 continue
             if end is not None and ts >= end:
                 break
-            entry_dict: dict[str, str | float | int] = {
+            entry_dict: dict[str, Any] = {
                 "time": ts.isoformat(),
                 "value": watts[ts],
             }

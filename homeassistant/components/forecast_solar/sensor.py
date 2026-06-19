@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import Any
 
 from forecast_solar.models import Estimate
@@ -36,7 +36,7 @@ class ForecastSolarSensorEntityDescription(SensorEntityDescription):
     attributes: Callable[[Estimate], dict[str, Any]] | None = None
 
 
-def _series_for_date(series: dict[datetime, int], target_date) -> dict[str, int]:
+def _series_for_date(series: dict[datetime, int], target_date: date) -> dict[str, int]:
     """Return ISO-keyed entries from a Forecast.Solar series for one date."""
     return {
         ts.isoformat(): val for ts, val in series.items() if ts.date() == target_date
