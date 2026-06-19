@@ -1,7 +1,7 @@
 """Teslemetry helper functions."""
 
 from collections.abc import Awaitable
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api.exceptions import InsufficientCredits, TeslaFleetError
 
@@ -11,12 +11,24 @@ from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
 from .const import CREDITS_URL, DOMAIN, LOGGER
 
+if TYPE_CHECKING:
+    from . import TeslemetryConfigEntry
+
 INSUFFICIENT_CREDITS_ISSUE = "insufficient_credits"
 
 # A credits event clears the insufficient credits issue when the account has
 # quota credits still available, or a balance topup has been applied.
 CREDITS_QUOTA_FRACTION_THRESHOLD = 0.95
 CREDITS_BALANCE_THRESHOLD = 25
+
+
+def insufficient_credits_issue_id(entry: TeslemetryConfigEntry) -> str:
+    """Return the per-config-entry insufficient credits issue id.
+
+    The issue is scoped to the config entry so that one account running out of
+    credits does not clear (or get cleared by) another account's repair.
+    """
+    return f"{INSUFFICIENT_CREDITS_ISSUE}_{entry.entry_id}"
 
 
 def flatten(
@@ -39,16 +51,19 @@ def flatten(
 
 
 async def handle_command(
-    hass: HomeAssistant, command: Awaitable[dict[str, Any]]
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    command: Awaitable[dict[str, Any]],
 ) -> dict[str, Any]:
     """Handle a command."""
+    issue_id = insufficient_credits_issue_id(entry)
     try:
         result = await command
     except InsufficientCredits as e:
         ir.async_create_issue(
             hass,
             DOMAIN,
-            INSUFFICIENT_CREDITS_ISSUE,
+            issue_id,
             is_fixable=False,
             severity=ir.IssueSeverity.ERROR,
             translation_key=INSUFFICIENT_CREDITS_ISSUE,
@@ -66,16 +81,18 @@ async def handle_command(
             translation_placeholders={"message": e.message},
         ) from e
     # A successful command means the account has credits again
-    ir.async_delete_issue(hass, DOMAIN, INSUFFICIENT_CREDITS_ISSUE)
+    ir.async_delete_issue(hass, DOMAIN, issue_id)
     LOGGER.debug("Command result: %s", result)
     return result
 
 
 async def handle_vehicle_command(
-    hass: HomeAssistant, command: Awaitable[dict[str, Any]]
+    hass: HomeAssistant,
+    entry: TeslemetryConfigEntry,
+    command: Awaitable[dict[str, Any]],
 ) -> Any:
     """Handle a vehicle command."""
-    result = await handle_command(hass, command)
+    result = await handle_command(hass, entry, command)
     if (response := result.get("response")) is None:
         if error := result.get("error"):
             # No response with error
@@ -108,7 +125,9 @@ async def handle_vehicle_command(
 
 
 @callback
-def async_handle_credits(hass: HomeAssistant, credits: dict[str, Any]) -> None:
+def async_handle_credits(
+    hass: HomeAssistant, entry: TeslemetryConfigEntry, credits: dict[str, Any]
+) -> None:
     """Clear the insufficient credits issue when credits become available."""
     accounting = credits.get("accounting")
     quota_available = (
@@ -116,7 +135,7 @@ def async_handle_credits(hass: HomeAssistant, credits: dict[str, Any]) -> None:
         and accounting["quota_fraction_used"] < CREDITS_QUOTA_FRACTION_THRESHOLD
     )
     if quota_available or credits["balance"] > CREDITS_BALANCE_THRESHOLD:
-        ir.async_delete_issue(hass, DOMAIN, INSUFFICIENT_CREDITS_ISSUE)
+        ir.async_delete_issue(hass, DOMAIN, insufficient_credits_issue_id(entry))
 
 
 @callback

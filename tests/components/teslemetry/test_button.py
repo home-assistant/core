@@ -62,7 +62,8 @@ async def test_insufficient_credits(
     issue_registry: ir.IssueRegistry,
 ) -> None:
     """Test a repair issue is raised when the account is out of command credits."""
-    await setup_platform(hass, [Platform.BUTTON])
+    entry = await setup_platform(hass, [Platform.BUTTON])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
 
     with (
         patch(
@@ -78,7 +79,7 @@ async def test_insufficient_credits(
             blocking=True,
         )
 
-    assert issue_registry.async_get_issue(DOMAIN, "insufficient_credits")
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
 
     # A subsequent successful command resolves the repair issue
     await hass.services.async_call(
@@ -88,4 +89,4 @@ async def test_insufficient_credits(
         blocking=True,
     )
 
-    assert issue_registry.async_get_issue(DOMAIN, "insufficient_credits") is None
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
