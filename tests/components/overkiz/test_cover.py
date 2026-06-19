@@ -529,20 +529,21 @@ async def test_merged_action_groups_keep_per_device_tracking(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
     mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test that covers sharing a merged execution each keep their movement state.
 
     The action queue can merge concurrent action groups into one execution and
-    return the same exec_id to every caller. Both stateless RTS covers must
-    therefore report OPENING, and both must clear once that execution completes.
+    return the same exec_id to every caller. Both covers must therefore report
+    OPENING, and both must clear once that execution completes.
     """
-    entry = await setup_overkiz_integration(fixture=UP_DOWN_VENETIAN_BLIND.fixture)
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
 
     # Both action groups merge into one execution sharing a single exec_id.
     mock_client.execute_action_group.side_effect = None
     mock_client.execute_action_group.return_value = "merged-exec"
 
-    for device in (UP_DOWN_VENETIAN_BLIND, UP_DOWN_SHEER_SCREEN):
+    for device in (SHUTTER, GARAGE):
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_OPEN_COVER,
@@ -551,23 +552,24 @@ async def test_merged_action_groups_keep_per_device_tracking(
         )
     await hass.async_block_till_done()
 
-    assert hass.states.get(UP_DOWN_VENETIAN_BLIND.entity_id).state == CoverState.OPENING
-    assert hass.states.get(UP_DOWN_SHEER_SCREEN.entity_id).state == CoverState.OPENING
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.OPENING
+    assert hass.states.get(GARAGE.entity_id).state == CoverState.OPENING
 
-    mock_client.queue_events(
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
         [
             execution_state_changed_event(
                 exec_id="merged-exec",
                 new_state=ExecutionState.COMPLETED,
                 old_state=ExecutionState.IN_PROGRESS,
             )
-        ]
+        ],
     )
-    await entry.runtime_data.coordinator.async_refresh()
-    await hass.async_block_till_done()
 
-    assert hass.states.get(UP_DOWN_VENETIAN_BLIND.entity_id).state != CoverState.OPENING
-    assert hass.states.get(UP_DOWN_SHEER_SCREEN.entity_id).state != CoverState.OPENING
+    assert hass.states.get(SHUTTER.entity_id).state != CoverState.OPENING
+    assert hass.states.get(GARAGE.entity_id).state != CoverState.OPENING
 
 
 @pytest.mark.parametrize(
