@@ -1,5 +1,7 @@
 {
   "services": {
-    "get_forecast": "mdi:solar-power"
+    "get_forecast": {
+      "service": "mdi:solar-power"
+    }
   }
 }

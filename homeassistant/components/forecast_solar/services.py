@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
@@ -17,6 +17,7 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
 
@@ -121,13 +122,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_key="end_before_start",
             )
 
-        forecast: list[dict[str, Any]] = []
+        forecast: list[JsonValueType] = []
         for ts in sorted(watts):
             if start is not None and ts < start:
                 continue
             if end is not None and ts >= end:
                 break
-            entry_dict: dict[str, Any] = {
+            entry_dict: dict[str, JsonValueType] = {
                 "time": ts.isoformat(),
                 "value": watts[ts],
             }
