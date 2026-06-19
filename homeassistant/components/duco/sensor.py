@@ -18,6 +18,7 @@ from homeassistant.const import (
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
@@ -45,6 +46,7 @@ class DucoSensorEntityDescription(SensorEntityDescription):
 class DucoBoxSensorEntityDescription(SensorEntityDescription):
     """Duco sensor entity description for box-level diagnostic data."""
 
+    supported_fn: Callable[[DucoCoordinator], bool] = lambda _: True
     value_fn: Callable[[DucoCoordinator], int | float | None]
 
 
@@ -137,6 +139,18 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
 
 BOX_SENSOR_DESCRIPTIONS: tuple[DucoBoxSensorEntityDescription, ...] = (
     DucoBoxSensorEntityDescription(
+        key="time_filter_remain",
+        translation_key="time_filter_remain",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.DAYS,
+        suggested_display_precision=0,
+        # Some Duco box variants do not expose a filter timer capability at all.
+        supported_fn=lambda coordinator: (
+            coordinator.data.time_filter_remain is not None
+        ),
+        value_fn=lambda coordinator: coordinator.data.time_filter_remain,
+    ),
+    DucoBoxSensorEntityDescription(
         key="rssi_wifi",
         device_class=SensorDeviceClass.SIGNAL_STRENGTH,
         state_class=SensorStateClass.MEASUREMENT,
@@ -156,10 +170,11 @@ async def async_setup_entry(
     """Set up Duco sensor entities."""
     coordinator = entry.runtime_data
 
-    # Track the node IDs for which entities have already been created, so we
-    # can detect both newly added and stale (deregistered) nodes on every
+    # Track the node IDs for which node entities have already been created, so
+    # we can detect both newly added and stale (deregistered) nodes on every
     # coordinator update.
     known_nodes: set[int] = set()
+    known_box_sensors: set[tuple[int, str]] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -191,31 +206,37 @@ async def async_setup_entry(
 
         new_entities: list[SensorEntity] = []
         for node in coordinator.data.nodes.values():
-            if node.node_id in known_nodes:
-                continue
-            if node.general.node_type == NodeType.UNKNOWN:
-                # Do not add the node to known_nodes so that it is re-evaluated
-                # on every coordinator update. This allows entities to be
-                # created automatically once a firmware update or library
-                # update adds support for the device type.
-                _LOGGER.debug(
-                    "Duco node %s (%s) has an unsupported device type and will be "
-                    "retried on subsequent coordinator updates",
-                    node.node_id,
-                    node.general.name,
+            if node.node_id not in known_nodes:
+                if node.general.node_type == NodeType.UNKNOWN:
+                    # Do not add the node to known_nodes so that it is re-evaluated
+                    # on every coordinator update. This allows entities to be
+                    # created automatically once a firmware update or library
+                    # update adds support for the device type.
+                    _LOGGER.debug(
+                        "Duco node %s (%s) has an unsupported device type and will be "
+                        "retried on subsequent coordinator updates",
+                        node.node_id,
+                        node.general.name,
+                    )
+                    continue
+                known_nodes.add(node.node_id)
+                new_entities.extend(
+                    DucoSensorEntity(coordinator, node, description)
+                    for description in SENSOR_DESCRIPTIONS
+                    if node.general.node_type in description.node_types
                 )
+
+            if node.general.node_type != NodeType.BOX:
                 continue
-            known_nodes.add(node.node_id)
-            new_entities.extend(
-                DucoSensorEntity(coordinator, node, description)
-                for description in SENSOR_DESCRIPTIONS
-                if node.general.node_type in description.node_types
-            )
-            new_entities.extend(
-                DucoBoxSensorEntity(coordinator, node, description)
-                for description in BOX_SENSOR_DESCRIPTIONS
-                if node.general.node_type == NodeType.BOX
-            )
+
+            for description in BOX_SENSOR_DESCRIPTIONS:
+                sensor_key = (node.node_id, description.key)
+                if sensor_key in known_box_sensors:
+                    continue
+                if not description.supported_fn(coordinator):
+                    continue
+                known_box_sensors.add(sensor_key)
+                new_entities.append(DucoBoxSensorEntity(coordinator, node, description))
         if new_entities:
             async_add_entities(new_entities)
 

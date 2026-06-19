@@ -25,13 +25,14 @@ _LOGGER = logging.getLogger(__name__)
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
 
 
-@dataclass
+@dataclass(slots=True, kw_only=True)
 class DucoData:
     """Data returned by the Duco coordinator."""
 
     nodes: dict[int, Node]
     node_actions: NodeListActionItemList
     rssi_wifi: int | None
+    time_filter_remain: int | None
 
 
 class DucoCoordinator(DataUpdateCoordinator[DucoData]):
@@ -83,6 +84,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
+        previous_data = cast(DucoData | None, self.data)
+
         try:
             nodes = await self.client.async_get_nodes()
         except DucoConnectionError as err:
@@ -99,7 +102,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         try:
             node_actions = await self.client.async_get_node_actions()
         except DucoError as err:
-            previous_data = cast(DucoData | None, self.data)
             node_actions = (
                 previous_data.node_actions
                 if previous_data is not None
@@ -116,7 +118,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         # LAN info only backs the diagnostic RSSI sensor, so failures on this
         # supplemental endpoint, including connection failures, should not make
         # the primary node entities unavailable.
-        rssi_wifi = self.data.rssi_wifi if self.data else None
+        rssi_wifi = previous_data.rssi_wifi if previous_data else None
         try:
             lan_info = await self.client.async_get_lan_info()
         except DucoError as err:
@@ -124,8 +126,17 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         else:
             rssi_wifi = lan_info.rssi_wifi
 
+        # Heat recovery info only backs the optional filter timer sensor, so
+        # failures on this supplemental endpoint should keep the last value.
+        time_filter_remain = previous_data.time_filter_remain if previous_data else None
+        try:
+            time_filter_remain = await self.client.async_get_time_filter_remaining()
+        except DucoError as err:
+            _LOGGER.debug("Could not fetch Duco heat recovery info", exc_info=err)
+
         return DucoData(
             nodes={node.node_id: node for node in nodes},
             node_actions=node_actions,
             rssi_wifi=rssi_wifi,
+            time_filter_remain=time_filter_remain,
         )

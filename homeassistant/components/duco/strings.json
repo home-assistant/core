@@ -82,6 +82,9 @@
       "target_flow_level": {
         "name": "Target flow level"
       },
+      "time_filter_remain": {
+        "name": "Filter remaining days"
+      },
       "time_state_end": {
         "name": "State end time"
       },

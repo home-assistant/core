@@ -26,6 +26,8 @@ from . import setup_platform_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
+FILTER_REMAINING_ENTITY_ID = "sensor.living_filter_remaining_days"
+
 
 @pytest.fixture
 async def init_integration(
@@ -137,6 +139,84 @@ async def test_lan_info_failures_keep_node_entities_available(
     state = hass.states.get("sensor.living_signal_strength")
     assert state is not None
     assert state.state == "-60"
+
+
+async def test_time_filter_remaining_missing_skips_sensor_creation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+) -> None:
+    """Test the filter timer sensor is not created when unsupported."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    mock_duco_client.async_get_time_filter_remaining.return_value = None
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
+
+
+async def test_time_filter_remaining_sensor_added_when_available_later(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the filter timer sensor is added when the capability appears later."""
+    mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
+    mock_duco_client.async_get_time_filter_remaining.return_value = None
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
+
+    mock_duco_client.async_get_time_filter_remaining.return_value = 180
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
+    assert state is not None
+    assert state.state == "180"
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(DucoError("heat recovery info error"), id="duco_error"),
+        pytest.param(
+            DucoConnectionError("heat recovery info offline"),
+            id="connection_error",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_time_filter_remaining_failures_keep_previous_value(
+    hass: HomeAssistant,
+    mock_duco_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test filter timer failures keep the previous value and other entities available."""
+    state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
+    assert state is not None
+    assert state.state == "180"
+
+    mock_duco_client.async_get_time_filter_remaining = AsyncMock(side_effect=exception)
+
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
+    assert state is not None
+    assert state.state == "180"
+
+    state = hass.states.get("sensor.office_co2_carbon_dioxide")
+    assert state is not None
+    assert state.state == "405"
 
 
 @pytest.mark.parametrize(
