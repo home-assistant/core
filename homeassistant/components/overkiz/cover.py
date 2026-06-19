@@ -838,7 +838,8 @@ class OverkizCover(OverkizDescriptiveEntity, CoverEntity):
         return any(
             execution.get("device_url") == self.device.device_url
             and execution.get("command_name") == command
-            for execution in self.coordinator.executions.values()
+            for executions in self.coordinator.executions.values()
+            for execution in executions
         )
 
     @property
