@@ -1,0 +1,53 @@
+# serializer version: 1
+# name: test_all_entities[image.c3_stop_100_line_pictogram-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'image',
+    'entity_category': None,
+    'entity_id': 'image.c3_stop_100_line_pictogram',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Line pictogram',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Line pictogram',
+    'platform': 'data_grand_lyon',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'line_pictogram',
+    'unique_id': 'C3_100-line_pictogram',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[image.c3_stop_100_line_pictogram-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'access_token': '1',
+      'entity_picture': '/api/image_proxy/image.c3_stop_100_line_pictogram?token=1',
+      'friendly_name': 'C3 - Stop 100 Line pictogram',
+    }),
+    'context': <ANY>,
+    'entity_id': 'image.c3_stop_100_line_pictogram',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2026-04-10T14:00:00+00:00',
+  })
+# ---

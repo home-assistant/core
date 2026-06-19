@@ -8,6 +8,11 @@
         }
       }
     },
+    "image": {
+      "line_pictogram": {
+        "default": "mdi:bus"
+      }
+    },
     "sensor": {
       "accessible_spaces": {
         "default": "mdi:wheelchair-accessibility"

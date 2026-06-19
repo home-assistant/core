@@ -11,6 +11,7 @@ from homeassistant.helpers.update_coordinator import (
 from .const import DOMAIN
 from .coordinator import (
     DataGrandLyonParkAndRideCoordinator,
+    DataGrandLyonPictogramCoordinator,
     DataGrandLyonTclCoordinator,
     DataGrandLyonVelovCoordinator,
 )
@@ -62,6 +63,21 @@ class DataGrandLyonTclEntity(DataGrandLyonEntity[DataGrandLyonTclCoordinator]):
         description: EntityDescription,
     ) -> None:
         """Initialize the TCL entity."""
+        super().__init__(coordinator, subentry, description, "TCL", "Stop")
+
+
+class DataGrandLyonStopPictogramEntity(
+    DataGrandLyonEntity[DataGrandLyonPictogramCoordinator]
+):
+    """Base entity for Data Grand Lyon TCL stop line pictograms."""
+
+    def __init__(
+        self,
+        coordinator: DataGrandLyonPictogramCoordinator,
+        subentry: ConfigSubentry,
+        description: EntityDescription,
+    ) -> None:
+        """Initialize the pictogram entity on the TCL stop device."""
         super().__init__(coordinator, subentry, description, "TCL", "Stop")
 
 
