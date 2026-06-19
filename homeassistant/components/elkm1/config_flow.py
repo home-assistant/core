@@ -246,8 +246,8 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
                 if device is not None and device.mac_address:
                     await self.async_set_unique_id(dr.format_mac(device.mac_address))
-                    # aborts if user tried to switch devices
-                    self._abort_if_unique_id_mismatch()
+                    if reconfigure_entry.unique_id is not None:
+                        self._abort_if_unique_id_mismatch()
                 else:
                     # If we cannot confirm identity, keep existing
                     # behavior (don't block reconfigure)
@@ -255,6 +255,7 @@ class Elkm1ConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
+                    unique_id=self.unique_id,
                     data_updates={
                         **reconfigure_entry.data,
                         CONF_HOST: info[CONF_HOST],
