@@ -229,6 +229,47 @@ async def test_multi_radio_press_calls_idx(
     mock_method.assert_called_once_with(idx=idx)
 
 
+@pytest.mark.parametrize("idx", [0, 1, 2])
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_ultima3_radio_restart_buttons_call_idx(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    idx: int,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test Ultima3 radio restart buttons pass the correct idx."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        addons={"zwave": True},
+        model="SLZB-Ultima3",
+        u_device=True,
+        radios=[
+            Radio(zb_type=8, chip_index=0),
+            Radio(zb_type=0, chip_index=1),
+            Radio(zb_type=-1, chip_index=2),
+        ],
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    unique_id_suffix = f"_{idx}" if idx else ""
+    entity_id = entity_registry.async_get_entity_id(
+        BUTTON_DOMAIN, DOMAIN, f"aa:bb:cc:dd:ee:ff-zigbee_restart{unique_id_suffix}"
+    )
+    assert entity_id is not None
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_smlight_client.cmds.zb_restart.assert_called_once_with(idx=idx)
+
+
 @pytest.mark.parametrize("key", ["zigbee_restart", "zigbee_flash_mode"])
 async def test_multi_radio_buttons_shared_non_u_device(
     hass: HomeAssistant,

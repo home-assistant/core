@@ -2,7 +2,7 @@
 
 from unittest.mock import MagicMock
 
-from pysmlight import Info, Sensors
+from pysmlight import Info, Radio, Sensors
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -114,6 +114,75 @@ async def test_zigbee_type_sensors(
     state = hass.states.get("sensor.mock_title_zigbee_type_2")
     assert state
     assert state.state == "router"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.freeze_time("2024-07-01 00:00:00+00:00")
+async def test_ultima3_radio_uptime_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test uptime sensors for each Ultima3 radio."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        addons={"zwave": True},
+        model="SLZB-Ultima3",
+        u_device=True,
+        radios=[
+            Radio(zb_type=8, chip_index=0),
+            Radio(zb_type=0, chip_index=1),
+            Radio(zb_type=-1, chip_index=2),
+        ],
+    )
+    mock_smlight_client.get_sensors.return_value = Sensors(
+        otbr_uptime=60,
+        socket_uptime=0,
+        socket2_uptime=120,
+        socket3_uptime=180,
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        hass.states.get("sensor.mock_title_zigbee_uptime").state
+        == "2024-06-30T23:59:00+00:00"
+    )
+    assert (
+        hass.states.get("sensor.mock_title_zigbee_uptime_2").state
+        == "2024-06-30T23:58:00+00:00"
+    )
+    assert (
+        hass.states.get("sensor.mock_title_zigbee_uptime_3").state
+        == "2024-06-30T23:57:00+00:00"
+    )
+
+
+async def test_ultima3_thread_border_router_type_sensor(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_smlight_client: MagicMock,
+) -> None:
+    """Test Thread border router radio type from Ultima3 diagnostics."""
+    mock_smlight_client.get_info.side_effect = None
+    mock_smlight_client.get_info.return_value = Info(
+        MAC="AA:BB:CC:DD:EE:FF",
+        addons={"zwave": True},
+        model="SLZB-Ultima3",
+        u_device=True,
+        radios=[
+            Radio(zb_type=8, chip_index=0),
+            Radio(zb_type=0, chip_index=1),
+            Radio(zb_type=-1, chip_index=2),
+        ],
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.mock_title_zigbee_type")
+    assert state
+    assert state.state == "thread_border_router"
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
