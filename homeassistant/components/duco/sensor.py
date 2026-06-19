@@ -174,7 +174,6 @@ async def async_setup_entry(
     # we can detect both newly added and stale (deregistered) nodes on every
     # coordinator update.
     known_nodes: set[int] = set()
-    known_box_sensors: set[tuple[int, str]] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -225,20 +224,12 @@ async def async_setup_entry(
                     for description in SENSOR_DESCRIPTIONS
                     if node.general.node_type in description.node_types
                 )
-
-            if node.general.node_type != NodeType.BOX:
-                continue
-
-            for description in BOX_SENSOR_DESCRIPTIONS:
-                sensor_key = (node.node_id, description.key)
-                if sensor_key in known_box_sensors:
-                    continue
-                # Retry box-level sensors on later refreshes so supported boxes
-                # still gain optional entities after an earlier fetch failure.
-                if not description.supported_fn(coordinator):
-                    continue
-                known_box_sensors.add(sensor_key)
-                new_entities.append(DucoBoxSensorEntity(coordinator, node, description))
+                if node.general.node_type == NodeType.BOX:
+                    new_entities.extend(
+                        DucoBoxSensorEntity(coordinator, node, description)
+                        for description in BOX_SENSOR_DESCRIPTIONS
+                        if description.supported_fn(coordinator)
+                    )
         if new_entities:
             async_add_entities(new_entities)
 

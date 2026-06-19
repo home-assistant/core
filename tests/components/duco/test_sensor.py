@@ -166,7 +166,7 @@ async def test_time_filter_remaining_missing_skips_sensor_creation(
         ),
     ],
 )
-async def test_time_filter_remaining_sensor_added_after_initial_fetch_failure(
+async def test_time_filter_remaining_initial_fetch_failure_skips_sensor_creation(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
@@ -174,7 +174,7 @@ async def test_time_filter_remaining_sensor_added_after_initial_fetch_failure(
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
-    """Test the filter timer sensor is added after an initial fetch failure."""
+    """Test the filter timer sensor is not added after an initial fetch failure."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
     mock_duco_client.async_get_time_filter_remaining = AsyncMock(
         side_effect=[exception, 180]
@@ -188,9 +188,7 @@ async def test_time_filter_remaining_sensor_added_after_initial_fetch_failure(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
-    assert state is not None
-    assert state.state == "180"
+    assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
 
 
 @pytest.mark.parametrize(
