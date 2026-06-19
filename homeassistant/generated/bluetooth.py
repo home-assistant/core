@@ -94,6 +94,21 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "local_name": "Jar*",
     },
     {
+        "connectable": True,
+        "domain": "diesel_heater",
+        "manufacturer_id": 65535,
+    },
+    {
+        "connectable": True,
+        "domain": "diesel_heater",
+        "service_uuid": "0000fff0-0000-1000-8000-00805f9b34fb",
+    },
+    {
+        "connectable": True,
+        "domain": "diesel_heater",
+        "service_uuid": "0000ffe0-0000-1000-8000-00805f9b34fb",
+    },
+    {
         "domain": "dormakaba_dkey",
         "service_uuid": "e7a60000-6639-429f-94fd-86de8ea26897",
     },

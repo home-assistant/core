@@ -395,6 +395,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/dhcp/ @bdraco
 /homeassistant/components/diagnostics/ @home-assistant/core
 /tests/components/diagnostics/ @home-assistant/core
+/homeassistant/components/diesel_heater/ @Spettacolo83
+/tests/components/diesel_heater/ @Spettacolo83
 /homeassistant/components/digital_ocean/ @fabaff
 /homeassistant/components/discogs/ @thibmaek
 /homeassistant/components/discord/ @tkdrob
