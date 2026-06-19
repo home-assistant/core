@@ -1,8 +1,14 @@
 """Tests for Overkiz integration init."""
 
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyoverkiz.client import OverkizClient
+from pyoverkiz.enums import Server
+import pytest
+
 from homeassistant import config_entries
+from homeassistant.components.overkiz import create_cloud_client, create_local_client
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -146,3 +152,28 @@ async def test_setup_token_transient_error_retries(
 
     assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_RETRY
     assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.parametrize(
+    "create_client",
+    [
+        lambda hass: create_cloud_client(
+            hass, TEST_EMAIL, TEST_PASSWORD, Server.SOMFY_EUROPE
+        ),
+        lambda hass: create_local_client(hass, "192.168.1.2", "token", verify_ssl=True),
+    ],
+    ids=["cloud", "local"],
+)
+async def test_client_enables_action_queue(
+    hass: HomeAssistant,
+    create_client: Callable[[HomeAssistant], OverkizClient],
+) -> None:
+    """Test the client factories enable the action queue.
+
+    The queue merges the bursts of action groups produced when an automation or
+    scene drives many devices at once into a single execution, which the gateway
+    would otherwise reject with a rate-limit error.
+    """
+    client = create_client(hass)
+
+    assert client.settings.action_queue is not None
