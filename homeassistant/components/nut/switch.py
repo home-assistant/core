@@ -2,7 +2,6 @@
 
 from contextlib import suppress
 import logging
-import re
 from typing import Any
 
 from homeassistant.components.switch import (
@@ -30,48 +29,50 @@ async def async_setup_entry(
     pynut_data = config_entry.runtime_data
     coordinator = pynut_data.coordinator
     status = coordinator.data
-
     data = pynut_data.data
     unique_id = pynut_data.unique_id
     user_available_commands = pynut_data.user_available_commands
 
     outlet_numbers: set[int] = set()
 
-    # Prefer outlet.count
+    # Prefer outlet.count when available
     if (num_outlets := status.get("outlet.count")) is not None:
         with suppress(ValueError):
             outlet_numbers.update(range(1, int(num_outlets) + 1))
 
-    # Detect outlets from status
+    # Detect outlets from status keys (outlet.<n>.status)
+    prefix = "outlet."
     for key in status:
-        match = re.fullmatch(r"outlet\.(\d+)\.status", key)
-        if match:
-            outlet_numbers.add(int(match.group(1)))
+        rest = key.removeprefix(prefix)
+        if rest != key and rest.endswith(".status"):
+            num = rest[: -len(".status")]
+            if num.isdigit():
+                outlet_numbers.add(int(num))
 
-    # Detect outlets from commands
-    for cmd in map(str, user_available_commands):
-        match = re.fullmatch(r"outlet\.(\d+)\.load\.(on|off)", cmd)
-        if match:
-            outlet_numbers.add(int(match.group(1)))
-
+    # Detect outlets from available commands (outlet.<n>.load.on/off)
     cmds = set(map(str, user_available_commands))
+    for cmd in cmds:
+        rest = cmd.removeprefix(prefix)
+        if rest != cmd and (rest.endswith(".load.on") or rest.endswith(".load.off")):
+            num = rest.split(".", 1)[0]
+            if num.isdigit():
+                outlet_numbers.add(int(num))
 
     switch_descriptions = [
         SwitchEntityDescription(
             key=f"outlet.{outlet_num}.load.poweronoff",
             translation_key="outlet_number_load_poweronoff",
             translation_placeholders={
-                "outlet_name": (
-                    status.get(f"outlet.{outlet_num}.name")
-                    or status.get(f"outlet.{outlet_num}.desc")
-                    or f"Outlet {outlet_num}"
-                )
+                "outlet_name": status.get(f"outlet.{outlet_num}.name")
+                or str(outlet_num)
             },
             device_class=SwitchDeviceClass.OUTLET,
-            has_entity_name=True,
         )
         for outlet_num in sorted(outlet_numbers)
-        if f"outlet.{outlet_num}.load.on" in cmds or "load.on" in cmds
+        if (
+            f"outlet.{outlet_num}.load.on" in cmds
+            and f"outlet.{outlet_num}.load.off" in cmds
+        )
     ]
 
     async_add_entities(
@@ -94,14 +95,12 @@ class NUTSwitch(NUTBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the device."""
-
         outlet, outlet_num_str = self.entity_description.key.split(".", 2)[:2]
         command_name = f"{outlet}.{outlet_num_str}.load.on"
         await self.pynut_data.async_run_command(command_name)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the device."""
-
         outlet, outlet_num_str = self.entity_description.key.split(".", 2)[:2]
         command_name = f"{outlet}.{outlet_num_str}.load.off"
         await self.pynut_data.async_run_command(command_name)
