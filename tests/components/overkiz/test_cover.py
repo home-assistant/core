@@ -568,8 +568,8 @@ async def test_merged_action_groups_keep_per_device_tracking(
         ],
     )
 
-    assert hass.states.get(SHUTTER.entity_id).state != CoverState.OPENING
-    assert hass.states.get(GARAGE.entity_id).state != CoverState.OPENING
+    assert hass.states.get(SHUTTER.entity_id).state == CoverState.CLOSED
+    assert hass.states.get(GARAGE.entity_id).state == CoverState.CLOSED
 
 
 @pytest.mark.parametrize(
