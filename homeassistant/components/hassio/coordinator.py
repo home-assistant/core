@@ -76,6 +76,7 @@ from .const import (
     REQUEST_REFRESH_DELAY,
     STARTUP_COMPLETE,
     SUPERVISOR_CONTAINER,
+    SUPERVISOR_JOBS_UPDATE_INTERVAL,
     UPDATE_KEY_SUPERVISOR,
     SupervisorEntityModel,
 )
@@ -122,14 +123,21 @@ class JobSubscription:
 class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
     """Manage access to Supervisor jobs."""
 
+    config_entry: ConfigEntry
+
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
         """Initialize object."""
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name="Supervisor jobs",
-            always_update=False,
+            name="SupervisorJobsCoordinator",
+            update_interval=SUPERVISOR_JOBS_UPDATE_INTERVAL,
+            # We don't want an immediate refresh since we want to avoid
+            # hammering the Supervisor API on startup
+            request_refresh_debouncer=Debouncer(
+                hass, _LOGGER, cooldown=REQUEST_REFRESH_DELAY, immediate=False
+            ),
         )
         self._supervisor_client = get_supervisor_client(hass)
         self._subscriptions: set[JobSubscription] = set()
@@ -246,7 +254,7 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
             and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
         ):
-            self.hass.async_create_task(self.async_request_refresh())
+            self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
         elif event[ATTR_WS_EVENT] == EVENT_JOB:
             job = Job.from_dict(event[ATTR_DATA] | {"child_jobs": []})
