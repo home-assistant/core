@@ -8,10 +8,9 @@ from urllib import parse
 from httpx import AsyncClient, HTTPError, HTTPStatusError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.httpx_client import get_async_client
 
 from .const import DOMAIN
@@ -112,34 +111,7 @@ async def _get_image_url(call: ServiceCall) -> dict[str, Any]:
 
 
 def _async_get_config_entry(hass: HomeAssistant, entry_id: str) -> VolvoConfigEntry:
-    if not entry_id:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_entry_id",
-            translation_placeholders={"entry_id": entry_id},
-        )
-
-    if not (entry := hass.config_entries.async_get_entry(entry_id)):
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_found",
-            translation_placeholders={"entry_id": entry_id},
-        )
-
-    if entry.domain != DOMAIN:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_entry",
-            translation_placeholders={"entry_id": entry.entry_id},
-        )
-
-    if entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="entry_not_loaded",
-            translation_placeholders={"entry_id": entry.entry_id},
-        )
-
+    entry: VolvoConfigEntry = service.async_get_config_entry(hass, DOMAIN, entry_id)
     return entry
 
 
