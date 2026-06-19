@@ -182,58 +182,6 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_reconfigure(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reconfiguration: fix the IP after a DHCP change."""
-        reconfigure_entry = self._get_reconfigure_entry()
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            ip = user_input["ip"].strip()
-            try:
-                ipaddress.IPv4Address(ip)
-            except ValueError:
-                errors["ip"] = "invalid_ip"
-            else:
-                if ip == reconfigure_entry.data["ip"]:
-                    errors["ip"] = "same_ip"
-                else:
-                    try:
-                        info = await async_get_device_info(ip)
-                    except PowerShadesTimeoutError:
-                        errors["base"] = "cannot_connect"
-                    else:
-                        serial = str(info["serial"])
-                        if reconfigure_entry.unique_id != serial:
-                            _LOGGER.debug(
-                                "Reconfigure mismatch for %s: entry unique_id=%s, "
-                                "probed serial at %s=%s",
-                                reconfigure_entry.title,
-                                reconfigure_entry.unique_id,
-                                ip,
-                                serial,
-                            )
-                            errors["base"] = "wrong_device"
-                        else:
-                            return self.async_update_reload_and_abort(
-                                reconfigure_entry,
-                                data_updates={
-                                    "ip": ip,
-                                    "serial": info["serial"],
-                                    "name": info["name"],
-                                    "model": info["model"],
-                                },
-                            )
-
-        return self.async_show_form(
-            step_id="reconfigure",
-            data_schema=vol.Schema(
-                {vol.Required("ip", default=reconfigure_entry.data["ip"]): str}
-            ),
-            errors=errors,
-        )
-
     async def _async_validate_and_create(
         self, ip: str, errors: dict[str, str]
     ) -> ConfigFlowResult | None:

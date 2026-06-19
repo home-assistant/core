@@ -77,8 +77,15 @@ rules:
     comment: >-
       The cover entity has no custom icon, it uses the default
       device-class icon, so there's nothing state-dependent to translate.
-  reconfiguration-flow: done
-  repair-issues: done
+  reconfiguration-flow:
+    status: todo
+    comment: planned for a follow-up PR
+  repair-issues:
+    status: exempt
+    comment: >-
+      A device not responding is a transient condition handled by
+      ConfigEntryNotReady's built-in retry; it isn't something the user
+      needs to act on, so it doesn't warrant a repair issue.
   stale-devices:
     status: exempt
     comment: >-
@@ -93,8 +100,4 @@ rules:
   inject-websession:
     status: exempt
     comment: uses UDP, not http(s), so there's no aiohttp session to inject
-  strict-typing:
-    status: exempt
-    comment: |
-      The getmac dependency does not include a py.typed file and is not PEP 561 compliant.
-      This is outside the integration's control as it's a third-party library requirement.
+  strict-typing: done

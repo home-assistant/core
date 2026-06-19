@@ -2,14 +2,11 @@
   "config": {
     "abort": {
       "already_configured": "Device is already configured",
-      "cannot_connect": "The device did not respond to a PowerShades probe",
-      "reconfigure_successful": "Re-configuration was successful"
+      "cannot_connect": "The device did not respond to a PowerShades probe"
     },
     "error": {
       "cannot_connect": "The device did not respond. Check the IP address and make sure the shade is awake.",
-      "invalid_ip": "Invalid IPv4 address",
-      "same_ip": "This is already this shade's configured IP address",
-      "wrong_device": "The device at this IP address is a different shade than the one configured here"
+      "invalid_ip": "Invalid IPv4 address"
     },
     "flow_title": "{name}",
     "step": {
@@ -35,16 +32,6 @@
           "device": "The PowerShades device to set up, discovered on your network."
         },
         "title": "Select your PowerShades device"
-      },
-      "reconfigure": {
-        "data": {
-          "ip": "IP address"
-        },
-        "data_description": {
-          "ip": "The new IP address of your PowerShades device."
-        },
-        "description": "Update the IP address if it has changed (e.g. after a DHCP reassignment).",
-        "title": "Reconfigure PowerShades device"
       }
     }
   },
@@ -57,12 +44,6 @@
     },
     "update_timeout": {
       "message": "Shade at {ip_address} did not reply: {error}"
-    }
-  },
-  "issues": {
-    "cannot_connect": {
-      "description": "Home Assistant could not connect to the PowerShades shade \"{name}\" at {ip}.\n\nMake sure the shade is powered on and connected to the network, then reload the integration. If its IP address has changed, open the device's PowerShades entry, select **Reconfigure** and enter the new IP address.",
-      "title": "{name} is not responding"
     }
   }
 }
