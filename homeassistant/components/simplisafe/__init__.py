@@ -247,7 +247,7 @@ def _async_register_base_station(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, str(system.system_id))},
         manufacturer="SimpliSafe",
-        model=system.version,
+        model=str(system.version),
         name=system.address,
     )
 
