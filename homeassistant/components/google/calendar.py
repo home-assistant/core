@@ -143,7 +143,7 @@ def _get_entity_descriptions(
         local_sync = True
         if (
             search := data.get(CONF_SEARCH)
-        ) or calendar_item.access_role is AccessRole.FREE_BUSY_READER:
+        ) or calendar_item.access_role == AccessRole.FREE_BUSY_READER:
             read_only = True
             local_sync = False
         entity_description = GoogleCalendarEntityDescription(
@@ -386,7 +386,7 @@ class GoogleCalendarEntity(
         """Return True if the event is visible and not declined."""
 
         if any(
-            attendee.is_self and attendee.response_status is ResponseStatus.DECLINED
+            attendee.is_self and attendee.response_status == ResponseStatus.DECLINED
             for attendee in event.attendees
         ):
             return False
