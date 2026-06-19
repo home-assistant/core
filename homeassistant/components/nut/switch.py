@@ -50,10 +50,10 @@ async def async_setup_entry(
                 outlet_numbers.add(int(num))
 
     # Detect outlets from available commands (outlet.<n>.load.on/off)
-    cmds = set(map(str, user_available_commands))
+    cmds = set(user_available_commands)
     for cmd in cmds:
         rest = cmd.removeprefix(prefix)
-        if rest != cmd and (rest.endswith(".load.on") or rest.endswith(".load.off")):
+        if rest != cmd and rest.endswith((".load.on", ".load.off")):
             num = rest.split(".", 1)[0]
             if num.isdigit():
                 outlet_numbers.add(int(num))
