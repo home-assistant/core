@@ -1416,9 +1416,8 @@ def _async_get_single_loaded_config_entry(
     """Retrieve single loaded config entry.
 
     This is a fallback for services that do not request (or have not been
-    provided with) a config entry ID. It will raise an error if there are
-    no loaded config entries or if there are multiple loaded config entries
-    for the domain.
+    provided with) a config entry ID. Only one config entry should exist
+    for the domain, and it must be loaded.
     """
     config_entries = hass.config_entries.async_entries(
         domain, include_ignore=False, include_disabled=False
