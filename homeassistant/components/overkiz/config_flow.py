@@ -166,6 +166,9 @@ class OverkizConfigFlow(
                     ),
                 }
             ),
+            description_placeholders={
+                "local_api_docs": "https://www.home-assistant.io/integrations/overkiz/#local-api-support"
+            },
         )
 
     async def async_step_cloud(
@@ -261,7 +264,8 @@ class OverkizConfigFlow(
         """Handle the local authentication step via config flow."""
         errors = {}
         description_placeholders = {
-            "somfy_developer_mode_docs": "https://github.com/Somfy-Developer/Somfy-TaHoma-Developer-Mode#getting-started"
+            "local_api_docs": "https://www.home-assistant.io/integrations/overkiz/#local-api-support",
+            "token_docs": "https://www.home-assistant.io/integrations/overkiz/#login-to-overkiz-local-api",
         }
 
         if user_input:
