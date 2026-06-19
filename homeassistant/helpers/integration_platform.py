@@ -299,28 +299,34 @@ class LazyIntegrationPlatforms[_R]:
         return await self._async_process(integration)
 
     async def async_get_platforms(self) -> dict[str, _R]:
-        """Return the processed platform for all loaded integrations that have it."""
+        """Return the processed platform for all loaded integrations that have it.
+
+        The integrations are resolved in a single pass and their platforms are
+        imported concurrently.
+        """
         integrations = await async_get_integrations(
             self._hass, self._hass.config.top_level_components
         )
-        domains = [
-            domain
-            for domain, integration in integrations.items()
+        to_process = [
+            integration
+            for integration in integrations.values()
             if not isinstance(integration, Exception)
             and integration.platforms_exists((self._platform_name,))
         ]
         results = await asyncio.gather(
-            *(self.async_get_platform(domain) for domain in domains)
+            *(self._async_process(integration) for integration in to_process)
         )
         return {
-            domain: result
-            for domain, result in zip(domains, results, strict=True)
+            integration.domain: result
+            for integration, result in zip(to_process, results, strict=True)
             if result is not None
         }
 
     async def _async_process(self, integration: Integration) -> _R | None:
         """Import, process and cache the platform for a loaded integration."""
         domain = integration.domain
+        if domain in self._processed:
+            return self._processed[domain]
         result: _R | None = None
         if integration.platforms_exists((self._platform_name,)):
             try:
