@@ -128,6 +128,11 @@
         "name": "Station open"
       }
     },
+    "image": {
+      "line_pictogram": {
+        "name": "Line pictogram"
+      }
+    },
     "sensor": {
       "accessible_spaces": {
         "name": "Accessible parking spaces",
@@ -216,6 +221,9 @@
     },
     "update_failed_park_and_ride": {
       "message": "Error fetching park & ride availability from Data Grand Lyon."
+    },
+    "update_failed_pictograms": {
+      "message": "Error fetching TCL line pictograms from Data Grand Lyon."
     },
     "update_failed_tcl": {
       "message": "Error fetching TCL departures from Data Grand Lyon."
