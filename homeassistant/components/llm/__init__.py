@@ -10,9 +10,11 @@ helper/integration split.
 
 from collections.abc import Callable
 from dataclasses import dataclass
+import logging
 from typing import Protocol
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.integration_platform import (
     async_process_integration_platforms,
@@ -22,6 +24,8 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -51,12 +55,15 @@ def async_register_tool_provider(
     the tools (and an optional prompt fragment) to expose.
     """
     providers = hass.data.setdefault(_TOOL_PROVIDERS, [])
+    if provider in providers:
+        raise HomeAssistantError("Tool provider is already registered")
     providers.append(provider)
 
     @callback
     def unregister() -> None:
         """Unregister the tool provider."""
-        providers.remove(provider)
+        if provider in providers:
+            providers.remove(provider)
 
     return unregister
 
@@ -71,7 +78,11 @@ def async_get_tools(hass: HomeAssistant, llm_context: LLMContext) -> LLMTools:
     tools: list[Tool] = []
     prompts: list[str] = []
     for provider in providers:
-        result = provider(hass, llm_context)
+        try:
+            result = provider(hass, llm_context)
+        except Exception:
+            _LOGGER.exception("Error getting tools from LLM tool provider")
+            continue
         tools.extend(result.tools)
         if result.prompt:
             prompts.append(result.prompt)

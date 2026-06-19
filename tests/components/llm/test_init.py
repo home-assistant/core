@@ -10,6 +10,7 @@ from homeassistant.components.llm import (
     async_register_tool_provider,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
@@ -107,3 +108,47 @@ async def test_register_tool_provider_merges(
     result = async_get_tools(hass, llm_context)
     assert result.tools == [tool_a, tool_b]
     assert result.prompt == "prompt a\nprompt b"
+
+
+async def test_register_tool_provider_duplicate(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test that registering the same provider twice raises and unregister is idempotent."""
+
+    @callback
+    def provider(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> LLMTools:
+        return LLMTools(tools=[])
+
+    unreg = async_register_tool_provider(hass, provider)
+
+    with pytest.raises(HomeAssistantError):
+        async_register_tool_provider(hass, provider)
+
+    unreg()
+    # Unregistering again is a no-op, not a ValueError.
+    unreg()
+
+
+async def test_get_tools_isolates_failing_provider(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that one failing provider does not drop the others' tools."""
+    tool = _StubTool("good_tool")
+
+    @callback
+    def bad_provider(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> LLMTools:
+        raise ValueError("boom")
+
+    @callback
+    def good_provider(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> LLMTools:
+        return LLMTools(tools=[tool], prompt="prompt")
+
+    async_register_tool_provider(hass, bad_provider)
+    async_register_tool_provider(hass, good_provider)
+
+    result = async_get_tools(hass, llm_context)
+    assert result.tools == [tool]
+    assert result.prompt == "prompt"
+    assert "Error getting tools from LLM tool provider" in caplog.text
