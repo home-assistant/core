@@ -8,6 +8,8 @@
           'AUDIO_PLAYER',
           'MICROPHONE',
         ]),
+        'communication_settings': dict({
+        }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
         }),
@@ -79,6 +81,8 @@
           'AUDIO_PLAYER',
           'MICROPHONE',
         ]),
+        'communication_settings': dict({
+        }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
         }),
@@ -150,6 +154,8 @@
           'AUDIO_PLAYER',
           'MICROPHONE',
         ]),
+        'communication_settings': dict({
+        }),
         'device_cluster_members': dict({
           'echo_test_serial_number': 'echo_test_device_id',
         }),

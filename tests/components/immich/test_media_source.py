@@ -293,7 +293,7 @@ async def test_browse_media_collections_error(
 @pytest.mark.parametrize(
     ("collection", "mocked_get_fn"),
     [
-        ("albums", ("albums", "async_get_album_info")),
+        ("albums", ("search", "async_get_all_by_album_ids")),
         ("favorites", ("search", "async_get_all_favorites")),
         ("people", ("search", "async_get_all_by_person_ids")),
         ("tags", ("search", "async_get_all_by_tag_ids")),

@@ -5,6 +5,7 @@ import logging
 from typing import Any
 
 from weheat.abstractions.user import async_get_user_id_from_token
+from weheat.exceptions import ApiException
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
@@ -33,12 +34,17 @@ class OAuth2FlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
 
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Override create entry to find heat pumps."""
-        # get the user id and use that as unique id for this entry
-        user_id = await async_get_user_id_from_token(
-            API_URL,
-            data[CONF_TOKEN][CONF_ACCESS_TOKEN],
-            async_get_clientsession(self.hass),
-        )
+        try:
+            user_id = await async_get_user_id_from_token(
+                API_URL,
+                data[CONF_TOKEN][CONF_ACCESS_TOKEN],
+                async_get_clientsession(self.hass),
+            )
+        except ApiException as err:
+            self.logger.error("Failed to get user ID from Weheat API: %s", err)
+            return self.async_abort(reason="oauth_failed")
+        if user_id is None:
+            return self.async_abort(reason="oauth_failed")
         await self.async_set_unique_id(user_id)
         if self.source != SOURCE_REAUTH:
             self._abort_if_unique_id_configured()

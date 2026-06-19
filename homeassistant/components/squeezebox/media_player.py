@@ -160,7 +160,7 @@ async def async_setup_entry(
             model=model,
             manufacturer=manufacturer,
             model_id=model_id,
-            hw_version=player.firmware,
+            hw_version=str(player.firmware) if player.firmware is not None else None,
             sw_version=sw_version,
             via_device=(DOMAIN, coordinator.server_uuid),
         )

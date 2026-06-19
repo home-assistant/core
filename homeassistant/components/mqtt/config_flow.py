@@ -4179,7 +4179,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_PROTOCOL: DEFAULT_PROTOCOL,
                 CONF_USERNAME: addon_discovery_config.get(CONF_USERNAME),
                 CONF_PASSWORD: addon_discovery_config.get(CONF_PASSWORD),
-                CONF_DISCOVERY: DEFAULT_DISCOVERY,
             }
         except AddonError:
             # We do not have discovery information yet
@@ -4420,7 +4419,6 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                         CONF_PROTOCOL: DEFAULT_PROTOCOL,
                         CONF_USERNAME: data.get(CONF_USERNAME),
                         CONF_PASSWORD: data.get(CONF_PASSWORD),
-                        CONF_DISCOVERY: DEFAULT_DISCOVERY,
                     },
                 )
 
