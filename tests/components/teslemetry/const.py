@@ -41,9 +41,9 @@ COMMAND_ERRORS = (COMMAND_REASON, COMMAND_NOREASON, COMMAND_ERROR, COMMAND_NOERR
 RESPONSE_OK = {"response": {}, "error": None}
 
 # Per-vehicle config cache returned in the metadata endpoint. The select
-# platform reads these keys to decide which seat-heater/cooler entities exist.
-# Defaults match the Model 3 in vehicle_data.json (heated rear bench, no third
-# row, no seat cooling).
+# platform reads rear_seat_heaters and third_row_seats to decide which rear
+# seat-heater entities exist. Defaults match the Model 3 in vehicle_data.json
+# (heated rear bench, no third row, no seat cooling).
 VEHICLE_CONFIG = {
     "rear_seat_heaters": 1,
     "third_row_seats": False,
