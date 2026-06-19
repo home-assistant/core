@@ -252,9 +252,6 @@ class NetatmoCamera(NetatmoModuleEntity, Camera):
     @property
     def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
-
-        # Not all Netatmo cameras support streaming, but all support on/off.
-
         supported_features = CameraEntityFeature.ON_OFF
         if self.device_type != "NDB":
             supported_features |= CameraEntityFeature.STREAM
