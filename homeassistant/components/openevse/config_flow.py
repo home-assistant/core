@@ -7,7 +7,7 @@ from openevsehttp.__main__ import OpenEVSE
 from openevsehttp.exceptions import AuthenticationError, MissingSerial
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_ID,
@@ -221,28 +221,28 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             host = user_input[CONF_HOST]
-            username = user_input.get(CONF_USERNAME)
-            password = user_input.get(CONF_PASSWORD)
+            username = user_input.get(CONF_USERNAME) or None
+            password = user_input.get(CONF_PASSWORD) or None
 
             errors, _ = await self.check_status(host, username, password)
-            if not errors:
-                data_updates: dict[str, Any] = {CONF_HOST: host}
-                if username:
-                    data_updates[CONF_USERNAME] = username
-                if password:
-                    data_updates[CONF_PASSWORD] = password
-
-                return self.async_update_reload_and_abort(
-                    reconfigure_entry,
-                    data_updates=data_updates,
+            if errors:
+                return self.async_show_form(
+                    step_id="reconfigure",
+                    data_schema=self.add_suggested_values_to_schema(
+                        self._get_reconfigure_schema(reconfigure_entry), user_input
+                    ),
+                    errors=errors,
                 )
 
-            return self.async_show_form(
-                step_id="reconfigure",
-                data_schema=self.add_suggested_values_to_schema(
-                    self._get_reconfigure_schema(reconfigure_entry), user_input
-                ),
-                errors=errors,
+            data_updates = {
+                CONF_HOST: host,
+                CONF_USERNAME: username,
+                CONF_PASSWORD: password,
+            }
+
+            return self.async_update_reload_and_abort(
+                reconfigure_entry,
+                data_updates=data_updates,
             )
 
         return self.async_show_form(
@@ -252,25 +252,18 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    def _get_reconfigure_schema(self, config_entry: Any) -> vol.Schema:
+    def _get_reconfigure_schema(self, config_entry: ConfigEntry) -> vol.Schema:
         """Get the reconfigure schema."""
         data = config_entry.data
-
-        if CONF_USERNAME in data or CONF_PASSWORD in data:
-            return vol.Schema(
-                {
-                    vol.Required(CONF_HOST, default=data.get(CONF_HOST, "")): cv.string,
-                    vol.Optional(
-                        CONF_USERNAME, default=data.get(CONF_USERNAME, "")
-                    ): cv.string,
-                    vol.Optional(
-                        CONF_PASSWORD, default=data.get(CONF_PASSWORD, "")
-                    ): cv.string,
-                }
-            )
 
         return vol.Schema(
             {
                 vol.Required(CONF_HOST, default=data.get(CONF_HOST, "")): cv.string,
+                vol.Optional(
+                    CONF_USERNAME, default=data.get(CONF_USERNAME, "")
+                ): cv.string,
+                vol.Optional(
+                    CONF_PASSWORD, default=data.get(CONF_PASSWORD, "")
+                ): cv.string,
             }
         )
