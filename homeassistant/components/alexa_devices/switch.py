@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import AmazonConfigEntry, alexa_api_call
 from .entity import AmazonEntity
-from .utils import async_remove_dnd_from_virtual_group, async_update_unique_id
+from .utils import async_remove_entity_from_virtual_group, async_update_unique_id
 
 PARALLEL_UPDATES = 1
 
@@ -58,7 +58,9 @@ async def async_setup_entry(
     new_key = "dnd"
 
     # Remove old DND switch from virtual groups
-    await async_remove_dnd_from_virtual_group(hass, coordinator, old_key)
+    await async_remove_entity_from_virtual_group(
+        hass, coordinator, SWITCH_DOMAIN, old_key
+    )
 
     # Replace unique id for DND switch
     await async_update_unique_id(hass, coordinator, SWITCH_DOMAIN, old_key, new_key)
