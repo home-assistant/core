@@ -99,15 +99,6 @@ SERVICE_GET_WANTED_SCHEMA = SERVICE_BASE_SCHEMA.extend(
 )
 
 
-def _get_config_entry_from_service_data(call: ServiceCall) -> SonarrConfigEntry:
-    """Return config entry for entry id."""
-    config_entry_id: str = call.data[ATTR_ENTRY_ID]
-    entry: SonarrConfigEntry = service.async_get_config_entry(
-        call.hass, DOMAIN, config_entry_id
-    )
-    return entry
-
-
 async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
     """Handle API errors and raise HomeAssistantError with user-friendly messages."""
     try:
@@ -122,7 +113,9 @@ async def _handle_api_errors[_T](func: Callable[[], Awaitable[_T]]) -> _T:
 
 async def _async_get_series(call: ServiceCall) -> dict[str, Any]:
     """Get all Sonarr series."""
-    entry = _get_config_entry_from_service_data(call)
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
 
     api_client = entry.runtime_data.status.api_client
     series_list = await _handle_api_errors(api_client.async_get_series)
@@ -135,7 +128,9 @@ async def _async_get_series(call: ServiceCall) -> dict[str, Any]:
 
 async def _async_get_episodes(call: ServiceCall) -> dict[str, Any]:
     """Get episodes for a specific series."""
-    entry = _get_config_entry_from_service_data(call)
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
     series_id: int = call.data[CONF_SERIES_ID]
     season_number: int | None = call.data.get(CONF_SEASON_NUMBER)
 
@@ -151,7 +146,9 @@ async def _async_get_episodes(call: ServiceCall) -> dict[str, Any]:
 
 async def _async_get_queue(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr queue."""
-    entry = _get_config_entry_from_service_data(call)
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
     max_items: int = call.data[CONF_MAX_ITEMS]
 
     api_client = entry.runtime_data.status.api_client
@@ -171,7 +168,9 @@ async def _async_get_queue(call: ServiceCall) -> dict[str, Any]:
 
 async def _async_get_diskspace(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr diskspace information."""
-    entry = _get_config_entry_from_service_data(call)
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
     space_unit: str = call.data[CONF_SPACE_UNIT]
 
     api_client = entry.runtime_data.status.api_client
@@ -182,7 +181,9 @@ async def _async_get_diskspace(call: ServiceCall) -> dict[str, Any]:
 
 async def _async_get_upcoming(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr upcoming episodes."""
-    entry = _get_config_entry_from_service_data(call)
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
     days: int = call.data[CONF_DAYS]
 
     api_client = entry.runtime_data.status.api_client
@@ -205,7 +206,9 @@ async def _async_get_upcoming(call: ServiceCall) -> dict[str, Any]:
 
 async def _async_get_wanted(call: ServiceCall) -> dict[str, Any]:
     """Get Sonarr wanted/missing episodes."""
-    entry = _get_config_entry_from_service_data(call)
+    entry: SonarrConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_ENTRY_ID]
+    )
     max_items: int = call.data[CONF_MAX_ITEMS]
 
     api_client = entry.runtime_data.status.api_client
