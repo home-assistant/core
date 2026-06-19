@@ -69,7 +69,9 @@ async def _get_image_url(call: ServiceCall) -> dict[str, Any]:
     entry_id = call.data.get(CONF_CONFIG_ENTRY_ID, "")
     requested_images = call.data.get(CONF_IMAGE_TYPES, [])
 
-    entry = _async_get_config_entry(call.hass, entry_id)
+    entry: VolvoConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, entry_id
+    )
     image_types = _get_requested_image_types(requested_images)
     client = get_async_client(call.hass)
 
@@ -108,11 +110,6 @@ async def _get_image_url(call: ServiceCall) -> dict[str, Any]:
             if exists
         ]
     }
-
-
-def _async_get_config_entry(hass: HomeAssistant, entry_id: str) -> VolvoConfigEntry:
-    entry: VolvoConfigEntry = service.async_get_config_entry(hass, DOMAIN, entry_id)
-    return entry
 
 
 def _get_requested_image_types(requested_image_types: list[str]) -> list[str]:
