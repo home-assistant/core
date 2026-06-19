@@ -128,7 +128,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "bsblan": {"python-bsblan": {"backoff"}},
     "coinbase": {"coinbase-advanced-py": {"backoff"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
@@ -171,7 +170,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "ipp": {"pyipp": {"backoff"}},
     "iqvia": {"pyiqvia": {"backoff"}},
-    "izone": {"python-izone": {"async-timeout"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
     "lametric": {"demetriek": {"backoff"}},
@@ -204,7 +202,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "opengarage": {"open-garage": {"async-timeout"}},
     "overkiz": {"pyoverkiz": {"backoff"}},
     "prosegur": {"pyprosegur": {"backoff"}},
-    "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
     "radio_browser": {"radios": {"backoff"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
@@ -234,7 +231,6 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
-    "wled": {"wled": {"backoff"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
     "zha": {

@@ -14,6 +14,7 @@ import pytest
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http
 from homeassistant.components.cloud import CloudNotAvailable
+from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.config import (
     _DEFAULT_CONFIG,
     HTTP_STORAGE_SCHEMA,
@@ -152,7 +153,7 @@ async def test_proxy_config(hass: HomeAssistant) -> None:
     assert (
         await async_setup_component(
             hass,
-            "http",
+            DOMAIN,
             {
                 "http": {
                     http.CONF_USE_X_FORWARDED_FOR: True,
@@ -168,7 +169,7 @@ async def test_proxy_config_only_use_xff(hass: HomeAssistant) -> None:
     """Test use_x_forwarded_for must config together with trusted_proxies."""
     assert (
         await async_setup_component(
-            hass, "http", {"http": {http.CONF_USE_X_FORWARDED_FOR: True}}
+            hass, DOMAIN, {"http": {http.CONF_USE_X_FORWARDED_FOR: True}}
         )
         is not True
     )
@@ -178,7 +179,7 @@ async def test_proxy_config_only_trust_proxies(hass: HomeAssistant) -> None:
     """Test use_x_forwarded_for must config together with trusted_proxies."""
     assert (
         await async_setup_component(
-            hass, "http", {"http": {http.CONF_TRUSTED_PROXIES: ["127.0.0.1"]}}
+            hass, DOMAIN, {"http": {http.CONF_TRUSTED_PROXIES: ["127.0.0.1"]}}
         )
         is not True
     )
@@ -201,7 +202,7 @@ async def test_ssl_profile_defaults_modern(hass: HomeAssistant, tmp_path: Path) 
         assert (
             await async_setup_component(
                 hass,
-                "http",
+                DOMAIN,
                 {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
             )
             is True
@@ -231,7 +232,7 @@ async def test_ssl_profile_change_intermediate(
         assert (
             await async_setup_component(
                 hass,
-                "http",
+                DOMAIN,
                 {
                     "http": {
                         "ssl_profile": "intermediate",
@@ -265,7 +266,7 @@ async def test_ssl_profile_change_modern(hass: HomeAssistant, tmp_path: Path) ->
         assert (
             await async_setup_component(
                 hass,
-                "http",
+                DOMAIN,
                 {
                     "http": {
                         "ssl_profile": "modern",
@@ -299,7 +300,7 @@ async def test_peer_cert(hass: HomeAssistant, tmp_path: Path) -> None:
         assert (
             await async_setup_component(
                 hass,
-                "http",
+                DOMAIN,
                 {
                     "http": {
                         "ssl_peer_certificate": peer_cert_path,
@@ -353,7 +354,7 @@ async def test_emergency_ssl_certificate_when_invalid(
     )
     # In recovery mode YAML is ignored, so seed the broken SSL paths into the
     # store's stable slot — that's the only config recovery mode will look at.
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {"ssl_certificate": str(cert_path), "ssl_key": str(key_path)}
     )
     hass.config.recovery_mode = True
@@ -381,7 +382,7 @@ async def test_emergency_ssl_certificate_not_used_when_not_recovery_mode(
 
     assert (
         await async_setup_component(
-            hass, "http", {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
+            hass, DOMAIN, {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}}
         )
         is False
     )
@@ -400,7 +401,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {"ssl_certificate": str(cert_path), "ssl_key": str(key_path)}
     )
     hass.config.recovery_mode = True
@@ -408,7 +409,7 @@ async def test_emergency_ssl_certificate_when_invalid_get_url_fails(
     with patch(
         "homeassistant.components.http.get_url", side_effect=NoURLAvailableError
     ) as mock_get_url:
-        assert await async_setup_component(hass, "http", {}) is True
+        assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_start()
         await hass.async_block_till_done()
 
@@ -433,7 +434,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {"ssl_certificate": str(cert_path), "ssl_key": str(key_path)}
     )
     hass.config.recovery_mode = True
@@ -441,7 +442,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert(
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
     ) as mock_builder:
-        assert await async_setup_component(hass, "http", {}) is True
+        assert await async_setup_component(hass, DOMAIN, {}) is True
         await hass.async_start()
         await hass.async_block_till_done()
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
@@ -467,7 +468,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     cert_path, key_path = await hass.async_add_executor_job(
         _setup_broken_ssl_pem_files, tmp_path
     )
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {
             "ssl_certificate": str(cert_path),
             "ssl_key": str(key_path),
@@ -479,7 +480,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
     with patch(
         "homeassistant.components.http.x509.CertificateBuilder", side_effect=OSError
     ) as mock_builder:
-        assert await async_setup_component(hass, "http", {}) is False
+        assert await async_setup_component(hass, DOMAIN, {}) is False
         await hass.async_start()
         await hass.async_block_till_done()
     assert "Could not create an emergency self signed ssl certificate" in caplog.text
@@ -489,7 +490,7 @@ async def test_invalid_ssl_and_cannot_create_emergency_cert_with_ssl_peer_cert(
 async def test_cors_defaults(hass: HomeAssistant) -> None:
     """Test the CORS default settings."""
     with patch("homeassistant.components.http.setup_cors") as mock_setup:
-        assert await async_setup_component(hass, "http", {})
+        assert await async_setup_component(hass, DOMAIN, {})
 
     assert len(mock_setup.mock_calls) == 1
     assert mock_setup.mock_calls[0][1][1] == ["https://cast.home-assistant.io"]
@@ -503,8 +504,8 @@ async def test_logging(
     """Testing the access log works."""
     await asyncio.gather(
         *(
-            async_setup_component(hass, component, {})
-            for component in ("http", "logger", "api")
+            async_setup_component(hass, domain, {})
+            for domain in ("http", "logger", "api")
         )
     )
     hass.states.async_set("logging.entity", "hello")
@@ -548,7 +549,7 @@ async def test_ssl_issue_if_no_urls_configured(
     ):
         assert await async_setup_component(
             hass,
-            "http",
+            DOMAIN,
             {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
         )
         await hass.async_start()
@@ -580,7 +581,7 @@ async def test_ssl_issue_if_using_cloud(
     ):
         assert await async_setup_component(
             hass,
-            "http",
+            DOMAIN,
             {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
         )
         await hass.async_start()
@@ -618,7 +619,7 @@ async def test_ssl_issue_if_not_connected_to_cloud(
     ):
         assert await async_setup_component(
             hass,
-            "http",
+            DOMAIN,
             {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
         )
         await hass.async_start()
@@ -660,7 +661,7 @@ async def test_ssl_issue_urls_configured(
     ):
         assert await async_setup_component(
             hass,
-            "http",
+            DOMAIN,
             {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
         )
         await hass.async_start()
@@ -720,7 +721,7 @@ async def test_server_host(
     ):
         assert await async_setup_component(
             hass,
-            "http",
+            DOMAIN,
             {"http": http_config},
         )
         await hass.async_start()
@@ -764,7 +765,7 @@ async def test_unix_socket_started_with_supervisor(
             loop, "create_unix_server", return_value=Mock()
         ) as mock_create_unix,
     ):
-        assert await async_setup_component(hass, "http", {"http": {}})
+        assert await async_setup_component(hass, DOMAIN, {"http": {}})
         await hass.async_start()
         await hass.async_block_till_done()
 
@@ -782,7 +783,7 @@ async def test_unix_socket_not_started_without_supervisor(
         patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
     ):
         os.environ.pop("SUPERVISOR_CORE_API_SOCKET", None)
-        assert await async_setup_component(hass, "http", {"http": {}})
+        assert await async_setup_component(hass, DOMAIN, {"http": {}})
         await hass.async_start()
         await hass.async_block_till_done()
 
@@ -802,7 +803,7 @@ async def test_unix_socket_rejected_relative_path(
         ),
         patch("asyncio.BaseEventLoop.create_server", return_value=Mock()),
     ):
-        assert await async_setup_component(hass, "http", {"http": {}})
+        assert await async_setup_component(hass, DOMAIN, {"http": {}})
         await hass.async_start()
         await hass.async_block_till_done()
 
@@ -841,7 +842,7 @@ async def test_yaml_migration_to_storage(
         issue_registry.async_get_issue("http", "deprecated_yaml_import_error") is None
     )
 
-    stored = hass_storage["http"]["data"]
+    stored = hass_storage[DOMAIN]["data"]
     assert stored["yaml_migration_done"] is True
     assert stored["stable"]["server_port"] == 8123  # untouched defaults
     pending = stored["pending"]
@@ -868,7 +869,7 @@ async def test_yaml_migration_matches_stable_no_pending(
         "ssl_profile": "modern",
         "use_x_frame_options": True,
     }
-    hass_storage["http"] = {
+    hass_storage[DOMAIN] = {
         "version": 2,
         "key": "http",
         "data": {
@@ -890,7 +891,7 @@ async def test_yaml_migration_matches_stable_no_pending(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    stored = hass_storage["http"]["data"]
+    stored = hass_storage[DOMAIN]["data"]
     assert stored["pending"] is None
     assert stored["stable"] == existing_stable
 
@@ -912,7 +913,7 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
         "ssl_profile": "modern",
         "use_x_frame_options": True,
     }
-    hass_storage["http"] = {
+    hass_storage[DOMAIN] = {
         "version": 2,
         "key": "http",
         "data": {
@@ -928,7 +929,7 @@ async def test_yaml_migration_differs_from_stable_creates_pending(
         await hass.async_start()
         await hass.async_block_till_done()
 
-    stored = hass_storage["http"]["data"]
+    stored = hass_storage[DOMAIN]["data"]
     assert stored["stable"] == existing_stable
     assert stored["pending"] == {
         "server_port": 8765,
@@ -974,7 +975,7 @@ async def test_yaml_still_present_after_migration_creates_issue(
     hass_storage: dict[str, Any],
 ) -> None:
     """When YAML lingers after migration, a repair issue is surfaced and YAML is ignored."""
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {"server_port": 9876}, yaml_migration_done=True
     )
 
@@ -1002,7 +1003,7 @@ async def test_yaml_still_present_issue_cleared_when_yaml_removed(
     hass_storage: dict[str, Any],
 ) -> None:
     """A previously created leftover-YAML issue is cleared once YAML is removed."""
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {"server_port": 9876}, yaml_migration_done=True
     )
     ir.async_create_issue(
@@ -1031,7 +1032,7 @@ async def test_setup_uses_stable_config_when_no_yaml(
     hass_storage: dict[str, Any],
 ) -> None:
     """Test HTTP config is loaded from the stable slot when no YAML or pending is set."""
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {
             "server_port": 9876,
             "cors_allowed_origins": ["https://stored.example.com"],
@@ -1060,7 +1061,7 @@ async def test_setup_prefers_pending_over_stable_in_normal_mode(
     hass_storage: dict[str, Any],
 ) -> None:
     """Pending overrides stable on a normal boot so the new config gets tested."""
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {"server_port": 9876}, pending={"server_port": 9999}
     )
 
@@ -1081,7 +1082,7 @@ async def test_recovery_mode_falls_back_to_stable(
     hass_storage: dict[str, Any],
 ) -> None:
     """In recovery mode the pending config is ignored to keep HA reachable."""
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {"server_port": 9876}, pending={"server_port": 9999}
     )
     hass.config.recovery_mode = True
@@ -1137,7 +1138,7 @@ async def test_recovery_mode_ignores_yaml(
     config and fall back to the last known good ``stable`` slot. Migrating
     YAML here would defeat that and could re-introduce the broken config.
     """
-    hass_storage["http"] = _stable_http_storage(
+    hass_storage[DOMAIN] = _stable_http_storage(
         {"server_port": 5555}, yaml_migration_done=False
     )
     hass.config.recovery_mode = True
@@ -1157,7 +1158,7 @@ async def test_recovery_mode_ignores_yaml(
     assert args[2] == 5555
     # The migration must not run in recovery mode, so its flag stays untouched
     # and no deprecation issue is created on this boot.
-    assert hass_storage["http"]["data"]["yaml_migration_done"] is False
+    assert hass_storage[DOMAIN]["data"]["yaml_migration_done"] is False
     assert issue_registry.async_get_issue("http", "deprecated_yaml") is None
 
 
@@ -1166,7 +1167,7 @@ async def test_setup_migrates_v1_storage_to_v2(
     hass_storage: dict[str, Any],
 ) -> None:
     """An existing v1 store is migrated into the stable slot."""
-    hass_storage["http"] = {
+    hass_storage[DOMAIN] = {
         "version": 1,
         "key": "http",
         "data": {"server_port": 9876},
@@ -1185,8 +1186,8 @@ async def test_setup_migrates_v1_storage_to_v2(
     # boot after store migration. With no YAML http config, the default config is migrated to the pending slot and used. Therefore we assert below the default port (8123)
     args, _ = mock_create_server.call_args
     assert args[2] == 8123
-    assert hass_storage["http"]["version"] == 2
-    data = hass_storage["http"]["data"]
+    assert hass_storage[DOMAIN]["version"] == 2
+    data = hass_storage[DOMAIN]["data"]
     # The v1→v2 migration normalises the payload through the storage schema,
     # so the v2 stable slot is well-formed (all keys present) on disk.
     assert data["stable"]["server_port"] == 9876
@@ -1232,7 +1233,7 @@ async def test_setup_port_env_var_used_as_default(
 
     args, _ = mock_create_server.call_args
     assert args[2] == 80
-    assert hass_storage["http"]["data"]["pending"]["server_port"] == 80
+    assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == 80
 
 
 async def test_websocket_http_config(
@@ -1275,7 +1276,7 @@ async def test_websocket_http_config(
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {"restart": True}
-    pending = hass_storage["http"]["data"]["pending"]
+    pending = hass_storage[DOMAIN]["data"]["pending"]
     assert pending["server_port"] == 9123
     assert pending["trusted_proxies"] == ["127.0.0.0/8"]
     await hass.async_block_till_done()
@@ -1292,8 +1293,8 @@ async def test_websocket_http_config(
     await ws_client.send_json_auto_id({"type": "http/config/promote"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert hass_storage["http"]["data"]["pending"] is None
-    assert hass_storage["http"]["data"]["stable"]["server_port"] == 9123
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert hass_storage[DOMAIN]["data"]["stable"]["server_port"] == 9123
 
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
@@ -1313,7 +1314,7 @@ async def test_websocket_http_config(
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {"restart": True}
-    assert hass_storage["http"]["data"]["pending"]["server_port"] == 7000
+    assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == 7000
     await hass.async_block_till_done()
     assert len(restart_calls) == 2
 
@@ -1323,8 +1324,8 @@ async def test_websocket_http_config(
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {"restart": True}
-    assert hass_storage["http"]["data"]["pending"] is None
-    assert hass_storage["http"]["data"]["stable"]["server_port"] == 9123
+    assert hass_storage[DOMAIN]["data"]["pending"] is None
+    assert hass_storage[DOMAIN]["data"]["stable"]["server_port"] == 9123
     await hass.async_block_till_done()
     assert len(restart_calls) == 3
 

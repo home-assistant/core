@@ -423,7 +423,6 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         )
 
         raise ServiceValidationError(
-            "Invalid alarm code provided",
             translation_domain=DOMAIN,
             translation_key="invalid_code",
         )

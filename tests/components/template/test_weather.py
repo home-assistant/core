@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
-from homeassistant.components.template.const import CONF_PICTURE
+from homeassistant.components.template.const import CONF_PICTURE, DOMAIN
 from homeassistant.components.weather import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -78,7 +78,6 @@ TEST_SENSORS = (
 )
 TEST_WEATHER = TemplatePlatformSetup(
     WEATHER_DOMAIN,
-    None,
     "template_weather",
     make_test_trigger(TEST_STATE_ENTITY_ID, *TEST_SENSORS),
 )
@@ -104,19 +103,6 @@ async def setup_weather(
 ) -> None:
     """Do setup of number integration."""
     await setup_entity(hass, TEST_WEATHER, style, 1, config)
-
-
-@pytest.mark.parametrize(
-    ("style", "config"),
-    [(ConfigurationStyle.LEGACY, TEST_LEGACY_REQUIRED)],
-)
-@pytest.mark.usefixtures("setup_weather")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("weather")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -817,7 +803,7 @@ async def test_restore_weather_save_state(
     """Test Restore saved state for Weather trigger template."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},
@@ -912,7 +898,7 @@ async def test_trigger_entity_restore_state_fail(
     mock_restore_cache_with_extra_data(hass, ((saved_state, saved_extra_data),))
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": {
                 "trigger": {"platform": "event", "event_type": "test_event"},

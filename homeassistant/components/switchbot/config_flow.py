@@ -14,6 +14,7 @@ from switchbot import (
 )
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -424,6 +425,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_password()
             return await self._async_create_entry_from_discovery(user_input)
 
+        await bluetooth.async_request_active_scan(self.hass)
         self._async_discover_devices()
         if len(self._discovered_advs) == 1:
             # If there is only one device we can ask for a password
@@ -477,6 +479,9 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             SupportedModels.LOCK,
             SupportedModels.LOCK_PRO,
             SupportedModels.LOCK_ULTRA,
+            SupportedModels.LOCK_PRO_WIFI,
+            SupportedModels.LOCK_VISION,
+            SupportedModels.LOCK_VISION_PRO,
         ):
             options.update(
                 {

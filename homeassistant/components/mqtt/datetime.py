@@ -27,6 +27,7 @@ from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
     CONF_STATE_TOPIC,
+    CONF_TIMEZONE,
     PAYLOAD_NONE,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
@@ -39,8 +40,6 @@ from .models import (
 from .schemas import MQTT_ENTITY_COMMON_SCHEMA
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_TIMEZONE = "timezone"
 
 PARALLEL_UPDATES = 0
 

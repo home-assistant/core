@@ -50,7 +50,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.weersensor_raining-entry]
+# name: test_binary_sensor[binary_sensor.tuin_weersensor_raining-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -64,7 +64,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.weersensor_raining',
+    'entity_id': 'binary_sensor.tuin_weersensor_raining',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -87,20 +87,20 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.weersensor_raining-state]
+# name: test_binary_sensor[binary_sensor.tuin_weersensor_raining-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Weersensor Raining',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.weersensor_raining',
+    'entity_id': 'binary_sensor.tuin_weersensor_raining',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
   })
 # ---
-# name: test_binary_sensor[binary_sensor.weersensor_twilight-entry]
+# name: test_binary_sensor[binary_sensor.tuin_weersensor_twilight-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -114,7 +114,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.weersensor_twilight',
+    'entity_id': 'binary_sensor.tuin_weersensor_twilight',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -137,13 +137,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor[binary_sensor.weersensor_twilight-state]
+# name: test_binary_sensor[binary_sensor.tuin_weersensor_twilight-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Weersensor Twilight',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.weersensor_twilight',
+    'entity_id': 'binary_sensor.tuin_weersensor_twilight',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

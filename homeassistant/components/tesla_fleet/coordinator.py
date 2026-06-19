@@ -109,11 +109,11 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.data = flatten(product)
         self.updated_once = False
-        self.last_active = datetime.now()
+        self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         self.endpoints = (
             ENDPOINTS
             if location
-            else [ep for ep in ENDPOINTS if ep != VehicleDataEndpoint.LOCATION_DATA]
+            else [ep for ep in ENDPOINTS if ep is not VehicleDataEndpoint.LOCATION_DATA]
         )
 
     async def _async_update_data(self) -> dict[str, Any]:
@@ -159,12 +159,12 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 or data["vehicle_state"].get("sentry_mode")
             ):
                 # Vehicle is active, reset timer
-                self.last_active = datetime.now()
+                self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
             else:
-                elapsed = datetime.now() - self.last_active
+                elapsed = datetime.now() - self.last_active  # pylint: disable=home-assistant-enforce-naive-now
                 if elapsed > timedelta(minutes=20):
                     # Vehicle didn't sleep, try again in 15 minutes
-                    self.last_active = datetime.now()
+                    self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
                 elif elapsed > timedelta(minutes=15):
                     # Let vehicle go to sleep now
                     self.update_interval = VEHICLE_WAIT

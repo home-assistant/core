@@ -36,7 +36,7 @@ async def test_button_error_confirm(
     values: dict[str, MowerAttributes],
 ) -> None:
     """Test error confirm button command."""
-    entity_id = "button.test_mower_1_confirm_error"
+    entity_id = "button.garden_test_mower_1_confirm_error"
     await setup_integration(hass, mock_config_entry)
     state = hass.states.get(entity_id)
     assert state.name == "Test Mower 1 Confirm error"
@@ -63,17 +63,17 @@ async def test_button_error_confirm(
     ("entity_id", "name", "expected_command"),
     [
         (
-            "button.test_mower_1_confirm_error",
+            "button.garden_test_mower_1_confirm_error",
             "Test Mower 1 Confirm error",
             "error_confirm",
         ),
         (
-            "button.test_mower_1_sync_clock",
+            "button.garden_test_mower_1_sync_clock",
             "Test Mower 1 Sync clock",
             "set_datetime",
         ),
         (
-            "button.test_mower_1_reset_cutting_blade_usage_time",
+            "button.garden_test_mower_1_reset_cutting_blade_usage_time",
             "Test Mower 1 Reset cutting blade usage time",
             "reset_cutting_blade_usage_time",
         ),

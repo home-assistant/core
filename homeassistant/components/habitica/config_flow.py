@@ -249,7 +249,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not errors and login is not None:
                     await self.async_set_unique_id(str(login.id))
                     self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         reauth_entry,
                         data_updates={CONF_API_KEY: login.apiToken},
                     )
@@ -261,7 +261,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 )
                 if not errors and user is not None:
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         reauth_entry, data_updates=user_input[SECTION_REAUTH_API_KEY]
                     )
             else:
@@ -309,7 +309,7 @@ class HabiticaConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
             if not errors and user is not None:
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     reconf_entry,
                     data_updates={
                         CONF_API_KEY: user_input[CONF_API_KEY],

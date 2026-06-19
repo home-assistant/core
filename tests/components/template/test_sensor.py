@@ -9,6 +9,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.bootstrap import async_from_config_dict
 from homeassistant.components import sensor, template
+from homeassistant.components.template import DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_FRIENDLY_NAME,
@@ -53,7 +54,6 @@ TEST_AVAILABILITY_SENSOR = "sensor.availability_sensor"
 
 TEST_SENSOR = TemplatePlatformSetup(
     sensor.DOMAIN,
-    "sensors",
     "test_template_sensor",
     make_test_trigger(TEST_STATE_SENSOR, TEST_AVAILABILITY_SENSOR),
 )
@@ -123,19 +123,6 @@ async def setup_attributes_state_sensor(
         state_template,
         attributes=attributes,
     )
-
-
-@pytest.mark.parametrize(
-    ("count", "state_template", "style", "config"),
-    [(1, "{{ states('sensor.test_state') }}", ConfigurationStyle.LEGACY, {})],
-)
-@pytest.mark.usefixtures("setup_state_sensor")
-async def test_legacy_template_creates_warning(
-    hass: HomeAssistant, caplog_setup_text
-) -> None:
-    """Test legacy YAML configuration logs a warning."""
-    assert len(hass.states.async_all("sensor")) == 0
-    assert "entities can only be configured under template:" in caplog_setup_text
 
 
 @pytest.mark.parametrize(
@@ -1240,7 +1227,7 @@ async def test_numeric_trigger_entity_set_unknown(
     """Test trigger entity state parsing with numeric sensors."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {
@@ -1278,7 +1265,7 @@ async def test_trigger_attribute_order(
     """Test trigger entity attributes order."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {
@@ -1361,7 +1348,7 @@ async def test_entity_last_reset_total_increasing(
     with patch("homeassistant.util.dt.now", return_value=now):
         assert await async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": [
                     {

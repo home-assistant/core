@@ -70,14 +70,20 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                     station_id,
                     err,
                 )
-                raise ConfigEntryAuthFailed(err) from err
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_api_key",
+                ) from err
             except TankerkoenigConnectionError as err:
                 _LOGGER.debug(
                     "connection error occur during setup of station %s %s",
                     station_id,
                     err,
                 )
-                raise ConfigEntryNotReady(err) from err
+                raise ConfigEntryNotReady(
+                    translation_domain=DOMAIN,
+                    translation_key="connection_error",
+                ) from err
             except TankerkoenigError as err:
                 _LOGGER.error("Error when adding station %s %s", station_id, err)
                 continue

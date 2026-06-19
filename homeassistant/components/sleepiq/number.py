@@ -86,7 +86,7 @@ async def _async_set_foot_warmer_time(
     foot_warmer: SleepIQFootWarmer, time: int
 ) -> None:
     temperature = FootWarmingTemps(foot_warmer.temperature)
-    if temperature != FootWarmingTemps.OFF:
+    if temperature is not FootWarmingTemps.OFF:
         await foot_warmer.turn_on(temperature, time)
 
     foot_warmer.timer = time
@@ -105,7 +105,7 @@ async def _async_set_core_climate_time(
     core_climate: SleepIQCoreClimate, time: int
 ) -> None:
     temperature = CoreTemps(core_climate.temperature)
-    if temperature != CoreTemps.OFF:
+    if temperature is not CoreTemps.OFF:
         await core_climate.turn_on(temperature, time)
 
     core_climate.timer = time

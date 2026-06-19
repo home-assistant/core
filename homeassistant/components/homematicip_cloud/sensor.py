@@ -27,6 +27,7 @@ from homematicip.device import (
     PassageDetector,
     PresenceDetectorIndoor,
     RoomControlDeviceAnalog,
+    RotaryHandleSensor,
     SmokeDetector,
     SoilMoistureSensorInterface,
     SwitchMeasuring,
@@ -166,6 +167,7 @@ ILLUMINATION_DEVICE_ATTRIBUTES = {
 }
 
 TILT_STATE_VALUES = ["neutral", "tilted", "non_neutral"]
+WINDOW_STATE_VALUES = ["open", "closed", "tilted"]
 
 
 def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
@@ -203,6 +205,9 @@ def get_device_handlers(hap: HomematicipHAP) -> dict[type, Callable]:
         ],
         RoomControlDeviceAnalog: lambda device: [
             HomematicipTemperatureSensor(hap, device),
+        ],
+        RotaryHandleSensor: lambda device: [
+            HomematicipWindowStateSensor(hap, device),
         ],
         LightSensor: lambda device: [
             HomematicipIlluminanceSensor(hap, device),
@@ -496,6 +501,24 @@ class HomematicipTiltStateSensor(HomematicipGenericEntity, SensorEntity):
         )
 
         return state_attr
+
+
+class HomematicipWindowStateSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP rotary handle window state sensor."""
+
+    _attr_device_class = SensorDeviceClass.ENUM
+    _attr_options = WINDOW_STATE_VALUES
+    _attr_translation_key = "window_state"
+
+    def __init__(self, hap: HomematicipHAP, device: RotaryHandleSensor) -> None:
+        """Initialize the window state sensor."""
+        super().__init__(hap, device, feature_id="window_state")
+
+    @property
+    def native_value(self) -> str | None:
+        """Return the state."""
+        window_state = getattr(self._device, "windowState", None)
+        return window_state.lower() if window_state is not None else None
 
 
 class HomematicipFloorTerminalBlockMechanicChannelValve(
@@ -1070,9 +1093,7 @@ class HmipSmokeDetectorSensor(HomematicipGenericEntity, SensorEntity):
         description: HmipSmokeDetectorSensorDescription,
     ) -> None:
         """Initialize the smoke detector sensor."""
-        super().__init__(
-            hap, device, post=description.key, feature_id="smoke_detector_sensor"
-        )
+        super().__init__(hap, device, feature_id="smoke_detector_sensor")
         self.entity_description = description
         self._sensor_unique_id = f"{device.id}_{description.key}"
 

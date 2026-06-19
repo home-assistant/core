@@ -722,6 +722,7 @@ def supervisor_info_fixture(supervisor_client: AsyncMock) -> AsyncMock:
         auto_update=True,
         country=None,
         detect_blocking_io=False,
+        feature_flags={},
     )
     return supervisor_client.supervisor.info
 
@@ -912,6 +913,11 @@ def supervisor_client() -> Generator[AsyncMock]:
         ),
         patch(
             "homeassistant.components.hassio.update_helper.get_supervisor_client",
+            return_value=supervisor_client,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_hardware.util."
+            "get_supervisor_client",
             return_value=supervisor_client,
         ),
     ):

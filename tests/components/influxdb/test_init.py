@@ -13,7 +13,13 @@ import pytest
 from homeassistant.components import influxdb
 from homeassistant.components.influxdb.const import DEFAULT_BUCKET, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import PERCENTAGE, STATE_OFF, STATE_ON, STATE_STANDBY
+from homeassistant.const import (
+    CONF_PATH,
+    PERCENTAGE,
+    STATE_OFF,
+    STATE_ON,
+    STATE_STANDBY,
+)
 from homeassistant.core import HomeAssistant, split_entity_id
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -167,7 +173,7 @@ async def test_setup_config_full(
     full_config.update(config_update)
     full_config.update(config_ext)
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == full_config
     assert issue_registry.async_get_issue(
         domain=DOMAIN,
@@ -311,7 +317,7 @@ async def test_setup_config_ssl(
         patch("os.access", return_value=True),
         patch("os.path.isfile", return_value=True),
     ):
-        mock_entry = MockConfigEntry(domain="influxdb", data=config)
+        mock_entry = MockConfigEntry(domain=DOMAIN, data=config)
 
         mock_entry.add_to_hass(hass)
 
@@ -319,6 +325,46 @@ async def test_setup_config_ssl(
         await hass.async_block_till_done()
 
         assert expected_client_args.items() <= mock_client.call_args.kwargs.items()
+
+
+@pytest.mark.parametrize(
+    ("mock_client", "config_ext", "expected_path"),
+    [
+        pytest.param(
+            influxdb.DEFAULT_API_VERSION,
+            {CONF_PATH: "/"},
+            None,
+            id="root_path_excluded",
+        ),
+        pytest.param(
+            influxdb.DEFAULT_API_VERSION,
+            {CONF_PATH: "/custom_path"},
+            "/custom_path",
+            id="custom_path_included",
+        ),
+        pytest.param(
+            influxdb.DEFAULT_API_VERSION,
+            {},
+            None,
+            id="no_path_excluded",
+        ),
+    ],
+    indirect=["mock_client"],
+)
+async def test_setup_config_path(
+    hass: HomeAssistant, mock_client, config_ext: dict, expected_path: str | None
+) -> None:
+    """Test that path='/' is not passed to InfluxDBClient, but other paths are."""
+    config = BASE_V1_CONFIG.copy()
+    config.update(config_ext)
+
+    mock_entry = MockConfigEntry(domain=DOMAIN, data=config)
+    mock_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_client.call_args.kwargs.get(CONF_PATH) == expected_path
 
 
 @pytest.mark.parametrize(
@@ -351,7 +397,7 @@ async def test_setup_minimal_config_no_connection_keys(
 
     entry = conf_entries[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == BASE_V1_CONFIG
 
     assert not issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
@@ -396,7 +442,7 @@ async def test_setup_minimal_config_with_connection_keys(
 
     entry = conf_entries[0]
 
-    assert entry.state == ConfigEntryState.LOADED
+    assert entry.state is ConfigEntryState.LOADED
     assert entry.data == config_base
 
     assert issue_registry.async_get_issue(domain=DOMAIN, issue_id="deprecated_yaml")
@@ -459,7 +505,7 @@ async def test_setup_no_import_when_config_entry_exist(
     config["influxdb"].update(config_ext)
 
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config_base,
     )
     mock_entry.add_to_hass(hass)
@@ -481,7 +527,7 @@ async def _setup(
 ) -> None:
     """Prepare client for next test and return event handler method."""
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config,
     )
 
@@ -1895,7 +1941,7 @@ async def test_connection_failure_on_startup(
     write_api.side_effect = test_exception
 
     mock_entry = MockConfigEntry(
-        domain="influxdb",
+        domain=DOMAIN,
         data=config_base,
     )
 

@@ -298,9 +298,13 @@ class PassiveBluetoothProcessorCoordinator[_DataT](BasePassiveBluetoothCoordinat
         mode: BluetoothScanningMode,
         update_method: Callable[[BluetoothServiceInfoBleak], _DataT],
         connectable: bool = False,
+        scan_interval: float | None = None,
+        scan_duration: float | None = None,
     ) -> None:
         """Initialize the coordinator."""
-        super().__init__(hass, logger, address, mode, connectable)
+        super().__init__(
+            hass, logger, address, mode, connectable, scan_interval, scan_duration
+        )
         self._processors: list[PassiveBluetoothDataProcessor[Any, _DataT]] = []
         self._update_method = update_method
         self.last_update_success = True

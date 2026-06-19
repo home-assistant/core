@@ -7,6 +7,7 @@ import smarttub
 import voluptuous as vol
 
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import ATTR_MODE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -19,7 +20,6 @@ from .entity import SmartTubOnboardSensorBase
 # the desired duration, in hours, of the cycle
 ATTR_DURATION = "duration"
 ATTR_CYCLE_LAST_UPDATED = "cycle_last_updated"
-ATTR_MODE = "mode"
 # the hour of the day at which to start the cycle (0-23)
 ATTR_START_HOUR = "start_hour"
 

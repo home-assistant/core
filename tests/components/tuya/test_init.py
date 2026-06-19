@@ -108,6 +108,7 @@ async def test_registry_cleanup_multiple_entries(
     assert entity_registry.async_get(second_entity_id)
 
 
+@pytest.mark.usefixtures("no_quirk")
 async def test_device_registry(
     hass: HomeAssistant,
     mock_manager: Manager,

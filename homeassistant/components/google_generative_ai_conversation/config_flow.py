@@ -19,7 +19,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME
+from homeassistant.const import CONF_API_KEY, CONF_LLM_HASS_API, CONF_NAME, CONF_PROMPT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.selector import (
@@ -38,7 +38,6 @@ from .const import (
     CONF_HARASSMENT_BLOCK_THRESHOLD,
     CONF_HATE_BLOCK_THRESHOLD,
     CONF_MAX_TOKENS,
-    CONF_PROMPT,
     CONF_RECOMMENDED,
     CONF_SEXUAL_BLOCK_THRESHOLD,
     CONF_TEMPERATURE,
@@ -225,7 +224,7 @@ class LLMSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Set conversation options."""
         # abort if entry is not loaded
-        if self._get_entry().state != ConfigEntryState.LOADED:
+        if self._get_entry().state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         errors: dict[str, str] = {}
@@ -435,49 +434,56 @@ async def google_generative_ai_config_option_schema(
                 description={"suggested_value": options.get(CONF_TEMPERATURE)},
                 default=RECOMMENDED_TEMPERATURE,
             ): NumberSelector(NumberSelectorConfig(min=0, max=2, step=0.05)),
-            vol.Optional(
-                CONF_TOP_P,
-                description={"suggested_value": options.get(CONF_TOP_P)},
-                default=RECOMMENDED_TOP_P,
-            ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
-            vol.Optional(
-                CONF_TOP_K,
-                description={"suggested_value": options.get(CONF_TOP_K)},
-                default=RECOMMENDED_TOP_K,
-            ): int,
-            vol.Optional(
-                CONF_MAX_TOKENS,
-                description={"suggested_value": options.get(CONF_MAX_TOKENS)},
-                default=RECOMMENDED_MAX_TOKENS,
-            ): int,
-            vol.Optional(
-                CONF_HARASSMENT_BLOCK_THRESHOLD,
-                description={
-                    "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
-                },
-                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-            ): harm_block_thresholds_selector,
-            vol.Optional(
-                CONF_HATE_BLOCK_THRESHOLD,
-                description={"suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)},
-                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-            ): harm_block_thresholds_selector,
-            vol.Optional(
-                CONF_SEXUAL_BLOCK_THRESHOLD,
-                description={
-                    "suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)
-                },
-                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-            ): harm_block_thresholds_selector,
-            vol.Optional(
-                CONF_DANGEROUS_BLOCK_THRESHOLD,
-                description={
-                    "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
-                },
-                default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
-            ): harm_block_thresholds_selector,
         }
     )
+    if subentry_type != "tts":
+        schema.update(
+            {
+                vol.Optional(
+                    CONF_TOP_P,
+                    description={"suggested_value": options.get(CONF_TOP_P)},
+                    default=RECOMMENDED_TOP_P,
+                ): NumberSelector(NumberSelectorConfig(min=0, max=1, step=0.05)),
+                vol.Optional(
+                    CONF_TOP_K,
+                    description={"suggested_value": options.get(CONF_TOP_K)},
+                    default=RECOMMENDED_TOP_K,
+                ): int,
+                vol.Optional(
+                    CONF_MAX_TOKENS,
+                    description={"suggested_value": options.get(CONF_MAX_TOKENS)},
+                    default=RECOMMENDED_MAX_TOKENS,
+                ): int,
+                vol.Optional(
+                    CONF_HARASSMENT_BLOCK_THRESHOLD,
+                    description={
+                        "suggested_value": options.get(CONF_HARASSMENT_BLOCK_THRESHOLD)
+                    },
+                    default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                ): harm_block_thresholds_selector,
+                vol.Optional(
+                    CONF_HATE_BLOCK_THRESHOLD,
+                    description={
+                        "suggested_value": options.get(CONF_HATE_BLOCK_THRESHOLD)
+                    },
+                    default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                ): harm_block_thresholds_selector,
+                vol.Optional(
+                    CONF_SEXUAL_BLOCK_THRESHOLD,
+                    description={
+                        "suggested_value": options.get(CONF_SEXUAL_BLOCK_THRESHOLD)
+                    },
+                    default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                ): harm_block_thresholds_selector,
+                vol.Optional(
+                    CONF_DANGEROUS_BLOCK_THRESHOLD,
+                    description={
+                        "suggested_value": options.get(CONF_DANGEROUS_BLOCK_THRESHOLD)
+                    },
+                    default=RECOMMENDED_HARM_BLOCK_THRESHOLD,
+                ): harm_block_thresholds_selector,
+            }
+        )
     if subentry_type == "conversation":
         schema.update(
             {

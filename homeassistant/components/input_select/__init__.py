@@ -21,6 +21,7 @@ from homeassistant.const import (
     CONF_ICON,
     CONF_ID,
     CONF_NAME,
+    CONF_OPTIONS,
     SERVICE_RELOAD,
 )
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -37,7 +38,6 @@ _LOGGER = logging.getLogger(__name__)
 DOMAIN = "input_select"
 
 CONF_INITIAL = "initial"
-CONF_OPTIONS = "options"
 
 SERVICE_SET_OPTIONS = "set_options"
 STORAGE_KEY = DOMAIN
