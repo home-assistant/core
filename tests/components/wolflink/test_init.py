@@ -251,6 +251,54 @@ async def test_migration_merges_duplicate_v1_entries(
     assert device.config_entries == {surviving.entry_id}
 
 
+async def test_migration_v1_list_device_id(hass: HomeAssistant) -> None:
+    """Test v1 migration tolerates device_id stored as a list from partial migrations."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234",
+        data={**LEGACY_CONFIG, "device_id": [1234]},
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.WolfClient",
+        autospec=True,
+    ) as wolf_mock:
+        wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
+            "Unable to connect"
+        )
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    _assert_v2_hub(config_entry)
+
+
+async def test_migration_v1_empty_list_device_id(hass: HomeAssistant) -> None:
+    """Test v1 migration returns early if device_id is an empty list."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="1234",
+        data={**LEGACY_CONFIG, "device_id": []},
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.wolflink.WolfClient",
+        autospec=True,
+    ) as wolf_mock:
+        wolf_mock.return_value.fetch_system_list.side_effect = RequestError(
+            "Unable to connect"
+        )
+        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    # Migration returned early — entry is unchanged (still v1).
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+
+
 async def test_setup_no_devices_on_account(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
@@ -414,3 +462,42 @@ async def test_parameter_read_error_triggers_refetch(
 
     assert mock_wolflink.fetch_parameters.call_count == 1
     assert hass.states.get("sensor.test_device_energy_parameter").state == "183"
+
+
+async def test_refetch_flag_reset_on_fetch_failure(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test _refetch_parameters is reset even when the re-fetch itself fails.
+
+    Regression test: if fetch_parameters raises during a re-fetch triggered by
+    ParameterReadError, the flag must be cleared so subsequent cycles do not
+    endlessly retry the parameter fetch on every update.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    # Trigger the flag via ParameterReadError.
+    mock_wolflink.fetch_value.side_effect = ParameterReadError("stale")
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # Re-fetch itself fails — flag must still be cleared.
+    mock_wolflink.fetch_parameters.reset_mock()
+    mock_wolflink.fetch_parameters.side_effect = RequestError("cannot reach API")
+    mock_wolflink.fetch_value.side_effect = None
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_wolflink.fetch_parameters.call_count == 1
+
+    # Next cycle must NOT retry the re-fetch — flag was cleared.
+    mock_wolflink.fetch_parameters.side_effect = None
+    freezer.tick(timedelta(seconds=120))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_wolflink.fetch_parameters.call_count == 1

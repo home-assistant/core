@@ -10,7 +10,6 @@ from wolf_comm.wolf_client import FetchFailed, ParameterReadError, WolfClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN
@@ -55,7 +54,7 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
                 self._wolf_client, self._gateway_id, self.device_id
             )
         except (FetchFailed, RequestError) as exception:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 f"Error communicating with API: {exception}"
             ) from exception
 
@@ -70,10 +69,12 @@ class WolfLinkCoordinator(DataUpdateCoordinator[dict[int, tuple[int, str]]]):
                     "Could not fetch values from server because device is offline."
                 )
             if self._refetch_parameters:
-                self.parameters = await fetch_parameters(
-                    self._wolf_client, self._gateway_id, self.device_id
-                )
-                self._refetch_parameters = False
+                try:
+                    self.parameters = await fetch_parameters(
+                        self._wolf_client, self._gateway_id, self.device_id
+                    )
+                finally:
+                    self._refetch_parameters = False
             values = {
                 v.value_id: v.value
                 for v in await self._wolf_client.fetch_value(

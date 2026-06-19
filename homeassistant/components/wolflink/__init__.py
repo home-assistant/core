@@ -115,7 +115,12 @@ def _migrate_v1_to_v2(hass: HomeAssistant, entry: ConfigEntry) -> None:
     """
     username = entry.data[CONF_USERNAME]
     target_unique_id = username.lower()
-    legacy_device_id = int(entry.data["device_id"])
+    raw_device_id = entry.data["device_id"]
+    if isinstance(raw_device_id, list):
+        if not raw_device_id:
+            return
+        raw_device_id = raw_device_id[0]
+    legacy_device_id = int(raw_device_id)
 
     sibling = next(
         (
