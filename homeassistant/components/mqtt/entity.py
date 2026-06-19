@@ -95,6 +95,7 @@ from .const import (
     CONF_SW_VERSION,
     CONF_TOPIC,
     CONF_VIA_DEVICE,
+    CONF_VISIBLE_BY_DEFAULT,
     DOMAIN,
     MQTT_CONNECTION_STATE,
 )
@@ -530,7 +531,7 @@ class MqttAttributesMixin(Entity):
                         self._attributes_message_received,
                         {
                             "_attr_extra_state_attributes",
-                            "_attr_gps_accuracy",
+                            "_attr_location_accuracy",
                             "_attr_latitude",
                             "_attr_location_name",
                             "_attr_longitude",
@@ -1240,7 +1241,7 @@ class MqttDiscoveryUpdateMixin(Entity):
         super().add_to_platform_abort()
 
     async def async_will_remove_from_hass(self) -> None:
-        """Stop listening to signal and cleanup discovery data.."""
+        """Stop listening to signal and cleanup discovery data."""
         self._cleanup_discovery_on_remove()
 
     def _cleanup_discovery_on_remove(self) -> None:
@@ -1428,19 +1429,44 @@ class MqttEntity(
             # Plan to update the entity_id based on `default_entity_id`
             # if a deleted entity was found
             self._update_registry_entity_id = self.entity_id
-
         if (
-            self._config[CONF_ENABLED_BY_DEFAULT]
-            and deleted_entry
-            and deleted_entry.disabled_by is not None
+            reenable_condition := (
+                deleted_entry
+                and self._config[CONF_ENABLED_BY_DEFAULT]
+                and deleted_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+            )
+        ) or (
+            deleted_entry
+            and self._config[CONF_VISIBLE_BY_DEFAULT]
+            and deleted_entry.hidden_by is not None
         ):
-            # Enable previous deleted entity and enable it
+            # Enable previous deleted entity,
+            # if it was not disabled by the user.
+            # Only reset hidden by flag if it was not hidden by the user.
+            if (
+                deleted_entry.hidden_by is er.RegistryEntryHider.USER
+                and self._config[CONF_VISIBLE_BY_DEFAULT]
+            ):
+                _LOGGER.info(
+                    "Restored entity %s was configured as visible by default, "
+                    "but was hidden by the user before, and will remain hidden",
+                    self.entity_id,
+                )
+            if deleted_entry.hidden_by is er.RegistryEntryHider.USER:
+                hidden_by: er.RegistryEntryHider | None = er.RegistryEntryHider.USER
+            else:
+                hidden_by = (
+                    None
+                    if self._config[CONF_VISIBLE_BY_DEFAULT]
+                    else er.RegistryEntryHider.INTEGRATION
+                )
             recreated_entry = entity_registry.async_get_or_create(
                 entity_platform, DOMAIN, self.unique_id
             )
             entity_registry.async_update_entity(
                 recreated_entry.entity_id,
-                disabled_by=None,
+                disabled_by=None if reenable_condition else UNDEFINED,
+                hidden_by=hidden_by,
             )
 
         if discovery_data is None:
@@ -1588,6 +1614,9 @@ class MqttEntity(
         self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
         self._attr_entity_registry_enabled_default = bool(
             config.get(CONF_ENABLED_BY_DEFAULT, True)
+        )
+        self._attr_entity_registry_visible_default = bool(
+            config.get(CONF_VISIBLE_BY_DEFAULT, True)
         )
         self._attr_icon = config.get(CONF_ICON)
         self._attr_entity_picture = config.get(CONF_ENTITY_PICTURE)

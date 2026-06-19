@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DISCOVERY,
     CONF_PLATFORM,
+    CONF_PORT,
     CONF_PROTOCOL,
     SERVICE_RELOAD,
 )
@@ -50,6 +51,7 @@ from .client import (
     async_subscribe_internal,
     publish,
     subscribe,
+    try_connection,
 )
 from .config import MQTT_BASE_SCHEMA, MQTT_RO_SCHEMA, MQTT_RW_SCHEMA
 from .config_integration import CONFIG_SCHEMA_BASE
@@ -79,14 +81,14 @@ from .const import (
     CONFIG_ENTRY_VERSION,
     DEFAULT_DISCOVERY,
     DEFAULT_ENCODING,
+    DEFAULT_PORT,
     DEFAULT_PREFIX,
-    DEFAULT_PROTOCOL,
     DEFAULT_QOS,
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
-    ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
+    PROTOCOL_5,
     PROTOCOL_311,
     TEMPLATE_ERRORS,
     Platform,
@@ -151,7 +153,6 @@ __all__ = [
     "DEFAULT_RETAIN",
     "DOMAIN",
     "ENTITY_PLATFORMS",
-    "ENTRY_OPTION_FIELDS",
     "MQTT",
     "MQTT_BASE_SCHEMA",
     "MQTT_CONNECTION_STATE",
@@ -291,7 +292,6 @@ async def async_check_config_schema(
                     message = conf_util.format_schema_error(
                         hass, exc, domain, config, integration.documentation
                     )
-                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key="invalid_platform_config_message",
@@ -409,6 +409,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async def _reload_config(call: ServiceCall) -> None:
         """Reload the platforms."""
+        if not mqtt_config_entry_enabled(hass):
+            _LOGGER.debug(
+                "Skipped reloading MQTT integration, "
+                "the MQTT config entry is not enabled"
+            )
+            return
         entry: ConfigEntry = next(iter(hass.config_entries.async_entries(DOMAIN)))
         mqtt_data = hass.data[DATA_MQTT]
 
@@ -460,31 +466,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate the options from config entry data."""
+    """Migrate the config entry to the latest version."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
     data: dict[str, Any] = dict(entry.data)
     options: dict[str, Any] = dict(entry.options)
-    if entry.version > 2 or (entry.version == 2 and entry.minor_version > 1):
-        # This means the user has downgraded from a future version
-        # We allow read support for version 2.1
-        return False
 
     if entry.version == 1 and entry.minor_version < 2:
-        # Can be removed when the config entry is bumped to version 2.1
-        # with HA Core 2026.7.0. Read support for version 2.1 is expected with 2026.1
-        # From 2026.7 we will write version 2.1
-        for key in ENTRY_OPTION_FIELDS:
+        for key in (
+            CONF_DISCOVERY,
+            CONF_DISCOVERY_PREFIX,
+            "birth_message",
+            "will_message",
+        ):
             if key not in data:
                 continue
             options[key] = data.pop(key)
-        # Write version 1.2 for backwards compatibility
-        hass.config_entries.async_update_entry(
-            entry,
-            data=data,
-            options=options,
-            version=1,
-            minor_version=2,
-        )
+
+    # Bump config entry to version 2.1
+    hass.config_entries.async_update_entry(
+        entry,
+        data=data,
+        options=options,
+        version=2,
+        minor_version=1,
+    )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
@@ -496,25 +501,47 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Load a config entry."""
     mqtt_data: MqttData
 
-    if (protocol := entry.data.get(CONF_PROTOCOL, PROTOCOL_311)) != DEFAULT_PROTOCOL:
-        broker: str = entry.data[CONF_BROKER]
-        async_create_issue(
-            hass,
-            DOMAIN,
-            "protocol_5_migration",
-            issue_domain=DOMAIN,
-            is_fixable=True,
-            breaks_in_ha_version="2027.1.0",
-            severity=IssueSeverity.WARNING,
-            learn_more_url="https://www.home-assistant.io/integrations/mqtt/#mqtt-protocol",
-            data={
-                "entry_id": entry.entry_id,
-                "broker": broker,
-                "protocol": protocol,
-            },
-            translation_placeholders={"broker": broker, "protocol": protocol},
-            translation_key="protocol_5_migration",
-        )
+    if (protocol := entry.data.get(CONF_PROTOCOL, PROTOCOL_311)) != PROTOCOL_5:
+        # Automatically migrate the broker protocol to v5 if possible
+        # Can be removed with HA Core 2027.1
+        new_entry_data = entry.data.copy()
+        new_entry_data[CONF_PROTOCOL] = PROTOCOL_5
+        # Create temporary certificate files from entry
+        await async_create_certificate_temp_files(hass, new_entry_data)
+        # Try the connection with protocol version 5
+        # And update the protocol if successful
+        if await hass.async_add_executor_job(
+            try_connection,
+            {CONF_PORT: DEFAULT_PORT} | new_entry_data,
+        ):
+            hass.config_entries.async_update_entry(
+                entry,
+                data=new_entry_data,
+            )
+            ir.async_delete_issue(hass, DOMAIN, "protocol_5_migration")
+            _LOGGER.info(
+                "The MQTT protocol version was successfully updated to version 5"
+            )
+        else:
+            broker: str = entry.data[CONF_BROKER]
+            async_create_issue(
+                hass,
+                DOMAIN,
+                "protocol_5_migration",
+                issue_domain=DOMAIN,
+                is_fixable=False,
+                breaks_in_ha_version="2027.1.0",
+                severity=IssueSeverity.WARNING,
+                learn_more_url="https://www.home-assistant.io/integrations/mqtt/"
+                "#mqtt-protocol",
+                data={
+                    "entry_id": entry.entry_id,
+                    "broker": broker,
+                    "protocol": protocol,
+                },
+                translation_placeholders={"broker": broker, "protocol": protocol},
+                translation_key="protocol_5_migration",
+            )
 
     async def _setup_client() -> tuple[MqttData, dict[str, Any]]:
         """Set up the MQTT client."""

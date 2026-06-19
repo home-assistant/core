@@ -537,6 +537,12 @@ class SamsungTVConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initialized by zeroconf discovery."""
         LOGGER.debug("Samsung device found via ZEROCONF: %s", discovery_info)
+        if "Soundbar" in discovery_info.name:
+            LOGGER.debug(
+                "Ignoring Samsung Soundbar found via Zeroconf: %s", discovery_info
+            )
+            return self.async_abort(reason="not_supported")
+
         self._mac = format_mac(discovery_info.properties["deviceid"])
         self._host = discovery_info.host
         self._async_start_discovery_with_mac_address()
