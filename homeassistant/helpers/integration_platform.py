@@ -12,6 +12,7 @@ from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
+    IntegrationNotLoaded,
     async_get_integrations,
     async_get_loaded_integration,
     async_register_preload_platform,
@@ -251,3 +252,84 @@ async def _async_process_integration_platforms(
 
     if futures:
         await asyncio.gather(*futures)
+
+
+type ProcessPlatform[_R] = Callable[[HomeAssistant, str, ModuleType], _R]
+
+
+class LazyIntegrationPlatforms[_R]:
+    """Lazily load and process an integration platform on demand.
+
+    Unlike async_process_integration_platforms, which imports and processes the
+    platform for every loaded integration up front (and as integrations load),
+    this only imports and processes the platform for an integration the first
+    time it is requested, and only for integrations that are loaded.
+    """
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        platform_name: str,
+        process_platform: ProcessPlatform[_R],
+    ) -> None:
+        """Initialize the lazy integration platforms."""
+        self._hass = hass
+        self._platform_name = platform_name
+        self._process_platform = process_platform
+        # A cached value of None means the integration does not provide the
+        # platform (or it failed to import).
+        self._processed: dict[str, _R | None] = {}
+        # Tell the loader to preload the platform for any future components so
+        # we can reduce the amount of import executor usage.
+        async_register_preload_platform(hass, platform_name)
+
+    async def async_get_platform(self, domain: str) -> _R | None:
+        """Return the processed platform for a loaded integration.
+
+        Returns None if the integration is not loaded or does not provide the
+        platform. The result for a loaded integration is cached.
+        """
+        if domain in self._processed:
+            return self._processed[domain]
+        try:
+            integration = async_get_loaded_integration(self._hass, domain)
+        except IntegrationNotLoaded:
+            # Don't cache, the integration may be loaded later.
+            return None
+        return await self._async_process(integration)
+
+    async def async_get_platforms(self) -> dict[str, _R]:
+        """Return the processed platform for all loaded integrations that have it."""
+        integrations = await async_get_integrations(
+            self._hass, self._hass.config.top_level_components
+        )
+        domains = [
+            domain
+            for domain, integration in integrations.items()
+            if not isinstance(integration, Exception)
+            and integration.platforms_exists((self._platform_name,))
+        ]
+        results = await asyncio.gather(
+            *(self.async_get_platform(domain) for domain in domains)
+        )
+        return {
+            domain: result
+            for domain, result in zip(domains, results, strict=True)
+            if result is not None
+        }
+
+    async def _async_process(self, integration: Integration) -> _R | None:
+        """Import, process and cache the platform for a loaded integration."""
+        domain = integration.domain
+        result: _R | None = None
+        if integration.platforms_exists((self._platform_name,)):
+            try:
+                platform = await integration.async_get_platform(self._platform_name)
+            except ImportError:
+                _LOGGER.debug(
+                    "Error importing %s platform for %s", self._platform_name, domain
+                )
+            else:
+                result = self._process_platform(self._hass, domain, platform)
+        self._processed[domain] = result
+        return result

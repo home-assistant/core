@@ -12,11 +12,12 @@ from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.integration_platform import (
+    LazyIntegrationPlatforms,
     async_process_integration_platforms,
 )
 from homeassistant.setup import ATTR_COMPONENT
 
-from tests.common import mock_platform
+from tests.common import MockModule, mock_integration, mock_platform
 
 
 async def test_process_integration_platforms_with_wait(hass: HomeAssistant) -> None:
@@ -288,3 +289,91 @@ async def test_process_integration_platforms_no_integrations(
     await hass.async_block_till_done()
 
     assert len(processed) == 0
+
+
+async def test_lazy_integration_platforms(hass: HomeAssistant) -> None:
+    """Test lazily loading and processing an integration platform on demand."""
+    loaded_platform = Mock()
+    mock_platform(hass, "loaded.platform_to_check", loaded_platform)
+    hass.config.components.add("loaded")
+
+    processed: list[str] = []
+
+    @callback
+    def _process_platform(hass: HomeAssistant, domain: str, platform: Any) -> Any:
+        processed.append(domain)
+        return platform
+
+    platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
+
+    # Nothing is processed until the platform is requested.
+    assert processed == []
+
+    assert await platforms.async_get_platform("loaded") is loaded_platform
+    assert processed == ["loaded"]
+
+    # Subsequent requests are served from the cache without reprocessing.
+    assert await platforms.async_get_platform("loaded") is loaded_platform
+    assert processed == ["loaded"]
+
+
+async def test_lazy_integration_platforms_not_loaded(hass: HomeAssistant) -> None:
+    """Test the platform is not processed for an integration that is not loaded."""
+
+    @callback
+    def _process_platform(hass: HomeAssistant, domain: str, platform: Any) -> Any:
+        return platform
+
+    platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
+
+    assert await platforms.async_get_platform("not_loaded") is None
+
+    # The not-loaded result is not cached, so it is served once it is loaded.
+    loaded_platform = Mock()
+    mock_platform(hass, "not_loaded.platform_to_check", loaded_platform)
+    assert await platforms.async_get_platform("not_loaded") is loaded_platform
+
+
+async def test_lazy_integration_platforms_no_platform(hass: HomeAssistant) -> None:
+    """Test a loaded integration without the platform returns None."""
+    mock_integration(hass, MockModule("loaded"))
+    hass.config.components.add("loaded")
+
+    processed: list[str] = []
+
+    @callback
+    def _process_platform(hass: HomeAssistant, domain: str, platform: Any) -> Any:
+        processed.append(domain)
+        return platform
+
+    platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
+
+    assert await platforms.async_get_platform("loaded") is None
+    # The platform does not exist, so the process callback is never called.
+    assert processed == []
+
+
+async def test_lazy_integration_platforms_get_platforms(hass: HomeAssistant) -> None:
+    """Test enumerating all loaded integrations that provide the platform."""
+    platform_a = Mock()
+    mock_platform(hass, "integration_a.platform_to_check", platform_a)
+    hass.config.components.add("integration_a")
+
+    platform_b = Mock()
+    mock_platform(hass, "integration_b.platform_to_check", platform_b)
+    hass.config.components.add("integration_b")
+
+    # A loaded integration without the platform is omitted.
+    mock_integration(hass, MockModule("integration_c"))
+    hass.config.components.add("integration_c")
+
+    @callback
+    def _process_platform(hass: HomeAssistant, domain: str, platform: Any) -> Any:
+        return platform
+
+    platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
+
+    assert await platforms.async_get_platforms() == {
+        "integration_a": platform_a,
+        "integration_b": platform_b,
+    }

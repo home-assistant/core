@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.diagnostics import _DIAGNOSTICS_DATA, DOMAIN
+from homeassistant.components.diagnostics import DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -83,24 +83,6 @@ async def test_websocket(
     }
 
 
-async def test_platforms_loaded_lazily(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
-) -> None:
-    """Test diagnostics platforms are only imported when first used."""
-    # Nothing is processed at setup time.
-    assert hass.data[_DIAGNOSTICS_DATA].platforms == {}
-
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "diagnostics/get", "domain": "fake_integration"}
-    )
-    msg = await client.receive_json()
-
-    assert msg["success"]
-    # Only the requested domain has been loaded into the cache.
-    assert set(hass.data[_DIAGNOSTICS_DATA].platforms) == {"fake_integration"}
-
-
 async def test_get_not_loaded_integration(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
@@ -113,8 +95,6 @@ async def test_get_not_loaded_integration(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "not_found"
-    # Not cached, so it can be served once the integration is loaded.
-    assert "not_loaded_integration" not in hass.data[_DIAGNOSTICS_DATA].platforms
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")

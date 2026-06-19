@@ -1,8 +1,7 @@
 """The Diagnostics integration."""
 
-import asyncio
 from collections.abc import Callable, Coroutine, Mapping
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from http import HTTPStatus
 import json
 import logging
@@ -20,6 +19,7 @@ from homeassistant.helpers import (
     issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
@@ -27,12 +27,9 @@ from homeassistant.helpers.json import (
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
-    IntegrationNotLoaded,
     Manifest,
     async_get_custom_components,
     async_get_integration,
-    async_get_integrations,
-    async_get_loaded_integration,
 )
 from homeassistant.setup import async_get_domain_setup_times
 from homeassistant.util.hass_dict import HassKey
@@ -47,7 +44,9 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-_DIAGNOSTICS_DATA: HassKey[DiagnosticsData] = HassKey(DOMAIN)
+_DIAGNOSTICS_DATA: HassKey[LazyIntegrationPlatforms[DiagnosticsPlatformData]] = HassKey(
+    DOMAIN
+)
 
 
 @dataclass(slots=True)
@@ -67,21 +66,11 @@ class DiagnosticsPlatformData:
     )
 
 
-@dataclass(slots=True)
-class DiagnosticsData:
-    """Diagnostic data.
-
-    ``platforms`` is a lazily populated cache. A value of ``None`` means the
-    integration's diagnostics platform has been looked up and does not exist (or
-    failed to import), so we don't try to import it again.
-    """
-
-    platforms: dict[str, DiagnosticsPlatformData | None] = field(default_factory=dict)
-
-
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Diagnostics integration."""
-    hass.data[_DIAGNOSTICS_DATA] = DiagnosticsData()
+    hass.data[_DIAGNOSTICS_DATA] = LazyIntegrationPlatforms(
+        hass, DOMAIN, _process_diagnostics_platform
+    )
 
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_get)
@@ -104,40 +93,15 @@ class DiagnosticsProtocol(Protocol):
         """Return diagnostics for a device."""
 
 
-async def _async_get_platform_data(
-    hass: HomeAssistant, domain: str
-) -> DiagnosticsPlatformData | None:
-    """Return the diagnostics platform data for a domain, loading it on demand.
-
-    The result (including ``None`` for integrations without a diagnostics
-    platform) is cached so the platform is imported at most once.
-    """
-    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
-    if domain in diagnostics_data.platforms:
-        return diagnostics_data.platforms[domain]
-
-    try:
-        integration = async_get_loaded_integration(hass, domain)
-    except IntegrationNotLoaded:
-        # Don't cache, the integration may be loaded later.
-        return None
-
-    data: DiagnosticsPlatformData | None = None
-    if integration.platforms_exists(("diagnostics",)):
-        try:
-            platform: DiagnosticsProtocol = await integration.async_get_platform(
-                "diagnostics"
-            )
-        except ImportError:
-            _LOGGER.debug("Error importing diagnostics platform for %s", domain)
-        else:
-            data = DiagnosticsPlatformData(
-                getattr(platform, "async_get_config_entry_diagnostics", None),
-                getattr(platform, "async_get_device_diagnostics", None),
-            )
-
-    diagnostics_data.platforms[domain] = data
-    return data
+@callback
+def _process_diagnostics_platform(
+    hass: HomeAssistant, domain: str, platform: DiagnosticsProtocol
+) -> DiagnosticsPlatformData:
+    """Build the diagnostics platform data from a diagnostics platform."""
+    return DiagnosticsPlatformData(
+        getattr(platform, "async_get_config_entry_diagnostics", None),
+        getattr(platform, "async_get_device_diagnostics", None),
+    )
 
 
 @websocket_api.require_admin
@@ -147,16 +111,7 @@ async def handle_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List all possible diagnostic handlers."""
-    integrations = await async_get_integrations(hass, hass.config.top_level_components)
-    domains = [
-        domain
-        for domain, integration in integrations.items()
-        if not isinstance(integration, Exception)
-        and integration.platforms_exists(("diagnostics",))
-    ]
-    infos = await asyncio.gather(
-        *(_async_get_platform_data(hass, domain) for domain in domains)
-    )
+    platforms = await hass.data[_DIAGNOSTICS_DATA].async_get_platforms()
     result = [
         {
             "domain": domain,
@@ -165,8 +120,7 @@ async def handle_info(
                 DiagnosticsSubType.DEVICE: info.device_diagnostics is not None,
             },
         }
-        for domain, info in zip(domains, infos, strict=True)
-        if info is not None
+        for domain, info in platforms.items()
     ]
     connection.send_result(msg["id"], result)
 
@@ -185,7 +139,7 @@ async def handle_get(
     """List all diagnostic handlers for a domain."""
     domain = msg["domain"]
 
-    if (info := await _async_get_platform_data(hass, domain)) is None:
+    if (info := await hass.data[_DIAGNOSTICS_DATA].async_get_platform(domain)) is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
         )
@@ -309,7 +263,10 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        if (info := await _async_get_platform_data(hass, config_entry.domain)) is None:
+        diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
+        if (
+            info := await diagnostics_data.async_get_platform(config_entry.domain)
+        ) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
