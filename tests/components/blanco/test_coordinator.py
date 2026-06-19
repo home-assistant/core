@@ -2,6 +2,7 @@
 
 import base64
 import json
+import math
 import time
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -240,9 +241,9 @@ class TestJwtExpiresAt:
 
     def test_non_jwt_returns_inf(self) -> None:
         """A non-JWT string returns float('inf'), disabling proactive renewal."""
-        assert _jwt_expires_at("not-a-jwt") == float("inf")
-        assert _jwt_expires_at("test-bearer-token") == float("inf")
-        assert _jwt_expires_at("") == float("inf")
+        assert _jwt_expires_at("not-a-jwt") == math.inf
+        assert _jwt_expires_at("test-bearer-token") == math.inf
+        assert _jwt_expires_at("") == math.inf
 
 
 # ── _async_update_data ─────────────────────────────────────────────────────────

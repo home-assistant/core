@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import json
 import logging
+import math
 import time
 from typing import TYPE_CHECKING, Any
 
@@ -44,14 +45,14 @@ def _jwt_expires_at(token: str) -> float:
     """
     parts = token.split(".")
     if len(parts) < 2:
-        return float("inf")
+        return math.inf
     try:
         # Restore base64url padding that is stripped during JWT encoding.
         payload_b64 = parts[1] + "=" * (-len(parts[1]) % 4)
         payload = json.loads(base64.urlsafe_b64decode(payload_b64))
-        return float(payload.get("exp", float("inf")))
+        return float(payload.get("exp", math.inf))
     except ValueError:
-        return float("inf")
+        return math.inf
 
 
 class BlancoDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
