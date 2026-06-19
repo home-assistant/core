@@ -163,7 +163,8 @@ class TriggerUpdateCoordinator(DataUpdateCoordinator):
         condition_result = self._cond_func.async_check(variables=run_variables)
         if condition_result is False:
             _LOGGER.debug(
-                "Conditions not met, aborting template trigger update. Condition summary: %s",
+                "Conditions not met, aborting template"
+                " trigger update. Condition summary: %s",
                 trace_get(clear=False),
             )
         return condition_result

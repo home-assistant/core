@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.number import (
-    ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
@@ -125,8 +124,11 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
@@ -158,7 +160,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, NumberEntity):
         if set_value := self._action_scripts.get(CONF_SET_VALUE):
             await self.async_run_script(
                 set_value,
-                run_variables={ATTR_VALUE: value},
+                run_variables={"value": value},
                 context=self._context,
             )
 

@@ -138,7 +138,8 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
                 )
             else:
                 LOGGER.debug(
-                    "device has no fullcolorsupport, using supported colors with 'setcolor'"
+                    "device has no fullcolorsupport,"
+                    " using supported colors with 'setcolor'"
                 )
                 # find supported hs values closest to what user selected
                 hue = min(

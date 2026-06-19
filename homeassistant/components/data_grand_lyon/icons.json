@@ -1,6 +1,35 @@
 {
   "entity": {
+    "binary_sensor": {
+      "station_open": {
+        "default": "mdi:close-circle",
+        "state": {
+          "on": "mdi:check-circle"
+        }
+      }
+    },
     "sensor": {
+      "available_bikes": {
+        "default": "mdi:bike"
+      },
+      "available_electrical_bikes": {
+        "default": "mdi:bicycle-electric"
+      },
+      "available_mechanical_bikes": {
+        "default": "mdi:bike"
+      },
+      "available_stands": {
+        "default": "mdi:parking"
+      },
+      "capacity": {
+        "default": "mdi:counter"
+      },
+      "electrical_internal_battery_bikes": {
+        "default": "mdi:bicycle-electric"
+      },
+      "electrical_removable_battery_bikes": {
+        "default": "mdi:bicycle-electric"
+      },
       "next_departure_1": {
         "default": "mdi:bus-clock"
       },

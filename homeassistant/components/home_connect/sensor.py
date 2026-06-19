@@ -372,7 +372,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN20CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_20_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -380,7 +380,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN15CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_15_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -388,7 +388,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN10CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_10_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -396,7 +396,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN5CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_5_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -600,7 +600,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):
-    """Sensor class for Home Connect sensors that reports information related to the running program."""
+    """Sensor class for Home Connect running program information."""
 
     async def async_added_to_hass(self) -> None:
         """Register listener."""
@@ -634,8 +634,9 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     @property
     def available(self) -> bool:
         """Return true if the sensor is available."""
-        # These sensors are only available if the program is running, paused or finished.
-        # Otherwise, some sensors report erroneous values.
+        # These sensors are only available if the program is
+        # running, paused or finished. Otherwise, some sensors
+        # report erroneous values.
         return super().available and self.program_running
 
     def update_native_value(self) -> None:

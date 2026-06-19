@@ -370,7 +370,11 @@ class NetgearRouterSensorEntity(NetgearRouterCoordinatorEntity, RestoreSensor):
         """Initialize a Netgear device."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.router.serial_number}-{entity_description.key}-{entity_description.index}"
+        self._attr_unique_id = (
+            f"{coordinator.router.serial_number}"
+            f"-{entity_description.key}"
+            f"-{entity_description.index}"
+        )
 
         self._value: StateType | date | datetime | Decimal = None
         self.async_update_device()

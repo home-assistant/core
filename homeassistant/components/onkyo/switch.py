@@ -89,6 +89,6 @@ class OnkyoChannelMutingSwitch(
         """Handle updated data from the coordinator."""
         value = self.coordinator.data.get(self._channel)
         self._attr_is_on = (
-            None if value is None else value == status.ChannelMuting.Param.ON
+            None if value is None else value is status.ChannelMuting.Param.ON
         )
         super()._handle_coordinator_update()

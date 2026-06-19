@@ -1402,11 +1402,15 @@ async def test_statistic_during_period_partial_overlap(
     zero = now
     start = zero.replace(hour=0, minute=0, second=0, microsecond=0)
 
-    # Sum shall be tracking a hypothetical sensor that is 0 at midnight, and grows by 1 per minute.
-    # The test will have 4 hours of LTS-only data (0:00-3:59:59), followed by 2 hours of overlapping STS/LTS (4:00-5:59:59), followed by 30 minutes of STS only (6:00-6:29:59)
-    # similar to how a real recorder might look after purging STS.
+    # Sum shall be tracking a hypothetical sensor that is 0 at
+    # midnight, and grows by 1 per minute.
+    # The test will have 4 hours of LTS-only data (0:00-3:59:59),
+    # followed by 2 hours of overlapping STS/LTS (4:00-5:59:59),
+    # followed by 30 minutes of STS only (6:00-6:29:59) similar to
+    # how a real recorder might look after purging STS.
 
-    # The datapoint at i=0 (start = 0:00) will be 60 as that is the growth during the hour starting at the start period
+    # The datapoint at i=0 (start = 0:00) will be 60 as that is
+    # the growth during the hour starting at the start period
     imported_stats_hours = [
         {
             "start": (start + timedelta(hours=i)),
@@ -1540,7 +1544,9 @@ async def test_statistic_during_period_partial_overlap(
     )
 
     # Six minutes of growth in STS-only
-    # 5-minute Change includes start times exactly on or before a statistics start, but end times are not counted unless they are greater than start.
+    # 5-minute Change includes start times exactly on or before a
+    # statistics start, but end times are not counted unless they
+    # are greater than start.
     start_time = start.replace(hour=6, minute=15)
     end_time = start.replace(hour=6, minute=21)
     await assert_stat_during_fixed(
@@ -1595,7 +1601,9 @@ async def test_statistic_during_period_partial_overlap(
         },
     )
 
-    # Five minutes of growth in STS-only, with a minute offset. Despite that this does not cover the full period, result is still 5
+    # Five minutes of growth in STS-only, with a minute offset.
+    # Despite that this does not cover the full period, result is
+    # still 5
     start_time = start.replace(hour=6, minute=16)
     end_time = start.replace(hour=6, minute=21)
     await assert_stat_during_fixed(
@@ -1636,7 +1644,8 @@ async def test_statistic_during_period_partial_overlap(
         {"change": None, "min": None, "max": None, "mean": None},
     )
 
-    # One hours worth of growth in LTS-only, with arbitrary minute offsets, covering a whole 1-hour period
+    # One hours worth of growth in LTS-only, with arbitrary minute
+    # offsets, covering a whole 1-hour period
     start_time = start.replace(hour=1, minute=40)
     end_time = start.replace(hour=3, minute=12)
     await assert_stat_during_fixed(
@@ -2395,6 +2404,7 @@ async def test_list_statistic_ids(
     )
     response = await client.receive_json()
     assert response["success"]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if has_mean:
         assert response["result"] == [
             {
@@ -2417,6 +2427,7 @@ async def test_list_statistic_ids(
     )
     response = await client.receive_json()
     assert response["success"]
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if has_sum:
         assert response["result"] == [
             {
@@ -4683,7 +4694,7 @@ async def test_import_statistics_with_last_reset(
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test importing external statistics with last_reset can be fetched via websocket api."""
+    """Test importing external stats with last_reset via websocket."""
     client = await hass_ws_client()
 
     assert "Compiling statistics for" not in caplog.text

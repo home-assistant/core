@@ -65,31 +65,35 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
         self._attr_min_temp = cast(
-            float, self.executor.select_state(OverkizState.CORE_MIN_SETPOINT)
+            float, self.device.states.get_value(OverkizState.CORE_MIN_SETPOINT)
         )
         self._attr_max_temp = cast(
-            float, self.executor.select_state(OverkizState.CORE_MAX_SETPOINT)
+            float, self.device.states.get_value(OverkizState.CORE_MAX_SETPOINT)
         )
 
     @property
-    def hvac_action(self) -> HVACAction:
+    def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
-        return OVERKIZ_TO_HVAC_ACTION[
-            cast(str, self.executor.select_state(OverkizState.CORE_OPEN_CLOSED_VALVE))
-        ]
+        if (
+            state := self.device.states.get_value(OverkizState.CORE_OPEN_CLOSED_VALVE)
+        ) is None:
+            return None
+        return OVERKIZ_TO_HVAC_ACTION[cast(str, state)]
 
     @property
     def target_temperature(self) -> float:
         """Return the temperature."""
         return cast(
-            float, self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
+            float, self.device.states.get_value(OverkizState.CORE_TARGET_TEMPERATURE)
         )
 
     @property
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
-            temperature := self.temperature_device.states[OverkizState.CORE_TEMPERATURE]
+            temperature := self.temperature_device.states.get(
+                OverkizState.CORE_TEMPERATURE
+            )
         ):
             return temperature.value_as_float
 
@@ -114,15 +118,17 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         """Return the current preset mode, e.g., home, away, temp."""
         return OVERKIZ_TO_PRESET_MODE[
             cast(
-                str, self.executor.select_state(OverkizState.IO_DEROGATION_HEATING_MODE)
+                str,
+                self.device.states.get_value(OverkizState.IO_DEROGATION_HEATING_MODE),
             )
         ]
 
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
 
-        # If we want to switch to manual mode via a preset, we need to pass in a temperature
-        # Manual mode will be on automatically if an user sets a temperature
+        # If we want to switch to manual mode via a preset,
+        # we need to pass in a temperature. Manual mode will
+        # be on automatically if a user sets a temperature
         if preset_mode == PRESET_MANUAL:
             if current_temperature := self.current_temperature:
                 await self.executor.async_execute_command(

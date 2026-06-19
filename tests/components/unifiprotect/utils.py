@@ -37,6 +37,7 @@ class MockUFPFixture:
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     ws_state_subscription: Callable[[WebsocketState], None] | None = None
     devices_ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
+    devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -53,7 +54,6 @@ def reset_objects(bootstrap: Bootstrap):
     bootstrap.sensors = {}
     bootstrap.viewers = {}
     bootstrap.events = {}
-    bootstrap.doorlocks = {}
     bootstrap.chimes = {}
 
 
@@ -126,7 +126,7 @@ async def ids_from_device_description(
     device: ProtectAdoptableDeviceModel,
     description: EntityDescription,
 ) -> tuple[str, str]:
-    """Return expected unique_id and entity_id using real Home Assistant translation logic."""
+    """Return expected unique_id and entity_id using HA translation logic."""
 
     entity_name = normalize_name(device.display_name)
 

@@ -108,6 +108,7 @@ async def test_registry_cleanup_multiple_entries(
     assert entity_registry.async_get(second_entity_id)
 
 
+@pytest.mark.usefixtures("no_quirk")
 async def test_device_registry(
     hass: HomeAssistant,
     mock_manager: Manager,
@@ -117,7 +118,7 @@ async def test_device_registry(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Validate device registry snapshots for all devices, including unsupported ones."""
+    """Validate device registry snapshots for all devices."""
 
     await initialize_entry(hass, mock_manager, mock_config_entry, mock_devices)
 
@@ -351,6 +352,10 @@ async def test_fixtures_valid(hass: HomeAssistant) -> None:
     for device_code in DEVICE_MOCKS:
         details = await async_load_json_object_fixture(
             hass, f"{device_code}.json", DOMAIN
+        )
+        expected_code = f"{details['category']}_{details['product_id']}"
+        assert device_code == expected_code, (
+            f"Device code {device_code} does not match expected {expected_code}"
         )
         for key in EXCLUDE_KEYS:
             assert key not in details, (

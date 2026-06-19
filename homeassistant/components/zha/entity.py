@@ -206,7 +206,7 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         await super().async_will_remove_from_hass()
         self.remove_future.set_result(True)
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_update(self) -> None:
         """Update the entity."""
         await self.entity_data.entity.async_update()
@@ -214,6 +214,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
+        if not _LOGGER.isEnabledFor(level):
+            # Avoid building the prefixed message and args tuple for disabled
+            # levels; this runs for every entity event via _handle_entity_events.
+            return
         msg = f"%s: {msg}"
         args = (self.entity_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)

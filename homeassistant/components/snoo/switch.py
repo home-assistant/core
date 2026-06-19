@@ -83,7 +83,7 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_on_failed",
-                translation_placeholders={"name": str(self.name), "status": "on"},
+                translation_placeholders={"name": str(self.name)},
             ) from err
 
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -99,5 +99,5 @@ class SnooSwitch(SnooDescriptionEntity, SwitchEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="switch_off_failed",
-                translation_placeholders={"name": str(self.name), "status": "off"},
+                translation_placeholders={"name": str(self.name)},
             ) from err

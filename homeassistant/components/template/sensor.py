@@ -9,7 +9,6 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
-    ATTR_LAST_RESET,
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as SENSOR_DOMAIN,
@@ -22,7 +21,6 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_SENSORS,
     CONF_STATE,
     CONF_UNIT_OF_MEASUREMENT,
     STATE_UNAVAILABLE,
@@ -51,13 +49,14 @@ from .schemas import (
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
 
+CONF_LAST_RESET = "last_reset"
 DEFAULT_NAME = "Template Sensor"
 
 
 def validate_last_reset(val):
     """Run extra validation checks."""
     if (
-        val.get(ATTR_LAST_RESET) is not None
+        val.get(CONF_LAST_RESET) is not None
         and val.get(CONF_STATE_CLASS) != SensorStateClass.TOTAL
     ):
         raise vol.Invalid(
@@ -79,7 +78,7 @@ SENSOR_COMMON_SCHEMA = vol.Schema(
 SENSOR_YAML_SCHEMA = vol.All(
     vol.Schema(
         {
-            vol.Optional(ATTR_LAST_RESET): cv.template,
+            vol.Optional(CONF_LAST_RESET): cv.template,
         }
     )
     .extend(SENSOR_COMMON_SCHEMA.schema)
@@ -113,7 +112,6 @@ async def async_setup_platform(
         TriggerSensorEntity,
         async_add_entities,
         discovery_info,
-        legacy_key=CONF_SENSORS,
     )
 
 
@@ -189,8 +187,11 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, config: ConfigType) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
@@ -203,10 +204,10 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
             self._validate_state,
         )
         self.setup_template(
-            ATTR_LAST_RESET,
+            CONF_LAST_RESET,
             "_attr_last_reset",
             validate_datetime(
-                self, ATTR_LAST_RESET, SensorDeviceClass.TIMESTAMP, require_tzinfo=False
+                self, CONF_LAST_RESET, SensorDeviceClass.TIMESTAMP, require_tzinfo=False
             ),
         )
 

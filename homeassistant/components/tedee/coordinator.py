@@ -96,9 +96,10 @@ class TedeeApiCoordinator(DataUpdateCoordinator[dict[int, TedeeLock]]):
         try:
             await update_fn()
         except TedeeLocalAuthException as ex:
+            # pylint: disable-next=home-assistant-exception-translation-key-missing
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
-                translation_key="authentification_failed",
+                translation_key="authentication_failed",
             ) from ex
 
         except TedeeDataUpdateException as ex:

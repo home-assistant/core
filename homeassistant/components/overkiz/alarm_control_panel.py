@@ -73,8 +73,12 @@ def _state_tsk_alarm_controller(
 
 MAP_CORE_ACTIVE_ZONES: dict[str, AlarmControlPanelState] = {
     OverkizCommandParam.A: AlarmControlPanelState.ARMED_HOME,
-    f"{OverkizCommandParam.A},{OverkizCommandParam.B}": AlarmControlPanelState.ARMED_NIGHT,
-    f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}": AlarmControlPanelState.ARMED_AWAY,
+    f"{OverkizCommandParam.A},{OverkizCommandParam.B}": (
+        AlarmControlPanelState.ARMED_NIGHT
+    ),
+    (
+        f"{OverkizCommandParam.A},{OverkizCommandParam.B},{OverkizCommandParam.C}"
+    ): AlarmControlPanelState.ARMED_AWAY,
 }
 
 
@@ -84,8 +88,10 @@ def _state_stateful_alarm_controller(
     """Return the state of the device."""
     if state := cast(str, select_state(OverkizState.CORE_ACTIVE_ZONES)):
         # The Stateful Alarm Controller has 3 zones with the following options:
-        # (A, B, C, A,B, B,C, A,C, A,B,C). Since it is not possible to map this to AlarmControlPanel entity,
-        # only the most important zones are mapped, other zones can only be disarmed.
+        # (A, B, C, A,B, B,C, A,C, A,B,C). Since it is not
+        # possible to map this to AlarmControlPanel entity, only
+        # the most important zones are mapped, other zones can
+        # only be disarmed.
         if state in MAP_CORE_ACTIVE_ZONES:
             return MAP_CORE_ACTIVE_ZONES[state]
 
@@ -138,7 +144,7 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     # Disabled by default since all Overkiz hubs have this
     # virtual device, but only a few users actually use this.
     OverkizAlarmDescription(
-        key=UIWidget.TSKALARM_CONTROLLER,
+        key=UIWidget.TSK_ALARM_CONTROLLER,
         entity_registry_enabled_default=False,
         supported_features=(
             AlarmControlPanelEntityFeature.ARM_AWAY
@@ -246,7 +252,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     @property
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
-        return self.entity_description.fn_state(self.executor.select_state)
+        return self.entity_description.fn_state(self.device.states.get_value)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""

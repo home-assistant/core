@@ -157,7 +157,7 @@ async def test_v2_device_update_empty_location_id_ignored(
     init_integration: MockConfigEntry,
     mock_client: MagicMock,
 ) -> None:
-    """Test access.data.v2.device.update with empty location_id does not update state."""
+    """Test device.update with empty location_id does not update state."""
     handlers = _get_ws_handlers(mock_client)
 
     update_msg = V2DeviceUpdate(
@@ -197,5 +197,5 @@ async def test_v2_device_update_no_explicit_state_does_not_overwrite(
     await handlers["access.data.v2.device.update"](update_msg)
     await hass.async_block_till_done()
 
-    # Back door must still be open/on – not silently reset to closed/off
+    # Back door must still be open/on - not silently reset to closed/off
     assert hass.states.get(BACK_DOOR_ENTITY).state == "on"

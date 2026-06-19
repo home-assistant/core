@@ -162,7 +162,8 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required("device"): vol.In(
                         {
                             key: (
-                                f"{key} ({formatted_category(discovery.description.category)})"
+                                f"{key} ("
+                                f"{formatted_category(discovery.description.category)})"
                             )
                             for key, discovery in self.devices.items()
                         }
@@ -176,7 +177,7 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
         """Determine if the device is a homekit bridge or accessory."""
         dev_reg = dr.async_get(self.hass)
         device = dev_reg.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(hkid))}
+            connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
         )
 
         if device is None:

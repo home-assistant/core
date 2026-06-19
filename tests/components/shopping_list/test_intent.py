@@ -24,7 +24,7 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
         hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
     )
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     completed_items = response.speech_slots.get("completed_items")
     assert len(completed_items) == 2
     assert completed_items[0]["name"] == "beer"
@@ -36,7 +36,7 @@ async def test_complete_item_intent(hass: HomeAssistant, sl_setup) -> None:
         hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
     )
 
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech_slots.get("completed_items") == []
     assert _get_shopping_data(hass).items[1]["complete"]
     assert _get_shopping_data(hass).items[2]["complete"]
@@ -47,7 +47,7 @@ async def test_complete_item_intent_not_found(hass: HomeAssistant, sl_setup) -> 
     response = await intent.async_handle(
         hass, "test", "HassShoppingListCompleteItem", {"item": {"value": "beer"}}
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.speech_slots.get("completed_items") == []
 
 

@@ -327,7 +327,7 @@ class TargetCalendarEventListener(TargetEntityChangeTracker):
 
     @callback
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
-        """Restart the listeners when the list of entities of the tracked targets is updated."""
+        """Restart listeners when tracked target entities update."""
         if self._pending_listener_task:
             self._pending_listener_task.cancel()
         self._pending_listener_task = self._hass.async_create_task(
@@ -460,7 +460,7 @@ class EventTrigger(Trigger):
         listener = TargetCalendarEventListener(
             self._hass, target_selection, self._event_type, offset, run_action
         )
-        return listener.async_setup()
+        return await listener.async_setup()
 
 
 class EventStartedTrigger(EventTrigger):

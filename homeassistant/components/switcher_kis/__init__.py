@@ -46,7 +46,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: SwitcherConfigEntry) -> 
 
         # New device - create device
         _LOGGER.info(
-            "Discovered Switcher device - id: %s, key: %s, name: %s, type: %s (%s), is_token_needed: %s",
+            "Discovered Switcher device - id: %s, key: %s,"
+            " name: %s, type: %s (%s), is_token_needed: %s",
             device.device_id,
             device.device_key,
             device.name,

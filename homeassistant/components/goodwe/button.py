@@ -29,7 +29,7 @@ SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
     key="synchronize_clock",
     translation_key="synchronize_clock",
     entity_category=EntityCategory.CONFIG,
-    action=lambda inv: inv.write_setting("time", datetime.now()),
+    action=lambda inv: inv.write_setting("time", datetime.now()),  # pylint: disable=home-assistant-enforce-naive-now
 )
 
 

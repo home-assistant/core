@@ -4,13 +4,14 @@ import asyncio
 import logging
 from typing import TypedDict
 
+import aiohttp
 from aiohttp.web import Request
 from loqedAPI import loqed
 
 from homeassistant.components import cloud, webhook
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_WEBHOOK_ID
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import CONF_CLOUDHOOK_URL, DOMAIN
@@ -119,6 +120,12 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
             self.hass, DOMAIN, "Loqed", webhook_id, self._handle_webhook
         )
 
+        @callback
+        def _async_unregister_webhook() -> None:
+            webhook.async_unregister(self.hass, webhook_id)
+
+        self.config_entry.async_on_unload(_async_unregister_webhook)
+
         if cloud.async_active_subscription(self.hass):
             webhook_url = await async_cloudhook_generate_url(
                 self.hass, self.config_entry
@@ -152,20 +159,22 @@ class LoqedDataCoordinator(DataUpdateCoordinator[StatusMessage]):
         else:
             webhook_url = webhook.async_generate_url(self.hass, webhook_id)
 
-        webhook.async_unregister(
-            self.hass,
-            webhook_id,
-        )
         _LOGGER.debug("Webhook URL: %s", webhook_url)
 
-        webhooks = await self.lock.getWebhooks()
+        try:
+            webhooks = await self.lock.getWebhooks()
 
-        webhook_index = next(
-            (x["id"] for x in webhooks if x["url"] == webhook_url), None
-        )
+            webhook_index = next(
+                (x["id"] for x in webhooks if x["url"] == webhook_url), None
+            )
 
-        if webhook_index:
-            await self.lock.deleteWebhook(webhook_index)
+            if webhook_index:
+                await self.lock.deleteWebhook(webhook_index)
+        except (TimeoutError, aiohttp.ClientError) as err:
+            _LOGGER.warning(
+                "Could not remove webhook from LOQED bridge; the bridge may be offline. Continuing to unload the entry anyway: %s",
+                err,
+            )
 
 
 async def async_cloudhook_generate_url(

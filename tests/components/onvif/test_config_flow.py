@@ -7,7 +7,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.onvif import config_flow
-from homeassistant.components.onvif.const import DOMAIN
+from homeassistant.components.onvif.const import CONF_MORE_OPTIONS, DOMAIN
 from homeassistant.config_entries import SOURCE_DHCP
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_USERNAME
 from homeassistant.core import HomeAssistant
@@ -105,7 +105,7 @@ async def test_flow_discovered_devices(hass: HomeAssistant) -> None:
     logging.getLogger("homeassistant.components.onvif").setLevel(logging.DEBUG)
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -178,7 +178,7 @@ async def test_flow_discovered_devices_ignore_configured_manual_input(
     await setup_onvif_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -219,7 +219,7 @@ async def test_flow_discovered_no_device(hass: HomeAssistant) -> None:
     await setup_onvif_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -264,7 +264,7 @@ async def test_flow_discovery_ignore_existing_and_abort(hass: HomeAssistant) -> 
     )
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -310,7 +310,7 @@ async def test_flow_manual_entry(hass: HomeAssistant) -> None:
     """Test that config flow works for discovered devices."""
     logging.getLogger("homeassistant.components.onvif").setLevel(logging.DEBUG)
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -369,7 +369,7 @@ async def test_flow_manual_entry(hass: HomeAssistant) -> None:
 async def test_flow_manual_entry_no_profiles(hass: HomeAssistant) -> None:
     """Test that config flow when no profiles are returned."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -411,7 +411,7 @@ async def test_flow_manual_entry_no_profiles(hass: HomeAssistant) -> None:
 async def test_flow_manual_entry_no_mac(hass: HomeAssistant) -> None:
     """Test that config flow when no mac address is returned."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -455,7 +455,7 @@ async def test_flow_manual_entry_no_mac(hass: HomeAssistant) -> None:
 async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
     """Test that we get a good error when manual entry fails."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -565,7 +565,7 @@ async def test_flow_manual_entry_fails(hass: HomeAssistant) -> None:
 async def test_flow_manual_entry_wrong_password(hass: HomeAssistant) -> None:
     """Test that we get a an auth error with the wrong password."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -648,9 +648,7 @@ async def test_option_flow(hass: HomeAssistant, option_value: bool) -> None:
     """Test config flow options."""
     entry, _, _ = await setup_onvif_integration(hass)
 
-    result = await hass.config_entries.options.async_init(
-        entry.entry_id, context={"show_advanced_options": True}
-    )
+    result = await hass.config_entries.options.async_init(entry.entry_id)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "onvif_devices"
@@ -660,8 +658,10 @@ async def test_option_flow(hass: HomeAssistant, option_value: bool) -> None:
         user_input={
             config_flow.CONF_EXTRA_ARGUMENTS: "",
             config_flow.CONF_RTSP_TRANSPORT: list(config_flow.RTSP_TRANSPORTS)[1],
-            config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: option_value,
             config_flow.CONF_ENABLE_WEBHOOKS: option_value,
+            CONF_MORE_OPTIONS: {
+                config_flow.CONF_USE_WALLCLOCK_AS_TIMESTAMPS: option_value,
+            },
         },
     )
 
@@ -845,7 +845,7 @@ async def test_flow_manual_entry_updates_existing_user_password(
     entry, _, _ = await setup_onvif_integration(hass)
 
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -898,7 +898,7 @@ async def test_flow_manual_entry_updates_existing_user_password(
 async def test_flow_manual_entry_wrong_port(hass: HomeAssistant) -> None:
     """Test that we get a useful error with the wrong port."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM

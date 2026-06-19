@@ -18,7 +18,7 @@ PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
-class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEntityT]):
+class RobotButtonEntityDescription(ButtonEntityDescription, Generic[_WhiskerEntityT]):  # noqa: UP046
     """A class that describes robot button entities."""
 
     press_fn: Callable[[_WhiskerEntityT], Coroutine[Any, Any, bool]]
@@ -40,6 +40,12 @@ ROBOT_BUTTON_MAP: dict[tuple[type[Robot], ...], RobotButtonEntityDescription] = 
         translation_key="reset",
         entity_category=EntityCategory.CONFIG,
         press_fn=lambda robot: robot.reset(),
+    ),
+    (LitterRobot5,): RobotButtonEntityDescription[LitterRobot5](
+        key="change_filter",
+        translation_key="change_filter",
+        entity_category=EntityCategory.CONFIG,
+        press_fn=lambda robot: robot.change_filter(),
     ),
     (FeederRobot,): RobotButtonEntityDescription[FeederRobot](
         key="give_snack",

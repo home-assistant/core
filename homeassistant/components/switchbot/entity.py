@@ -41,7 +41,8 @@ class SwitchbotEntity(
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_BLUETOOTH, self._address)},
             manufacturer=MANUFACTURER,
-            model=coordinator.model,  # Sometimes the modelName is missing from the advertisement data
+            # Sometimes the modelName is missing from ads
+            model=coordinator.model,
             name=coordinator.device_name,
         )
         self._channel: int | None = None

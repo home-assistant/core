@@ -124,7 +124,11 @@ class Server:
     async def _async_get_instance_udn(self) -> str:
         """Get Unique Device Name for this instance."""
         instance_id = await async_get_instance_id(self.hass)
-        return f"uuid:{instance_id[0:8]}-{instance_id[8:12]}-{instance_id[12:16]}-{instance_id[16:20]}-{instance_id[20:32]}".upper()
+        return (
+            f"uuid:{instance_id[0:8]}-{instance_id[8:12]}"
+            f"-{instance_id[12:16]}-{instance_id[16:20]}"
+            f"-{instance_id[20:32]}"
+        ).upper()
 
     async def _async_start_upnp_servers(self, event: Event) -> None:
         """Start the UPnP/SSDP servers."""

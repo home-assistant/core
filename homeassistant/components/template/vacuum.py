@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components.vacuum import (
-    ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_CLEAN_SPOT,
     SERVICE_LOCATE,
@@ -245,8 +244,11 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
     _optimistic_entity = True
     _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
@@ -386,7 +388,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity):
 
         if script := self._action_scripts.get(SERVICE_SET_FAN_SPEED):
             await self.async_run_script(
-                script, run_variables={ATTR_FAN_SPEED: fan_speed}, context=self._context
+                script, run_variables={"fan_speed": fan_speed}, context=self._context
             )
 
 

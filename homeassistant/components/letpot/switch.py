@@ -86,7 +86,7 @@ async def async_setup_entry(
     entry: LetPotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up LetPot switch entities based on a config entry and device status/features."""
+    """Set up LetPot switch entities."""
     coordinators = entry.runtime_data
     entities: list[SwitchEntity] = [
         LetPotSwitchEntity[LetPotGardenStatus](coordinator, description)
@@ -112,7 +112,11 @@ class LetPotSwitchEntity[_DataT: LetPotDeviceStatus](
         """Initialize LetPot switch entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{coordinator.device.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}"
+            f"_{coordinator.device.serial_number}"
+            f"_{description.key}"
+        )
 
     @property
     def is_on(self) -> bool | None:

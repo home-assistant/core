@@ -9,7 +9,14 @@ from pybravia import BraviaAuthError, BraviaClient, BraviaError, BraviaNotSuppor
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_CLIENT_ID, CONF_HOST, CONF_MAC, CONF_NAME, CONF_PIN
+from homeassistant.const import (
+    ATTR_MODEL,
+    CONF_CLIENT_ID,
+    CONF_HOST,
+    CONF_MAC,
+    CONF_NAME,
+    CONF_PIN,
+)
 from homeassistant.helpers import instance_id
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.service_info.ssdp import (
@@ -23,7 +30,6 @@ from homeassistant.util.network import is_host_valid
 from .const import (
     ATTR_CID,
     ATTR_MAC,
-    ATTR_MODEL,
     CONF_NICKNAME,
     CONF_USE_PSK,
     CONF_USE_SSL,

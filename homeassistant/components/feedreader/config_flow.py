@@ -23,14 +23,18 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DOMAIN
+from .const import CONF_MAX_ENTRIES, DEFAULT_MAX_ENTRIES, DOMAIN, USER_AGENT
 
 LOGGER = logging.getLogger(__name__)
 
 
 async def async_fetch_feed(hass: HomeAssistant, url: str) -> feedparser.FeedParserDict:
     """Fetch the feed."""
-    return await hass.async_add_executor_job(feedparser.parse, url)
+
+    def _parse_feed() -> feedparser.FeedParserDict:
+        return feedparser.parse(url, agent=USER_AGENT)
+
+    return await hass.async_add_executor_job(_parse_feed)
 
 
 class FeedReaderConfigFlow(ConfigFlow, domain=DOMAIN):

@@ -212,8 +212,8 @@ class NADtcp(MediaPlayerEntity):
 
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        nad_volume_to_set = int(
-            round(volume * (self._max_vol - self._min_vol) + self._min_vol)
+        nad_volume_to_set = round(
+            volume * (self._max_vol - self._min_vol) + self._min_vol
         )
         self._nad_receiver.set_volume(nad_volume_to_set)
 

@@ -62,8 +62,9 @@ class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
 
         self._attr_is_closed = False
 
-        # If we read cover status from coil, and not from optional status register,
-        # we interpret boolean value False as closed cover, and value True as open cover.
+        # If we read cover status from coil, and not from
+        # optional status register, we interpret boolean value
+        # False as closed cover, and value True as open cover.
         # Intermediate states are not supported in such a setup.
         if self._input_type == CALL_TYPE_COIL:
             self._write_type = CALL_TYPE_WRITE_COIL

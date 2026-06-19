@@ -11,6 +11,7 @@ from homeassistant.components.template import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import SERVICE_RELOAD
 from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
@@ -147,7 +148,9 @@ async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
     assert hass.states.get("sensor.state").state == "mytest"
     assert len(hass.states.async_all()) == 2
 
-    await async_yaml_patch_helper(hass, "configuration.yaml.corrupt")
+    with pytest.raises(HomeAssistantError, match="Error reloading template entities: "):
+        await async_yaml_patch_helper(hass, "configuration.yaml.corrupt")
+
     assert hass.states.get("sensor.state").state == "mytest"
     assert len(hass.states.async_all()) == 2
 
@@ -168,7 +171,7 @@ async def test_reloadable_stops_on_invalid_config(hass: HomeAssistant) -> None:
 )
 @pytest.mark.usefixtures("start_ha")
 async def test_reloadable_handles_partial_valid_config(hass: HomeAssistant) -> None:
-    """Test we can still setup valid sensors when configuration.yaml has a broken entry."""
+    """Test we can still setup valid sensors when config has a broken entry."""
     hass.states.async_set("sensor.test_sensor", "mytest")
     await hass.async_block_till_done()
     assert hass.states.get("sensor.state").state == "mytest"

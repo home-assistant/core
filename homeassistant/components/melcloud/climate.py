@@ -160,7 +160,9 @@ class AtaDeviceClimate(MelCloudClimate):
             attr.update(
                 {
                     ATTR_VANE_HORIZONTAL: vane_horizontal,
-                    ATTR_VANE_HORIZONTAL_POSITIONS: self._device.vane_horizontal_positions,
+                    ATTR_VANE_HORIZONTAL_POSITIONS: (
+                        self._device.vane_horizontal_positions
+                    ),
                 }
             )
 

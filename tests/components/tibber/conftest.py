@@ -59,7 +59,8 @@ def create_tibber_device(
         charging_status: Charging status (for binary sensors).
         device_status: Device on/off status (for binary sensors).
         is_online: Device online status (for binary sensors).
-        sensor_values: Dictionary mapping sensor IDs to their values for additional sensors.
+        sensor_values: Dictionary mapping sensor IDs to their values
+            for additional sensors.
     """
     capabilities = []
 

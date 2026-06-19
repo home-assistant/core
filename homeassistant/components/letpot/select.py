@@ -35,7 +35,7 @@ class LightBrightnessLowHigh(StrEnum):
 
 
 def _get_brightness_low_high_value(coordinator: LetPotDeviceCoordinator) -> str | None:
-    """Return brightness as low/high for a device which only has a low and high value."""
+    """Return brightness as low/high for a device with two levels."""
     brightness = coordinator.data.light_brightness
     levels = coordinator.device_client.get_light_brightness_levels(
         coordinator.device.serial_number
@@ -139,7 +139,7 @@ async def async_setup_entry(
     entry: LetPotConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up LetPot select entities based on a config entry and device status/features."""
+    """Set up LetPot select entities."""
     coordinators = entry.runtime_data
     async_add_entities(
         LetPotSelectEntity[LetPotGardenStatus](coordinator, description)
@@ -164,7 +164,11 @@ class LetPotSelectEntity[_DataT: LetPotDeviceStatus](
         """Initialize LetPot select entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{coordinator.device.serial_number}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}"
+            f"_{coordinator.device.serial_number}"
+            f"_{description.key}"
+        )
 
     @property
     def current_option(self) -> str | None:

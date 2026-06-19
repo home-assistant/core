@@ -1,6 +1,7 @@
 """Climate entity for Mitsubishi Comfort integration."""
 
-from typing import Any
+import logging
+from typing import Any, NoReturn
 
 from mitsubishi_comfort import FanSpeed, IndoorUnit, Mode, VaneDirection
 
@@ -14,10 +15,14 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .coordinator import MitsubishiComfortConfigEntry, MitsubishiComfortCoordinator
 from .entity import MitsubishiComfortEntity
+
+_LOGGER = logging.getLogger(__name__)
 
 _MODE_TO_HVAC: dict[str, HVACMode] = {
     "off": HVACMode.OFF,
@@ -219,32 +224,47 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
             features |= ClimateEntityFeature.SWING_MODE
         return features
 
+    def _command_failed(self, translation_key: str) -> NoReturn:
+        """Raise a translated error after the device rejects a command."""
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key=translation_key,
+            translation_placeholders={"device_name": self._device.name},
+        )
+
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         lib_mode = _HVAC_TO_MODE.get(hvac_mode)
         if lib_mode is None:
+            _LOGGER.debug("Ignoring unsupported HVAC mode %s", hvac_mode)
             return
         result = await self._device.set_mode(lib_mode)
-        if result.success:
-            self._optimistic[_OPT_MODE] = result.value
-            self.async_write_ha_state()
+        if not result.success:
+            self._command_failed("set_hvac_mode_failed")
+        self._optimistic[_OPT_MODE] = result.value
+        self.async_write_ha_state()
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set the target temperature."""
         mode = self._effective_mode
         wrote = False
+        failed = False
 
         if ATTR_TARGET_TEMP_HIGH in kwargs:
             result = await self._device.set_cool_setpoint(kwargs[ATTR_TARGET_TEMP_HIGH])
             if result.success:
                 self._optimistic[_OPT_COOL_SETPOINT] = result.value
                 wrote = True
+            else:
+                failed = True
 
         if ATTR_TARGET_TEMP_LOW in kwargs:
             result = await self._device.set_heat_setpoint(kwargs[ATTR_TARGET_TEMP_LOW])
             if result.success:
                 self._optimistic[_OPT_HEAT_SETPOINT] = result.value
                 wrote = True
+            else:
+                failed = True
 
         temp = kwargs.get(ATTR_TEMPERATURE)
         if temp is not None:
@@ -253,34 +273,51 @@ class MitsubishiComfortClimate(MitsubishiComfortEntity, ClimateEntity):
                 if result.success:
                     self._optimistic[_OPT_COOL_SETPOINT] = result.value
                     wrote = True
+                else:
+                    failed = True
             elif mode in ("heat", "autoHeat"):
                 result = await self._device.set_heat_setpoint(temp)
                 if result.success:
                     self._optimistic[_OPT_HEAT_SETPOINT] = result.value
                     wrote = True
+                else:
+                    failed = True
+            else:
+                _LOGGER.debug(
+                    "Ignoring temperature for %s: no setpoint applies in mode %s",
+                    self._device.name,
+                    mode,
+                )
 
+        # Apply whatever succeeded before surfacing the failure to the user.
         if wrote:
             self.async_write_ha_state()
+        if failed:
+            self._command_failed("set_temperature_failed")
 
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         speed = _FAN_SPEED_MAP.get(fan_mode)
         if speed is None:
+            _LOGGER.debug("Ignoring unsupported fan mode %s", fan_mode)
             return
         result = await self._device.set_fan_speed(speed)
-        if result.success:
-            self._optimistic[_OPT_FAN_SPEED] = result.value
-            self.async_write_ha_state()
+        if not result.success:
+            self._command_failed("set_fan_mode_failed")
+        self._optimistic[_OPT_FAN_SPEED] = result.value
+        self.async_write_ha_state()
 
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode."""
         direction = _VANE_DIR_MAP.get(swing_mode)
         if direction is None:
+            _LOGGER.debug("Ignoring unsupported swing mode %s", swing_mode)
             return
         result = await self._device.set_vane_direction(direction)
-        if result.success:
-            self._optimistic[_OPT_VANE_DIRECTION] = result.value
-            self.async_write_ha_state()
+        if not result.success:
+            self._command_failed("set_swing_mode_failed")
+        self._optimistic[_OPT_VANE_DIRECTION] = result.value
+        self.async_write_ha_state()
 
     async def async_turn_off(self) -> None:
         """Turn the entity off."""

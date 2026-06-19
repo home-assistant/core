@@ -55,7 +55,7 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
     """A class to describe a Radarr calendar event."""
 
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):  # noqa: UP046
     """Data update coordinator for the Radarr integration."""
 
     config_entry: RadarrConfigEntry
@@ -184,7 +184,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         self._events = [
             e
             for e in self._events
-            if e.start >= datetime.now().date() - timedelta(days=30)
+            if e.start >= datetime.now().date() - timedelta(days=30)  # pylint: disable=home-assistant-enforce-naive-now
         ]
         _days = (end_date - start_date).days
         await asyncio.gather(

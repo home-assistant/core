@@ -69,6 +69,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 refresh_token = await self.hass.async_add_executor_job(
                     Tami4EdgeAPI.submit_otp, self.phone, otp
                 )
+                # pylint: disable-next=home-assistant-sequential-executor-jobs
                 api = await self.hass.async_add_executor_job(
                     Tami4EdgeAPI, refresh_token
                 )
