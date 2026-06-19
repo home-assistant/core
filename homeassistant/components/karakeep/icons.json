@@ -1,14 +1,14 @@
 {
   "entity": {
     "sensor": {
+      "archived": {
+        "default": "mdi:archive"
+      },
       "bookmarks": {
         "default": "mdi:bookmark"
       },
       "favorites": {
         "default": "mdi:star"
-      },
-      "archived": {
-        "default": "mdi:archive"
       },
       "highlights": {
         "default": "mdi:marker"
