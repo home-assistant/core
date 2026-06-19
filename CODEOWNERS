@@ -1993,6 +1993,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/watts/ @theobld-ww @devender-verma-ww @ssi-spyro
 /homeassistant/components/watttime/ @bachya
 /tests/components/watttime/ @bachya
+/homeassistant/components/wattwaechter/ @smartcircuits
+/tests/components/wattwaechter/ @smartcircuits
 /homeassistant/components/waze_travel_time/ @eifinger
 /tests/components/waze_travel_time/ @eifinger
 /homeassistant/components/weather/ @home-assistant/core
