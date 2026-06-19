@@ -8,13 +8,7 @@ from pygeosphere_warnings import LocationWarnings
 import pytest
 
 from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
-from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-    CONF_LATITUDE,
-    CONF_LONGITUDE,
-)
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
 
 from tests.common import MockConfigEntry, load_json_object_fixture
 
@@ -61,14 +55,4 @@ def mock_config_entry() -> MockConfigEntry:
         title="Schwechat",
         data={CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE},
         unique_id="30740",
-    )
-
-
-@pytest.fixture
-def home_zone(hass: HomeAssistant) -> None:
-    """Create a home zone state."""
-    hass.states.async_set(
-        "zone.home",
-        "0",
-        {ATTR_LATITUDE: TEST_LATITUDE, ATTR_LONGITUDE: TEST_LONGITUDE},
     )

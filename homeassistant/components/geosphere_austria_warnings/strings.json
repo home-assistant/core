@@ -5,19 +5,18 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "municipality_not_found": "No Austrian municipality was found at the location of the selected zone.",
-      "unknown": "[%key:common::config_flow::error::unknown%]",
-      "zone_not_found": "The selected zone does not exist."
+      "municipality_not_found": "No Austrian municipality was found at the selected location.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "user": {
         "data": {
-          "zone": "Zone"
+          "location": "[%key:common::config_flow::data::location%]"
         },
         "data_description": {
-          "zone": "Warnings are provided for the Austrian municipality at the location of this zone."
+          "location": "Warnings are provided for the Austrian municipality at this location."
         },
-        "description": "Select the zone to monitor for official GeoSphere Austria weather warnings."
+        "description": "Select the location to monitor for official GeoSphere Austria weather warnings."
       }
     }
   },

@@ -11,7 +11,7 @@ import pytest
 
 from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_ZONE
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -19,7 +19,11 @@ from .conftest import TEST_LATITUDE, TEST_LONGITUDE
 
 from tests.common import MockConfigEntry
 
-pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_client", "home_zone")
+pytestmark = pytest.mark.usefixtures("mock_setup_entry", "mock_client")
+
+USER_INPUT = {
+    CONF_LOCATION: {CONF_LATITUDE: TEST_LATITUDE, CONF_LONGITUDE: TEST_LONGITUDE}
+}
 
 
 async def test_full_flow(hass: HomeAssistant, mock_client: AsyncMock) -> None:
@@ -31,7 +35,7 @@ async def test_full_flow(hass: HomeAssistant, mock_client: AsyncMock) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_ZONE: "zone.home"}
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Schwechat"
@@ -71,32 +75,14 @@ async def test_flow_errors(
     )
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_ZONE: "zone.home"}
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
     mock_client.get_warnings_for_coords.side_effect = None
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_ZONE: "zone.home"}
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
-async def test_flow_zone_not_found(hass: HomeAssistant) -> None:
-    """Test that a missing zone shows an error and the flow can recover."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_ZONE: "zone.missing"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "zone_not_found"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_ZONE: "zone.home"}
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -111,7 +97,7 @@ async def test_flow_already_configured(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_ZONE: "zone.home"}
+        result["flow_id"], USER_INPUT
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
