@@ -41,7 +41,9 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics:
+    status: todo
+    comment: planned for a follow-up PR
   discovery-update-info: done
   discovery: done
   docs-data-update: done
@@ -83,7 +85,7 @@ rules:
   repair-issues:
     status: exempt
     comment: >-
-      A device not responding is a transient condition handled by
+      A device not responding is handled by
       ConfigEntryNotReady's built-in retry; it isn't something the user
       needs to act on, so it doesn't warrant a repair issue.
   stale-devices:
