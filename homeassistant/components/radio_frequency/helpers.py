@@ -105,7 +105,6 @@ class RadioFrequencyTransmitterConsumerEntity(Entity):
             )
         )
 
-        # Set initial availability based on current RF entity state
         rf_state = self.hass.states.get(self._rf_transmitter_entity_id)
         self._attr_available = (
             rf_state is not None and rf_state.state != STATE_UNAVAILABLE
