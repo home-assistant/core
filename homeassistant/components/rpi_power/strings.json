@@ -21,5 +21,18 @@
       "message": "Under-voltage monitoring is not supported on this device."
     }
   },
+  "issues": {
+    "under_voltage_detected": {
+      "fix_flow": {
+        "step": {
+          "confirm": {
+            "description": "Your device has reported a low-voltage condition. The Raspberry Pi monitors its power input and records an under-voltage event when the supply voltage drops below approximately 4.63V. This can lead to instability, unexpected reboots, poor performance, storage corruption, or unreliable operation of Home Assistant.\n\nCommon causes include:\n\n- A power supply that cannot provide sufficient current.\n- A low-quality or damaged USB power cable causing voltage drop.\n- High-demand USB devices connected to the system.\n- Loose power connections.\n\nTo resolve this issue:\n\n- Switch to a higher quality power supply and cable.\n- Disconnect unnecessary USB devices and check whether the warning stops.\n\nAfter correcting the power issue, monitor the system to ensure no additional under-voltage events are reported.",
+            "title": "[%key:component::rpi_power::issues::under_voltage_detected::title%]"
+          }
+        }
+      },
+      "title": "Under-voltage detected"
+    }
+  },
   "title": "Raspberry Pi Power Supply Checker"
 }

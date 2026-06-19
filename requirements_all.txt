@@ -285,7 +285,7 @@ aioharmony==1.0.8
 aiohasupervisor==0.5.0
 
 # homeassistant.components.home_connect
-aiohomeconnect==0.36.1
+aiohomeconnect==0.38.0
 
 # homeassistant.components.homekit_controller
 aiohomekit==3.2.20
@@ -333,7 +333,7 @@ aiolyric==2.1.1
 aiomealie==1.2.4
 
 # homeassistant.components.melcloud_home
-aiomelcloudhome==0.1.6
+aiomelcloudhome==0.1.8
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -408,7 +408,7 @@ aiorussound==5.0.1
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.26.1
+aioshelly==13.26.2
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -946,7 +946,7 @@ env-canada==0.15.0
 ephem==4.1.6
 
 # homeassistant.components.epic_games_store
-epicstore-api==0.1.7
+epicstore-api==0.1.9
 
 # homeassistant.components.epion
 epion==0.0.3
@@ -3255,7 +3255,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==13.1.2
+uiprotect==13.3.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

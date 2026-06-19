@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode
+from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream.const import Signal
 
 from homeassistant.components.select import (
@@ -18,10 +19,11 @@ from homeassistant.components.teslemetry.coordinator import ENERGY_INFO_INTERVAL
 from homeassistant.components.teslemetry.select import LOW
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, reload_platform, setup_platform
-from .const import COMMAND_OK, METADATA, SITE_INFO, VEHICLE_DATA_ALT
+from .const import COMMAND_ERRORS, COMMAND_OK, METADATA, SITE_INFO, VEHICLE_DATA_ALT
 
 from tests.common import async_fire_time_changed
 
@@ -178,6 +180,51 @@ async def test_select_services(hass: HomeAssistant, mock_vehicle_data) -> None:
         state = hass.states.get(entity_id)
         assert state.state == EnergyExportMode.BATTERY_OK.value
         call.assert_called_once()
+
+
+@pytest.mark.parametrize("response", COMMAND_ERRORS)
+async def test_select_command_errors(
+    hass: HomeAssistant, mock_vehicle_data: AsyncMock, response: dict
+) -> None:
+    """Tests that vehicle command failures raise HomeAssistantError."""
+    mock_vehicle_data.return_value = VEHICLE_DATA_ALT
+    await setup_platform(hass, [Platform.SELECT])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.remote_seat_heater_request",
+            return_value=response,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: "select.test_seat_heater_front_left", ATTR_OPTION: LOW},
+            blocking=True,
+        )
+
+
+async def test_select_command_exception(hass: HomeAssistant) -> None:
+    """Tests that an energy command SDK exception raises HomeAssistantError."""
+    await setup_platform(hass, [Platform.SELECT])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.EnergySite.operation",
+            side_effect=InvalidCommand,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.energy_site_operation_mode",
+                ATTR_OPTION: EnergyOperationMode.AUTONOMOUS.value,
+            },
+            blocking=True,
+        )
 
 
 async def test_select_invalid_data(
