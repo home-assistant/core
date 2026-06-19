@@ -1,7 +1,6 @@
 """Test the Wolf SmartSet Service Sensor platform."""
 
-from unittest.mock import MagicMock
-
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.core import HomeAssistant
@@ -12,9 +11,9 @@ from . import setup_integration
 from tests.common import MockConfigEntry, snapshot_platform
 
 
+@pytest.mark.usefixtures("mock_wolflink")
 async def test_device_entry(
     hass: HomeAssistant,
-    mock_wolflink: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
@@ -29,9 +28,9 @@ async def test_device_entry(
     assert device == snapshot
 
 
+@pytest.mark.usefixtures("mock_wolflink")
 async def test_sensors(
     hass: HomeAssistant,
-    mock_wolflink: MagicMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
