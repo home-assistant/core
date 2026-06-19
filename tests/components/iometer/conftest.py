@@ -23,8 +23,21 @@ def mock_setup_entry() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_iometer_client() -> Generator[MagicMock]:
-    """Mock IOmeter SSE client for the coordinator and HTTP client for config flow."""
+def mock_http_client() -> Generator[MagicMock]:
+    """Mock IOmeter HTTP client for config flow."""
+    with patch(
+        "homeassistant.components.iometer.config_flow.IOmeterClient"
+    ) as mock_http_class:
+        http_client = mock_http_class.return_value
+        http_client.get_current_status = AsyncMock(
+            return_value=Status.from_json(load_fixture("status.json", DOMAIN))
+        )
+        yield http_client
+
+
+@pytest.fixture
+def mock_iometer_client(mock_http_client: MagicMock) -> Generator[MagicMock]:
+    """Mock IOmeter SSE client for the coordinator."""
 
     def subscribe_readings(on_reading, _on_error=None):
         on_reading(Reading.from_json(load_fixture("reading.json", DOMAIN)))
@@ -34,22 +47,10 @@ def mock_iometer_client() -> Generator[MagicMock]:
         on_status(Status.from_json(load_fixture("status.json", DOMAIN)))
         return lambda: None
 
-    with (
-        patch("homeassistant.components.iometer.IOmeterSSEClient") as mock_sse_class,
-        patch(
-            "homeassistant.components.iometer.config_flow.IOmeterClient"
-        ) as mock_http_class,
-    ):
+    with patch("homeassistant.components.iometer.IOmeterSSEClient") as mock_sse_class:
         sse_client = mock_sse_class.return_value
         sse_client.subscribe_readings.side_effect = subscribe_readings
         sse_client.subscribe_status.side_effect = subscribe_status
-
-        http_client = mock_http_class.return_value
-        http_client.get_current_status = AsyncMock(
-            return_value=Status.from_json(load_fixture("status.json", DOMAIN))
-        )
-        sse_client.http = http_client
-
         yield sse_client
 
 
