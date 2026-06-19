@@ -81,6 +81,7 @@ class ImmichDataUpdateCoordinator(DataUpdateCoordinator[ImmichData]):
     async def _async_setup(self) -> None:
         """Handle setup of the coordinator."""
         try:
+            await self.api.async_setup()
             user_info = await self.api.users.async_get_my_user()
         except ImmichUnauthorizedError as err:
             raise ConfigEntryAuthFailed(
