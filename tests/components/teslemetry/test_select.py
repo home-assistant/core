@@ -56,27 +56,27 @@ async def test_select(
     [
         pytest.param({}, set(), id="no_config"),
         pytest.param(
-            {"rear_seat_heaters": 0, "third_row_seats": False},
+            {"rear_seat_heaters": 0, "third_row_seats": "None"},
             set(),
             id="0_no_rear_heaters",
         ),
         pytest.param(
-            {"rear_seat_heaters": 1, "third_row_seats": False},
+            {"rear_seat_heaters": 1, "third_row_seats": "None"},
             {REAR_LEFT, REAR_CENTER, REAR_RIGHT},
             id="1_heated_rear_bench",
         ),
         pytest.param(
-            {"rear_seat_heaters": 2, "third_row_seats": False},
+            {"rear_seat_heaters": 2, "third_row_seats": "None"},
             {REAR_LEFT, REAR_RIGHT},
             id="2_legacy_model_s_outboard_only",
         ),
         pytest.param(
-            {"rear_seat_heaters": 3, "third_row_seats": True},
+            {"rear_seat_heaters": 3, "third_row_seats": "FoldFlatPowerStrutSeats"},
             {REAR_LEFT, REAR_CENTER, REAR_RIGHT, THIRD_LEFT, THIRD_RIGHT},
             id="3_model_x_with_third_row",
         ),
         pytest.param(
-            {"rear_seat_heaters": 3, "third_row_seats": False},
+            {"rear_seat_heaters": 3, "third_row_seats": "None"},
             {REAR_LEFT, REAR_CENTER, REAR_RIGHT},
             id="3_model_x_five_seat_no_third_row",
         ),
@@ -86,7 +86,7 @@ async def test_rear_seat_heater_configurations(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
-    config: dict[str, int | bool],
+    config: dict[str, int | str],
     expected: set[str],
 ) -> None:
     """Verify which rear seat-heater entities exist per rear_seat_heaters config.
@@ -98,7 +98,8 @@ async def test_rear_seat_heater_configurations(
       2 - outboard rear only: left, right, no center (classic Model S)
       3 - heated rear bench plus third row (Model X)
     Third-row heaters additionally require an actual third row, since some
-    5-seat Model X report 3 without having a third row.
+    5-seat Model X report 3 without having a third row. third_row_seats is a
+    string ("None" when absent), not a bool.
     """
     metadata = deepcopy(METADATA)
     metadata["vehicles"][VEHICLE_VIN]["config"] = config
