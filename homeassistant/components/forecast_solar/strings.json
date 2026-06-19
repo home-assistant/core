@@ -85,8 +85,46 @@
     "api_key_required": {
       "message": "An API key is required when more than one plane is configured"
     },
+    "end_before_start": {
+      "message": "The end time must be after the start time."
+    },
+    "entry_not_loaded": {
+      "message": "The selected Forecast.Solar configuration entry is not loaded."
+    },
     "no_plane": {
       "message": "No plane configured, cannot set up Forecast.Solar"
+    }
+  },
+  "selector": {
+    "forecast_resolution": {
+      "options": {
+        "raw": "Native (15-minute or hourly, depending on account)",
+        "hourly": "Aggregated to whole hours"
+      }
+    }
+  },
+  "services": {
+    "get_forecast": {
+      "name": "Get forecast",
+      "description": "Returns the solar production forecast time series for a configured Forecast.Solar entry.",
+      "fields": {
+        "config_entry": {
+          "name": "Forecast.Solar entry",
+          "description": "The Forecast.Solar configuration entry to query."
+        },
+        "start": {
+          "name": "Start",
+          "description": "Earliest period start to return. If omitted, the response begins at the start of the cached forecast."
+        },
+        "end": {
+          "name": "End",
+          "description": "Latest period start to return (exclusive). If omitted, the response includes the full cached forecast."
+        },
+        "resolution": {
+          "name": "Resolution",
+          "description": "Resolution of the returned series. 'Native' uses the upstream Forecast.Solar resolution (15-minute on paid accounts, hourly on the free tier). 'Hourly' aggregates to whole-hour buckets."
+        }
+      }
     }
   },
   "options": {

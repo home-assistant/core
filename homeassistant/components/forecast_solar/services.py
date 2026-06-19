@@ -1,0 +1,140 @@
+"""Services for the Forecast.Solar integration."""
+
+from datetime import datetime
+import logging
+from typing import TYPE_CHECKING
+
+import voluptuous as vol
+
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import config_validation as cv, service
+from homeassistant.helpers.selector import ConfigEntrySelector
+
+from .const import DOMAIN
+
+if TYPE_CHECKING:
+    from .coordinator import ForecastSolarConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
+ATTR_CONFIG_ENTRY = "config_entry"
+ATTR_START = "start"
+ATTR_END = "end"
+ATTR_RESOLUTION = "resolution"
+
+RESOLUTION_RAW = "raw"
+RESOLUTION_HOURLY = "hourly"
+
+SERVICE_GET_FORECAST = "get_forecast"
+
+GET_FORECAST_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY): ConfigEntrySelector({"integration": DOMAIN}),
+        vol.Optional(ATTR_START): cv.datetime,
+        vol.Optional(ATTR_END): cv.datetime,
+        vol.Optional(ATTR_RESOLUTION, default=RESOLUTION_RAW): vol.In(
+            (RESOLUTION_RAW, RESOLUTION_HOURLY)
+        ),
+    }
+)
+
+
+def _aggregate_hourly(
+    watts: dict[datetime, int], wh_period: dict[datetime, int]
+) -> tuple[dict[datetime, float], dict[datetime, int]]:
+    """Aggregate raw forecast series to whole-hour resolution.
+
+    The Forecast.Solar API returns timestamps at the boundary of each
+    interval. We bucket each entry by its hour-floor, average the power
+    values within the hour, and sum the energy values.
+    """
+    hourly_watts_buckets: dict[datetime, list[int]] = {}
+    hourly_wh: dict[datetime, int] = {}
+
+    for ts, w in watts.items():
+        hour = ts.replace(minute=0, second=0, microsecond=0)
+        hourly_watts_buckets.setdefault(hour, []).append(w)
+
+    for ts, wh in wh_period.items():
+        hour = ts.replace(minute=0, second=0, microsecond=0)
+        hourly_wh[hour] = hourly_wh.get(hour, 0) + wh
+
+    hourly_watts: dict[datetime, float] = {
+        hour: sum(values) / len(values) for hour, values in hourly_watts_buckets.items()
+    }
+    return hourly_watts, hourly_wh
+
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Set up services for the Forecast.Solar integration."""
+
+    async def async_get_forecast(call: ServiceCall) -> ServiceResponse:
+        """Return the solar production forecast time series.
+
+        The response is a list of ``{time, value, energy_wh}`` entries
+        where ``value`` is the estimated power output in watts and
+        ``energy_wh`` is the energy produced during the interval that
+        starts at ``time``.
+        """
+        entry: ForecastSolarConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
+        )
+        if entry.runtime_data is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="entry_not_loaded",
+            )
+
+        estimate = entry.runtime_data.data
+
+        watts: dict[datetime, int] = dict(estimate.watts)
+        wh_period: dict[datetime, int] = dict(estimate.wh_period)
+
+        if call.data[ATTR_RESOLUTION] == RESOLUTION_HOURLY:
+            watts, wh_period = _aggregate_hourly(watts, wh_period)
+
+        start: datetime | None = call.data.get(ATTR_START)
+        end: datetime | None = call.data.get(ATTR_END)
+
+        # Validate / normalise the optional time-range filter.
+        if start is not None and start.tzinfo is None:
+            start = start.replace(tzinfo=estimate.timezone or None)
+        if end is not None and end.tzinfo is None:
+            end = end.replace(tzinfo=estimate.timezone or None)
+        if start is not None and end is not None and end < start:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="end_before_start",
+            )
+
+        forecast: list[dict[str, str | float | int]] = []
+        for ts in sorted(watts):
+            if start is not None and ts < start:
+                continue
+            if end is not None and ts >= end:
+                break
+            entry_dict: dict[str, str | float | int] = {
+                "time": ts.isoformat(),
+                "value": watts[ts],
+            }
+            if ts in wh_period:
+                entry_dict["energy_wh"] = wh_period[ts]
+            forecast.append(entry_dict)
+
+        return {"forecast": forecast}
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_FORECAST,
+        async_get_forecast,
+        schema=GET_FORECAST_SCHEMA,
+        supports_response=SupportsResponse.ONLY,
+    )

@@ -33,6 +33,31 @@ class ForecastSolarSensorEntityDescription(SensorEntityDescription):
     """Describes a Forecast.Solar Sensor."""
 
     state: Callable[[Estimate], Any] | None = None
+    attributes: Callable[[Estimate], dict[str, Any]] | None = None
+
+
+def _series_for_date(series: dict[datetime, int], target_date) -> dict[str, int]:
+    """Return ISO-keyed entries from a Forecast.Solar series for one date."""
+    return {
+        ts.isoformat(): val for ts, val in series.items() if ts.date() == target_date
+    }
+
+
+def _today_attributes(estimate: Estimate) -> dict[str, Any]:
+    """Return today's power and energy curves as state attributes.
+
+    Each attribute is a mapping of ISO 8601 timestamp -> value, where
+    ``watts`` is the estimated power in W at the timestamp and
+    ``wh_period`` is the energy in Wh for the interval starting at that
+    timestamp. The series is capped to today's entries to stay below
+    the recorder's 16 KiB state-attribute size warning even at the
+    15-minute resolution provided by paid Forecast.Solar accounts.
+    """
+    today = estimate.now().date()
+    return {
+        "watts": _series_for_date(estimate.watts, today),
+        "wh_period": _series_for_date(estimate.wh_period, today),
+    }
 
 
 SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
@@ -40,6 +65,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         key="energy_production_today",
         translation_key="energy_production_today",
         state=lambda estimate: estimate.energy_production_today,
+        attributes=_today_attributes,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -191,3 +217,10 @@ class ForecastSolarSensorEntity(
             state = self.entity_description.state(self.coordinator.data)
 
         return state
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return any extra state attributes for the sensor."""
+        if self.entity_description.attributes is None:
+            return None
+        return self.entity_description.attributes(self.coordinator.data)
