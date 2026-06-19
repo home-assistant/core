@@ -83,35 +83,7 @@ _LOGGER = logging.getLogger(__name__)
 PACKAGE_MERGE_HINT = "list"
 
 
-def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
-    """Validate that binary sensors with auto_off have triggers."""
-    if CONF_TRIGGERS not in obj and BINARY_SENSOR_DOMAIN in obj:
-        binary_sensors: list[ConfigType] = obj[BINARY_SENSOR_DOMAIN]
-        for binary_sensor in binary_sensors:
-            if binary_sensor_platform.CONF_AUTO_OFF not in binary_sensor:
-                continue
-
-            identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
-            if (
-                (name := binary_sensor.get(CONF_NAME))
-                and isinstance(name, Template)
-                and name.template != binary_sensor_platform.DEFAULT_NAME
-            ):
-                identifier = f"{CONF_NAME}: {name.template}"
-            elif default_entity_id := binary_sensor.get(CONF_DEFAULT_ENTITY_ID):
-                identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
-            elif unique_id := binary_sensor.get(CONF_UNIQUE_ID):
-                identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
-
-            raise vol.Invalid(
-                f"The auto_off option for template binary sensor: {identifier} "
-                "requires a trigger, remove the auto_off option or rewrite "
-                "configuration to use a trigger"
-            )
-
-    return obj
-
-
+_DEFAULT_NAME = "Template Entity"
 _DEFAULT_NAMES = {
     Platform.ALARM_CONTROL_PANEL: alarm_control_panel_platform.DEFAULT_NAME,
     Platform.BINARY_SENSOR: binary_sensor_platform.DEFAULT_NAME,
@@ -133,7 +105,46 @@ _DEFAULT_NAMES = {
 }
 
 
-def validate_entity_condition_has_trigger(obj: dict) -> dict:
+def _identify_invalid_entity_config(
+    platform: Platform, option: str, entity_config: ConfigType
+) -> None:
+    if option not in entity_config:
+        return
+
+    identifier = f"{CONF_NAME}: {_DEFAULT_NAMES.get(platform, _DEFAULT_NAME)}"
+    if (
+        (name := entity_config.get(CONF_NAME))
+        and isinstance(name, Template)
+        and name.template != _DEFAULT_NAMES.get(platform, _DEFAULT_NAME)
+    ):
+        identifier = f"{CONF_NAME}: {name.template}"
+    elif default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+        identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+    elif unique_id := entity_config.get(CONF_UNIQUE_ID):
+        identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
+
+    raise vol.Invalid(
+        f"The {option} option for template {platform.replace('_', ' ')}: {identifier} "
+        f"requires a trigger, remove the {option} option or rewrite "
+        "configuration to use a trigger"
+    )
+
+
+def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
+    """Validate that binary sensors with auto_off have triggers."""
+    if CONF_TRIGGERS not in obj and BINARY_SENSOR_DOMAIN in obj:
+        binary_sensors: list[ConfigType] = obj[BINARY_SENSOR_DOMAIN]
+        for binary_sensor in binary_sensors:
+            _identify_invalid_entity_config(
+                Platform.BINARY_SENSOR,
+                binary_sensor_platform.CONF_AUTO_OFF,
+                binary_sensor,
+            )
+
+    return obj
+
+
+def validate_entity_config_with_conditions_has_trigger(obj: dict) -> dict:
     """Validate entity condition requires trigger."""
     if CONF_TRIGGERS not in obj:
         for platform in PLATFORMS:
@@ -141,25 +152,10 @@ def validate_entity_condition_has_trigger(obj: dict) -> dict:
                 continue
 
             for entity_config in obj[platform]:
-                if CONF_CONDITIONS not in entity_config:
-                    continue
-
-                identifier = f"{CONF_NAME}: Template {platform.title()}"
-                if (
-                    (name := entity_config.get(CONF_NAME))
-                    and isinstance(name, Template)
-                    and name.template != _DEFAULT_NAMES.get(platform, "Template Entity")
-                ):
-                    identifier = f"{CONF_NAME}: {name.template}"
-                elif default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
-                    identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
-                elif unique_id := entity_config.get(CONF_UNIQUE_ID):
-                    identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
-
-                raise vol.Invalid(
-                    f"The condition option for template {platform}: {identifier} "
-                    "requires a trigger, remove the ccondition option or rewrite "
-                    "configuration to use a trigger"
+                _identify_invalid_entity_config(
+                    platform,
+                    CONF_CONDITIONS,
+                    entity_config,
                 )
 
     return obj
@@ -306,7 +302,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
         BUTTON_DOMAIN,
     ),
     validate_binary_sensor_auto_off_has_trigger,
-    validate_entity_condition_has_trigger,
+    validate_entity_config_with_conditions_has_trigger,
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(

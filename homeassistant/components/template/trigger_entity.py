@@ -64,12 +64,17 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 self.hass,
                 condition_config,
                 _LOGGER,
-                self._attr_name or "template entity",
+                f"template {self.domain} entity",
             )
-            self.async_on_remove(self._cond_func.async_unload)
 
         if self.coordinator.data is not None:
             self._process_data()
+
+    async def async_will_remove_from_hass(self) -> None:
+        """Clean up conditions when removing from Home Assistant."""
+        await super().async_will_remove_from_hass()
+        if self._cond_func:
+            self._cond_func.async_unload()
 
     def _set_unique_id(self, unique_id: str | None) -> None:
         """Set unique id."""
