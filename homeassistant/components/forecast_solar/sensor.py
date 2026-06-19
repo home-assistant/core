@@ -49,9 +49,11 @@ def _today_attributes(estimate: Estimate) -> dict[str, Any]:
     Each attribute is a mapping of ISO 8601 timestamp -> value, where
     ``watts`` is the estimated power in W at the timestamp and
     ``wh_period`` is the energy in Wh for the interval starting at that
-    timestamp. The series is capped to today's entries to stay below
-    the recorder's 16 KiB state-attribute size warning even at the
-    15-minute resolution provided by paid Forecast.Solar accounts.
+    timestamp. The series is capped to today's entries to keep the live
+    state payload (state machine, websocket/REST consumers, frontend)
+    small at the 15-minute resolution provided by paid Forecast.Solar
+    accounts. Recorder write cost is handled separately via
+    ``_unrecorded_attributes`` on the entity class.
     """
     today = estimate.now().date()
     return {

@@ -25,7 +25,6 @@ from tests.common import MockConfigEntry
 async def test_get_forecast_raw(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_forecast_solar: MagicMock,
 ) -> None:
     """Test the get_forecast service with native resolution."""
     response = await hass.services.async_call(
@@ -145,7 +144,6 @@ async def test_get_forecast_filters_by_time_range(
 async def test_get_forecast_rejects_end_before_start(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_forecast_solar: MagicMock,
 ) -> None:
     """Test the get_forecast service rejects an end-before-start range."""
     tz = dt_util.get_default_time_zone()

@@ -99,13 +99,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
         start: datetime | None = call.data.get(ATTR_START)
         end: datetime | None = call.data.get(ATTR_END)
 
-        # Validate / normalise the optional time-range filter. The
-        # Forecast.Solar library exposes ``timezone`` as the IANA zone
-        # name string for the configured location; resolve it to a
-        # ``tzinfo`` via the async helper so naive inputs from the
-        # service call can be interpreted in the same zone as the
-        # forecast series without blocking the event loop on tz-data
-        # disk I/O.
+        # Interpret naive inputs in the forecast's zone; use the async
+        # helper to avoid blocking tz-data I/O on first use.
         tz = (
             await dt_util.async_get_time_zone(estimate.timezone)
             if estimate.timezone
