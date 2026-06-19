@@ -2,14 +2,14 @@
 
 from typing import Any
 
-from pycync.devices.devices import CyncDevice
 from pycync.devices.device_types import DeviceType
+from pycync.devices.devices import CyncDevice
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import CyncConfigEntry, CyncCoordinator
+from .coordinator import CyncConfigEntry
 from .entity import CyncBaseEntity
 
 
