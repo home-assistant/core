@@ -13,6 +13,7 @@ from homeassistant.components.hassio.const import (
     DOMAIN,
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
+    REQUEST_REFRESH_DELAY,
 )
 from homeassistant.components.hassio.coordinator import (
     HassioMainDataUpdateCoordinator,
@@ -21,9 +22,11 @@ from homeassistant.components.hassio.coordinator import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .test_init import MOCK_ENVIRON
 
+from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
@@ -346,6 +349,12 @@ async def test_job_manager_reload_on_supervisor_restart(
     )
     msg = await client.receive_json()
     assert msg["success"]
+    await hass.async_block_till_done()
+
+    # Advance time past the debouncer cooldown for the refresh to complete
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + dt_util.dt.timedelta(seconds=REQUEST_REFRESH_DELAY + 1)
+    )
     await hass.async_block_till_done()
 
     # Listener should be told job is done and cache cleared out
