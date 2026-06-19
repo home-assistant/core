@@ -1,7 +1,7 @@
 """Tests for the enum_identity_compare mypy plugin.
 
 Each test snippet is run through mypy's API with the plugin enabled.
-Tests assert the number of ``ha-enum-identity-compare`` errors emitted
+Tests assert the number of ``home-assistant-enum-identity-compare`` errors emitted
 and the relevant message content (operator pair and enum class name).
 
 The plugin is intentionally narrow: it fires only on plain ``enum.Enum``
@@ -22,7 +22,7 @@ _PLUGINS_ROOT = _PROJECT_ROOT  # mypy_plugins/ lives under the worktree root
 
 
 def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[str]:
-    """Run mypy with the plugin and return ha-enum-identity-compare errors.
+    """Run mypy with the plugin and return home-assistant-enum-identity-compare errors.
 
     Each error is normalized to ``LINE: MESSAGE`` form. ``mypy_path``, if
     given, is written into ``mypy.ini`` so tests can supply stub modules
@@ -63,12 +63,12 @@ def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[s
 
     errors: list[str] = []
     for line in stdout.splitlines():
-        if "[ha-enum-identity-compare]" not in line:
+        if "[home-assistant-enum-identity-compare]" not in line:
             continue
         # Format: "<path>:<line>: error: <msg>  [code]"
         prefix, _, msg = line.partition(": error: ")
         line_no = prefix.rsplit(":", 1)[-1].strip()
-        msg_clean = msg.split("  [ha-enum-identity-compare]", 1)[0].strip()
+        msg_clean = msg.split("  [home-assistant-enum-identity-compare]", 1)[0].strip()
         errors.append(f"{line_no}: {msg_clean}")
     return errors
 

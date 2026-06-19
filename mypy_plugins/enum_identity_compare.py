@@ -33,7 +33,7 @@ from mypy.plugin import MethodContext, Plugin
 from mypy.types import Instance, LiteralType, Type, UnionType, get_proper_type
 
 ENUM_IDENTITY = ErrorCode(
-    "ha-enum-identity-compare",
+    "home-assistant-enum-identity-compare",
     "Use `is`/`is not` to compare two operands of the same enum class.",
     "Home Assistant",
 )
