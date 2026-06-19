@@ -6,7 +6,10 @@ from typing import Any
 import pytest
 
 from homeassistant.components.midea_lan.config_flow import MideaLanConfigFlow
+from homeassistant.components.midea_lan.const import DOMAIN
+from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 
 
 class DummyDevice:
@@ -79,8 +82,11 @@ class DummyDevice:
 
 
 @pytest.fixture
-def mock_config_flow(hass: HomeAssistant) -> MideaLanConfigFlow:
-    """Return a configured config flow instance."""
-    config_flow = MideaLanConfigFlow()
-    config_flow.hass = hass
-    return config_flow
+async def mock_config_flow(hass: HomeAssistant) -> MideaLanConfigFlow:
+    """Return a configured config flow instance from the flow manager."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.MENU
+    return hass.config_entries.flow._progress[result["flow_id"]]
