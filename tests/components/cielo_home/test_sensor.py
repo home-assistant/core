@@ -8,7 +8,11 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.const import Platform, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM, UnitSystem
+from homeassistant.util.unit_system import (
+    METRIC_SYSTEM,
+    US_CUSTOMARY_SYSTEM,
+    UnitSystem,
+)
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -45,13 +49,13 @@ async def test_all_entities(
         ),
         pytest.param(
             "unknown",
-            None,
+            METRIC_SYSTEM,
             UnitOfTemperature.CELSIUS,
             id="unknown_unit",
         ),
         pytest.param(
             None,
-            None,
+            METRIC_SYSTEM,
             UnitOfTemperature.CELSIUS,
             id="none_unit",
         ),
@@ -62,14 +66,14 @@ async def test_temperature_sensor_unit(
     mock_cielo_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     mock_cielo_device_api: MagicMock,
+    entity_registry: er.EntityRegistry,
     temperature_unit: str | None,
-    hass_units: UnitSystem | None,
+    hass_units: UnitSystem,
     expected_unit: str,
 ) -> None:
     """Test temperature sensor reports the correct unit."""
     mock_cielo_device_api.temperature_unit.return_value = temperature_unit
-    if hass_units is not None:
-        hass.config.units = hass_units
+    hass.config.units = hass_units
 
     mock_config_entry.add_to_hass(hass)
 
@@ -80,7 +84,6 @@ async def test_temperature_sensor_unit(
     assert state is not None
     assert state.attributes.get("unit_of_measurement") == expected_unit
 
-    registry = er.async_get(hass)
-    entry = registry.async_get("sensor.living_room_living_room_temperature")
+    entry = entity_registry.async_get("sensor.living_room_living_room_temperature")
     assert entry is not None
     assert entry.unit_of_measurement == expected_unit
