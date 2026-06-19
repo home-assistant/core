@@ -51,6 +51,7 @@ class HomeeCoverState(float, Enum):
 class HomeeSlatState(float, Enum):
     """Slat states for covers in homee."""
 
+    STOPPED = 0.0
     CLOSED = 1.0
     OPEN = 2.0
 
@@ -82,7 +83,11 @@ def get_cover_features(
             features |= CoverEntityFeature.SET_POSITION
 
     if node.get_attribute_by_type(AttributeType.SLAT_ROTATION_IMPULSE) is not None:
-        features |= CoverEntityFeature.OPEN_TILT | CoverEntityFeature.CLOSE_TILT
+        features |= (
+            CoverEntityFeature.OPEN_TILT
+            | CoverEntityFeature.CLOSE_TILT
+            | CoverEntityFeature.STOP_TILT
+        )
 
     if node.get_attribute_by_type(AttributeType.SHUTTER_SLAT_POSITION) is not None:
         features |= CoverEntityFeature.SET_TILT_POSITION
@@ -312,6 +317,15 @@ class HomeeCover(HomeeNodeEntity, CoverEntity):
                 await self.async_set_homee_value(slat_attribute, HomeeSlatState.CLOSED)
             else:
                 await self.async_set_homee_value(slat_attribute, HomeeSlatState.OPEN)
+
+    async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt."""
+        if (
+            slat_attribute := self._node.get_attribute_by_type(
+                AttributeType.SLAT_ROTATION_IMPULSE
+            )
+        ) is not None:
+            await self.async_set_homee_value(slat_attribute, HomeeSlatState.STOPPED)
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""

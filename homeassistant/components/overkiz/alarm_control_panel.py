@@ -144,7 +144,7 @@ ALARM_DESCRIPTIONS: list[OverkizAlarmDescription] = [
     # Disabled by default since all Overkiz hubs have this
     # virtual device, but only a few users actually use this.
     OverkizAlarmDescription(
-        key=UIWidget.TSKALARM_CONTROLLER,
+        key=UIWidget.TSK_ALARM_CONTROLLER,
         entity_registry_enabled_default=False,
         supported_features=(
             AlarmControlPanelEntityFeature.ARM_AWAY
@@ -252,7 +252,7 @@ class OverkizAlarmControlPanel(OverkizDescriptiveEntity, AlarmControlPanelEntity
     @property
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
-        return self.entity_description.fn_state(self.executor.select_state)
+        return self.entity_description.fn_state(self.device.states.get_value)
 
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
