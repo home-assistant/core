@@ -2,7 +2,7 @@
 
 import asyncio
 import collections
-from collections.abc import Awaitable, Callable, Container, Coroutine, Mapping
+from collections.abc import Awaitable, Callable, Coroutine
 from contextlib import suppress
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
@@ -12,16 +12,16 @@ import logging
 import os
 from random import SystemRandom
 import time
-from typing import Any, Final, final, override
+from typing import Any, Final, final
 
-from aiohttp import web
+from aiohttp import hdrs, web
 import attr
 from propcache.api import cached_property, under_cached_property
 import voluptuous as vol
 from webrtc_models import RTCIceCandidateInit
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
     ATTR_MEDIA_CONTENT_TYPE,
@@ -776,25 +776,35 @@ class Camera(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 class CameraView(HomeAssistantView):
     """Base CameraView."""
 
-    use_query_token_for_auth = True
+    requires_auth = False
 
     def __init__(self, component: EntityComponent[Camera]) -> None:
         """Initialize a basic camera view."""
         self.component = component
 
-    @callback
-    @override
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
-        """Return valid auth tokens, which can be used for query token authentication."""
-        if (camera := self.component.get_entity(match_info["entity_id"])) is None:
-            return ()
-
-        return camera.access_tokens
-
     async def get(self, request: web.Request, entity_id: str) -> web.StreamResponse:
         """Start a GET request."""
         if (camera := self.component.get_entity(entity_id)) is None:
-            raise web.HTTPNotFound
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
+            )
+
+        authenticated = (
+            request[KEY_AUTHENTICATED]
+            or request.query.get("token") in camera.access_tokens
+        )
+
+        if not authenticated:
+            if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
+                raise web.HTTPUnauthorized
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
+            raise web.HTTPForbidden
 
         if not camera.is_on:
             _LOGGER.debug("Camera is off")
