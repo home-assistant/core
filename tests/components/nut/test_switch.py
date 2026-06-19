@@ -157,3 +157,77 @@ async def test_switch_pdu_dynamic_outlets_state_unknown(
     switch = hass.states.get(entity_id)
     assert switch
     assert switch.state == STATE_UNKNOWN
+
+
+async def test_switch_outlets_without_outlet_count(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test outlet switches are created when outlet.count is missing.
+
+    The outlet is discovered from the ``outlet.1.status`` status key and the
+    ``outlet.1.load.on`` / ``outlet.1.load.off`` available commands.
+    """
+
+    run_command = AsyncMock()
+
+    config_entry = await async_init_integration(
+        hass,
+        list_ups={"ups1": "UPS 1"},
+        list_vars={
+            "outlet.1.status": "on",
+            "outlet.1.name": "A1",
+        },
+        list_commands_return_value={
+            "outlet.1.load.on": None,
+            "outlet.1.load.off": None,
+        },
+        run_command=run_command,
+    )
+
+    entity_id = "switch.ups1_power_outlet_a1"
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == f"{config_entry.entry_id}_outlet.1.load.poweronoff"
+
+    switch = hass.states.get(entity_id)
+    assert switch
+    assert switch.state == STATE_ON
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    run_command.assert_called_with("ups1", "outlet.1.load.off")
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+    run_command.assert_called_with("ups1", "outlet.1.load.on")
+
+
+async def test_switch_outlet_not_created_without_both_commands(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test no switch is created when only one of load.on/load.off is available."""
+
+    await async_init_integration(
+        hass,
+        list_ups={"ups1": "UPS 1"},
+        list_vars={
+            "outlet.1.status": "on",
+            "outlet.1.name": "A1",
+        },
+        list_commands_return_value={
+            "outlet.1.load.on": None,
+        },
+    )
+
+    switch = hass.states.get("switch.ups1_power_outlet_a1")
+    assert not switch
