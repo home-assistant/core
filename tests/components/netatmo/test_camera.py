@@ -446,11 +446,11 @@ async def test_service_set_camera_light_invalid_type(
 
 
 @pytest.mark.parametrize(
-    ("camera_type", "camera_id", "camera_entity"),
+    ("camera_type", "camera_id", "camera_entity", "expected_motion_detection"),
     [
-        ("NACamera", "12:34:56:00:f1:62", "camera.hall"),
-        ("NOC", "12:34:56:10:b9:0e", "camera.front"),
-        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell"),
+        ("NACamera", "12:34:56:00:f1:62", "camera.hall", True),
+        ("NOC", "12:34:56:10:b9:0e", "camera.front", True),
+        ("NDB", "12:34:56:10:f1:66", "camera.netatmo_doorbell", None),
     ],
 )
 async def test_camera_reconnect_webhook(
@@ -459,6 +459,7 @@ async def test_camera_reconnect_webhook(
     camera_type: str,
     camera_id: str,
     camera_entity: str,
+    expected_motion_detection: bool | None,
 ) -> None:
     """Test webhook event on camera reconnect."""
     fake_post_hits = 0
@@ -519,16 +520,10 @@ async def test_camera_reconnect_webhook(
         # Check initial state
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
-        if camera_type != "NDB":
-            assert (
-                hass.states.get(camera_entity).attributes.get("motion_detection")
-                is True
-            )
-        else:
-            assert (
-                hass.states.get(camera_entity).attributes.get("motion_detection")
-                is False
-            )
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection")
+            is expected_motion_detection
+        )
 
         # Camera off event (meaning: monitoring off, but still connected)
         response = {
@@ -542,9 +537,7 @@ async def test_camera_reconnect_webhook(
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
-        assert (
-            hass.states.get(camera_entity).attributes.get("motion_detection") is False
-        )
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Real camera disconnect
         response = {
@@ -572,9 +565,7 @@ async def test_camera_reconnect_webhook(
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is False
-        assert (
-            hass.states.get(camera_entity).attributes.get("motion_detection") is False
-        )
+        assert hass.states.get(camera_entity).attributes.get("motion_detection") is None
 
         # Camera on event (meaning: monitoring is also resuming to on)
         response = {
@@ -588,16 +579,10 @@ async def test_camera_reconnect_webhook(
 
         assert hass.states.get(camera_entity).state == "idle"
         assert hass.states.get(camera_entity).attributes.get("monitoring") is True
-        if camera_type != "NDB":
-            assert (
-                hass.states.get(camera_entity).attributes.get("motion_detection")
-                is True
-            )
-        else:
-            assert (
-                hass.states.get(camera_entity).attributes.get("motion_detection")
-                is False
-            )
+        assert (
+            hass.states.get(camera_entity).attributes.get("motion_detection")
+            is expected_motion_detection
+        )
 
 
 @pytest.mark.parametrize(
