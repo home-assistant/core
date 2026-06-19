@@ -51,11 +51,6 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.OUTLET
     _attr_name = None
 
-    @property
-    def is_on(self) -> bool | None:
-        """Return None — pycync 0.5.0 does not track on/off state for plugs."""
-        return None
-
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the plug."""
         await self._device._command_client.set_power_state(self._device, True)  # noqa: SLF001
