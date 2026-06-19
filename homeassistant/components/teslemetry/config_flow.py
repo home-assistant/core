@@ -7,6 +7,7 @@ from typing import Any
 from aiohttp import ClientConnectionError
 from tesla_fleet_api.exceptions import (
     InvalidToken,
+    LoginRequired,
     SubscriptionRequired,
     TeslaFleetError,
 )
@@ -98,7 +99,7 @@ class OAuth2FlowHandler(
 
         try:
             metadata = await teslemetry.metadata()
-        except InvalidToken:
+        except InvalidToken, LoginRequired:
             return {"base": "invalid_access_token"}
         except SubscriptionRequired:
             return {"base": "subscription_required"}

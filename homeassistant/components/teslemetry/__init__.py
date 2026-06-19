@@ -10,6 +10,7 @@ from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
     InvalidToken,
+    LoginRequired,
     SubscriptionRequired,
     TeslaFleetError,
 )
@@ -201,6 +202,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             translation_domain=DOMAIN,
             translation_key="auth_failed_invalid_token",
         ) from e
+    except LoginRequired as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_login_required",
+        ) from e
     except SubscriptionRequired as e:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -336,6 +342,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
                     translation_key="auth_failed_invalid_token",
+                ) from e
+            except LoginRequired as e:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed_login_required",
                 ) from e
             except SubscriptionRequired as e:
                 raise ConfigEntryAuthFailed(
