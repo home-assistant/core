@@ -117,6 +117,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
         # Tilt commands move the tilt with a few degrees
+        # position (1-127), speed (1-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
         open_tilt_command_args=(_TILT_STEP_SIZE, 0),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
@@ -132,7 +133,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
-        # Args are position (1-127) and speed (1-15, optional)
+        # position (1-127), speed (1-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
         open_tilt_command_args=(_TILT_STEP_SIZE, 1),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
@@ -148,7 +149,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
-        # Args are position (1-127)
+        # position (1-127), speed (1-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
         open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
@@ -163,7 +164,7 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
-        # Args are position (1-127) and speed (1-15, optional)
+        # position (1-127), speed (1-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
         open_tilt_command_args=(_TILT_STEP_SIZE, 1),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
