@@ -1,6 +1,5 @@
 """Data update coordinator for the Karakeep integration."""
 
-from dataclasses import dataclass
 import logging
 
 from aiokarakeep import (
@@ -25,18 +24,11 @@ _LOGGER = logging.getLogger(__name__)
 type KarakeepConfigEntry = ConfigEntry[KarakeepDataUpdateCoordinator]
 
 
-@dataclass
-class KarakeepData:
-    """Data fetched from Karakeep."""
-
-    stats: KarakeepStats
-    version: str | None
-
-
-class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepData]):
+class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepStats]):
     """Class to manage fetching Karakeep data."""
 
     config_entry: KarakeepConfigEntry
+    version: str | None = None
 
     def __init__(
         self,
@@ -55,22 +47,21 @@ class KarakeepDataUpdateCoordinator(DataUpdateCoordinator[KarakeepData]):
             config_entry=entry,
         )
 
-    async def _async_update_data(self) -> KarakeepData:
+    async def _async_setup(self) -> None:
+        """Fetch the server version once during setup."""
+        # The version is optional and must never fail setup.
+        try:
+            self.version = await self.client.async_get_version()
+        except KarakeepError as err:
+            _LOGGER.debug("Could not fetch Karakeep version: %s", err)
+
+    async def _async_update_data(self) -> KarakeepStats:
         """Fetch data from Karakeep API."""
         try:
-            stats = await self.client.async_get_stats()
+            return await self.client.async_get_stats()
         except KarakeepAuthError as err:
             raise ConfigEntryAuthFailed("Invalid Karakeep API token") from err
         except KarakeepConnectionError as err:
             raise UpdateFailed(f"Error communicating with Karakeep: {err}") from err
         except (KarakeepApiError, KarakeepInvalidResponseError) as err:
             raise UpdateFailed(f"Invalid response from Karakeep: {err}") from err
-
-        # The version is optional and must never fail the data update.
-        try:
-            version = await self.client.async_get_version()
-        except KarakeepError as err:
-            _LOGGER.debug("Could not fetch Karakeep version: %s", err)
-            version = None
-
-        return KarakeepData(stats=stats, version=version)
