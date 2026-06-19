@@ -4,8 +4,9 @@ Scope is intentionally narrow: only **plain ``enum.Enum`` subclasses** are
 flagged by default, because Python's ``Enum.__eq__`` is identity-based —
 ``a == b`` and ``a is b`` produce the same result there.
 
-``StrEnum``/``IntEnum``/``ReprEnum`` are **skipped** because their
-``__eq__`` delegates to the underlying ``str``/``int`` and accepts raw
+``StrEnum``/``IntEnum``/``ReprEnum`` (and the legacy mixin form
+``class X(str, Enum)`` / ``class X(int, Enum)``) are **skipped** because
+their ``__eq__`` delegates to the underlying ``str``/``int`` and accepts raw
 primitive values: callers routinely pass ``"on"`` where a ``HVACMode``
 parameter is annotated, and ``==`` silently makes that work while ``is``
 silently breaks it. Switching those sites to ``is`` is a runtime-behavior
@@ -40,7 +41,13 @@ ENUM_IDENTITY = ErrorCode(
 
 _PLAIN_ENUM_BASE = "enum.Enum"
 _VALUE_BASED_ENUM_BASES = frozenset(
-    {"enum.IntEnum", "enum.ReprEnum", "enum.StrEnum"}
+    {
+        "enum.IntEnum",
+        "enum.ReprEnum",
+        "enum.StrEnum",
+        "builtins.int",
+        "builtins.str",
+    }
 )
 _FLAG_BASES = frozenset({"enum.Flag", "enum.IntFlag"})
 
@@ -66,7 +73,8 @@ def _enum_class(t: Type | None) -> TypeInfo | None:
 
     Returns ``None`` for:
     - ``Flag``/``IntFlag`` (bitwise ``==`` is idiomatic)
-    - ``StrEnum``/``IntEnum``/``ReprEnum`` not in the framework allowlist
+    - value-based enums not in the framework allowlist: ``StrEnum``/
+      ``IntEnum``/``ReprEnum`` and the ``(str, Enum)``/``(int, Enum)`` mixin form
     - Anything else (``Any``, ``None``, mixed unions, etc.)
     """
     if t is None:
@@ -101,7 +109,7 @@ def _enum_class(t: Type | None) -> TypeInfo | None:
     if not has_enum_base:
         return None
     if has_value_based_base and info.fullname not in _FRAMEWORK_GUARANTEED_ENUMS:
-        # StrEnum/IntEnum without explicit trust — `is` may diverge from
+        # Value-based enum without explicit trust — `is` may diverge from
         # `==` when callers pass the underlying string/int.
         return None
     return info

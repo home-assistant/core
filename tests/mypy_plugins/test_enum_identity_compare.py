@@ -98,6 +98,14 @@ class HTTPStatus(IntEnum):
 
 class ClimateFeature(IntFlag):
     SWING_MODE = 32
+
+class AudioBitRates(int, Enum):
+    BITRATE_8 = 8
+    BITRATE_16 = 16
+
+class LegacyStr(str, Enum):
+    A = "a"
+    B = "b"
 """
 
 
@@ -207,6 +215,23 @@ def fn(code: HTTPStatus) -> bool:
     return code == HTTPStatus.OK
 """,
             id="intenum_not_allowlisted",
+        ),
+        # The legacy ``(int, Enum)`` mixin inherits a value-based ``__eq__``
+        # from ``int`` (no ``enum.IntEnum`` base), so it is NOT flagged either.
+        pytest.param(
+            """
+def fn(rate: AudioBitRates) -> bool:
+    return rate == AudioBitRates.BITRATE_8
+""",
+            id="int_enum_mixin_not_allowlisted",
+        ),
+        # And the same for the legacy ``(str, Enum)`` mixin.
+        pytest.param(
+            """
+def fn(v: LegacyStr) -> bool:
+    return v == LegacyStr.A
+""",
+            id="str_enum_mixin_not_allowlisted",
         ),
         # Comparing a raw ``str`` against a ``StrEnum`` member is legitimate.
         pytest.param(
