@@ -77,6 +77,8 @@ from zha.zigbee.device import (
     ZHAEvent,
 )
 from zha.zigbee.group import Group, GroupInfo, GroupMember
+import zhaquirks
+import zhaquirks.legacy
 from zigpy.config import (
     CONF_DATABASE,
     CONF_DEVICE,
@@ -1363,6 +1365,10 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     quirks_config: QuirksConfiguration = QuirksConfiguration(
         enabled=ha_zha_data.yaml_config.get(CONF_ENABLE_QUIRKS, True),
         custom_quirks_path=ha_zha_data.yaml_config.get(CONF_CUSTOM_QUIRKS_PATH),
+        setup_function=zhaquirks.setup,
+        uninitialized_packet_handler=(
+            zhaquirks.legacy.handle_message_from_uninitialized_sender
+        ),
     )
     overrides_config: dict[str, DeviceOverridesConfiguration] = {}
     overrides: dict[str, dict[str, Any]] = cast(

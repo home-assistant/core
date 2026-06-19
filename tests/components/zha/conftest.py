@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 import warnings
 
 import pytest
+from zha.quirks import resolve_zigpy_device
 import zhaquirks
 import zigpy
 from zigpy.application import ControllerApplication
@@ -397,7 +398,7 @@ def zigpy_device_mock(zigpy_app_controller) -> Callable[..., zigpy.device.Device
             device = quirk(zigpy_app_controller, device.ieee, device.nwk, device)
         else:
             # Allow zigpy to apply quirks if we don't pass one explicitly
-            device = zigpy.quirks.get_device(device)
+            device = resolve_zigpy_device(device)
 
         if patch_cluster:
             for endpoint in (ep for epid, ep in device.endpoints.items() if epid):
