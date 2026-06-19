@@ -1368,7 +1368,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==6.0.1
+infrared-protocols==6.1.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -3439,7 +3439,7 @@ yeelightsunflower==0.0.10
 yolink-api==0.6.5
 
 # homeassistant.components.yoto
-yoto-api==4.3.0
+yoto-api==4.3.1
 
 # homeassistant.components.youless
 youless-api==2.2.0
