@@ -1,13 +1,17 @@
 """Services for the Ness Alarm integration."""
 
+from typing import TYPE_CHECKING
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_CODE, ATTR_STATE
-from homeassistant.core import HomeAssistant, ServiceCall
-from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import ATTR_OUTPUT_ID, DOMAIN, SERVICE_AUX, SERVICE_PANIC
+
+if TYPE_CHECKING:
+    from . import NessAlarmConfigEntry
 
 SERVICE_SCHEMA_PANIC = vol.Schema({vol.Required(ATTR_CODE): cv.string})
 SERVICE_SCHEMA_AUX = vol.Schema(
@@ -18,34 +22,29 @@ SERVICE_SCHEMA_AUX = vol.Schema(
 )
 
 
+async def _handle_panic(call: ServiceCall) -> None:
+    """Handle panic service call."""
+    entry: NessAlarmConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, None
+    )
+    await entry.runtime_data.panic(call.data[ATTR_CODE])
+
+
+async def _handle_aux(call: ServiceCall) -> None:
+    """Handle aux service call."""
+    entry: NessAlarmConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, None
+    )
+    await entry.runtime_data.aux(call.data[ATTR_OUTPUT_ID], call.data[ATTR_STATE])
+
+
+@callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register Ness Alarm services."""
 
-    async def handle_panic(call: ServiceCall) -> None:
-        """Handle panic service call."""
-        entries = call.hass.config_entries.async_loaded_entries(DOMAIN)
-        if not entries:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_config_entry",
-            )
-        client = entries[0].runtime_data
-        await client.panic(call.data[ATTR_CODE])
-
-    async def handle_aux(call: ServiceCall) -> None:
-        """Handle aux service call."""
-        entries = call.hass.config_entries.async_loaded_entries(DOMAIN)
-        if not entries:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="no_config_entry",
-            )
-        client = entries[0].runtime_data
-        await client.aux(call.data[ATTR_OUTPUT_ID], call.data[ATTR_STATE])
-
     hass.services.async_register(
-        DOMAIN, SERVICE_PANIC, handle_panic, schema=SERVICE_SCHEMA_PANIC
+        DOMAIN, SERVICE_PANIC, _handle_panic, schema=SERVICE_SCHEMA_PANIC
     )
     hass.services.async_register(
-        DOMAIN, SERVICE_AUX, handle_aux, schema=SERVICE_SCHEMA_AUX
+        DOMAIN, SERVICE_AUX, _handle_aux, schema=SERVICE_SCHEMA_AUX
     )
