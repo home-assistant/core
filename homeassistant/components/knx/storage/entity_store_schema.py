@@ -3,7 +3,7 @@
 from enum import StrEnum, unique
 
 import voluptuous as vol
-from xknx.dpt import DPTBase, DPTNumeric
+from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
 from xknx.exceptions import ConversionError
 
 from homeassistant.components.climate import HVACMode
@@ -188,12 +188,17 @@ def _button_data_sub_validator(config: dict) -> dict:
                 transcoder.to_knx(config[CONF_DATA][CONF_VALUE])
             except ConversionError as ex:
                 raise vol.Invalid(
-                    f"Value invalid for DPT {transcoder.dpt_number_str}"
+                    f"Value invalid for DPT {transcoder.dpt_number_str()}",
+                    path=([CONF_DATA]),
                 ) from ex
         elif CONF_PAYLOAD_LENGTH in config[CONF_DATA]:
-            if config[CONF_DATA][CONF_PAYLOAD_LENGTH] > transcoder.payload_length:
+            length = config[CONF_DATA][CONF_PAYLOAD_LENGTH]
+            if length != transcoder.payload_length or (
+                length != 0 and transcoder.payload_type is DPTBinary
+            ):
                 raise vol.Invalid(
-                    f"Payload length invalid for DPT {transcoder.dpt_number_str}"
+                    f"Payload length invalid for DPT {transcoder.dpt_number_str()}",
+                    path=([CONF_DATA]),
                 )
         return config
     # without DPT only raw allowed -> payload + payload_length (checked by KnxPayloadSelector)
@@ -207,7 +212,8 @@ BUTTON_KNX_SCHEMA = AllSerializeFirst(
         {
             vol.Required(CONF_GA_SEND): GASelector(
                 state=False,
-                state_required=True,
+                write_required=True,
+                passive=False,
                 dpt=["numeric", "enum", "complex", "string"],
                 dpt_required=False,  # for raw payload support
             ),

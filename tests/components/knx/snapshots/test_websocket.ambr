@@ -142,10 +142,10 @@
             'complex',
             'string',
           ]),
-          'passive': True,
+          'passive': False,
           'state': False,
           'write': dict({
-            'required': False,
+            'required': True,
           }),
         }),
         'required': True,

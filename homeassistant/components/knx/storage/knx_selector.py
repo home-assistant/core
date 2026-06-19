@@ -318,7 +318,7 @@ class KnxPayloadSelector(KNXSelectorBase):
 
     schema = vol.Any(
         {
-            vol.Optional(CONF_VALUE): object,
+            vol.Required(CONF_VALUE): object,
         },
         {
             vol.Required(CONF_PAYLOAD): cv.positive_int,
