@@ -4,6 +4,12 @@
       "forced_hot_water": {
         "default": "mdi:water-boiler"
       },
+      "frost_protection": {
+        "default": "mdi:snowflake"
+      },
+      "overheat_protection": {
+        "default": "mdi:fire"
+      },
       "standby": {
         "default": "mdi:power-sleep"
       }
