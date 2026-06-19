@@ -141,6 +141,46 @@ async def test_get_forecast_filters_by_time_range(
     assert forecast[1]["value"] == 900
 
 
+async def test_get_forecast_accepts_naive_datetimes(
+    hass: HomeAssistant,
+    init_integration: MockConfigEntry,
+    mock_forecast_solar: MagicMock,
+) -> None:
+    """Test that naive start/end datetimes are interpreted in the forecast zone.
+
+    The Home Assistant UI datetime selector and `cv.datetime` produce naive
+    `datetime` values for strings without an offset, so the service must
+    attach the forecast's timezone before filtering.
+    """
+    tz = dt_util.get_default_time_zone()
+    estimate = mock_forecast_solar.estimate.return_value
+    estimate.watts = {
+        datetime(2026, 6, 19, 6, 0, tzinfo=tz): 100,
+        datetime(2026, 6, 19, 9, 0, tzinfo=tz): 500,
+        datetime(2026, 6, 19, 12, 0, tzinfo=tz): 900,
+        datetime(2026, 6, 19, 18, 0, tzinfo=tz): 50,
+    }
+    estimate.wh_period = dict(estimate.watts)
+
+    response = await hass.services.async_call(
+        DOMAIN,
+        SERVICE_GET_FORECAST,
+        {
+            ATTR_CONFIG_ENTRY: init_integration.entry_id,
+            # Naive datetimes, as produced by `cv.datetime` from the UI.
+            ATTR_START: datetime(2026, 6, 19, 9, 0),
+            ATTR_END: datetime(2026, 6, 19, 18, 0),
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    forecast = response["forecast"]
+    assert len(forecast) == 2
+    assert forecast[0]["value"] == 500
+    assert forecast[1]["value"] == 900
+
+
 async def test_get_forecast_rejects_end_before_start(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
