@@ -34,6 +34,9 @@ from .entity import OverkizDescriptiveEntity
 _POSITION_MY = 108  # "My position" preset
 _POSITION_UNKNOWN = 124  # "Unknown position" preset
 
+# Default tilt step size (in degrees) used for RTS tilt commands
+_TILT_STEP_SIZE = 5
+
 
 @dataclass(frozen=True, kw_only=True)
 class OverkizCoverDescription(CoverEntityDescription):
@@ -115,9 +118,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         stop_command=OverkizCommand.STOP,
         # Tilt commands move the tilt with a few degrees
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(1, 0),
+        open_tilt_command_args=(_TILT_STEP_SIZE, 0),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(1, 0),
+        close_tilt_command_args=(_TILT_STEP_SIZE, 0),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands
@@ -129,10 +132,11 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
+        # Args are position (1-127) and speed (1-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        open_tilt_command_args=(_TILT_STEP_SIZE, 1),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command_args=(_TILT_STEP_SIZE, 1),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands
@@ -144,10 +148,11 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
+        # Args are position (1-127)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        open_tilt_command_args=(_TILT_STEP_SIZE,),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command_args=(_TILT_STEP_SIZE,),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override to support very specific tilt commands (rts:SheerBlindRTSComponent)
@@ -158,10 +163,11 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
         open_command=OverkizCommand.OPEN,
         close_command=OverkizCommand.CLOSE,
         stop_command=OverkizCommand.STOP,
+        # Args are position (1-127) and speed (1-15, optional)
         open_tilt_command=OverkizCommand.TILT_POSITIVE,
-        open_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        open_tilt_command_args=(_TILT_STEP_SIZE, 1),
         close_tilt_command=OverkizCommand.TILT_NEGATIVE,
-        close_tilt_command_args=(15, 1),  # position (1-127), speed (1-15)
+        close_tilt_command_args=(_TILT_STEP_SIZE, 1),
         stop_tilt_command=OverkizCommand.STOP,
     ),
     # Needs override since BioclimaticPergola uses core:SlatsOpenClosedState
