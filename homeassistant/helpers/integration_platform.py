@@ -12,7 +12,6 @@ from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
-    IntegrationNotLoaded,
     async_get_integrations,
     async_get_loaded_integration,
     async_register_preload_platform,
@@ -291,11 +290,12 @@ class LazyIntegrationPlatforms[_R]:
         """
         if domain in self._processed:
             return self._processed[domain]
-        try:
-            integration = async_get_loaded_integration(self._hass, domain)
-        except IntegrationNotLoaded:
+        # Only process integrations whose component is loaded, matching
+        # async_process_integration_platforms.
+        if domain not in self._hass.config.top_level_components:
             # Don't cache, the integration may be loaded later.
             return None
+        integration = async_get_loaded_integration(self._hass, domain)
         return await self._async_process(integration)
 
     async def async_get_platforms(self) -> dict[str, _R]:
@@ -327,15 +327,17 @@ class LazyIntegrationPlatforms[_R]:
         domain = integration.domain
         if domain in self._processed:
             return self._processed[domain]
+        if not integration.platforms_exists((self._platform_name,)):
+            self._processed[domain] = None
+            return None
         result: _R | None = None
-        if integration.platforms_exists((self._platform_name,)):
-            try:
-                platform = await integration.async_get_platform(self._platform_name)
-            except ImportError:
-                _LOGGER.debug(
-                    "Error importing %s platform for %s", self._platform_name, domain
-                )
-            else:
-                result = self._process_platform(self._hass, domain, platform)
+        try:
+            platform = await integration.async_get_platform(self._platform_name)
+        except ImportError:
+            _LOGGER.debug(
+                "Error importing %s platform for %s", self._platform_name, domain
+            )
+        else:
+            result = self._process_platform(self._hass, domain, platform)
         self._processed[domain] = result
         return result

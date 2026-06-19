@@ -326,11 +326,14 @@ async def test_lazy_integration_platforms_not_loaded(hass: HomeAssistant) -> Non
 
     platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
 
-    assert await platforms.async_get_platform("not_loaded") is None
-
-    # The not-loaded result is not cached, so it is served once it is loaded.
     loaded_platform = Mock()
     mock_platform(hass, "not_loaded.platform_to_check", loaded_platform)
+
+    # The component is not loaded yet, so it is not processed or cached.
+    assert await platforms.async_get_platform("not_loaded") is None
+
+    # Once the component is loaded, the platform is served.
+    hass.config.components.add("not_loaded")
     assert await platforms.async_get_platform("not_loaded") is loaded_platform
 
 

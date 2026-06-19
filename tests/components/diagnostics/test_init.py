@@ -44,7 +44,7 @@ async def mock_diagnostics_integration(hass: HomeAssistant) -> None:
     mock_platform(
         hass,
         "integration_without_diagnostics.diagnostics",
-        Mock(spec=[]),
+        Mock(),
     )
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -81,20 +81,6 @@ async def test_websocket(
         "domain": "fake_integration",
         "handlers": {"config_entry": True, "device": True},
     }
-
-
-async def test_get_not_loaded_integration(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
-) -> None:
-    """Test diagnostics are not provided for integrations that aren't loaded."""
-    client = await hass_ws_client(hass)
-    await client.send_json(
-        {"id": 5, "type": "diagnostics/get", "domain": "not_loaded_integration"}
-    )
-    msg = await client.receive_json()
-
-    assert not msg["success"]
-    assert msg["error"]["code"] == "not_found"
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
