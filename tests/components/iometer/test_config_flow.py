@@ -114,7 +114,7 @@ async def test_zeroconf_flow_abort_errors(
     reason: str,
 ) -> None:
     """Test zeroconf flow aborts when the HTTP client raises an exception."""
-    mock_iometer_client.get_current_status.side_effect = exception
+    mock_iometer_client.http.get_current_status.side_effect = exception
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -133,7 +133,7 @@ async def test_zeroconf_flow_abort_no_meter(
     """Test zeroconf flow aborts when the status contains no meter info."""
     mock_status = MagicMock()
     mock_status.meter = None
-    mock_iometer_client.get_current_status.return_value = mock_status
+    mock_iometer_client.http.get_current_status.return_value = mock_status
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -165,7 +165,7 @@ async def test_user_flow_errors(
     valid_status = Status.from_json(
         await async_load_fixture(hass, "status.json", DOMAIN)
     )
-    mock_iometer_client.get_current_status.side_effect = [exception, valid_status]
+    mock_iometer_client.http.get_current_status.side_effect = [exception, valid_status]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -201,7 +201,10 @@ async def test_user_flow_no_meter_error(
     valid_status = Status.from_json(
         await async_load_fixture(hass, "status.json", DOMAIN)
     )
-    mock_iometer_client.get_current_status.side_effect = [mock_status, valid_status]
+    mock_iometer_client.http.get_current_status.side_effect = [
+        mock_status,
+        valid_status,
+    ]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,

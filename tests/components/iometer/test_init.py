@@ -1,6 +1,5 @@
 """Tests for the IOmeter integration."""
 
-import asyncio
 import json
 import logging
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -22,7 +21,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
-from . import setup_platform
+from . import get_status_callback, setup_platform
 
 from tests.common import MockConfigEntry, async_load_fixture
 
@@ -32,7 +31,6 @@ async def test_new_firmware_version(
     mock_iometer_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    status_queue: asyncio.Queue[Status],
 ) -> None:
     """Test device registry is updated when firmware version changes via SSE."""
     assert mock_config_entry.unique_id is not None
@@ -47,7 +45,7 @@ async def test_new_firmware_version(
     status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
     status_data["device"]["core"]["version"] = "build-62"
     status_data["device"]["bridge"]["version"] = "build-69"
-    status_queue.put_nowait(Status.from_json(json.dumps(status_data)))
+    get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
 
     device_entry = device_registry.async_get_device(

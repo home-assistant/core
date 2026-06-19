@@ -1,6 +1,5 @@
 """Common fixtures for the IOmeter tests."""
 
-import asyncio
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -9,7 +8,6 @@ import pytest
 
 from homeassistant.components.iometer.const import DOMAIN
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, load_fixture
 
@@ -25,46 +23,16 @@ def mock_setup_entry() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def reading_queue() -> asyncio.Queue[Reading]:
-    """Queue for injecting readings into the SSE stream during tests."""
-    q: asyncio.Queue[Reading] = asyncio.Queue()
-    q.put_nowait(Reading.from_json(load_fixture("reading.json", DOMAIN)))
-    return q
-
-
-@pytest.fixture
-def status_queue() -> asyncio.Queue[Status]:
-    """Queue for injecting statuses into the SSE stream during tests."""
-    q: asyncio.Queue[Status] = asyncio.Queue()
-    q.put_nowait(Status.from_json(load_fixture("status.json", DOMAIN)))
-    return q
-
-
-@pytest.fixture
-def mock_iometer_client(
-    hass: HomeAssistant,
-    reading_queue: asyncio.Queue[Reading],
-    status_queue: asyncio.Queue[Status],
-) -> Generator[MagicMock]:
-    """Mock IOmeter clients: SSE client for the coordinator, HTTP client for config flow."""
+def mock_iometer_client() -> Generator[MagicMock]:
+    """Mock IOmeter SSE client for the coordinator and HTTP client for config flow."""
 
     def subscribe_readings(on_reading, _on_error=None):
-        async def _feed():
-            while True:
-                reading = await reading_queue.get()
-                on_reading(reading)
-
-        task = hass.async_create_background_task(_feed(), "mock_reading_feed")
-        return task.cancel
+        on_reading(Reading.from_json(load_fixture("reading.json", DOMAIN)))
+        return lambda: None
 
     def subscribe_status(on_status, _on_error=None):
-        async def _feed():
-            while True:
-                status = await status_queue.get()
-                on_status(status)
-
-        task = hass.async_create_background_task(_feed(), "mock_status_feed")
-        return task.cancel
+        on_status(Status.from_json(load_fixture("status.json", DOMAIN)))
+        return lambda: None
 
     with (
         patch("homeassistant.components.iometer.IOmeterSSEClient") as mock_sse_class,
@@ -73,8 +41,6 @@ def mock_iometer_client(
         ) as mock_http_class,
     ):
         sse_client = mock_sse_class.return_value
-        sse_client.__aenter__ = AsyncMock(return_value=sse_client)
-        sse_client.__aexit__ = AsyncMock(return_value=False)
         sse_client.subscribe_readings.side_effect = subscribe_readings
         sse_client.subscribe_status.side_effect = subscribe_status
 
@@ -82,8 +48,9 @@ def mock_iometer_client(
         http_client.get_current_status = AsyncMock(
             return_value=Status.from_json(load_fixture("status.json", DOMAIN))
         )
+        sse_client.http = http_client
 
-        yield http_client
+        yield sse_client
 
 
 @pytest.fixture

@@ -1,6 +1,5 @@
 """Test the IOmeter binary sensors."""
 
-import asyncio
 import json
 from unittest.mock import MagicMock
 
@@ -13,7 +12,7 @@ from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import setup_platform
+from . import get_status_callback, setup_platform
 
 from tests.common import MockConfigEntry, async_load_fixture, snapshot_platform
 
@@ -37,7 +36,6 @@ async def test_connection_status_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_iometer_client: MagicMock,
-    status_queue: asyncio.Queue[Status],
 ) -> None:
     """Test connection status sensor updates via SSE."""
     await setup_platform(hass, mock_config_entry, [Platform.BINARY_SENSOR])
@@ -51,7 +49,7 @@ async def test_connection_status_sensors(
 
     status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
     status_data["device"]["core"]["connectionStatus"] = "disconnected"
-    status_queue.put_nowait(Status.from_json(json.dumps(status_data)))
+    get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
 
     assert (
@@ -67,7 +65,6 @@ async def test_attachment_status_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_iometer_client: MagicMock,
-    status_queue: asyncio.Queue[Status],
 ) -> None:
     """Test attachment status sensor updates via SSE."""
     await setup_platform(hass, mock_config_entry, [Platform.BINARY_SENSOR])
@@ -81,7 +78,7 @@ async def test_attachment_status_sensors(
 
     status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
     status_data["device"]["core"]["attachmentStatus"] = "detached"
-    status_queue.put_nowait(Status.from_json(json.dumps(status_data)))
+    get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
 
     assert (
@@ -97,7 +94,6 @@ async def test_attachment_status_sensors_unknown(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_iometer_client: MagicMock,
-    status_queue: asyncio.Queue[Status],
 ) -> None:
     """Test attachment status sensor shows unknown state via SSE."""
     await setup_platform(hass, mock_config_entry, [Platform.BINARY_SENSOR])
@@ -111,7 +107,7 @@ async def test_attachment_status_sensors_unknown(
 
     status_data = json.loads(await async_load_fixture(hass, "status.json", DOMAIN))
     del status_data["device"]["core"]["attachmentStatus"]
-    status_queue.put_nowait(Status.from_json(json.dumps(status_data)))
+    get_status_callback(mock_iometer_client)(Status.from_json(json.dumps(status_data)))
     await hass.async_block_till_done()
 
     assert (
