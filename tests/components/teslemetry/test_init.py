@@ -277,12 +277,13 @@ async def test_insufficient_credits_resolved_by_stream(
 ) -> None:
     """Test the insufficient credits issue is resolved by a credits event."""
 
-    await setup_platform(hass, [Platform.BINARY_SENSOR])
+    entry = await setup_platform(hass, [Platform.BINARY_SENSOR])
+    issue_id = f"insufficient_credits_{entry.entry_id}"
 
     ir.async_create_issue(
         hass,
         DOMAIN,
-        "insufficient_credits",
+        issue_id,
         is_fixable=False,
         severity=ir.IssueSeverity.ERROR,
         translation_key="insufficient_credits",
@@ -294,7 +295,7 @@ async def test_insufficient_credits_resolved_by_stream(
     )
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "insufficient_credits")
+    issue = issue_registry.async_get_issue(DOMAIN, issue_id)
     assert (issue is None) is resolved
 
 

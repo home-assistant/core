@@ -179,7 +179,7 @@ class TeslemetryVehicleNumberEntity(TeslemetryRootEntity, NumberEntity):
         value = int(value)
         self.raise_for_scope(self.entity_description.scopes[0])
         await handle_vehicle_command(
-            self.hass, self.entity_description.func(self.api, value)
+            self.hass, self.config_entry, self.entity_description.func(self.api, value)
         )
         self._attr_native_value = value
         self.async_write_ha_state()
@@ -306,6 +306,8 @@ class TeslemetryEnergyInfoNumberSensorEntity(TeslemetryEnergyInfoEntity, NumberE
         """Set new value."""
         value = int(value)
         self.raise_for_scope(Scope.ENERGY_CMDS)
-        await handle_command(self.hass, self.entity_description.func(self.api, value))
+        await handle_command(
+            self.hass, self.config_entry, self.entity_description.func(self.api, value)
+        )
         self._attr_native_value = value
         self.async_write_ha_state()

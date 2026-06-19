@@ -209,7 +209,7 @@ class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
         """Turn on the Switch."""
         self.raise_for_scope(self.entity_description.scopes[0])
         await handle_vehicle_command(
-            self.hass, self.entity_description.on_func(self.api)
+            self.hass, self.config_entry, self.entity_description.on_func(self.api)
         )
         self._attr_is_on = True
         self.async_write_ha_state()
@@ -219,7 +219,7 @@ class TeslemetryVehicleSwitchEntity(TeslemetryRootEntity, SwitchEntity):
         """Turn off the Switch."""
         self.raise_for_scope(self.entity_description.scopes[0])
         await handle_vehicle_command(
-            self.hass, self.entity_description.off_func(self.api)
+            self.hass, self.config_entry, self.entity_description.off_func(self.api)
         )
         self._attr_is_on = False
         self.async_write_ha_state()
@@ -326,6 +326,7 @@ class TeslemetryChargeFromGridSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEnt
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(
             self.hass,
+            self.config_entry,
             self.api.grid_import_export(
                 disallow_charge_from_grid_with_solar_installed=False
             ),
@@ -339,6 +340,7 @@ class TeslemetryChargeFromGridSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEnt
         self.raise_for_scope(Scope.ENERGY_CMDS)
         await handle_command(
             self.hass,
+            self.config_entry,
             self.api.grid_import_export(
                 disallow_charge_from_grid_with_solar_installed=True
             ),
@@ -371,7 +373,9 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
-        await handle_command(self.hass, self.api.storm_mode(enabled=True))
+        await handle_command(
+            self.hass, self.config_entry, self.api.storm_mode(enabled=True)
+        )
         self._attr_is_on = True
         self.async_write_ha_state()
 
@@ -379,6 +383,8 @@ class TeslemetryStormModeSwitchEntity(TeslemetryEnergyInfoEntity, SwitchEntity):
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
-        await handle_command(self.hass, self.api.storm_mode(enabled=False))
+        await handle_command(
+            self.hass, self.config_entry, self.api.storm_mode(enabled=False)
+        )
         self._attr_is_on = False
         self.async_write_ha_state()

@@ -541,7 +541,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     if stream:
         entry.async_on_unload(stream.close)
         entry.async_on_unload(
-            stream.listen_Credits(partial(async_handle_credits, hass))
+            stream.listen_Credits(partial(async_handle_credits, hass, entry))
         )
         entry.async_create_background_task(hass, stream.listen(), "Teslemetry Stream")
 

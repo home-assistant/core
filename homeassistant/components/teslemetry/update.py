@@ -58,7 +58,9 @@ class TeslemetryUpdateEntity(TeslemetryRootEntity, UpdateEntity):
         self.raise_for_scope(Scope.VEHICLE_CMDS)
 
         await handle_vehicle_command(
-            self.hass, self.api.schedule_software_update(offset_sec=0)
+            self.hass,
+            self.config_entry,
+            self.api.schedule_software_update(offset_sec=0),
         )
         self._attr_in_progress = True
         self.async_write_ha_state()
