@@ -228,6 +228,60 @@ class Tool:
         return f"<{self.__class__.__name__} - {self.name}>"
 
 
+@dataclass(slots=True)
+class LLMTools:
+    """Tools and an optional prompt fragment contributed by a provider."""
+
+    tools: list[Tool]
+    prompt: str | None = None
+
+
+type LLMToolProvider = Callable[[HomeAssistant, LLMContext], LLMTools]
+
+
+_TOOL_PROVIDERS: HassKey[list[LLMToolProvider]] = HassKey("llm_tool_providers")
+
+
+@callback
+def async_register_tool_provider(
+    hass: HomeAssistant,
+    provider: LLMToolProvider,
+) -> Callable[[], None]:
+    """Register a provider that contributes tools to the LLM API.
+
+    The provider is evaluated per request with the ``LLMContext`` and returns
+    the tools (and an optional prompt fragment) to expose.
+    """
+    providers = hass.data.setdefault(_TOOL_PROVIDERS, [])
+    providers.append(provider)
+
+    @callback
+    def unregister() -> None:
+        """Unregister the tool provider."""
+        providers.remove(provider)
+
+    return unregister
+
+
+@callback
+def _async_get_registered_tools(
+    hass: HomeAssistant, llm_context: LLMContext
+) -> LLMTools:
+    """Return the tools and merged prompt from all registered providers."""
+    providers = hass.data.get(_TOOL_PROVIDERS)
+    if not providers:
+        return LLMTools(tools=[])
+
+    tools: list[Tool] = []
+    prompts: list[str] = []
+    for provider in providers:
+        result = provider(hass, llm_context)
+        tools.extend(result.tools)
+        if result.prompt:
+            prompts.append(result.prompt)
+    return LLMTools(tools=tools, prompt="\n".join(prompts) if prompts else None)
+
+
 @dataclass
 class APIInstance:
     """Instance of an API to be used by an LLM."""
