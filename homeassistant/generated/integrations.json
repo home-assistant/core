@@ -1031,6 +1031,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "chef_iq": {
+      "name": "Chef iQ",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "chess_com": {
       "name": "Chess.com",
       "integration_type": "service",

@@ -128,6 +128,7 @@ FLOWS = {
         "centriconnect",
         "cert_expiry",
         "chacon_dio",
+        "chef_iq",
         "chess_com",
         "cielo_home",
         "cloudflare",
