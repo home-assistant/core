@@ -36,9 +36,11 @@ from .const import (
     DEFAULT_CORS,
     DOMAIN,
     ENV_SETUP_PORT,
+    ENV_SUPERVISOR,
     NO_LOGIN_ATTEMPT_THRESHOLD,
     SSL_INTERMEDIATE,
     SSL_MODERN,
+    SUPERVISOR_DEFAULT_PORT,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,12 +49,14 @@ _LOGGER = logging.getLogger(__name__)
 def default_server_port() -> int:
     """Return the default HTTP server port.
 
-    The built-in default port can be overridden via the
-    ``SETUP_PORT`` environment variable. An invalid value is ignored in favor
-    of the built-in default.
+    Under Supervisor the default is port 80, since Supervisor fronts Core on
+    the standard HTTP port; otherwise the default is ``SERVER_PORT``. The
+    default can be overridden via the ``SETUP_PORT`` environment variable; an
+    invalid value is ignored in favor of the default.
     """
+    default = SUPERVISOR_DEFAULT_PORT if ENV_SUPERVISOR in os.environ else SERVER_PORT
     if (env_value := os.environ.get(ENV_SETUP_PORT)) is None:
-        return SERVER_PORT
+        return default
     try:
         return cast(int, cv.port(env_value))
     except vol.Invalid:
@@ -60,9 +64,9 @@ def default_server_port() -> int:
             "Invalid port %r in %s environment variable; falling back to %s",
             env_value,
             ENV_SETUP_PORT,
-            SERVER_PORT,
+            default,
         )
-        return SERVER_PORT
+        return default
 
 
 STORAGE_KEY: Final = DOMAIN

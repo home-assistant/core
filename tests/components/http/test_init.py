@@ -26,7 +26,7 @@ from homeassistant.components.http.config import (
     async_get_and_load_store,
     default_server_port,
 )
-from homeassistant.components.http.const import ENV_SETUP_PORT
+from homeassistant.components.http.const import ENV_SETUP_PORT, ENV_SUPERVISOR
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -1298,13 +1298,24 @@ async def test_setup_migrates_v1_storage_to_v2(
         pytest.param({ENV_SETUP_PORT: "0"}, 8123, id="out-of-range"),
         pytest.param({ENV_SETUP_PORT: "notaport"}, 8123, id="not-a-number"),
         pytest.param({ENV_SETUP_PORT: ""}, 8123, id="empty"),
+        pytest.param({ENV_SUPERVISOR: "core"}, 80, id="supervisor"),
+        pytest.param(
+            {ENV_SUPERVISOR: "core", ENV_SETUP_PORT: "8080"},
+            8080,
+            id="supervisor-setup-port-override",
+        ),
+        pytest.param(
+            {ENV_SUPERVISOR: "core", ENV_SETUP_PORT: "notaport"},
+            80,
+            id="supervisor-invalid-setup-port",
+        ),
     ],
 )
 def test_default_server_port(
     env: dict[str, str],
     expected_port: int,
 ) -> None:
-    """Test SETUP_PORT overrides the default port and invalid values fall back."""
+    """Test the default port, including Supervisor and SETUP_PORT overrides."""
     with patch.dict(os.environ, env, clear=True):
         assert default_server_port() == expected_port
 
@@ -1323,6 +1334,27 @@ async def test_setup_port_env_var_used_as_default(
 
     assert hass.config.api.port == 80
     assert hass_storage["http"]["data"]["pending"]["server_port"] == 80
+
+
+async def test_supervisor_defaults_to_port_80(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test the default server port is 80 when running under Supervisor."""
+    mock_server = Mock()
+    with (
+        patch.dict(os.environ, {ENV_SUPERVISOR: "core"}),
+        patch(
+            "asyncio.BaseEventLoop.create_server", return_value=mock_server
+        ) as mock_create_server,
+    ):
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    args, _ = mock_create_server.call_args
+    assert args[2] == 80
+    assert hass_storage[DOMAIN]["data"]["pending"]["server_port"] == 80
 
 
 async def test_websocket_http_config(
