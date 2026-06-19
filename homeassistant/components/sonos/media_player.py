@@ -21,7 +21,6 @@ from sonos_websocket.exception import SonosWebsocketError
 
 from homeassistant.components import media_source, spotify
 from homeassistant.components.media_player import (
-    ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
     ATTR_MEDIA_ANNOUNCE,
     ATTR_MEDIA_ARTIST,
@@ -64,6 +63,7 @@ from .const import (
     MODELS_TV_ONLY,
     PLAYABLE_MEDIA_TYPES,
     SONOS_CREATE_MEDIA_PLAYER,
+    SONOS_FAVORITES_UPDATED,
     SONOS_MEDIA_UPDATED,
     SONOS_STATE_PLAYING,
     SONOS_STATE_TRANSITIONING,
@@ -131,7 +131,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         | MediaPlayerEntityFeature.REPEAT_SET
         | MediaPlayerEntityFeature.SEARCH_MEDIA
         | MediaPlayerEntityFeature.SEEK
-        | MediaPlayerEntityFeature.SELECT_SOURCE
         | MediaPlayerEntityFeature.SHUFFLE_SET
         | MediaPlayerEntityFeature.STOP
         | MediaPlayerEntityFeature.VOLUME_MUTE
@@ -145,6 +144,14 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
         super().__init__(speaker, config_entry)
         self._attr_unique_id = self.soco.uid
 
+    @property
+    def supported_features(self) -> MediaPlayerEntityFeature:
+        """Flag media player features that are supported."""
+        features = self._attr_supported_features
+        if self.source_list:
+            features |= MediaPlayerEntityFeature.SELECT_SOURCE
+        return features
+
     async def async_added_to_hass(self) -> None:
         """Handle common setup when added to hass."""
         await super().async_added_to_hass()
@@ -153,6 +160,13 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
                 self.hass,
                 SONOS_MEDIA_UPDATED,
                 self.async_write_media_state,
+            )
+        )
+        self.async_on_remove(
+            async_dispatcher_connect(
+                self.hass,
+                f"{SONOS_FAVORITES_UPDATED}-{self.speaker.household_id}",
+                self.async_write_ha_state,
             )
         )
 
@@ -394,14 +408,18 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
     @property
     def source_list(self) -> list[str]:
         """List of available input sources."""
+        sources: list[str] = []
         model = self.coordinator.model_name.split()[-1].upper()
         if model in MODELS_LINEIN_ONLY:
-            return [SOURCE_LINEIN]
-        if model in MODELS_TV_ONLY:
-            return [SOURCE_TV]
-        if model in MODELS_LINEIN_AND_TV:
-            return [SOURCE_LINEIN, SOURCE_TV]
-        return []
+            sources = [SOURCE_LINEIN]
+        elif model in MODELS_TV_ONLY:
+            sources = [SOURCE_TV]
+        elif model in MODELS_LINEIN_AND_TV:
+            sources = [SOURCE_LINEIN, SOURCE_TV]
+        sources.extend(
+            fav.title for fav in self.speaker.favorites if fav.title not in sources
+        )
+        return sources
 
     @soco_error(UPNP_ERRORS_TO_IGNORE)
     def media_play(self) -> None:
@@ -778,9 +796,6 @@ class SonosMediaPlayerEntity(SonosEntity, MediaPlayerEntity):
 
         if self.media.queue_size:
             attributes["queue_size"] = self.media.queue_size
-
-        if self.source:
-            attributes[ATTR_INPUT_SOURCE] = self.source
 
         return attributes
 

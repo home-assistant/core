@@ -221,14 +221,14 @@ async def test_active_zone_prefers_smaller_zone_if_same_distance_2(
     assert in_zones == ["zone.smallest_zone"]
 
 
-async def test_active_zone_prefers_closer_zone_over_smaller_zone(
+async def test_active_zone_prefers_smaller_zone_over_closer_zone(
     hass: HomeAssistant,
 ) -> None:
-    """Test the closest containing zone wins over a smaller, farther one.
+    """Test the smallest containing zone wins over a larger, closer one.
 
     A larger zone is centered on the point (distance 0) while a smaller zone is
-    offset but still contains the point. The larger zone is closer to its center,
-    so it is preferred.
+    offset but still contains the point. The smaller zone is farther from its
+    center, but it is preferred because it is smaller.
     """
     latitude = 32.880600
     longitude = -117.237561
@@ -245,7 +245,7 @@ async def test_active_zone_prefers_closer_zone_over_smaller_zone(
                 },
                 {
                     # Offset ~111 m north; its 200 m radius still contains the
-                    # point. Smaller than Big Zone, but farther from its center.
+                    # point. Farther from its center than Big Zone, but smaller.
                     "name": "Small Zone",
                     "latitude": latitude + 0.001,
                     "longitude": longitude,
@@ -256,10 +256,10 @@ async def test_active_zone_prefers_closer_zone_over_smaller_zone(
     )
 
     active_zone = zone.async_active_zone(hass, latitude, longitude)
-    assert active_zone.entity_id == "zone.big_zone"
+    assert active_zone.entity_id == "zone.small_zone"
     active_zone, in_zones = zone.async_in_zones(hass, latitude, longitude)
-    assert active_zone.entity_id == "zone.big_zone"
-    assert in_zones == ["zone.big_zone", "zone.small_zone"]
+    assert active_zone.entity_id == "zone.small_zone"
+    assert in_zones == ["zone.small_zone", "zone.big_zone"]
 
 
 async def test_in_zone_works_for_passive_zones(hass: HomeAssistant) -> None:

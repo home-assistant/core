@@ -46,7 +46,6 @@ DEVICES_THAT_ADOPT = {
     ModelType.LIGHT,
     ModelType.VIEWPORT,
     ModelType.SENSOR,
-    ModelType.DOORLOCK,
     ModelType.CHIME,
 }
 DEVICES_WITH_ENTITIES = DEVICES_THAT_ADOPT | {ModelType.NVR}
@@ -71,7 +70,6 @@ PLATFORMS = [
     Platform.CAMERA,
     Platform.EVENT,
     Platform.LIGHT,
-    Platform.LOCK,
     Platform.MEDIA_PLAYER,
     Platform.NUMBER,
     Platform.SELECT,

@@ -23,6 +23,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ACTION_LONG_PRESS,
     ACTION_MULTITAP,
     ACTION_PRESS,
     ACTION_RELEASE,
@@ -35,6 +36,7 @@ from .const import (
     ATTR_SERIAL,
     ATTR_TYPE,
     BRIDGE_DEVICE_ID,
+    BUTTON_STATUS_LONG_HOLD,
     CONF_CA_CERTS,
     CONF_CERTFILE,
     CONF_KEYFILE,
@@ -450,6 +452,8 @@ def _async_subscribe_keypad_events(
             action = ACTION_PRESS
         elif event_type == BUTTON_STATUS_MULTITAP:
             action = ACTION_MULTITAP
+        elif event_type == BUTTON_STATUS_LONG_HOLD:
+            action = ACTION_LONG_PRESS
         else:
             action = ACTION_RELEASE
 
