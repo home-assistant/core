@@ -106,10 +106,7 @@ def mock_controller_service_password_authenticated(service_authenticated: MagicM
     """Mock a service that needs a password update."""
     with patch(
         "homeassistant.components.icloud.config_flow.PyiCloudService",
-        side_effect=[
-            PyiCloudFailedLoginException(msg="Password updated"),
-            service_authenticated(),
-        ],
+        return_value=service_authenticated(),
     ) as service_mock:
         yield service_mock
 
@@ -536,7 +533,6 @@ async def test_password_update(hass: HomeAssistant) -> None:
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: PASSWORD_2}
@@ -562,7 +558,6 @@ async def test_password_update_wrong_password(hass: HomeAssistant) -> None:
     result = await config_entry.start_reauth_flow(hass)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {CONF_PASSWORD: "invalid_auth"}
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_PASSWORD: PASSWORD_2}

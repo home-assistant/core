@@ -221,12 +221,24 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
 
         # Get the API from the existing entry runtime data
         self.api = self._get_reauth_entry().runtime_data.api
+
+        # If the API is None, it means the existing entry was never successfully authenticated,
+        # so we need to show the setup form again to get the password.
+        if self.api is None:
+            return self._show_setup_form(step_id="reauth_confirm")
+
+        # If the API is not None, it means the existing entry was successfully authenticated before,
+        # so we can proceed to the reauth_confirm step to trigger 2FA challenge.
         return await self.async_step_reauth_confirm()
 
     async def async_step_reauth_confirm(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Update password for a config entry that can't authenticate."""
+        """Initialise re-authentication confirmation.
+
+        Update password for a config entry that can't authenticate (if changed)
+        and trigger 2FA challenge if needed.
+        """
         return await self._validate_and_create_entry(user_input, "reauth_confirm")
 
     async def async_step_trusted_device(
