@@ -34,6 +34,11 @@ class SmSensorEntityDescription(SensorEntityDescription):
 
 
 @dataclass(frozen=True, kw_only=True)
+class SmRadioUptimeSensorEntityDescription(SensorEntityDescription):
+    """Class describing SMLIGHT radio uptime sensor entities."""
+
+
+@dataclass(frozen=True, kw_only=True)
 class SmInfoEntityDescription(SensorEntityDescription):
     """Class describing SMLIGHT information entities."""
 
@@ -141,12 +146,11 @@ CORE_UPTIME = SmSensorEntityDescription(
     value_fn=lambda x: x.uptime,
 )
 
-RADIO_UPTIME = SmSensorEntityDescription(
+RADIO_UPTIME = SmRadioUptimeSensorEntityDescription(
     key="socket_uptime",
     translation_key="socket_uptime",
     device_class=SensorDeviceClass.TIMESTAMP,
     entity_registry_enabled_default=False,
-    value_fn=lambda x: x.socket_uptime,
 )
 
 
@@ -258,16 +262,18 @@ class SmInfoSensorEntity(SmEntity, SensorEntity):
         return value
 
 
-class SmUptimeSensorEntity(SmSensorEntity):
-    """Representation of a slzb uptime sensor."""
+class SmBaseUptimeSensorEntity(SmEntity, SensorEntity):
+    """Base representation of an SMLIGHT uptime sensor."""
+
+    coordinator: SmDataUpdateCoordinator
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     def __init__(
         self,
         coordinator: SmDataUpdateCoordinator,
-        description: SmSensorEntityDescription,
     ) -> None:
         "Initialize uptime sensor instance."
-        super().__init__(coordinator, description)
+        super().__init__(coordinator)
         self._last_uptime: datetime | None = None
 
     def get_uptime(self, uptime: float | None) -> datetime | None:
@@ -292,6 +298,22 @@ class SmUptimeSensorEntity(SmSensorEntity):
 
         return self._last_uptime
 
+
+class SmUptimeSensorEntity(SmBaseUptimeSensorEntity):
+    """Representation of a slzb uptime sensor."""
+
+    entity_description: SmSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: SmDataUpdateCoordinator,
+        description: SmSensorEntityDescription,
+    ) -> None:
+        """Initialize uptime sensor instance."""
+        super().__init__(coordinator)
+        self.entity_description = description
+        self._attr_unique_id = f"{coordinator.unique_id}_{description.key}"
+
     @property
     def native_value(self) -> datetime | None:
         """Return the sensor value."""
@@ -300,19 +322,21 @@ class SmUptimeSensorEntity(SmSensorEntity):
         return self.get_uptime(value)
 
 
-class SmRadioUptimeSensorEntity(SmUptimeSensorEntity):
+class SmRadioUptimeSensorEntity(SmBaseUptimeSensorEntity):
     """Representation of a radio uptime sensor."""
 
+    entity_description: SmRadioUptimeSensorEntityDescription
     idx: int
 
     def __init__(
         self,
         coordinator: SmDataUpdateCoordinator,
-        description: SmSensorEntityDescription,
+        description: SmRadioUptimeSensorEntityDescription,
         idx: int = 0,
     ) -> None:
         """Initialize radio uptime sensor instance."""
-        super().__init__(coordinator, description)
+        super().__init__(coordinator)
+        self.entity_description = description
         self.idx = idx
         sensor = f"_{idx}" if idx else ""
         self._attr_unique_id = f"{coordinator.unique_id}_{description.key}{sensor}"
