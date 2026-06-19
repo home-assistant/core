@@ -44,16 +44,17 @@ async def test_get_forecast_raw(
     assert isinstance(forecast, list)
     assert len(forecast) == 2
 
-    # The conftest mock seeds two timestamps in `watts` and `wh_period`.
+    # The conftest mock seeds two timestamps in `watts` and `wh_period`,
+    # both at 13:00 in the test default timezone.
+    tz = dt_util.get_default_time_zone()
     first = forecast[0]
     assert set(first.keys()) >= {"time", "value", "energy_wh"}
-    assert first["time"].endswith("T13:00:00+02:00") or first["time"].startswith(
-        "2021-06-27"
-    )
+    assert first["time"] == datetime(2021, 6, 27, 13, 0, tzinfo=tz).isoformat()
     assert first["value"] == 10
     assert first["energy_wh"] == 30
 
     second = forecast[1]
+    assert second["time"] == datetime(2022, 6, 27, 13, 0, tzinfo=tz).isoformat()
     assert second["value"] == 100
     assert second["energy_wh"] == 300
 

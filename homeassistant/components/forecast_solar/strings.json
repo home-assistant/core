@@ -88,9 +88,6 @@
     "end_before_start": {
       "message": "The end time must be after the start time."
     },
-    "entry_not_loaded": {
-      "message": "The selected Forecast.Solar configuration entry is not loaded."
-    },
     "no_plane": {
       "message": "No plane configured, cannot set up Forecast.Solar"
     }

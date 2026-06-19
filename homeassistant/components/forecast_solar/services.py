@@ -1,9 +1,7 @@
 """Services for the Forecast.Solar integration."""
 
 from datetime import datetime
-import logging
 from typing import TYPE_CHECKING
-from zoneinfo import ZoneInfo
 
 import voluptuous as vol
 
@@ -17,14 +15,13 @@ from homeassistant.core import (
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
 from .const import DOMAIN
 
 if TYPE_CHECKING:
     from .coordinator import ForecastSolarConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 ATTR_CONFIG_ENTRY = "config_entry"
 ATTR_START = "start"
@@ -89,29 +86,31 @@ def async_setup_services(hass: HomeAssistant) -> None:
         entry: ForecastSolarConfigEntry = service.async_get_config_entry(
             hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
         )
-        if entry.runtime_data is None:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="entry_not_loaded",
-            )
-
         estimate = entry.runtime_data.data
 
-        watts: dict[datetime, float] = dict(estimate.watts)
         wh_period: dict[datetime, int] = dict(estimate.wh_period)
+        watts: dict[datetime, float]
 
         if call.data[ATTR_RESOLUTION] == RESOLUTION_HOURLY:
             watts, wh_period = _aggregate_hourly(dict(estimate.watts), wh_period)
+        else:
+            watts = dict(estimate.watts)
 
         start: datetime | None = call.data.get(ATTR_START)
         end: datetime | None = call.data.get(ATTR_END)
 
         # Validate / normalise the optional time-range filter. The
         # Forecast.Solar library exposes ``timezone`` as the IANA zone
-        # name string for the configured location; convert it to a
-        # ``ZoneInfo`` so naive inputs from the service call can be
-        # interpreted in the same zone as the forecast series.
-        tz = ZoneInfo(estimate.timezone) if estimate.timezone else None
+        # name string for the configured location; resolve it to a
+        # ``tzinfo`` via the async helper so naive inputs from the
+        # service call can be interpreted in the same zone as the
+        # forecast series without blocking the event loop on tz-data
+        # disk I/O.
+        tz = (
+            await dt_util.async_get_time_zone(estimate.timezone)
+            if estimate.timezone
+            else None
+        )
         if start is not None and start.tzinfo is None:
             start = start.replace(tzinfo=tz)
         if end is not None and end.tzinfo is None:
