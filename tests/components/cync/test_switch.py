@@ -20,9 +20,7 @@ PLUG_ENTITY_ID = "switch.bedroom_bedroom_plug"
 @pytest.fixture(autouse=True)
 def switch_platform_only():
     """Limit platform setup to switch only."""
-    with patch(
-        "homeassistant.components.cync._PLATFORMS", [Platform.SWITCH]
-    ):
+    with patch("homeassistant.components.cync._PLATFORMS", [Platform.SWITCH]):
         yield
 
 

@@ -17,9 +17,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 @pytest.fixture(autouse=True)
 def light_platform_only():
     """Limit platform setup to light only."""
-    with patch(
-        "homeassistant.components.cync._PLATFORMS", [Platform.LIGHT]
-    ):
+    with patch("homeassistant.components.cync._PLATFORMS", [Platform.LIGHT]):
         yield
 
 
