@@ -9,6 +9,7 @@ from aiohttp import ClientConnectionError
 import pytest
 from tesla_fleet_api.exceptions import (
     InvalidToken,
+    LoginRequired,
     SubscriptionRequired,
     TeslaFleetError,
 )
