@@ -7,7 +7,13 @@ from typing import Any
 
 from aiohttp import ClientConnectorError
 from pygti.exceptions import GTIError
-from pygti.models import ElevatorState, SDName, SDNameType, StationInformationRequest
+from pygti.models import (
+    ElevatorState,
+    SDName,
+    SDNameType,
+    StationInformationRequest,
+    StationInformationResponse,
+)
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -39,8 +45,9 @@ async def async_setup_entry(
     station = entry.data[CONF_STATION]
 
     def get_elevator_entities_from_station_information(
-        station_name, station_information
-    ):
+        station_name: str,
+        station_information: StationInformationResponse | None,
+    ) -> dict[str, Any]:
         """Convert station information into a list of elevators."""
         elevators = {}
 
@@ -82,7 +89,7 @@ async def async_setup_entry(
                 }
         return elevators
 
-    async def async_update_data():
+    async def async_update_data() -> dict[str, Any]:
         """Fetch data from API endpoint.
 
         This is the place to pre-process the data to lookup tables
@@ -132,7 +139,12 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     _attr_has_entity_name = True
     _attr_device_class = BinarySensorDeviceClass.PROBLEM
 
-    def __init__(self, coordinator, idx, config_entry):
+    def __init__(
+        self,
+        coordinator: DataUpdateCoordinator[dict[str, Any]],
+        idx: str,
+        config_entry: HVVConfigEntry,
+    ) -> None:
         """Initialize."""
         super().__init__(coordinator)
         self.coordinator = coordinator
@@ -143,7 +155,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
-                (
+                (  # type: ignore[arg-type]
                     DOMAIN,
                     config_entry.entry_id,
                     config_entry.data[CONF_STATION]["id"],
@@ -157,7 +169,7 @@ class HvvDepartureBinarySensor(CoordinatorEntity, BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return entity state."""
-        return self.coordinator.data[self.idx]["state"]
+        return bool(self.coordinator.data[self.idx]["state"])
 
     @property
     def available(self) -> bool:

@@ -29,6 +29,7 @@ from homeassistant.const import (
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
+    SERVICE_STOP_COVER_TILT,
     STATE_UNAVAILABLE,
     Platform,
 )
@@ -164,9 +165,16 @@ async def test_close_open_slats(
     assert attributes.get("supported_features") == (
         CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
 
+    await hass.services.async_call(
+        COVER_DOMAIN,
+        SERVICE_STOP_COVER_TILT,
+        {ATTR_ENTITY_ID: "cover.slats_position"},
+        blocking=True,
+    )
     await hass.services.async_call(
         COVER_DOMAIN,
         SERVICE_CLOSE_COVER_TILT,
@@ -181,7 +189,7 @@ async def test_close_open_slats(
     )
 
     calls = mock_homee.set_value.call_args_list
-    for index, call in enumerate(calls, start=1):
+    for index, call in enumerate(calls):
         assert call[0] == (mock_homee.nodes[0].id, 2, index)
 
 
@@ -200,6 +208,7 @@ async def test_close_open_reversed_slats(
     assert attributes.get("supported_features") == (
         CoverEntityFeature.OPEN_TILT
         | CoverEntityFeature.CLOSE_TILT
+        | CoverEntityFeature.STOP_TILT
         | CoverEntityFeature.SET_TILT_POSITION
     )
 

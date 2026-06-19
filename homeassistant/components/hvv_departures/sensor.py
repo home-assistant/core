@@ -4,7 +4,7 @@ from datetime import timedelta
 import logging
 from typing import Any
 
-from aiohttp import ClientConnectorError
+from aiohttp import ClientConnectorError, ClientSession
 from pygti.exceptions import GTIError, GTIUnauthorizedError
 from pygti.models import DLRequest, GTITime, SDName, SDNameType
 
@@ -25,7 +25,7 @@ from .const import (
     DOMAIN,
     MANUFACTURER,
 )
-from .hub import HVVConfigEntry
+from .hub import GTIHub, HVVConfigEntry
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(minutes=1)
 MAX_LIST = 20
@@ -70,11 +70,17 @@ class HVVDepartureSensor(SensorEntity):
     _attr_has_entity_name = True
     _attr_available = False
 
-    def __init__(self, hass, config_entry, session, hub):
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: HVVConfigEntry,
+        session: ClientSession,
+        hub: GTIHub,
+    ) -> None:
         """Initialize."""
         self.config_entry = config_entry
         self.station_name = self.config_entry.data[CONF_STATION]["name"]
-        self._last_error = None
+        self._last_error: type[Exception] | Exception | None = None
         self._attr_extra_state_attributes = {}
 
         self.gti = hub.gti
@@ -85,7 +91,7 @@ class HVVDepartureSensor(SensorEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
-                (
+                (  # type: ignore[arg-type]
                     DOMAIN,
                     config_entry.entry_id,
                     config_entry.data[CONF_STATION]["id"],
