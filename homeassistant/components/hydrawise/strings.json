@@ -36,6 +36,18 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "gql_tokens_per_epoch": "Cloud requests per 30 minutes"
+        },
+        "data_description": {
+          "gql_tokens_per_epoch": "Maximum number of requests Home Assistant makes to the Hydrawise cloud every 30 minutes. Raising this fetches fresher data for accounts with many controllers or zones, but a value that is too high may cause the Hydrawise cloud to rate-limit your account. The default of 5 matches the recommended limit."
+        }
+      }
+    }
+  },
   "entity": {
     "binary_sensor": {
       "rain_sensor": {
