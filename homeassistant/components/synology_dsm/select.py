@@ -14,6 +14,13 @@ from . import SynoApi
 from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigEntry
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
+FAN_SPEED_MAP = {
+    FanSpeed.COOL: "cool",
+    FanSpeed.FULL: "full_speed",
+    FanSpeed.QUIET: "quiet",
+}
+FAN_SPEED_MAP_INVERSE = {v: k for k, v in FAN_SPEED_MAP.items()}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SynologyDSMSelectEntityDescription(
@@ -40,7 +47,7 @@ class SynologyDSMFanSpeedMode(
 ):
     """Represent a Synology DSM fan speed mode select entity."""
 
-    _attr_options = [e.value for e in FanSpeed]
+    _attr_options = list(FAN_SPEED_MAP.values())
     entity_description: SynologyDSMSelectEntityDescription
 
     def __init__(
@@ -60,11 +67,11 @@ class SynologyDSMFanSpeedMode(
     @property
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
-        return self._api.dsm.hardware.fan_speed.value
+        return FAN_SPEED_MAP[self._api.dsm.hardware.fan_speed]
 
     @override
     async def async_select_option(self, option: str) -> None:
         """Set the fan speed mode."""
-        await self._api.dsm.hardware.set_fan_speed(FanSpeed(option))
+        await self._api.dsm.hardware.set_fan_speed(FAN_SPEED_MAP_INVERSE[option])
         await self._api.dsm.hardware.update()
         self.async_write_ha_state()

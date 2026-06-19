@@ -7,9 +7,9 @@
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'fullfan',
-        'coolfan',
-        'quietfan',
+        'cool',
+        'full_speed',
+        'quiet',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -48,9 +48,9 @@
       'attribution': 'Data provided by Synology',
       'friendly_name': 'nas.meontheinternet.com Fan speed mode',
       'options': list([
-        'fullfan',
-        'coolfan',
-        'quietfan',
+        'cool',
+        'full_speed',
+        'quiet',
       ]),
     }),
     'context': <ANY>,
@@ -58,6 +58,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'coolfan',
+    'state': 'cool',
   })
 # ---

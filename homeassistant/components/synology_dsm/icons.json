@@ -9,9 +9,9 @@
       "fan_speed_mode": {
         "default": "mdi:fan",
         "state": {
-          "coolfan": "mdi:fan-speed-2",
-          "fullfan": "mdi:fan-speed-3",
-          "quietfan": "mdi:fan-speed-1"
+          "cool": "mdi:fan-speed-2",
+          "full_speed": "mdi:fan-speed-3",
+          "quiet": "mdi:fan-speed-1"
         }
       }
     },

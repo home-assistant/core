@@ -2,7 +2,9 @@
 
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
+from pylint_home_assistant.const import Platform
 import pytest
+from synology_dsm.api.core.hardware import FanSpeed
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.select import (
@@ -81,11 +83,15 @@ async def test_fan_speed(
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
 
 
-@pytest.mark.parametrize("fan_speed", ["fullfan", "coolfan", "quietfan"])
+@pytest.mark.parametrize(
+    ("fan_speed", "fan_speed_parameter"),
+    [("full_speed", FanSpeed.FULL), ("cool", FanSpeed.COOL), ("quiet", FanSpeed.QUIET)],
+)
 async def test_fan_speed_select_option(
     hass: HomeAssistant,
     mock_dsm: MagicMock,
     fan_speed: str,
+    fan_speed_parameter: FanSpeed,
 ) -> None:
     """Test selecting a fan speed mode option."""
     with (
@@ -93,7 +99,7 @@ async def test_fan_speed_select_option(
             "homeassistant.components.synology_dsm.common.SynologyDSM",
             return_value=mock_dsm,
         ),
-        patch("homeassistant.components.synology_dsm.PLATFORMS", ["select"]),
+        patch("homeassistant.components.synology_dsm.PLATFORMS", [Platform.SELECT]),
     ):
         entry = MockConfigEntry(
             domain=DOMAIN,
@@ -120,4 +126,4 @@ async def test_fan_speed_select_option(
         },
         blocking=True,
     )
-    assert mock_dsm.hardware.set_fan_speed.call_args[0][0] == fan_speed
+    assert mock_dsm.hardware.set_fan_speed.call_args[0][0] == fan_speed_parameter
