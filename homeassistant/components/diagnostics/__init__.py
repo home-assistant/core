@@ -1,5 +1,6 @@
 """The Diagnostics integration."""
 
+import asyncio
 from collections.abc import Callable, Coroutine, Mapping
 from dataclasses import dataclass, field
 from http import HTTPStatus
@@ -16,7 +17,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
-    integration_platform,
     issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceEntry
@@ -27,9 +27,11 @@ from homeassistant.helpers.json import (
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
+    IntegrationNotFound,
     Manifest,
     async_get_custom_components,
     async_get_integration,
+    async_get_integrations,
 )
 from homeassistant.setup import async_get_domain_setup_times
 from homeassistant.util.hass_dict import HassKey
@@ -66,18 +68,19 @@ class DiagnosticsPlatformData:
 
 @dataclass(slots=True)
 class DiagnosticsData:
-    """Diagnostic data."""
+    """Diagnostic data.
 
-    platforms: dict[str, DiagnosticsPlatformData] = field(default_factory=dict)
+    ``platforms`` is a lazily populated cache. A value of ``None`` means the
+    integration's diagnostics platform has been looked up and does not exist (or
+    failed to import), so we don't try to import it again.
+    """
+
+    platforms: dict[str, DiagnosticsPlatformData | None] = field(default_factory=dict)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Diagnostics integration."""
     hass.data[_DIAGNOSTICS_DATA] = DiagnosticsData()
-
-    await integration_platform.async_process_integration_platforms(
-        hass, DOMAIN, _register_diagnostics_platform
-    )
 
     websocket_api.async_register_command(hass, handle_info)
     websocket_api.async_register_command(hass, handle_get)
@@ -100,26 +103,58 @@ class DiagnosticsProtocol(Protocol):
         """Return diagnostics for a device."""
 
 
-@callback
-def _register_diagnostics_platform(
-    hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
-) -> None:
-    """Register a diagnostics platform."""
+async def _async_get_platform_data(
+    hass: HomeAssistant, domain: str
+) -> DiagnosticsPlatformData | None:
+    """Return the diagnostics platform data for a domain, loading it on demand.
+
+    The result (including ``None`` for integrations without a diagnostics
+    platform) is cached so the platform is imported at most once.
+    """
     diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
-    diagnostics_data.platforms[integration_domain] = DiagnosticsPlatformData(
-        getattr(platform, "async_get_config_entry_diagnostics", None),
-        getattr(platform, "async_get_device_diagnostics", None),
-    )
+    if domain in diagnostics_data.platforms:
+        return diagnostics_data.platforms[domain]
+
+    try:
+        integration = await async_get_integration(hass, domain)
+    except IntegrationNotFound:
+        return None
+
+    data: DiagnosticsPlatformData | None = None
+    if integration.platforms_exists(("diagnostics",)):
+        try:
+            platform: DiagnosticsProtocol = await integration.async_get_platform(
+                "diagnostics"
+            )
+        except ImportError:
+            _LOGGER.debug("Error importing diagnostics platform for %s", domain)
+        else:
+            data = DiagnosticsPlatformData(
+                getattr(platform, "async_get_config_entry_diagnostics", None),
+                getattr(platform, "async_get_device_diagnostics", None),
+            )
+
+    diagnostics_data.platforms[domain] = data
+    return data
 
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "diagnostics/list"})
-@callback
-def handle_info(
+@websocket_api.async_response
+async def handle_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List all possible diagnostic handlers."""
-    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
+    integrations = await async_get_integrations(hass, hass.config.top_level_components)
+    domains = [
+        domain
+        for domain, integration in integrations.items()
+        if not isinstance(integration, Exception)
+        and integration.platforms_exists(("diagnostics",))
+    ]
+    infos = await asyncio.gather(
+        *(_async_get_platform_data(hass, domain) for domain in domains)
+    )
     result = [
         {
             "domain": domain,
@@ -128,7 +163,8 @@ def handle_info(
                 DiagnosticsSubType.DEVICE: info.device_diagnostics is not None,
             },
         }
-        for domain, info in diagnostics_data.platforms.items()
+        for domain, info in zip(domains, infos, strict=True)
+        if info is not None
     ]
     connection.send_result(msg["id"], result)
 
@@ -140,15 +176,14 @@ def handle_info(
         vol.Required("domain"): str,
     }
 )
-@callback
-def handle_get(
+@websocket_api.async_response
+async def handle_get(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List all diagnostic handlers for a domain."""
     domain = msg["domain"]
-    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
 
-    if (info := diagnostics_data.platforms.get(domain)) is None:
+    if (info := await _async_get_platform_data(hass, domain)) is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
         )
@@ -272,8 +307,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if (config_entry := hass.config_entries.async_get_entry(d_id)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
-        if (info := diagnostics_data.platforms.get(config_entry.domain)) is None:
+        if (info := await _async_get_platform_data(hass, config_entry.domain)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"

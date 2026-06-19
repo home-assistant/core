@@ -7,7 +7,7 @@ from unittest.mock import AsyncMock, Mock, patch
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.diagnostics import DOMAIN
+from homeassistant.components.diagnostics import _DIAGNOSTICS_DATA, DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -44,7 +44,7 @@ async def mock_diagnostics_integration(hass: HomeAssistant) -> None:
     mock_platform(
         hass,
         "integration_without_diagnostics.diagnostics",
-        Mock(),
+        Mock(spec=[]),
     )
     assert await async_setup_component(hass, DOMAIN, {})
 
@@ -81,6 +81,24 @@ async def test_websocket(
         "domain": "fake_integration",
         "handlers": {"config_entry": True, "device": True},
     }
+
+
+async def test_platforms_loaded_lazily(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test diagnostics platforms are only imported when first used."""
+    # Nothing is processed at setup time.
+    assert hass.data[_DIAGNOSTICS_DATA].platforms == {}
+
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "diagnostics/get", "domain": "fake_integration"}
+    )
+    msg = await client.receive_json()
+
+    assert msg["success"]
+    # Only the requested domain has been loaded into the cache.
+    assert set(hass.data[_DIAGNOSTICS_DATA].platforms) == {"fake_integration"}
 
 
 @pytest.mark.usefixtures("enable_custom_integrations")
