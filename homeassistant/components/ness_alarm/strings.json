@@ -59,6 +59,13 @@
       }
     }
   },
+  "entity": {
+    "binary_sensor": {
+      "panel_connectivity": {
+        "name": "Panel connectivity"
+      }
+    }
+  },
   "exceptions": {
     "no_config_entry": {
       "message": "No Ness Alarm configuration entry is loaded"
