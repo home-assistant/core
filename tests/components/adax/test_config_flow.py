@@ -183,6 +183,49 @@ async def test_local_create_entry(hass: HomeAssistant) -> None:
     }
 
 
+async def test_local_create_entry_strips_password_whitespace(
+    hass: HomeAssistant,
+) -> None:
+    """Test surrounding whitespace is stripped while inner spaces are kept."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONNECTION_TYPE: LOCAL,
+        },
+    )
+    assert result2["type"] is FlowResultType.FORM
+
+    with (
+        patch(
+            "homeassistant.components.adax.async_setup_entry",
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.components.adax.config_flow.adax_local.AdaxConfig",
+            autospec=True,
+        ) as mock_client_class,
+    ):
+        client = mock_client_class.return_value
+        client.configure_device.return_value = True
+        client.device_ip = "192.168.1.4"
+        client.access_token = "token"
+        client.mac_id = "8383838"
+        result = await hass.config_entries.flow.async_configure(
+            result2["flow_id"],
+            {
+                WIFI_SSID: "ssid",
+                WIFI_PSWD: "  pass word  ",
+            },
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_client_class.assert_called_once_with("ssid", "pass word")
+
+
 async def test_local_flow_entry_already_exists(hass: HomeAssistant) -> None:
     """Test user input for config_entry that already exists."""
 

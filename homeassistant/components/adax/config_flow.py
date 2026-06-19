@@ -86,7 +86,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         wifi_ssid = user_input[WIFI_SSID]
-        wifi_pswd = user_input[WIFI_PSWD].replace(" ", "")
+        wifi_pswd = user_input[WIFI_PSWD].strip()
         configurator = adax_local.AdaxConfig(wifi_ssid, wifi_pswd)
 
         try:
