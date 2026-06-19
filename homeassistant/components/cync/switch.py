@@ -58,11 +58,11 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the plug."""
-        await self._device._command_client.set_power_state(self._device, True)
+        await self._device._command_client.set_power_state(self._device, True)  # noqa: SLF001
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the plug."""
-        await self._device._command_client.set_power_state(self._device, False)
+        await self._device._command_client.set_power_state(self._device, False)  # noqa: SLF001
 
     @property
     def _device(self) -> CyncDevice:
