@@ -3390,8 +3390,8 @@ async def test_get_service_config_entry(hass: HomeAssistant) -> None:
     assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
-async def test_get_single_loaded_config_entry(hass: HomeAssistant) -> None:
-    """Test that we can get a single loaded config entry."""
+async def test_get_service_config_entry_none(hass: HomeAssistant) -> None:
+    """Test that we can get a service config entry if no entry ID is provided."""
     domain = "mock_integration"
 
     # No config entry exists
