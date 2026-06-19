@@ -11,7 +11,7 @@ from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
 from homeassistant.components.script import ScriptConfig
-from homeassistant.core import Context, HomeAssistant, State, SupportsResponse, callback
+from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     area_registry as ar,
@@ -51,24 +51,6 @@ class MyAPI(llm.API):
     async def async_get_api_instance(self, _: llm.ToolInput) -> llm.APIInstance:
         """Return a list of tools."""
         return llm.APIInstance(self, self.prompt, llm_context, self.tools)
-
-
-class _StubTool(llm.Tool):
-    """Minimal tool for registry tests."""
-
-    def __init__(self, name: str) -> None:
-        """Initialize the stub tool."""
-        self.name = name
-        self.description = f"{name} description"
-
-    async def async_call(
-        self,
-        hass: HomeAssistant,
-        tool_input: llm.ToolInput,
-        llm_context: llm.LLMContext,
-    ) -> JsonObjectType:
-        """Return an empty result."""
-        return {}
 
 
 async def test_get_api_no_existing(
@@ -144,51 +126,6 @@ async def test_multiple_apis(hass: HomeAssistant, llm_context: llm.LLMContext) -
         assert await llm.async_get_api(hass, "test-1", llm_context)
 
     assert await llm.async_get_api(hass, "test-2", llm_context)
-
-
-async def test_register_tool_provider(
-    hass: HomeAssistant, llm_context: llm.LLMContext
-) -> None:
-    """Test registering and unregistering a tool provider."""
-    tool = _StubTool("my_tool")
-
-    @callback
-    def provider(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> llm.LLMTools:
-        return llm.LLMTools(tools=[tool], prompt="use my_tool wisely")
-
-    unreg = llm.async_register_tool_provider(hass, provider)
-
-    result = llm._async_get_registered_tools(hass, llm_context)
-    assert result.tools == [tool]
-    assert result.prompt == "use my_tool wisely"
-
-    unreg()
-    result = llm._async_get_registered_tools(hass, llm_context)
-    assert result.tools == []
-    assert result.prompt is None
-
-
-async def test_register_tool_provider_merges(
-    hass: HomeAssistant, llm_context: llm.LLMContext
-) -> None:
-    """Test that tools and prompts from multiple providers are merged."""
-    tool_a = _StubTool("tool_a")
-    tool_b = _StubTool("tool_b")
-
-    @callback
-    def provider_a(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> llm.LLMTools:
-        return llm.LLMTools(tools=[tool_a], prompt="prompt a")
-
-    @callback
-    def provider_b(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> llm.LLMTools:
-        return llm.LLMTools(tools=[tool_b], prompt="prompt b")
-
-    llm.async_register_tool_provider(hass, provider_a)
-    llm.async_register_tool_provider(hass, provider_b)
-
-    result = llm._async_get_registered_tools(hass, llm_context)
-    assert result.tools == [tool_a, tool_b]
-    assert result.prompt == "prompt a\nprompt b"
 
 
 async def test_call_tool_no_existing(
