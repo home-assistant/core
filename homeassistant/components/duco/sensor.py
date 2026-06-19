@@ -233,8 +233,8 @@ async def async_setup_entry(
                 sensor_key = (node.node_id, description.key)
                 if sensor_key in known_box_sensors:
                     continue
-                # Retry box-level sensors on later refreshes so optional
-                # capabilities can appear once the library exposes them.
+                # Retry box-level sensors on later refreshes so supported boxes
+                # still gain optional entities after an earlier fetch failure.
                 if not description.supported_fn(coordinator):
                     continue
                 known_box_sensors.add(sensor_key)

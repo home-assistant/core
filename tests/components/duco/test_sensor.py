@@ -156,22 +156,33 @@ async def test_time_filter_remaining_missing_skips_sensor_creation(
     assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
 
 
-async def test_time_filter_remaining_sensor_added_when_available_later(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(DucoError("heat recovery info error"), id="duco_error"),
+        pytest.param(
+            DucoConnectionError("heat recovery info offline"),
+            id="connection_error",
+        ),
+    ],
+)
+async def test_time_filter_remaining_sensor_added_after_initial_fetch_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     mock_sensor_nodes: list[Node],
     freezer: FrozenDateTimeFactory,
+    exception: Exception,
 ) -> None:
-    """Test the filter timer sensor is added when the capability appears later."""
+    """Test the filter timer sensor is added after an initial fetch failure."""
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
-    mock_duco_client.async_get_time_filter_remaining.return_value = None
+    mock_duco_client.async_get_time_filter_remaining = AsyncMock(
+        side_effect=[exception, 180]
+    )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
 
     assert hass.states.get(FILTER_REMAINING_ENTITY_ID) is None
-
-    mock_duco_client.async_get_time_filter_remaining.return_value = 180
 
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
