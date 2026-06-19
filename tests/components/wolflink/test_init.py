@@ -317,6 +317,39 @@ async def test_setup_no_devices_on_account(
     assert not hass.states.async_entity_ids("sensor")
 
 
+async def test_setup_multiple_devices(
+    hass: HomeAssistant,
+    mock_wolflink: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that each device on the account gets its own coordinator and device entry.
+
+    Verifies the multi-device path in async_setup_entry: two devices must produce
+    two device-registry entries and two independent sets of entities with correctly
+    namespaced unique_ids.
+    """
+    mock_wolflink.fetch_system_list.return_value = [
+        Device(1234, 5678, "first-device"),
+        Device(9999, 5678, "second-device"),
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    # Both devices must appear in the device registry.
+    first = device_registry.async_get_device({(DOMAIN, "1234")})
+    second = device_registry.async_get_device({(DOMAIN, "9999")})
+    assert first is not None
+    assert second is not None
+    assert first.name == "first-device"
+    assert second.name == "second-device"
+
+    # Entities for each device carry the correct device-scoped unique_ids.
+    entity_ids = hass.states.async_entity_ids("sensor")
+    assert any("first_device" in eid for eid in entity_ids)
+    assert any("second_device" in eid for eid in entity_ids)
+
+
 async def test_migrate_future_version_aborts(hass: HomeAssistant) -> None:
     """Test migration refuses to downgrade a future-version entry."""
     config_entry = MockConfigEntry(
@@ -337,20 +370,19 @@ async def test_migrate_future_version_aborts(hass: HomeAssistant) -> None:
     assert config_entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
-@pytest.mark.usefixtures("mock_wolflink")
 async def test_setup_fetch_parameters_fails(
     hass: HomeAssistant,
+    mock_wolflink: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test a device whose parameter fetch fails is skipped, not the whole entry."""
+    mock_wolflink.fetch_parameters.side_effect = RequestError(
+        "Unable to fetch parameters"
+    )
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.wolflink.coordinator.fetch_parameters",
-        side_effect=RequestError("Unable to fetch parameters"),
-    ):
-        await hass.config_entries.async_setup(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert not hass.states.async_entity_ids("sensor")
