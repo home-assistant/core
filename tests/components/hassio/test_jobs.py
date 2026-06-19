@@ -9,10 +9,15 @@ from uuid import uuid4
 from aiohasupervisor.models import Job, JobsInfo
 import pytest
 
-from homeassistant.components.hassio.const import DOMAIN, MAIN_COORDINATOR
+from homeassistant.components.hassio.const import (
+    DOMAIN,
+    JOBS_COORDINATOR,
+    MAIN_COORDINATOR,
+)
 from homeassistant.components.hassio.coordinator import (
     HassioMainDataUpdateCoordinator,
     JobSubscription,
+    SupervisorJobsCoordinator,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.setup import async_setup_component
@@ -67,10 +72,10 @@ async def test_job_manager_setup(hass: HomeAssistant, jobs_info: AsyncMock) -> N
     assert result
     jobs_info.assert_called_once()
 
-    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
-    assert len(data_coordinator.jobs.current_jobs) == 2
-    assert data_coordinator.jobs.current_jobs[0].name == "test_job"
-    assert data_coordinator.jobs.current_jobs[1].name == "test_inner_job"
+    jobs_coordinator: SupervisorJobsCoordinator = hass.data[JOBS_COORDINATOR]
+    assert len(jobs_coordinator.current_jobs) == 2
+    assert jobs_coordinator.current_jobs[0].name == "test_job"
+    assert jobs_coordinator.current_jobs[1].name == "test_inner_job"
 
 
 @pytest.mark.usefixtures("all_setup_requests")
@@ -102,8 +107,8 @@ async def test_job_manager_ws_updates(
 
     jobs_info.reset_mock()
     client = await hass_supervisor_ws_client()
-    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
-    assert not data_coordinator.jobs.current_jobs
+    jobs_coordinator: SupervisorJobsCoordinator = hass.data[JOBS_COORDINATOR]
+    assert not jobs_coordinator.current_jobs
 
     # Make an example listener
     job_data: Job | None = None
@@ -116,7 +121,7 @@ async def test_job_manager_ws_updates(
     subscription = JobSubscription(
         mock_subscription_callback, name="test_job", reference="test"
     )
-    unsubscribe = data_coordinator.jobs.subscribe(subscription)
+    unsubscribe = jobs_coordinator.subscribe(subscription)
 
     # Send start of job update
     await client.send_json(
@@ -148,7 +153,7 @@ async def test_job_manager_ws_updates(
     assert job_data.progress == 0
     assert job_data.done is False
     # One job in the cache
-    assert len(data_coordinator.jobs.current_jobs) == 1
+    assert len(jobs_coordinator.current_jobs) == 1
 
     # Example progress update
     await client.send_json(
@@ -180,7 +185,7 @@ async def test_job_manager_ws_updates(
     assert job_data.progress == 50
     assert job_data.done is False
     # Same job, same number of jobs in cache
-    assert len(data_coordinator.jobs.current_jobs) == 1
+    assert len(jobs_coordinator.current_jobs) == 1
 
     # Unrelated job update - name change, subscriber should not receive
     await client.send_json(
@@ -210,7 +215,7 @@ async def test_job_manager_ws_updates(
     assert job_data.name == "test_job"
     assert job_data.reference == "test"
     # New job, cache increases
-    assert len(data_coordinator.jobs.current_jobs) == 2
+    assert len(jobs_coordinator.current_jobs) == 2
 
     # Unrelated job update - reference change, subscriber should not receive
     await client.send_json(
@@ -240,7 +245,7 @@ async def test_job_manager_ws_updates(
     assert job_data.name == "test_job"
     assert job_data.reference == "test"
     # New job, cache increases
-    assert len(data_coordinator.jobs.current_jobs) == 3
+    assert len(jobs_coordinator.current_jobs) == 3
 
     # Unsubscribe mock listener, should not receive final update
     unsubscribe()
@@ -273,7 +278,7 @@ async def test_job_manager_ws_updates(
     assert job_data.progress == 50
     assert job_data.done is False
     # Job ended, cache decreases
-    assert len(data_coordinator.jobs.current_jobs) == 2
+    assert len(jobs_coordinator.current_jobs) == 2
 
     # REST API should not be used during this sequence
     jobs_info.assert_not_called()
@@ -308,9 +313,9 @@ async def test_job_manager_reload_on_supervisor_restart(
     assert result
     jobs_info.assert_called_once()
 
-    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
-    assert len(data_coordinator.jobs.current_jobs) == 1
-    assert data_coordinator.jobs.current_jobs[0].name == "test_job"
+    jobs_coordinator: SupervisorJobsCoordinator = hass.data[JOBS_COORDINATOR]
+    assert len(jobs_coordinator.current_jobs) == 1
+    assert jobs_coordinator.current_jobs[0].name == "test_job"
 
     jobs_info.reset_mock()
     jobs_info.return_value = JobsInfo(ignore_conditions=[], jobs=[])
@@ -325,7 +330,7 @@ async def test_job_manager_reload_on_supervisor_restart(
         job_data = job
 
     subscription = JobSubscription(mock_subscription_callback, name="test_job")
-    data_coordinator.jobs.subscribe(subscription)
+    jobs_coordinator.subscribe(subscription)
 
     # Send supervisor restart signal
     await client.send_json(
@@ -348,7 +353,7 @@ async def test_job_manager_reload_on_supervisor_restart(
     assert job_data.name == "test_job"
     assert job_data.reference == "test"
     assert job_data.done is True
-    assert not data_coordinator.jobs.current_jobs
+    assert not jobs_coordinator.current_jobs
 
 
 @pytest.mark.usefixtures("all_setup_requests")
@@ -380,7 +385,7 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
     assert result
 
     client = await hass_supervisor_ws_client()
-    data_coordinator: HassioMainDataUpdateCoordinator = hass.data[MAIN_COORDINATOR]
+    jobs_coordinator: SupervisorJobsCoordinator = hass.data[JOBS_COORDINATOR]
 
     received: list[Job] = []
 
@@ -389,7 +394,7 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
         received.append(job)
 
     subscription = JobSubscription(mock_subscription_callback, name="test_job")
-    unsubscribe = data_coordinator.jobs.subscribe(subscription)
+    unsubscribe = jobs_coordinator.subscribe(subscription)
 
     # Existing matching job is delivered immediately, and a callable unsubscribe
     # is returned (not the None result of the callback)

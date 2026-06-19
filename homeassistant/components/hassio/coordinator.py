@@ -119,7 +119,7 @@ class JobSubscription:
         return job.name == self.name and self.reference in (None, job.reference)
 
 
-class SupervisorJobs(DataUpdateCoordinator[dict[UUID, Job]]):
+class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
     """Manage access to Supervisor jobs."""
 
     def __init__(self, hass: HomeAssistant, config_entry: ConfigEntry) -> None:
@@ -131,7 +131,6 @@ class SupervisorJobs(DataUpdateCoordinator[dict[UUID, Job]]):
             name="Supervisor jobs",
             always_update=False,
         )
-        self._hass = hass
         self._supervisor_client = get_supervisor_client(hass)
         self._subscriptions: set[JobSubscription] = set()
         self._dispatcher_disconnect: Callable[[], None] | None = None
@@ -211,7 +210,7 @@ class SupervisorJobs(DataUpdateCoordinator[dict[UUID, Job]]):
         """Register to receive Supervisor events after the first successful refresh."""
         if self.last_update_success and self._dispatcher_disconnect is None:
             self._dispatcher_disconnect = async_dispatcher_connect(
-                self._hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_jobs
+                self.hass, EVENT_SUPERVISOR_EVENT, self._supervisor_events_to_jobs
             )
 
     async def _async_refresh(
@@ -247,7 +246,7 @@ class SupervisorJobs(DataUpdateCoordinator[dict[UUID, Job]]):
             and event.get(ATTR_UPDATE_KEY) == UPDATE_KEY_SUPERVISOR
             and event.get(ATTR_DATA, {}).get(ATTR_STARTUP) == STARTUP_COMPLETE
         ):
-            self._hass.async_create_task(self.async_request_refresh())
+            self.hass.async_create_task(self.async_request_refresh())
 
         elif event[ATTR_WS_EVENT] == EVENT_JOB:
             job = Job.from_dict(event[ATTR_DATA] | {"child_jobs": []})
@@ -770,7 +769,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         hass: HomeAssistant,
         config_entry: ConfigEntry,
         dev_reg: dr.DeviceRegistry,
-        jobs: SupervisorJobs,
     ) -> None:
         """Initialize coordinator."""
         super().__init__(
@@ -789,7 +787,6 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
         self.supervisor_client = get_supervisor_client(hass)
-        self.jobs = jobs
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
@@ -979,7 +976,6 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         self.dev_reg = dev_reg
         self.is_hass_os = False
         self.supervisor_client = get_supervisor_client(hass)
-        self.jobs = SupervisorJobs(hass, config_entry)
         self._dispatcher_disconnect = async_dispatcher_connect(
             hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
         )
@@ -1129,4 +1125,3 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         """Shut down and clean up when config entry unloaded."""
         await super().async_shutdown()
         self._dispatcher_disconnect()
-        await self.jobs.async_shutdown()

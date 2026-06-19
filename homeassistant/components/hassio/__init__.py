@@ -60,6 +60,7 @@ from .const import (
     DATA_HASSIO_SUPERVISOR_USER,
     DATA_KEY_SUPERVISOR_ISSUES,
     DOMAIN,
+    JOBS_COORDINATOR,
     MAIN_COORDINATOR,
     STATS_COORDINATOR,
 )
@@ -67,6 +68,7 @@ from .coordinator import (
     HassioAddOnDataUpdateCoordinator,
     HassioMainDataUpdateCoordinator,
     HassioStatsDataUpdateCoordinator,
+    SupervisorJobsCoordinator,
     get_addons_info,
     get_addons_list,
     get_addons_stats,
@@ -324,12 +326,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     coordinator = HassioMainDataUpdateCoordinator(hass, entry, dev_reg)
     await coordinator.async_config_entry_first_refresh()
-    await coordinator.jobs.async_config_entry_first_refresh()
     hass.data[MAIN_COORDINATOR] = coordinator
 
-    addon_coordinator = HassioAddOnDataUpdateCoordinator(
-        hass, entry, dev_reg, coordinator.jobs
-    )
+    jobs_coordinator = SupervisorJobsCoordinator(hass, entry)
+    await jobs_coordinator.async_config_entry_first_refresh()
+    hass.data[JOBS_COORDINATOR] = jobs_coordinator
+
+    addon_coordinator = HassioAddOnDataUpdateCoordinator(hass, entry, dev_reg)
     await addon_coordinator.async_config_entry_first_refresh()
     hass.data[ADDONS_COORDINATOR] = addon_coordinator
 
@@ -438,5 +441,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     hass.data.pop(MAIN_COORDINATOR, None)
     hass.data.pop(ADDONS_COORDINATOR, None)
     hass.data.pop(STATS_COORDINATOR, None)
+    hass.data.pop(JOBS_COORDINATOR, None)
 
     return unload_ok

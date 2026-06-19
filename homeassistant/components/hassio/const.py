@@ -27,6 +27,7 @@ if TYPE_CHECKING:
         HassioAddOnDataUpdateCoordinator,
         HassioMainDataUpdateCoordinator,
         HassioStatsDataUpdateCoordinator,
+        SupervisorJobsCoordinator,
     )
     from .handler import HassIO
     from .issues import SupervisorIssues
@@ -102,6 +103,9 @@ ADDONS_COORDINATOR: HassKey[HassioAddOnDataUpdateCoordinator] = HassKey(
 )
 STATS_COORDINATOR: HassKey[HassioStatsDataUpdateCoordinator] = HassKey(
     "hassio_stats_coordinator"
+)
+JOBS_COORDINATOR: HassKey[SupervisorJobsCoordinator] = HassKey(
+    "hassio_jobs_coordinator"
 )
 
 
