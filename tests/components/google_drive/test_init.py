@@ -6,14 +6,20 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
 
+from homeassistant.components.google_drive.api import AsyncConfigEntryAuth
 from homeassistant.components.google_drive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
+    OAuth2Session,
+    async_get_config_entry_implementation,
 )
 
 from tests.common import MockConfigEntry
@@ -174,3 +180,69 @@ async def test_oauth_implementation_not_available(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_async_get_access_token_runtime_transient_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+) -> None:
+    """Test transient error during runtime token refresh."""
+    await setup_integration()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Force token expiration
+    new_data = {**config_entry.data}
+    new_data["token"] = {**new_data["token"], "expires_at": time.time() - 3600}
+    hass.config_entries.async_update_entry(config_entry, data=new_data)
+
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        exc=aiohttp.ClientError("Network error"),
+    )
+
+    implementation = await async_get_config_entry_implementation(hass, config_entry)
+    auth = AsyncConfigEntryAuth(
+        async_get_clientsession(hass),
+        OAuth2Session(hass, config_entry, implementation),
+    )
+
+    # Transient error should be passed through
+    with pytest.raises(aiohttp.ClientError):
+        await auth.async_get_access_token()
+
+
+async def test_async_get_access_token_runtime_auth_error(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry: MockConfigEntry,
+    mock_api: MagicMock,
+) -> None:
+    """Test auth error during runtime token refresh."""
+    await setup_integration()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    # Force token expiration
+    new_data = {**config_entry.data}
+    new_data["token"] = {**new_data["token"], "expires_at": time.time() - 3600}
+    hass.config_entries.async_update_entry(config_entry, data=new_data)
+
+    aioclient_mock.post(
+        "https://oauth2.googleapis.com/token",
+        status=http.HTTPStatus.BAD_REQUEST,
+    )
+
+    implementation = await async_get_config_entry_implementation(hass, config_entry)
+    auth = AsyncConfigEntryAuth(
+        async_get_clientsession(hass),
+        OAuth2Session(hass, config_entry, implementation),
+    )
+
+    # 400 error should raise ConfigEntryAuthFailed
+    with pytest.raises(ConfigEntryAuthFailed):
+        await auth.async_get_access_token()
