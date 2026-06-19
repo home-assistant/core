@@ -1,0 +1,24 @@
+{
+  "entity": {
+    "sensor": {
+      "export_tariff_1": {
+        "default": "mdi:meter-electric-outline"
+      },
+      "export_tariff_2": {
+        "default": "mdi:meter-electric-outline"
+      },
+      "export_total": {
+        "default": "mdi:meter-electric-outline"
+      },
+      "import_tariff_1": {
+        "default": "mdi:meter-electric"
+      },
+      "import_tariff_2": {
+        "default": "mdi:meter-electric"
+      },
+      "import_total": {
+        "default": "mdi:meter-electric"
+      }
+    }
+  }
+}
