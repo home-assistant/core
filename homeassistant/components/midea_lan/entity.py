@@ -5,6 +5,7 @@ from typing import Any
 
 from midealocal.device import MideaDevice
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -12,6 +13,8 @@ from .const import DOMAIN
 from .device_catalog import MIDEA_DEVICE_NAMES
 
 _LOGGER = logging.getLogger(__name__)
+
+type MideaLanConfigEntry = ConfigEntry[MideaDevice]
 
 
 class MideaEntity(Entity):

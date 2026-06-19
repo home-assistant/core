@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, cast
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes, MideaACDevice
@@ -34,10 +34,8 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
-    CONF_SENSORS,
     PRECISION_HALVES,
     PRECISION_WHOLE,
     UnitOfTemperature,
@@ -46,7 +44,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import FanSpeed
-from .entity import MideaEntity
+from .entity import MideaEntity, MideaLanConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -121,29 +119,33 @@ _SWING_STATE_MAP: dict[tuple[bool, bool], str] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MideaLanConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up climate entries."""
     device = config_entry.runtime_data
-    if device is None:
-        _LOGGER.warning("Unable to set up climate entities: device not found")
-        return
+
     entities: list[MideaClimate] = []
     for description in CLIMATE_ENTITIES:
         if device.device_type not in description.models:
             continue
         if device.device_type == DeviceType.AC:
             # AC entities need the config entry to honor optional humidity exposure.
-            entities.append(MideaACClimate(device, description, config_entry))
+            entities.append(
+                MideaACClimate(cast(MideaACDevice, device), description, config_entry)
+            )
         elif device.device_type == DeviceType.CC:
-            entities.append(MideaCCClimate(device, description))
+            entities.append(MideaCCClimate(cast(MideaCCDevice, device), description))
         elif device.device_type == DeviceType.CF:
-            entities.append(MideaCFClimate(device, description))
+            entities.append(MideaCFClimate(cast(MideaCFDevice, device), description))
         elif device.device_type == DeviceType.C3 and description.zone is not None:
-            entities.append(MideaC3Climate(device, description, description.zone))
+            entities.append(
+                MideaC3Climate(
+                    cast(MideaC3Device, device), description, description.zone
+                )
+            )
         elif device.device_type == DeviceType.FB:
-            entities.append(MideaFBClimate(device, description))
+            entities.append(MideaFBClimate(cast(MideaFBDevice, device), description))
     async_add_entities(entities)
 
 
@@ -315,16 +317,10 @@ class MideaACClimate(MideaClimate):
         self,
         device: MideaACDevice,
         description: MideaClimateEntityDescription,
-        config_entry: ConfigEntry,
+        config_entry: MideaLanConfigEntry,
     ) -> None:
         """Midea AC Climate entity init."""
         super().__init__(device, description)
-        # Indoor humidity is only enabled when explicitly configured by the user
-        # because some devices report invalid values (0 or 0xFF) for this sensor.
-        self._indoor_humidity_enabled = (
-            CONF_SENSORS in config_entry.options
-            and "indoor_humidity" in config_entry.options[CONF_SENSORS]
-        )
         self._attr_target_temperature_step = float(
             PRECISION_WHOLE if self._device.temperature_step == 1 else PRECISION_HALVES,
         )
@@ -350,9 +346,7 @@ class MideaACClimate(MideaClimate):
     @property
     def current_humidity(self) -> float | None:
         """Return the current indoor humidity, or None if unavailable."""
-        if not self._indoor_humidity_enabled:
-            return None
-        raw = self._device.get_attribute("indoor_humidity")
+        raw = self._device.get_attribute(ACAttributes.indoor_humidity)
         # Some devices report invalid values (0 or 0xFF) for this sensor
         # so filter those out and return None instead.
         if isinstance(raw, (int, float)) and raw not in {0, 0xFF}:

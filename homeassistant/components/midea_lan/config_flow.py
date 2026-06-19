@@ -211,7 +211,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 # return to next step after login pass
                 return await self.async_step_auto()
             # return error with login failed
-            _LOGGER.error(
+            _LOGGER.debug(
                 "Failed to login with %s account in %s server",
                 login_mode,
                 cloud_server,
@@ -361,7 +361,7 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                 cloud_name,
             )
             return True
-        _LOGGER.error(
+        _LOGGER.debug(
             "Unable to login to %s cloud",
             cloud_name,
         )
@@ -410,13 +410,12 @@ class MideaLanConfigFlow(ConfigFlow, domain=DOMAIN):
                     await self.hass.async_add_executor_job(dm.authenticate)
                 except AuthException:
                     _LOGGER.debug("Unable to authenticate")
-                    await self.hass.async_add_executor_job(dm.close_socket)
                 except SocketException:
                     _LOGGER.debug("Socket closed")
-                    await self.hass.async_add_executor_job(dm.close_socket)
                 else:
-                    await self.hass.async_add_executor_job(dm.close_socket)
                     return value
+                finally:
+                    await self.hass.async_add_executor_job(dm.close_socket)
             # return debug log with failed key
             _LOGGER.debug(
                 "Connect device using method %s token/key failed",

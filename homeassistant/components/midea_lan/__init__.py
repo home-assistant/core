@@ -3,7 +3,6 @@
 from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.devices import device_selector
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
     CONF_IP_ADDRESS,
@@ -18,11 +17,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
 from .const import CONF_SUBTYPE
+from .entity import MideaLanConfigEntry
 
 _PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> bool:
     """Set up Midea LAN from a config entry."""
 
     data = entry.data
@@ -56,6 +56,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: MideaLanConfigEntry) -> bool:
     """Unload a config entry."""
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

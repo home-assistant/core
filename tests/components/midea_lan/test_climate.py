@@ -226,9 +226,6 @@ def test_midea_ac_specific() -> None:
     ent.device.attributes["indoor_humidity"] = 255
     assert ent.current_humidity is None
 
-    ent._indoor_humidity_enabled = False
-    assert ent.current_humidity is None
-
     assert ent.outdoor_temperature == 10.5
     ent.set_fan_mode(FAN_LOW)
     with pytest.raises(KeyError):
