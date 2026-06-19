@@ -2,6 +2,7 @@
 
 from datetime import datetime, timedelta
 from unittest.mock import MagicMock
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -150,15 +151,17 @@ async def test_get_forecast_accepts_naive_datetimes(
 
     The Home Assistant UI datetime selector and `cv.datetime` produce naive
     `datetime` values for strings without an offset, so the service must
-    attach the forecast's timezone before filtering.
+    attach the forecast's timezone before filtering. The mock estimate has
+    ``timezone = "Europe/Amsterdam"``, which can differ from HA's default
+    time zone, so the forecast data is built in that zone too.
     """
-    tz = dt_util.get_default_time_zone()
+    forecast_tz = ZoneInfo("Europe/Amsterdam")
     estimate = mock_forecast_solar.estimate.return_value
     estimate.watts = {
-        datetime(2026, 6, 19, 6, 0, tzinfo=tz): 100,
-        datetime(2026, 6, 19, 9, 0, tzinfo=tz): 500,
-        datetime(2026, 6, 19, 12, 0, tzinfo=tz): 900,
-        datetime(2026, 6, 19, 18, 0, tzinfo=tz): 50,
+        datetime(2026, 6, 19, 6, 0, tzinfo=forecast_tz): 100,
+        datetime(2026, 6, 19, 9, 0, tzinfo=forecast_tz): 500,
+        datetime(2026, 6, 19, 12, 0, tzinfo=forecast_tz): 900,
+        datetime(2026, 6, 19, 18, 0, tzinfo=forecast_tz): 50,
     }
     estimate.wh_period = dict(estimate.watts)
 
