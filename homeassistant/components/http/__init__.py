@@ -33,7 +33,6 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     HASSIO_USER_NAME,
-    SERVER_PORT,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -60,7 +59,7 @@ from homeassistant.util.json import json_loads
 
 from .auth import async_setup_auth
 from .ban import setup_bans
-from .config import async_load_config
+from .config import async_load_config, default_server_port
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -109,7 +108,7 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_SERVER_HOST): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
-            vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
+            vol.Optional(CONF_SERVER_PORT, default=default_server_port): cv.port,
             vol.Optional(CONF_BASE_URL): cv.string,
             vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
             vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
