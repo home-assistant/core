@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import cast
 
 from duco_connectivity import DucoClient
 from duco_connectivity.exceptions import (
@@ -9,7 +10,7 @@ from duco_connectivity.exceptions import (
     DucoError,
     DucoResponseError,
 )
-from duco_connectivity.models import BoardInfo, Node
+from duco_connectivity.models import BoardInfo, Node, NodeListActionItemList
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -29,6 +30,7 @@ class DucoData:
     """Data returned by the Duco coordinator."""
 
     nodes: dict[int, Node]
+    node_actions: NodeListActionItemList
     rssi_wifi: int | None
 
 
@@ -67,19 +69,16 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except DucoConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except DucoError as err:
             raise ConfigEntryError(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
     async def _async_update_data(self) -> DucoData:
@@ -90,14 +89,29 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except DucoError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": repr(err)},
             ) from err
+
+        try:
+            node_actions = await self.client.async_get_node_actions()
+        except DucoError as err:
+            previous_data = cast(DucoData | None, self.data)
+            node_actions = (
+                previous_data.node_actions
+                if previous_data is not None
+                else NodeListActionItemList(nodes=[])
+            )
+            _LOGGER.warning(
+                "Could not fetch Duco node actions; %s",
+                "keeping previous select discovery data"
+                if previous_data is not None
+                else "starting with empty select discovery data",
+                exc_info=err,
+            )
 
         # LAN info only backs the diagnostic RSSI sensor, so failures on this
         # supplemental endpoint, including connection failures, should not make
@@ -112,5 +126,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
         return DucoData(
             nodes={node.node_id: node for node in nodes},
+            node_actions=node_actions,
             rssi_wifi=rssi_wifi,
         )
