@@ -33,6 +33,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_START,
     EVENT_HOMEASSISTANT_STOP,
     HASSIO_USER_NAME,
+    SERVER_PORT,
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -83,6 +84,7 @@ from .const import (  # noqa: F401
     CONF_USE_X_FRAME_OPTIONS,
     DEFAULT_CORS,
     DOMAIN,
+    ENV_SUPERVISOR,
     KEY_HASS_REFRESH_TOKEN_ID,
     KEY_HASS_USER,
     NO_LOGIN_ATTEMPT_THRESHOLD,
@@ -482,6 +484,16 @@ class HomeAssistantHTTP:
         self.runner: web.AppRunner | None = None
         self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
+        # Under Supervisor the server moved off the previous default port
+        # (SERVER_PORT). Redirect that port to the active one and relax CORS
+        # for same-host requests so already-flashed devices and bookmarks keep
+        # working, until onboarding completes.
+        self._port_transition = (
+            ENV_SUPERVISOR in os.environ and server_port != SERVER_PORT
+        )
+        self._port_transition_cors = self._port_transition
+        self._legacy_redirect_runner: web.AppRunner | None = None
+        self._legacy_redirect_server: asyncio.Server | None = None
         self._server: asyncio.Server | None = None
 
     async def async_bind(self) -> None:
@@ -554,6 +566,9 @@ class HomeAssistantHTTP:
 
         setup_headers(self.app, use_x_frame_options)
         setup_cors(self.app, cors_origins)
+
+        if self._port_transition:
+            self.app.on_response_prepare.append(self._async_add_transition_cors)
 
     def register_view(self, view: HomeAssistantView | type[HomeAssistantView]) -> None:
         """Register a view with the WSGI server.
@@ -799,8 +814,103 @@ class HomeAssistantHTTP:
 
         _LOGGER.info("Now listening on port %d", self.server_port)
 
+        if self._port_transition:
+            await self._async_start_legacy_redirect()
+
+    async def _async_add_transition_cors(
+        self, request: web.Request, response: web.StreamResponse
+    ) -> None:
+        """Echo a same-host Origin during the port transition.
+
+        A cross-origin fetch that follows the legacy-port redirect stays in
+        CORS mode, so the final response on the active port also needs CORS
+        headers. Scope this to our own host (the redirect is only ever same
+        host, different port) and only until onboarding completes.
+        """
+        if not self._port_transition_cors:
+            return
+        origin = request.headers.get("Origin")
+        if not origin:
+            return
+        try:
+            origin_host = URL(origin).host
+        except ValueError:
+            return
+        if origin_host and origin_host == request.url.host:
+            response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Credentials"] = "true"
+
+    async def _async_start_legacy_redirect(self) -> None:
+        """Redirect the previous default port to the active port until onboarded."""
+        target_port = self.server_port
+
+        async def _redirect(request: web.Request) -> web.StreamResponse:
+            raise web.HTTPFound(request.url.with_port(target_port))
+
+        redirect_app = web.Application()
+        redirect_app.router.add_route("*", "/{path:.*}", _redirect)
+        self._legacy_redirect_runner = web.AppRunner(redirect_app)
+        await self._legacy_redirect_runner.setup()
+        try:
+            self._legacy_redirect_server = await self.hass.loop.create_server(
+                self._legacy_redirect_runner.server,
+                self.server_host if self.server_host is not None else _DEFAULT_BIND,
+                SERVER_PORT,
+            )
+        except OSError as error:
+            _LOGGER.error(
+                "Failed to start legacy port %d redirect: %s", SERVER_PORT, error
+            )
+            await self._legacy_redirect_runner.cleanup()
+            self._legacy_redirect_runner = None
+            return
+
+        _LOGGER.info(
+            "Redirecting legacy port %d to port %d until onboarding completes",
+            SERVER_PORT,
+            target_port,
+        )
+        async_when_setup_or_start(
+            self.hass, "onboarding", self._async_register_onboarding_teardown
+        )
+
+    async def _async_register_onboarding_teardown(self, *_: Any) -> None:
+        """Tear down the port transition once onboarding completes.
+
+        async_add_listener no-ops if onboarding isn't loaded yet, so register
+        only once the onboarding component is available.
+        """
+        from homeassistant.components import onboarding  # noqa: PLC0415
+
+        @callback
+        def _end_transition() -> None:
+            self.hass.async_create_task(self._async_end_port_transition())
+
+        onboarding.async_add_listener(self.hass, _end_transition)
+
+    async def _async_stop_legacy_redirect(self) -> None:
+        """Stop the legacy redirect server and free its port."""
+        if self._legacy_redirect_server is not None:
+            self._legacy_redirect_server.close()
+            await self._legacy_redirect_server.wait_closed()
+            self._legacy_redirect_server = None
+        if self._legacy_redirect_runner is not None:
+            await self._legacy_redirect_runner.cleanup()
+            self._legacy_redirect_runner = None
+
+    async def _async_end_port_transition(self) -> None:
+        """Stop the legacy redirect and CORS relaxation."""
+        self._port_transition_cors = False
+        if self._legacy_redirect_runner is None:
+            return
+        await self._async_stop_legacy_redirect()
+        _LOGGER.info(
+            "Onboarding complete; stopped legacy port %d redirect", SERVER_PORT
+        )
+
     async def stop(self) -> None:
         """Stop the aiohttp server."""
+        await self._async_stop_legacy_redirect()
         if self.supervisor_site is not None:
             await self.supervisor_site.stop()
             if self.supervisor_unix_socket_path is not None:
