@@ -142,6 +142,7 @@ homeassistant.components.canary.*
 homeassistant.components.casper_glow.*
 homeassistant.components.centriconnect.*
 homeassistant.components.cert_expiry.*
+homeassistant.components.chef_iq.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
 homeassistant.components.climate.*

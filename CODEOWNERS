@@ -299,6 +299,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/cert_expiry/ @jjlawren
 /homeassistant/components/chacon_dio/ @cnico
 /tests/components/chacon_dio/ @cnico
+/homeassistant/components/chef_iq/ @Invader444
+/tests/components/chef_iq/ @Invader444
 /homeassistant/components/chess_com/ @joostlek
 /tests/components/chess_com/ @joostlek
 /homeassistant/components/cielo_home/ @ihsan-cielo @mudasar-cielo
