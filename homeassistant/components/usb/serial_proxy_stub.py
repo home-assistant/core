@@ -1,12 +1,4 @@
-"""ESPHome serial proxy URI handler stub for serialx.
-
-This registers a placeholder ``esphome-hass://`` handler so that attempts to open
-an ESPHome serial proxy before the ESPHome integration has loaded fail cleanly
-with `ConfigEntryNotReady`. It deliberately avoids inheriting from
-``serialx.platforms.serial_esphome`` so that the USB integration does not pull in
-``aioesphomeapi`` just to register the stub. The real handler (registered by the
-ESPHome integration with a higher weight) takes precedence once loaded.
-"""
+"""ESPHome serial proxy URI handler stub for serialx."""
 
 from collections.abc import Buffer, Callable
 from typing import Unpack
