@@ -27,11 +27,12 @@ from homeassistant.helpers.json import (
 from homeassistant.helpers.system_info import async_get_system_info
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import (
-    IntegrationNotFound,
+    IntegrationNotLoaded,
     Manifest,
     async_get_custom_components,
     async_get_integration,
     async_get_integrations,
+    async_get_loaded_integration,
 )
 from homeassistant.setup import async_get_domain_setup_times
 from homeassistant.util.hass_dict import HassKey
@@ -116,8 +117,9 @@ async def _async_get_platform_data(
         return diagnostics_data.platforms[domain]
 
     try:
-        integration = await async_get_integration(hass, domain)
-    except IntegrationNotFound:
+        integration = async_get_loaded_integration(hass, domain)
+    except IntegrationNotLoaded:
+        # Don't cache, the integration may be loaded later.
         return None
 
     data: DiagnosticsPlatformData | None = None

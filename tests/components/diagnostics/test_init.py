@@ -101,6 +101,22 @@ async def test_platforms_loaded_lazily(
     assert set(hass.data[_DIAGNOSTICS_DATA].platforms) == {"fake_integration"}
 
 
+async def test_get_not_loaded_integration(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test diagnostics are not provided for integrations that aren't loaded."""
+    client = await hass_ws_client(hass)
+    await client.send_json(
+        {"id": 5, "type": "diagnostics/get", "domain": "not_loaded_integration"}
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+    # Not cached, so it can be served once the integration is loaded.
+    assert "not_loaded_integration" not in hass.data[_DIAGNOSTICS_DATA].platforms
+
+
 @pytest.mark.usefixtures("enable_custom_integrations")
 @pytest.mark.parametrize(
     "ignore_missing_translations",
