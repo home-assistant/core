@@ -3,7 +3,7 @@
 from typing import TYPE_CHECKING
 
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import service
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -22,21 +22,12 @@ if TYPE_CHECKING:
     from . import AfterShipConfigEntry
 
 
-def get_config_entry(call: ServiceCall) -> AfterShipConfigEntry:
-    """Retrieve current config entry."""
-    entries: list[AfterShipConfigEntry] = call.hass.config_entries.async_loaded_entries(
-        DOMAIN
-    )
-    if not entries:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN, translation_key="config_entry_not_loaded"
-        )
-    return entries[0]
-
-
 async def handle_add_tracking(call: ServiceCall) -> None:
     """Call when a user adds a new Aftership tracking from Home Assistant."""
-    aftership = get_config_entry(call).runtime_data
+    entry: AfterShipConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, None
+    )
+    aftership = entry.runtime_data
     await aftership.trackings.add(
         tracking_number=call.data[CONF_TRACKING_NUMBER],
         title=call.data.get(CONF_TITLE),
@@ -47,7 +38,10 @@ async def handle_add_tracking(call: ServiceCall) -> None:
 
 async def handle_remove_tracking(call: ServiceCall) -> None:
     """Call when a user removes an Aftership tracking from Home Assistant."""
-    aftership = get_config_entry(call).runtime_data
+    entry: AfterShipConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, None
+    )
+    aftership = entry.runtime_data
     await aftership.trackings.remove(
         tracking_number=call.data[CONF_TRACKING_NUMBER],
         slug=call.data[CONF_SLUG],
