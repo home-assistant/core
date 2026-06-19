@@ -93,9 +93,6 @@ def mock_connection():
             AsyncMock(side_effect=fake_request),
         ),
         patch.object(PowerShadesConnection, "close"),
-        patch(
-            "homeassistant.components.powershades.get_mac_address", return_value=None
-        ),
     ):
         yield
 

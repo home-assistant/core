@@ -2,7 +2,6 @@
 
 import logging
 
-from getmac import get_mac_address
 from pyowershades import (
     OP_GET_SERIAL,
     PowerShadesConnection,
@@ -13,8 +12,7 @@ from pyowershades import (
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -28,45 +26,31 @@ PLATFORMS = [Platform.COVER]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-async def _async_update_device_metadata(
+async def _async_update_device_model(
     hass: HomeAssistant,
     entry: PowerShadesConfigEntry,
     coordinator: PowerShadesCoordinator,
 ) -> None:
-    """Fill in MAC and model metadata missing from the entry."""
-    updates: dict[str, str | int] = {}
+    """Fill in the model if missing from the entry."""
+    if entry.data.get("model") is not None:
+        return
 
-    mac = await hass.async_add_executor_job(
-        lambda: get_mac_address(ip=entry.data["ip"])
-    )
-    if mac and mac != "00:00:00:00:00:00":
-        mac = format_mac(mac)
-        coordinator.mac_address = mac
-        if mac != entry.data.get("mac"):
-            updates["mac"] = mac
-
-    if entry.data.get("model") is None:
-        try:
-            reply = await coordinator.connection.async_request(OP_GET_SERIAL)
-        except PowerShadesTimeoutError:
-            reply = None
-        parsed = parse_serial_reply(reply) if reply else None
-        if parsed is not None:
-            coordinator.model = parsed["model"]
-            updates["model"] = parsed["model"]
-
-    if updates:
-        hass.config_entries.async_update_entry(entry, data={**entry.data, **updates})
+    try:
+        reply = await coordinator.connection.async_request(OP_GET_SERIAL)
+    except PowerShadesTimeoutError:
+        return
+    parsed = parse_serial_reply(reply)
+    if parsed is not None:
+        coordinator.model = parsed["model"]
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, "model": parsed["model"]}
+        )
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the PowerShades component."""
     async_start_discovery(hass)
     return True
-
-
-def _cannot_connect_issue_id(entry: PowerShadesConfigEntry) -> str:
-    return f"cannot_connect_{entry.entry_id}"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: PowerShadesConfigEntry) -> bool:
@@ -79,23 +63,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: PowerShadesConfigEntry) 
         await coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady:
         connection.close()
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            _cannot_connect_issue_id(entry),
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key="cannot_connect",
-            translation_placeholders={"name": entry.title, "ip": entry.data["ip"]},
-        )
         raise
-
-    ir.async_delete_issue(hass, DOMAIN, _cannot_connect_issue_id(entry))
 
     entry.runtime_data = coordinator
     entry.async_on_unload(connection.close)
 
-    await _async_update_device_metadata(hass, entry, coordinator)
+    await _async_update_device_model(hass, entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -105,5 +78,4 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: PowerShadesConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    ir.async_delete_issue(hass, DOMAIN, _cannot_connect_issue_id(entry))
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
