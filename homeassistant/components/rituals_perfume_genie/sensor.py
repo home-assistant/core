@@ -40,6 +40,7 @@ ENTITY_DESCRIPTIONS = (
         key="fill",
         translation_key="fill",
         value_fn=lambda diffuser: diffuser.fill,
+        has_fn=lambda diffuser: "fillc" in diffuser.hub_data.get("sensors", {}),
     ),
     RitualsSensorEntityDescription(
         key="perfume",
