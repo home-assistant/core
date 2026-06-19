@@ -76,8 +76,8 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.address = discovery_info.address
         self.context["title_placeholders"] = {
-            "name": f"{PRODUCT_NAMES[mfg.product_type]} ({discovery_info.name})",
-            "address": discovery_info.address,
+            "name": PRODUCT_NAMES[mfg.product_type],
+            "identifier": f"{discovery_info.name}, {discovery_info.address}",
         }
         return await self.async_step_confirm()
 
@@ -108,7 +108,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
                 "name": PRODUCT_NAMES[
                     self.devices[user_input[CONF_ADDRESS]].product_type
                 ],
-                "address": user_input[CONF_ADDRESS],
+                "identifier": user_input[CONF_ADDRESS],
             }
             await self.async_set_unique_id(self.address, raise_on_progress=False)
             self._abort_if_unique_id_configured()
