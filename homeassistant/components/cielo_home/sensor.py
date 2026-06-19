@@ -18,7 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import SENSOR_HUMIDITY, SENSOR_TEMPERATURE
 from .coordinator import CieloDataUpdateCoordinator, CieloHomeConfigEntry
-from .entity import CieloDeviceEntity, _normalize_temp_unit
+from .entity import CieloDeviceEntity, normalize_temp_unit
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -37,7 +37,7 @@ SENSOR_DESCRIPTIONS: tuple[CieloSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         value_fn=lambda client, device_data: client.current_temperature(),
         # Temperature unit is dynamic; see the native_unit_of_measurement property for limitations.
-        unit_fn=_normalize_temp_unit,
+        unit_fn=normalize_temp_unit,
     ),
     CieloSensorEntityDescription(
         key=SENSOR_HUMIDITY,
