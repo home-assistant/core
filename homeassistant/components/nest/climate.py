@@ -371,3 +371,16 @@ class ThermostatEntity(ClimateEntity):
             raise HomeAssistantError(
                 f"Error setting {self.entity_id} fan timer: {err}"
             ) from err
+
+    @property
+    def extra_state_attributes(self) -> dict[str, Any] | None:
+        """Return the optional state attributes."""
+        attributes = {}
+        if (
+            FanTrait.NAME in self._device.traits
+            and (trait := self._device.traits[FanTrait.NAME])
+            and trait.timer_timeout
+        ):
+            # Expose the ISO 8601 formatted string of the timeout
+            attributes["fan_timer_timeout"] = trait.timer_timeout.isoformat()
+        return attributes

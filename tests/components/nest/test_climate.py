@@ -919,6 +919,7 @@ async def test_thermostat_fan_off(
     }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_OFF
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+    assert thermostat.attributes.get("fan_timer_timeout") == "2019-05-10T03:22:54+00:00"
     assert thermostat.attributes[ATTR_SUPPORTED_FEATURES] == (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -972,6 +973,7 @@ async def test_thermostat_fan_on(
     }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+    assert thermostat.attributes.get("fan_timer_timeout") == "2019-05-10T03:22:54+00:00"
     assert thermostat.attributes[ATTR_SUPPORTED_FEATURES] == (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -1017,6 +1019,7 @@ async def test_thermostat_cool_with_fan(
     }
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+    assert thermostat.attributes.get("fan_timer_timeout") == "2019-05-10T03:22:54+00:00"
     assert thermostat.attributes[ATTR_SUPPORTED_FEATURES] == (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -1056,6 +1059,7 @@ async def test_thermostat_set_fan(
     assert thermostat.state == HVACMode.HEAT
     assert thermostat.attributes[ATTR_FAN_MODE] == FAN_ON
     assert thermostat.attributes[ATTR_FAN_MODES] == [FAN_ON, FAN_OFF]
+    assert thermostat.attributes.get("fan_timer_timeout") == "2019-05-10T03:22:54+00:00"
     assert thermostat.attributes[ATTR_SUPPORTED_FEATURES] == (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
@@ -1357,6 +1361,7 @@ async def test_thermostat_fan_empty(
     }
     assert ATTR_FAN_MODE not in thermostat.attributes
     assert ATTR_FAN_MODES not in thermostat.attributes
+    assert "fan_timer_timeout" not in thermostat.attributes
     assert thermostat.attributes[ATTR_SUPPORTED_FEATURES] == (
         ClimateEntityFeature.TARGET_TEMPERATURE
         | ClimateEntityFeature.TARGET_TEMPERATURE_RANGE
