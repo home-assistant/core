@@ -3,6 +3,7 @@
 import asyncio
 from ipaddress import IPv4Network, IPv6Network, ip_network
 import logging
+import os
 from typing import Any, Final, TypedDict, cast, override
 
 import voluptuous as vol
@@ -31,12 +32,35 @@ from .const import (
     CONF_USE_X_FRAME_OPTIONS,
     DEFAULT_CORS,
     DOMAIN,
+    ENV_SETUP_PORT,
     NO_LOGIN_ATTEMPT_THRESHOLD,
     SSL_INTERMEDIATE,
     SSL_MODERN,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def default_server_port() -> int:
+    """Return the default HTTP server port.
+
+    The built-in default port can be overridden via the
+    ``SETUP_PORT`` environment variable. An invalid value is ignored in favor
+    of the built-in default.
+    """
+    if (env_value := os.environ.get(ENV_SETUP_PORT)) is None:
+        return SERVER_PORT
+    try:
+        return cast(int, cv.port(env_value))
+    except vol.Invalid:
+        _LOGGER.warning(
+            "Invalid port %r in %s environment variable; falling back to %s",
+            env_value,
+            ENV_SETUP_PORT,
+            SERVER_PORT,
+        )
+        return SERVER_PORT
+
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 2
@@ -86,7 +110,7 @@ HTTP_STORAGE_SCHEMA: Final = vol.Schema(
         vol.Optional(CONF_SERVER_HOST): vol.All(
             cv.ensure_list, vol.Length(min=1), [cv.string]
         ),
-        vol.Optional(CONF_SERVER_PORT, default=SERVER_PORT): cv.port,
+        vol.Optional(CONF_SERVER_PORT, default=default_server_port): cv.port,
         vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
         vol.Optional(CONF_SSL_KEY): cv.isfile,

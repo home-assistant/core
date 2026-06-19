@@ -15,7 +15,12 @@ from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http
 from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.http import DOMAIN
-from homeassistant.components.http.config import _DEFAULT_CONFIG, HTTP_STORAGE_SCHEMA
+from homeassistant.components.http.config import (
+    _DEFAULT_CONFIG,
+    HTTP_STORAGE_SCHEMA,
+    default_server_port,
+)
+from homeassistant.components.http.const import ENV_SETUP_PORT
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
@@ -1189,6 +1194,46 @@ async def test_setup_migrates_v1_storage_to_v2(
     assert data["stable"]["ip_ban_enabled"] is True
     assert data["pending"] == _DEFAULT_CONFIG
     assert data["yaml_migration_done"] is True
+
+
+@pytest.mark.parametrize(
+    ("env", "expected_port"),
+    [
+        pytest.param({}, 8123, id="unset"),
+        pytest.param({ENV_SETUP_PORT: "80"}, 80, id="valid"),
+        pytest.param({ENV_SETUP_PORT: "0"}, 8123, id="out-of-range"),
+        pytest.param({ENV_SETUP_PORT: "notaport"}, 8123, id="not-a-number"),
+        pytest.param({ENV_SETUP_PORT: ""}, 8123, id="empty"),
+    ],
+)
+def test_default_server_port(
+    env: dict[str, str],
+    expected_port: int,
+) -> None:
+    """Test SETUP_PORT overrides the default port and invalid values fall back."""
+    with patch.dict(os.environ, env, clear=True):
+        assert default_server_port() == expected_port
+
+
+async def test_setup_port_env_var_used_as_default(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test SETUP_PORT is used as the default server port without YAML config."""
+    mock_server = Mock()
+    with (
+        patch.dict(os.environ, {ENV_SETUP_PORT: "80"}),
+        patch(
+            "asyncio.BaseEventLoop.create_server", return_value=mock_server
+        ) as mock_create_server,
+    ):
+        assert await async_setup_component(hass, "http", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    args, _ = mock_create_server.call_args
+    assert args[2] == 80
+    assert hass_storage["http"]["data"]["pending"]["server_port"] == 80
 
 
 async def test_websocket_http_config(

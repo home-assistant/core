@@ -28,6 +28,8 @@ CONF_SSL_PROFILE: Final = "ssl_profile"
 SSL_MODERN: Final = "modern"
 SSL_INTERMEDIATE: Final = "intermediate"
 
+ENV_SETUP_PORT: Final = "SETUP_PORT"
+
 # Cast to be able to load custom cards.
 # My to be able to check url and version info.
 DEFAULT_CORS: Final[list[str]] = ["https://cast.home-assistant.io"]
