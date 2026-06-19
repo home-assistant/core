@@ -30,7 +30,7 @@ AUTOMATION_SCHEMA = vol.Schema({ATTR_ENTITY_ID: cv.entity_ids})
 
 def _get_abode_system(hass: HomeAssistant) -> AbodeSystem:
     """Return the Abode system for the loaded config entry."""
-    entry: AbodeConfigEntry = service.get_single_loaded_config_entry(hass, DOMAIN)
+    entry: AbodeConfigEntry = service.async_get_config_entry(hass, DOMAIN, None)
     return entry.runtime_data
 
 

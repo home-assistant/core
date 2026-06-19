@@ -3396,14 +3396,14 @@ async def test_get_single_loaded_config_entry(hass: HomeAssistant) -> None:
 
     # No config entry exists
     with pytest.raises(exceptions.ServiceValidationError) as err:
-        service.get_single_loaded_config_entry(hass, domain)
+        service.async_get_config_entry(hass, domain, None)
     assert err.value.translation_key == "service_found_no_config_entry_for_domain"
 
     # A single config entry exists and is loaded
     entry1 = MockConfigEntry(domain=domain)
     entry1.add_to_hass(hass)
     entry1.mock_state(hass, config_entries.ConfigEntryState.LOADED)
-    assert service.get_single_loaded_config_entry(hass, domain) is entry1
+    assert service.async_get_config_entry(hass, domain, None) is entry1
 
     # Ignored and disabled entries are not counted
     ignored_entry = MockConfigEntry(domain=domain, source=config_entries.SOURCE_IGNORE)
@@ -3412,19 +3412,19 @@ async def test_get_single_loaded_config_entry(hass: HomeAssistant) -> None:
         domain=domain, disabled_by=config_entries.ConfigEntryDisabler.USER
     )
     disabled_entry.add_to_hass(hass)
-    assert service.get_single_loaded_config_entry(hass, domain) is entry1
+    assert service.async_get_config_entry(hass, domain, None) is entry1
 
     # Multiple config entries exist
     entry2 = MockConfigEntry(domain=domain)
     entry2.add_to_hass(hass)
     entry2.mock_state(hass, config_entries.ConfigEntryState.LOADED)
     with pytest.raises(exceptions.ServiceValidationError) as err:
-        service.get_single_loaded_config_entry(hass, domain)
+        service.async_get_config_entry(hass, domain, None)
     assert err.value.translation_key == "service_found_multiple_config_entry_for_domain"
 
     # A single config entry exists, but is not loaded
     await hass.config_entries.async_remove(entry2.entry_id)
     entry1.mock_state(hass, config_entries.ConfigEntryState.NOT_LOADED)
     with pytest.raises(exceptions.ServiceValidationError) as err:
-        service.get_single_loaded_config_entry(hass, domain)
+        service.async_get_config_entry(hass, domain, None)
     assert err.value.translation_key == "service_config_entry_not_loaded"

@@ -24,16 +24,16 @@ SERVICE_SCHEMA_AUX = vol.Schema(
 
 async def _handle_panic(call: ServiceCall) -> None:
     """Handle panic service call."""
-    entry: NessAlarmConfigEntry = service.get_single_loaded_config_entry(
-        call.hass, DOMAIN
+    entry: NessAlarmConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, None
     )
     await entry.runtime_data.panic(call.data[ATTR_CODE])
 
 
 async def _handle_aux(call: ServiceCall) -> None:
     """Handle aux service call."""
-    entry: NessAlarmConfigEntry = service.get_single_loaded_config_entry(
-        call.hass, DOMAIN
+    entry: NessAlarmConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, None
     )
     await entry.runtime_data.aux(call.data[ATTR_OUTPUT_ID], call.data[ATTR_STATE])
 
