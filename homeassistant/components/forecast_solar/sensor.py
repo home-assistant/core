@@ -183,6 +183,7 @@ class ForecastSolarSensorEntity(
 
     entity_description: ForecastSolarSensorEntityDescription
     _attr_has_entity_name = True
+    _unrecorded_attributes = frozenset({"watts", "wh_period"})
 
     def __init__(
         self,
