@@ -13,7 +13,7 @@ from homeassistant.helpers.typing import VolDictType
 
 from .const import DEFAULT_WATERING_DURATION, SWITCH_REFRESH_DELAY
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
-from .entity import YardianEntity
+from .entity import YardianZoneEntity
 
 SERVICE_START_IRRIGATION = "start_irrigation"
 SERVICE_SCHEMA_START_IRRIGATION: VolDictType = {
@@ -44,21 +44,15 @@ async def async_setup_entry(
     )
 
 
-class YardianSwitch(YardianEntity, SwitchEntity):
+class YardianSwitch(YardianZoneEntity, SwitchEntity):
     """Representation of a Yardian switch."""
 
     _attr_translation_key = "switch"
 
-    def __init__(self, coordinator: YardianUpdateCoordinator, zone_id) -> None:
+    def __init__(self, coordinator: YardianUpdateCoordinator, zone_id: int) -> None:
         """Initialize a Yardian Switch Device."""
-        super().__init__(coordinator)
-        self._zone_id = zone_id
+        super().__init__(coordinator, zone_id)
         self._attr_unique_id = f"{coordinator.yid}-{zone_id}"
-
-    @property
-    def name(self) -> str:
-        """Return the zone name."""
-        return self.coordinator.data.zones[self._zone_id].name
 
     @property
     def is_on(self) -> bool:
