@@ -34,7 +34,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/10001-ventilation_inlet',
+    'unique_id': 'io://1234-5678-1698/10001-VentilationInlet',
     'unit_of_measurement': None,
   })
 # ---
@@ -91,7 +91,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/10002-ventilation_outlet',
+    'unique_id': 'io://1234-5678-1698/10002-VentilationOutlet',
     'unit_of_measurement': None,
   })
 # ---
@@ -148,7 +148,7 @@
     'suggested_object_id': None,
     'supported_features': <FanEntityFeature: 49>,
     'translation_key': None,
-    'unique_id': 'io://1234-5678-1698/10003-ventilation_transfer',
+    'unique_id': 'io://1234-5678-1698/10003-VentilationTransfer',
     'unit_of_measurement': None,
   })
 # ---
