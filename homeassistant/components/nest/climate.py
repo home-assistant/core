@@ -381,6 +381,5 @@ class ThermostatEntity(ClimateEntity):
             and (trait := self._device.traits[FanTrait.NAME])
             and trait.timer_timeout
         ):
-            # Expose the ISO 8601 formatted string of the timeout
             attributes["fan_timer_timeout"] = trait.timer_timeout.isoformat()
         return attributes
