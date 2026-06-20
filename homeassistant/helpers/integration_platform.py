@@ -348,7 +348,6 @@ class LazyIntegrationPlatforms[_R]:
             try:
                 result = self._process_platform(self._hass, domain, platform)
             except Exception:
-                # Isolate failures so one integration cannot break the batch.
                 _LOGGER.exception(
                     "Error processing %s platform for %s", self._platform_name, domain
                 )
