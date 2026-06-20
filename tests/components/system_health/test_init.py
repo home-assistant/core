@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from aiohttp.client_exceptions import ClientError
+import pytest
 
 from homeassistant.components import system_health
 from homeassistant.components.system_health import DOMAIN, async_register_info
@@ -88,6 +89,22 @@ async def test_info_endpoint_register_callback(
 
     # Test our test helper works
     assert await get_system_health_info(hass, "lovelace") == {"storage": "YAML"}
+
+
+async def test_async_register_info_deprecated(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test async_register_info logs a deprecation warning."""
+
+    async def mock_info(hass: HomeAssistant) -> dict[str, Any]:
+        return {"storage": "YAML"}
+
+    async_register_info(hass, "lovelace", mock_info)
+
+    assert "calls system_health.async_register_info, which is deprecated" in caplog.text
+    assert "This will stop working in Home Assistant 2027.1" in caplog.text
 
 
 async def test_info_endpoint_register_callback_timeout(

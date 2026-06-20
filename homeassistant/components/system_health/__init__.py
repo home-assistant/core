@@ -17,6 +17,7 @@ from homeassistant.helpers import (
     config_validation as cv,
     integration_platform,
 )
+from homeassistant.helpers.frame import ReportBehavior, report_usage
 from homeassistant.helpers.typing import ConfigType
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,9 +48,11 @@ def async_register_info(
 
     Deprecated.
     """
-    _LOGGER.warning(
-        "Calling system_health.async_register_info is deprecated; Add a system_health"
-        " platform instead"
+    report_usage(
+        "calls system_health.async_register_info, which is deprecated; "
+        "add a system_health platform instead",
+        breaks_in_ha_version="2027.1",
+        core_behavior=ReportBehavior.LOG,
     )
     hass.data.setdefault(DOMAIN, {})
     SystemHealthRegistration(hass, domain).async_register_info(info_callback)
