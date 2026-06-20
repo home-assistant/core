@@ -44,14 +44,16 @@ def _series_for_date(
 
     Series keys are UTC-aware datetimes (the Forecast.Solar library v4+
     requests data using UTC). ``target_date`` is a calendar date in the
-    API/site timezone, so each key is converted to that timezone for
-    the date comparison — otherwise sites east or west of UTC would get
-    a mix of two local days bucketed into ``target_date``.
+    API/site timezone, so each key is converted to that timezone both
+    for the date comparison and for the emitted ISO string — downstream
+    consumers see local-zoned timestamps (e.g. ``+10:00``) rather than
+    ``+00:00``.
     """
     return {
-        ts.isoformat(): val
+        local_ts.isoformat(): val
         for ts, val in series.items()
-        if ts.astimezone(tz).date() == target_date
+        for local_ts in (ts.astimezone(tz),)
+        if local_ts.date() == target_date
     }
 
 
