@@ -63,8 +63,7 @@ async def test_info_endpoint_return_info(
         return_value={"hello": True},
     ):
         assert await async_setup_component(hass, DOMAIN, {})
-
-    data = await gather_system_health_info(hass, hass_ws_client)
+        data = await gather_system_health_info(hass, hass_ws_client)
 
     assert len(data) == 1
     data = data["homeassistant"]
