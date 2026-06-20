@@ -225,7 +225,6 @@ async def test_switch_outlets_without_outlet_count(
 
 async def test_switch_outlet_not_created_without_both_commands(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test no switch is created when only one of load.on/load.off exists."""
 
@@ -247,7 +246,6 @@ async def test_switch_outlet_not_created_without_both_commands(
 
 async def test_switch_outlet_not_created_when_not_switchable(
     hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test no switch is created when the outlet reports switchable: no."""
 
