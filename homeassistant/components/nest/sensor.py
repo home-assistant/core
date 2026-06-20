@@ -1,9 +1,10 @@
 """Support for Google Nest SDM sensors."""
 
+from datetime import datetime
 import logging
 
 from google_nest_sdm.device import Device
-from google_nest_sdm.device_traits import HumidityTrait, TemperatureTrait
+from google_nest_sdm.device_traits import FanTrait, HumidityTrait, TemperatureTrait
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -42,6 +43,8 @@ async def async_setup_entry(
                 entities.append(TemperatureSensor(device))
             if HumidityTrait.NAME in device.traits:
                 entities.append(HumiditySensor(device))
+            if FanTrait.NAME in device.traits:
+                entities.append(FanTimerSensor(device))
         async_add_entities(entities)
 
     entry.runtime_data.register_devices_listener(devices_added)
@@ -101,3 +104,26 @@ class HumiditySensor(SensorBase):
         trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
         # Cast without loss of precision because the API always returns an integer.
         return int(trait.ambient_humidity_percent)
+
+
+class FanTimerSensor(SensorBase):
+    """Representation of the Fan Timer Timeout Sensor."""
+
+    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_translation_key = "fan_timer_timeout"
+
+    @property
+    def available(self) -> bool:
+        """Return True if the entity is available and the timer is active."""
+        if not super().available:
+            return False
+
+        trait: FanTrait = self._device.traits[FanTrait.NAME]
+        # The sensor is available when a timer is actually running
+        return trait.timer_timeout is not None
+
+    @property
+    def native_value(self) -> datetime | None:
+        """Return the state of the sensor."""
+        trait: FanTrait = self._device.traits[FanTrait.NAME]
+        return trait.timer_timeout
