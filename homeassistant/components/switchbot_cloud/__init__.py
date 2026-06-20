@@ -21,10 +21,15 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_API_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
 from .coordinator import SwitchBotCoordinator
+from .service import async_register_services
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema("switchbot_cloud")
 
 _LOGGER = getLogger(__name__)
 PLATFORMS: list[Platform] = [
@@ -350,13 +355,18 @@ async def make_new_device_data(
             target_list.append((device, coordinator))
 
 
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Switchbot Cloud."""
+    async_register_services(hass)
+    return True
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
 ) -> bool:
     """Set up SwitchBot via API from a config entry."""
     token = entry.data[CONF_API_TOKEN]
     secret = entry.data[CONF_API_KEY]
-
     api = SwitchBotAPI(
         token=token, secret=secret, session=async_get_clientsession(hass)
     )
@@ -504,9 +514,15 @@ def _create_handle_webhook(
         _LOGGER.debug("Received data from switchbot webhook: %s", repr(data))
         device_mac = data["context"]["deviceMac"]
 
-        if device_mac not in coordinators_by_id:
-            _LOGGER.error(
-                "Received data for unknown entity from switchbot webhook: %s", data
+        registered_device_macs = [
+            coordinator.data.get("deviceMac") or coordinator.data.get("deviceId")
+            for coordinator in coordinators_by_id.values()
+            if coordinator.manageable_by_webhook() and coordinator.data is not None
+        ]
+        if device_mac not in registered_device_macs:
+            _LOGGER.debug(
+                "Received data for an unregistered webhook entity from SwitchBot Webhook: %s",
+                data,
             )
             return
 

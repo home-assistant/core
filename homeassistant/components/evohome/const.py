@@ -24,6 +24,8 @@ ATTR_DURATION: Final = "duration"  # number of minutes, <24h
 ATTR_PERIOD: Final = "period"  # number of days
 ATTR_SETPOINT: Final = "setpoint"
 
+# Support for the refresh_system service is being deprecated
+REFRESH_BREAKS_IN_HA_VERSION: Final = "2027.1.0"
 # Support for the reset service calls/presets is being deprecated
 RESET_BREAKS_IN_HA_VERSION: Final = "2026.11.0"
 # Support for untargeted service calls to controllers is being deprecated

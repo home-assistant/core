@@ -93,6 +93,12 @@
       }
     },
     "switch": {
+      "announcements": {
+        "name": "Announcements"
+      },
+      "communications": {
+        "name": "Communications"
+      },
       "do_not_disturb": {
         "name": "Do not disturb"
       }
@@ -125,6 +131,9 @@
     },
     "invalid_sound_value": {
       "message": "Invalid sound {sound} specified"
+    },
+    "unknown_exception": {
+      "message": "Unknown error occurred: {error}"
     }
   },
   "selector": {

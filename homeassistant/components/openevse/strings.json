@@ -42,6 +42,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "divert_active": {
+        "name": "Divert active"
+      },
+      "has_limit": {
+        "name": "Limit active"
+      },
+      "mqtt_connected": {
+        "name": "MQTT connected"
+      },
+      "shaper_active": {
+        "name": "Shaper active"
+      },
+      "using_ethernet": {
+        "name": "Ethernet connected"
+      },
+      "vehicle": {
+        "name": "Vehicle connected"
+      }
+    },
     "number": {
       "charge_rate": {
         "name": "Charge rate"
@@ -168,10 +188,10 @@
   },
   "exceptions": {
     "authentication_error": {
-      "message": "Authentication failed while communicating with the charger."
+      "message": "Authentication failed"
     },
     "communication_error": {
-      "message": "Failed to communicate with the charger."
+      "message": "Failed to communicate with the charger"
     },
     "invalid_value": {
       "message": "Value {value} is invalid for the charger."
