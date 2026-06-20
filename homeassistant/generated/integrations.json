@@ -1031,6 +1031,12 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "chef_iq": {
+      "name": "Chef iQ",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "chess_com": {
       "name": "Chess.com",
       "integration_type": "service",
@@ -1839,6 +1845,12 @@
       "name": "Energie VanOns",
       "integration_type": "virtual",
       "supported_by": "energyzero"
+    },
+    "energieleser": {
+      "name": "energieleser",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "energyid": {
       "name": "EnergyID",
@@ -7947,6 +7959,12 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "wattwaechter": {
+      "name": "WattW\u00e4chter Plus",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "waze_travel_time": {
       "integration_type": "service",

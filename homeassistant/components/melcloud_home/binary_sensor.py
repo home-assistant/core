@@ -48,6 +48,22 @@ ATA_SENSORS: tuple[ATABinarySensorEntityDescription, ...] = (
         state_fn=lambda unit: unit.in_standby_mode,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    ATABinarySensorEntityDescription(
+        key="frost_protection",
+        translation_key="frost_protection",
+        state_fn=lambda unit: (
+            unit.frost_protection.enabled if unit.frost_protection else None
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ATABinarySensorEntityDescription(
+        key="overheat_protection",
+        translation_key="overheat_protection",
+        state_fn=lambda unit: (
+            unit.overheat_protection.enabled if unit.overheat_protection else None
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 ATW_SENSORS: tuple[ATWBinarySensorEntityDescription, ...] = (
