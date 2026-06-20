@@ -234,10 +234,34 @@ async def test_switch_outlet_not_created_without_both_commands(
         list_ups={"ups1": "UPS 1"},
         list_vars={
             "outlet.1.status": "on",
+            "outlet.1.switchable": "yes",
             "outlet.1.desc": "PowerShare Outlet 1",
         },
         list_commands_return_value={
             "outlet.1.load.on": None,
+        },
+    )
+
+    assert not hass.states.get("switch.ups1_power_outlet_powershare_outlet_1")
+
+
+async def test_switch_outlet_not_created_when_not_switchable(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test no switch is created when the outlet reports switchable: no."""
+
+    await async_init_integration(
+        hass,
+        list_ups={"ups1": "UPS 1"},
+        list_vars={
+            "outlet.1.status": "on",
+            "outlet.1.switchable": "no",
+            "outlet.1.desc": "PowerShare Outlet 1",
+        },
+        list_commands_return_value={
+            "outlet.1.load.on": None,
+            "outlet.1.load.off": None,
         },
     )
 
