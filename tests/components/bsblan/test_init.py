@@ -35,6 +35,8 @@ from homeassistant.helpers import (
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
+CLIMATE_ENTITY_ID = "climate.heating_circuit_1"
+
 
 async def test_load_unload_config_entry(
     hass: HomeAssistant,
@@ -401,7 +403,7 @@ async def test_coordinator_fast_state_error_marks_update_failed(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("climate.heating_circuit_1")
+    state = hass.states.get(CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
@@ -414,7 +416,7 @@ async def test_coordinator_fast_state_error_marks_update_failed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    state = hass.states.get("climate.heating_circuit_1")
+    state = hass.states.get(CLIMATE_ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
 
