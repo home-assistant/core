@@ -21,7 +21,6 @@ class HassESPHomeSerialStub(BaseSerial):
 
     def _configure_port(self) -> None:
         """Configure the serial port settings."""
-        raise ConfigEntryNotReady(_NOT_READY)
 
     def _close(self) -> None:
         """Close the serial port."""
@@ -33,23 +32,21 @@ class HassESPHomeSerialStub(BaseSerial):
 
     def _get_modem_pins(self) -> ModemPins:
         """Get modem control bits."""
-        raise ConfigEntryNotReady(_NOT_READY)
+        return ModemPins()
 
     def _set_modem_pins(self, modem_pins: ModemPins) -> None:
         """Set modem control bits."""
-        raise ConfigEntryNotReady(_NOT_READY)
 
     def _readinto(self, b: Buffer, *, timeout: float | None) -> int:
         """Read bytes from the serial port into a buffer."""
-        raise ConfigEntryNotReady(_NOT_READY)
+        return 0
 
     def _write(self, data: Buffer, *, timeout: float | None) -> int:
         """Write bytes to the serial port."""
-        raise ConfigEntryNotReady(_NOT_READY)
+        return 0
 
     def _flush(self) -> None:
         """Flush write buffers."""
-        raise ConfigEntryNotReady(_NOT_READY)
 
     def _reset_read_buffer(self) -> None:
         """Reset the read buffer."""
@@ -92,15 +89,13 @@ class HassESPHomeSerialStubTransport(BaseSerialTransport):
 
     async def _flush(self) -> None:
         """Flush write buffers."""
-        raise ConfigEntryNotReady(_NOT_READY)
 
     async def _get_modem_pins(self) -> ModemPins:
         """Get modem control bits."""
-        raise ConfigEntryNotReady(_NOT_READY)
+        return ModemPins()
 
     async def _set_modem_pins(self, modem_pins: ModemPins) -> None:
         """Set modem control bits."""
-        raise ConfigEntryNotReady(_NOT_READY)
 
 
 def register_serialx_transport() -> Callable[[Event], None]:
