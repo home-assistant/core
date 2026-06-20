@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import Any
 from zoneinfo import ZoneInfo
 
@@ -37,26 +37,6 @@ class ForecastSolarSensorEntityDescription(SensorEntityDescription):
     attributes: Callable[[Estimate], dict[str, Any]] | None = None
 
 
-def _series_for_date(
-    series: dict[datetime, int], target_date: date, tz: ZoneInfo
-) -> dict[str, int]:
-    """Return ISO-keyed entries from a Forecast.Solar series for one date.
-
-    Series keys are UTC-aware datetimes (the Forecast.Solar library v4+
-    requests data using UTC). ``target_date`` is a calendar date in the
-    API/site timezone, so each key is converted to that timezone both
-    for the date comparison and for the emitted ISO string — downstream
-    consumers see local-zoned timestamps (e.g. ``+10:00``) rather than
-    ``+00:00``.
-    """
-    return {
-        local_ts.isoformat(): val
-        for ts, val in series.items()
-        for local_ts in (ts.astimezone(tz),)
-        if local_ts.date() == target_date
-    }
-
-
 def _series_in_tz(series: dict[datetime, int], tz: ZoneInfo) -> dict[str, int]:
     """Return all ISO-keyed entries from a series, converted to ``tz``.
 
@@ -69,7 +49,7 @@ def _series_in_tz(series: dict[datetime, int], tz: ZoneInfo) -> dict[str, int]:
     return {ts.astimezone(tz).isoformat(): val for ts, val in series.items()}
 
 
-def _today_attributes(estimate: Estimate) -> dict[str, Any]:
+def _forecast_attributes(estimate: Estimate) -> dict[str, Any]:
     """Return the full power and energy forecast curves as state attributes.
 
     Each attribute is a mapping of ISO 8601 timestamp -> value, where
@@ -85,10 +65,6 @@ def _today_attributes(estimate: Estimate) -> dict[str, Any]:
     class, so the live state payload is the only remaining concern;
     even the paid-tier window at 15-minute resolution stays well under
     typical attribute size limits.
-
-    The function name is preserved for backwards compatibility; despite
-    the name, the emitted series is the full horizon rather than only
-    today.
     """
     tz = ZoneInfo(estimate.timezone)
     return {
@@ -102,7 +78,7 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         key="energy_production_today",
         translation_key="energy_production_today",
         state=lambda estimate: estimate.energy_production_today,
-        attributes=_today_attributes,
+        attributes=_forecast_attributes,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
