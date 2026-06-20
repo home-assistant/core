@@ -10,7 +10,7 @@ from homeassistant.components.button import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import _outlet_numbers_from_status
+from . import outlet_numbers_from_status
 from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
 
@@ -29,7 +29,7 @@ async def async_setup_entry(
     coordinator = pynut_data.coordinator
     status = coordinator.data
 
-    outlet_numbers = _outlet_numbers_from_status(status)
+    outlet_numbers = outlet_numbers_from_status(status)
     if not outlet_numbers:
         return
 
