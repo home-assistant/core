@@ -192,6 +192,18 @@
             "hasStandbyMode": false,
             "hasEnergyConsumedMeter": true
           },
+          "frostProtection": {
+            "active": false,
+            "enabled": false,
+            "min": 5,
+            "max": 8
+          },
+          "overheatProtection": {
+            "active": false,
+            "enabled": false,
+            "min": 55,
+            "max": 60
+          },
           "rssi": -52
         }
       ]
