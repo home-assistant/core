@@ -1,0 +1,115 @@
+"""Tests for the NeoPool coordinator."""
+
+from datetime import timedelta
+from unittest.mock import AsyncMock, MagicMock
+
+from freezegun.api import FrozenDateTimeFactory
+from neopool_modbus.registers import MAX_RELAY_GPIO
+
+from homeassistant.components.neopool.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import issue_registry as ir
+
+from . import setup_integration
+from .conftest import MOCK_POOL_DATA
+
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def test_update_data_populates_firmware_and_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """The first successful read populates firmware and model."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.firmware == "18.52"
+    assert coordinator.model == "NeoPool"
+
+
+async def test_transient_modbus_failure_after_first_success_marks_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A failure after at least one good read raises UpdateFailed (not ConfigEntryNotReady)."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert coordinator.last_update_success is True
+
+    mock_neopool_client.async_read_all.side_effect = ConnectionError("Modbus fail")
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is False
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_corrupt_gpio_creates_repair_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A GPIO register outside 0..MAX_RELAY_GPIO opens a corrupted_gpio issue."""
+    bad_data = dict(MOCK_POOL_DATA)
+    bad_data["MBF_PAR_FILT_GPIO"] = MAX_RELAY_GPIO + 1
+    mock_neopool_client.async_read_all = AsyncMock(return_value=bad_data)
+
+    await setup_integration(hass, mock_config_entry)
+
+    issue_registry = ir.async_get(hass)
+    issue = issue_registry.async_get_issue(DOMAIN, "corrupted_gpio")
+    assert issue is not None
+    assert issue.severity is ir.IssueSeverity.ERROR
+
+
+async def test_clean_gpio_does_not_create_issue(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """A clean read does not open a corrupted_gpio issue."""
+    await setup_integration(hass, mock_config_entry)
+    issue_registry = ir.async_get(hass)
+    assert issue_registry.async_get_issue(DOMAIN, "corrupted_gpio") is None
+
+
+async def test_timer_block_data_merged_into_coordinator(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """When read_all_timers returns timer blocks, the per-block fields land in data."""
+    mock_neopool_client.read_all_timers = AsyncMock(
+        return_value={
+            "filtration1": {
+                "enable": 1,
+                "on": 8 * 3600,
+                "interval": 4 * 3600,
+                "stop": 12 * 3600,
+                "period": 86400,
+                "countdown": 3600,
+            },
+            "filtration2": {
+                "enable": 0,
+                "on": None,
+                "interval": None,
+                "stop": None,
+                "period": None,
+                "countdown": 0,
+            },
+        }
+    )
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+
+    assert coordinator.data["filtration1_enable"] == 1
+    assert coordinator.data["filtration1_start"] == 8 * 3600
+    assert coordinator.data["filtration1_interval"] == 4 * 3600
+    assert coordinator.data["filtration1_stop"] == 12 * 3600
+    assert coordinator.data["filtration2_stop"] is None
+    assert coordinator.data["FILTRATION_REMAINING"] == 3600
