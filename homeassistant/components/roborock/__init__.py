@@ -133,8 +133,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: RoborockConfigEntry) -> 
             translation_key="home_data_fail",
         ) from err
 
-    entry.runtime_data.device_manager = device_manager
-
     async def shutdown_roborock(_: Event | None = None) -> None:
         await asyncio.gather(device_manager.close(), cache.flush())
 
