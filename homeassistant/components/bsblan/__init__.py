@@ -114,6 +114,18 @@ def _issue_id_for_entry(entry_id: str) -> str:
     return f"{ISSUE_OUTDATED_FIRMWARE}_{entry_id}"
 
 
+def _is_reduced_api_mode(json_api_version: str | None) -> bool:
+    """Return whether the device runs in reduced (single-circuit) JSON-API mode.
+
+    Devices reporting a JSON-API version below v2 expose only a reduced feature
+    set limited to a single heating circuit.
+    """
+    return (
+        json_api_version is not None
+        and AwesomeVersion(json_api_version) < MINIMUM_FULL_API_VERSION
+    )
+
+
 def _async_manage_outdated_firmware_issue(
     hass: HomeAssistant,
     entry: BSBLanConfigEntry,
@@ -126,10 +138,7 @@ def _async_manage_outdated_firmware_issue(
     set, so we recommend the user upgrades the firmware for full support.
     """
     issue_id = _issue_id_for_entry(entry.entry_id)
-    if (
-        json_api_version is not None
-        and AwesomeVersion(json_api_version) < MINIMUM_FULL_API_VERSION
-    ):
+    if _is_reduced_api_mode(json_api_version):
         ir.async_create_issue(
             hass,
             DOMAIN,
@@ -178,10 +187,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BSBLanConfigEntry) -> bo
         # additional circuits from when the device ran newer firmware, which
         # would make setup fail when fetching those now-unsupported circuits.
         # Restrict to the default single circuit so the integration still loads.
-        if (
-            bsblan.json_api_version is not None
-            and AwesomeVersion(bsblan.json_api_version) < MINIMUM_FULL_API_VERSION
-        ):
+        if _is_reduced_api_mode(bsblan.json_api_version):
             circuits = list(DEFAULT_HEATING_CIRCUITS)
 
         # Fetch device metadata
