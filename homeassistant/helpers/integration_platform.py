@@ -150,6 +150,25 @@ def _format_err(name: str, platform_name: str, *args: Any) -> str:
     return f"Exception in {name} when processing platform '{platform_name}': {args}"
 
 
+async def _async_import_platform(
+    integration: Integration, platform_name: str
+) -> ModuleType | None:
+    """Import a single platform for an integration.
+
+    Returns None if the integration does not provide the platform or it could
+    not be imported.
+    """
+    if not integration.platforms_exists((platform_name,)):
+        return None
+    try:
+        return await integration.async_get_platform(platform_name)
+    except ImportError:
+        _LOGGER.debug(
+            "Error importing %s platform for %s", platform_name, integration.domain
+        )
+        return None
+
+
 async def async_process_integration_platforms(
     hass: HomeAssistant,
     platform_name: str,
@@ -232,18 +251,10 @@ async def _async_process_integration_platforms(
     # this could be a bottleneck.
     futures: list[asyncio.Future[None]] = []
     for integration in loaded_integrations:
-        if not integration.platforms_exists((platform_name,)):
+        if (
+            platform := await _async_import_platform(integration, platform_name)
+        ) is None:
             continue
-        try:
-            platform = await integration.async_get_platform(platform_name)
-        except ImportError:
-            _LOGGER.debug(
-                "Unexpected error importing %s for %s",
-                platform_name,
-                integration.domain,
-            )
-            continue
-
         if future := hass.async_run_hass_job(
             process_job, hass, integration.domain, platform
         ):
@@ -335,17 +346,11 @@ class LazyIntegrationPlatforms[_R]:
         Callers must only pass integrations that are not already cached.
         """
         domain = integration.domain
-        if not integration.platforms_exists((self._platform_name,)):
-            self._processed[domain] = None
-            return None
-        result: _R | None = None
-        try:
-            platform = await integration.async_get_platform(self._platform_name)
-        except ImportError:
-            _LOGGER.debug(
-                "Error importing %s platform for %s", self._platform_name, domain
-            )
-        else:
-            result = self._process_platform(self._hass, domain, platform)
+        platform = await _async_import_platform(integration, self._platform_name)
+        result: _R | None = (
+            None
+            if platform is None
+            else self._process_platform(self._hass, domain, platform)
+        )
         self._processed[domain] = result
         return result

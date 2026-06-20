@@ -129,7 +129,7 @@ async def test_process_integration_platforms_import_fails(
         await hass.async_block_till_done()
 
     assert len(processed) == 0
-    assert "Unexpected error importing platform_to_check for loaded" in caplog.text
+    assert "Error importing platform_to_check platform for loaded" in caplog.text
 
     hass.bus.async_fire(EVENT_COMPONENT_LOADED, {ATTR_COMPONENT: "event"})
     await hass.async_block_till_done()
