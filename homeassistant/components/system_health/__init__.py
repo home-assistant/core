@@ -111,10 +111,10 @@ async def _registered_domain_data(
         DATA_SYSTEM_HEALTH_PLATFORMS
     ].async_get_platforms()
     # hass.data[DOMAIN] holds registrations from the deprecated direct path.
-    registrations: dict[str, SystemHealthRegistration] = {
-        **hass.data[DOMAIN],
-        **platform_registrations,
-    }
+    # Sort so the reported order is deterministic regardless of load order.
+    registrations: dict[str, SystemHealthRegistration] = dict(
+        sorted({**hass.data[DOMAIN], **platform_registrations}.items())
+    )
     for domain, domain_data in zip(
         registrations,
         await asyncio.gather(
