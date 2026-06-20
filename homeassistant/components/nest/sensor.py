@@ -57,7 +57,7 @@ class SensorBase(SensorEntity):
     """Representation of a dynamically updated Sensor."""
 
     _attr_should_poll = False
-    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_state_class: SensorStateClass | None = SensorStateClass.MEASUREMENT
     _attr_has_entity_name = True
 
     def __init__(self, device: Device) -> None:
@@ -115,16 +115,6 @@ class FanTimerSensor(SensorBase):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_state_class = None
     _attr_translation_key = "fan_timer_timeout"
-
-    @property
-    def available(self) -> bool:
-        """Return True if the entity is available and the timer is active."""
-        if not super().available:
-            return False
-
-        trait: FanTrait = self._device.traits[FanTrait.NAME]
-        # The sensor is available when a timer is actually running
-        return trait.timer_timeout is not None
 
     @property
     def native_value(self) -> datetime | None:
