@@ -21,9 +21,11 @@ def parse_json_attributes(
     try:
         json_dict = json_loads(value)
         if json_attrs_path is not None:
+            # jsonpath will always store the result in json_dict[0]
+            # so the next line happens to work exactly as needed to
+            # find the result
             json_dict = search(json_attrs_path, json_dict)
-        # find the result
-        if isinstance(json_dict, list):
+        if isinstance(json_dict, list) and json_dict:
             json_dict = json_dict[0]
         if isinstance(json_dict, dict):
             return {k: json_dict[k] for k in json_attrs if k in json_dict}
