@@ -90,7 +90,7 @@ def _today_attributes(estimate: Estimate) -> dict[str, Any]:
     the name, the emitted series is the full horizon rather than only
     today.
     """
-    tz = ZoneInfo(estimate.api_timezone)
+    tz = ZoneInfo(estimate.timezone)
     return {
         "watts": _series_in_tz(estimate.watts, tz),
         "wh_period": _series_in_tz(estimate.wh_period, tz),
