@@ -265,9 +265,11 @@ async def async_setup_device(
         )
     else:
         _LOGGER.warning(
-            "Not adding entities for device %s because its protocol"
+            "Not adding entities for device %s (%s/%s) because its protocol"
             " version %s or category %s is not supported",
             device.duid,
+            device.product.name,
+            device.product.model,
             device.device_info.pv,
             device.product.category.name,
         )
