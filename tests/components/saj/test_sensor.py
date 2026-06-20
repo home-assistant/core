@@ -1,8 +1,9 @@
 """Test the saj sensor platform."""
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 import pysaj
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -14,10 +15,8 @@ from homeassistant.const import CONF_HOST, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
-from homeassistant.util import dt as dt_util
 
 from . import setup_integration
-from .conftest import PySajMocks
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
@@ -32,27 +31,26 @@ def platforms() -> list[Platform]:
 async def test_sensors(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
-    mock_config_entry_ethernet: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_pysaj: PySajMocks,
+    mock_pysaj_saj: MagicMock,
 ) -> None:
     """Test the sensor entities."""
-    await setup_integration(hass, mock_config_entry_ethernet)
-    await snapshot_platform(
-        hass, entity_registry, snapshot, mock_config_entry_ethernet.entry_id
-    )
+    await setup_integration(hass, mock_config_entry)
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 async def test_sensor_update_failure(
     hass: HomeAssistant,
-    mock_config_entry_ethernet: MockConfigEntry,
-    mock_pysaj: PySajMocks,
+    mock_config_entry: MockConfigEntry,
+    mock_pysaj_saj: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensor update handles failures."""
     # Setup read + initial scheduled poll succeed; next poll fails (unknown state).
-    mock_pysaj.saj.read = AsyncMock(side_effect=[True, True, False])
+    mock_pysaj_saj.read = AsyncMock(side_effect=[True, True, False])
 
-    entry = await setup_integration(hass, mock_config_entry_ethernet)
+    entry = await setup_integration(hass, mock_config_entry)
     assert entry.state is ConfigEntryState.LOADED
 
     await hass.async_block_till_done()
@@ -60,14 +58,13 @@ async def test_sensor_update_failure(
     state = hass.states.get("sensor.saj_current_power")
     assert state is not None
     assert state.state == "5000.0"
-    assert mock_pysaj.saj.read.await_count == 2
+    assert mock_pysaj_saj.read.await_count == 2
 
-    async_fire_time_changed(
-        hass, dt_util.utcnow() + timedelta(seconds=MIN_INTERVAL_SEC + 1)
-    )
+    freezer.tick(timedelta(seconds=MIN_INTERVAL_SEC + 1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_pysaj.saj.read.await_count == 3
+    assert mock_pysaj_saj.read.await_count == 3
     state = hass.states.get("sensor.saj_current_power")
     assert state is not None
     assert state.state == STATE_UNKNOWN
@@ -76,7 +73,7 @@ async def test_sensor_update_failure(
 async def test_yaml_import_creates_deprecated_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_pysaj: PySajMocks,
+    mock_pysaj_saj: MagicMock,
 ) -> None:
     """YAML platform triggers import; successful import creates remove-YAML issue."""
     assert await async_setup_component(
@@ -94,10 +91,10 @@ async def test_yaml_import_creates_deprecated_issue(
 async def test_yaml_import_failure_creates_domain_issue(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
-    mock_pysaj: PySajMocks,
+    mock_pysaj_saj: MagicMock,
 ) -> None:
     """YAML import failure creates an integration issue explaining the error."""
-    mock_pysaj.saj.read.side_effect = pysaj.UnexpectedResponseException("bad")
+    mock_pysaj_saj.read.side_effect = pysaj.UnexpectedResponseException("bad")
     assert await async_setup_component(
         hass,
         "sensor",
