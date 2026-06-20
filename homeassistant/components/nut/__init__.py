@@ -33,9 +33,9 @@ _LOGGER = logging.getLogger(__name__)
 def _outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
     """Return the outlet numbers reported by the device.
 
-    Prefer ``outlet.count`` when available and fall back to discovering
-    outlets from ``outlet.<n>.*`` status keys for devices that expose
-    switchable outlets without reporting a count.
+    Combine the ``outlet.count`` range (when present) with outlets discovered
+    from ``outlet.<n>.*`` status keys so devices that expose switchable outlets
+    without reporting a count are still detected.
     """
     outlet_numbers: set[int] = set()
 
