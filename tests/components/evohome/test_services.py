@@ -127,13 +127,13 @@ async def test_set_system_mode_deprecated(
     should cause a Repair issue.
     """
 
-    # EvoService.SET_SYSTEM_MODE: auto
+    # EvoService.SET_SYSTEM_MODE: Auto
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "auto",
+                ATTR_MODE: "Auto",
             },
             blocking=True,
         )
@@ -150,13 +150,13 @@ async def test_set_system_mode_deprecated(
 
     freezer.move_to("2024-07-10T12:00:00+00:00")
 
-    # EvoService.SET_SYSTEM_MODE: auto_with_eco, hours=12
+    # EvoService.SET_SYSTEM_MODE: AutoWithEco, hours=12
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "auto_with_eco",
+                ATTR_MODE: "AutoWithEco",
                 ATTR_DURATION: {"hours": 12},
             },
             blocking=True,
@@ -166,13 +166,13 @@ async def test_set_system_mode_deprecated(
             "auto_with_eco", until=datetime(2024, 7, 11, 0, 0, tzinfo=UTC)
         )
 
-    # EvoService.SET_SYSTEM_MODE: away, days=7
+    # EvoService.SET_SYSTEM_MODE: Away, days=7
     with patch("evohomeasync2.control_system.ControlSystem.set_mode") as mock_fcn:
         await hass.services.async_call(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "away",
+                ATTR_MODE: "Away",
                 ATTR_PERIOD: {"days": 7},
             },
             blocking=True,
@@ -199,7 +199,7 @@ async def test_set_system_mode(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "away",
+                ATTR_MODE: "Away",
                 ATTR_PERIOD: {"days": 7},
             },
             target={ATTR_ENTITY_ID: ctl_id},
@@ -217,7 +217,7 @@ async def test_set_system_mode(
             EvoService.SET_SYSTEM_MODE,
             {
                 ATTR_ENTITY_ID: ctl_id,
-                ATTR_MODE: "away",
+                ATTR_MODE: "Away",
                 ATTR_PERIOD: {"days": 7},
             },
             blocking=True,
@@ -458,7 +458,7 @@ async def test_controller_services_with_zone_id(
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "auto",
+                ATTR_MODE: "Auto",
                 ATTR_ENTITY_ID: zone_id,
             },
             blocking=True,
@@ -482,7 +482,7 @@ async def test_set_system_mode_entity_not_found(hass: HomeAssistant) -> None:
             DOMAIN,
             EvoService.SET_SYSTEM_MODE,
             {
-                ATTR_MODE: "auto",
+                ATTR_MODE: "Auto",
                 ATTR_ENTITY_ID: non_existent_entity_id,
             },
             blocking=True,
@@ -496,19 +496,19 @@ async def test_set_system_mode_entity_not_found(hass: HomeAssistant) -> None:
 
 _SET_SYSTEM_MODE_VALIDATOR_PARAMS = [
     (
-        {ATTR_MODE: "not_a_real_mode"},
+        {ATTR_MODE: "NotARealMode"},
         "mode_not_supported",
     ),
     (
-        {ATTR_MODE: "auto", ATTR_DURATION: {"hours": 1}},
+        {ATTR_MODE: "Auto", ATTR_DURATION: {"hours": 1}},
         "mode_cant_be_temporary",
     ),
     (
-        {ATTR_MODE: "auto_with_eco", ATTR_PERIOD: {"days": 1}},
+        {ATTR_MODE: "AutoWithEco", ATTR_PERIOD: {"days": 1}},
         "mode_cant_have_period",
     ),
     (
-        {ATTR_MODE: "day_off", ATTR_DURATION: {"hours": 1}},
+        {ATTR_MODE: "DayOff", ATTR_DURATION: {"hours": 1}},
         "mode_cant_have_duration",
     ),
 ]
