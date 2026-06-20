@@ -294,6 +294,8 @@ class LazyIntegrationPlatforms[_R]:
         # A cached value of None means the integration does not provide the
         # platform (or it failed to import).
         self._processed: dict[str, _R | None] = {}
+        # In-flight processing per domain, so concurrent callers share the work.
+        self._processing: dict[str, asyncio.Future[_R | None]] = {}
 
     async def async_get_platform(self, domain: str) -> _R | None:
         """Return the processed platform for a loaded integration.
@@ -337,18 +339,38 @@ class LazyIntegrationPlatforms[_R]:
         }
 
     async def _async_process(self, integration: Integration) -> _R | None:
-        """Import, process and cache the platform for a loaded integration."""
+        """Import, process and cache the platform for a loaded integration.
+
+        Concurrent callers for the same domain wait on a shared future so the
+        platform is imported and processed at most once.
+        """
         domain = integration.domain
         if domain in self._processed:
             return self._processed[domain]
-        platform = await _async_import_platform(integration, self._platform_name)
-        result: _R | None = None
-        if platform is not None:
-            try:
-                result = self._process_platform(self._hass, domain, platform)
-            except Exception:
-                _LOGGER.exception(
-                    "Error processing %s platform for %s", self._platform_name, domain
-                )
-        self._processed[domain] = result
+        if (processing := self._processing.get(domain)) is not None:
+            return await processing
+
+        future: asyncio.Future[_R | None] = self._hass.loop.create_future()
+        self._processing[domain] = future
+        try:
+            platform = await _async_import_platform(integration, self._platform_name)
+            result: _R | None = None
+            if platform is not None:
+                try:
+                    result = self._process_platform(self._hass, domain, platform)
+                except Exception:
+                    _LOGGER.exception(
+                        "Error processing %s platform for %s",
+                        self._platform_name,
+                        domain,
+                    )
+            self._processed[domain] = result
+        except BaseException as err:
+            future.set_exception(err)
+            # Retrieve so an unawaited future does not log the exception.
+            future.exception()
+            raise
+        finally:
+            del self._processing[domain]
+        future.set_result(result)
         return result

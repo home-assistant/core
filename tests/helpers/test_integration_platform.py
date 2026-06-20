@@ -1,5 +1,6 @@
 """Test integration platform helpers."""
 
+import asyncio
 from collections.abc import Callable
 from types import ModuleType
 from typing import Any
@@ -433,3 +434,40 @@ async def test_lazy_integration_platforms_process_raises(
     # The failing integration is skipped; the others are still returned.
     assert await platforms.async_get_platforms() == {"good": good_platform}
     assert "Error processing platform_to_check platform for bad" in caplog.text
+
+
+async def test_lazy_integration_platforms_concurrent(hass: HomeAssistant) -> None:
+    """Test concurrent requests for the same domain process it only once."""
+    loaded_platform = Mock()
+    mock_platform(hass, "loaded.platform_to_check", loaded_platform)
+    hass.config.components.add("loaded")
+
+    processed: list[str] = []
+
+    @callback
+    def _process_platform(hass: HomeAssistant, domain: str, platform: Any) -> Any:
+        processed.append(domain)
+        return platform
+
+    platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
+
+    # Block the import so both callers are in flight at the same time.
+    integration = await loader.async_get_integration(hass, "loaded")
+    event = asyncio.Event()
+
+    async def _blocking_get_platform(platform_name: str) -> Any:
+        await event.wait()
+        return loaded_platform
+
+    with patch.object(
+        integration, "async_get_platform", side_effect=_blocking_get_platform
+    ):
+        first = asyncio.ensure_future(platforms.async_get_platform("loaded"))
+        second = asyncio.ensure_future(platforms.async_get_platform("loaded"))
+        await asyncio.sleep(0)
+        event.set()
+        results = await asyncio.gather(first, second)
+
+    assert results == [loaded_platform, loaded_platform]
+    # The platform was imported and processed exactly once.
+    assert processed == ["loaded"]
