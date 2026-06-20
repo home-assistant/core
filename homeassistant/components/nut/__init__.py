@@ -1,5 +1,6 @@
 """The nut component."""
 
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
@@ -27,6 +28,31 @@ from .coordinator import NutConfigEntry, NutCoordinator, NutRuntimeData
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
+    """Return the outlet numbers reported by the device.
+
+    Prefer ``outlet.count`` when available and fall back to discovering
+    outlets from ``outlet.<n>.*`` status keys for devices that expose
+    switchable outlets without reporting a count.
+    """
+    outlet_numbers: set[int] = set()
+
+    if (num_outlets := status.get("outlet.count")) is not None:
+        with suppress(ValueError):
+            outlet_numbers.update(range(1, int(num_outlets) + 1))
+
+    prefix = "outlet."
+    for key in status:
+        rest = key.removeprefix(prefix)
+        if rest == key:
+            continue
+        number = rest.split(".", 1)[0]
+        if number.isdigit():
+            outlet_numbers.add(int(number))
+
+    return outlet_numbers
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
@@ -81,14 +107,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     if username is not None and password is not None:
         # Dynamically add outlet integration commands
         additional_integration_commands = set()
-        if (num_outlets := status.get("outlet.count")) is not None:
-            for outlet_num in range(1, int(num_outlets) + 1):
-                outlet_num_str: str = str(outlet_num)
-                additional_integration_commands |= {
-                    f"outlet.{outlet_num_str}.load.cycle",
-                    f"outlet.{outlet_num_str}.load.on",
-                    f"outlet.{outlet_num_str}.load.off",
-                }
+        for outlet_num in _outlet_numbers_from_status(status):
+            additional_integration_commands |= {
+                f"outlet.{outlet_num}.load.cycle",
+                f"outlet.{outlet_num}.load.on",
+                f"outlet.{outlet_num}.load.off",
+            }
 
         valid_integration_commands = (
             INTEGRATION_SUPPORTED_COMMANDS | additional_integration_commands
