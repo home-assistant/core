@@ -19,7 +19,13 @@ from homeassistant.components.bsblan.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_USERNAME,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     device_registry as dr,
@@ -395,8 +401,9 @@ async def test_coordinator_fast_state_error_marks_update_failed(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    coordinator = mock_config_entry.runtime_data.fast_coordinator
-    assert coordinator.last_update_success is True
+    state = hass.states.get("climate.heating_circuit_1")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
     # A generic error while fetching a circuit's state should fail the update
     mock_bsblan.state.side_effect = BSBLANError(
@@ -407,7 +414,9 @@ async def test_coordinator_fast_state_error_marks_update_failed(
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert coordinator.last_update_success is False
+    state = hass.states.get("climate.heating_circuit_1")
+    assert state is not None
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_coordinator_slow_no_dhw_support(
