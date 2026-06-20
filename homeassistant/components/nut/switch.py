@@ -1,6 +1,5 @@
 """Provides a switch for switchable NUT outlets."""
 
-from contextlib import suppress
 import logging
 from typing import Any
 
@@ -12,6 +11,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import _outlet_numbers_from_status
 from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
 
@@ -33,45 +33,23 @@ async def async_setup_entry(
     unique_id = pynut_data.unique_id
     user_available_commands = pynut_data.user_available_commands
 
-    outlet_numbers: set[int] = set()
-
-    # Prefer outlet.count when available
-    if (num_outlets := status.get("outlet.count")) is not None:
-        with suppress(ValueError):
-            outlet_numbers.update(range(1, int(num_outlets) + 1))
-
-    # Detect outlets from status keys (outlet.<n>.status)
-    prefix = "outlet."
-    for key in status:
-        rest = key.removeprefix(prefix)
-        if rest != key and rest.endswith(".status"):
-            num = rest[: -len(".status")]
-            if num.isdigit():
-                outlet_numbers.add(int(num))
-
-    # Detect outlets from available commands (outlet.<n>.load.on/off)
-    cmds = set(user_available_commands)
-    for cmd in cmds:
-        rest = cmd.removeprefix(prefix)
-        if rest != cmd and rest.endswith((".load.on", ".load.off")):
-            num = rest.split(".", 1)[0]
-            if num.isdigit():
-                outlet_numbers.add(int(num))
-
     switch_descriptions = [
         SwitchEntityDescription(
             key=f"outlet.{outlet_num}.load.poweronoff",
             translation_key="outlet_number_load_poweronoff",
             translation_placeholders={
-                "outlet_name": status.get(f"outlet.{outlet_num}.name")
-                or str(outlet_num)
+                "outlet_name": (
+                    status.get(f"outlet.{outlet_num}.name")
+                    or status.get(f"outlet.{outlet_num}.desc")
+                    or str(outlet_num)
+                )
             },
             device_class=SwitchDeviceClass.OUTLET,
         )
-        for outlet_num in sorted(outlet_numbers)
+        for outlet_num in sorted(_outlet_numbers_from_status(status))
         if (
-            f"outlet.{outlet_num}.load.on" in cmds
-            and f"outlet.{outlet_num}.load.off" in cmds
+            f"outlet.{outlet_num}.load.on" in user_available_commands
+            and f"outlet.{outlet_num}.load.off" in user_available_commands
         )
     ]
 
