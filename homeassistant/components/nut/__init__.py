@@ -29,7 +29,7 @@ NUT_FAKE_SERIAL = ["unknown", "blank"]
 _LOGGER = logging.getLogger(__name__)
 
 
-def _outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
+def outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
     """Return the outlet numbers reported by the device.
 
     Use ``outlet.count`` when the device reports it. Otherwise fall back to
@@ -107,13 +107,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     if username is not None and password is not None:
-        # Dynamically add outlet integration commands for every detected
-        # outlet. Outlets are discovered from outlet.count when available,
-        # otherwise from outlet.<n>.* status keys. Commands are later
-        # intersected with the device's actual command list, so unsupported
-        # commands are not exposed.
+        # Dynamically add outlet integration commands for every detected outlet
         additional_integration_commands = set()
-        for outlet_num in _outlet_numbers_from_status(status):
+        for outlet_num in outlet_numbers_from_status(status):
             additional_integration_commands |= {
                 f"outlet.{outlet_num}.load.cycle",
                 f"outlet.{outlet_num}.load.on",
