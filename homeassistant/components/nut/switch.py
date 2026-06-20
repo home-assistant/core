@@ -11,7 +11,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import _outlet_numbers_from_status
+from . import outlet_numbers_from_status
 from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
 
@@ -46,7 +46,7 @@ async def async_setup_entry(
             },
             device_class=SwitchDeviceClass.OUTLET,
         )
-        for outlet_num in sorted(_outlet_numbers_from_status(status))
+        for outlet_num in sorted(outlet_numbers_from_status(status))
         if (
             status.get(f"outlet.{outlet_num}.switchable") == "yes"
             and f"outlet.{outlet_num}.load.on" in user_available_commands
