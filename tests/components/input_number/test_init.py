@@ -327,7 +327,7 @@ async def test_input_number_context(
 ) -> None:
     """Test that input_number context works."""
     assert await async_setup_component(
-        hass, "input_number", {"input_number": {"b1": {"min": 0, "max": 100}}}
+        hass, DOMAIN, {"input_number": {"b1": {"min": 0, "max": 100}}}
     )
 
     state = hass.states.get("input_number.b1")
