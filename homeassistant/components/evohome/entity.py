@@ -1,6 +1,7 @@
 """Support for entities of the Evohome integration."""
 
 from collections.abc import Mapping
+from datetime import datetime
 import logging
 from typing import Any
 
@@ -18,6 +19,17 @@ from homeassistant.util import dt as dt_util
 from .coordinator import EvoDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _dt_to_iso(val: Any) -> Any:
+    """Convert any datetime objects to ISO strings (for use in state attrs)."""
+    if isinstance(val, datetime):
+        return val.isoformat()
+    if isinstance(val, dict):
+        return {k: _dt_to_iso(v) for k, v in val.items()}
+    if isinstance(val, (list, tuple)):
+        return type(val)(_dt_to_iso(v) for v in val)
+    return val
 
 
 def is_valid_zone(zone: evo.Zone) -> bool:
@@ -69,7 +81,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
         self._device_state_attrs[self._evo_id_attr] = self._evo_device.id
 
         for attr in self._evo_state_attr_names:
-            self._device_state_attrs[attr] = getattr(self._evo_device, attr)
+            self._device_state_attrs[attr] = _dt_to_iso(getattr(self._evo_device, attr))
 
         super()._handle_coordinator_update()
 
@@ -173,7 +185,7 @@ class EvoChild(EvoEntity):
         """Handle updated data from the coordinator."""
 
         self._device_state_attrs = {
-            "activeFaults": self._evo_device.active_faults,
+            "activeFaults": _dt_to_iso(self._evo_device.active_faults),
             "setpoints": self.setpoints,
         }
 
