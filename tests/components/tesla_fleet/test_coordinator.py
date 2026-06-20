@@ -51,11 +51,7 @@ async def _get_hourly_stats(
 
 @pytest.fixture(autouse=True)
 def mock_recorder_functions() -> None:
-    """Override the autouse mock_recorder_functions from conftest.py.
-
-    This fixture overrides the conftest.py version to NOT mock recorder functions,
-    allowing tests in this file to use the real recorder.
-    """
+    """Use the real recorder for these tests by overriding the conftest mock."""
 
 
 @pytest.fixture
