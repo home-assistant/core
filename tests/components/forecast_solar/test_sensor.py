@@ -23,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -53,10 +54,16 @@ async def test_sensors(
     # The watts/wh_period attributes expose the full forecast horizon
     # emitted by the library, with ISO 8601 keys in the site/API
     # timezone (``Europe/Amsterdam`` per the conftest mock). The mock
-    # seeds two entries: 2021-06-27 and 2022-06-27.
+    # seeds two entries timestamped at 13:00 in HA's default timezone;
+    # these are emitted with the Europe/Amsterdam offset.
     api_tz = ZoneInfo("Europe/Amsterdam")
-    ts_2021 = datetime(2021, 6, 27, 13, 0, tzinfo=api_tz).isoformat()
-    ts_2022 = datetime(2022, 6, 27, 13, 0, tzinfo=api_tz).isoformat()
+    default_tz = dt_util.get_default_time_zone()
+    ts_2021 = (
+        datetime(2021, 6, 27, 13, 0, tzinfo=default_tz).astimezone(api_tz).isoformat()
+    )
+    ts_2022 = (
+        datetime(2022, 6, 27, 13, 0, tzinfo=default_tz).astimezone(api_tz).isoformat()
+    )
     watts_attr = state.attributes.get("watts")
     wh_attr = state.attributes.get("wh_period")
     assert isinstance(watts_attr, dict)

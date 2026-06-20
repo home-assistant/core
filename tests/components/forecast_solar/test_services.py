@@ -46,12 +46,17 @@ async def test_get_forecast_raw(
     assert isinstance(response["wh_period"], dict)
 
     # The conftest mock seeds two timestamps in ``watts`` and
-    # ``wh_period``, both at 13:00 in the test default timezone. The
+    # ``wh_period``, both at 13:00 in HA's default timezone. The
     # service emits ISO keys in the site/API timezone
     # (``Europe/Amsterdam`` per the conftest mock).
     api_tz = ZoneInfo("Europe/Amsterdam")
-    ts_2021 = datetime(2021, 6, 27, 13, 0, tzinfo=api_tz).isoformat()
-    ts_2022 = datetime(2022, 6, 27, 13, 0, tzinfo=api_tz).isoformat()
+    default_tz = dt_util.get_default_time_zone()
+    ts_2021 = (
+        datetime(2021, 6, 27, 13, 0, tzinfo=default_tz).astimezone(api_tz).isoformat()
+    )
+    ts_2022 = (
+        datetime(2022, 6, 27, 13, 0, tzinfo=default_tz).astimezone(api_tz).isoformat()
+    )
     assert response["watts"] == {ts_2021: 10, ts_2022: 100}
     assert response["wh_period"] == {ts_2021: 30, ts_2022: 300}
 
