@@ -11,7 +11,7 @@ from homeassistant.core import HomeAssistant
 
 from . import remove_config_entry
 
-from tests.common import MockConfigEntry, load_json_object_fixture
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 @pytest.fixture
@@ -78,21 +78,25 @@ def mock_hub_refresh() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_hub_configuration(request: pytest.FixtureRequest) -> Generator[AsyncMock]:
+async def mock_hub_configuration(
+    request: pytest.FixtureRequest, hass: HomeAssistant
+) -> AsyncGenerator[AsyncMock]:
     """Override WebControlPro._getConfiguration with a param fixture file."""
     with patch(
         "wmspro.webcontrol.WebControlPro._getConfiguration",
-        return_value=load_json_object_fixture(request.param, DOMAIN),
+        return_value=await async_load_json_object_fixture(hass, request.param, DOMAIN),
     ) as mock_hub_configuration:
         yield mock_hub_configuration
 
 
 @pytest.fixture
-def mock_hub_status(request: pytest.FixtureRequest) -> Generator[AsyncMock]:
+async def mock_hub_status(
+    request: pytest.FixtureRequest, hass: HomeAssistant
+) -> AsyncGenerator[AsyncMock]:
     """Override WebControlPro._getStatus with a param fixture file."""
     with patch(
         "wmspro.webcontrol.WebControlPro._getStatus",
-        return_value=load_json_object_fixture(request.param, DOMAIN),
+        return_value=await async_load_json_object_fixture(hass, request.param, DOMAIN),
     ) as mock_hub_status:
         yield mock_hub_status
 
