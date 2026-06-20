@@ -879,8 +879,8 @@ class StartStopTrait(_Trait):
                 & VacuumEntityFeature.PAUSE
                 != 0
             }
-            attributes = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
-            if attributes & VacuumEntityFeature.CLEAN_AREA:
+            features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if features & VacuumEntityFeature.CLEAN_AREA:
                 available_zones = []
                 entity_registry = er.async_get(self.hass)
                 entry = entity_registry.async_get(self.state.entity_id)
