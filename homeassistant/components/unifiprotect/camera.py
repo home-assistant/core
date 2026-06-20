@@ -60,8 +60,9 @@ def _async_camera_entities(
 ) -> list[ProtectDeviceEntity]:
     """Create camera entities with stream URLs sourced from the public API.
 
-    One entity per *active* RTSPS quality (the first is enabled by default); the
-    package channel is just another quality tier (PACKAGE). When no quality is
+    One entity per *active* RTSPS quality (the first is enabled by default). The
+    package channel is a snapshot-first view and is always exposed (disabled by
+    default), streaming only when its quality is active. When no main quality is
     active the first non-package channel is still created so snapshots work, and
     a repair offers to activate its stream. RTSPS URLs come from the public API
     (the authoritative per-camera host, so stacked consoles resolve correctly)
@@ -87,20 +88,32 @@ def _async_camera_entities(
         issue_id = f"rtsp_disabled_{camera.id}"
 
         has_stream = False
+        package_channel: CameraChannel | None = None
         for channel in camera.channels:
+            if channel.is_package:
+                package_channel = channel
+                continue
             if channel.rtsps_quality in active:
                 entities.append(
                     ProtectCamera(data, camera, channel, not has_stream, disable_stream)
                 )
                 has_stream = True
 
+        # the package channel is a snapshot-first view (very low FPS); always
+        # expose it (disabled by default), streaming only when its quality is active
+        if package_channel is not None:
+            entities.append(
+                ProtectCamera(data, camera, package_channel, False, disable_stream)
+            )
+
         if has_stream:
             ir.async_delete_issue(hass, DOMAIN, issue_id)
             continue
 
-        fallback = next(
-            (c for c in camera.channels if not c.is_package), camera.channels[0]
-        )
+        # no active main stream: expose the first non-package channel for snapshots
+        fallback = next((c for c in camera.channels if not c.is_package), None)
+        if fallback is None:
+            continue
         entities.append(ProtectCamera(data, camera, fallback, True, disable_stream))
         # no repair when the stream can't be enabled anyway: a disconnected
         # camera is streamless because it is offline, not because it needs one
@@ -186,6 +199,18 @@ class ProtectCamera(ProtectDeviceEntity, Camera):
         streams = self.data.get_rtsps_streams(self.device.id)
         if self._disable_stream or quality is None or streams is None:
             source = None
+            if (
+                streams is None
+                and not self._disable_stream
+                and not self.channel.is_package
+            ):
+                # online camera unexpectedly absent from the public bootstrap;
+                # log so this is distinguishable from an intentionally off stream
+                _LOGGER.debug(
+                    "No public RTSPS data for camera %s (%s); using snapshots",
+                    self.device.display_name,
+                    self.device.id,
+                )
         else:
             source = streams.get_stream_url(quality, srtp=False)
         self._attr_supported_features = _ENABLE_FEATURE if source else _DISABLE_FEATURE
