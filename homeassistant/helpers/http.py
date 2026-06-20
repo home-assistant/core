@@ -60,12 +60,9 @@ def request_handler_factory(
             from .network import NoURLAvailableError, get_url  # noqa: PLC0415
 
             # Get the current request header to include as resource metadata
-            # endpoint for RFC9728. We currently prefer external since this
-            # is likely most used by remote OAuth clients
+            # endpoint for RFC9728.
             try:
-                url_prefix = get_url(
-                    hass, require_current_request=True, prefer_external=True
-                )
+                url_prefix = get_url(hass, require_current_request=True)
             except NoURLAvailableError:
                 # Omit header to avoid leaking configured URLs
                 raise HTTPUnauthorized from None
