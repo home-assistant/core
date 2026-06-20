@@ -34,11 +34,10 @@ async def validate_input(blink: Blink) -> None:
         raise InvalidAuth
 
 
-async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> bool:
+async def _send_blink_2fa_pin(blink: Blink, pin: str | None) -> None:
     """Send 2FA pin to blink servers."""
     if not await blink.send_2fa_code(pin):
         raise InvalidAuth
-    return True
 
 
 class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
