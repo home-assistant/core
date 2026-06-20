@@ -1,5 +1,0 @@
-{
-  "permissions": {
-    "allow": ["Bash(git fetch *)", "Bash(git rebase *)"]
-  }
-}
