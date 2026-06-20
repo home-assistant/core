@@ -1,6 +1,5 @@
 """The nut component."""
 
-from contextlib import suppress
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
@@ -33,16 +32,19 @@ _LOGGER = logging.getLogger(__name__)
 def _outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
     """Return the outlet numbers reported by the device.
 
-    Combine the ``outlet.count`` range (when present) with outlets discovered
-    from ``outlet.<n>.*`` status keys so devices that expose switchable outlets
-    without reporting a count are still detected.
+    Use ``outlet.count`` when the device reports it. Otherwise fall back to
+    discovering outlets from ``outlet.<n>.*`` status keys, so devices that
+    expose switchable outlets without reporting a count are still detected.
     """
-    outlet_numbers: set[int] = set()
-
     if (num_outlets := status.get("outlet.count")) is not None:
-        with suppress(ValueError):
-            outlet_numbers.update(range(1, int(num_outlets) + 1))
+        try:
+            count = int(num_outlets)
+        except ValueError:
+            _LOGGER.warning("Invalid outlet.count value: %s", num_outlets)
+        else:
+            return set(range(1, count + 1))
 
+    outlet_numbers: set[int] = set()
     prefix = "outlet."
     for key in status:
         rest = key.removeprefix(prefix)
