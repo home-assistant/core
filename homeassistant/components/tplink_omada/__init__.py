@@ -115,12 +115,9 @@ async def async_migrate_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> b
             entry.minor_version,
         )
 
-        controller_id = entry.unique_id
-        site_id = entry.data[CONF_SITE]
-        new_unique_id = f"{controller_id}_{site_id}"
         hass.config_entries.async_update_entry(
             entry,
-            unique_id=new_unique_id,
+            unique_id=f"{entry.unique_id}_{entry.data[CONF_SITE]}",
             version=2,
         )
 

@@ -180,8 +180,9 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
             if info is not None:
                 # Check the controller ID is the same as before
                 reauth_entry = self._get_reauth_entry()
-                site_id = reauth_entry.data[CONF_SITE]
-                await self.async_set_unique_id(f"{info.controller_id}_{site_id}")
+                await self.async_set_unique_id(
+                    f"{info.controller_id}_{reauth_entry.data[CONF_SITE]}"
+                )
                 self._abort_if_unique_id_mismatch(reason="device_mismatch")
 
                 # Auth successful - update the config entry with the new credentials
