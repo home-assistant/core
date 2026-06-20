@@ -121,13 +121,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_key="end_before_start",
             )
 
-        # Response shape mirrors the today-attributes on the energy
-        # sensors: two flat ``{ISO timestamp -> number}`` maps, one for
-        # instantaneous watts and one for the wh produced during the
-        # interval starting at that timestamp. The library returns
-        # UTC-aware keys; emit ISO strings in the site/API timezone so
-        # consumers see the local offset (e.g. ``+10:00``) rather than
-        # ``+00:00``.
+        # Emit ISO keys in the site timezone so consumers see the local
+        # offset (e.g. ``+10:00``).
         watts_out: dict[str, JsonValueType] = {}
         wh_out: dict[str, JsonValueType] = {}
         for ts in sorted(watts):

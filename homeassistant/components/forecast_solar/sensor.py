@@ -50,21 +50,12 @@ def _series_in_tz(series: dict[datetime, int], tz: ZoneInfo) -> dict[str, int]:
 
 
 def _forecast_attributes(estimate: Estimate) -> dict[str, Any]:
-    """Return the full power and energy forecast curves as state attributes.
+    """Return the full forecast horizon as ``watts`` and ``wh_period`` maps.
 
-    Each attribute is a mapping of ISO 8601 timestamp -> value, where
-    ``watts`` is the estimated power in W at the timestamp and
-    ``wh_period`` is the energy in Wh for the interval starting at that
-    timestamp. ISO keys carry the site/API timezone offset.
-
-    The full forecast window returned by the Forecast.Solar library
-    (typically ~32 hours for free accounts, up to 3-6 days for paid
-    accounts) is emitted so downstream optimizers and forecasters can
-    consume more than a single day of lookahead. Recorder write cost
-    is handled separately via ``_unrecorded_attributes`` on the entity
-    class, so the live state payload is the only remaining concern;
-    even the paid-tier window at 15-minute resolution stays well under
-    typical attribute size limits.
+    Each map is ``{ISO 8601 timestamp -> number}`` keyed in the site
+    timezone, where ``watts`` is instantaneous power (W) and
+    ``wh_period`` is energy (Wh) for the interval starting at that
+    timestamp.
     """
     tz = ZoneInfo(estimate.timezone)
     return {
