@@ -130,6 +130,10 @@ class NX584Watcher(threading.Thread):
         if not (zone_sensor := self._zone_sensors.get(zone)):
             return
         zone_sensor._zone["state"] = event["zone_state"]  # noqa: SLF001
+        if "zone_flags" in event:
+            zone_sensor._zone["bypassed"] = (  # noqa: SLF001
+                "Inhibit" in event["zone_flags"] or "Bypass" in event["zone_flags"]
+            )
         zone_sensor.schedule_update_ha_state()
 
     def _process_events(self, events):
