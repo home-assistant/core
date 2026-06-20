@@ -1,0 +1,163 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "hub_state": {
+        "default": "mdi:alert-circle-outline",
+        "state": {
+          "on": "mdi:checkbox-marked-circle-outline"
+        }
+      },
+      "input_switch": {
+        "default": "mdi:toggle-switch-variant-off",
+        "state": {
+          "on": "mdi:toggle-switch-variant"
+        }
+      },
+      "listening_status": {
+        "default": "mdi:microphone-message-off",
+        "state": {
+          "on": "mdi:microphone-message"
+        }
+      },
+      "motion": {
+        "default": "mdi:motion-sensor-off",
+        "state": {
+          "on": "mdi:motion-sensor"
+        }
+      },
+      "rain": {
+        "default": "mdi:weather-partly-cloudy",
+        "state": {
+          "on": "mdi:weather-rainy"
+        }
+      }
+    },
+    "button": {
+      "count_down": {
+        "default": "mdi:chevron-down-box-outline"
+      },
+      "count_up": {
+        "default": "mdi:chevron-up-box-outline"
+      },
+      "hub_reboot": {
+        "default": "mdi:restart-alert"
+      },
+      "hub_restart": {
+        "default": "mdi:restart"
+      },
+      "module_reset": {
+        "default": "mdi:restart"
+      },
+      "power_cycle": {
+        "default": "mdi:backup-restore"
+      },
+      "restart_fwd_table": {
+        "default": "mdi:restore"
+      },
+      "router_reset_all": {
+        "default": "mdi:restart"
+      },
+      "voice_input": {
+        "default": "mdi:account-voice"
+      }
+    },
+    "light": {
+      "dimmed_output": {
+        "default": "mdi:lightbulb-on-60"
+      }
+    },
+    "media_player": {
+      "habitron_speaker": {
+        "default": "mdi:speaker"
+      }
+    },
+    "number": {
+      "analog_output": {
+        "default": "mdi:sine-wave"
+      }
+    },
+    "sensor": {
+      "airquality": {
+        "default": "mdi:air-filter"
+      },
+      "analog_sensor": {
+        "default": "mdi:chart-bell-curve-cumulative"
+      },
+      "ekey_finger": {
+        "default": "mdi:fingerprint"
+      },
+      "ekey_id": {
+        "default": "mdi:fingerprint"
+      },
+      "logic_state": {
+        "default": "mdi:counter"
+      },
+      "time_out": {
+        "default": "mdi:timer-alert-outline"
+      },
+      "wind": {
+        "default": "mdi:weather-windy-variant"
+      }
+    },
+    "switch": {
+      "climate_ctl": {
+        "default": "mdi:heat-pump-outline",
+        "state": {
+          "on": "mdi:heat-pump"
+        }
+      },
+      "habitron_flag": {
+        "default": "mdi:bookmark-outline",
+        "state": {
+          "on": "mdi:bookmark-check"
+        }
+      },
+      "microphone": {
+        "default": "mdi:microphone-message",
+        "state": {
+          "on": "mdi:webcam"
+        }
+      }
+    },
+    "text": {
+      "ekey_finger": {
+        "default": "mdi:fingerprint"
+      },
+      "ekey_user": {
+        "default": "mdi:fingerprint"
+      }
+    }
+  },
+  "services": {
+    "hub_reboot": {
+      "service": "mdi:restart-alert"
+    },
+    "hub_restart": {
+      "service": "mdi:restart"
+    },
+    "mod_restart": {
+      "service": "mdi:reload"
+    },
+    "rtr_restart": {
+      "service": "mdi:router-network"
+    },
+    "save_module_smc": {
+      "service": "mdi:content-save-cog"
+    },
+    "save_module_smg": {
+      "service": "mdi:content-save-settings"
+    },
+    "save_module_status": {
+      "service": "mdi:content-save"
+    },
+    "save_router_smr": {
+      "service": "mdi:content-save-edit"
+    },
+    "save_router_status": {
+      "service": "mdi:content-save-outline"
+    },
+    "update_entity": {
+      "service": "mdi:swap-horizontal-bold"
+    }
+  }
+}

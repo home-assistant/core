@@ -1,0 +1,137 @@
+# Describes the format for Habitron services.
+# Hub-acting services select the target SmartHub via a Habitron device; the
+# owning config entry (and thus the hub) is resolved from that device.
+
+hub_restart:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: habitron
+hub_reboot:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: habitron
+mod_restart:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: habitron
+    mod_nmbr:
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 64
+rtr_restart:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: habitron
+save_module_smc:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: habitron
+    mod_nmbr:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 64
+save_module_smg:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: habitron
+    mod_nmbr:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 64
+save_router_smr:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: habitron
+save_module_status:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: habitron
+    mod_nmbr:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 64
+save_router_status:
+  fields:
+    device_id:
+      selector:
+        device:
+          integration: habitron
+update_entity:
+  fields:
+    hub_uid:
+      required: true
+      selector:
+        text: null
+    rtr_nmbr:
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 8
+    mod_nmbr:
+      required: true
+      example: 1
+      selector:
+        number:
+          min: 1
+          max: 64
+    evnt_type:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+    evnt_arg1:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+    evnt_arg2:
+      required: true
+      selector:
+        number:
+          min: 0
+          max: 255
+    evnt_arg3:
+      selector:
+        number:
+          min: 0
+          max: 255
+    evnt_arg4:
+      selector:
+        number:
+          min: 0
+          max: 255
+    evnt_arg5:
+      selector:
+        number:
+          min: 0
+          max: 255
