@@ -337,11 +337,10 @@ class LazyIntegrationPlatforms[_R]:
         }
 
     async def _async_process(self, integration: Integration) -> _R | None:
-        """Import, process and cache the platform for a loaded integration.
-
-        Callers must only pass integrations that are not already cached.
-        """
+        """Import, process and cache the platform for a loaded integration."""
         domain = integration.domain
+        if domain in self._processed:
+            return self._processed[domain]
         platform = await _async_import_platform(integration, self._platform_name)
         result: _R | None = None
         if platform is not None:
