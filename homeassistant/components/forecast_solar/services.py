@@ -78,10 +78,15 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def async_get_forecast(call: ServiceCall) -> ServiceResponse:
         """Return the solar production forecast time series.
 
-        The response is a list of ``{time, value, energy_wh}`` entries
-        where ``value`` is the estimated power output in watts and
-        ``energy_wh`` is the energy produced during the interval that
-        starts at ``time``.
+        The response has two flat ``{ISO timestamp -> number}`` maps,
+        mirroring the today-attribute shape on the energy sensors:
+
+        - ``watts``: estimated instantaneous power in W at the timestamp.
+        - ``wh_period``: energy in Wh produced during the interval that
+          starts at the timestamp.
+
+        Timestamps are emitted in the site/API timezone (e.g.
+        ``+10:00``), not UTC.
         """
         entry: ForecastSolarConfigEntry = service.async_get_config_entry(
             hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY]
@@ -116,25 +121,26 @@ def async_setup_services(hass: HomeAssistant) -> None:
                 translation_key="end_before_start",
             )
 
-        # The library returns UTC-aware keys; emit ISO strings in the
-        # site/API timezone so consumers see the local offset (e.g.
-        # ``+10:00``) rather than ``+00:00``.
-        forecast: list[JsonValueType] = []
+        # Response shape mirrors the today-attributes on the energy
+        # sensors: two flat ``{ISO timestamp -> number}`` maps, one for
+        # instantaneous watts and one for the wh produced during the
+        # interval starting at that timestamp. The library returns
+        # UTC-aware keys; emit ISO strings in the site/API timezone so
+        # consumers see the local offset (e.g. ``+10:00``) rather than
+        # ``+00:00``.
+        watts_out: dict[str, JsonValueType] = {}
+        wh_out: dict[str, JsonValueType] = {}
         for ts in sorted(watts):
             if start is not None and ts < start:
                 continue
             if end is not None and ts >= end:
                 break
-            local_ts = ts.astimezone(tz) if tz is not None else ts
-            entry_dict: dict[str, JsonValueType] = {
-                "time": local_ts.isoformat(),
-                "value": watts[ts],
-            }
+            local_iso = (ts.astimezone(tz) if tz is not None else ts).isoformat()
+            watts_out[local_iso] = watts[ts]
             if ts in wh_period:
-                entry_dict["energy_wh"] = wh_period[ts]
-            forecast.append(entry_dict)
+                wh_out[local_iso] = wh_period[ts]
 
-        return {"forecast": forecast}
+        return {"watts": watts_out, "wh_period": wh_out}
 
     hass.services.async_register(
         DOMAIN,
