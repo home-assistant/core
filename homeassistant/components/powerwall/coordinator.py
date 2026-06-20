@@ -56,6 +56,8 @@ class PowerwallData:
     grid_services_active: bool
     grid_status: GridStatus
     backup_reserve: float | None
+    max_charge_power: int | None
+    max_discharge_power: int | None
     operation_mode: OperationMode | None
     batteries: dict[str, BatteryResponse]
 
