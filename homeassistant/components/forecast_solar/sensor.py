@@ -57,9 +57,7 @@ def _series_for_date(
     }
 
 
-def _series_in_tz(
-    series: dict[datetime, int], tz: ZoneInfo
-) -> dict[str, int]:
+def _series_in_tz(series: dict[datetime, int], tz: ZoneInfo) -> dict[str, int]:
     """Return all ISO-keyed entries from a series, converted to ``tz``.
 
     Keys are emitted with the site/API timezone offset (rather than
@@ -68,10 +66,7 @@ def _series_in_tz(
     the full forecast horizon returned by the Forecast.Solar library
     is preserved.
     """
-    return {
-        ts.astimezone(tz).isoformat(): val
-        for ts, val in series.items()
-    }
+    return {ts.astimezone(tz).isoformat(): val for ts, val in series.items()}
 
 
 def _today_attributes(estimate: Estimate) -> dict[str, Any]:
