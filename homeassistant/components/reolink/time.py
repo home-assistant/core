@@ -30,13 +30,19 @@ class ReolinkTimeEntityDescription(
     value: Callable[[Host, int], time | None]
 
 
-def _schedule_time(api: Host, ch: int, start: bool) -> time | None:
-    """Return the start or end time of the floodlight schedule."""
+def _start_time(api: Host, ch: int) -> time | None:
+    """Return the start time of the floodlight schedule."""
     schedule = api.whiteled_schedule(ch)
     if not schedule:
         return None
-    if start:
-        return time(hour=schedule["StartHour"], minute=schedule["StartMin"])
+    return time(hour=schedule["StartHour"], minute=schedule["StartMin"])
+
+
+def _end_time(api: Host, ch: int) -> time | None:
+    """Return the end time of the floodlight schedule."""
+    schedule = api.whiteled_schedule(ch)
+    if not schedule:
+        return None
     return time(hour=schedule["EndHour"], minute=schedule["EndMin"])
 
 
@@ -75,7 +81,7 @@ TIME_ENTITIES = (
         supported=lambda api, ch: (
             SpotlightModeEnum.schedule.name in api.whiteled_mode_list(ch)
         ),
-        value=lambda api, ch: _schedule_time(api, ch, True),
+        value=_start_time,
         method=_set_start,
     ),
     ReolinkTimeEntityDescription(
@@ -88,7 +94,7 @@ TIME_ENTITIES = (
         supported=lambda api, ch: (
             SpotlightModeEnum.schedule.name in api.whiteled_mode_list(ch)
         ),
-        value=lambda api, ch: _schedule_time(api, ch, False),
+        value=_end_time,
         method=_set_end,
     ),
 )
