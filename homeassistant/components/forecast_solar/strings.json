@@ -134,7 +134,7 @@
           "name": "Resolution"
         },
         "start": {
-          "description": "Earliest period start to return. If omitted, the response begins at the start of the cached forecast.",
+          "description": "Earliest period start to return (inclusive). If omitted, the response begins at the start of the cached forecast.",
           "name": "Start"
         }
       },
