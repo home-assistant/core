@@ -130,9 +130,8 @@ class OverkizDescriptiveEntity(OverkizEntity):
         self._attr_unique_id = f"{super().unique_id}-{self.entity_description.key}"
 
         if self.device.identifier.is_sub_device:
-            # In case of sub device, use the provided label and append the name
-            # of the type of entity. Descriptions without a name (e.g. those
-            # relying on a translation_key) fall back to the label alone.
+            # Prefix the sub device label; fall back to the label alone when the
+            # description has no name (e.g. when it relies on a translation_key).
             if isinstance(description.name, str):
                 self._attr_name = f"{self.device.label} {description.name}"
             else:
