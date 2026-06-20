@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
-from .entity import YotoEntity
+from .entity import YotoPlayerEntity
 
 URI_SCHEME = "yoto"
 URI_CARD = "card"
@@ -53,7 +53,7 @@ async def async_setup_entry(
     )
 
 
-class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
+class YotoMediaPlayer(YotoPlayerEntity, MediaPlayerEntity):
     """Representation of a Yoto Player."""
 
     _attr_name = None
@@ -81,11 +81,6 @@ class YotoMediaPlayer(YotoEntity, MediaPlayerEntity):
         """Initialize the media player."""
         super().__init__(coordinator, player)
         self._attr_unique_id = player.id
-
-    @property
-    def available(self) -> bool:
-        """Return whether the player is reachable through the Yoto cloud."""
-        return super().available and bool(self.player.status.is_online)
 
     @property
     def state(self) -> MediaPlayerState:

@@ -2,7 +2,7 @@
 
 import asyncio
 import collections
-from collections.abc import Callable, Container, Mapping
+from collections.abc import Callable
 from contextlib import suppress
 import datetime as dt
 from enum import StrEnum
@@ -12,11 +12,11 @@ import hashlib
 from http import HTTPStatus
 import logging
 import secrets
-from typing import Any, Final, Required, TypedDict, final, override
+from typing import Any, Final, Required, TypedDict, final
 from urllib.parse import quote, urlparse
 
 import aiohttp
-from aiohttp import web
+from aiohttp import hdrs, web
 from aiohttp.hdrs import CACHE_CONTROL, CONTENT_TYPE
 from aiohttp.typedefs import LooseHeaders
 from propcache.api import cached_property
@@ -24,7 +24,7 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant.components import websocket_api
-from homeassistant.components.http import HomeAssistantView
+from homeassistant.components.http import KEY_AUTHENTICATED, HomeAssistantView
 from homeassistant.components.websocket_api import ERR_NOT_SUPPORTED, ERR_UNKNOWN_ERROR
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401
@@ -50,7 +50,7 @@ from homeassistant.const import (  # noqa: F401
     STATE_PLAYING,
     STATE_STANDBY,
 )
-from homeassistant.core import HomeAssistant, SupportsResponse, callback
+from homeassistant.core import HomeAssistant, SupportsResponse
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity import Entity, EntityDescription
@@ -1249,7 +1249,7 @@ class MediaPlayerEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 class MediaPlayerImageView(HomeAssistantView):
     """Media player view to serve an image."""
 
-    use_query_token_for_auth = True
+    requires_auth = False
     url = "/api/media_player_proxy/{entity_id}"
     name = "api:media_player:image"
     extra_urls = [
@@ -1262,15 +1262,6 @@ class MediaPlayerImageView(HomeAssistantView):
         """Initialize a media player view."""
         self.component = component
 
-    @callback
-    @override
-    def get_valid_auth_tokens(self, match_info: Mapping[str, str]) -> Container[str]:
-        """Return valid auth tokens, which can be used for query token authentication."""
-        if (player := self.component.get_entity(match_info["entity_id"])) is None:
-            return ()
-
-        return (player.access_token,)
-
     async def get(
         self,
         request: web.Request,
@@ -1280,9 +1271,27 @@ class MediaPlayerImageView(HomeAssistantView):
     ) -> web.Response:
         """Start a get request."""
         if (player := self.component.get_entity(entity_id)) is None:
-            return web.Response(status=HTTPStatus.NOT_FOUND)
+            raise (
+                web.HTTPNotFound if request[KEY_AUTHENTICATED] else web.HTTPUnauthorized
+            )
 
         assert isinstance(player, MediaPlayerEntity)
+        authenticated = (
+            request[KEY_AUTHENTICATED]
+            or request.query.get("token") == player.access_token
+        )
+
+        if not authenticated:
+            if hdrs.AUTHORIZATION in request.headers:
+                # A failed request that carried an Authorization header is a real
+                # Bearer auth attempt — return 401 and let the ban middleware count
+                # it as a wrong login.
+                raise web.HTTPUnauthorized
+            # No Authorization header: most likely a benign signed-URL / query-
+            # token request whose token has expired (e.g. a browser tab left
+            # open that re-fetches resources later). Return 403 so it doesn't
+            # register as a wrong login and ban the user's own IP.
+            raise web.HTTPForbidden
 
         if media_content_type and media_content_id:
             media_image_id = request.query.get("media_image_id")

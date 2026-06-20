@@ -225,10 +225,9 @@ class ImmichMediaSource(MediaSource):
                 entry.title,
             )
             try:
-                album_info = await immich_api.albums.async_get_album_info(
-                    identifier.collection_id
+                assets = await immich_api.search.async_get_all_by_album_ids(
+                    [identifier.collection_id]
                 )
-                assets = album_info.assets
             except ImmichForbiddenError as err:
                 raise BrowseError(
                     translation_domain=DOMAIN,
