@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "event": {
+      "system_events": {
+        "default": "mdi:shield-home"
+      }
+    }
+  },
   "services": {
     "remove_pin": {
       "service": "mdi:alarm-panel-outline"

@@ -110,6 +110,7 @@ PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.LOCK,
     Platform.SENSOR,
 ]
@@ -183,6 +184,8 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
     }
 )
 
+# These events are fired on the HA bus as SIMPLISAFE_EVENT for backwards
+# compatibility. New integrations should use the system event entity instead.
 WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_AUTOMATIC_TEST,
     EVENT_CAMERA_MOTION_DETECTED,
@@ -541,6 +544,9 @@ class SimpliSafe:
             self._hass, DISPATCHER_TOPIC_WEBSOCKET_EVENT.format(event.system_id), event
         )
 
+        # Deprecated: SIMPLISAFE_EVENT bus events are maintained for backwards
+        # compatibility. Use the system event entity and event.received trigger
+        # instead.
         if event.event_type not in WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT:
             return
 

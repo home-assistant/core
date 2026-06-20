@@ -25,6 +25,11 @@
       "clear_notifications": {
         "name": "Clear notifications"
       }
+    },
+    "event": {
+      "system_events": {
+        "name": "System events"
+      }
     }
   },
   "options": {
