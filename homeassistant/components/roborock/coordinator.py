@@ -62,23 +62,15 @@ class RoborockCoordinators:
 
     def __init__(
         self,
-        v1: list[RoborockDataUpdateCoordinator] | None = None,
-        a01: list[RoborockDataUpdateCoordinatorA01] | None = None,
-        b01_q7: list[RoborockB01Q7UpdateCoordinator] | None = None,
-        b01_q10: list[RoborockB01Q10UpdateCoordinator] | None = None,
-        device_manager: Any = None,
     ) -> None:
         """Initialize."""
-        self._coordinators: dict[str, Any] = {}
-        self.device_manager = device_manager
-        for coord_v1 in v1 or []:
-            self.add(coord_v1)
-        for coord_a01 in a01 or []:
-            self.add(coord_a01)
-        for coord_b01_q7 in b01_q7 or []:
-            self.add(coord_b01_q7)
-        for coord_b01_q10 in b01_q10 or []:
-            self.add(coord_b01_q10)
+        self._coordinators: dict[
+            str,
+            RoborockDataUpdateCoordinator
+            | RoborockDataUpdateCoordinatorA01
+            | RoborockB01Q7UpdateCoordinator
+            | RoborockB01Q10UpdateCoordinator,
+        ] = {}
 
     def add(
         self,
