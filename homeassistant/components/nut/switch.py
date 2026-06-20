@@ -48,7 +48,8 @@ async def async_setup_entry(
         )
         for outlet_num in sorted(_outlet_numbers_from_status(status))
         if (
-            f"outlet.{outlet_num}.load.on" in user_available_commands
+            status.get(f"outlet.{outlet_num}.switchable") == "yes"
+            and f"outlet.{outlet_num}.load.on" in user_available_commands
             and f"outlet.{outlet_num}.load.off" in user_available_commands
         )
     ]
