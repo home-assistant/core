@@ -122,8 +122,16 @@
       ],
       "airToWaterUnits": [
         {
+          "unitSettings": null,
+          "schedule": [],
+          "scheduleEnabled": true,
+          "connectedInterfaceIdentifier": "iface-identifier-2",
+          "holidayMode": null,
+          "connectedInterfaceType": "melCloudWiFi",
+          "systemId": "system-uuid-2",
           "id": "atw-unit-uuid-1",
           "givenDisplayName": "Heat Pump",
+          "displayIcon": "HeatPump",
           "settings": [
             {
               "name": "Power",
@@ -204,7 +212,12 @@
             "min": 55,
             "max": 60
           },
-          "rssi": -52
+          "timeZone": "Europe/Amsterdam",
+          "rssi": -52,
+          "isConnected": true,
+          "isInError": false,
+          "energyProducedOptIn": null,
+          "isEnergyUsageCompatible": false
         }
       ]
     }
