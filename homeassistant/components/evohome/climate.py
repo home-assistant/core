@@ -6,14 +6,10 @@ from typing import Any
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
-    SZ_DURATION,
-    SZ_MODE,
-    SZ_PERIOD,
     SZ_SETPOINT_STATUS,
     SZ_SYSTEM_MODE,
     SZ_SYSTEM_MODE_STATUS,
     SZ_TEMPERATURE_STATUS,
-    SZ_UNTIL,
     SystemMode as EvoSystemMode,
     ZoneMode as EvoZoneMode,
 )
@@ -27,7 +23,12 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, PRECISION_TENTHS, UnitOfTemperature
+from homeassistant.const import (
+    ATTR_MODE,
+    ATTR_TEMPERATURE,
+    PRECISION_TENTHS,
+    UnitOfTemperature,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -35,7 +36,14 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, EVOHOME_DATA, RESET_BREAKS_IN_HA_VERSION, EvoService
+from .const import (
+    ATTR_DURATION,
+    ATTR_PERIOD,
+    DOMAIN,
+    EVOHOME_DATA,
+    RESET_BREAKS_IN_HA_VERSION,
+    EvoService,
+)
 from .coordinator import EvoDataUpdateCoordinator
 from .entity import EvoChild, EvoEntity, _dt_to_iso, is_valid_zone, unique_zone_id
 from .helpers import async_create_deprecation_issue_once
@@ -253,7 +261,7 @@ class EvoZone(EvoChild, EvoClimateEntity):
 
         temperature = kwargs[ATTR_TEMPERATURE]
 
-        if (until := kwargs.get(SZ_UNTIL)) is None:
+        if (until := kwargs.get("until")) is None:
             if self._evo_device.mode == EvoZoneMode.TEMPORARY_OVERRIDE:
                 until = self._evo_device.until
             if self._evo_device.mode == EvoZoneMode.FOLLOW_SCHEDULE:
@@ -375,14 +383,14 @@ class EvoController(EvoClimateEntity):
             await self.coordinator.call_client_api(self._evo_device.reset())
             return
 
-        mode = data[SZ_MODE]  # otherwise it is EvoService.SET_SYSTEM_MODE
+        mode = data[ATTR_MODE]  # otherwise it is EvoService.SET_SYSTEM_MODE
 
-        if SZ_PERIOD in data:
+        if ATTR_PERIOD in data:
             until = dt_util.start_of_local_day()
-            until += data[SZ_PERIOD]
+            until += data[ATTR_PERIOD]
 
-        elif SZ_DURATION in data:
-            until = dt_util.now() + data[SZ_DURATION]
+        elif ATTR_DURATION in data:
+            until = dt_util.now() + data[ATTR_DURATION]
 
         else:
             until = None
