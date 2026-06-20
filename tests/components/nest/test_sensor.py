@@ -343,3 +343,21 @@ async def test_thermostat_fan_timer_sensor_not_active(
     # When the timer is inactive, timer_timeout is None, rendering the sensor state unknown.
     assert fan_timer is not None
     assert fan_timer.state == STATE_UNKNOWN
+
+
+async def test_thermostat_fan_timer_sensor_unsupported(
+    hass: HomeAssistant,
+    create_device: CreateDevice,
+    setup_platform: PlatformSetup,
+) -> None:
+    """Test that the fan timer sensor is not created if the Fan trait lacks timer support."""
+    create_device.create(
+        {
+            "sdm.devices.traits.Fan": {},
+        }
+    )
+    await setup_platform()
+
+    fan_timer = hass.states.get("sensor.my_sensor_fan_timer_timeout")
+    # The sensor should not be created when timer_mode is unsupported/None
+    assert fan_timer is None
