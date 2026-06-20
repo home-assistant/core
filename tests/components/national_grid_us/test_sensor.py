@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+
 from homeassistant.components.national_grid_us.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -23,10 +25,10 @@ PATCH_CLIENT = (
 )
 
 
+@pytest.mark.usefixtures("mock_national_grid_api")
 async def test_sensor_entities_created(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_national_grid_api: AsyncMock,
 ) -> None:
     """Test that sensor entities are created for each meter."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

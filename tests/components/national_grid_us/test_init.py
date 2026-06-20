@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from py_nationalgrid.exceptions import CannotConnectError, InvalidAuthError
+import pytest
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -16,10 +17,10 @@ PATCH_CLIENT = (
 )
 
 
+@pytest.mark.usefixtures("mock_national_grid_api")
 async def test_setup_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_national_grid_api: AsyncMock,
 ) -> None:
     """Test successful setup and unload of a config entry."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
