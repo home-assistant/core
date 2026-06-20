@@ -165,8 +165,10 @@ async def test_switch_outlets_without_outlet_count(
 ) -> None:
     """Test outlet switches are created when outlet.count is missing.
 
-    The outlet is discovered from the ``outlet.1.status`` status key and the
-    ``outlet.1.load.on`` / ``outlet.1.load.off`` available commands.
+    Some devices (e.g. Eaton EX series) expose switchable outlets via
+    ``outlet.<n>.*`` status keys and the matching load commands without
+    reporting ``outlet.count``. The non-numbered ``outlet.switchable`` key
+    must be ignored.
     """
 
     run_command = AsyncMock()
@@ -175,17 +177,24 @@ async def test_switch_outlets_without_outlet_count(
         hass,
         list_ups={"ups1": "UPS 1"},
         list_vars={
+            "outlet.switchable": "yes",
             "outlet.1.status": "on",
-            "outlet.1.name": "A1",
+            "outlet.1.switchable": "yes",
+            "outlet.1.desc": "PowerShare Outlet 1",
+            "outlet.2.status": "on",
+            "outlet.2.switchable": "yes",
+            "outlet.2.desc": "PowerShare Outlet 2",
         },
         list_commands_return_value={
             "outlet.1.load.on": None,
             "outlet.1.load.off": None,
+            "outlet.2.load.on": None,
+            "outlet.2.load.off": None,
         },
         run_command=run_command,
     )
 
-    entity_id = "switch.ups1_power_outlet_a1"
+    entity_id = "switch.ups1_power_powershare_outlet_1"
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_outlet.1.load.poweronoff"
@@ -210,24 +219,26 @@ async def test_switch_outlets_without_outlet_count(
     )
     run_command.assert_called_with("ups1", "outlet.1.load.on")
 
+    # Second outlet is also created
+    assert hass.states.get("switch.ups1_power_powershare_outlet_2")
+
 
 async def test_switch_outlet_not_created_without_both_commands(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test no switch is created when only one of load.on/load.off is available."""
+    """Test no switch is created when only one of load.on/load.off exists."""
 
     await async_init_integration(
         hass,
         list_ups={"ups1": "UPS 1"},
         list_vars={
             "outlet.1.status": "on",
-            "outlet.1.name": "A1",
+            "outlet.1.desc": "PowerShare Outlet 1",
         },
         list_commands_return_value={
             "outlet.1.load.on": None,
         },
     )
 
-    switch = hass.states.get("switch.ups1_power_outlet_a1")
-    assert not switch
+    assert not hass.states.get("switch.ups1_power_powershare_outlet_1")
