@@ -43,7 +43,10 @@ async def async_setup_entry(
                 entities.append(TemperatureSensor(device))
             if HumidityTrait.NAME in device.traits:
                 entities.append(HumiditySensor(device))
-            if FanTrait.NAME in device.traits:
+            if (
+                FanTrait.NAME in device.traits
+                and device.traits[FanTrait.NAME].timer_mode is not None
+            ):
                 entities.append(FanTimerSensor(device))
         async_add_entities(entities)
 
