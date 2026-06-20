@@ -125,7 +125,7 @@ async def test_buttons_outlets_without_outlet_count(
         },
     )
 
-    entity_id = "button.ups1_power_cycle_powershare_outlet_1"
+    entity_id = "button.ups1_power_cycle_outlet_powershare_outlet_1"
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_outlet.1.load.cycle"
