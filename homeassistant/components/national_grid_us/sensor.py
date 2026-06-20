@@ -79,11 +79,11 @@ async def async_setup_entry(
 
     entities: list[NationalGridSensor] = []
     if coordinator.data:
-        for service_point_number, meter_data in coordinator.data.meters.items():
+        for meter_key, meter_data in coordinator.data.meters.items():
             entities.extend(
                 NationalGridSensor(
                     coordinator=coordinator,
-                    service_point_number=service_point_number,
+                    meter_key=meter_key,
                     entity_description=description,
                     meter_data=meter_data,
                 )
@@ -101,16 +101,14 @@ class NationalGridSensor(NationalGridEntity, SensorEntity):
     def __init__(
         self,
         coordinator: NationalGridDataUpdateCoordinator,
-        service_point_number: str,
+        meter_key: str,
         entity_description: NationalGridSensorEntityDescription,
         meter_data: MeterData,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, service_point_number)
+        super().__init__(coordinator, meter_key)
         self.entity_description = entity_description
-        self._attr_unique_id = (
-            f"{DOMAIN}_{service_point_number}_{entity_description.key}"
-        )
+        self._attr_unique_id = f"{DOMAIN}_{meter_key}_{entity_description.key}"
         if entity_description.unit_fn:
             self._attr_native_unit_of_measurement = entity_description.unit_fn(
                 meter_data
@@ -121,7 +119,7 @@ class NationalGridSensor(NationalGridEntity, SensorEntity):
     @property
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        meter_data = self.coordinator.data.meters.get(self._service_point_number)
+        meter_data = self.coordinator.data.meters.get(self._meter_key)
         if meter_data is None:
             return None
         return self.entity_description.value_fn(meter_data)

@@ -136,12 +136,14 @@ class NationalGridDataUpdateCoordinator(
 
         for meter in billing_account["meter"]["nodes"]:
             service_point = str(meter["servicePointNumber"])
-            if service_point:
-                data.meters[service_point] = MeterData(
-                    meter=meter,
-                    account_id=account_id,
-                    billing_account=billing_account,
-                )
+            # Accounts may reuse the same service point number, so key by a
+            # composite of account_id and service point to avoid collisions.
+            meter_key = f"{account_id}_{service_point}"
+            data.meters[meter_key] = MeterData(
+                meter=meter,
+                account_id=account_id,
+                billing_account=billing_account,
+            )
 
         try:
             data.usages[account_id] = await self.api.get_energy_usages(

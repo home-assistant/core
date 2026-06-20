@@ -4,7 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components.national_grid_us.const import DOMAIN
+from homeassistant.components.national_grid_us.const import (
+    CONF_SELECTED_ACCOUNTS,
+    DOMAIN,
+)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -14,8 +18,12 @@ from .conftest import (
     ENTITY_GAS_COST,
     ENTITY_GAS_USAGE,
     MOCK_ACCOUNT_ID,
+    MOCK_ACCOUNT_ID_2,
+    MOCK_PASSWORD,
     MOCK_SERVICE_POINT,
+    MOCK_USERNAME,
     make_api_mock,
+    mock_billing_account,
 )
 
 from tests.common import MockConfigEntry
@@ -73,7 +81,7 @@ async def test_meter_devices_linked_to_account_device(
     assert account_device.entry_type is dr.DeviceEntryType.SERVICE
 
     meter_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERVICE_POINT)}
+        identifiers={(DOMAIN, f"{MOCK_ACCOUNT_ID}_{MOCK_SERVICE_POINT}")}
     )
     assert meter_device is not None
     assert meter_device.via_device_id == account_device.id
@@ -114,3 +122,53 @@ async def test_cost_sensor_uses_date_not_month_across_year_boundary(
     state = hass.states.get(ENTITY_ELECTRIC_COST)
     assert state is not None
     assert float(state.state) == 120.5
+
+
+async def test_shared_service_point_across_accounts_no_collision(
+    hass: HomeAssistant,
+) -> None:
+    """Test meters sharing a service point across accounts do not collide.
+
+    Two selected accounts can expose the same service point number. Meters
+    must be keyed by account_id + service point so neither meter overwrites
+    the other and both produce distinct devices and sensors.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title=MOCK_USERNAME,
+        data={
+            CONF_USERNAME: MOCK_USERNAME,
+            CONF_PASSWORD: MOCK_PASSWORD,
+            CONF_SELECTED_ACCOUNTS: [MOCK_ACCOUNT_ID, MOCK_ACCOUNT_ID_2],
+        },
+        unique_id="testuser_example_com",
+    )
+    config_entry.add_to_hass(hass)
+
+    api = make_api_mock()
+    api.get_billing_account = AsyncMock(side_effect=mock_billing_account)
+
+    with patch(PATCH_CLIENT, return_value=api):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device_registry = dr.async_get(hass)
+
+    device_1 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{MOCK_ACCOUNT_ID}_{MOCK_SERVICE_POINT}")}
+    )
+    device_2 = device_registry.async_get_device(
+        identifiers={(DOMAIN, f"{MOCK_ACCOUNT_ID_2}_{MOCK_SERVICE_POINT}")}
+    )
+    assert device_1 is not None
+    assert device_2 is not None
+    assert device_1.id != device_2.id
+
+    state_1 = hass.states.get(
+        f"sensor.electric_meter_{MOCK_ACCOUNT_ID}_sp001_last_billing_usage"
+    )
+    state_2 = hass.states.get(
+        f"sensor.electric_meter_{MOCK_ACCOUNT_ID_2}_sp001_last_billing_usage"
+    )
+    assert state_1 is not None
+    assert state_2 is not None
