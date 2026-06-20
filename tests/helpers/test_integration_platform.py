@@ -410,3 +410,26 @@ async def test_lazy_integration_platforms_import_fails(hass: HomeAssistant) -> N
     # subsequent request does not retry the import.
     assert processed == []
     assert await platforms.async_get_platform("loaded") is None
+
+
+async def test_lazy_integration_platforms_process_raises(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test a process callback that raises is isolated to its integration."""
+    good_platform = Mock()
+    mock_platform(hass, "good.platform_to_check", good_platform)
+    hass.config.components.add("good")
+    mock_platform(hass, "bad.platform_to_check", Mock())
+    hass.config.components.add("bad")
+
+    @callback
+    def _process_platform(hass: HomeAssistant, domain: str, platform: Any) -> Any:
+        if domain == "bad":
+            raise ValueError("boom")
+        return platform
+
+    platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
+
+    # The failing integration is skipped; the others are still returned.
+    assert await platforms.async_get_platforms() == {"good": good_platform}
+    assert "Error processing platform_to_check platform for bad" in caplog.text

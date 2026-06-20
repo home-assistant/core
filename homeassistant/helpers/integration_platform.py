@@ -347,10 +347,14 @@ class LazyIntegrationPlatforms[_R]:
         """
         domain = integration.domain
         platform = await _async_import_platform(integration, self._platform_name)
-        result: _R | None = (
-            None
-            if platform is None
-            else self._process_platform(self._hass, domain, platform)
-        )
+        result: _R | None = None
+        if platform is not None:
+            try:
+                result = self._process_platform(self._hass, domain, platform)
+            except Exception:
+                # Isolate failures so one integration cannot break the batch.
+                _LOGGER.exception(
+                    "Error processing %s platform for %s", self._platform_name, domain
+                )
         self._processed[domain] = result
         return result
