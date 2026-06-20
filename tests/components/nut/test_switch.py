@@ -223,44 +223,45 @@ async def test_switch_outlets_without_outlet_count(
     assert hass.states.get("switch.ups1_power_outlet_powershare_outlet_2")
 
 
-async def test_switch_outlet_not_created_without_both_commands(
+@pytest.mark.parametrize(
+    ("list_vars", "list_commands_return_value"),
+    [
+        pytest.param(
+            {
+                "outlet.1.status": "on",
+                "outlet.1.switchable": "yes",
+                "outlet.1.desc": "PowerShare Outlet 1",
+            },
+            {"outlet.1.load.on": None},
+            id="missing_one_command",
+        ),
+        pytest.param(
+            {
+                "outlet.1.status": "on",
+                "outlet.1.switchable": "no",
+                "outlet.1.desc": "PowerShare Outlet 1",
+            },
+            {"outlet.1.load.on": None, "outlet.1.load.off": None},
+            id="not_switchable",
+        ),
+    ],
+)
+async def test_switch_outlet_not_created(
     hass: HomeAssistant,
+    list_vars: dict[str, str],
+    list_commands_return_value: dict[str, None],
 ) -> None:
-    """Test no switch is created when only one of load.on/load.off exists."""
+    """Test no switch is created for ineligible outlets.
+
+    Covers an outlet missing one of the load.on/load.off commands and an
+    outlet that reports switchable: no.
+    """
 
     await async_init_integration(
         hass,
         list_ups={"ups1": "UPS 1"},
-        list_vars={
-            "outlet.1.status": "on",
-            "outlet.1.switchable": "yes",
-            "outlet.1.desc": "PowerShare Outlet 1",
-        },
-        list_commands_return_value={
-            "outlet.1.load.on": None,
-        },
-    )
-
-    assert not hass.states.get("switch.ups1_power_outlet_powershare_outlet_1")
-
-
-async def test_switch_outlet_not_created_when_not_switchable(
-    hass: HomeAssistant,
-) -> None:
-    """Test no switch is created when the outlet reports switchable: no."""
-
-    await async_init_integration(
-        hass,
-        list_ups={"ups1": "UPS 1"},
-        list_vars={
-            "outlet.1.status": "on",
-            "outlet.1.switchable": "no",
-            "outlet.1.desc": "PowerShare Outlet 1",
-        },
-        list_commands_return_value={
-            "outlet.1.load.on": None,
-            "outlet.1.load.off": None,
-        },
+        list_vars=list_vars,
+        list_commands_return_value=list_commands_return_value,
     )
 
     assert not hass.states.get("switch.ups1_power_outlet_powershare_outlet_1")
