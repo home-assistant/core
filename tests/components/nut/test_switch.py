@@ -265,3 +265,30 @@ async def test_switch_outlet_not_created(
     )
 
     assert not hass.states.get("switch.ups1_power_outlet_powershare_outlet_1")
+
+
+async def test_switch_invalid_outlet_count_falls_back(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a non-numeric outlet.count falls back to status-key discovery."""
+
+    config_entry = await async_init_integration(
+        hass,
+        list_ups={"ups1": "UPS 1"},
+        list_vars={
+            "outlet.count": "not-a-number",
+            "outlet.1.status": "on",
+            "outlet.1.switchable": "yes",
+            "outlet.1.desc": "PowerShare Outlet 1",
+        },
+        list_commands_return_value={
+            "outlet.1.load.on": None,
+            "outlet.1.load.off": None,
+        },
+    )
+
+    entity_id = "switch.ups1_power_outlet_powershare_outlet_1"
+    entry = entity_registry.async_get(entity_id)
+    assert entry
+    assert entry.unique_id == f"{config_entry.entry_id}_outlet.1.load.poweronoff"
