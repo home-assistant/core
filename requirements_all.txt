@@ -583,6 +583,9 @@ asyncsleepiq==1.7.1
 # homeassistant.components.sftp_storage
 asyncssh==2.21.0
 
+# homeassistant.components.aten_pe
+# atenpdu==0.8.0
+
 # homeassistant.components.aurora
 auroranoaa==0.0.5
 
