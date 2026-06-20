@@ -2,6 +2,7 @@
 
 from typing import TYPE_CHECKING, override
 
+from nexia.sensor import NexiaSensor
 from nexia.thermostat import NexiaThermostat
 from nexia.zone import NexiaThermostatZone
 
@@ -99,21 +100,26 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         coordinator: NexiaDataUpdateCoordinator,
         zone: NexiaThermostatZone,
         unique_id: str,
+        dev_info: DeviceInfo | None = None,
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, zone.thermostat, unique_id)
         self._zone = zone
         if TYPE_CHECKING:
             assert self._attr_device_info is not None
-        self._attr_device_info |= {
-            ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
-            ATTR_NAME: zone.get_name(),
-            "via_device_id": dr.async_get_device_id_by_identifier(
-                self.coordinator.hass,
-                (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773
-                config_entry_id=self.coordinator.config_entry.entry_id,
-            ),
-        }
+        if dev_info is not None:
+            self._attr_device_info |= dev_info
+        else:
+            zone_name = self._zone.get_name()
+            self._attr_device_info |= {
+                ATTR_IDENTIFIERS: {(DOMAIN, zone.zone_id)},  # type: ignore[arg-type] # until fix issue #139773
+                ATTR_NAME: zone.get_name(),
+                "via_device_id": dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, zone.thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                ),
+            }
         self._zone_signal = f"{SIGNAL_ZONE_UPDATE}-{zone.zone_id}"
 
     @override
@@ -137,3 +143,28 @@ class NexiaThermostatZoneEntity(NexiaThermostatEntity):
         Update a single zone.
         """
         async_dispatcher_send(self.hass, self._zone_signal)
+
+
+class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
+    """Base class for RoomIQ sensor entities."""
+
+    def __init__(
+        self,
+        coordinator: NexiaDataUpdateCoordinator,
+        zone: NexiaThermostatZone,
+        sensor: NexiaSensor,
+        unique_id: str,
+    ) -> None:
+        """Initialize the entity."""
+        # online sensors are separate devices
+        dev_info: DeviceInfo | None = None
+        if sensor.has_online:
+            dev_info = DeviceInfo(
+                identifiers={(DOMAIN, str(sensor.id))},
+                translation_key="room_iq_sensor",
+                translation_placeholders={"sensor_name": sensor.name},
+                suggested_area=sensor.name,
+                via_device=(DOMAIN, zone.zone_id),  # type: ignore[typeddict-item] # until fix issue #139773
+            )
+        super().__init__(coordinator, zone, unique_id, dev_info)
+        self._sensor_id = sensor.id
