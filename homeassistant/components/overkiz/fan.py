@@ -1,4 +1,4 @@
-"""Support for Overkiz IO ventilation points."""
+"""Support for Overkiz ventilation systems as fans."""
 
 from dataclasses import dataclass
 from typing import Any, cast
@@ -10,8 +10,12 @@ from homeassistant.components.fan import (
     FanEntityDescription,
     FanEntityFeature,
 )
+from homeassistant.const import Platform
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from ..entity import OverkizDescriptiveEntity
+from . import OverkizDataConfigEntry
+from .entity import OverkizDescriptiveEntity
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,6 +45,25 @@ VENTILATION_POINT_DESCRIPTIONS: dict[UIWidget, OverkizVentilationPointDescriptio
         set_air_flow_command=OverkizCommand.SET_AIR_TRANSFER,
     ),
 }
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: OverkizDataConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the Overkiz fans from a config entry."""
+    data = entry.runtime_data
+
+    async_add_entities(
+        OverkizVentilationPointFan(
+            device.device_url,
+            data.coordinator,
+            VENTILATION_POINT_DESCRIPTIONS[device.widget],
+        )
+        for device in data.platforms[Platform.FAN]
+        if device.widget in VENTILATION_POINT_DESCRIPTIONS
+    )
 
 
 class OverkizVentilationPointFan(OverkizDescriptiveEntity, FanEntity):
