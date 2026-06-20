@@ -455,6 +455,8 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         # work out (all) uri(s) to play
         for media_id_str in media_id:
             assert self.mass.server_info  # for type checking
+            # pre schema 33: verify_item_uri does not exist as API method
+            # with schema 33: only local files have to be verified
             if self.mass.server_info.schema_version < 33:
                 # URL or URI string
                 if "://" in media_id_str:

@@ -514,6 +514,7 @@ async def test_media_player_play_media_action(
         artist="artist",
         album="album",
         media_type=None,
+        username=None,
     )
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
