@@ -217,6 +217,52 @@ async def test_package_camera_image(
     assert ufp.api.get_public_api_camera_snapshot.call_args.kwargs["package"] is True
 
 
+async def test_package_camera_without_stream(
+    hass: HomeAssistant, ufp: MockUFPFixture, doorbell: ProtectCamera
+) -> None:
+    """The package camera stays available for snapshots when its stream is off."""
+    doorbell.channels = [c.model_copy() for c in doorbell.channels]
+    doorbell.channels[3].is_rtsp_enabled = False  # package stream off (the default)
+
+    await init_entry(hass, ufp, [doorbell])
+
+    # high (enabled, streaming) + package (disabled, snapshot-only) still present
+    assert_entity_counts(hass, Platform.CAMERA, 2, 1)
+
+    package_id = _assert_entity(hass, doorbell, 3, enabled=False)
+    await enable_entity(hass, ufp.entry.entry_id, package_id)
+    assert await async_get_stream_source(hass, package_id) is None
+    state = hass.states.get(package_id)
+    assert state
+    assert state.attributes["supported_features"] == CameraEntityFeature(0)
+
+    # snapshots still work, fetched with package=True
+    ufp.api.get_public_api_camera_snapshot = AsyncMock()
+    await async_get_image(hass, package_id)
+    assert ufp.api.get_public_api_camera_snapshot.call_args.kwargs["package"] is True
+
+
+async def test_package_only_camera(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    camera: ProtectCamera,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """A camera with only a package channel still exposes a snapshot entity."""
+    package = camera.channels[0].model_copy()
+    package.id = 3
+    package.fps = 2
+    package.is_rtsp_enabled = False
+    camera.channels = [package]
+
+    await init_entry(hass, ufp, [camera])
+
+    # only the package snapshot entity (disabled by default); no main fallback, no repair
+    assert_entity_counts(hass, Platform.CAMERA, 1, 0)
+    _assert_entity(hass, camera, 0, enabled=False)
+    assert issue_registry.async_get_issue(DOMAIN, f"rtsp_disabled_{camera.id}") is None
+
+
 async def test_no_channels(
     hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
 ) -> None:
