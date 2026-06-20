@@ -27,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
@@ -255,7 +256,9 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.discovery_schema = {
             vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
-            vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): str,
+            vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): TextSelector(
+                TextSelectorConfig(read_only=True)
+            ),
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
