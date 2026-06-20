@@ -110,6 +110,7 @@ class FanTimerSensor(SensorBase):
     """Representation of the Fan Timer Timeout Sensor."""
 
     _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_state_class = None
     _attr_translation_key = "fan_timer_timeout"
 
     @property
