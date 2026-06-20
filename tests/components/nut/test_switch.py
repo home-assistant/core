@@ -194,7 +194,7 @@ async def test_switch_outlets_without_outlet_count(
         run_command=run_command,
     )
 
-    entity_id = "switch.ups1_power_powershare_outlet_1"
+    entity_id = "switch.ups1_power_outlet_powershare_outlet_1"
     entry = entity_registry.async_get(entity_id)
     assert entry
     assert entry.unique_id == f"{config_entry.entry_id}_outlet.1.load.poweronoff"
@@ -220,7 +220,7 @@ async def test_switch_outlets_without_outlet_count(
     run_command.assert_called_with("ups1", "outlet.1.load.on")
 
     # Second outlet is also created
-    assert hass.states.get("switch.ups1_power_powershare_outlet_2")
+    assert hass.states.get("switch.ups1_power_outlet_powershare_outlet_2")
 
 
 async def test_switch_outlet_not_created_without_both_commands(
@@ -241,4 +241,4 @@ async def test_switch_outlet_not_created_without_both_commands(
         },
     )
 
-    assert not hass.states.get("switch.ups1_power_powershare_outlet_1")
+    assert not hass.states.get("switch.ups1_power_outlet_powershare_outlet_1")
