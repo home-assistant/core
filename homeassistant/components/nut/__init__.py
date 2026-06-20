@@ -51,7 +51,7 @@ def _outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
         if rest == key:
             continue
         number = rest.split(".", 1)[0]
-        if number.isdigit():
+        if number.isdigit() and int(number) > 0:
             outlet_numbers.add(int(number))
 
     return outlet_numbers
@@ -107,21 +107,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     if username is not None and password is not None:
-        # Dynamically add outlet integration commands. Outlets are discovered
-        # from outlet.count when available, otherwise from outlet.<n>.* status
-        # keys. The load.cycle button is only created for devices that report
-        # outlet.count (see button.py), so it is only exposed in that case.
-        has_outlet_count = status.get("outlet.count") is not None
+        # Dynamically add outlet integration commands for every detected
+        # outlet. Outlets are discovered from outlet.count when available,
+        # otherwise from outlet.<n>.* status keys. Commands are later
+        # intersected with the device's actual command list, so unsupported
+        # commands are not exposed.
         additional_integration_commands = set()
         for outlet_num in _outlet_numbers_from_status(status):
             additional_integration_commands |= {
+                f"outlet.{outlet_num}.load.cycle",
                 f"outlet.{outlet_num}.load.on",
                 f"outlet.{outlet_num}.load.off",
             }
-            if has_outlet_count:
-                additional_integration_commands.add(
-                    f"outlet.{outlet_num}.load.cycle"
-                )
 
         valid_integration_commands = (
             INTEGRATION_SUPPORTED_COMMANDS | additional_integration_commands
