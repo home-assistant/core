@@ -85,6 +85,8 @@ async def test_info_endpoint_register_callback(
 
     assert "calls system_health.async_register_info, which is deprecated" in caplog.text
     assert "This will stop working in Home Assistant 2027.1" in caplog.text
+    # The deprecation must not be attributed to system_health itself
+    assert "integration 'system_health'" not in caplog.text
 
     assert await async_setup_component(hass, DOMAIN, {})
     data = await gather_system_health_info(hass, hass_ws_client)

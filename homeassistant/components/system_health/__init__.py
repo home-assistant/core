@@ -53,6 +53,7 @@ def async_register_info(
         "add a system_health platform instead",
         breaks_in_ha_version="2027.1",
         core_behavior=ReportBehavior.LOG,
+        exclude_integrations={DOMAIN},
     )
     hass.data.setdefault(DOMAIN, {})
     SystemHealthRegistration(hass, domain).async_register_info(info_callback)
