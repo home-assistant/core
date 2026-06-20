@@ -312,6 +312,7 @@ async def test_thermostat_fan_timer_sensor(
     assert fan_timer is not None
     assert fan_timer.state == "2019-05-10T03:22:54+00:00"
     assert fan_timer.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.TIMESTAMP
+    assert fan_timer.attributes.get(ATTR_STATE_CLASS) is None
     assert fan_timer.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Fan timer timeout"
 
     entry = entity_registry.async_get("sensor.my_sensor_fan_timer_timeout")
