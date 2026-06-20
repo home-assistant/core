@@ -370,13 +370,43 @@ async def test_lazy_integration_platforms_get_platforms(hass: HomeAssistant) -> 
     mock_integration(hass, MockModule("integration_c"))
     hass.config.components.add("integration_c")
 
+    processed: list[str] = []
+
     @callback
     def _process_platform(hass: HomeAssistant, domain: str, platform: Any) -> Any:
+        processed.append(domain)
         return platform
 
     platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
 
-    assert await platforms.async_get_platforms() == {
-        "integration_a": platform_a,
-        "integration_b": platform_b,
-    }
+    expected = {"integration_a": platform_a, "integration_b": platform_b}
+    assert await platforms.async_get_platforms() == expected
+    assert sorted(processed) == ["integration_a", "integration_b"]
+
+    # A second call is served entirely from the cache without reprocessing.
+    assert await platforms.async_get_platforms() == expected
+    assert sorted(processed) == ["integration_a", "integration_b"]
+
+
+async def test_lazy_integration_platforms_import_fails(hass: HomeAssistant) -> None:
+    """Test a platform that fails to import is cached as None."""
+    mock_platform(hass, "loaded.platform_to_check", Mock())
+    hass.config.components.add("loaded")
+
+    processed: list[str] = []
+
+    @callback
+    def _process_platform(hass: HomeAssistant, domain: str, platform: Any) -> Any:
+        processed.append(domain)
+        return platform
+
+    platforms = LazyIntegrationPlatforms(hass, "platform_to_check", _process_platform)
+
+    integration = await loader.async_get_integration(hass, "loaded")
+    with patch.object(integration, "async_get_platform", side_effect=ImportError):
+        assert await platforms.async_get_platform("loaded") is None
+
+    # The process callback was never called and the failure is cached, so a
+    # subsequent request does not retry the import.
+    assert processed == []
+    assert await platforms.async_get_platform("loaded") is None

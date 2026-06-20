@@ -253,7 +253,8 @@ async def _async_process_integration_platforms(
         await asyncio.gather(*futures)
 
 
-type ProcessPlatform[_R] = Callable[[HomeAssistant, str, ModuleType], _R]
+# Any = platform.
+type ProcessPlatform[_R] = Callable[[HomeAssistant, str, Any], _R]
 
 
 class LazyIntegrationPlatforms[_R]:
@@ -263,6 +264,10 @@ class LazyIntegrationPlatforms[_R]:
     platform for every loaded integration up front (and as integrations load),
     this only imports and processes the platform for an integration the first
     time it is requested, and only for integrations that are loaded.
+
+    The platform is intentionally not registered for preloading, since for a
+    rarely used platform that would import it for every integration during
+    loading, defeating the point of loading it lazily.
     """
 
     def __init__(
@@ -278,9 +283,6 @@ class LazyIntegrationPlatforms[_R]:
         # A cached value of None means the integration does not provide the
         # platform (or it failed to import).
         self._processed: dict[str, _R | None] = {}
-        # Tell the loader to preload the platform for any future components so
-        # we can reduce the amount of import executor usage.
-        async_register_preload_platform(hass, platform_name)
 
     async def async_get_platform(self, domain: str) -> _R | None:
         """Return the processed platform for a loaded integration.
@@ -301,8 +303,8 @@ class LazyIntegrationPlatforms[_R]:
     async def async_get_platforms(self) -> dict[str, _R]:
         """Return the processed platform for all loaded integrations that have it.
 
-        The integrations are resolved in a single pass and their platforms are
-        imported concurrently.
+        The integrations are resolved in a single pass and only platforms that
+        are not already cached are imported, concurrently.
         """
         integrations = await async_get_integrations(
             self._hass, self._hass.config.top_level_components
@@ -313,20 +315,26 @@ class LazyIntegrationPlatforms[_R]:
             if not isinstance(integration, Exception)
             and integration.platforms_exists((self._platform_name,))
         ]
-        results = await asyncio.gather(
-            *(self._async_process(integration) for integration in to_process)
-        )
+        if missing := [
+            integration
+            for integration in to_process
+            if integration.domain not in self._processed
+        ]:
+            await asyncio.gather(
+                *(self._async_process(integration) for integration in missing)
+            )
         return {
             integration.domain: result
-            for integration, result in zip(to_process, results, strict=True)
-            if result is not None
+            for integration in to_process
+            if (result := self._processed[integration.domain]) is not None
         }
 
     async def _async_process(self, integration: Integration) -> _R | None:
-        """Import, process and cache the platform for a loaded integration."""
+        """Import, process and cache the platform for a loaded integration.
+
+        Callers must only pass integrations that are not already cached.
+        """
         domain = integration.domain
-        if domain in self._processed:
-            return self._processed[domain]
         if not integration.platforms_exists((self._platform_name,)):
             self._processed[domain] = None
             return None
