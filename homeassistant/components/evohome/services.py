@@ -41,8 +41,8 @@ from .coordinator import EvoDataUpdateCoordinator
 from .helpers import async_create_deprecation_issue_once
 
 
-def _normalise_mode(mode: str) -> str:
-    """Normalise a CamelCase system mode string to the snake_case used by the library."""
+def _as_snake_case(mode: str) -> str:
+    """Convert a CamelCase string to the snake_case used by the library."""
     return re.sub(r"(?<!^)(?=[A-Z])", "_", mode).lower()
 
 
@@ -170,7 +170,7 @@ def _validate_set_system_mode_params(tcs: ControlSystem, data: dict[str, Any]) -
     # different schema (until instead of duration/period) for the method invoked
     # via this service call
 
-    if (mode_info := tcs_modes.get(_normalise_mode(mode))) is None:  # type: ignore[call-overload]
+    if (mode_info := tcs_modes.get(_as_snake_case(mode))) is None:  # type: ignore[call-overload]
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="mode_not_supported",
@@ -249,13 +249,12 @@ def setup_service_functions(
             # this service call to be deprecated, so no need to _resolve_ctl_unique_id
             unique_id = coordinator.tcs.id
 
-        if ATTR_MODE in call.data:
-            call.data = {**call.data, ATTR_MODE: _normalise_mode(call.data[ATTR_MODE])}  # type: ignore[assignment]
-
         payload = {
             "unique_id": unique_id,
             "service": call.service,
-            "data": call.data,
+            "data": {**call.data, ATTR_MODE: _as_snake_case(call.data[ATTR_MODE])}
+            if ATTR_MODE in call.data
+            else call.data,
         }
         async_dispatcher_send(hass, DOMAIN, payload)
 
