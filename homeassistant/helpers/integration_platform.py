@@ -312,11 +312,7 @@ class LazyIntegrationPlatforms[_R]:
         return await self._async_process(integration)
 
     async def async_get_platforms(self) -> dict[str, _R]:
-        """Return the processed platform for all loaded integrations that have it.
-
-        The integrations are resolved in a single pass and only platforms that
-        are not already cached are imported, concurrently.
-        """
+        """Return the processed platform for all loaded integrations that have it."""
         integrations = await async_get_integrations(
             self._hass, self._hass.config.top_level_components
         )
