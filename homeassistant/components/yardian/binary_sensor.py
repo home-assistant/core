@@ -11,6 +11,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import YardianConfigEntry, YardianUpdateCoordinator
 from .entity import YardianEntity, YardianZoneEntity
@@ -55,8 +56,8 @@ SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
         key="standby",
         translation_key="standby",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda coordinator: bool(
-            coordinator.data.oper_info.get("iStandby", 0)
+        value_fn=lambda coordinator: (
+            coordinator.data.oper_info.get("iStandby", 0) > dt_util.utcnow().timestamp()
         ),
     ),
     YardianBinarySensorEntityDescription(
