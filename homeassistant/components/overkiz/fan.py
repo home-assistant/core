@@ -28,8 +28,6 @@ class OverkizFanDescription(FanEntityDescription):
 
 
 FAN_DESCRIPTIONS: list[OverkizFanDescription] = [
-    # IO ventilation points: identical apart from the command/state used
-    # to read and set the air flow level (0-100).
     OverkizFanDescription(
         key=UIWidget.VENTILATION_INLET,
         percentage=OverkizState.CORE_AIR_INPUT,
