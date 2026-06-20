@@ -657,7 +657,7 @@ class ColorTempSelectorUnit(StrEnum):
 
 @SELECTORS.register("color_temp")
 class ColorTempSelector(Selector[ColorTempSelectorConfig]):
-    """Selector of an color temperature."""
+    """Selector of a color temperature."""
 
     selector_type = "color_temp"
 
@@ -699,12 +699,12 @@ class ColorTempSelector(Selector[ColorTempSelectorConfig]):
 
 
 class ConditionSelectorConfig(BaseSelectorConfig):
-    """Class to represent an condition selector config."""
+    """Class to represent a condition selector config."""
 
 
 @SELECTORS.register("condition")
 class ConditionSelector(Selector[ConditionSelectorConfig]):
-    """Selector of an condition sequence (script syntax)."""
+    """Selector of a condition sequence (script syntax)."""
 
     selector_type = "condition"
 
@@ -1077,7 +1077,7 @@ class FileSelector(Selector[FileSelectorConfig]):
 
 
 class FloorSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent an floor selector config."""
+    """Class to represent a floor selector config."""
 
     entity: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
     device: DeviceFilterSelectorConfig | list[DeviceFilterSelectorConfig]
@@ -1178,7 +1178,7 @@ class LabelSelector(Selector[LabelSelectorConfig]):
 
 
 class LanguageSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent an language selector config."""
+    """Class to represent a language selector config."""
 
     languages: list[str]
     native_name: bool
@@ -1187,7 +1187,7 @@ class LanguageSelectorConfig(BaseSelectorConfig, total=False):
 
 @SELECTORS.register("language")
 class LanguageSelector(Selector[LanguageSelectorConfig]):
-    """Selector for an language."""
+    """Selector for a language."""
 
     selector_type = "language"
 
@@ -1799,7 +1799,7 @@ class SelectSelectorConfig(BaseSelectorConfig, total=False):
 
 @SELECTORS.register("select")
 class SelectSelector(Selector[SelectSelectorConfig]):
-    """Selector for an single-choice input select."""
+    """Selector for a single-choice input select."""
 
     selector_type = "select"
 
@@ -1872,7 +1872,7 @@ class SerialPortSelector(Selector[SerialPortSelectorConfig]):
 
 
 class StateSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent an state selector config."""
+    """Class to represent a state selector config."""
 
     entity_id: str
     hide_states: list[str]
@@ -1996,12 +1996,12 @@ class TargetSelector(Selector[TargetSelectorConfig]):
 
 
 class TemplateSelectorConfig(BaseSelectorConfig):
-    """Class to represent an template selector config."""
+    """Class to represent a template selector config."""
 
 
 @SELECTORS.register("template")
 class TemplateSelector(Selector[TemplateSelectorConfig]):
-    """Selector for an template."""
+    """Selector for a template."""
 
     selector_type = "template"
 
@@ -2087,7 +2087,7 @@ class ThemeSelectorConfig(BaseSelectorConfig):
 
 @SELECTORS.register("theme")
 class ThemeSelector(Selector[ThemeSelectorConfig]):
-    """Selector for an theme."""
+    """Selector for a theme."""
 
     selector_type = "theme"
 
@@ -2130,7 +2130,7 @@ class TimeSelector(Selector[TimeSelectorConfig]):
 
 
 class TriggerSelectorConfig(BaseSelectorConfig):
-    """Class to represent an trigger selector config."""
+    """Class to represent a trigger selector config."""
 
 
 @SELECTORS.register("trigger")

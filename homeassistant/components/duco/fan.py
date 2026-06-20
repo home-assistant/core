@@ -132,6 +132,5 @@ class DucoVentilationFanEntity(DucoEntity, FanEntity):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="failed_to_set_state",
-                translation_placeholders={"error": repr(err)},
             ) from err
         await self.coordinator.async_refresh()
