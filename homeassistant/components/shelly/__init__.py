@@ -134,8 +134,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ShellyConfigEntry) -> bool:
     """Migrate old config entries."""
-    if entry.version > 1 or (entry.version == 1 and entry.minor_version > 3):
-        return False
+
     if entry.minor_version < 3:
         # One-time flip of explicit Active scanning to Auto so existing
         # installs get the new battery-friendly default; Passive stays
@@ -195,7 +194,7 @@ async def _async_setup_block_entry(
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+            connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
@@ -309,7 +308,7 @@ async def _async_setup_rpc_entry(hass: HomeAssistant, entry: ShellyConfigEntry) 
     device_entry = None
     if entry.unique_id is not None:
         device_entry = dev_reg.async_get_device(
-            connections={(CONNECTION_NETWORK_MAC, dr.format_mac(entry.unique_id))},
+            connections={(CONNECTION_NETWORK_MAC, entry.unique_id)},
         )
     # https://github.com/home-assistant/core/pull/48076
     if device_entry and entry.entry_id not in device_entry.config_entries:
