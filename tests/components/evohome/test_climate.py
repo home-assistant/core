@@ -7,7 +7,6 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from evohomeasync2 import exceptions as evo_exc
-from evohomeasync2.const import SZ_UNTIL, SystemMode as EvoSystemMode
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -116,9 +115,9 @@ async def test_ctl_set_hvac_mode(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with(EvoSystemMode.HEATING_OFF, until=None)
+            mock_fcn.assert_awaited_once_with("heating_off", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with(EvoSystemMode.OFF, until=None)
+            mock_fcn.assert_awaited_once_with("off", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -135,9 +134,9 @@ async def test_ctl_set_hvac_mode(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with(EvoSystemMode.AUTO, until=None)
+            mock_fcn.assert_awaited_once_with("auto", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with(EvoSystemMode.HEAT, until=None)
+            mock_fcn.assert_awaited_once_with("heat", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -186,9 +185,9 @@ async def test_ctl_turn_off(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with(EvoSystemMode.HEATING_OFF, until=None)
+            mock_fcn.assert_awaited_once_with("heating_off", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with(EvoSystemMode.OFF, until=None)
+            mock_fcn.assert_awaited_once_with("off", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -243,9 +242,9 @@ async def test_ctl_turn_on(
         )
 
         try:
-            mock_fcn.assert_awaited_once_with(EvoSystemMode.AUTO, until=None)
+            mock_fcn.assert_awaited_once_with("auto", until=None)
         except AssertionError:
-            mock_fcn.assert_awaited_once_with(EvoSystemMode.HEAT, until=None)
+            mock_fcn.assert_awaited_once_with("heat", until=None)
 
         results.append(mock_fcn.await_args.args)  # type: ignore[union-attr]
 
@@ -271,7 +270,7 @@ async def test_ctl_preset_reset_deprecated(
             blocking=True,
         )
 
-        mock_fcn.assert_awaited_once_with(EvoSystemMode.AUTO_WITH_RESET, until=None)
+        mock_fcn.assert_awaited_once_with("auto_with_reset", until=None)
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_preset_reset")
     assert issue is not None
@@ -321,7 +320,7 @@ async def test_zone_set_hvac_mode(
 
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args != ()  # minimum target temp
-        assert mock_fcn.await_args.kwargs == {SZ_UNTIL: None}
+        assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
 
@@ -370,7 +369,7 @@ async def test_zone_set_preset_mode(
 
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args != ()  # current target temp
-        assert mock_fcn.await_args.kwargs == {SZ_UNTIL: None}
+        assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
 
@@ -456,7 +455,7 @@ async def test_zone_turn_off(
 
         assert mock_fcn.await_args is not None  # mypy hint
         assert mock_fcn.await_args.args != ()  # minimum target temp
-        assert mock_fcn.await_args.kwargs == {SZ_UNTIL: None}
+        assert mock_fcn.await_args.kwargs == {"until": None}
 
         results.append(mock_fcn.await_args.args)
 
