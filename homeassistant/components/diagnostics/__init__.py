@@ -1,7 +1,7 @@
 """The Diagnostics integration."""
 
 from collections.abc import Callable, Coroutine, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from http import HTTPStatus
 import json
 import logging
@@ -16,10 +16,10 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
+    integration_platform,
     issue_registry as ir,
 )
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
@@ -44,9 +44,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
-_DIAGNOSTICS_DATA: HassKey[LazyIntegrationPlatforms[DiagnosticsPlatformData]] = HassKey(
-    DOMAIN
-)
+_DIAGNOSTICS_DATA: HassKey[DiagnosticsData] = HassKey(DOMAIN)
 
 
 @dataclass(slots=True)
@@ -66,10 +64,19 @@ class DiagnosticsPlatformData:
     )
 
 
+@dataclass(slots=True)
+class DiagnosticsData:
+    """Diagnostic data."""
+
+    platforms: dict[str, DiagnosticsPlatformData] = field(default_factory=dict)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up Diagnostics integration."""
-    hass.data[_DIAGNOSTICS_DATA] = LazyIntegrationPlatforms(
-        hass, DOMAIN, _process_diagnostics_platform
+    hass.data[_DIAGNOSTICS_DATA] = DiagnosticsData()
+
+    await integration_platform.async_process_integration_platforms(
+        hass, DOMAIN, _register_diagnostics_platform
     )
 
     websocket_api.async_register_command(hass, handle_info)
@@ -94,11 +101,12 @@ class DiagnosticsProtocol(Protocol):
 
 
 @callback
-def _process_diagnostics_platform(
-    hass: HomeAssistant, domain: str, platform: DiagnosticsProtocol
-) -> DiagnosticsPlatformData:
-    """Build the diagnostics platform data from a diagnostics platform."""
-    return DiagnosticsPlatformData(
+def _register_diagnostics_platform(
+    hass: HomeAssistant, integration_domain: str, platform: DiagnosticsProtocol
+) -> None:
+    """Register a diagnostics platform."""
+    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
+    diagnostics_data.platforms[integration_domain] = DiagnosticsPlatformData(
         getattr(platform, "async_get_config_entry_diagnostics", None),
         getattr(platform, "async_get_device_diagnostics", None),
     )
@@ -106,12 +114,12 @@ def _process_diagnostics_platform(
 
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "diagnostics/list"})
-@websocket_api.async_response
-async def handle_info(
+@callback
+def handle_info(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List all possible diagnostic handlers."""
-    platforms = await hass.data[_DIAGNOSTICS_DATA].async_get_platforms()
+    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
     result = [
         {
             "domain": domain,
@@ -120,7 +128,7 @@ async def handle_info(
                 DiagnosticsSubType.DEVICE: info.device_diagnostics is not None,
             },
         }
-        for domain, info in platforms.items()
+        for domain, info in diagnostics_data.platforms.items()
     ]
     connection.send_result(msg["id"], result)
 
@@ -132,14 +140,15 @@ async def handle_info(
         vol.Required("domain"): str,
     }
 )
-@websocket_api.async_response
-async def handle_get(
+@callback
+def handle_get(
     hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
 ) -> None:
     """List all diagnostic handlers for a domain."""
     domain = msg["domain"]
+    diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
 
-    if (info := await hass.data[_DIAGNOSTICS_DATA].async_get_platform(domain)) is None:
+    if (info := diagnostics_data.platforms.get(domain)) is None:
         connection.send_error(
             msg["id"], websocket_api.ERR_NOT_FOUND, "Domain not supported"
         )
@@ -264,9 +273,7 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         diagnostics_data = hass.data[_DIAGNOSTICS_DATA]
-        if (
-            info := await diagnostics_data.async_get_platform(config_entry.domain)
-        ) is None:
+        if (info := diagnostics_data.platforms.get(config_entry.domain)) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         filename = f"{config_entry.domain}-{config_entry.entry_id}"
