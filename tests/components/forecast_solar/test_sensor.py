@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from unittest.mock import MagicMock
+from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -22,7 +23,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -50,18 +50,19 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
-    # The today-curve attributes expose only the entries whose date
-    # matches the mocked "now" (2021-06-27). The 2022-06-27 entry in
-    # the conftest mock should not appear.
-    today_ts = datetime(
-        2021, 6, 27, 13, 0, tzinfo=dt_util.get_default_time_zone()
-    ).isoformat()
-    today_watts = state.attributes.get("watts")
-    today_wh = state.attributes.get("wh_period")
-    assert isinstance(today_watts, dict)
-    assert isinstance(today_wh, dict)
-    assert today_watts == {today_ts: 10}
-    assert today_wh == {today_ts: 30}
+    # The watts/wh_period attributes expose the full forecast horizon
+    # emitted by the library, with ISO 8601 keys in the site/API
+    # timezone (``Europe/Amsterdam`` per the conftest mock). The mock
+    # seeds two entries: 2021-06-27 and 2022-06-27.
+    api_tz = ZoneInfo("Europe/Amsterdam")
+    ts_2021 = datetime(2021, 6, 27, 13, 0, tzinfo=api_tz).isoformat()
+    ts_2022 = datetime(2022, 6, 27, 13, 0, tzinfo=api_tz).isoformat()
+    watts_attr = state.attributes.get("watts")
+    wh_attr = state.attributes.get("wh_period")
+    assert isinstance(watts_attr, dict)
+    assert isinstance(wh_attr, dict)
+    assert watts_attr == {ts_2021: 10, ts_2022: 100}
+    assert wh_attr == {ts_2021: 30, ts_2022: 300}
 
     state = hass.states.get("sensor.energy_production_today_remaining")
     entry = entity_registry.async_get("sensor.energy_production_today_remaining")

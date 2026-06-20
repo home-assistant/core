@@ -39,24 +39,21 @@ async def test_get_forecast_raw(
         return_response=True,
     )
 
-    assert "forecast" in response
-    forecast = response["forecast"]
-    assert isinstance(forecast, list)
-    assert len(forecast) == 2
+    # Response shape mirrors the today-attributes on the energy sensor:
+    # two flat ``{ISO timestamp -> number}`` maps.
+    assert set(response.keys()) == {"watts", "wh_period"}
+    assert isinstance(response["watts"], dict)
+    assert isinstance(response["wh_period"], dict)
 
-    # The conftest mock seeds two timestamps in `watts` and `wh_period`,
-    # both at 13:00 in the test default timezone.
-    tz = dt_util.get_default_time_zone()
-    first = forecast[0]
-    assert set(first.keys()) >= {"time", "value", "energy_wh"}
-    assert first["time"] == datetime(2021, 6, 27, 13, 0, tzinfo=tz).isoformat()
-    assert first["value"] == 10
-    assert first["energy_wh"] == 30
-
-    second = forecast[1]
-    assert second["time"] == datetime(2022, 6, 27, 13, 0, tzinfo=tz).isoformat()
-    assert second["value"] == 100
-    assert second["energy_wh"] == 300
+    # The conftest mock seeds two timestamps in ``watts`` and
+    # ``wh_period``, both at 13:00 in the test default timezone. The
+    # service emits ISO keys in the site/API timezone
+    # (``Europe/Amsterdam`` per the conftest mock).
+    api_tz = ZoneInfo("Europe/Amsterdam")
+    ts_2021 = datetime(2021, 6, 27, 13, 0, tzinfo=api_tz).isoformat()
+    ts_2022 = datetime(2022, 6, 27, 13, 0, tzinfo=api_tz).isoformat()
+    assert response["watts"] == {ts_2021: 10, ts_2022: 100}
+    assert response["wh_period"] == {ts_2021: 30, ts_2022: 300}
 
 
 async def test_get_forecast_hourly_aggregation(
@@ -67,9 +64,9 @@ async def test_get_forecast_hourly_aggregation(
     """Test the get_forecast service aggregates to whole hours."""
     # Add some 15-min-resolution entries within a single hour so we can
     # observe that power gets averaged and energy gets summed.
-    tz = dt_util.get_default_time_zone()
+    api_tz = ZoneInfo("Europe/Amsterdam")
     estimate = mock_forecast_solar.estimate.return_value
-    base = datetime(2026, 6, 19, 8, 0, tzinfo=tz)
+    base = datetime(2026, 6, 19, 8, 0, tzinfo=api_tz)
     estimate.watts = {
         base: 1000,
         base + timedelta(minutes=15): 2000,
@@ -96,16 +93,14 @@ async def test_get_forecast_hourly_aggregation(
         return_response=True,
     )
 
-    forecast = response["forecast"]
-    by_time = {entry["time"]: entry for entry in forecast}
-
-    hour_0 = by_time[base.isoformat()]
-    assert hour_0["value"] == pytest.approx(2500.0)
-    assert hour_0["energy_wh"] == 2500
-
-    hour_1 = by_time[(base + timedelta(hours=1)).isoformat()]
-    assert hour_1["value"] == pytest.approx(5000.0)
-    assert hour_1["energy_wh"] == 1250
+    watts = response["watts"]
+    wh = response["wh_period"]
+    hour_0_iso = base.isoformat()
+    hour_1_iso = (base + timedelta(hours=1)).isoformat()
+    assert watts[hour_0_iso] == pytest.approx(2500.0)
+    assert wh[hour_0_iso] == 2500
+    assert watts[hour_1_iso] == pytest.approx(5000.0)
+    assert wh[hour_1_iso] == 1250
 
 
 async def test_get_forecast_filters_by_time_range(
@@ -114,13 +109,13 @@ async def test_get_forecast_filters_by_time_range(
     mock_forecast_solar: MagicMock,
 ) -> None:
     """Test the get_forecast service filters entries to the requested range."""
-    tz = dt_util.get_default_time_zone()
+    api_tz = ZoneInfo("Europe/Amsterdam")
     estimate = mock_forecast_solar.estimate.return_value
     estimate.watts = {
-        datetime(2026, 6, 19, 6, 0, tzinfo=tz): 100,
-        datetime(2026, 6, 19, 9, 0, tzinfo=tz): 500,
-        datetime(2026, 6, 19, 12, 0, tzinfo=tz): 900,
-        datetime(2026, 6, 19, 18, 0, tzinfo=tz): 50,
+        datetime(2026, 6, 19, 6, 0, tzinfo=api_tz): 100,
+        datetime(2026, 6, 19, 9, 0, tzinfo=api_tz): 500,
+        datetime(2026, 6, 19, 12, 0, tzinfo=api_tz): 900,
+        datetime(2026, 6, 19, 18, 0, tzinfo=api_tz): 50,
     }
     estimate.wh_period = dict(estimate.watts)
 
@@ -129,17 +124,22 @@ async def test_get_forecast_filters_by_time_range(
         SERVICE_GET_FORECAST,
         {
             ATTR_CONFIG_ENTRY: init_integration.entry_id,
-            ATTR_START: datetime(2026, 6, 19, 9, 0, tzinfo=tz),
-            ATTR_END: datetime(2026, 6, 19, 18, 0, tzinfo=tz),
+            ATTR_START: datetime(2026, 6, 19, 9, 0, tzinfo=api_tz),
+            ATTR_END: datetime(2026, 6, 19, 18, 0, tzinfo=api_tz),
         },
         blocking=True,
         return_response=True,
     )
 
-    forecast = response["forecast"]
-    assert len(forecast) == 2
-    assert forecast[0]["value"] == 500
-    assert forecast[1]["value"] == 900
+    # Range is half-open ``[start, end)``: 09:00 is included, 18:00 is
+    # excluded, leaving the 09:00 and 12:00 entries.
+    watts = response["watts"]
+    assert set(watts.keys()) == {
+        datetime(2026, 6, 19, 9, 0, tzinfo=api_tz).isoformat(),
+        datetime(2026, 6, 19, 12, 0, tzinfo=api_tz).isoformat(),
+    }
+    assert watts[datetime(2026, 6, 19, 9, 0, tzinfo=api_tz).isoformat()] == 500
+    assert watts[datetime(2026, 6, 19, 12, 0, tzinfo=api_tz).isoformat()] == 900
 
 
 async def test_get_forecast_accepts_naive_datetimes(
@@ -149,19 +149,20 @@ async def test_get_forecast_accepts_naive_datetimes(
 ) -> None:
     """Test that naive start/end datetimes are interpreted in the forecast zone.
 
-    The Home Assistant UI datetime selector and `cv.datetime` produce naive
-    `datetime` values for strings without an offset, so the service must
-    attach the forecast's timezone before filtering. The mock estimate has
-    ``timezone = "Europe/Amsterdam"``, which can differ from HA's default
-    time zone, so the forecast data is built in that zone too.
+    The Home Assistant UI datetime selector and ``cv.datetime`` produce
+    naive ``datetime`` values for strings without an offset, so the
+    service must attach the forecast's timezone before filtering. The
+    mock estimate has ``timezone = "Europe/Amsterdam"``, which can
+    differ from HA's default time zone, so the forecast data is built
+    in that zone too.
     """
-    forecast_tz = ZoneInfo("Europe/Amsterdam")
+    api_tz = ZoneInfo("Europe/Amsterdam")
     estimate = mock_forecast_solar.estimate.return_value
     estimate.watts = {
-        datetime(2026, 6, 19, 6, 0, tzinfo=forecast_tz): 100,
-        datetime(2026, 6, 19, 9, 0, tzinfo=forecast_tz): 500,
-        datetime(2026, 6, 19, 12, 0, tzinfo=forecast_tz): 900,
-        datetime(2026, 6, 19, 18, 0, tzinfo=forecast_tz): 50,
+        datetime(2026, 6, 19, 6, 0, tzinfo=api_tz): 100,
+        datetime(2026, 6, 19, 9, 0, tzinfo=api_tz): 500,
+        datetime(2026, 6, 19, 12, 0, tzinfo=api_tz): 900,
+        datetime(2026, 6, 19, 18, 0, tzinfo=api_tz): 50,
     }
     estimate.wh_period = dict(estimate.watts)
 
@@ -170,7 +171,7 @@ async def test_get_forecast_accepts_naive_datetimes(
         SERVICE_GET_FORECAST,
         {
             ATTR_CONFIG_ENTRY: init_integration.entry_id,
-            # Naive datetimes, as produced by `cv.datetime` from the UI.
+            # Naive datetimes, as produced by ``cv.datetime`` from the UI.
             ATTR_START: datetime(2026, 6, 19, 9, 0),
             ATTR_END: datetime(2026, 6, 19, 18, 0),
         },
@@ -178,10 +179,12 @@ async def test_get_forecast_accepts_naive_datetimes(
         return_response=True,
     )
 
-    forecast = response["forecast"]
-    assert len(forecast) == 2
-    assert forecast[0]["value"] == 500
-    assert forecast[1]["value"] == 900
+    watts = response["watts"]
+    # 09:00 inclusive, 18:00 exclusive -> 09:00 + 12:00 remain.
+    assert set(watts.keys()) == {
+        datetime(2026, 6, 19, 9, 0, tzinfo=api_tz).isoformat(),
+        datetime(2026, 6, 19, 12, 0, tzinfo=api_tz).isoformat(),
+    }
 
 
 async def test_get_forecast_rejects_end_before_start(
