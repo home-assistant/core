@@ -45,6 +45,18 @@ def _zone_value_factory(
     return value
 
 
+def _standby_value(coordinator: YardianUpdateCoordinator) -> bool:
+    """Return True if the device is in standby mode safely."""
+    standby_end = coordinator.data.oper_info.get("iStandby")
+
+    # Guard against None, strings, or missing data
+    if not isinstance(standby_end, int):
+        return False
+
+    # Safe to compare now!
+    return standby_end > dt_util.utcnow().timestamp()
+
+
 SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
     YardianBinarySensorEntityDescription(
         key="watering_running",
@@ -56,9 +68,7 @@ SENSOR_DESCRIPTIONS: tuple[YardianBinarySensorEntityDescription, ...] = (
         key="standby",
         translation_key="standby",
         entity_category=EntityCategory.DIAGNOSTIC,
-        value_fn=lambda coordinator: (
-            coordinator.data.oper_info.get("iStandby", 0) > dt_util.utcnow().timestamp()
-        ),
+        value_fn=_standby_value,
     ),
     YardianBinarySensorEntityDescription(
         key="freeze_prevent",
