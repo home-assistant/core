@@ -23,8 +23,8 @@ from .entity import OverkizDescriptiveEntity
 class OverkizFanDescription(FanEntityDescription):
     """Class to describe an Overkiz fan."""
 
-    current_air_flow_state: OverkizState
-    set_air_flow_command: OverkizCommand
+    percentage: OverkizState
+    set_percentage: OverkizCommand
 
 
 FAN_DESCRIPTIONS: list[OverkizFanDescription] = [
@@ -32,18 +32,18 @@ FAN_DESCRIPTIONS: list[OverkizFanDescription] = [
     # to read and set the air flow level (0-100).
     OverkizFanDescription(
         key=UIWidget.VENTILATION_INLET,
-        current_air_flow_state=OverkizState.CORE_AIR_INPUT,
-        set_air_flow_command=OverkizCommand.SET_AIR_INPUT,
+        percentage=OverkizState.CORE_AIR_INPUT,
+        set_percentage=OverkizCommand.SET_AIR_INPUT,
     ),
     OverkizFanDescription(
         key=UIWidget.VENTILATION_OUTLET,
-        current_air_flow_state=OverkizState.CORE_AIR_OUTPUT,
-        set_air_flow_command=OverkizCommand.SET_AIR_OUTPUT,
+        percentage=OverkizState.CORE_AIR_OUTPUT,
+        set_percentage=OverkizCommand.SET_AIR_OUTPUT,
     ),
     OverkizFanDescription(
         key=UIWidget.VENTILATION_TRANSFER,
-        current_air_flow_state=OverkizState.CORE_AIR_TRANSFER,
-        set_air_flow_command=OverkizCommand.SET_AIR_TRANSFER,
+        percentage=OverkizState.CORE_AIR_TRANSFER,
+        set_percentage=OverkizCommand.SET_AIR_TRANSFER,
     ),
 ]
 
@@ -86,9 +86,7 @@ class OverkizFan(OverkizDescriptiveEntity, FanEntity):
     @property
     def percentage(self) -> int | None:
         """Return the current air flow level as a percentage."""
-        air_flow = self.device.states.get_value(
-            self.entity_description.current_air_flow_state
-        )
+        air_flow = self.device.states.get_value(self.entity_description.percentage)
 
         if air_flow is None:
             return None
@@ -110,7 +108,7 @@ class OverkizFan(OverkizDescriptiveEntity, FanEntity):
             return
 
         await self.executor.async_execute_command(
-            self.entity_description.set_air_flow_command, percentage
+            self.entity_description.set_percentage, percentage
         )
 
     async def async_turn_on(
