@@ -8,9 +8,7 @@ from homeassistant import data_entry_flow
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
-from homeassistant.helpers.integration_platform import (
-    async_process_integration_platforms,
-)
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 
 from .const import DOMAIN
 from .models import RepairsFlow, RepairsFlowResult, RepairsProtocol
@@ -65,14 +63,12 @@ class RepairsFlowManager(
         if issue is None or not issue.is_fixable:
             raise data_entry_flow.UnknownStep
 
-        if "platforms" not in self.hass.data[DOMAIN]:
-            await async_process_repairs_platforms(self.hass)
-
-        platforms: dict[str, RepairsProtocol] = self.hass.data[DOMAIN]["platforms"]
-        if handler_key not in platforms:
+        platforms: LazyIntegrationPlatforms[RepairsProtocol] = self.hass.data[DOMAIN][
+            "platforms"
+        ]
+        if (platform := await platforms.async_get_platform(handler_key)) is None:
             flow: RepairsFlow = ConfirmRepairFlow()
         else:
-            platform = platforms[handler_key]
             flow = await platform.async_create_fix_flow(self.hass, issue_id, issue.data)
 
         flow.issue_id = issue_id
@@ -100,22 +96,25 @@ class RepairsFlowManager(
 def async_setup(hass: HomeAssistant) -> None:
     """Initialize repairs."""
     hass.data[DOMAIN]["flow_manager"] = RepairsFlowManager(hass)
-
-
-async def async_process_repairs_platforms(hass: HomeAssistant) -> None:
-    """Start processing repairs platforms."""
-    hass.data[DOMAIN]["platforms"] = {}
-
-    await async_process_integration_platforms(
-        hass, DOMAIN, _register_repairs_platform, wait_for_platforms=True
+    hass.data[DOMAIN]["platforms"] = LazyIntegrationPlatforms(
+        hass, DOMAIN, _process_repairs_platform
     )
 
 
+async def async_process_repairs_platforms(hass: HomeAssistant) -> None:
+    """Load all repairs platforms.
+
+    Platforms are normally loaded lazily when a fix flow is created; this
+    loads them all up front and is primarily used by tests.
+    """
+    await hass.data[DOMAIN]["platforms"].async_get_platforms()
+
+
 @callback
-def _register_repairs_platform(
+def _process_repairs_platform(
     hass: HomeAssistant, integration_domain: str, platform: RepairsProtocol
-) -> None:
-    """Register a repairs platform."""
+) -> RepairsProtocol:
+    """Process a repairs platform."""
     if not hasattr(platform, "async_create_fix_flow"):
         raise HomeAssistantError(f"Invalid repairs platform {platform}")
-    hass.data[DOMAIN]["platforms"][integration_domain] = platform
+    return platform
