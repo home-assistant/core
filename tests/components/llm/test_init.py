@@ -1,16 +1,11 @@
 """Tests for the LLM integration."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import Mock
 
 import pytest
 
-from homeassistant.components.llm import (
-    LLMTools,
-    async_get_tools,
-    async_register_tool_provider,
-)
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.components.llm import DATA_PLATFORMS, LLMTools, async_get_tools
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
@@ -48,107 +43,79 @@ def llm_context() -> llm.LLMContext:
     )
 
 
+def _mock_tools_platform(
+    hass: HomeAssistant, domain: str, tools: LLMTools | Exception
+) -> None:
+    """Register a mock <integration>/llm.py platform returning the given tools."""
+    if isinstance(tools, Exception):
+        async_get_tools = Mock(side_effect=tools)
+    else:
+        async_get_tools = Mock(return_value=tools)
+    hass.config.components.add(domain)
+    mock_platform(hass, f"{domain}.llm", Mock(async_get_tools=async_get_tools))
+
+
 async def test_setup(hass: HomeAssistant) -> None:
     """Test the integration sets up."""
     assert await async_setup_component(hass, "llm", {})
+    assert DATA_PLATFORMS in hass.data
 
 
-async def test_tool_platform_discovery(hass: HomeAssistant) -> None:
-    """Test that an integration's llm tools platform is set up."""
-    platform = Mock(async_setup_tools=AsyncMock())
-    mock_platform(hass, "test.llm", platform)
-    hass.config.components.add("test")
+async def test_get_tools(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
+    """Test that tools from an integration platform are returned."""
+    tool = _StubTool("my_tool")
+    _mock_tools_platform(
+        hass, "test", LLMTools(tools=[tool], prompt="use my_tool wisely")
+    )
 
     assert await async_setup_component(hass, "llm", {})
-    await hass.async_block_till_done()
 
-    platform.async_setup_tools.assert_awaited_once_with(hass)
-
-
-async def test_register_tool_provider(
-    hass: HomeAssistant, llm_context: llm.LLMContext
-) -> None:
-    """Test registering and unregistering a tool provider."""
-    tool = _StubTool("my_tool")
-
-    @callback
-    def provider(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> LLMTools:
-        return LLMTools(tools=[tool], prompt="use my_tool wisely")
-
-    unreg = async_register_tool_provider(hass, provider)
-
-    result = async_get_tools(hass, llm_context)
+    result = await async_get_tools(hass, llm_context)
     assert result.tools == [tool]
     assert result.prompt == "use my_tool wisely"
 
-    unreg()
-    result = async_get_tools(hass, llm_context)
+
+async def test_get_tools_empty(
+    hass: HomeAssistant, llm_context: llm.LLMContext
+) -> None:
+    """Test that no platforms yields no tools."""
+    assert await async_setup_component(hass, "llm", {})
+
+    result = await async_get_tools(hass, llm_context)
     assert result.tools == []
     assert result.prompt is None
 
 
-async def test_register_tool_provider_merges(
+async def test_get_tools_merges_sorted(
     hass: HomeAssistant, llm_context: llm.LLMContext
 ) -> None:
-    """Test that tools and prompts from multiple providers are merged."""
+    """Test that tools and prompts are merged in a load-order-independent order."""
     tool_a = _StubTool("tool_a")
     tool_b = _StubTool("tool_b")
+    # Register "test_b" before "test_a" to prove the result is sorted by domain.
+    _mock_tools_platform(hass, "test_b", LLMTools(tools=[tool_b], prompt="prompt b"))
+    _mock_tools_platform(hass, "test_a", LLMTools(tools=[tool_a], prompt="prompt a"))
 
-    @callback
-    def provider_a(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> LLMTools:
-        return LLMTools(tools=[tool_a], prompt="prompt a")
+    assert await async_setup_component(hass, "llm", {})
 
-    @callback
-    def provider_b(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> LLMTools:
-        return LLMTools(tools=[tool_b], prompt="prompt b")
-
-    async_register_tool_provider(hass, provider_a)
-    async_register_tool_provider(hass, provider_b)
-
-    result = async_get_tools(hass, llm_context)
+    result = await async_get_tools(hass, llm_context)
     assert result.tools == [tool_a, tool_b]
     assert result.prompt == "prompt a\nprompt b"
 
 
-async def test_register_tool_provider_duplicate(
-    hass: HomeAssistant, llm_context: llm.LLMContext
-) -> None:
-    """Test that registering the same provider twice raises and unregister is idempotent."""
-
-    @callback
-    def provider(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> LLMTools:
-        return LLMTools(tools=[])
-
-    unreg = async_register_tool_provider(hass, provider)
-
-    with pytest.raises(HomeAssistantError):
-        async_register_tool_provider(hass, provider)
-
-    unreg()
-    # Unregistering again is a no-op, not a ValueError.
-    unreg()
-
-
-async def test_get_tools_isolates_failing_provider(
+async def test_get_tools_isolates_failing_platform(
     hass: HomeAssistant,
     llm_context: llm.LLMContext,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test that one failing provider does not drop the others' tools."""
+    """Test that one failing platform does not drop the others' tools."""
     tool = _StubTool("good_tool")
+    _mock_tools_platform(hass, "test_bad", ValueError("boom"))
+    _mock_tools_platform(hass, "test_good", LLMTools(tools=[tool], prompt="prompt"))
 
-    @callback
-    def bad_provider(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> LLMTools:
-        raise ValueError("boom")
+    assert await async_setup_component(hass, "llm", {})
 
-    @callback
-    def good_provider(_hass: HomeAssistant, _llm_context: llm.LLMContext) -> LLMTools:
-        return LLMTools(tools=[tool], prompt="prompt")
-
-    async_register_tool_provider(hass, bad_provider)
-    async_register_tool_provider(hass, good_provider)
-
-    result = async_get_tools(hass, llm_context)
+    result = await async_get_tools(hass, llm_context)
     assert result.tools == [tool]
     assert result.prompt == "prompt"
-    assert "Error getting tools from LLM tool provider" in caplog.text
+    assert "Error getting tools from LLM platform test_bad" in caplog.text
