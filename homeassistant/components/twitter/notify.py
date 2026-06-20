@@ -232,7 +232,7 @@ class TwitterNotificationService(BaseNotificationService):
             "media processing waiting %s seconds to check status", str(check_after_secs)
         )
 
-        when = datetime.now() + timedelta(seconds=check_after_secs)
+        when = datetime.now() + timedelta(seconds=check_after_secs)  # pylint: disable=home-assistant-enforce-naive-now
         myself = partial(self.check_status_until_done, media_id, callback)
         async_track_point_in_time(self.hass, myself, when)
 

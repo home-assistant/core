@@ -21,6 +21,13 @@ BINARY_SENSOR_TYPES = (
         key="moisture",
         device_class=BinarySensorDeviceClass.MOISTURE,
     ),
+    BinarySensorEntityDescription(
+        key="open",
+        device_class=BinarySensorDeviceClass.WINDOW,
+    ),
+    BinarySensorEntityDescription(
+        key="input",
+    ),
 )
 
 
@@ -52,6 +59,8 @@ class BleBoxBinarySensorEntity(BleBoxEntity[BinarySensorFeature], BinarySensorEn
         """Initialize a BleBox binary sensor feature."""
         super().__init__(coordinator, feature)
         self.entity_description = description
+        if feature.name:
+            self._attr_name = feature.name
 
     @property
     def is_on(self) -> bool:

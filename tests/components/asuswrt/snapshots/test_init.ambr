@@ -1,0 +1,36 @@
+# serializer version: 1
+# name: test_device_registry
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entries': <ANY>,
+    'config_entries_subentries': <ANY>,
+    'configuration_url': 'http://myrouter.asuswrt.com:80',
+    'connections': set({
+      tuple(
+        'mac',
+        'a1:b2:c3:d4:e5:f6',
+      ),
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': None,
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'asuswrt',
+        'a1:b2:c3:d4:e5:f6',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'Asus',
+    'model': 'FAKE_MODEL',
+    'model_id': None,
+    'name': 'myrouter.asuswrt.com',
+    'name_by_user': None,
+    'primary_config_entry': <ANY>,
+    'serial_number': None,
+    'sw_version': 'FAKE_FIRMWARE',
+    'via_device_id': None,
+  })
+# ---

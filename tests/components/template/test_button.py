@@ -1,6 +1,5 @@
 """The tests for the Template button platform."""
 
-import datetime as dt
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -24,6 +23,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
     ConfigurationStyle,
@@ -145,7 +145,7 @@ async def test_missing_emtpy_press_action_config(
     """Test: missing optional template is ok."""
     _verify(hass, STATE_UNKNOWN)
 
-    now = dt.datetime.now(dt.UTC)  # pylint: disable=home-assistant-enforce-utcnow
+    now = dt_util.utcnow()
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -196,7 +196,7 @@ async def test_device_class_option(
         TEST_BUTTON.entity_id,
     )
 
-    now = dt.datetime.now(dt.UTC)  # pylint: disable=home-assistant-enforce-utcnow
+    now = dt_util.utcnow()
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,
@@ -252,7 +252,7 @@ async def test_options_that_are_templates(
 
     _verify(hass, STATE_UNKNOWN, expected_attributes)
 
-    now = dt.datetime.now(dt.UTC)  # pylint: disable=home-assistant-enforce-utcnow
+    now = dt_util.utcnow()
     freezer.move_to(now)
     await hass.services.async_call(
         BUTTON_DOMAIN,

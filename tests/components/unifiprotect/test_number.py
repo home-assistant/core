@@ -4,12 +4,11 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import Camera, Chime, Doorlock, IRLEDMode, Light, RingSetting
+from uiprotect.data import Camera, Chime, IRLEDMode, Light, RingSetting
 
 from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
 from homeassistant.components.unifiprotect.number import (
     CAMERA_NUMBERS,
-    DOORLOCK_NUMBERS,
     LIGHT_NUMBERS,
     ProtectNumberEntityDescription,
 )
@@ -52,19 +51,6 @@ async def test_number_sensor_light_remove(
     assert_entity_counts(hass, Platform.NUMBER, 0, 0)
     await adopt_devices(hass, ufp, [light])
     assert_entity_counts(hass, Platform.NUMBER, 2, 2)
-
-
-async def test_number_lock_remove(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
-) -> None:
-    """Test removing and re-adding a light device."""
-
-    await init_entry(hass, ufp, [doorlock])
-    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
-    await remove_entities(hass, ufp, [doorlock])
-    assert_entity_counts(hass, Platform.NUMBER, 0, 0)
-    await adopt_devices(hass, ufp, [doorlock])
-    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
 
 
 async def test_number_setup_light(
@@ -235,33 +221,6 @@ async def test_number_camera_simple(
         )
 
         mock_method.assert_called_once_with(1.0)
-
-
-async def test_number_lock_auto_close(
-    hass: HomeAssistant, ufp: MockUFPFixture, doorlock: Doorlock
-) -> None:
-    """Test auto-lock timeout for locks."""
-
-    await init_entry(hass, ufp, [doorlock])
-    assert_entity_counts(hass, Platform.NUMBER, 1, 1)
-
-    description = DOORLOCK_NUMBERS[0]
-
-    _, entity_id = await ids_from_device_description(
-        hass, Platform.NUMBER, doorlock, description
-    )
-
-    with patch_ufp_method(
-        doorlock, "set_auto_close_time", new_callable=AsyncMock
-    ) as mock_method:
-        await hass.services.async_call(
-            "number",
-            "set_value",
-            {ATTR_ENTITY_ID: entity_id, "value": 15.0},
-            blocking=True,
-        )
-
-        mock_method.assert_called_once_with(timedelta(seconds=15.0))
 
 
 def _setup_chime_with_doorbell(

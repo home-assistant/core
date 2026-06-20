@@ -1,8 +1,7 @@
 """Media player platform for Alexa Devices."""
 
-from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Final
+from typing import Any
 
 from aioamazondevices.structures import (
     AmazonMediaControls,
@@ -23,9 +22,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import _LOGGER
-from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator
+from .coordinator import AmazonConfigEntry, AmazonDevicesCoordinator, alexa_api_call
 from .entity import AmazonEntity
-from .utils import alexa_api_call
 
 PARALLEL_UPDATES = 1
 
@@ -35,18 +33,6 @@ STANDARD_SUPPORTED_FEATURES = (
     | MediaPlayerEntityFeature.VOLUME_MUTE
     | MediaPlayerEntityFeature.STOP
     | MediaPlayerEntityFeature.PLAY_MEDIA
-)
-
-
-@dataclass(frozen=True, kw_only=True)
-class AmazonDevicesMediaPlayerEntityDescription(MediaPlayerEntityDescription):
-    """Describes an Alexa Devices media player entity."""
-
-
-MEDIA_PLAYERS: Final = (
-    AmazonDevicesMediaPlayerEntityDescription(
-        key="media",
-    ),
 )
 
 
@@ -69,9 +55,10 @@ async def async_setup_entry(
                 continue
 
             known_devices.add(serial_num)
-            new_entities.extend(
-                AlexaDevicesMediaPlayer(coordinator, serial_num, description)
-                for description in MEDIA_PLAYERS
+            new_entities.append(
+                AlexaDevicesMediaPlayer(
+                    coordinator, serial_num, MediaPlayerEntityDescription(key="media")
+                )
             )
 
         if new_entities:
@@ -85,8 +72,6 @@ async def async_setup_entry(
 class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     """Representation of an Alexa device media player."""
 
-    entity_description: AmazonDevicesMediaPlayerEntityDescription
-
     _attr_name = None  # Uses the device name
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_volume_step = 0.05
@@ -95,7 +80,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         self,
         coordinator: AmazonDevicesCoordinator,
         serial_num: str,
-        description: AmazonDevicesMediaPlayerEntityDescription,
+        description: MediaPlayerEntityDescription,
     ) -> None:
         """Initialize."""
         self._prev_volume: int | None = None
@@ -214,7 +199,7 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
     @property
     def media_content_type(self) -> MediaType | None:
         """Content type — tells HA what kind of media is playing."""
-        if self.state in [MediaPlayerState.PLAYING, MediaPlayerState.PAUSED]:
+        if self.state in (MediaPlayerState.PLAYING, MediaPlayerState.PAUSED):
             return MediaType.MUSIC
         return None
 
@@ -227,18 +212,18 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         **kwargs: Any,
     ) -> None:
         """Play a piece of media."""
-        await self.async_call_alexa_music(media_id, media_type)
+        provider = media_type.value if isinstance(media_type, MediaType) else media_type
+        await self.async_call_alexa_music(media_id, provider)
 
-    @alexa_api_call
     async def async_call_alexa_music(
         self, search_phrase: str, provider_id: str
     ) -> None:
         """Call alexa music."""
-        await self.coordinator.api.call_alexa_music(
-            self.device, search_phrase, provider_id
-        )
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.call_alexa_music(
+                self.device, search_phrase, provider_id
+            )
 
-    @alexa_api_call
     async def async_set_device_volume(self, volume: int) -> None:
         """Set the device volume."""
         _LOGGER.debug(
@@ -246,7 +231,8 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
             self.device.serial_number,
             volume,
         )
-        await self.coordinator.api.set_device_volume(self.device, volume)
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.set_device_volume(self.device, volume)
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level (0.0 to 1.0)."""
@@ -276,12 +262,12 @@ class AlexaDevicesMediaPlayer(AmazonEntity, MediaPlayerEntity):
         await self.async_set_volume_level(target_volume / 100)
         self._prev_volume = None
 
-    @alexa_api_call
     async def _send_media_command(self, command: AmazonMediaControls) -> None:
         _LOGGER.debug(
             "Sending media command '%s' to %s", command, self.device.serial_number
         )
-        await self.coordinator.api.send_media_command(self.device, command)
+        async with alexa_api_call(self.coordinator):
+            await self.coordinator.api.send_media_command(self.device, command)
 
     async def async_media_stop(self) -> None:
         """Send stop command."""

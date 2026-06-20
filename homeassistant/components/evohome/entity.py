@@ -1,7 +1,6 @@
 """Support for entities of the Evohome integration."""
 
 from collections.abc import Mapping
-from datetime import UTC, datetime
 import logging
 from typing import Any
 
@@ -14,6 +13,7 @@ from evohomeasync2.schemas.typedefs import DayOfWeekDhwT
 
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .coordinator import EvoDataUpdateCoordinator
 
@@ -161,7 +161,7 @@ class EvoChild(EvoEntity):
             or self._schedule is None
             or (
                 (until := self._setpoints.get("next_sp_from")) is not None
-                and until < datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
+                and until < dt_util.utcnow()
             )
         ):  # must use self._setpoints, not self.setpoints
             await get_schedule()
