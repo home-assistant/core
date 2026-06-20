@@ -57,23 +57,48 @@ def _series_for_date(
     }
 
 
+def _series_in_tz(
+    series: dict[datetime, int], tz: ZoneInfo
+) -> dict[str, int]:
+    """Return all ISO-keyed entries from a series, converted to ``tz``.
+
+    Keys are emitted with the site/API timezone offset (rather than
+    ``+00:00``) so downstream consumers parsing the attribute map
+    directly see local-zoned timestamps. No date filter is applied:
+    the full forecast horizon returned by the Forecast.Solar library
+    is preserved.
+    """
+    return {
+        ts.astimezone(tz).isoformat(): val
+        for ts, val in series.items()
+    }
+
+
 def _today_attributes(estimate: Estimate) -> dict[str, Any]:
-    """Return today's power and energy curves as state attributes.
+    """Return the full power and energy forecast curves as state attributes.
 
     Each attribute is a mapping of ISO 8601 timestamp -> value, where
     ``watts`` is the estimated power in W at the timestamp and
     ``wh_period`` is the energy in Wh for the interval starting at that
-    timestamp. The series is capped to today's entries to keep the live
-    state payload (state machine, websocket/REST consumers, frontend)
-    small at the 15-minute resolution provided by paid Forecast.Solar
-    accounts. Recorder write cost is handled separately via
-    ``_unrecorded_attributes`` on the entity class.
+    timestamp. ISO keys carry the site/API timezone offset.
+
+    The full forecast window returned by the Forecast.Solar library
+    (typically ~32 hours for free accounts, up to 3-6 days for paid
+    accounts) is emitted so downstream optimizers and forecasters can
+    consume more than a single day of lookahead. Recorder write cost
+    is handled separately via ``_unrecorded_attributes`` on the entity
+    class, so the live state payload is the only remaining concern;
+    even the paid-tier window at 15-minute resolution stays well under
+    typical attribute size limits.
+
+    The function name is preserved for backwards compatibility; despite
+    the name, the emitted series is the full horizon rather than only
+    today.
     """
     tz = ZoneInfo(estimate.api_timezone)
-    today = estimate.now().date()
     return {
-        "watts": _series_for_date(estimate.watts, today, tz),
-        "wh_period": _series_for_date(estimate.wh_period, today, tz),
+        "watts": _series_in_tz(estimate.watts, tz),
+        "wh_period": _series_in_tz(estimate.wh_period, tz),
     }
 
 
