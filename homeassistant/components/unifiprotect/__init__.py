@@ -164,6 +164,14 @@ async def _async_setup_entry(
     # streamless cameras.
     try:
         await data_service.api.update_public()
+    except NotAuthorized as err:
+        # A public 401 means a bad/revoked API key (independent of the private
+        # session); route to reauth instead of retrying forever.
+        await data_service.async_stop()
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_key_required",
+        ) from err
     except (TimeoutError, ClientError, ServerDisconnectedError) as err:
         # async_setup() already subscribed the websockets and started polling;
         # tear them down so a setup retry does not leak another set.

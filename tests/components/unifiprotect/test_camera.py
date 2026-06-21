@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 from uiprotect.data import AiPort, Camera as ProtectCamera, StateType
-from uiprotect.exceptions import ClientError
+from uiprotect.exceptions import ClientError, NotAuthorized
 
 from homeassistant.components.camera import (
     CameraEntityFeature,
@@ -15,7 +15,7 @@ from homeassistant.components.camera import (
 )
 from homeassistant.components.unifiprotect.const import CONF_DISABLE_RTSP, DOMAIN
 from homeassistant.components.unifiprotect.utils import get_camera_base_name
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
@@ -309,6 +309,19 @@ async def test_public_bootstrap_failure_not_ready(
 
     assert ufp.entry.state is ConfigEntryState.SETUP_RETRY
     ufp.api.async_disconnect_ws.assert_called()
+
+
+async def test_public_bootstrap_revoked_key_reauth(
+    hass: HomeAssistant, ufp: MockUFPFixture, camera: ProtectCamera
+) -> None:
+    """A revoked API key (public 401) triggers reauth, not an endless retry."""
+    ufp.api.update_public = AsyncMock(side_effect=NotAuthorized("revoked"))
+
+    await init_entry(hass, ufp, [camera])
+
+    assert ufp.entry.state is ConfigEntryState.SETUP_ERROR
+    ufp.api.async_disconnect_ws.assert_called()
+    assert any(ufp.entry.async_get_active_flows(hass, {SOURCE_REAUTH}))
 
 
 async def test_adopt(
