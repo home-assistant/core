@@ -27,6 +27,9 @@
       }
     },
     "event": {
+      "camera_events": {
+        "name": "Camera events"
+      },
       "system_events": {
         "name": "System events"
       }

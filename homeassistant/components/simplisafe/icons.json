@@ -1,6 +1,9 @@
 {
   "entity": {
     "event": {
+      "camera_events": {
+        "default": "mdi:cctv"
+      },
       "system_events": {
         "default": "mdi:shield-home"
       }

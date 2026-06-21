@@ -5,6 +5,7 @@ from collections.abc import Callable, Coroutine
 from typing import Any
 
 from simplipy import API
+from simplipy.device.camera import Camera
 from simplipy.errors import (
     EndpointUnavailableError,
     InvalidCredentialsError,
@@ -267,6 +268,29 @@ def _async_register_base_station(
             name_by_user=old_base_station.name_by_user,
         )
         device_registry.async_remove_device(old_base_station.id)
+
+
+@callback
+def _async_register_camera(
+    hass: HomeAssistant, entry: ConfigEntry, system: SystemType, camera: Camera
+) -> None:
+    """Register a camera device."""
+    if not isinstance(system, SystemV3):
+        return
+
+    device_registry = dr.async_get(hass)
+
+    model = camera.camera_type.name.capitalize().replace("_", " ")
+    device_name = f"{camera.name.capitalize()} {model}"
+
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, camera.serial)},
+        manufacturer="SimpliSafe",
+        model=model,
+        name=device_name,
+        via_device=(DOMAIN, str(system.system_id)),
+    )
 
 
 @callback
@@ -583,6 +607,11 @@ class SimpliSafe:
             self._system_notifications[system.system_id] = set()
 
             _async_register_base_station(self._hass, self.entry, system)
+
+            # Register each camera as a device:
+            if isinstance(system, SystemV3):
+                for camera in system.cameras.values():
+                    _async_register_camera(self._hass, self.entry, system, camera)
 
             # Future events will come from the websocket, but since subscription to the
             # websocket doesn't provide the most recent event, we grab it from the REST
