@@ -52,12 +52,12 @@ MYFOX_CAMERA = FixtureDevice(
     "myfox://SOMFY_PROTECT-1234567890ABCDEF/jQ5ul40RVLnipT6JB8b3JK96tUsf14mR",
     "switch.outdoor_camera_camera_shutter",
 )
-# Bug: entity ID contains "undefinedtype_singleton" because the DomesticHotWaterTank
-# description has no name set, and the #7 suffix makes it a sub-device.
+# Sub-device (#7 suffix) whose DomesticHotWaterTank description has no name set,
+# so the entity name falls back to the device label alone.
 DOMESTIC_HOT_WATER_TANK = FixtureDevice(
     "setup/cloud_somfy_myfox_europe.json",
     "io://1234-5678-1202/6019143#7",
-    "switch.hot_water_tank_undefinedtype_singleton",
+    "switch.hot_water_tank",
 )
 
 
