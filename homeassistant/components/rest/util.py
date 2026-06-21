@@ -3,7 +3,7 @@
 import logging
 from typing import Any
 
-from jsonpath import search
+from jsonpath import ExprSyntaxError, JSONPathTypeError, search
 
 from homeassistant.util.json import json_loads
 
@@ -21,8 +21,6 @@ def parse_json_attributes(
     try:
         json_dict = json_loads(value)
         if json_attrs_path is not None:
-            # jsonpath will always store the result in json_dict[0]
-            # so the next line happens to work exactly as needed to
             json_dict = search(json_attrs_path, json_dict)
         if isinstance(json_dict, list) and json_dict:
             json_dict = json_dict[0]
@@ -32,7 +30,7 @@ def parse_json_attributes(
         _LOGGER.warning(
             "JSON result was not a dictionary or list with 0th element a dictionary"
         )
-    except ValueError:
+    except ValueError, TypeError, ExprSyntaxError, JSONPathTypeError:
         _LOGGER.warning("REST result could not be parsed as JSON")
         _LOGGER.debug("Erroneous JSON: %s", value)
 

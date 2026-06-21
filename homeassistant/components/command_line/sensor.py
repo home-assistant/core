@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import json
 from typing import Any
 
-from jsonpath import search
+from jsonpath import ExprSyntaxError, JSONPathTypeError, search
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.const import (
@@ -171,7 +171,7 @@ class CommandSensor(ManualTriggerSensorEntity):
                         }
                     else:
                         LOGGER.warning("JSON result was not a dictionary")
-                except ValueError:
+                except ValueError, TypeError, ExprSyntaxError, JSONPathTypeError:
                     LOGGER.warning("Unable to parse output as JSON: %s", value)
             else:
                 LOGGER.warning("Empty reply found when expecting JSON data")
