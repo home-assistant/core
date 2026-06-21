@@ -215,13 +215,8 @@ async def test_async_enable_logging_log_file_disable_control(
             hass.data.get(bootstrap.DATA_LOGGING_DISABLED_REASON)
             == data_logging_disabled_reason
         )
-        expected_config_disabled_reason = (
-            data_logging_disabled_reason
-            if data_logging_disabled_reason == "environment"
-            else None
-        )
         assert hass.config.as_dict()["logging"] == {
-            "log_file_disabled_reason": expected_config_disabled_reason,
+            "log_file_disabled_reason": data_logging_disabled_reason,
         }
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
