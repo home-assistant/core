@@ -392,17 +392,6 @@ LIGHT_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ),
 )
 
-DOORLOCK_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
-    ProtectSwitchEntityDescription(
-        key="status_light",
-        translation_key="status_light",
-        entity_category=EntityCategory.CONFIG,
-        ufp_value="led_settings.is_enabled",
-        ufp_set_method="set_status_light",
-        ufp_perm=PermRequired.WRITE,
-    ),
-)
-
 VIEWER_SWITCHES: tuple[ProtectSwitchEntityDescription, ...] = (
     ProtectSwitchEntityDescription(
         key="ssh",
@@ -442,7 +431,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SWITCHES,
     ModelType.LIGHT: LIGHT_SWITCHES,
     ModelType.SENSOR: SENSE_SWITCHES,
-    ModelType.DOORLOCK: DOORLOCK_SWITCHES,
     ModelType.VIEWPORT: VIEWER_SWITCHES,
 }
 
@@ -648,7 +636,7 @@ class ProtectRelayOutputSwitch(SwitchEntity):
             self._attr_available = False
             self._attr_is_on = None
             return
-        self._attr_available = self.data.last_update_success
+        self._attr_available = self.data.last_public_update_success
         self._attr_is_on = (
             _RELAY_STATE_MAP.get(output.state) if output.state is not None else None
         )

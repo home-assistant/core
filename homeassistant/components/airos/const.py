@@ -12,7 +12,7 @@ MANUFACTURER = "Ubiquiti"
 DEFAULT_VERIFY_SSL = False
 DEFAULT_SSL = True
 
-SECTION_ADVANCED_SETTINGS = "advanced_settings"
+SECTION_ADDITIONAL_SETTINGS = "additional_settings"
 
 # Discovery related
 DEFAULT_USERNAME = "ubnt"
