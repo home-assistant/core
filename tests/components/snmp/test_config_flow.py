@@ -1,8 +1,9 @@
 """Tests for the SNMP config flow."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, patch
 
 from pysnmp.error import PySnmpError
+from pysnmp.proto import errind
 from pysnmp.proto.rfc1902 import OctetString
 from pysnmp.smi.error import WrongValueError
 import pytest
@@ -288,8 +289,7 @@ async def test_user_flow_invalid_oid_short(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert "Short OID 1" in result["description_placeholders"]["error"]
+    assert result["errors"] == {"base": "invalid_oid"}
 
 
 async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
@@ -309,7 +309,7 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
     )
 
     # Step 2: V3 Auth fails (err_status returned by get_cmd)
-    mock_err_status = Mock()
+    mock_err_status = MagicMock()
     mock_err_status.prettyPrint.return_value = "usmStatsWrongDigests"
     with (
         patch(
@@ -327,8 +327,7 @@ async def test_user_flow_v3_invalid_auth(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "invalid_auth"}
-    assert "usmStatsWrongDigests" in result["description_placeholders"]["error"]
+    assert result["errors"] == {"base": "usm_wrong_digests"}
 
 
 async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
@@ -344,7 +343,7 @@ async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
     with (
         patch(
             "homeassistant.components.snmp.config_flow.get_cmd",
-            return_value=("No response", None, None, None),
+            return_value=(errind.requestTimedOut, None, None, None),
         ),
         patch(
             "homeassistant.components.snmp.util.UdpTransportTarget.create",
@@ -356,8 +355,63 @@ async def test_user_flow_timeout_generic(hass: HomeAssistant) -> None:
         )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-    assert "No response" in result["description_placeholders"]["error"]
+    assert result["errors"] == {"base": "snmp_timeout"}
+
+
+async def test_user_flow_err_indication_wrong_digest(hass: HomeAssistant) -> None:
+    """Test user setup flow failure - v3 wrong digest indication from device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.snmp.config_flow.get_cmd",
+            return_value=(errind.wrongDigest, None, None, None),
+        ),
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value="mock_target",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "user", "auth_key": "pass"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "usm_wrong_digests"}
+
+
+async def test_user_flow_err_indication_unknown_user(hass: HomeAssistant) -> None:
+    """Test user setup flow failure - unknown USM user indication from device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.snmp.config_flow.get_cmd",
+            return_value=(errind.unknownUserName, None, None, None),
+        ),
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value="mock_target",
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"username": "nouser", "auth_key": "pass"}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
 
 
 async def test_user_flow_invalid_oid_exception(hass: HomeAssistant) -> None:
@@ -415,9 +469,15 @@ async def test_user_flow_v1_v2c_unknown_error(hass: HomeAssistant) -> None:
         {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "1"},
     )
 
-    with patch(
-        "homeassistant.components.snmp.config_flow.validate_input",
-        side_effect=PySnmpError("Unknown error"),
+    with (
+        patch(
+            "homeassistant.components.snmp.config_flow.get_cmd",
+            side_effect=PySnmpError("Unknown error"),
+        ),
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value="mock_target",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"community": "public"}
@@ -455,9 +515,15 @@ async def test_user_flow_v3_unknown_error(hass: HomeAssistant) -> None:
         {"host": "1.1.1.1", "baseoid": "1.3.6.1.2.1", "version": "3"},
     )
 
-    with patch(
-        "homeassistant.components.snmp.config_flow.validate_input",
-        side_effect=PySnmpError("Unknown error"),
+    with (
+        patch(
+            "homeassistant.components.snmp.config_flow.get_cmd",
+            side_effect=PySnmpError("Unknown error"),
+        ),
+        patch(
+            "homeassistant.components.snmp.util.UdpTransportTarget.create",
+            return_value="mock_target",
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {"username": "user", "auth_key": "pass"}

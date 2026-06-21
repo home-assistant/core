@@ -5,6 +5,7 @@ from typing import Any
 
 from pysnmp.error import PySnmpError
 from pysnmp.hlapi.v3arch.asyncio import ObjectIdentity, get_cmd
+from pysnmp.proto import errind
 from pysnmp.smi.error import WrongValueError
 import voluptuous as vol
 
@@ -87,12 +88,12 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         target = await async_create_transport_target(host, port, DEFAULT_TIMEOUT)
     except PySnmpError as err:
         _LOGGER.warning("SNMP target creation failed: %s", err)
-        raise CannotConnect(f"SNMP target creation failed: {err}") from err
+        raise CannotConnect from err
 
     try:
         auth_data = create_auth_data(data, version)
     except PySnmpError as err:
-        raise InvalidAuth(str(err)) from err
+        raise InvalidAuth from err
 
     # Use sysDescr.0 to verify connectivity and authentication.
     # This OID is standard and responds to GET on almost all devices.
@@ -106,16 +107,41 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         err_indication, err_status, _, _ = await get_cmd(*request_args)
     except WrongValueError as err:
         # pysnmp raises WrongValueError when v3 credentials/keys match the wrong protocol
-        raise InvalidAuth("Invalid authentication credentials or protocols") from err
+        raise UsmWrongDigests from err
     except PySnmpError as err:
         # Handle other pysnmp errors like StatusInformation/SerializationError
-        raise CannotConnect(str(err)) from err
+        raise CannotConnect from err
 
     if err_indication:
-        raise CannotConnect(str(err_indication))
+        if err_indication in (errind.requestTimedOut, errind.emptyResponse):
+            raise SnmpTimeout from Exception(str(err_indication))
+        if err_indication in (
+            errind.wrongDigest,
+            errind.decryptionError,
+        ):
+            raise UsmWrongDigests from Exception(str(err_indication))
+        if err_indication in (
+            errind.unknownCommunityName,
+            errind.unknownUserName,
+            errind.unknownSecurityName,
+            errind.unsupportedSecurityLevel,
+            errind.unsupportedSecurityModel,
+            errind.unsupportedAuthProtocol,
+            errind.unsupportedPrivProtocol,
+            errind.authenticationFailure,
+            errind.authenticationError,
+        ):
+            raise InvalidAuth from Exception(str(err_indication))
+        raise CannotConnect from Exception(str(err_indication))
 
     if version == "3" and err_status:
-        raise InvalidAuth(err_status.prettyPrint())
+        err_status_str = err_status.prettyPrint()
+        if (
+            "wrongdigests" in err_status_str.lower()
+            or "decryptionerror" in err_status_str.lower()
+        ):
+            raise UsmWrongDigests from Exception(err_status_str)
+        raise InvalidAuth from Exception(err_status_str)
 
     # Also verify that the user-provided baseoid is serializable and valid.
     # This catches errors like "Short OID 1" during the config flow.
@@ -127,7 +153,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> None:
         # We don't necessarily care about the result, just that it serializes and sends.
         await get_cmd(*base_request_args)
     except (PySnmpError, WrongValueError) as err:
-        raise CannotConnect(f"Invalid OID '{base_oid}': {err}") from err
+        raise InvalidOid from err
 
 
 class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -168,12 +194,9 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle V1/V2c authentication."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
         if user_input is not None:
             data = {**self._user_data, **user_input}
-            if result := await self._async_validate_and_create_entry(
-                data, errors, description_placeholders
-            ):
+            if result := await self._async_validate_and_create_entry(data, errors):
                 return result
 
         return self.async_show_form(
@@ -182,7 +205,6 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_V1_V2C_DATA_SCHEMA, user_input
             ),
             errors=errors,
-            description_placeholders=description_placeholders,
         )
 
     async def async_step_v3(
@@ -190,16 +212,13 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle V3 authentication."""
         errors: dict[str, str] = {}
-        description_placeholders: dict[str, str] = {}
         if user_input is not None:
             if user_input.get(CONF_PRIV_KEY) and not user_input.get(CONF_AUTH_KEY):
                 errors["base"] = "auth_key_required_for_priv"
 
             if not errors:
                 data = {**self._user_data, **user_input}
-                if result := await self._async_validate_and_create_entry(
-                    data, errors, description_placeholders
-                ):
+                if result := await self._async_validate_and_create_entry(data, errors):
                     return result
 
         return self.async_show_form(
@@ -208,7 +227,6 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
                 STEP_V3_DATA_SCHEMA, user_input
             ),
             errors=errors,
-            description_placeholders=description_placeholders,
         )
 
     async def async_step_import(self, user_input: dict[str, Any]) -> ConfigFlowResult:
@@ -251,22 +269,21 @@ class SnmpConfigFlow(ConfigFlow, domain=DOMAIN):
         self,
         data: dict[str, Any],
         errors: dict[str, str],
-        description_placeholders: dict[str, str],
     ) -> ConfigFlowResult | None:
         """Validate input and create entry."""
         await self._async_check_unique_id(data)
         try:
             await validate_input(self.hass, data)
-        except CannotConnect as err:
+        except SnmpTimeout:
+            errors["base"] = "snmp_timeout"
+        except CannotConnect:
             errors["base"] = "cannot_connect"
-            description_placeholders["error"] = str(err)
-        except InvalidAuth as err:
+        except UsmWrongDigests:
+            errors["base"] = "usm_wrong_digests"
+        except InvalidAuth:
             errors["base"] = "invalid_auth"
-            description_placeholders["error"] = str(err)
-        except PySnmpError as err:
-            _LOGGER.warning("Unexpected SNMP error during validation: %s", err)
-            errors["base"] = "cannot_connect"
-            description_placeholders["error"] = str(err)
+        except InvalidOid:
+            errors["base"] = "invalid_oid"
         else:
             return self.async_create_entry(title=data[CONF_HOST], data=data)
         return None
@@ -276,5 +293,17 @@ class CannotConnect(Exception):
     """Error to indicate we cannot connect."""
 
 
+class SnmpTimeout(CannotConnect):
+    """Error to indicate query timed out."""
+
+
 class InvalidAuth(Exception):
     """Error to indicate there is invalid auth."""
+
+
+class UsmWrongDigests(InvalidAuth):
+    """Error to indicate wrong authentication/privacy keys or digests."""
+
+
+class InvalidOid(Exception):
+    """Error to indicate the OID is invalid."""
