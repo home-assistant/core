@@ -8,8 +8,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.translation import async_get_cached_translations
 
 from .const import (
+    DATA_LOCAL_SOURCE,
     DATA_MEDIA_SOURCE_PLATFORMS,
-    MEDIA_SOURCE_DATA,
+    DOMAIN,
     URI_SCHEME,
     URI_SCHEME_REGEX,
 )
@@ -20,8 +21,7 @@ if TYPE_CHECKING:
 
 async def _async_get_media_sources(hass: HomeAssistant) -> dict[str, MediaSource]:
     """Return all media sources, loading integration platforms on demand."""
-    eager_sources: dict[str, MediaSource] = hass.data[MEDIA_SOURCE_DATA]
-    sources = dict(eager_sources)
+    sources: dict[str, MediaSource] = {DOMAIN: hass.data[DATA_LOCAL_SOURCE]}
     sources.update(await hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platforms())
     return sources
 
@@ -30,8 +30,8 @@ async def _async_get_media_source(
     hass: HomeAssistant, domain: str
 ) -> MediaSource | None:
     """Return the media source for a domain, loading it on demand."""
-    if (source := hass.data[MEDIA_SOURCE_DATA].get(domain)) is not None:
-        return source
+    if domain == DOMAIN:
+        return hass.data[DATA_LOCAL_SOURCE]
     return await hass.data[DATA_MEDIA_SOURCE_PLATFORMS].async_get_platform(domain)
 
 

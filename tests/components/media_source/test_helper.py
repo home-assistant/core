@@ -1,6 +1,6 @@
 """Test media source helpers."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import patch
 
 import pytest
 
@@ -120,10 +120,10 @@ async def test_async_unresolve_media(hass: HomeAssistant) -> None:
         )
 
 
-async def test_browse_resolve_without_setup() -> None:
+async def test_browse_resolve_without_setup(hass: HomeAssistant) -> None:
     """Test browse and resolve work without being setup."""
     with pytest.raises(BrowseError):
-        await media_source.async_browse_media(Mock(data={}), None)
+        await media_source.async_browse_media(hass, None)
 
     with pytest.raises(media_source.Unresolvable):
-        await media_source.async_resolve_media(Mock(data={}), None, None)
+        await media_source.async_resolve_media(hass, None, None)
