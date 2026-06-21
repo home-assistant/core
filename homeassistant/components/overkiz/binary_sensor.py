@@ -139,7 +139,8 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
             )
         ),
     ),
-    # ContactSensor/WindowStateSensor, ContactSensor/SlidingWindowStateSensor
+    # ContactSensor/IntrusionEventSensor
+    # (io:SomfyWindowStateSensor, io:SomfySlidingWindowStateSensor)
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_OPEN_CLOSED,
         name="Window",
@@ -156,7 +157,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         device_class=BinarySensorDeviceClass.SAFETY,
         value_fn=bool,
     ),
-    # ContactSensor/IntrusionEventSensor
+    # ContactSensor/IntrusionEventSensor (io:SomfyWindowStateSensor)
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_TILTED,
         name="Tilt",
