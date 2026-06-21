@@ -56,7 +56,7 @@ async def async_browse_media(
     content_filter: Callable[[BrowseMedia], bool] | None = None,
 ) -> BrowseMediaSource | RootBrowseMediaSource:
     """Return media player browse media results."""
-    if DOMAIN not in hass.data:
+    if DOMAIN not in hass.config.top_level_components:
         raise BrowseError("Media Source not loaded")
 
     try:
@@ -89,11 +89,12 @@ async def async_search_media(
     query: SearchMediaQuery,
 ) -> SearchMedia:
     """Return media searched in the media source."""
-    if DOMAIN not in hass.data:
+    if DOMAIN not in hass.config.top_level_components:
         raise BrowseError("Media Source not loaded")
 
     try:
-        return await _get_media_item(hass, media_content_id, None).async_search(query)
+        media_item = await _get_media_item(hass, media_content_id, None)
+        return await media_item.async_search(query)
     except NotImplementedError as err:
         raise BrowseError(
             translation_domain=DOMAIN,
@@ -117,7 +118,7 @@ async def async_resolve_media(
     target_media_player: str | None | UndefinedType = UNDEFINED,
 ) -> PlayMedia:
     """Get info to play media."""
-    if DOMAIN not in hass.data:
+    if DOMAIN not in hass.config.top_level_components:
         raise Unresolvable("Media Source not loaded")
 
     if target_media_player is UNDEFINED:

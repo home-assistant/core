@@ -12,9 +12,7 @@ if TYPE_CHECKING:
     from .models import MediaSource
 
 DOMAIN = "media_source"
-# Eagerly loaded built-in sources (currently only the local source).
-MEDIA_SOURCE_DATA: HassKey[dict[str, MediaSource]] = HassKey(DOMAIN)
-# Lazily loaded media sources provided by other integrations.
+DATA_LOCAL_SOURCE: HassKey[MediaSource] = HassKey("media_source_local_source")
 DATA_MEDIA_SOURCE_PLATFORMS: HassKey[LazyIntegrationPlatforms[MediaSource]] = HassKey(
     "media_source_platforms"
 )

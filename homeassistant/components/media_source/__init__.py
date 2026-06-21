@@ -10,11 +10,11 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import http, local_source
 from .const import (
+    DATA_LOCAL_SOURCE,
     DATA_MEDIA_SOURCE_PLATFORMS,
     DOMAIN,
     MEDIA_CLASS_MAP,
     MEDIA_MIME_TYPES,
-    MEDIA_SOURCE_DATA,
     URI_SCHEME,
     URI_SCHEME_REGEX,
 )
@@ -72,14 +72,13 @@ def generate_media_source_id(domain: str, identifier: str) -> str:
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the media_source component."""
-    hass.data[MEDIA_SOURCE_DATA] = {}
     hass.data[DATA_MEDIA_SOURCE_PLATFORMS] = LazyIntegrationPlatforms[MediaSource](
         hass, DOMAIN, _process_media_source_platform
     )
     http.async_setup(hass)
 
     # Local sources support
-    hass.data[MEDIA_SOURCE_DATA][DOMAIN] = await _process_media_source_platform(
+    hass.data[DATA_LOCAL_SOURCE] = await _process_media_source_platform(
         hass, DOMAIN, local_source
     )
     hass.http.register_view(local_source.UploadMediaView)
