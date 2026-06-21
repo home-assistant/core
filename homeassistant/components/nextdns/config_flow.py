@@ -59,9 +59,7 @@ async def async_validate_new_api_key(
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
-        return errors
-
-    if not errors:
+    else:
         for profile_id in profile_ids:
             if not any(profile.id == profile_id for profile in nextdns.profiles):
                 errors["base"] = "profile_not_available"
