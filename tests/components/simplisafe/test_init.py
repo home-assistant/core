@@ -135,9 +135,7 @@ async def test_camera_device_registration(
     assert camera_device.name == "Camera Camera"
 
     # Verify via_device points to the base station:
-    base_station = device_registry.async_get_device(
-        identifiers={(DOMAIN, "12345")}
-    )
+    base_station = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
     assert base_station is not None
     assert camera_device.via_device_id == base_station.id
 
