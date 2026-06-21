@@ -156,15 +156,9 @@ def dsmr_connection_send_validate_fixture() -> Generator[
 
     protocol.wait_closed = wait_closed
 
-    with (
-        patch(
-            "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
-            connection_factory,
-        ),
-        patch(
-            "homeassistant.components.dsmr.config_flow.create_tcp_dsmr_reader",
-            connection_factory,
-        ),
+    with patch(
+        "homeassistant.components.dsmr.config_flow.create_dsmr_reader",
+        connection_factory,
     ):
         yield (connection_factory, transport, protocol)
 
@@ -207,14 +201,8 @@ def rfxtrx_dsmr_connection_send_validate_fixture() -> Generator[
 
     protocol.wait_closed = wait_closed
 
-    with (
-        patch(
-            "homeassistant.components.dsmr.config_flow.create_rfxtrx_dsmr_reader",
-            connection_factory,
-        ),
-        patch(
-            "homeassistant.components.dsmr.config_flow.create_rfxtrx_tcp_dsmr_reader",
-            connection_factory,
-        ),
+    with patch(
+        "homeassistant.components.dsmr.config_flow.create_rfxtrx_dsmr_reader",
+        connection_factory,
     ):
         yield (connection_factory, transport, protocol)

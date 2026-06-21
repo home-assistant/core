@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from enum import IntEnum
 from functools import partial
+from urllib.parse import urlparse
 
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
 from dsmr_parser.clients.rfxtrx_protocol import (
@@ -769,34 +770,48 @@ async def async_setup_entry(
                 hass, EVENT_FIRST_TELEGRAM.format(entry.entry_id), telegram
             )
 
-    # Creates an asyncio.Protocol factory for reading DSMR telegrams from
-    # serial and calls update_entities_telegram to update entities on arrival
-    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    # Legacy network entries stored host and port separately; combine them into
+    # the single socket://host:port form newer entries already use, in memory
+    # only, so the stored entry stays untouched and rolling back to an older
+    # Home Assistant version keeps working.
+    port = entry.data[CONF_PORT]
     if CONF_HOST in entry.data:
-        if protocol == DSMR_PROTOCOL:
-            create_reader = create_tcp_dsmr_reader
-        else:
-            create_reader = create_rfxtrx_tcp_dsmr_reader
-        reader_factory = partial(
-            create_reader,
-            entry.data[CONF_HOST],
-            entry.data[CONF_PORT],
-            dsmr_version,
-            update_entities_telegram,
-            loop=hass.loop,
-            keep_alive_interval=60,
-        )
-    else:
+        port = f"socket://{entry.data[CONF_HOST]}:{port}"
+
+    # Creates an asyncio.Protocol factory for reading DSMR telegrams and calls
+    # update_entities_telegram to update entities on arrival. A leading slash
+    # means a local serial device. Anything else is a network address, for which
+    # we use create_tcp_dsmr_reader: despite its name it is the same reader as
+    # create_dsmr_reader, but it adds a keep-alive watchdog that closes the
+    # connection (triggering a reconnect) when a network link drops silently
+    # without an EOF. Local serial devices don't need that watchdog.
+    protocol = entry.data.get(CONF_PROTOCOL, DSMR_PROTOCOL)
+    if port.startswith("/"):
         if protocol == DSMR_PROTOCOL:
             create_reader = create_dsmr_reader
         else:
             create_reader = create_rfxtrx_dsmr_reader
         reader_factory = partial(
             create_reader,
-            entry.data[CONF_PORT],
+            port,
             dsmr_version,
             update_entities_telegram,
             loop=hass.loop,
+        )
+    else:
+        address = urlparse(port)
+        if protocol == DSMR_PROTOCOL:
+            create_reader = create_tcp_dsmr_reader
+        else:
+            create_reader = create_rfxtrx_tcp_dsmr_reader
+        reader_factory = partial(
+            create_reader,
+            address.hostname,
+            address.port,
+            dsmr_version,
+            update_entities_telegram,
+            loop=hass.loop,
+            keep_alive_interval=60,
         )
 
     async def connect_and_reconnect() -> None:
@@ -813,7 +828,7 @@ async def async_setup_entry(
             update_entities_telegram({})
 
             try:
-                transport, protocol = await hass.loop.create_task(reader_factory())
+                transport, protocol = await reader_factory()
 
                 if transport:
                     # Register listener to close transport on HA shutdown
