@@ -26,7 +26,7 @@ class OverkizBinarySensorDescription(BinarySensorEntityDescription):
 
     value_fn: Callable[[OverkizStateType], bool]
 
-    # Restrict this sensor to the listed device types (UIWidget/UIClass).
+    # Restrict this entity to the listed device types (UIWidget/UIClass).
     # When omitted, the sensor applies to any device exposing the state.
     device_types: list[UIWidget | UIClass] | None = None
 
@@ -151,7 +151,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     ),
     # ContactSensor/IntrusionSensor
     OverkizBinarySensorDescription(
-        key="core:IntrusionDetectedState",
+        key=OverkizState.CORE_INTRUSION_DETECTED,
         name="Intrusion",
         device_class=BinarySensorDeviceClass.SAFETY,
         value_fn=bool,
