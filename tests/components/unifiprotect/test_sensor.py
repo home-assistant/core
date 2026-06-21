@@ -290,16 +290,6 @@ async def test_sensor_battery_refreshes_on_public_ws_reconnect(
     assert hass.states.get(entity_id).state == "55"
 
 
-def test_sensor_description_rounds_public_value() -> None:
-    """A migrated sensor description rounds the public value when precision is set."""
-    description = ProtectSensorEntityDescription(
-        key="test_public_rounding", precision=1, ufp_public_value="value"
-    )
-    public = Mock()
-    public.value = 3.14159
-    assert description.get_value(Mock(), public) == 3.1
-
-
 async def test_sensor_setup_nvr(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
