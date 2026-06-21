@@ -156,7 +156,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         device_class=BinarySensorDeviceClass.SAFETY,
         value_fn=bool,
     ),
-    # ContactSensor/WindowWithTiltSensor
+    # ContactSensor/IntrusionEventSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_TILTED,
         name="Tilt",
