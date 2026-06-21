@@ -628,23 +628,31 @@ class Thermostat(ClimateEntity):
             if device.name == sensor_info["name"]
         ]
 
+    def _active_climate_name(self) -> str:
+        """Return the ecobee climate name of the active comfort setting.
+
+        ``preset_mode`` is the climate *name*, but ``_preset_modes`` is keyed by
+        climateRef, so the built-in presets are translated back to their ecobee
+        name. Holds that are not a comfort setting (temperature/vacation/
+        indefinite away) are not real climates; per ecobee they follow the Home
+        comfort setting's sensor participation, so fall back to "Home".
+        """
+        # https://support.ecobee.com/s/articles/SmartSensors-Sensor-Participation
+        preset_mode = self.preset_mode
+        if preset_mode is None:
+            return "Home"
+        mode = HASS_TO_ECOBEE_PRESET.get(preset_mode, preset_mode)
+        return mode if mode in self._preset_modes.values() else "Home"
+
     @property
     def active_sensors_in_preset_mode(self) -> list:
         """Return the currently active/participating sensors."""
-        # https://support.ecobee.com/s/articles/SmartSensors-Sensor-Participation
-        # During a manual hold, the ecobee will follow the Sensor Participation
-        # rules for the Home Comfort Settings
-        mode = self._preset_modes.get(self.preset_mode, "Home")
-        return self._sensors_in_preset_mode(mode)
+        return self._sensors_in_preset_mode(self._active_climate_name())
 
     @property
     def active_sensor_devices_in_preset_mode(self) -> list:
         """Return the currently active/participating sensor devices."""
-        # https://support.ecobee.com/s/articles/SmartSensors-Sensor-Participation
-        # During a manual hold, the ecobee will follow the Sensor Participation
-        # rules for the Home Comfort Settings
-        mode = self._preset_modes.get(self.preset_mode, "Home")
-        return self._sensor_devices_in_preset_mode(mode)
+        return self._sensor_devices_in_preset_mode(self._active_climate_name())
 
     def set_preset_mode(self, preset_mode: str) -> None:
         """Activate a preset."""
