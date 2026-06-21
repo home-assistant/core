@@ -76,6 +76,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -113,7 +117,7 @@
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
+    'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': <TeslaFleetClimateSide.DRIVER: 'driver_temp'>,
     'unique_id': 'LRWXF7EK4KC700000-driver_temp',
     'unit_of_measurement': None,
@@ -123,6 +127,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 30.0,
+      'fan_mode': 'off',
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'friendly_name': 'Test Climate',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -137,7 +146,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      'supported_features': <ClimateEntityFeature: 409>,
       'temperature': 22.0,
     }),
     'context': <ANY>,
@@ -224,6 +233,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -261,7 +274,7 @@
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
+    'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': <TeslaFleetClimateSide.DRIVER: 'driver_temp'>,
     'unique_id': 'LRWXF7EK4KC700000-driver_temp',
     'unit_of_measurement': None,
@@ -271,6 +284,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 30.0,
+      'fan_mode': 'off',
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'friendly_name': 'Test Climate',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -285,7 +303,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      'supported_features': <ClimateEntityFeature: 409>,
       'temperature': 22.0,
     }),
     'context': <ANY>,
@@ -372,6 +390,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
         <HVACMode.OFF: 'off'>,
@@ -409,7 +431,7 @@
     'platform': 'tesla_fleet',
     'previous_unique_id': None,
     'suggested_object_id': None,
-    'supported_features': <ClimateEntityFeature: 401>,
+    'supported_features': <ClimateEntityFeature: 409>,
     'translation_key': <TeslaFleetClimateSide.DRIVER: 'driver_temp'>,
     'unique_id': 'LRWXF7EK4KC700000-driver_temp',
     'unit_of_measurement': None,
@@ -419,6 +441,11 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': None,
+      'fan_mode': 'off',
+      'fan_modes': list([
+        'off',
+        'bioweapon',
+      ]),
       'friendly_name': 'Test Climate',
       'hvac_modes': list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
@@ -433,7 +460,7 @@
         'dog',
         'camp',
       ]),
-      'supported_features': <ClimateEntityFeature: 401>,
+      'supported_features': <ClimateEntityFeature: 409>,
       'temperature': None,
     }),
     'context': <ANY>,
