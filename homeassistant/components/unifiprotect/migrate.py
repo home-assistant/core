@@ -109,6 +109,75 @@ async def async_migrate_data(
     async_deprecate_hdr(hass, entry)
     _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
 
+    _LOGGER.debug("Start Migrate: async_migrate_insecure_cameras")
+    async_migrate_insecure_cameras(hass, entry)
+    _LOGGER.debug("Completed Migrate: async_migrate_insecure_cameras")
+
+
+@callback
+def async_migrate_insecure_cameras(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
+    """Migrate the legacy plain-RTSP "(insecure)" camera entities.
+
+    Streams now come from the public API, which is RTSPS-only, so the old
+    ``{mac}_{channel}_insecure`` camera entities no longer exist. Redirect each
+    to its secure unique_id (``{mac}_{channel}``) so its history/customizations
+    carry over to the public stream; if the secure entity already exists, drop
+    the redundant insecure one (raising a repair first if it is still used).
+
+    Added in 2026.7.0
+    """
+    registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(registry, entry.entry_id):
+        if entity.domain != Platform.CAMERA or not entity.unique_id.endswith(
+            "_insecure"
+        ):
+            continue
+        secure_unique_id = entity.unique_id.removesuffix("_insecure")
+        secure_entity_id = registry.async_get_entity_id(
+            Platform.CAMERA, DOMAIN, secure_unique_id
+        )
+        if secure_entity_id is None:
+            registry.async_update_entity(
+                entity.entity_id, new_unique_id=secure_unique_id
+            )
+            continue
+        _async_repair_if_insecure_used(hass, entity, secure_entity_id)
+        registry.async_remove(entity.entity_id)
+
+
+@callback
+def _async_repair_if_insecure_used(
+    hass: HomeAssistant, insecure: er.RegistryEntry, replacement: str
+) -> None:
+    """Warn before removing a redundant insecure camera entity that is in use.
+
+    Removal cannot rewrite the user's automations/scripts, so a persistent repair
+    lists the affected ones and points to the surviving secure entity. Disabled
+    entities are skipped: they are not active in any automation.
+    """
+    if insecure.disabled_by is not None:
+        return
+    items = sorted(
+        set(automations_with_entity(hass, insecure.entity_id))
+        | set(scripts_with_entity(hass, insecure.entity_id))
+    )
+    if not items:
+        return
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        f"insecure_camera_removed_{insecure.unique_id}",
+        is_fixable=False,
+        is_persistent=True,
+        severity=IssueSeverity.WARNING,
+        translation_key="insecure_camera_removed",
+        translation_placeholders={
+            "entity_id": insecure.entity_id,
+            "replacement": replacement,
+            "items": "* `" + "`\n* `".join(items) + "`\n",
+        },
+    )
+
 
 @callback
 def async_deprecate_hdr(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
