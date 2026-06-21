@@ -84,8 +84,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
 
     async def _async_update_data(self) -> DucoData:
         """Fetch node data from the Duco box."""
-        previous_data = cast(DucoData | None, self.data)
-
         try:
             nodes = await self.client.async_get_nodes()
         except DucoConnectionError as err:
@@ -102,6 +100,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         try:
             node_actions = await self.client.async_get_node_actions()
         except DucoError as err:
+            previous_data = cast(DucoData | None, self.data)
             node_actions = (
                 previous_data.node_actions
                 if previous_data is not None
