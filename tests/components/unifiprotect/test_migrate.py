@@ -9,12 +9,11 @@ from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from .utils import MockUFPFixture, init_entry
 
-from tests.components.repairs import async_process_repairs_platforms
 from tests.typing import WebSocketGenerator
 
 
@@ -28,7 +27,6 @@ async def test_deprecated_entity(
 
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -59,7 +57,6 @@ async def test_deprecated_entity_no_automations(
 
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -123,7 +120,6 @@ async def test_deprecate_entity_automation(
     await _load_automation(hass, entry.entity_id)
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -191,7 +187,6 @@ async def test_deprecate_entity_script(
     await _load_script(hass, entry.entity_id)
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -243,7 +238,7 @@ async def test_remove_chime_volume(
     await _load_automation(hass, entry.entity_id)
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
-    await async_process_repairs_platforms(hass)
+    assert await async_setup_component(hass, "repairs", {})
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -295,7 +290,7 @@ async def test_remove_chime_volume_ignores_ring_volume(
     await _load_automation(hass, entry.entity_id)
     await init_entry(hass, ufp, [chime, doorbell], regenerate_ids=False)
 
-    await async_process_repairs_platforms(hass)
+    assert await async_setup_component(hass, "repairs", {})
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -307,3 +302,127 @@ async def test_remove_chime_volume_ignores_ring_volume(
         if i["issue_id"] == "remove_chime_volume":
             issue = i
     assert issue is None
+
+
+async def test_migrate_insecure_camera_redirected(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A legacy insecure camera entity is redirected to the secure stream."""
+    insecure = entity_registry.async_get_or_create(
+        Platform.CAMERA,
+        DOMAIN,
+        f"{doorbell.mac}_0_insecure",
+        config_entry=ufp.entry,
+    )
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    # the insecure entity now carries the secure unique_id (history preserved)
+    migrated = entity_registry.async_get(insecure.entity_id)
+    assert migrated is not None
+    assert migrated.unique_id == f"{doorbell.mac}_0"
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.CAMERA, DOMAIN, f"{doorbell.mac}_0_insecure"
+        )
+        is None
+    )
+
+
+async def test_migrate_insecure_camera_removed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A redundant, unused insecure entity is removed silently."""
+    entity_registry.async_get_or_create(
+        Platform.CAMERA, DOMAIN, f"{doorbell.mac}_0", config_entry=ufp.entry
+    )
+    insecure = entity_registry.async_get_or_create(
+        Platform.CAMERA,
+        DOMAIN,
+        f"{doorbell.mac}_0_insecure",
+        config_entry=ufp.entry,
+    )
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(insecure.entity_id) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.CAMERA, DOMAIN, f"{doorbell.mac}_0"
+        )
+        is not None
+    )
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"insecure_camera_removed_{doorbell.mac}_0_insecure"
+        )
+        is None
+    )
+
+
+async def test_migrate_insecure_camera_removed_in_use(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """Removing an insecure entity that is still used raises an actionable repair."""
+    secure = entity_registry.async_get_or_create(
+        Platform.CAMERA, DOMAIN, f"{doorbell.mac}_0", config_entry=ufp.entry
+    )
+    insecure = entity_registry.async_get_or_create(
+        Platform.CAMERA,
+        DOMAIN,
+        f"{doorbell.mac}_0_insecure",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, insecure.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(insecure.entity_id) is None
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"insecure_camera_removed_{doorbell.mac}_0_insecure"
+    )
+    assert issue is not None
+    assert issue.translation_placeholders["entity_id"] == insecure.entity_id
+    assert issue.translation_placeholders["replacement"] == secure.entity_id
+
+
+async def test_migrate_insecure_camera_removed_disabled_not_repaired(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A disabled insecure entity is removed without a repair even if referenced."""
+    entity_registry.async_get_or_create(
+        Platform.CAMERA, DOMAIN, f"{doorbell.mac}_0", config_entry=ufp.entry
+    )
+    insecure = entity_registry.async_get_or_create(
+        Platform.CAMERA,
+        DOMAIN,
+        f"{doorbell.mac}_0_insecure",
+        config_entry=ufp.entry,
+        disabled_by=er.RegistryEntryDisabler.USER,
+    )
+    await _load_automation(hass, insecure.entity_id)
+
+    await init_entry(hass, ufp, [doorbell], regenerate_ids=False)
+
+    assert entity_registry.async_get(insecure.entity_id) is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"insecure_camera_removed_{doorbell.mac}_0_insecure"
+        )
+        is None
+    )

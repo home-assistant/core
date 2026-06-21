@@ -380,12 +380,9 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         """Initialize the state change tracker.
 
         `on_entities_update` may be a plain callback or a coroutine function.
-        A coroutine is awaited for the initial entity set (so setup is
-        deterministic) and scheduled as a background task for later
-        registry-driven changes. It is called with the added and removed
-        entity ids and the states of all currently targeted entities; the
-        states mapping is only valid during the synchronous call, so a
-        coroutine must copy what it needs before awaiting.
+        It is called with the added and removed entity ids and the states of
+        all currently targeted entities; the states mapping is only valid during
+        the synchronous call, so a coroutine must copy what it needs before awaiting.
         """
         super().__init__(
             hass,
@@ -404,9 +401,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         """Set up tracking, awaiting the update for the initial entity set.
 
         The initial update is awaited so that a coroutine `on_entities_update`
-        (e.g. one that loads history) completes before setup returns. Later
-        registry-driven updates instead arrive via the callback
-        `_handle_entities_update` and are scheduled as background tasks.
+        (e.g. one that loads history) completes before setup returns.
         """
         self._setup_registry_listeners()
         entities = self._referenced_entities()
@@ -511,9 +506,7 @@ async def async_track_target_selector_state_change_event(
 
     `on_entities_update` is called with the added and removed entity ids and
     the states of all currently targeted entities. It may be a coroutine
-    function; it is awaited for the initial entity set and scheduled as a
-    task for later registry-driven changes, so this function must itself be
-    awaited. The states mapping is only valid during the synchronous call.
+    function; The states mapping is only valid during the synchronous call.
     """
     target_selection = TargetSelection(target_selector_config)
     if not target_selection.has_any_target:

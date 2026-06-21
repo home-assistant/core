@@ -65,17 +65,17 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         )
 
         self._attr_min_temp = cast(
-            float, self.executor.select_state(OverkizState.CORE_MIN_SETPOINT)
+            float, self.device.states.get_value(OverkizState.CORE_MIN_SETPOINT)
         )
         self._attr_max_temp = cast(
-            float, self.executor.select_state(OverkizState.CORE_MAX_SETPOINT)
+            float, self.device.states.get_value(OverkizState.CORE_MAX_SETPOINT)
         )
 
     @property
     def hvac_action(self) -> HVACAction | None:
         """Return the current running hvac operation."""
         if (
-            state := self.executor.select_state(OverkizState.CORE_OPEN_CLOSED_VALVE)
+            state := self.device.states.get_value(OverkizState.CORE_OPEN_CLOSED_VALVE)
         ) is None:
             return None
         return OVERKIZ_TO_HVAC_ACTION[cast(str, state)]
@@ -84,7 +84,7 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
     def target_temperature(self) -> float:
         """Return the temperature."""
         return cast(
-            float, self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE)
+            float, self.device.states.get_value(OverkizState.CORE_TARGET_TEMPERATURE)
         )
 
     @property
@@ -118,7 +118,8 @@ class ValveHeatingTemperatureInterface(OverkizEntity, ClimateEntity):
         """Return the current preset mode, e.g., home, away, temp."""
         return OVERKIZ_TO_PRESET_MODE[
             cast(
-                str, self.executor.select_state(OverkizState.IO_DEROGATION_HEATING_MODE)
+                str,
+                self.device.states.get_value(OverkizState.IO_DEROGATION_HEATING_MODE),
             )
         ]
 
