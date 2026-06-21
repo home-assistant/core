@@ -155,6 +155,9 @@ def mock_core_config_flow() -> Iterator[None]:
     class CompConfigFlow(ConfigFlow):
         """Config flow with options and subentries flow."""
 
+        async def async_step_user(self, user_input=None):
+            return self.async_show_form(step_id="user")
+
         async def async_step_reconfigure(self, user_input=None):
             return self.async_show_form(step_id="reconfigure")
 
@@ -201,22 +204,33 @@ class MockFixFlowNextFlow(RepairsFlow):
         mock_subentry_id = list(subentries.keys())[0]
 
         with mock_core_config_flow():
-            if self.data["flow_type"] == FlowType.CONFIG_FLOW:
+            flow_type: str = self.data["flow_type"]
+            if flow_type == FlowType.CONFIG_FLOW:
                 next_flow = await mock_entry.start_reconfigure_flow(self.hass)
-            elif self.data["flow_type"] == FlowType.OPTIONS_FLOW:
+            elif flow_type == "create_entry_flow":
+                next_flow = await self.hass.config_entries.flow.async_init(
+                    "comp", context={"source": "user"}
+                )
+                flow_type = FlowType.CONFIG_FLOW
+            elif flow_type == FlowType.OPTIONS_FLOW:
                 next_flow = await self.hass.config_entries.options.async_init(
                     mock_entry.entry_id
                 )
-            elif self.data["flow_type"] == FlowType.CONFIG_SUBENTRIES_FLOW:
+            elif flow_type == FlowType.CONFIG_SUBENTRIES_FLOW:
                 next_flow = await mock_entry.start_subentry_reconfigure_flow(
                     self.hass, mock_subentry_id
                 )
-            elif self.data["flow_type"] == "invalid_flow":
+            elif flow_type == "invalid_flow":
                 next_flow = {"flow_id": "fake_flow_id"}
+            elif flow_type == "unknown_entry":
+                next_flow = await mock_entry.start_reconfigure_flow(self.hass)
+                # Remove the entry to trigger UnknownEntity error.
+                await self.hass.config_entries.async_remove(mock_entry.entry_id)
+                flow_type = FlowType.CONFIG_FLOW
             return self.async_create_entry(
                 data={},
                 next_flow=(
-                    self.data["flow_type"],
+                    flow_type,
                     next_flow["flow_id"],
                 ),
             )
@@ -482,9 +496,11 @@ async def test_fix_issue(
     ),
     [
         (FlowType.CONFIG_FLOW, ["fake_integration"]),
+        ("create_entry_flow", ["fake_integration"]),
         (FlowType.OPTIONS_FLOW, ["fake_integration"]),
         (FlowType.CONFIG_SUBENTRIES_FLOW, ["fake_integration"]),
         ("invalid_flow", ["fake_integration"]),
+        ("unknown_entry", ["fake_integration"]),
     ],
 )
 async def test_fix_issue_next_flow(
@@ -530,6 +546,12 @@ async def test_fix_issue_next_flow(
         assert "Invalid next_flow type" in data["message"]
         return
 
+    if flow_type == "unknown_entry":
+        assert resp.status == HTTPStatus.BAD_REQUEST
+        data = await resp.json()
+        assert "not found in next_flow" in data["message"]
+        return
+
     assert resp.status == HTTPStatus.OK, (
         f"Error: {resp.status} cause {await resp.text()}"
     )
@@ -538,17 +560,21 @@ async def test_fix_issue_next_flow(
 
     _, next_flow_id = data["next_flow"]
 
-    assert data == (
-        {
-            "description_placeholders": None,
-            "flow_id": ANY,
-            "handler": "fake_integration",
-            "description": None,
-            "type": "create_entry",
-            "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
-            "next_flow": [flow_type, next_flow_id],
-        }
-    )
+    to_assert = {
+        "description_placeholders": None,
+        "flow_id": ANY,
+        "handler": "fake_integration",
+        "description": None,
+        "type": "create_entry",
+        "result": orjson.loads(orjson.dumps(mock_entry.as_json_fragment)),
+        "next_flow": [flow_type, next_flow_id],
+    }
+
+    if flow_type == "create_entry_flow":
+        to_assert["next_flow"] = [FlowType.CONFIG_FLOW, next_flow_id]
+        del to_assert["result"]
+
+    assert data == to_assert
 
 
 async def test_fix_issue_unauth(

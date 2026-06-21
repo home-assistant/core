@@ -12,7 +12,7 @@ from homeassistant.auth.permissions.const import POLICY_EDIT
 from homeassistant.components import websocket_api
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.http.decorators import require_admin
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, UnknownEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.data_entry_flow import (
@@ -147,6 +147,10 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
             return self.json_message(f"Unknown Flow: {ex!s}", HTTPStatus.BAD_REQUEST)
         except data_entry_flow.UnknownStep as ex:
             return self.json_message(str(ex), HTTPStatus.BAD_REQUEST)
+        except UnknownEntry as ex:
+            return self.json_message(
+                f"Config entry {ex!s} not found in next_flow", HTTPStatus.BAD_REQUEST
+            )
         return self.json(self._prepare_result_json(result))
 
     def _prepare_result_json(
