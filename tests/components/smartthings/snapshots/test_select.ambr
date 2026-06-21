@@ -1,14 +1,14 @@
 # serializer version: 1
-# name: test_all_entities[da_ac_air_000001][select.air_purifier_lamp-entry]
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_backup_heater_application-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'off',
-        'high',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -18,7 +18,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.air_purifier_lamp',
+    'entity_id': 'select.heat_pump_backup_heater_application',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -26,43 +26,467 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Lamp',
+    'object_id_base': 'Backup heater application',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Lamp',
+    'original_name': 'Backup heater application',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'lamp',
-    'unique_id': 'c02e8cfa-94ba-86f3-59a0-04a280950f2b_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'translation_key': 'backup_heater_application',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_air_000001][select.air_purifier_lamp-state]
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_backup_heater_application-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Air purifier Lamp',
+      'friendly_name': 'Heat pump Backup heater application',
       'options': list([
-        'off',
-        'high',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.air_purifier_lamp',
+    'entity_id': 'select.heat_pump_backup_heater_application',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'off',
+    'state': 'no',
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_dhw_space_heating_priority-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'dhw',
+        'heating',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_dhw_space_heating_priority',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW space heating priority',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW space heating priority',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_space_heating_priority',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4011',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_dhw_space_heating_priority-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat pump DHW space heating priority',
+      'options': list([
+        'dhw',
+        'heating',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_dhw_space_heating_priority',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heating',
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_dhw_tank_function-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_dhw_tank_function',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW tank function',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW tank function',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_tank_function',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_3011',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_dhw_tank_function-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat pump DHW tank function',
+      'options': list([
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_dhw_tank_function',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'enabled_thermo_on',
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_external_run_input_zone_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_external_run_input_zone_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External run input (zone 1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External run input (zone 1)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'external_run_input_zone_1',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2091',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_external_run_input_zone_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat pump External run input (zone 1)',
+      'options': list([
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_external_run_input_zone_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disable',
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_external_run_input_zone_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_external_run_input_zone_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External run input (zone 2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External run input (zone 2)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'external_run_input_zone_2',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2092',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_external_run_input_zone_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat pump External run input (zone 2)',
+      'options': list([
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_external_run_input_zone_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disable',
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_remote_controller_room_temp_control_internal_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_remote_controller_room_temp_control_internal_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remote controller room temp control (internal sensor)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remote controller room temp control (internal sensor)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_controller_room_temp_control',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_2093',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_remote_controller_room_temp_control_internal_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat pump Remote controller room temp control (internal sensor)',
+      'options': list([
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_remote_controller_room_temp_control_internal_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room_or_wl_pump_off',
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_three_way_valve_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room_space_heating',
+        'tank_dhw',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_three_way_valve_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Three-way valve direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Three-way valve direction',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'three_way_valve_direction',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_3071',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_three_way_valve_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat pump Three-way valve direction',
+      'options': list([
+        'room_space_heating',
+        'tank_dhw',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_three_way_valve_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room_space_heating',
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_two_zone_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no',
+        'yes',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_two_zone_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Two-zone control',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Two-zone control',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'two_zone_control',
+    'unique_id': '4165c51e-bf6b-c5b6-fd53-127d6248754b_main_samsungce.ehsFsvSettings_fsvSettings_4061',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_ehs_01001][select.heat_pump_two_zone_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat pump Two-zone control',
+      'options': list([
+        'no',
+        'yes',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_two_zone_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no',
   })
 # ---
 # name: test_all_entities[da_ac_rac_000003][select.clim_salon_dust_filter_alarm_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -121,11 +545,10 @@
     'state': '500',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold-entry]
+# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -142,7 +565,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold',
+    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -165,7 +588,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold-state]
+# name: test_all_entities[da_ac_rac_01001][select.aire_dormitorio_principal_dust_filter_alarm_threshold-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Aire Dormitorio Principal Dust filter alarm threshold',
@@ -177,18 +600,17 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.theater_aire_dormitorio_principal_dust_filter_alarm_threshold',
+    'entity_id': 'select.aire_dormitorio_principal_dust_filter_alarm_threshold',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '500',
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][select.theater_microwave_lamp-entry]
+# name: test_all_entities[da_ks_microwave_0101x][select.microwave_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -204,7 +626,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.theater_microwave_lamp',
+    'entity_id': 'select.microwave_lamp',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -227,7 +649,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ks_microwave_0101x][select.theater_microwave_lamp-state]
+# name: test_all_entities[da_ks_microwave_0101x][select.microwave_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Microwave Lamp',
@@ -238,7 +660,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.theater_microwave_lamp',
+    'entity_id': 'select.microwave_lamp',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -247,9 +669,8 @@
 # ---
 # name: test_all_entities[da_ks_oven_01061][select.oven_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -306,9 +727,8 @@
 # ---
 # name: test_all_entities[da_ks_oven_0107x][select.kitchen_oven_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -365,9 +785,8 @@
 # ---
 # name: test_all_entities[da_ks_range_0101x][select.vulcan_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -424,9 +843,8 @@
 # ---
 # name: test_all_entities[da_ks_walloven_0107x][select.four_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -481,135 +899,10 @@
     'state': 'high',
   })
 # ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_cleaning_type-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'vacuum',
-        'mop',
-        'vacuum_and_mop_together',
-        'mop_after_vacuum',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.robot_vacuum_cleaning_type',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Cleaning type',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Cleaning type',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'robot_cleaner_cleaning_type',
-    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerCleaningType_cleaningType_cleaningType',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_cleaning_type-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Cleaning type',
-      'options': list([
-        'vacuum',
-        'mop',
-        'vacuum_and_mop_together',
-        'mop_after_vacuum',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.robot_vacuum_cleaning_type',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'vacuum',
-  })
-# ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_driving_mode-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'area_then_walls',
-        'walls_first',
-        'quick_clean_zigzag_pattern',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.robot_vacuum_driving_mode',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Driving mode',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Driving mode',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'robot_cleaner_driving_mode',
-    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerDrivingMode_drivingMode_drivingMode',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_driving_mode-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Driving mode',
-      'options': list([
-        'area_then_walls',
-        'walls_first',
-        'quick_clean_zigzag_pattern',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.robot_vacuum_driving_mode',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'area_then_walls',
-  })
-# ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -643,14 +936,14 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'lamp',
-    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'unique_id': '05accb39-2017-c98b-a5ab-04a81f4d3d9a_main_samsungce.lamp_brightnessLevel_brightnessLevel',
     'unit_of_measurement': None,
   })
 # ---
 # name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_lamp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Lamp',
+      'friendly_name': 'Robot vacuum Lamp',
       'options': list([
         'on',
         'off',
@@ -664,17 +957,16 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_detection_sensitivity-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_backup_heater_application-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'low',
-        'medium',
-        'high',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -684,7 +976,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.robot_vacuum_sound_detection_sensitivity',
+    'entity_id': 'select.eco_heating_system_backup_heater_application',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -692,50 +984,48 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sound detection sensitivity',
+    'object_id_base': 'Backup heater application',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sound detection sensitivity',
+    'original_name': 'Backup heater application',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sound_detection_sensitivity',
-    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.soundDetectionSensitivity_level_level',
+    'translation_key': 'backup_heater_application',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4021',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_detection_sensitivity-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_backup_heater_application-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Sound detection sensitivity',
+      'friendly_name': 'Eco Heating System Backup heater application',
       'options': list([
-        'low',
-        'medium',
-        'high',
+        'no',
+        'buh_two_step',
+        'buh_one_step',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.robot_vacuum_sound_detection_sensitivity',
+    'entity_id': 'select.eco_heating_system_backup_heater_application',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'medium',
+    'state': 'no',
   })
 # ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_mode-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_dhw_space_heating_priority-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'mute',
-        'tone',
-        'voice',
+        'dhw',
+        'heating',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -745,7 +1035,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.robot_vacuum_sound_mode',
+    'entity_id': 'select.eco_heating_system_dhw_space_heating_priority',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -753,52 +1043,48 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Sound mode',
+    'object_id_base': 'DHW space heating priority',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Sound mode',
+    'original_name': 'DHW space heating priority',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'robot_cleaner_sound_mode',
-    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerSystemSoundMode_soundMode_soundMode',
+    'translation_key': 'dhw_space_heating_priority',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_sound_mode-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_dhw_space_heating_priority-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Sound mode',
+      'friendly_name': 'Eco Heating System DHW space heating priority',
       'options': list([
-        'mute',
-        'tone',
-        'voice',
+        'dhw',
+        'heating',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.robot_vacuum_sound_mode',
+    'entity_id': 'select.eco_heating_system_dhw_space_heating_priority',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'tone',
+    'state': 'dhw',
   })
 # ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_water_level-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_dhw_tank_function-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'high',
-        'moderate_high',
-        'medium',
-        'moderate_low',
-        'low',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -808,7 +1094,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.robot_vacuum_water_level',
+    'entity_id': 'select.eco_heating_system_dhw_tank_function',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -816,51 +1102,51 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Water level',
+    'object_id_base': 'DHW tank function',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Water level',
+    'original_name': 'DHW tank function',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'robot_cleaner_water_spray_level',
-    'unique_id': '01b28624-5907-c8bc-0325-8ad23f03a637_main_samsungce.robotCleanerWaterSprayLevel_waterSprayLevel_waterSprayLevel',
+    'translation_key': 'dhw_tank_function',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_3011',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_rvc_map_01011][select.robot_vacuum_water_level-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_dhw_tank_function-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Robot Vacuum Water level',
+      'friendly_name': 'Eco Heating System DHW tank function',
       'options': list([
-        'high',
-        'moderate_high',
-        'medium',
-        'moderate_low',
-        'low',
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.robot_vacuum_water_level',
+    'entity_id': 'select.eco_heating_system_dhw_tank_function',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'medium',
+    'state': 'enabled_thermo_off',
   })
 # ---
-# name: test_all_entities[da_vc_stick_01001][select.stick_vacuum_lamp-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_external_run_input_zone_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
-        'on',
-        'off',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -870,7 +1156,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.stick_vacuum_lamp',
+    'entity_id': 'select.eco_heating_system_external_run_input_zone_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -878,43 +1164,1255 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Lamp',
+    'object_id_base': 'External run input (zone 1)',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Lamp',
+    'original_name': 'External run input (zone 1)',
     'platform': 'smartthings',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'lamp',
-    'unique_id': 'e1f93c0c-6fe0-c65a-a314-c8f7b163c86b_main_samsungce.lamp_brightnessLevel_brightnessLevel',
+    'translation_key': 'external_run_input_zone_1',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2091',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_vc_stick_01001][select.stick_vacuum_lamp-state]
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_external_run_input_zone_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Stick vacuum Lamp',
+      'friendly_name': 'Eco Heating System External run input (zone 1)',
       'options': list([
-        'on',
-        'off',
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.stick_vacuum_lamp',
+    'entity_id': 'select.eco_heating_system_external_run_input_zone_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'disable',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher-entry]
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_external_run_input_zone_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eco_heating_system_external_run_input_zone_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External run input (zone 2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External run input (zone 2)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'external_run_input_zone_2',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2092',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_external_run_input_zone_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eco Heating System External run input (zone 2)',
+      'options': list([
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eco_heating_system_external_run_input_zone_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disable',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_remote_controller_room_temp_control_internal_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eco_heating_system_remote_controller_room_temp_control_internal_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remote controller room temp control (internal sensor)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remote controller room temp control (internal sensor)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_controller_room_temp_control',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_2093',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_remote_controller_room_temp_control_internal_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eco Heating System Remote controller room temp control (internal sensor)',
+      'options': list([
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eco_heating_system_remote_controller_room_temp_control_internal_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room_or_wl_pump_cycle',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_three_way_valve_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room_space_heating',
+        'tank_dhw',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eco_heating_system_three_way_valve_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Three-way valve direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Three-way valve direction',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'three_way_valve_direction',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_3071',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_three_way_valve_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eco Heating System Three-way valve direction',
+      'options': list([
+        'room_space_heating',
+        'tank_dhw',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eco_heating_system_three_way_valve_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room_space_heating',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_two_zone_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no',
+        'yes',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.eco_heating_system_two_zone_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Two-zone control',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Two-zone control',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'two_zone_control',
+    'unique_id': '1f98ebd0-ac48-d802-7f62-000001200100_main_samsungce.ehsFsvSettings_fsvSettings_4061',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub][select.eco_heating_system_two_zone_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Eco Heating System Two-zone control',
+      'options': list([
+        'no',
+        'yes',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.eco_heating_system_two_zone_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_backup_heater_application-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no',
+        'buh_two_step',
+        'buh_one_step',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_main_backup_heater_application',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Backup heater application',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Backup heater application',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'backup_heater_application',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4021',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_backup_heater_application-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat Pump Main Backup heater application',
+      'options': list([
+        'no',
+        'buh_two_step',
+        'buh_one_step',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_main_backup_heater_application',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_dhw_space_heating_priority-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'dhw',
+        'heating',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_main_dhw_space_heating_priority',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW space heating priority',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW space heating priority',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_space_heating_priority',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4011',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_dhw_space_heating_priority-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat Pump Main DHW space heating priority',
+      'options': list([
+        'dhw',
+        'heating',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_main_dhw_space_heating_priority',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heating',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_dhw_tank_function-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_main_dhw_tank_function',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW tank function',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW tank function',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_tank_function',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_3011',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_dhw_tank_function-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat Pump Main DHW tank function',
+      'options': list([
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_main_dhw_tank_function',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disabled',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_external_run_input_zone_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_main_external_run_input_zone_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External run input (zone 1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External run input (zone 1)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'external_run_input_zone_1',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2091',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_external_run_input_zone_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat Pump Main External run input (zone 1)',
+      'options': list([
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_main_external_run_input_zone_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'compressor_only',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_external_run_input_zone_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_main_external_run_input_zone_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External run input (zone 2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External run input (zone 2)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'external_run_input_zone_2',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2092',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_external_run_input_zone_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat Pump Main External run input (zone 2)',
+      'options': list([
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_main_external_run_input_zone_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'compressor_only',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_remote_controller_room_temp_control_internal_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_main_remote_controller_room_temp_control_internal_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remote controller room temp control (internal sensor)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remote controller room temp control (internal sensor)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_controller_room_temp_control',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_2093',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_remote_controller_room_temp_control_internal_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat Pump Main Remote controller room temp control (internal sensor)',
+      'options': list([
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_main_remote_controller_room_temp_control_internal_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room_or_wl_pump_cycle',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_three_way_valve_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room_space_heating',
+        'tank_dhw',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_main_three_way_valve_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Three-way valve direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Three-way valve direction',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'three_way_valve_direction',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_3071',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_three_way_valve_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat Pump Main Three-way valve direction',
+      'options': list([
+        'room_space_heating',
+        'tank_dhw',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_main_three_way_valve_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room_space_heating',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_two_zone_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no',
+        'yes',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.heat_pump_main_two_zone_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Two-zone control',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Two-zone control',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'two_zone_control',
+    'unique_id': '6a7d5349-0a66-0277-058d-000001200101_main_samsungce.ehsFsvSettings_fsvSettings_4061',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000001_sub_1][select.heat_pump_main_two_zone_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Heat Pump Main Two-zone control',
+      'options': list([
+        'no',
+        'yes',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.heat_pump_main_two_zone_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_backup_heater_application-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no',
+        'buh_two_step',
+        'buh_one_step',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.warmepumpe_backup_heater_application',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Backup heater application',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Backup heater application',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'backup_heater_application',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4021',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_backup_heater_application-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wärmepumpe Backup heater application',
+      'options': list([
+        'no',
+        'buh_two_step',
+        'buh_one_step',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.warmepumpe_backup_heater_application',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'no',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_dhw_space_heating_priority-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'dhw',
+        'heating',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.warmepumpe_dhw_space_heating_priority',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW space heating priority',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW space heating priority',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_space_heating_priority',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4011',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_dhw_space_heating_priority-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wärmepumpe DHW space heating priority',
+      'options': list([
+        'dhw',
+        'heating',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.warmepumpe_dhw_space_heating_priority',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'dhw',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_dhw_tank_function-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.warmepumpe_dhw_tank_function',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'DHW tank function',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'DHW tank function',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'dhw_tank_function',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_3011',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_dhw_tank_function-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wärmepumpe DHW tank function',
+      'options': list([
+        'disabled',
+        'enabled_thermo_on',
+        'enabled_thermo_off',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.warmepumpe_dhw_tank_function',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'enabled_thermo_on',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_external_run_input_zone_1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.warmepumpe_external_run_input_zone_1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External run input (zone 1)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External run input (zone 1)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'external_run_input_zone_1',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2091',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_external_run_input_zone_1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wärmepumpe External run input (zone 1)',
+      'options': list([
+        'disable',
+        'compressor_only',
+        'compressor_pump_mode_2',
+        'compressor_pump_mode_3',
+        'compressor_pump_mode_4',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.warmepumpe_external_run_input_zone_1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disable',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_external_run_input_zone_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.warmepumpe_external_run_input_zone_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'External run input (zone 2)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'External run input (zone 2)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'external_run_input_zone_2',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2092',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_external_run_input_zone_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wärmepumpe External run input (zone 2)',
+      'options': list([
+        'disable',
+        'compressor_only',
+        'pump_off',
+        'pump_on',
+        'pump_cycles',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.warmepumpe_external_run_input_zone_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'disable',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_remote_controller_room_temp_control_internal_sensor-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.warmepumpe_remote_controller_room_temp_control_internal_sensor',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Remote controller room temp control (internal sensor)',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Remote controller room temp control (internal sensor)',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remote_controller_room_temp_control',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_2093',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_remote_controller_room_temp_control_internal_sensor-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wärmepumpe Remote controller room temp control (internal sensor)',
+      'options': list([
+        'room_sensor_only',
+        'room_or_wl_pump_off',
+        'room_or_wl_pump_on',
+        'room_or_wl_pump_cycle',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.warmepumpe_remote_controller_room_temp_control_internal_sensor',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room_or_wl_pump_cycle',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_three_way_valve_direction-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'room_space_heating',
+        'tank_dhw',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.warmepumpe_three_way_valve_direction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Three-way valve direction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Three-way valve direction',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'three_way_valve_direction',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_3071',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_three_way_valve_direction-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wärmepumpe Three-way valve direction',
+      'options': list([
+        'room_space_heating',
+        'tank_dhw',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.warmepumpe_three_way_valve_direction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'room_space_heating',
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_two_zone_control-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        'no',
+        'yes',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'select',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'select.warmepumpe_two_zone_control',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Two-zone control',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Two-zone control',
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'two_zone_control',
+    'unique_id': '3810e5ad-5351-d9f9-12ff-000001200000_main_samsungce.ehsFsvSettings_fsvSettings_4061',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_sac_ehs_000002_sub][select.warmepumpe_two_zone_control-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Wärmepumpe Two-zone control',
+      'options': list([
+        'no',
+        'yes',
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'select.warmepumpe_two_zone_control',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'yes',
+  })
+# ---
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -930,7 +2428,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.theater_dishwasher',
+    'entity_id': 'select.dishwasher',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -953,7 +2451,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher-state]
+# name: test_all_entities[da_wm_dw_000001][select.dishwasher-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dishwasher',
@@ -964,138 +2462,17 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.theater_dishwasher',
+    'entity_id': 'select.dishwasher',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_selected_zone-entry]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'none',
-        'lower',
-        'all',
-      ]),
+    'aliases': set({
     }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.theater_dishwasher_selected_zone',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Selected zone',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Selected zone',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'selected_zone',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherWashingOptions_selectedZone_selectedZone',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_selected_zone-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Selected zone',
-      'options': list([
-        'none',
-        'lower',
-        'all',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.theater_dishwasher_selected_zone',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'all',
-  })
-# ---
-# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_zone_booster-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'none',
-        'left',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.theater_dishwasher_zone_booster',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Zone booster',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Zone booster',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'zone_booster',
-    'unique_id': 'f36dc7ce-cac0-0667-dc14-a3704eb5e676_main_samsungce.dishwasherWashingOptions_zoneBooster_zoneBooster',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_zone_booster-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Zone booster',
-      'options': list([
-        'none',
-        'left',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.theater_dishwasher_zone_booster',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'none',
-  })
-# ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1111,7 +2488,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.dishwasher_1',
+    'entity_id': 'select.dishwasher',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1134,10 +2511,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1-state]
+# name: test_all_entities[da_wm_dw_01011][select.dishwasher-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1',
+      'friendly_name': 'Dishwasher',
       'options': list([
         'stop',
         'run',
@@ -1145,77 +2522,17 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.dishwasher_1',
+    'entity_id': 'select.dishwasher',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1_selected_zone-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      'options': list([
-        'lower',
-        'all',
-      ]),
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'select',
-    'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.dishwasher_1_selected_zone',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Selected zone',
-    'options': dict({
-    }),
-    'original_device_class': None,
-    'original_icon': None,
-    'original_name': 'Selected zone',
-    'platform': 'smartthings',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'selected_zone',
-    'unique_id': '7ff318f3-3772-524d-3c9f-72fcd26413ed_main_samsungce.dishwasherWashingOptions_selectedZone_selectedZone',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[da_wm_dw_01011][select.dishwasher_1_selected_zone-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Selected zone',
-      'options': list([
-        'lower',
-        'all',
-      ]),
-    }),
-    'context': <ANY>,
-    'entity_id': 'select.dishwasher_1_selected_zone',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': 'all',
-  })
-# ---
 # name: test_all_entities[da_wm_sc_000001][select.airdresser-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1272,11 +2589,10 @@
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][select.theater_dryer-entry]
+# name: test_all_entities[da_wm_wd_000001][select.dryer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1292,7 +2608,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.theater_dryer',
+    'entity_id': 'select.dryer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1315,7 +2631,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wd_000001][select.theater_dryer-state]
+# name: test_all_entities[da_wm_wd_000001][select.dryer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Dryer',
@@ -1326,7 +2642,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.theater_dryer',
+    'entity_id': 'select.dryer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1335,9 +2651,8 @@
 # ---
 # name: test_all_entities[da_wm_wd_000001_1][select.seca_roupa-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1396,9 +2711,8 @@
 # ---
 # name: test_all_entities[da_wm_wd_01011][select.trockner-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1455,11 +2769,10 @@
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.theater_washer-entry]
+# name: test_all_entities[da_wm_wm_000001][select.washer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1475,7 +2788,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.theater_washer',
+    'entity_id': 'select.washer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1498,7 +2811,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.theater_washer-state]
+# name: test_all_entities[da_wm_wm_000001][select.washer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer',
@@ -1509,18 +2822,17 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.theater_washer',
+    'entity_id': 'select.washer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.theater_washer_soil_level-entry]
+# name: test_all_entities[da_wm_wm_000001][select.washer_soil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1539,7 +2851,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.theater_washer_soil_level',
+    'entity_id': 'select.washer_soil_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1562,7 +2874,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.theater_washer_soil_level-state]
+# name: test_all_entities[da_wm_wm_000001][select.washer_soil_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Soil level',
@@ -1576,18 +2888,17 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.theater_washer_soil_level',
+    'entity_id': 'select.washer_soil_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'normal',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.theater_washer_spin_level-entry]
+# name: test_all_entities[da_wm_wm_000001][select.washer_spin_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1606,7 +2917,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.theater_washer_spin_level',
+    'entity_id': 'select.washer_spin_level',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1629,7 +2940,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.theater_washer_spin_level-state]
+# name: test_all_entities[da_wm_wm_000001][select.washer_spin_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Spin level',
@@ -1643,18 +2954,17 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.theater_washer_spin_level',
+    'entity_id': 'select.washer_spin_level',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'high',
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.theater_washer_water_temperature-entry]
+# name: test_all_entities[da_wm_wm_000001][select.washer_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1673,7 +2983,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'select.theater_washer_water_temperature',
+    'entity_id': 'select.washer_water_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1696,7 +3006,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_000001][select.theater_washer_water_temperature-state]
+# name: test_all_entities[da_wm_wm_000001][select.washer_water_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Washer Water temperature',
@@ -1710,7 +3020,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.theater_washer_water_temperature',
+    'entity_id': 'select.washer_water_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1719,9 +3029,8 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1780,9 +3089,8 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_spin_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1849,9 +3157,8 @@
 # ---
 # name: test_all_entities[da_wm_wm_000001_1][select.washing_machine_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1918,9 +3225,8 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1979,9 +3285,8 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_detergent_dispense_amount-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2042,9 +3347,8 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_flexible_compartment_dispense_amount-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2105,9 +3409,8 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_spin_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2174,9 +3477,8 @@
 # ---
 # name: test_all_entities[da_wm_wm_01011][select.machine_a_laver_water_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2241,11 +3543,10 @@
     'state': '40',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][select.washer_1-entry]
+# name: test_all_entities[da_wm_wm_100001][select.washer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2261,7 +3562,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.washer_1',
+    'entity_id': 'select.washer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2284,10 +3585,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100001][select.washer_1-state]
+# name: test_all_entities[da_wm_wm_100001][select.washer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer 1',
+      'friendly_name': 'Washer',
       'options': list([
         'run',
         'pause',
@@ -2295,18 +3596,17 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer_1',
+    'entity_id': 'select.washer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'stop',
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][select.washer_2-entry]
+# name: test_all_entities[da_wm_wm_100002][select.washer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
+    'aliases': set({
+    }),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -2322,7 +3622,7 @@
     'disabled_by': None,
     'domain': 'select',
     'entity_category': None,
-    'entity_id': 'select.washer_2',
+    'entity_id': 'select.washer',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -2345,10 +3645,10 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_wm_wm_100002][select.washer_2-state]
+# name: test_all_entities[da_wm_wm_100002][select.washer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Washer 2',
+      'friendly_name': 'Washer',
       'options': list([
         'run',
         'pause',
@@ -2356,7 +3656,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'select.washer_2',
+    'entity_id': 'select.washer',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
