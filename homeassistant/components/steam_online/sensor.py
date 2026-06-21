@@ -29,9 +29,12 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Steam platform."""
+    coordinator = entry.runtime_data
+
     async_add_entities(
-        SteamSensor(entry.runtime_data, steam_id)
-        for steam_id in entry.options[CONF_ACCOUNTS]
+        SteamSensor(coordinator, steamid)
+        for steamid in entry.options[CONF_ACCOUNTS]
+        if steamid in coordinator.data
     )
 
 

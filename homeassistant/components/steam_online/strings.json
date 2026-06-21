@@ -42,6 +42,7 @@
         },
         "state_attributes": {
           "game": { "name": "Game" },
+          "game_icon": { "name": "Game icon" },
           "game_id": { "name": "Game ID" },
           "game_image_header": { "name": "Game header image" },
           "game_image_main": { "name": "Game image" },
