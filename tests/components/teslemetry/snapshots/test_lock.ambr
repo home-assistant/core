@@ -149,7 +149,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unlocked',
+    'state': 'unknown',
   })
 # ---
 # name: test_lock_alt[lock.test_lock-entry]
