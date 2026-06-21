@@ -65,7 +65,7 @@ class VeluxRainSensor(
         # Velux windows with rain sensors report an opening
         # limitation when rain is detected. So far we've
         # seen 89, 91, 93 (most cases) or 100 (Velux GPU).
-        # It probably makes sense to # assume that any large
+        # It probably makes sense to assume that any large
         # enough limitation (we use >=89) means rain is detected.
         # Documentation on this is non-existent AFAIK.
         if self.coordinator.data is None:
