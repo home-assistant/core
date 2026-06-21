@@ -27,6 +27,7 @@ from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 from tests.common import async_capture_events, async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 
 async def test_button_simple(
@@ -252,17 +253,24 @@ async def test_button_ui_load(hass: HomeAssistant, knx: KNXTestKit) -> None:
 async def test_button_ui_create_data_validation(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    create_ui_entity: KnxEntityGenerator,
+    hass_ws_client: WebSocketGenerator,
     knx_config: dict[str, Any],
 ) -> None:
     """Test creating a button with invalid data."""
     await knx.setup_integration()
-    with pytest.raises(AssertionError) as err:
-        await create_ui_entity(
-            platform=Platform.BUTTON,
-            entity_data={"name": "test"},
-            knx_data=knx_config,
-        )
-    assert "success" in err.value.args[0]
-    assert "error_base" in err.value.args[0]
-    assert "path" in err.value.args[0]
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": Platform.BUTTON,
+            "data": {
+                "entity": {"name": "test"},
+                "knx": knx_config,
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["error_base"]
+    assert res["result"]["errors"][0]["path"]
