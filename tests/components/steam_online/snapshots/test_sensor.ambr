@@ -40,7 +40,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Steam',
-      'entity_picture': '',
       'friendly_name': 'Steam testaccount1',
       'level': 10,
     }),

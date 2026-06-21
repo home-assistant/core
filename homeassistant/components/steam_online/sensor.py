@@ -50,7 +50,9 @@ class SteamSensor(SteamEntity, SensorEntity):
         self._steamid = steamid
         self._attr_unique_id = f"sensor.steam_{steamid}"
         self._attr_name = str(coordinator.data[steamid]["personaname"])
-        self._attr_entity_picture = str(coordinator.data[steamid]["avatarmedium"])
+        self._attr_entity_picture = (
+            str(coordinator.data[steamid]["avatarmedium"]) or None
+        )
 
     @property
     @override
