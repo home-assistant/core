@@ -3,11 +3,7 @@
 from aiomusiccast.capabilities import Capability
 
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_VIA_DEVICE
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import BRAND, DEFAULT_ZONE, DOMAIN, ENTITY_CATEGORY_MAPPING
@@ -68,7 +64,7 @@ class MusicCastDeviceEntity(MusicCastEntity):
 
         if self._zone_id == DEFAULT_ZONE:
             device_info[ATTR_CONNECTIONS] = {
-                (CONNECTION_NETWORK_MAC, format_mac(mac))
+                (CONNECTION_NETWORK_MAC, mac)
                 for mac in self.coordinator.data.mac_addresses.values()
             }
         else:
