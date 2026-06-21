@@ -599,7 +599,7 @@ aurorapy==0.2.7
 autarco==3.2.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.8
+automower-ble==0.2.9
 
 # homeassistant.components.autoskope
 autoskope_client==1.4.1
@@ -718,7 +718,7 @@ bring-api==1.1.2
 broadlink==0.19.0
 
 # homeassistant.components.brother
-brother==6.1.0
+brother==6.1.1
 
 # homeassistant.components.brottsplatskartan
 brottsplatskartan==1.0.5
@@ -1377,7 +1377,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==6.1.0
+infrared-protocols==6.3.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1417,7 +1417,7 @@ jellyfin-apiclient-python==1.11.0
 
 # homeassistant.components.command_line
 # homeassistant.components.rest
-jsonpath==0.82.2
+jsonpath-python==1.1.6
 
 # homeassistant.components.justnimbus
 justnimbus==0.7.4
@@ -2045,7 +2045,7 @@ pyatag==0.3.5.3
 pyatmo==9.4.0
 
 # homeassistant.components.apple_tv
-pyatv==0.17.0
+pyatv==0.18.0
 
 # homeassistant.components.aussie_broadband
 pyaussiebb==0.1.5
@@ -2373,7 +2373,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.11.2
+pymodbus==3.13.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.5
@@ -2450,7 +2450,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.0.1
+pyoverkiz[nexity]==2.0.2
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -2857,7 +2857,7 @@ pyws66i==1.1
 pyxeoma==1.4.2
 
 # homeassistant.components.yardian
-pyyardian==1.4.0
+pyyardian==1.4.1
 
 # homeassistant.components.qrcode
 pyzbar==0.1.9
@@ -3222,7 +3222,7 @@ toonapi==0.3.0
 total-connect-client==2025.12.2
 
 # homeassistant.components.tplink_omada
-tplink-omada-client==1.5.7
+tplink-omada-client==1.5.8
 
 # homeassistant.components.transmission
 transmission-rpc==7.0.3
@@ -3264,7 +3264,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==13.5.1
+uiprotect==14.0.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

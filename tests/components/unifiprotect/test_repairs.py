@@ -14,14 +14,11 @@ from homeassistant.components.unifiprotect.repairs import async_create_fix_flow
 from homeassistant.config_entries import SOURCE_REAUTH
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.setup import async_setup_component
 
 from .utils import MockUFPFixture, init_entry
 
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 _ACTIVE_STREAMS = RTSPSStreams(high="rtsps://example.test:7441/abc?enableSrtp")
@@ -42,7 +39,7 @@ async def test_cloud_user_fix(
     user.cloud_account = cloud_account
     ufp.api.bootstrap.users[ufp.api.bootstrap.auth_user_id] = user
     await init_entry(hass, ufp, [])
-    await async_process_repairs_platforms(hass)
+    assert await async_setup_component(hass, "repairs", {})
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
@@ -81,7 +78,7 @@ async def _raise_and_assert_repair(
         channel.is_rtsp_enabled = False
 
     await init_entry(hass, ufp, [doorbell])
-    await async_process_repairs_platforms(hass)
+    assert await async_setup_component(hass, "repairs", {})
     ws_client = await hass_ws_client(hass)
     client = await hass_client()
 
