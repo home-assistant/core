@@ -155,9 +155,6 @@ class CommandSensor(ManualTriggerSensorEntity):
                 try:
                     json_dict = json.loads(value)
                     if self._json_attributes_path is not None:
-                        # jsonpath will always store the result in json_dict[0]
-                        # so the next line happens to work exactly as needed to
-                        # find the result
                         json_dict = search(self._json_attributes_path, json_dict)
                     if isinstance(json_dict, list) and json_dict:
                         json_dict = json_dict[0]
