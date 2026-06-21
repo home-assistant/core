@@ -576,7 +576,11 @@ async def test_reconfigure_flow_host_only(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == {CONF_HOST: "192.168.1.101"}
+    assert config_entry.data == {
+        CONF_HOST: "192.168.1.101",
+        CONF_USERNAME: None,
+        CONF_PASSWORD: None,
+    }
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -671,4 +675,115 @@ async def test_reconfigure_flow_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert config_entry.data == {CONF_HOST: "192.168.1.102"}
+    assert config_entry.data == {
+        CONF_HOST: "192.168.1.102",
+        CONF_USERNAME: None,
+        CONF_PASSWORD: None,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_matching_serial(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test reconfiguration flow succeeds when device serial matches."""
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_HOST: "192.168.1.101",
+        CONF_USERNAME: None,
+        CONF_PASSWORD: None,
+    }
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_changed_serial(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test reconfiguration flow aborts when device serial changes."""
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id="deadbeeffeed",
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_charger.test_and_get.return_value = {
+        "serial": "newfeedfeed",
+        "model": "openevse_wifi_v1",
+    }
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "unique_id_mismatch"
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_flow_no_serial(
+    hass: HomeAssistant, mock_charger: MagicMock
+) -> None:
+    """Test reconfiguration flow when device doesn't return serial."""
+    config_entry = MockConfigEntry(
+        title="openevse_mock_config",
+        domain=DOMAIN,
+        data={CONF_HOST: "192.168.1.100"},
+        entry_id="FAKE",
+        unique_id=None,
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_charger.test_and_get.return_value = {"model": "openevse_wifi_v1"}
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_RECONFIGURE, "entry_id": config_entry.entry_id},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.101"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert config_entry.data == {
+        CONF_HOST: "192.168.1.101",
+        CONF_USERNAME: None,
+        CONF_PASSWORD: None,
+    }

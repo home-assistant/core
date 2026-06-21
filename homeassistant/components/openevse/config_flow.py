@@ -224,7 +224,7 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
             username = user_input.get(CONF_USERNAME) or None
             password = user_input.get(CONF_PASSWORD) or None
 
-            errors, _ = await self.check_status(host, username, password)
+            errors, serial = await self.check_status(host, username, password)
             if errors:
                 return self.async_show_form(
                     step_id="reconfigure",
@@ -233,6 +233,10 @@ class OpenEVSEConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                     errors=errors,
                 )
+
+            if serial is not None:
+                await self.async_set_unique_id(serial)
+                self._abort_if_unique_id_mismatch()
 
             data_updates = {
                 CONF_HOST: host,

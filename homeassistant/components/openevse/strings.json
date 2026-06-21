@@ -4,7 +4,8 @@
       "already_configured": "This charger is already configured",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
-      "unavailable_host": "Unable to connect to host"
+      "unavailable_host": "Unable to connect to host",
+      "unique_id_mismatch": "The charger identifier does not match the previous identifier"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
