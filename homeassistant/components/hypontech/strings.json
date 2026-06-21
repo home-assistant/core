@@ -37,6 +37,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "status": {
+        "name": "Status"
+      }
+    },
     "sensor": {
       "battery_power": {
         "name": "Battery power"
