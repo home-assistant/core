@@ -1153,6 +1153,10 @@ class EntityRegistry(BaseRegistry):
         self, domain: str, platform: str, unique_id: str
     ) -> str | None:
         """Check if an entity_id is currently registered."""
+        if domain not in Platform._value2member_map_:
+            raise ValueError(
+                f"Invalid domain '{domain}': must be part of Platform enum"
+            )
         return self.entities.get_entity_id((domain, platform, unique_id))
 
     @callback
