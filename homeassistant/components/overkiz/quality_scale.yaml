@@ -5,9 +5,7 @@ rules:
   dependency-transparency: done
   common-modules: done
   has-entity-name: done
-  action-setup:
-    status: exempt
-    comment: The integration does not register actions.
+  action-setup: done
   appropriate-polling: done
   test-before-configure: done
   entity-event-setup: done
@@ -18,18 +16,14 @@ rules:
   test-before-setup: done
   docs-high-level-description: done
   config-flow-test-coverage: done
-  docs-actions:
-    status: exempt
-    comment: The integration does not register actions.
+  docs-actions: done
   runtime-data: done
 
   # Silver
   log-when-unavailable: done
   config-entry-unloading: done
   reauthentication-flow: done
-  action-exceptions:
-    status: exempt
-    comment: The integration does not register actions.
+  action-exceptions: done
   docs-installation-parameters: done
   integration-owner: done
   parallel-updates:
@@ -70,8 +64,9 @@ rules:
   stale-devices:
     status: todo
     comment: |
-      coordinator.py already removes the device registry entry on DEVICE_REMOVED and deletes the device from coordinator.devices.
-      This still needs a clear determination of whether the current cleanup behavior fully satisfies the stale-devices rule.
+      On DEVICE_REMOVED, coordinator.py deletes the whole device from the registry.
+      It should instead remove only this config entry from the device (async_update_device with remove_config_entry_id)
+      and delete the device only when no config entries remain, since the device may be shared with other integrations.
   docs-supported-functions: todo
   repair-issues: todo
   reconfiguration-flow: todo
