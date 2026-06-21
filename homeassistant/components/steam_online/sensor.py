@@ -1,14 +1,13 @@
 """Sensor for Steam account status."""
 
 from datetime import datetime
-from time import localtime, mktime
 from typing import cast, override
 
-from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
+from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.util.dt import utc_from_timestamp
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_ACCOUNTS,
@@ -31,40 +30,38 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Steam platform."""
     async_add_entities(
-        SteamSensor(entry.runtime_data, account)
-        for account in entry.options[CONF_ACCOUNTS]
+        SteamSensor(entry.runtime_data, steam_id)
+        for steam_id in entry.options[CONF_ACCOUNTS]
     )
 
 
 class SteamSensor(SteamEntity, SensorEntity):
     """A class for the Steam account."""
 
-    def __init__(self, coordinator: SteamDataUpdateCoordinator, account: str) -> None:
+    _attr_translation_key = "account"
+    _attr_has_entity_name = True
+
+    def __init__(self, coordinator: SteamDataUpdateCoordinator, steamid: str) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self.entity_description = SensorEntityDescription(
-            key=account,
-            name=f"steam_{account}",
-            icon="mdi:steam",
-        )
-        self._attr_unique_id = f"sensor.steam_{account}"
+        self._steamid = steamid
+        self._attr_unique_id = f"sensor.steam_{steamid}"
+        self._attr_name = str(coordinator.data[steamid]["personaname"])
+        self._attr_entity_picture = str(coordinator.data[steamid]["avatarmedium"])
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        if self.entity_description.key in self.coordinator.data:
-            player = self.coordinator.data[self.entity_description.key]
-            return STEAM_STATUSES[cast(int, player["personastate"])]
-        return None
+        return STEAM_STATUSES[
+            cast(int, self.coordinator.data[self._steamid]["personastate"])
+        ]
 
     @property
     @override
     def extra_state_attributes(self) -> dict[str, str | int | datetime]:
         """Return the state attributes of the sensor."""
-        if self.entity_description.key not in self.coordinator.data:
-            return {}
-        player = self.coordinator.data[self.entity_description.key]
+        player = self.coordinator.data[self._steamid]
 
         attrs: dict[str, str | int | datetime] = {}
         if game := player.get("gameextrainfo"):
@@ -76,11 +73,11 @@ class SteamSensor(SteamEntity, SensorEntity):
             attrs["game_image_main"] = f"{game_url}{STEAM_MAIN_IMAGE_FILE}"
             if info := self._get_game_icon(player):
                 attrs["game_icon"] = f"{STEAM_ICON_URL}{game_id}/{info}.jpg"
-        self._attr_name = str(player["personaname"]) or None
-        self._attr_entity_picture = str(player["avatarmedium"]) or None
         if last_online := cast(int | None, player.get("lastlogoff")):
-            attrs["last_online"] = utc_from_timestamp(mktime(localtime(last_online)))
-        if level := self.coordinator.data[self.entity_description.key]["level"]:
+            attrs["last_online"] = dt_util.as_local(
+                dt_util.utc_from_timestamp(last_online)
+            )
+        if level := self.coordinator.data[self._steamid]["level"]:
             attrs["level"] = level
         return attrs
 
@@ -91,3 +88,9 @@ class SteamSensor(SteamEntity, SensorEntity):
         # Reset game icons to have coordinator get id for new game
         self.coordinator.game_icons = {}
         return None
+
+    @property
+    def available(self) -> bool:
+        """Return True if entity is available."""
+
+        return super().available and self._steamid in self.coordinator.data
