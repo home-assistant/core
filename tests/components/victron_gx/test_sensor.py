@@ -57,15 +57,18 @@ async def test_victron_battery_sensor(
     entity = next(e for e in entities if e.entity_id == "sensor.battery_dc_bus_current")
     assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_battery_0_battery_current"
     assert entity.original_device_class is SensorDeviceClass.CURRENT
-    assert entity.unit_of_measurement == "A"
     assert entity.translation_key == "battery_current"
 
+    # Unit is resolved in async_added_to_hass (needs hass.config), so it is not
+    # available in the entity registry at registration time. Verify it via the
+    # state attributes, which are written after async_added_to_hass completes.
     state = hass.states.get(entity.entity_id)
     assert state is not None
+    assert state.attributes["unit_of_measurement"] == "A"
+
     assert state.state == "10.5"
     assert state.attributes["state_class"] == SensorStateClass.MEASUREMENT
     assert state.attributes["device_class"] == "current"
-    assert state.attributes["unit_of_measurement"] == "A"
 
     # Verify device info was registered correctly
     device = device_registry.async_get_device(
