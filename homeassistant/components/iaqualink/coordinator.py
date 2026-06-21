@@ -45,13 +45,11 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, AqualinkDevi
         )
         self.system = system
         self._previous_devices: set[str] = set()
-        self._initialized: bool = False
         self.new_device_callbacks: list[Callable[[list[AqualinkDevice]], None]] = []
 
     def seed_previous_devices(self, device_names: set[str]) -> None:
         """Seed the previous devices set from the device registry."""
         self._previous_devices = device_names
-        self._initialized = bool(device_names)
 
     async def _async_update_data(self) -> dict[str, AqualinkDevice]:
         """Refresh internal state for a system."""
@@ -90,30 +88,22 @@ class AqualinkDataUpdateCoordinator(DataUpdateCoordinator[dict[str, AqualinkDevi
 
         current_device_names = set(devices)
 
-        if self._initialized:
-            if new_names := current_device_names - self._previous_devices:
-                new_devices = [devices[name] for name in new_names]
-                for callback in self.new_device_callbacks:
-                    callback(new_devices)
-
-            if stale_names := self._previous_devices - current_device_names:
-                device_registry = dr.async_get(self.hass)
-                for name in stale_names:
-                    device_id = f"{self.system.serial}_{name}"
-                    if device := device_registry.async_get_device(
-                        identifiers={(DOMAIN, device_id)}
-                    ):
-                        device_registry.async_update_device(
-                            device_id=device.id,
-                            remove_config_entry_id=self.config_entry.entry_id,
-                        )
-        elif self.new_device_callbacks:
-            # First successful refresh after platforms registered callbacks.
-            # Fire callbacks for all devices so entities are created.
-            all_devices = list(devices.values())
+        if new_names := current_device_names - self._previous_devices:
+            new_devices = [devices[name] for name in new_names]
             for callback in self.new_device_callbacks:
-                callback(all_devices)
+                callback(new_devices)
 
-        self._initialized = True
+        if stale_names := self._previous_devices - current_device_names:
+            device_registry = dr.async_get(self.hass)
+            for name in stale_names:
+                device_id = f"{self.system.serial}_{name}"
+                if device := device_registry.async_get_device(
+                    identifiers={(DOMAIN, device_id)}
+                ):
+                    device_registry.async_update_device(
+                        device_id=device.id,
+                        remove_config_entry_id=self.config_entry.entry_id,
+                    )
+
         self._previous_devices = current_device_names
         return devices
