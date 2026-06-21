@@ -141,23 +141,20 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     ),
     # ContactSensor/WindowStateSensor, ContactSensor/SlidingWindowStateSensor
     OverkizBinarySensorDescription(
-        # core:OpenClosedState is also exposed by cover devices, so restrict
-        # this to ContactSensor devices (e.g. the Somfy IntelliTAG).
         key=OverkizState.CORE_OPEN_CLOSED,
         name="Opening",
         device_class=BinarySensorDeviceClass.WINDOW,
         value_fn=lambda state: state == OverkizCommandParam.OPEN,
+        # core:OpenClosedState is also exposed by all cover devices,
+        # restrict this to ContactSensor devices (e.g. the Somfy IntelliTAG)
         device_types=[UIClass.CONTACT_SENSOR],
     ),
     # ContactSensor/IntrusionSensor
     OverkizBinarySensorDescription(
-        # core:IntrusionDetectedState is not yet exposed as an OverkizState enum
-        # (see iMicknl/python-overkiz-api#2141).
         key="core:IntrusionDetectedState",
         name="Intrusion",
         device_class=BinarySensorDeviceClass.SAFETY,
         value_fn=bool,
-        device_types=[UIClass.CONTACT_SENSOR],
     ),
 ]
 
