@@ -118,7 +118,7 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         # LAN info only backs the diagnostic RSSI sensor, so failures on this
         # supplemental endpoint, including connection failures, should not make
         # the primary node entities unavailable.
-        rssi_wifi = previous_data.rssi_wifi if previous_data else None
+        rssi_wifi = self.data.rssi_wifi if self.data else None
         try:
             lan_info = await self.client.async_get_lan_info()
         except DucoError as err:
