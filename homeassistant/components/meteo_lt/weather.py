@@ -16,12 +16,35 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import sun
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL
 from .coordinator import MeteoLtConfigEntry, MeteoLtUpdateCoordinator
+
+_CONDITION_MAP: dict[str, str] = {
+    "partly-cloudy": "partlycloudy",
+    "cloudy-with-sunny-intervals": "partlycloudy",
+    "cloudy": "cloudy",
+    "thunder": "lightning",
+    "isolated-thunderstorms": "lightning-rainy",
+    "thunderstorms": "lightning-rainy",
+    "heavy-rain-with-thunderstorms": "lightning-rainy",
+    "light-rain": "rainy",
+    "rain": "rainy",
+    "heavy-rain": "pouring",
+    "light-sleet": "snowy-rainy",
+    "sleet": "snowy-rainy",
+    "freezing-rain": "snowy-rainy",
+    "hail": "hail",
+    "light-snow": "snowy",
+    "snow": "snowy",
+    "heavy-snow": "snowy",
+    "fog": "fog",
+}
 
 
 async def async_setup_entry(
@@ -62,6 +85,14 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             manufacturer=MANUFACTURER,
             model=MODEL,
         )
+
+    def _map_condition(self, condition_code: str | None, datetime_str: str) -> str:
+        if condition_code is None:
+            return "exceptional"
+        if condition_code == "clear":
+            dt = dt_util.parse_datetime(datetime_str)
+            return "sunny" if sun.is_up(self.hass, dt) else "clear-night"
+        return _CONDITION_MAP.get(condition_code, "exceptional")
 
     @property
     def native_temperature(self) -> float | None:
@@ -106,7 +137,8 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
     @property
     def condition(self) -> str | None:
         """Return the current condition."""
-        return self.coordinator.data.current_conditions.condition
+        cc = self.coordinator.data.current_conditions
+        return self._map_condition(cc.condition_code, cc.datetime)
 
     def _convert_forecast_data(
         self, forecast_data: Any, include_templow: bool = False
@@ -117,7 +149,9 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             native_temperature=forecast_data.temperature,
             native_templow=forecast_data.temperature_low if include_templow else None,
             native_apparent_temperature=forecast_data.apparent_temperature,
-            condition=forecast_data.condition,
+            condition=self._map_condition(
+                forecast_data.condition_code, forecast_data.datetime
+            ),
             native_precipitation=forecast_data.precipitation,
             precipitation_probability=None,  # Not provided by API
             native_wind_speed=forecast_data.wind_speed,
@@ -159,7 +193,9 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
                 native_temperature=max_temp,
                 native_templow=min_temp,
                 native_apparent_temperature=midday_forecast.apparent_temperature,
-                condition=midday_forecast.condition,
+                condition=self._map_condition(
+                    midday_forecast.condition_code, midday_forecast.datetime
+                ),
                 # Calculate precipitation: sum if any values, else None
                 native_precipitation=(
                     sum(
