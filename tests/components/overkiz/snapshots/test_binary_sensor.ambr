@@ -483,8 +483,8 @@
     'object_id_base': 'Tilt',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
-    'original_icon': None,
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-acute',
     'original_name': 'Tilt',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -498,8 +498,8 @@
 # name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.balcony_window_tilt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'opening',
       'friendly_name': 'Balcony Window Tilt',
+      'icon': 'mdi:angle-acute',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.balcony_window_tilt',
@@ -687,8 +687,8 @@
     'object_id_base': 'Tilt',
     'options': dict({
     }),
-    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
-    'original_icon': None,
+    'original_device_class': None,
+    'original_icon': 'mdi:angle-acute',
     'original_name': 'Tilt',
     'platform': 'overkiz',
     'previous_unique_id': None,
@@ -702,8 +702,8 @@
 # name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.balcony_window_tilt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'opening',
       'friendly_name': 'Balcony Window Tilt',
+      'icon': 'mdi:angle-acute',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.balcony_window_tilt',

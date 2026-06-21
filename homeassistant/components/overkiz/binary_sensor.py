@@ -160,7 +160,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_TILTED,
         name="Tilt",
-        device_class=BinarySensorDeviceClass.OPENING,
+        icon="mdi:angle-acute",
         value_fn=bool,
     ),
 ]
