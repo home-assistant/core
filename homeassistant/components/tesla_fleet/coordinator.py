@@ -57,6 +57,11 @@ ENDPOINTS = [
 ]
 
 
+def _statistic_id(site_id: str | int, key: str) -> str:
+    """Return the external statistic ID for an energy site field."""
+    return f"{DOMAIN}:{site_id}_{key}"
+
+
 def _get_last_statistics_for_statistic_ids(
     hass: HomeAssistant,
     statistic_ids: list[str],
@@ -397,7 +402,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
 
         site_id = self.api.energy_site_id
         recorder = get_instance(self.hass)
-        statistic_ids = [f"{DOMAIN}:{site_id}_{key}" for key in ENERGY_HISTORY_FIELDS]
+        statistic_ids = [_statistic_id(site_id, key) for key in ENERGY_HISTORY_FIELDS]
 
         # Fetch all existing last statistics in a single executor call.
         last_stats = await recorder.async_add_executor_job(
@@ -406,8 +411,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
             statistic_ids,
         )
 
-        for key in ENERGY_HISTORY_FIELDS:
-            statistic_id = f"{DOMAIN}:{site_id}_{key}"
+        for key, statistic_id in zip(ENERGY_HISTORY_FIELDS, statistic_ids, strict=True):
             metadata = StatisticMetaData(
                 mean_type=StatisticMeanType.NONE,
                 has_sum=True,

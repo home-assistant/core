@@ -211,8 +211,8 @@ def mock_recorder_functions(recorder_mock: Recorder) -> Generator[None]:
             "homeassistant.components.tesla_fleet.coordinator.async_add_external_statistics",
         ),
     ):
-        # Mock the async_add_executor_job to return empty dict (no last stats)
-        # This is used by get_last_statistics and statistics_during_period
+        # Mock async_add_executor_job to return an empty dict (no last stats),
+        # which is what get_last_statistics returns when no statistics exist.
         mock_get_instance.return_value.async_add_executor_job = AsyncMock(
             return_value={}
         )

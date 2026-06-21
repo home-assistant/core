@@ -40,6 +40,7 @@ from .coordinator import (
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
+    _statistic_id,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
 
@@ -285,7 +286,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) 
     # its DIN (e.g. "abd-123" -> "123") and can be numeric, so it must not be
     # used to identify energy sites.
     statistic_ids = [
-        f"{DOMAIN}:{site_id}_{key}"
+        _statistic_id(site_id, key)
         for device in devices
         for domain, site_id in device.identifiers
         if domain == DOMAIN and site_id.isdigit()
