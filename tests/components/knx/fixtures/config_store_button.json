@@ -13,7 +13,7 @@
           },
           "knx": {
             "data": {
-              "payload": 1,
+              "payload": "0x1",
               "payload_length": 1
             },
             "ga_send": {

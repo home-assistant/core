@@ -103,7 +103,7 @@ class KnxUiButton(_KnxButton, KnxUiEntity):
         knx_conf = ConfigExtractor(config[DOMAIN])
         button_data = knx_conf.get(CONF_DATA)
         if CONF_PAYLOAD in button_data and CONF_PAYLOAD_LENGTH in button_data:
-            self._payload = button_data[CONF_PAYLOAD]
+            self._payload = int(button_data[CONF_PAYLOAD], 16)
             self._device = XknxRawValue(
                 xknx=knx_module.xknx,
                 name=config[CONF_ENTITY][CONF_NAME],

@@ -7,7 +7,6 @@ from typing import Any, override
 import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD
-from homeassistant.helpers import config_validation as cv
 
 from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE
 from ..dpt import HaDptClass, get_supported_dpts
@@ -314,14 +313,17 @@ class SyncStateSelector(KNXSelectorBase):
 
 
 class KnxPayloadSelector(KNXSelectorBase):
-    """Selector for KNX payload configuration."""
+    """Selector for KNX payload configuration.
+
+    Raw payloads are stored as hex strings.
+    """
 
     schema = vol.Any(
         {
             vol.Required(CONF_VALUE): object,
         },
         {
-            vol.Required(CONF_PAYLOAD): cv.positive_int,
+            vol.Required(CONF_PAYLOAD): str,
             vol.Required(CONF_PAYLOAD_LENGTH): vol.All(int, vol.Range(min=0, max=14)),
         },
     )
@@ -344,18 +346,26 @@ class KnxPayloadSelector(KNXSelectorBase):
         if CONF_PAYLOAD in validated and CONF_PAYLOAD_LENGTH in validated:
             payload = validated[CONF_PAYLOAD]
             payload_length = validated[CONF_PAYLOAD_LENGTH]
+            try:
+                int_payload = int(payload, 16)
+            except ValueError as ex:
+                raise vol.Invalid(f"Invalid payload format: {payload}") from ex
+            validated[CONF_PAYLOAD] = hex(int_payload)  # prepends "0x" if not present
+
+            if int_payload < 0:
+                raise vol.Invalid(f"Payload cannot be negative: {payload}")
             if payload_length == 0:
                 # DPT 1,2,3 is marked length 0, has 6 bit size
-                if payload > 63:
+                if int_payload > 63:
                     raise vol.Invalid(
-                        f"Payload exceeds DPT 1,2,3 limit of 63: {payload}"
+                        f"Payload exceeds DPT 1,2,3 limit of 0x3f (63): {payload}"
                     )
             else:
                 max_payload = (1 << (payload_length * 8)) - 1
-                if payload > max_payload:
+                if int_payload > max_payload:
                     raise vol.Invalid(
                         f"Payload {payload} exceeds possible maximum for "
-                        f"length {payload_length}: {max_payload}"
+                        f"length {payload_length}: {hex(max_payload)}"
                     )
         # CONF_VALUE branch needs subvalidator as we don't have the DPT available here
         return validated

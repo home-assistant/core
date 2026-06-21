@@ -156,13 +156,13 @@ async def test_button_invalid(
         (
             {
                 "ga_send": {"write": "1/1/1"},
-                "data": {"payload": 1, "payload_length": 1},  # raw payload
+                "data": {"payload": "1", "payload_length": 1},  # raw payload
             }
         ),
         (
             {
                 "ga_send": {"write": "1/1/1", "dpt": "5"},  # generic 1byte uint
-                "data": {"payload": 1, "payload_length": 1},  # raw payload
+                "data": {"payload": "0x01", "payload_length": 1},  # raw payload
             }
         ),
         (
@@ -233,7 +233,7 @@ async def test_button_ui_load(hass: HomeAssistant, knx: KNXTestKit) -> None:
         },
         {  # invalid length for DPT
             "ga_send": {"write": "1/1/1", "dpt": "9.001"},
-            "data": {"payload": 1, "payload_length": 1},
+            "data": {"payload": "0x1", "payload_length": 1},
         },
         {  # out of bound value for DPT
             "ga_send": {"write": "1/1/1", "dpt": "5.001"},
@@ -241,11 +241,11 @@ async def test_button_ui_load(hass: HomeAssistant, knx: KNXTestKit) -> None:
         },
         {  # out of bound value for length
             "ga_send": {"write": "1/1/1"},
-            "data": {"payload": 256, "payload_length": 1},
+            "data": {"payload": "0x100", "payload_length": 1},
         },
         {  # out of bound value for zero-length
             "ga_send": {"write": "1/1/1"},
-            "data": {"payload": 64, "payload_length": 0},
+            "data": {"payload": "0x40", "payload_length": 0},
         },
     ],
 )

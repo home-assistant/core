@@ -1038,8 +1038,7 @@
         },
         "raw_length": "Payload length",
         "raw_length_description": "Length of the raw payload in bytes. For DPT 1, 2 and 3 use `0`.",
-        "raw_payload": "Raw payload",
-        "raw_payload_description": "The raw payload as integer."
+        "raw_payload": "Raw payload"
       }
     }
   },
