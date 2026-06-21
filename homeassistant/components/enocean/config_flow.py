@@ -1,9 +1,11 @@
 """Config flows for the EnOcean integration."""
 
+from copy import deepcopy
 import glob
 from typing import Any
 
-from enocean_async import Gateway
+from enocean_async import DEVICE_TYPES, DeviceType, Gateway
+from enocean_async.address import EURID, Address
 import voluptuous as vol
 
 from homeassistant.components import usb
@@ -11,23 +13,47 @@ from homeassistant.components.usb import (
     human_readable_device_name,
     usb_unique_id_from_service_info,
 )
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import ATTR_MANUFACTURER, CONF_DEVICE, CONF_NAME
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.selector import (
-    SelectSelector,
-    SelectSelectorConfig,
-    SelectSelectorMode,
-)
+from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 
-from .const import DOMAIN, ERROR_INVALID_DONGLE_PATH, LOGGER, MANUFACTURER
+from . import EnOceanConfigEntry
+from .const import (
+    CONF_ENOCEAN_DEVICE_ID,
+    CONF_ENOCEAN_DEVICE_TYPE_ID,
+    CONF_ENOCEAN_DEVICES,
+    CONF_ENOCEAN_SENDER_ID,
+    DOMAIN,
+    ENOCEAN_DEVICE_TYPE_ID,
+    ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED,
+    ENOCEAN_ERROR_INVALID_DEVICE_ID,
+    ENOCEAN_ERROR_INVALID_SENDER_ID,
+    ENOCEAN_MENU_OPTION_ADD_DEVICE,
+    ENOCEAN_MENU_OPTION_DELETE_DEVICE,
+    ENOCEAN_MENU_OPTION_SELECT_DEVICE,
+    ENOCEAN_STEP_ID_ADD_DEVICE,
+    ENOCEAN_STEP_ID_DELETE_DEVICE,
+    ENOCEAN_STEP_ID_EDIT_DEVICE,
+    ENOCEAN_STEP_ID_INIT,
+    ENOCEAN_STEP_ID_SELECT_DEVICE,
+    LOGGER,
+    MANUFACTURER,
+)
 
 MANUAL_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_DEVICE): cv.string,
     }
 )
+
+
+def _device_type_label(dt: DeviceType) -> str:
+    """Return a human-readable label for a DeviceType."""
+    if dt.manufacturer is not None:
+        return f"{dt.manufacturer.display_name} {dt.model!s}"
+    return str(dt.model)
 
 
 def _detect_usb_dongle() -> list[str]:
@@ -51,7 +77,8 @@ def _detect_usb_dongle() -> list[str]:
 class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle the enOcean config flows."""
 
-    VERSION = 1
+    VERSION = 2
+    MINOR_VERSION = 1
     MANUAL_PATH_VALUE = "manual"
 
     def __init__(self) -> None:
@@ -99,18 +126,6 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Import a yaml configuration."""
-
-        if not await self.validate_enocean_conf(import_data):
-            LOGGER.warning(
-                "Cannot import yaml configuration: %s is not a valid dongle path",
-                import_data[CONF_DEVICE],
-            )
-            return self.async_abort(reason="invalid_dongle_path")
-
-        return self.create_enocean_entry(import_data)
-
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -121,10 +136,13 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Propose a list of detected dongles."""
+        errors: dict[str, str] = {}
         if user_input is not None:
             if user_input[CONF_DEVICE] == self.MANUAL_PATH_VALUE:
                 return await self.async_step_manual()
-            return await self.async_step_manual(user_input)
+            if await self.validate_enocean_conf(user_input):
+                return self.async_create_entry(title="EnOcean", data=user_input)
+            errors["base"] = "cannot_connect"
 
         devices = await self.hass.async_add_executor_job(_detect_usb_dongle)
         if len(devices) == 0:
@@ -133,13 +151,14 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="detect",
+            errors=errors,
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_DEVICE): SelectSelector(
-                        SelectSelectorConfig(
+                    vol.Required(CONF_DEVICE): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
                             options=devices,
                             translation_key="devices",
-                            mode=SelectSelectorMode.LIST,
+                            mode=selector.SelectSelectorMode.LIST,
                         )
                     )
                 }
@@ -150,11 +169,11 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Request manual USB dongle path."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             if await self.validate_enocean_conf(user_input):
-                return self.create_enocean_entry(user_input)
-            errors = {CONF_DEVICE: ERROR_INVALID_DONGLE_PATH}
+                return self.async_create_entry(title="EnOcean", data=user_input)
+            errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="manual",
@@ -162,9 +181,11 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def validate_enocean_conf(self, user_input) -> bool:
+    async def validate_enocean_conf(self, user_input: Any) -> bool:
         """Return True if the user_input contains a valid dongle path."""
         dongle_path = user_input[CONF_DEVICE]
+
+        gateway: Gateway | None = None
         try:
             # Starting the gateway will raise an exception if it can't connect
             gateway = Gateway(port=dongle_path)
@@ -173,10 +194,316 @@ class EnOceanFlowHandler(ConfigFlow, domain=DOMAIN):
             LOGGER.warning("Dongle path %s is invalid: %s", dongle_path, str(exception))
             return False
         finally:
-            gateway.stop()
+            if gateway:
+                gateway.stop()
 
         return True
 
-    def create_enocean_entry(self, user_input):
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: EnOceanConfigEntry,
+    ) -> OptionsFlow:
+        """Create the options flow."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlow):
+    """Handle an option flow for EnOcean."""
+
+    async def async_step_init(self, user_input: Any | None = None) -> ConfigFlowResult:
+        """Show menu displaying the options."""
+        devices = self.config_entry.options.get(CONF_ENOCEAN_DEVICES, [])
+
+        if len(devices) == 0:
+            return self.async_show_menu(
+                step_id=ENOCEAN_STEP_ID_INIT,
+                menu_options=[ENOCEAN_MENU_OPTION_ADD_DEVICE],
+            )
+
+        return self.async_show_menu(
+            step_id=ENOCEAN_STEP_ID_INIT,
+            menu_options=[
+                ENOCEAN_MENU_OPTION_ADD_DEVICE,
+                ENOCEAN_MENU_OPTION_SELECT_DEVICE,
+                ENOCEAN_MENU_OPTION_DELETE_DEVICE,
+            ],
+        )
+
+    async def async_step_add_device(
+        self, user_input: Any | None = None
+    ) -> ConfigFlowResult:
+        """Add an EnOcean device."""
+        errors: dict[str, str] = {}
+        devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
+
+        add_device_schema = None
+
+        default_device_type = ""
+        default_device_id = ""
+        gateway: Gateway = self.config_entry.runtime_data
+        default_sender_id = str(gateway.base_id)
+
+        device_id: EURID | None = None
+        sender_id: Address | None = None
+
+        if user_input is not None:
+            # device id must be a valid EnOcean ID and not already configured
+            try:
+                device_id = EURID(user_input[CONF_ENOCEAN_DEVICE_ID])
+            except ValueError:
+                errors[CONF_ENOCEAN_DEVICE_ID] = ENOCEAN_ERROR_INVALID_DEVICE_ID
+            else:
+                for dev in devices:
+                    try:
+                        existing_id = EURID(dev[CONF_ENOCEAN_DEVICE_ID])
+                    except ValueError:
+                        continue
+                    if int(existing_id) == int(device_id):
+                        errors[CONF_ENOCEAN_DEVICE_ID] = (
+                            ENOCEAN_ERROR_DEVICE_ALREADY_CONFIGURED
+                        )
+                        break
+
+            device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]
+
+            # sender id must be a valid EnOcean address string
+            if user_input[CONF_ENOCEAN_SENDER_ID].strip() == "":
+                sender_id = gateway.base_id
+            else:
+                try:
+                    sender_id = Address(user_input[CONF_ENOCEAN_SENDER_ID])
+                except ValueError:
+                    errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
+
+            # append to the configuration if no errors
+            if not errors:
+                assert device_id is not None
+                assert sender_id is not None
+                devices.append(
+                    {
+                        CONF_ENOCEAN_DEVICE_ID: str(device_id),
+                        CONF_ENOCEAN_DEVICE_TYPE_ID: device_type_id,
+                        CONF_ENOCEAN_SENDER_ID: str(sender_id),
+                    }
+                )
+
+                return self.async_create_entry(
+                    title="EnOcean device", data={CONF_ENOCEAN_DEVICES: devices}
+                )
+
+            default_device_type = device_type_id
+            default_device_id = str(device_id) if device_id else ""
+            default_sender_id = str(sender_id) if sender_id else ""
+
+        supported_devices = [
+            selector.SelectOptionDict(value=dt.id, label=_device_type_label(dt))
+            for dt in DEVICE_TYPES.values()
+        ]
+        supported_devices.sort(key=lambda entry: entry["label"].upper())
+
+        sender_options = [str(s) for s in gateway.sender_slots]
+
+        add_device_schema = vol.Schema(
+            {
+                vol.Required(
+                    ENOCEAN_DEVICE_TYPE_ID,
+                    default=default_device_type,
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=supported_devices)
+                ),
+                vol.Required(
+                    CONF_ENOCEAN_DEVICE_ID, default=default_device_id
+                ): selector.SelectSelector(
+                    # For now, the list of devices will be empty. For a
+                    # later version, it shall be pre-filled with all those
+                    # devices, from which the dongle has received telegrams.
+                    # (FUTURE WORK)
+                    # Hence the use of a SelectSelector.
+                    selector.SelectSelectorConfig(options=[], custom_value=True)
+                ),
+                vol.Optional(
+                    CONF_ENOCEAN_SENDER_ID,
+                    default=default_sender_id,
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=sender_options,
+                        custom_value=False,
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id=ENOCEAN_STEP_ID_ADD_DEVICE,
+            data_schema=add_device_schema,
+            errors=errors,
+        )
+
+    async def async_step_select_device_to_edit(
+        self, user_input: Any | None = None
+    ) -> ConfigFlowResult:
+        """Select a configured EnOcean device to edit."""
+        devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
+        device_list = [
+            selector.SelectOptionDict(
+                value=device[CONF_ENOCEAN_DEVICE_ID],
+                label=device[CONF_ENOCEAN_DEVICE_ID],
+            )
+            for device in devices
+        ]
+        device_list.sort(key=lambda entry: entry["label"].upper())
+
+        if user_input is not None:
+            device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
+
+            # find the device belonging to the device_id
+            device = None
+            for dev in devices:
+                if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
+                    device = dev
+                    break
+
+            return await self.async_step_edit_device(None, device)
+
+        select_device_to_edit_schema = vol.Schema(
+            {
+                vol.Required(CONF_ENOCEAN_DEVICE_ID): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=device_list)
+                )
+            }
+        )
+
+        return self.async_show_form(
+            step_id=ENOCEAN_STEP_ID_SELECT_DEVICE,
+            data_schema=select_device_to_edit_schema,
+        )
+
+    async def async_step_edit_device(
+        self, user_input: Any | None = None, device: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Edit an EnOcean device."""
+        errors: dict[str, str] = {}
+        devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
+
+        device_id = "00:00:00:00"
+        device_type_id: str = ""
+        sender_id: Address = Address(0)
+        sender_id_string: str = ""
+
+        gateway: Gateway = self.config_entry.runtime_data
+
+        if device is not None:  # user_input will be ignored in this case
+            device_id = device[CONF_ENOCEAN_DEVICE_ID]
+            device_type_id = device[CONF_ENOCEAN_DEVICE_TYPE_ID]
+            sender_id_string = device[CONF_ENOCEAN_SENDER_ID]
+
+        elif user_input is not None:
+            # device id needs no validation as user cannot change it
+            device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
+
+            # sender id must be either empty or a valid EnOcean ID
+            sender_id_string = user_input.get(CONF_ENOCEAN_SENDER_ID, "").strip()
+            if sender_id_string != "":
+                try:
+                    sender_id = Address(sender_id_string)
+                except ValueError:
+                    errors[CONF_ENOCEAN_SENDER_ID] = ENOCEAN_ERROR_INVALID_SENDER_ID
+
+            device_type_id = user_input[ENOCEAN_DEVICE_TYPE_ID]
+
+            if not errors:
+                for dev in devices:
+                    if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
+                        dev[CONF_ENOCEAN_DEVICE_TYPE_ID] = device_type_id
+                        dev[CONF_ENOCEAN_SENDER_ID] = str(sender_id)
+                        break
+
+                return self.async_create_entry(
+                    title="", data={CONF_ENOCEAN_DEVICES: devices}
+                )
+
+        supported_devices = [
+            selector.SelectOptionDict(value=dt.id, label=_device_type_label(dt))
+            for dt in DEVICE_TYPES.values()
+        ]
+        supported_devices.sort(key=lambda entry: entry["label"].upper())
+
+        sender_options = [str(s) for s in gateway.sender_slots]
+
+        edit_device_schema = vol.Schema(
+            {
+                vol.Required(
+                    CONF_ENOCEAN_DEVICE_ID, default=device_id
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=[device_id])
+                ),
+                vol.Required(
+                    ENOCEAN_DEVICE_TYPE_ID, default=device_type_id
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=supported_devices)
+                ),
+                vol.Optional(
+                    CONF_ENOCEAN_SENDER_ID, default=sender_id_string
+                ): selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=sender_options,
+                        custom_value=False,
+                    )
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id=ENOCEAN_STEP_ID_EDIT_DEVICE,
+            data_schema=edit_device_schema,
+            errors=errors,
+        )
+
+    async def async_step_delete_device(
+        self, user_input: Any | None = None
+    ) -> ConfigFlowResult:
+        """Delete an EnOcean device."""
+        devices = deepcopy(self.config_entry.options.get(CONF_ENOCEAN_DEVICES, []))
+        device_list = [
+            selector.SelectOptionDict(
+                value=device[CONF_ENOCEAN_DEVICE_ID],
+                label=device[CONF_ENOCEAN_DEVICE_ID],
+            )
+            for device in devices
+        ]
+        device_list.sort(key=lambda entry: entry["label"].upper())
+
+        if user_input is not None:
+            device_id = user_input[CONF_ENOCEAN_DEVICE_ID]
+
+            # find the device belonging to the device_id
+            device = None
+            for dev in devices:
+                if dev[CONF_ENOCEAN_DEVICE_ID] == device_id:
+                    device = dev
+                    break
+
+            if device is None:
+                return self.async_abort(reason="device_not_found")
+            devices.remove(device)
+            return self.async_create_entry(
+                title="", data={CONF_ENOCEAN_DEVICES: devices}
+            )
+
+        delete_device_schema = vol.Schema(
+            {
+                vol.Required(CONF_ENOCEAN_DEVICE_ID): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=device_list)
+                ),
+            }
+        )
+
+        return self.async_show_form(
+            step_id=ENOCEAN_STEP_ID_DELETE_DEVICE,
+            data_schema=delete_device_schema,
+        )
+
+    def create_enocean_entry(self, user_input: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the provided configuration."""
         return self.async_create_entry(title=MANUFACTURER, data=user_input)
