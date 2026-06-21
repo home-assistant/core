@@ -626,6 +626,7 @@ class Thermostat(ClimateEntity):
             for device in device_registry.devices.values()
             for sensor_info in sensors_info
             if device.name == sensor_info["name"]
+            and any(identifier[0] == DOMAIN for identifier in device.identifiers)
         ]
 
     def _active_climate_name(self) -> str:
@@ -937,6 +938,7 @@ class Thermostat(ClimateEntity):
                 for device in device_registry.devices.values()
                 for sensor_name in sensor_names
                 if device.name == sensor_name
+                and any(identifier[0] == DOMAIN for identifier in device.identifiers)
             ]
         )
 

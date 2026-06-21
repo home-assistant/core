@@ -523,6 +523,40 @@ async def test_remote_sensor_ids_names(hass: HomeAssistant) -> None:
     assert sorted(name_by_user_list) == sorted(["Remote Sensor 1", "ecobee"])
 
 
+async def test_remote_sensors_ignore_non_ecobee_devices(hass: HomeAssistant) -> None:
+    """Devices from other integrations sharing a sensor's name are not matched.
+
+    Regression test: the remote-sensor device lookup matched by device name across
+    the whole registry, so a device from another integration that happened to share
+    an ecobee sensor's name was wrongly reported as a participating sensor.
+    """
+    await setup_platform(hass, [const.Platform.CLIMATE, const.Platform.SENSOR])
+    device_registry = dr.async_get(hass)
+
+    # A device from another integration that shares the ecobee sensor's name.
+    other_entry = MockConfigEntry(domain="other")
+    other_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=other_entry.entry_id,
+        identifiers={("other", "collision")},
+        name="ecobee",
+    )
+
+    platform = hass.data[const.Platform.CLIMATE].entities
+    for entity in platform:
+        if entity.entity_id == "climate.ecobee":
+            thermostat = entity
+            break
+
+    assert thermostat is not None
+
+    name_by_user_list = [
+        item["name_by_user"] for item in thermostat.remote_sensor_ids_names
+    ]
+    # Only the two ecobee devices, not the colliding "other" device.
+    assert sorted(name_by_user_list) == sorted(["Remote Sensor 1", "ecobee"])
+
+
 async def test_set_sensors_used_in_climate(hass: HomeAssistant) -> None:
     """Test set sensors used in climate."""
     # Get device_id of remote sensor from the device registry.
