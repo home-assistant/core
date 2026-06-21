@@ -443,7 +443,10 @@ def _snap_hue(hue: float) -> int:
     normalized_hue = hue % 360
 
     # 360° is included as an alias for 0° to handle the wrap-around at red.
-    return min(
-        SUPPORTED_HUES,
-        key=lambda supported_hue: abs(normalized_hue - supported_hue),
-    ) % 360
+    return (
+        min(
+            SUPPORTED_HUES,
+            key=lambda supported_hue: abs(normalized_hue - supported_hue),
+        )
+        % 360
+    )
