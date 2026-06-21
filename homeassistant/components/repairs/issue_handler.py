@@ -101,15 +101,6 @@ def async_setup(hass: HomeAssistant) -> None:
     )
 
 
-async def async_process_repairs_platforms(hass: HomeAssistant) -> None:
-    """Load all repairs platforms.
-
-    Platforms are normally loaded lazily when a fix flow is created; this
-    loads them all up front and is primarily used by tests.
-    """
-    await hass.data[DOMAIN]["platforms"].async_get_platforms()
-
-
 @callback
 def _process_repairs_platform(
     hass: HomeAssistant, integration_domain: str, platform: RepairsProtocol

@@ -19,11 +19,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 
@@ -38,7 +34,6 @@ async def test_repair_acquires_token(
     """Test repair flow is able to obtain and use token."""
 
     assert await async_setup_component(hass, "repairs", {})
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
 
     mock_config_entry.add_to_hass(hass)
@@ -145,7 +140,6 @@ async def test_repair_confirm_enables_cloud_connection(
 ) -> None:
     """Test confirming repair enables cloud connection and resolves issue."""
     assert await async_setup_component(hass, "repairs", {})
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
 
     combined_data = mock_homewizardenergy.combined.return_value
@@ -193,7 +187,6 @@ async def test_repair_confirm_enable_cloud_connection_errors(
 ) -> None:
     """Test confirming repair returns recoverable errors if cloud enable fails."""
     assert await async_setup_component(hass, "repairs", {})
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
 
     combined_data = mock_homewizardenergy.combined.return_value
