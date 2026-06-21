@@ -300,7 +300,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="battery_status.percentage",
+        ufp_public_value="wireless_connection_state.battery_status.percentage",
     ),
     ProtectSensorEntityDescription(
         key="light_level",
@@ -647,7 +647,9 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
 
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+        self._attr_native_value = self.entity_description.get_value(
+            self.device, self._ufp_public_obj
+        )
 
 
 class ProtectDeviceSensor(BaseProtectSensor, ProtectDeviceEntity):

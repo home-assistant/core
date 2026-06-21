@@ -323,7 +323,7 @@ SENSE_SENSORS: tuple[ProtectBinaryEntityDescription, ...] = (
         key="battery_low",
         device_class=BinarySensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="battery_status.is_low",
+        ufp_public_value="wireless_connection_state.battery_status.is_low",
     ),
     ProtectBinaryEntityDescription(
         key="motion",

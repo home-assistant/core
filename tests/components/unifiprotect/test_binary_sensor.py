@@ -16,6 +16,7 @@ from uiprotect.data import (
     SmartDetectObjectType,
 )
 from uiprotect.data.nvr import EventMetadata
+from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.unifiprotect.binary_sensor import (
@@ -47,13 +48,17 @@ from .utils import (
     assert_entity_counts,
     ids_from_device_description,
     init_entry,
+    make_public_sensor,
+    public_device_ws_message,
     remove_entities,
+    setup_public_sensor,
 )
 
 from tests.common import async_capture_events
 
 LIGHT_SENSOR_WRITE = LIGHT_SENSORS[:2]
 SENSE_SENSORS_WRITE = SENSE_SENSORS[:3]
+BATTERY_LOW = next(d for d in SENSE_SENSORS if d.key == "battery_low")
 
 
 async def test_binary_sensor_camera_remove(
@@ -218,6 +223,7 @@ async def test_binary_sensor_setup_sensor(
 ) -> None:
     """Test binary_sensor entity setup for sensor devices."""
 
+    setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor_all])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
@@ -251,6 +257,7 @@ async def test_binary_sensor_setup_sensor_leak(
     """Test binary_sensor entity setup for sensor with most leak mounting type."""
 
     sensor.mount_type = MountType.LEAK
+    setup_public_sensor(ufp)
     await init_entry(hass, ufp, [sensor])
     assert_entity_counts(hass, Platform.BINARY_SENSOR, 11, 11)
 
@@ -273,6 +280,62 @@ async def test_binary_sensor_setup_sensor_leak(
         assert state
         assert state.state == expected[index]
         assert state.attributes[ATTR_ATTRIBUTION] == DEFAULT_ATTRIBUTION
+
+
+async def test_binary_sensor_battery_low_public_ws_update(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """battery_low refreshes from a public devices WS update."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, BATTERY_LOW
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    public = make_public_sensor(sensor_all, is_low=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_binary_sensor_battery_low_unavailable_without_public_api(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """The migrated battery_low entity is unavailable without a public object."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, BATTERY_LOW
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_binary_sensor_battery_low_unavailable_on_public_ws_disconnect(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """battery_low follows the public websocket health, not the private one."""
+    setup_public_sensor(ufp)
+    await init_entry(hass, ufp, [sensor_all])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.BINARY_SENSOR, sensor_all, BATTERY_LOW
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    assert ufp.devices_ws_state_subscription is not None
+    ufp.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_binary_sensor_update_motion(
