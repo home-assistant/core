@@ -6,18 +6,11 @@ rules:
       This integration does not provide additional service actions.
       Light functionality is exposed through the standard light entity actions.
   appropriate-polling: done
-  brands:
-    status: todo
-    comment: |
-      Add branding assets for osram_infrared to the Home Assistant brands
-      repository.
+  brands: done
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
-  dependency-transparency:
-    status: todo
-    comment: |
-      Waiting for the PR in the infrared-protocol repository to be merged and released
+  dependency-transparency: done
   docs-actions: done
   docs-high-level-description: done
   docs-installation-instructions: done
