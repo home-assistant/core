@@ -41,11 +41,8 @@ async def test_victron_number_with_step(
         == f"{MOCK_INSTALLATION_ID}_system_0_system_ess_max_charge_voltage"
     )
     assert entity.original_device_class is NumberDeviceClass.VOLTAGE
+    assert entity.unit_of_measurement == "V"
     assert entity.translation_key == "system_ess_max_charge_voltage"
-
-    # Unit is resolved in async_added_to_hass (needs hass.config), so it is not
-    # available in the entity registry at registration time. Verify it via the
-    # state attributes, which are written after async_added_to_hass completes.
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert state.attributes["unit_of_measurement"] == "V"

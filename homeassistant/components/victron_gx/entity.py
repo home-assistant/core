@@ -61,7 +61,9 @@ class VictronBaseEntity(Entity):
             metric.generic_short_id not in ENTITIES_DISABLE_BY_DEFAULT
         )
 
-    def _native_unit_of_measurement(self) -> str | None:
+    @property
+    def native_unit_of_measurement(self) -> str | None:
+        """Return the metric unit before entity registration."""
         if self._metric.metric_type == MetricType.COST:
             return self.hass.config.currency
 
