@@ -11,11 +11,18 @@ from fritzconnection.core.exceptions import (
 from fritzconnection.lib.fritzwlan import DEFAULT_PASSWORD_LENGTH
 import probatio
 
-from homeassistant.const import CommonServiceArgument
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, CommonServiceArgument
+from homeassistant.core import (
+    HomeAssistant,
+    ServiceCall,
+    ServiceResponse,
+    SupportsResponse,
+    callback,
+)
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
+    async_get_config_entry,
     async_register_admin_service,
 )
 
@@ -55,6 +62,13 @@ SERVICE_SCHEMA_DIAL = probatio.Schema(
         probatio.Required(FritzServiceArgument.MAX_RING_SECONDS): probatio.Range(
             min=1, max=300
         ),
+    }
+)
+
+SERVICE_GET_MESH_INFO = "get_mesh_info"
+SERVICE_SCHEMA_GET_MESH_INFO = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): str,
     }
 )
 
@@ -139,6 +153,17 @@ async def _async_dial(service_call: ServiceCall) -> None:
             ) from ex
 
 
+async def _async_get_mesh_info(service_call: ServiceCall) -> ServiceResponse:
+    """Return the most recent mesh info for targeted config entry."""
+    config_entry: FritzConfigEntry = async_get_config_entry(
+        service_call.hass, DOMAIN, service_call.data[ATTR_CONFIG_ENTRY_ID]
+    )
+    return {
+        "mesh_topology": config_entry.runtime_data.mesh_topology_raw,
+        "hosts_attributes": config_entry.runtime_data.hosts_attributes_raw,
+    }
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up services for Fritz integration."""
@@ -152,4 +177,12 @@ def async_setup_services(hass: HomeAssistant) -> None:
     )
     hass.services.async_register(
         DOMAIN, FritzService.DIAL, _async_dial, SERVICE_SCHEMA_DIAL
+    )
+    hass.services.async_register(DOMAIN, SERVICE_DIAL, _async_dial, SERVICE_SCHEMA_DIAL)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_GET_MESH_INFO,
+        _async_get_mesh_info,
+        SERVICE_SCHEMA_GET_MESH_INFO,
+        supports_response=SupportsResponse.ONLY,
     )

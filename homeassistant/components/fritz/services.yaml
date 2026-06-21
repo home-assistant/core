@@ -38,3 +38,10 @@ dial:
           min: 1
           max: 300
           unit_of_measurement: seconds
+get_mesh_info:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: fritz
