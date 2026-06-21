@@ -122,13 +122,15 @@ class MediaSourceItem:
             )
             return base
 
-        return await (await self.async_media_source()).async_browse_media(self)
+        source = await self._async_media_source()
+        return await source.async_browse_media(self)
 
     async def async_resolve(self) -> PlayMedia:
         """Resolve to playable item."""
-        return await (await self.async_media_source()).async_resolve_media(self)
+        source = await self._async_media_source()
+        return await source.async_resolve_media(self)
 
-    async def async_media_source(self) -> MediaSource:
+    async def _async_media_source(self) -> MediaSource:
         """Return media source that owns this item."""
         if TYPE_CHECKING:
             assert self.domain is not None
