@@ -63,10 +63,10 @@ async def test_sensor_entities_created(
     assert float(state.state) == 45.0
 
 
+@pytest.mark.usefixtures("mock_national_grid_api")
 async def test_meter_devices_linked_to_account_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_national_grid_api: AsyncMock,
 ) -> None:
     """Test meter devices are linked to a pre-registered account device."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

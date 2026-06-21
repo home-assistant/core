@@ -100,8 +100,8 @@ async def test_user_step_multiple_accounts(hass: HomeAssistant) -> None:
 async def test_user_step_errors(
     hass: HomeAssistant, side_effect: Exception, expected_error: str
 ) -> None:
-    """Test user step with various errors."""
-    client = _mock_client([])
+    """Test user step shows an error and then recovers on a valid retry."""
+    client = _mock_client([{"billingAccountId": MOCK_ACCOUNT_ID}])
     client.get_linked_accounts = AsyncMock(side_effect=side_effect)
     with patch(PATCH_CLIENT, return_value=client):
         result = await hass.config_entries.flow.async_init(
@@ -110,8 +110,20 @@ async def test_user_step_errors(
             data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == expected_error
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"]["base"] == expected_error
+
+        # The error clears and a valid retry creates the entry.
+        client.get_linked_accounts = AsyncMock(
+            return_value=[{"billingAccountId": MOCK_ACCOUNT_ID}]
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_SELECTED_ACCOUNTS] == [MOCK_ACCOUNT_ID]
 
 
 async def test_user_step_no_accounts_aborts(hass: HomeAssistant) -> None:
@@ -296,7 +308,7 @@ async def test_already_configured(hass: HomeAssistant) -> None:
 async def test_reauth_errors(
     hass: HomeAssistant, side_effect: Exception, expected_error: str
 ) -> None:
-    """Test reauth flow with various errors."""
+    """Test reauth shows an error and then recovers on a valid retry."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title=MOCK_USERNAME,
@@ -309,7 +321,7 @@ async def test_reauth_errors(
     )
     entry.add_to_hass(hass)
 
-    client = _mock_client([])
+    client = _mock_client([{"billingAccountId": MOCK_ACCOUNT_ID}])
     client.get_linked_accounts = AsyncMock(side_effect=side_effect)
     with patch(PATCH_CLIENT, return_value=client):
         result = await entry.start_reauth_flow(hass)
@@ -318,5 +330,18 @@ async def test_reauth_errors(
             user_input={CONF_PASSWORD: "new_password"},
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"]["base"] == expected_error
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"]["base"] == expected_error
+
+        # The error clears and a valid retry updates the entry.
+        client.get_linked_accounts = AsyncMock(
+            return_value=[{"billingAccountId": MOCK_ACCOUNT_ID}]
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_PASSWORD: "new_password"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert entry.data[CONF_PASSWORD] == "new_password"
