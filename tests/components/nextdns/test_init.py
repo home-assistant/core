@@ -288,9 +288,10 @@ async def test_migrate_entry_v1_to_v2_disabled_entry(
     )
 
     entity_registry.async_get_or_create(
-        "sensor",
-        DOMAIN,
-        "profile_two_dns_queries",
+        domain="sensor",
+        platform=DOMAIN,
+        unique_id="def22_all_queries",
+        suggested_object_id="profile_two_dns_queries",
         config_entry=entry2,
         device_id=device2.id,
         disabled_by=er.RegistryEntryDisabler.CONFIG_ENTRY,
@@ -317,7 +318,7 @@ async def test_migrate_entry_v1_to_v2_disabled_entry(
     assert device.disabled_by is dr.DeviceEntryDisabler.USER
 
     # Verify entity disabled_by was changed from CONFIG_ENTRY to DEVICE
-    entity_entry = entity_registry.async_get("sensor.nextdns_profile_two_dns_queries")
+    entity_entry = entity_registry.async_get("sensor.profile_two_dns_queries")
     assert entity_entry is not None
     assert entity_entry.config_entry_id == entry1.entry_id
     assert entity_entry.config_subentry_id == subentry2.subentry_id
