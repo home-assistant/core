@@ -4,6 +4,8 @@ from collections import defaultdict
 from datetime import datetime
 from typing import Any
 
+from meteo_lt import ForecastTimestamp
+
 from homeassistant.components.weather import (
     ATTR_CONDITION_CLEAR_NIGHT,
     ATTR_CONDITION_CLOUDY,
@@ -113,7 +115,7 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
         return _CONDITION_MAP.get(condition_code, ATTR_CONDITION_EXCEPTIONAL)
 
     @property
-    def _current_conditions(self):
+    def _current_conditions(self) -> ForecastTimestamp | None:
         """Return current conditions, or None when no forecast matches the current hour."""
         return self.coordinator.data.current_conditions
 

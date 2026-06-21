@@ -44,16 +44,18 @@ async def test_weather_entity(
 @pytest.mark.parametrize(
     ("latitude", "longitude", "expected_condition"),
     [
-        (
+        pytest.param(
             54.68705,
             25.28291,
             ATTR_CONDITION_SUNNY,
-        ),  # Vilnius: sun is up at 10:00 UTC (solar noon ~10:19 UTC)
-        (
+            id="sun_up",
+        ),
+        pytest.param(
             32.87336,
             -117.22743,
             ATTR_CONDITION_CLEAR_NIGHT,
-        ),  # San Diego: sun rises ~13:44 UTC, still below horizon at 10:00 UTC
+            id="sun_down",
+        ),
     ],
 )
 async def test_condition_clear_maps_day_night(
