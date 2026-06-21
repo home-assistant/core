@@ -19,7 +19,6 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_API_KEY, CONF_PROFILE_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_PROFILE_ID, DOMAIN, SUBENTRY_TYPE_PROFILE
@@ -29,19 +28,11 @@ AUTH_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_init_nextdns(
-    hass: HomeAssistant, api_key: str, profile_id: str | None = None
-) -> NextDns:
+async def async_init_nextdns(hass: HomeAssistant, api_key: str) -> NextDns:
     """Check if credentials and profile_id are valid."""
     websession = async_get_clientsession(hass)
 
-    nextdns = await NextDns.create(websession, api_key)
-
-    if profile_id:
-        if not any(profile.id == profile_id for profile in nextdns.profiles):
-            raise ProfileNotAvailable
-
-    return nextdns
+    return await NextDns.create(websession, api_key)
 
 
 async def async_validate_new_api_key(
@@ -275,7 +266,3 @@ class ProfileSubentryFlowHandler(ConfigSubentryFlow):
             ),
             errors=errors,
         )
-
-
-class ProfileNotAvailable(HomeAssistantError):
-    """Error to indicate that the profile is not available after reconfig/reauth."""
