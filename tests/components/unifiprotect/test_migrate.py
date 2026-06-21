@@ -2,14 +2,14 @@
 
 from unittest.mock import patch
 
-from uiprotect.data import Camera
+from uiprotect.data import AiPort, Camera
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from .utils import MockUFPFixture, init_entry
@@ -223,3 +223,34 @@ async def test_deprecate_entity_script(
         if i["issue_id"] == "deprecate_hdr_switch":
             issue = i
     assert issue is None
+
+
+async def test_migrate_remove_aiport_device(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    ufp: MockUFPFixture,
+    aiport: AiPort,
+) -> None:
+    """AI Port devices and their diagnostic entities are removed on migration."""
+    device = device_registry.async_get_or_create(
+        config_entry_id=ufp.entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, aiport.mac)},
+    )
+    entity = entity_registry.async_get_or_create(
+        Platform.SENSOR,
+        DOMAIN,
+        f"{aiport.mac}_uptime",
+        config_entry=ufp.entry,
+        device_id=device.id,
+    )
+
+    await init_entry(hass, ufp, [aiport], regenerate_ids=False)
+
+    assert entity_registry.async_get(entity.entity_id) is None
+    assert (
+        device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, aiport.mac)}
+        )
+        is None
+    )
