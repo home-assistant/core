@@ -14,7 +14,6 @@ from homeassistant.setup import async_setup_component
 
 from .utils import MockUFPFixture, init_entry
 
-from tests.components.repairs import async_process_repairs_platforms
 from tests.typing import WebSocketGenerator
 
 
@@ -28,7 +27,6 @@ async def test_deprecated_entity(
 
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -59,7 +57,6 @@ async def test_deprecated_entity_no_automations(
 
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -123,7 +120,6 @@ async def test_deprecate_entity_automation(
     await _load_automation(hass, entry.entity_id)
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
@@ -191,7 +187,6 @@ async def test_deprecate_entity_script(
     await _load_script(hass, entry.entity_id)
     await init_entry(hass, ufp, [doorbell])
 
-    await async_process_repairs_platforms(hass)
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})

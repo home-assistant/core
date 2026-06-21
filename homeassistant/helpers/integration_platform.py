@@ -12,6 +12,7 @@ from homeassistant.const import EVENT_COMPONENT_LOADED
 from homeassistant.core import Event, HassJob, HomeAssistant, callback
 from homeassistant.loader import (
     Integration,
+    async_get_integration,
     async_get_integrations,
     async_get_loaded_integration,
     async_register_preload_platform,
@@ -310,7 +311,7 @@ class LazyIntegrationPlatforms[_R]:
         if domain not in self._hass.config.top_level_components:
             # Don't cache, the integration may be loaded later.
             return None
-        integration = async_get_loaded_integration(self._hass, domain)
+        integration = await async_get_integration(self._hass, domain)
         return await self._async_process(integration)
 
     async def async_get_platforms(self) -> dict[str, _R]:
