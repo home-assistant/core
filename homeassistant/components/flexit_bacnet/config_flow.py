@@ -1,7 +1,5 @@
 """Config flow for Flexit Nordic (BACnet) integration."""
 
-from __future__ import annotations
-
 import asyncio.exceptions
 import logging
 from typing import Any

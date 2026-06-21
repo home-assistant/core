@@ -1,7 +1,5 @@
 """Support for Hydrawise sprinkler sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
@@ -21,6 +19,8 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)

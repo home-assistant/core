@@ -1,7 +1,5 @@
 """Base entity for Sleep as Android integration."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 
 from homeassistant.const import CONF_WEBHOOK_ID

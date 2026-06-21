@@ -1,7 +1,5 @@
 """Test ZHA API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock, call, patch

@@ -1,7 +1,5 @@
 """Platform for Control4 Climate/Thermostat."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -204,7 +202,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
     def _create_api_object(self) -> C4Climate:
         """Create a pyControl4 device object.
 
-        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        This exists so the director token used is always the
+        latest one, without needing to re-init the entire entity.
         """
         return C4Climate(self.runtime_data.director, self._idx)
 
@@ -273,7 +272,10 @@ class Control4Climate(Control4Entity, ClimateEntity):
         if data is None:
             return None
         humidity = data.get(CONTROL4_HUMIDITY)
-        return int(humidity) if humidity is not None else None
+        try:
+            return int(humidity) if humidity is not None else None
+        except ValueError, TypeError:
+            return None
 
     @property
     def hvac_mode(self) -> HVACMode:

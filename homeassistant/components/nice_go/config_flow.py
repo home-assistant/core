@@ -1,7 +1,5 @@
 """Config flow for Nice G.O. integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import datetime
 import logging
@@ -60,7 +58,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                         CONF_EMAIL: user_input[CONF_EMAIL],
                         CONF_PASSWORD: user_input[CONF_PASSWORD],
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
                     },
                 )
 
@@ -101,7 +99,7 @@ class NiceGOConfigFlow(ConfigFlow, domain=DOMAIN):
                     data={
                         **user_input,
                         CONF_REFRESH_TOKEN: refresh_token,
-                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+                        CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
                     },
                     unique_id=user_input[CONF_EMAIL],
                 )

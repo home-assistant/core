@@ -1,7 +1,5 @@
 """Config flow for Android TV Remote integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -109,7 +107,10 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_start_pair(self) -> ConfigFlowResult:
-        """Start pairing with the Android TV. Navigate to the pair flow to enter the PIN shown on screen."""
+        """Start pairing with the Android TV.
+
+        Navigate to the pair flow to enter the PIN shown on screen.
+        """
         self.api = create_api(self.hass, self.host, enable_ime=False)
         await self.api.async_generate_cert_if_missing()
         await self.api.async_start_pairing()
@@ -137,9 +138,10 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self._async_start_pair()
                 except CannotConnect, ConnectionClosed:
                     # Device doesn't respond to the specified host. Abort.
-                    # If we are in the user flow we could go back to the user step to allow
-                    # them to enter a new IP address but we cannot do that for the zeroconf
-                    # flow. Simpler to abort for both flows.
+                    # If we are in the user flow we could go back
+                    # to the user step to allow them to enter a
+                    # new IP address but we cannot do that for the
+                    # zeroconf flow. Simpler to abort for both.
                     return self.async_abort(reason="cannot_connect")
             else:
                 if self.source == SOURCE_REAUTH:

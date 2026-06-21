@@ -1,7 +1,5 @@
 """Test the RAPT Pill BLE sensors."""
 
-from __future__ import annotations
-
 from homeassistant.components.rapt_ble.const import DOMAIN
 from homeassistant.components.sensor import ATTR_STATE_CLASS, SensorStateClass
 from homeassistant.const import (

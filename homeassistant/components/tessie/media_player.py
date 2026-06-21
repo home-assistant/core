@@ -1,7 +1,5 @@
 """Media Player platform for Tessie integration."""
 
-from __future__ import annotations
-
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
     MediaPlayerEntity,

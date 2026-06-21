@@ -8,33 +8,32 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .const import DOMAIN
-
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SWITCH]
 
+type ProgettiHWSWConfigEntry = ConfigEntry[ProgettiHWSWAPI]
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ProgettiHWSWConfigEntry
+) -> bool:
     """Set up ProgettiHWSW Automation from a config entry."""
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = ProgettiHWSWAPI(
-        f"{entry.data['host']}:{entry.data['port']}"
-    )
+    api = ProgettiHWSWAPI(f"{entry.data['host']}:{entry.data['port']}")
 
     # Check board validation again to load new values to API.
-    await hass.data[DOMAIN][entry.entry_id].check_board()
+    await api.check_board()
+
+    entry.runtime_data = api
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, entry: ProgettiHWSWConfigEntry
+) -> bool:
     """Unload a config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 def setup_input(api: ProgettiHWSWAPI, input_number: int) -> Input:

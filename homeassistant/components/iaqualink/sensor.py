@@ -1,7 +1,5 @@
 """Support for Aqualink temperature sensors."""
 
-from __future__ import annotations
-
 from iaqualink.device import AqualinkSensor
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -10,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AqualinkConfigEntry
+from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
 
 PARALLEL_UPDATES = 0
@@ -22,18 +21,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up discovered sensors."""
     async_add_entities(
-        (HassAqualinkSensor(dev) for dev in config_entry.runtime_data.sensors),
-        True,
+        HassAqualinkSensor(
+            config_entry.runtime_data.coordinators[dev.system.serial], dev
+        )
+        for dev in config_entry.runtime_data.sensors
     )
 
 
 class HassAqualinkSensor(AqualinkEntity[AqualinkSensor], SensorEntity):
     """Representation of a sensor."""
 
-    def __init__(self, dev: AqualinkSensor) -> None:
+    def __init__(
+        self, coordinator: AqualinkDataUpdateCoordinator, dev: AqualinkSensor
+    ) -> None:
         """Initialize AquaLink sensor."""
-        super().__init__(dev)
-        self._attr_name = dev.label
+        super().__init__(coordinator, dev)
         if not dev.name.endswith("_temp"):
             return
         self._attr_device_class = SensorDeviceClass.TEMPERATURE

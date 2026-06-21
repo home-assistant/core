@@ -47,6 +47,14 @@
     }
   },
   "entity": {
+    "button": {
+      "remote_start": {
+        "name": "Remote start"
+      },
+      "remote_stop": {
+        "name": "Remote stop"
+      }
+    },
     "lock": {
       "door_locks": {
         "name": "Door locks"

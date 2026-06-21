@@ -1,7 +1,5 @@
 """Switch platform for Miele switch integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -190,9 +188,9 @@ class MielePowerSwitch(MieleSwitch):
     def available(self) -> bool:
         """Return the availability of the entity."""
 
-        return (
+        return super().available and (
             self.action.power_off_enabled or self.action.power_on_enabled
-        ) and super().available
+        )
 
     async def async_turn_switch(self, mode: dict[str, str | int | bool]) -> None:
         """Set switch to mode."""

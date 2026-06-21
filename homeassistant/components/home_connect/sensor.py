@@ -21,6 +21,7 @@ from homeassistant.util import dt as dt_util, slugify
 from .common import setup_home_connect_entry
 from .const import (
     APPLIANCES_WITH_PROGRAMS,
+    BSH_OPERATION_STATE_DELAYED_START,
     BSH_OPERATION_STATE_FINISHED,
     BSH_OPERATION_STATE_PAUSE,
     BSH_OPERATION_STATE_RUN,
@@ -57,6 +58,7 @@ BSH_PROGRAM_SENSORS = (
             "CookProcessor",
             "Dishwasher",
             "Dryer",
+            "Microwave",
             "Hood",
             "Oven",
             "Washer",
@@ -198,7 +200,7 @@ EVENT_SENSORS = (
         options=EVENT_OPTIONS,
         default_value="off",
         translation_key="program_aborted",
-        appliance_types=("Dishwasher", "CleaningRobot", "CookProcessor"),
+        appliance_types=("Dishwasher", "Microwave", "CleaningRobot", "CookProcessor"),
     ),
     HomeConnectSensorEntityDescription(
         key=EventKey.BSH_COMMON_EVENT_PROGRAM_FINISHED,
@@ -211,6 +213,7 @@ EVENT_SENSORS = (
             "Dishwasher",
             "Washer",
             "Dryer",
+            "Microwave",
             "WasherDryer",
             "CleaningRobot",
             "CookProcessor",
@@ -369,7 +372,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN20CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_20_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -377,7 +380,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN15CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_15_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -385,7 +388,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN10CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_10_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -393,7 +396,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN5CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_5_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -597,9 +600,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
 
 class HomeConnectProgramSensor(HomeConnectSensor):
-    """Sensor class for Home Connect sensors that reports information related to the running program."""
-
-    program_running: bool = False
+    """Sensor class for Home Connect running program information."""
 
     async def async_added_to_hass(self) -> None:
         """Register listener."""
@@ -614,34 +615,32 @@ class HomeConnectProgramSensor(HomeConnectSensor):
     @callback
     def _handle_operation_state_event(self) -> None:
         """Update status when an event for the entity is received."""
-        self.program_running = (
-            status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
-        ) is not None and status.value in [
-            BSH_OPERATION_STATE_RUN,
-            BSH_OPERATION_STATE_PAUSE,
-            BSH_OPERATION_STATE_FINISHED,
-        ]
         if not self.program_running:
             # reset the value when the program is not running, paused or finished
             self._attr_native_value = None
         self.async_write_ha_state()
 
     @property
-    def available(self) -> bool:
-        """Return true if the sensor is available."""
-        # These sensors are only available if the program is running, paused or finished.
-        # Otherwise, some sensors report erroneous values.
-        return super().available and self.program_running
-
-    def update_native_value(self) -> None:
-        """Update the program sensor's status."""
-        self.program_running = (
-            status := self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
-        ) is not None and status.value in [
+    def program_running(self) -> bool:
+        """Return whether a program is running, paused or finished."""
+        status = self.appliance.status.get(StatusKey.BSH_COMMON_OPERATION_STATE)
+        return status is not None and status.value in [
+            BSH_OPERATION_STATE_DELAYED_START,
             BSH_OPERATION_STATE_RUN,
             BSH_OPERATION_STATE_PAUSE,
             BSH_OPERATION_STATE_FINISHED,
         ]
+
+    @property
+    def available(self) -> bool:
+        """Return true if the sensor is available."""
+        # These sensors are only available if the program is
+        # running, paused or finished. Otherwise, some sensors
+        # report erroneous values.
+        return super().available and self.program_running
+
+    def update_native_value(self) -> None:
+        """Update the program sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
         if event:
             self._update_native_value(event.value)

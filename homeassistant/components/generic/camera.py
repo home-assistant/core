@@ -1,7 +1,5 @@
 """Support for IP Cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
@@ -137,6 +135,7 @@ class GenericCamera(Camera):
             return None
         try:
             url = self._still_image_url.async_render(parse_result=False)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TemplateError as err:
             _LOGGER.error("Error parsing template %s: %s", self._still_image_url, err)
             return self._last_image
@@ -155,12 +154,12 @@ class GenericCamera(Camera):
                 self._last_image is not None
                 and url == self._last_url
                 and self._last_update + timedelta(0, self._attr_frame_interval)
-                > datetime.now()
+                > datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
             ):
                 return self._last_image
 
             try:
-                update_time = datetime.now()
+                update_time = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
                 async_client = get_async_client(self.hass, verify_ssl=self.verify_ssl)
                 response = await async_client.get(
                     url,

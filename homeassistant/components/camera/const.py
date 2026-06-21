@@ -1,7 +1,5 @@
 """Constants for Camera component."""
 
-from __future__ import annotations
-
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 

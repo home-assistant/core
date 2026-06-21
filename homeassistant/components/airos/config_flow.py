@@ -1,7 +1,5 @@
 """Config flow for the Ubiquiti airOS integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -54,7 +52,7 @@ from .const import (
     HOSTNAME,
     IP_ADDRESS,
     MAC_ADDRESS,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -68,7 +66,7 @@ STEP_DISCOVERY_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
-        vol.Required(SECTION_ADVANCED_SETTINGS): section(
+        vol.Required(SECTION_ADDITIONAL_SETTINGS): section(
             vol.Schema(
                 {
                     vol.Required(CONF_SSL, default=DEFAULT_SSL): bool,
@@ -136,7 +134,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         # with no option in the web UI to change or upload a custom certificate.
         session = async_get_clientsession(
             self.hass,
-            verify_ssl=config_data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL],
+            verify_ssl=config_data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL],
         )
 
         try:
@@ -145,7 +143,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                 username=config_data[CONF_USERNAME],
                 password=config_data[CONF_PASSWORD],
                 session=session,
-                use_ssl=config_data[SECTION_ADVANCED_SETTINGS][CONF_SSL],
+                use_ssl=config_data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL],
             )
 
         except (
@@ -236,18 +234,18 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
                             autocomplete="current-password",
                         )
                     ),
-                    vol.Required(SECTION_ADVANCED_SETTINGS): section(
+                    vol.Required(SECTION_ADDITIONAL_SETTINGS): section(
                         vol.Schema(
                             {
                                 vol.Required(
                                     CONF_SSL,
-                                    default=current_data[SECTION_ADVANCED_SETTINGS][
+                                    default=current_data[SECTION_ADDITIONAL_SETTINGS][
                                         CONF_SSL
                                     ],
                                 ): bool,
                                 vol.Required(
                                     CONF_VERIFY_SSL,
-                                    default=current_data[SECTION_ADVANCED_SETTINGS][
+                                    default=current_data[SECTION_ADDITIONAL_SETTINGS][
                                         CONF_VERIFY_SSL
                                     ],
                                 ): bool,

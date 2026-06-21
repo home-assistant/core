@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Meteo.lt integration."""
 
-from __future__ import annotations
-
 import logging
 
 import aiohttp
@@ -55,7 +53,8 @@ class MeteoLtUpdateCoordinator(DataUpdateCoordinator[MeteoLtForecast]):
         # Check if forecast data is available
         if not forecast.forecast_timestamps:
             raise UpdateFailed(
-                f"No forecast data available for {self.place_code} - API returned empty timestamps"
+                f"No forecast data available for {self.place_code}"
+                " - API returned empty timestamps"
             )
 
         return forecast

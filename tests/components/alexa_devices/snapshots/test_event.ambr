@@ -1,0 +1,71 @@
+# serializer version: 1
+# name: test_all_entities[event.echo_test_voice_event-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'triggered',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.echo_test_voice_event',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Voice event',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Voice event',
+    'platform': 'alexa_devices',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'voice_event',
+    'unique_id': 'echo_test_serial_number-voice_event',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[event.echo_test_voice_event-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'triggered',
+      ]),
+      'friendly_name': 'Echo Test Voice event',
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.echo_test_voice_event',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_history_event_is_fired
+  ReadOnlyDict({
+    'event_type': 'triggered',
+    'event_types': list([
+      'triggered',
+    ]),
+    'friendly_name': 'Echo Test Voice event',
+    'intent': 'PlayMusicIntent',
+    'voice_command': 'Play some music',
+    'voice_reply': 'Echo Test',
+  })
+# ---

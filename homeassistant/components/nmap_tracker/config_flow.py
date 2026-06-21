@@ -1,7 +1,5 @@
 """Config flow for Nmap Tracker integration."""
 
-from __future__ import annotations
-
 from ipaddress import ip_address, ip_network, summarize_address_range
 import re
 from typing import Any
@@ -16,7 +14,6 @@ from homeassistant.components.device_tracker import (
 )
 from homeassistant.components.network import MDNS_TARGET_IP
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlowWithReload,
@@ -26,6 +23,7 @@ from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.typing import VolDictType
 
+from . import NmapTrackerConfigEntry
 from .const import (
     CONF_HOME_INTERVAL,
     CONF_HOSTS_EXCLUDE,
@@ -167,6 +165,8 @@ async def _async_build_schema_with_user_input(
     if include_options:
         schema.update(
             {
+                # Approved exemption: nmap scan interval is user-configurable
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Optional(
                     CONF_SCAN_INTERVAL,
                     default=user_input.get(CONF_SCAN_INTERVAL, TRACKER_SCAN_INTERVAL),
@@ -184,7 +184,7 @@ async def _async_build_schema_with_user_input(
 class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle an option flow for nmap tracker."""
 
-    def __init__(self, config_entry: ConfigEntry) -> None:
+    def __init__(self, config_entry: NmapTrackerConfigEntry) -> None:
         """Initialize options flow."""
         self.options = dict(config_entry.options)
 
@@ -259,6 +259,8 @@ class NmapTrackerConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlowHandler:
+    def async_get_options_flow(
+        config_entry: NmapTrackerConfigEntry,
+    ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler(config_entry)

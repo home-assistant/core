@@ -1,7 +1,5 @@
 """Base class for protect data."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Generator, Iterable
@@ -19,6 +17,8 @@ from uiprotect.data import (
     ModelType,
     ProtectAdoptableDeviceModel,
     PTZPatrol,
+    Relay,
+    Siren,
     WSSubscriptionMessage,
 )
 from uiprotect.exceptions import ClientError, NotAuthorized
@@ -83,10 +83,18 @@ class ProtectData:
         self._subscriptions: defaultdict[
             str, set[Callable[[ProtectDeviceType], None]]
         ] = defaultdict(set)
+        self._relay_subscriptions: defaultdict[str, set[Callable[[Relay], None]]] = (
+            defaultdict(set)
+        )
+        self._siren_subscriptions: defaultdict[str, set[Callable[[Siren], None]]] = (
+            defaultdict(set)
+        )
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
         self._auth_failures = 0
+        self.auth_retries = 0
         self.last_update_success = False
+        self.last_public_update_success = False
         self.api = protect
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
@@ -155,6 +163,7 @@ class ProtectData:
     def async_setup(self) -> None:
         """Subscribe and do the refresh."""
         self.last_update_success = True
+        self.last_public_update_success = True
         self._async_update_change(True, force_update=True)
         api = self.api
         self._unsubs = [
@@ -163,12 +172,70 @@ class ProtectData:
             async_track_time_interval(
                 self._hass, self._async_poll, self._update_interval
             ),
+            # Subscribe to the public devices websocket unconditionally so that
+            # it is active before update_public() primes the cache.
+            # Per library docs: subscribe first, then call update_public().
+            api.subscribe_devices_websocket(
+                self._async_process_public_devices_ws_message
+            ),
+            api.subscribe_devices_websocket_state(self._async_public_ws_state_changed),
         ]
+
+    @callback
+    def _async_process_public_devices_ws_message(
+        self, message: WSSubscriptionMessage
+    ) -> None:
+        """Process a message from the public devices websocket.
+
+        The API client pre-filters messages to the model types listed in
+        DEVICES_WS_SUBSCRIBED_MODELS. NVR messages signal the private NVR so
+        alarm entities pick up the new arm state. Relay messages dispatch
+        the merged Relay object by mac so relay-output entities can refresh.
+        Siren messages dispatch the merged Siren object by mac so siren entities
+        can refresh.
+        """
+        new_obj = message.new_obj
+        if new_obj is None:
+            # Delete event: notify subscribers so entities can be marked unavailable.
+            old_obj = message.old_obj
+            if old_obj is not None and old_obj.model is ModelType.SIREN:
+                self._async_signal_siren_update(cast(Siren, old_obj))
+            return
+        if new_obj.model is ModelType.NVR:
+            self._async_signal_device_update(self.api.bootstrap.nvr)
+            return
+        if new_obj.model is ModelType.RELAY:
+            self._async_signal_relay_update(cast(Relay, new_obj))
+            return
+        if new_obj.model is ModelType.SIREN:
+            self._async_signal_siren_update(cast(Siren, new_obj))
 
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the websocket state."""
         self._async_update_change(state is WebsocketState.CONNECTED)
+
+    @callback
+    def _async_public_ws_state_changed(self, state: WebsocketState) -> None:
+        """Handle a change in the public devices websocket state."""
+        success = state is WebsocketState.CONNECTED
+        if success == self.last_public_update_success:
+            return
+        self.last_public_update_success = success
+        self._async_process_public_updates()
+
+    @callback
+    def _async_process_public_updates(self) -> None:
+        """Re-signal public-API entities after a public websocket state change."""
+        api = self.api
+        if not api.has_public_bootstrap:
+            return
+        # The NVR alarm panel reads the public arm_mode, so refresh it too.
+        self._async_signal_device_update(api.bootstrap.nvr)
+        for relay in api.public_bootstrap.relays.values():
+            self._async_signal_relay_update(relay)
+        for siren in api.public_bootstrap.sirens.values():
+            self._async_signal_siren_update(siren)
 
     def _async_update_change(
         self,
@@ -274,7 +341,8 @@ class ProtectData:
             self._pending_camera_ids.remove(device.id)
             async_dispatcher_send(self._hass, self.channels_signal, device)
 
-        # trigger update for all Cameras with LCD screens when NVR Doorbell settings updates
+        # trigger update for all Cameras with LCD screens
+        # when NVR Doorbell settings updates
         if "doorbell_settings" in changed_data:
             _LOGGER.debug(
                 "Doorbell messages updated. Updating devices with LCD screens"
@@ -332,7 +400,11 @@ class ProtectData:
 
     @callback
     def _async_process_updates(self) -> None:
-        """Process update from the protect data."""
+        """Process an update from the private protect connection.
+
+        Public-API entities (relay/siren/alarm) are driven by the public
+        websocket via ``_async_process_public_updates``, not from here.
+        """
         self._async_signal_device_update(self.api.bootstrap.nvr)
         for device in self.get_by_types(DEVICES_THAT_ADOPT):
             self._async_signal_device_update(device)
@@ -365,6 +437,40 @@ class ProtectData:
             del self._subscriptions[mac]
 
     @callback
+    def async_subscribe_relay(
+        self, mac: str, update_callback: Callable[[Relay], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for relay updates."""
+        self._relay_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_relay, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_relay(
+        self, mac: str, update_callback: Callable[[Relay], None]
+    ) -> None:
+        """Remove a relay callback subscriber."""
+        self._relay_subscriptions[mac].remove(update_callback)
+        if not self._relay_subscriptions[mac]:
+            del self._relay_subscriptions[mac]
+
+    @callback
+    def async_subscribe_siren(
+        self, mac: str, update_callback: Callable[[Siren], None]
+    ) -> CALLBACK_TYPE:
+        """Add a callback subscriber for siren updates."""
+        self._siren_subscriptions[mac].add(update_callback)
+        return partial(self._async_unsubscribe_siren, mac, update_callback)
+
+    @callback
+    def _async_unsubscribe_siren(
+        self, mac: str, update_callback: Callable[[Siren], None]
+    ) -> None:
+        """Remove a siren callback subscriber."""
+        self._siren_subscriptions[mac].remove(update_callback)
+        if not self._siren_subscriptions[mac]:
+            del self._siren_subscriptions[mac]
+
+    @callback
     def _async_signal_device_update(self, device: ProtectDeviceType) -> None:
         """Call the callbacks for a device_id."""
         mac = device.mac
@@ -373,6 +479,26 @@ class ProtectData:
         _LOGGER.debug("Updating device: %s (%s)", device.name, mac)
         for update_callback in subscriptions:
             update_callback(device)
+
+    @callback
+    def _async_signal_relay_update(self, relay: Relay) -> None:
+        """Call the callbacks for a relay mac."""
+        mac = relay.mac
+        if not (subscriptions := self._relay_subscriptions.get(mac)):
+            return
+        _LOGGER.debug("Updating relay: %s (%s)", relay.name, mac)
+        for update_callback in subscriptions:
+            update_callback(relay)
+
+    @callback
+    def _async_signal_siren_update(self, siren: Siren) -> None:
+        """Call the callbacks for a siren mac."""
+        mac = siren.mac
+        if not (subscriptions := self._siren_subscriptions.get(mac)):
+            return
+        _LOGGER.debug("Updating siren: %s (%s)", siren.name, mac)
+        for update_callback in subscriptions:
+            update_callback(siren)
 
 
 @callback

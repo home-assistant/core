@@ -1,7 +1,5 @@
 """Lock platform for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from tesla_fleet_api.const import Scope
@@ -84,12 +82,12 @@ class TeslaFleetCableLockEntity(TeslaFleetVehicleEntity, LockEntity):
         """Update entity attributes."""
         if self._value is None:
             self._attr_is_locked = None
+            return
         self._attr_is_locked = self._value == ENGAGED
 
     async def async_lock(self, **kwargs: Any) -> None:
         """Charge cable Lock cannot be manually locked."""
         raise ServiceValidationError(
-            "Insert cable to lock",
             translation_domain=DOMAIN,
             translation_key="no_cable",
         )

@@ -1,7 +1,5 @@
 """Test the Shark IQ vacuum entity."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from copy import deepcopy
 from datetime import datetime, timedelta
@@ -115,7 +113,7 @@ class MockAyla(AylaApi):
     @property
     def auth_expiration(self) -> datetime:
         """Sample expiration timestamp that is always 1200 seconds behind now()."""
-        return datetime.now() - timedelta(seconds=1200)
+        return datetime.now() - timedelta(seconds=1200)  # pylint: disable=home-assistant-enforce-naive-now
 
 
 class MockShark(SharkIqVacuum):
@@ -290,7 +288,9 @@ async def test_coordinator_updates(
     hass: HomeAssistant, side_effect: Exception | None, success: bool
 ) -> None:
     """Test the update coordinator update functions."""
-    coordinator = hass.data[DOMAIN][ENTRY_ID]
+    entry = hass.config_entries.async_get_entry(ENTRY_ID)
+    assert entry is not None
+    coordinator = entry.runtime_data
 
     await async_setup_component(hass, HOMEASSISTANT_DOMAIN, {})
 

@@ -1,7 +1,5 @@
 """Support for August binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -166,7 +164,7 @@ class AugustDoorbellBinarySensor(AugustDescriptionEntity, BinarySensorEntity):
             self.async_write_ha_state()
 
     def _schedule_update_to_recheck_turn_off_sensor(self) -> None:
-        """Schedule an update to recheck the sensor to see if it is ready to turn off."""
+        """Schedule an update to recheck if sensor is ready to turn off."""
         # If the sensor is already off there is nothing to do
         if not self.is_on:
             return

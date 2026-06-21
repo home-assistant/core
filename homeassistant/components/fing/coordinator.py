@@ -69,7 +69,8 @@ class FingDataUpdateCoordinator(DataUpdateCoordinator[FingDataObject]):
             if err.response.status_code == 401:
                 raise UpdateFailed("Invalid API key") from err
             raise UpdateFailed(
-                f"Http request failed -> {err.response.status_code} - {err.response.reason_phrase}"
+                f"Http request failed -> {err.response.status_code}"
+                f" - {err.response.reason_phrase}"
             ) from err
         except httpx.InvalidURL as err:
             raise UpdateFailed("Invalid hostname or IP address") from err

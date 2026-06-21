@@ -1,7 +1,5 @@
 """Teslemetry Data Coordinator."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -10,6 +8,7 @@ from tesla_fleet_api.exceptions import (
     GatewayTimeout,
     InvalidResponse,
     InvalidToken,
+    LoginRequired,
     RateLimited,
     ServiceUnavailable,
     SubscriptionRequired,
@@ -85,7 +84,7 @@ class TeslemetryMetadataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Fetch latest metadata for subscription status."""
         try:
             data = await self.teslemetry.metadata()
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
@@ -130,24 +129,26 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.api = api
         self.data = flatten(product)
-        self.last_active = datetime.now()
+        self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
 
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using Teslemetry API."""
         try:
             data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
 
         return flatten(data)
@@ -186,18 +187,20 @@ class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         """Update energy site data using Teslemetry API."""
         try:
             data: dict[str, Any] = (await self.api.live_status())["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
         # Convert Wall Connectors from array to dict
         data["wall_connectors"] = {
@@ -233,18 +236,20 @@ class TeslemetryEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         """Update energy site data using Teslemetry API."""
         try:
             data = (await self.api.site_info())["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
 
         return flatten(
@@ -279,18 +284,20 @@ class TeslemetryEnergyHistoryCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Update energy site data using Teslemetry API."""
         try:
             data = (await self.api.energy_history(TeslaEnergyPeriod.DAY))["response"]
-        except (InvalidToken, SubscriptionRequired) as e:
+        except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
                 retry_after=_get_retry_after(e),
             ) from e
         except TeslaFleetError as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
+                translation_placeholders={"message": e.message},
             ) from e
 
         if not data or not isinstance(data.get("time_series"), list):

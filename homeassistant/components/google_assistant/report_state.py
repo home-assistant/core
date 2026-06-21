@@ -1,7 +1,5 @@
 """Google Report State implementation."""
 
-from __future__ import annotations
-
 from collections import deque
 import logging
 from typing import TYPE_CHECKING, Any
@@ -59,7 +57,8 @@ def async_enable_report_state(
                 {"devices": {"states": pending.popleft()}}
             )
 
-        # If things got queued up in last batch while we were reporting, schedule ourselves again
+        # If things got queued up in last batch while we were
+        # reporting, schedule ourselves again
         if pending[0]:
             unsub_pending = async_call_later(
                 hass, REPORT_STATE_WINDOW, report_states_job
@@ -74,7 +73,7 @@ def async_enable_report_state(
         return bool(
             hass.is_running
             and (new_state := data["new_state"])
-            and google_config.should_expose(new_state)
+            and google_config.should_expose(new_state.entity_id)
             and async_get_google_entity_if_supported_cached(
                 hass, google_config, new_state
             )
@@ -113,8 +112,8 @@ def async_enable_report_state(
             result = await google_config.async_sync_notification_all(event_id, payload)
             if result != 200:
                 _LOGGER.error(
-                    "Unable to send notification with result code: %s, check log for more"
-                    " info",
+                    "Unable to send notification with result"
+                    " code: %s, check log for more info",
                     result,
                 )
 
@@ -131,7 +130,8 @@ def async_enable_report_state(
 
         _LOGGER.debug("Scheduling report state for %s: %s", changed_entity, entity_data)
 
-        # If a significant change is already scheduled and we have another significant one,
+        # If a significant change is already scheduled and we
+        # have another significant one,
         # let's create a new batch of changes
         if changed_entity in pending[-1]:
             pending.append({})

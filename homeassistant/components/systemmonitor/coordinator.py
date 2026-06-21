@@ -1,7 +1,5 @@
 """DataUpdateCoordinators for the System monitor integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime
 import logging
@@ -9,7 +7,7 @@ import os
 from typing import TYPE_CHECKING, Any, NamedTuple
 
 from psutil import Process
-from psutil._common import sbattery, sdiskusage, shwtemp, snetio, snicaddr, sswap
+from psutil._ntuples import sbattery, sdiskusage, shwtemp, snetio, snicaddr, sswap
 import psutil_home_assistant as ha_psutil
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN

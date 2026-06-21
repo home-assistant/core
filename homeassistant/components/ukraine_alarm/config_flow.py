@@ -1,7 +1,5 @@
 """Config flow for Ukraine Alarm."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -95,7 +93,8 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             source = self.states
 
         if user_input is not None:
-            # Only offer to browse subchildren if picked region wasn't the previously picked one
+            # Only offer to browse subchildren if picked
+            # region wasn't the previously picked one
             if (
                 not self.selected_region
                 or user_input[CONF_REGION] != self.selected_region["regionId"]

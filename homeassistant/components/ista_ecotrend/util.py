@@ -1,7 +1,5 @@
 """Utility functions for Ista EcoTrend integration."""
 
-from __future__ import annotations
-
 import datetime
 from enum import StrEnum
 from typing import Any

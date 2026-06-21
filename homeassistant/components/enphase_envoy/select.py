@@ -1,7 +1,5 @@
 """Select platform for Enphase Envoy solar energy monitor."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any

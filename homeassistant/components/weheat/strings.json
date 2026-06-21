@@ -96,6 +96,9 @@
       "electricity_used_heating": {
         "name": "Electricity used heating"
       },
+      "electricity_used_standby": {
+        "name": "Electricity used standby"
+      },
       "energy_output": {
         "name": "Total energy output"
       },

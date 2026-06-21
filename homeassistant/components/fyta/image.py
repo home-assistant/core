@@ -1,7 +1,5 @@
 """Entity for Fyta plant image."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
@@ -119,5 +117,5 @@ class FytaPlantImageEntity(FytaPlantEntity, ImageEntity):
 
         if url != self._attr_image_url:
             self._cached_image = None
-            self._attr_image_last_updated = datetime.now()
+            self._attr_image_last_updated = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         return url

@@ -1,7 +1,5 @@
 """Cover Platform for Niko Home Control."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from nhc.cover import NHCCover

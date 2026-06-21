@@ -1,7 +1,5 @@
 """Contains sensors exposed by the Starlink integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -66,7 +64,7 @@ class StarlinkSensorEntity(StarlinkEntity, SensorEntity):
 
 
 class StarlinkAccumulationSensor(StarlinkSensorEntity, RestoreSensor):
-    """A StarlinkAccumulationSensor for Starlink devices. Handles creating unique IDs."""
+    """A StarlinkAccumulationSensor for Starlink devices."""
 
     _attr_native_value: int | float = 0
 

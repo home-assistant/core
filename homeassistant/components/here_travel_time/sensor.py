@@ -1,7 +1,5 @@
 """Support for HERE travel time sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from datetime import timedelta
 from typing import Any
@@ -13,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    ATTR_ATTRIBUTION,
     ATTR_LATITUDE,
     ATTR_LONGITUDE,
     CONF_MODE,
@@ -156,7 +153,7 @@ class HERETravelTimeSensor(
     def attribution(self) -> str | None:
         """Return the attribution."""
         if self.coordinator.data is not None:
-            if (attribution := self.coordinator.data.get(ATTR_ATTRIBUTION)) is not None:
+            if (attribution := self.coordinator.data.get("attribution")) is not None:
                 return str(attribution)
         return None
 

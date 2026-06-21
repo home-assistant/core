@@ -1,7 +1,5 @@
 """Switch platform for NRGkick."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from nrgkick_api.const import CONTROL_KEY_CHARGE_PAUSE

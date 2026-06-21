@@ -1,7 +1,5 @@
 """Support for Anthem Network Receivers and Processors."""
 
-from __future__ import annotations
-
 import logging
 
 from anthemav.protocol import AVR
@@ -14,7 +12,7 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_MAC, CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -89,9 +87,12 @@ class AnthemAVR(MediaPlayerEntity):
                 via_device=(DOMAIN, mac_address),
             )
         else:
+            # Zone 1 is the physical receiver that owns the network MAC; higher
+            # zones are via_device children and carry no connection.
             self._attr_unique_id = mac_address
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, mac_address)},
+                connections={(CONNECTION_NETWORK_MAC, mac_address)},
                 name=name,
                 manufacturer=MANUFACTURER,
                 model=model,

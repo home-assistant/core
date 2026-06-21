@@ -5,9 +5,11 @@ from http import HTTPStatus
 import json
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, mock_open, patch
+import warnings
 
 from aiohttp import ClientError
 from aiohttp.hdrs import AUTHORIZATION
+import jwt.warnings
 import pytest
 from pywebpush import WebPushException
 from syrupy.assertion import SnapshotAssertion
@@ -17,7 +19,6 @@ from homeassistant.components.html5.const import (
     ATTR_ACTIONS,
     ATTR_BADGE,
     ATTR_DIR,
-    ATTR_ICON,
     ATTR_IMAGE,
     ATTR_LANG,
     ATTR_RENOTIFY,
@@ -28,8 +29,10 @@ from homeassistant.components.html5.const import (
     ATTR_TTL,
     ATTR_URGENCY,
     ATTR_VIBRATE,
+    SERVICE_DISMISS,
 )
-from homeassistant.components.html5.notify import ATTR_ACTION, DEFAULT_TTL
+from homeassistant.components.html5.notify import ATTR_ACTION, ATTR_DISMISS, DEFAULT_TTL
+from homeassistant.components.html5.services import SERVICE_DISMISS_MESSAGE
 from homeassistant.components.notify import (
     ATTR_DATA,
     ATTR_MESSAGE,
@@ -41,6 +44,7 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     ATTR_ENTITY_ID,
+    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     Platform,
@@ -153,7 +157,10 @@ async def test_dismissing_message(mock_wp: AsyncMock, hass: HomeAssistant) -> No
     await service.async_dismiss(target=["device", "non_existing"], data={"tag": "test"})
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"tag": "test", "dismiss": true, "data": {"jwt": "JWT"}, "timestamp": 1234567890000}',
+        data=(
+            '{"tag": "test", "dismiss": true,'
+            ' "data": {"jwt": "JWT"}, "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -179,7 +186,15 @@ async def test_sending_message(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     )
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "beer.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -206,7 +221,15 @@ async def test_fcm_key_include(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     await service.async_send_message("Hello", target=["chrome"])
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -235,7 +258,15 @@ async def test_fcm_send_with_unknown_priority(
     await service.async_send_message("Hello", target=["chrome"], priority="undefined")
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -261,7 +292,15 @@ async def test_fcm_no_targets(mock_wp: AsyncMock, hass: HomeAssistant) -> None:
     await service.async_send_message("Hello")
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -287,7 +326,15 @@ async def test_fcm_additional_data(mock_wp: AsyncMock, hass: HomeAssistant) -> N
     await service.async_send_message("Hello", data={"mykey": "myvalue"})
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"mykey": "myvalue", "url": "/", "jwt": "JWT"}, "icon": "/static/icons/favicon-192x192.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"mykey": "myvalue", "url": "/", "jwt": "JWT"},'
+            ' "icon": "/static/icons/favicon-192x192.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -663,7 +710,15 @@ async def test_callback_view_with_jwt(
     )
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "beer.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -707,7 +762,15 @@ async def test_send_fcm_without_targets(
     )
 
     mock_wp.send_async.assert_awaited_once_with(
-        data='{"badge": "/static/images/notification-badge.png", "body": "Hello", "data": {"url": "/", "jwt": "JWT"}, "icon": "beer.png", "tag": "12345678-1234-5678-1234-567812345678", "title": "Home Assistant", "timestamp": 1234567890000}',
+        data=(
+            '{"badge": "/static/images/notification-badge.png",'
+            ' "body": "Hello",'
+            ' "data": {"url": "/", "jwt": "JWT"},'
+            ' "icon": "beer.png",'
+            ' "tag": "12345678-1234-5678-1234-567812345678",'
+            ' "title": "Home Assistant",'
+            ' "timestamp": 1234567890000}'
+        ),
         headers=VAPID_HEADERS,
         ttl=86400,
     )
@@ -1114,11 +1177,32 @@ async def test_html5_send_message(
 
 
 @pytest.mark.parametrize(
-    ("target", "issue_id"),
+    ("domain", "service", "service_data", "issue_id"),
     [
-        (["my-desktop"], "deprecated_notify_action_notify.html5_my_desktop"),
-        (None, "deprecated_notify_action_notify.html5"),
-        (["my-desktop", "my-phone"], "deprecated_notify_action_notify.html5"),
+        (
+            NOTIFY_DOMAIN,
+            "html5_my_desktop",
+            {ATTR_MESSAGE: "Hello", ATTR_TARGET: ["my-desktop"]},
+            "deprecated_notify_action_notify.html5_my_desktop",
+        ),
+        (
+            NOTIFY_DOMAIN,
+            DOMAIN,
+            {ATTR_MESSAGE: "Hello"},
+            "deprecated_notify_action_notify.html5",
+        ),
+        (
+            NOTIFY_DOMAIN,
+            DOMAIN,
+            {ATTR_MESSAGE: "Hello", ATTR_TARGET: ["my-desktop", "my-phone"]},
+            "deprecated_notify_action_notify.html5",
+        ),
+        (
+            DOMAIN,
+            SERVICE_DISMISS,
+            {},
+            "deprecated_dismiss_action",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_wp", "mock_jwt", "mock_vapid", "mock_uuid")
@@ -1127,7 +1211,9 @@ async def test_deprecation_action_call(
     config_entry: MockConfigEntry,
     load_config: MagicMock,
     issue_registry: ir.IssueRegistry,
-    target: list[str] | None,
+    domain: str,
+    service: str,
+    service_data: dict[str, Any] | None,
     issue_id: str,
 ) -> None:
     """Test deprecation action call."""
@@ -1143,9 +1229,9 @@ async def test_deprecation_action_call(
     assert config_entry.state is ConfigEntryState.LOADED
 
     await hass.services.async_call(
-        NOTIFY_DOMAIN,
-        DOMAIN,
-        {ATTR_MESSAGE: "Hello", ATTR_TARGET: target},
+        domain,
+        service,
+        service_data,
         blocking=True,
     )
 
@@ -1153,3 +1239,63 @@ async def test_deprecation_action_call(
         domain=DOMAIN,
         issue_id=issue_id,
     )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "expected_payload"),
+    [
+        (
+            {ATTR_TAG: "message-group-1"},
+            {ATTR_DISMISS: True, ATTR_TAG: "message-group-1"},
+        ),
+        (
+            {},
+            {ATTR_DISMISS: True, ATTR_TAG: ""},
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_jwt", "mock_vapid", "mock_uuid")
+@pytest.mark.freeze_time("2009-02-13T23:31:30.000Z")
+async def test_html5_dismiss_message(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    webpush_async: AsyncMock,
+    load_config: MagicMock,
+    service_data: dict[str, Any],
+    expected_payload: dict[str, Any],
+) -> None:
+    """Test dismissing a message via html5.dismiss_message action."""
+    load_config.return_value = {"my-desktop": SUBSCRIPTION_1}
+
+    config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_DISMISS_MESSAGE,
+        {
+            ATTR_ENTITY_ID: "notify.my_desktop",
+            **service_data,
+        },
+        blocking=True,
+    )
+
+    webpush_async.assert_awaited_once()
+    assert webpush_async.await_args
+    _, payload, _, _ = webpush_async.await_args.args
+    assert json.loads(payload) == {
+        "timestamp": 1234567890000,
+        "data": {"jwt": "JWT"},
+        **expected_payload,
+    }
+
+
+def test_add_jwt_no_insecure_key_warning() -> None:
+    """Test that add_jwt does not emit InsecureKeyLengthWarning for short keys."""
+    short_key = "c2hvcnRfa2V5X2hlcmU="
+    with warnings.catch_warnings():
+        warnings.simplefilter("error", jwt.warnings.InsecureKeyLengthWarning)
+        html5.add_jwt(1234567890, "device", "tag", short_key)

@@ -1,7 +1,5 @@
 """The devolo_home_control integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from functools import partial
@@ -108,7 +106,10 @@ def configure_mydevolo(conf: Mapping[str, Any]) -> Mydevolo:
 
 
 def check_mydevolo_and_get_gateway_ids(mydevolo: Mydevolo) -> list[str]:
-    """Check if the credentials are valid and return user's gateway IDs as long as mydevolo is not in maintenance mode."""
+    """Check credentials and return user's gateway IDs.
+
+    Raises if mydevolo is in maintenance mode.
+    """
     if not mydevolo.credentials_valid():
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,

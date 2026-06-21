@@ -1,7 +1,5 @@
 """Adds config flow for Workday integration."""
 
-from __future__ import annotations
-
 from functools import partial
 from typing import Any
 
@@ -14,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlowWithReload,
 )
-from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE, CONF_NAME
+from homeassistant.const import CONF_COUNTRY, CONF_LANGUAGE
 from homeassistant.core import callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
@@ -30,7 +28,6 @@ from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
 )
 from homeassistant.util import dt as dt_util
 
@@ -215,6 +212,7 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Workday integration."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     data: dict[str, Any] = {}
 
@@ -243,7 +241,6 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_NAME, default=DEFAULT_NAME): TextSelector(),
                     vol.Optional(CONF_COUNTRY): CountrySelector(
                         CountrySelectorConfig(
                             countries=list(supported_countries),
@@ -292,8 +289,14 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             LOGGER.debug("Errors have occurred %s", errors)
             if not errors:
                 LOGGER.debug("No duplicate, no errors, creating entry")
+
+                name = DEFAULT_NAME
+                if (country := combined_input.get(CONF_COUNTRY)) is not None:
+                    name += f" {country}"
+                if (province := combined_input.get(CONF_PROVINCE)) is not None:
+                    name += f" {province}"
                 return self.async_create_entry(
-                    title=combined_input[CONF_NAME],
+                    title=name,
                     data={},
                     options=combined_input,
                 )
@@ -309,7 +312,6 @@ class WorkdayConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=new_schema,
             errors=errors,
             description_placeholders={
-                "name": self.data[CONF_NAME],
                 "country": self.data.get(CONF_COUNTRY, "-"),
             },
         )
@@ -376,7 +378,7 @@ class WorkdayOptionsFlowHandler(OptionsFlowWithReload):
             data_schema=new_schema,
             errors=errors,
             description_placeholders={
-                "name": options[CONF_NAME],
+                "name": self.config_entry.title,
                 "country": options.get(CONF_COUNTRY, "-"),
             },
         )

@@ -1,7 +1,5 @@
 """Config flow to configure roomba component."""
 
-from __future__ import annotations
-
 import asyncio
 from functools import partial
 from typing import Any
@@ -11,12 +9,7 @@ from roombapy.discovery import RoombaDiscovery
 from roombapy.getpassword import RoombaPassword
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_NAME, CONF_PASSWORD
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -31,6 +24,7 @@ from .const import (
     DOMAIN,
     ROOMBA_SESSION,
 )
+from .models import RoombaConfigEntry
 
 ROOMBA_DISCOVERY_LOCK = "roomba_discovery_lock"
 ALL_ATTEMPTS = 2
@@ -90,7 +84,7 @@ class RoombaConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: RoombaConfigEntry,
     ) -> RoombaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return RoombaOptionsFlowHandler()
@@ -340,7 +334,7 @@ def _async_get_roomba_discovery() -> RoombaDiscovery:
 @callback
 def _async_blid_from_hostname(hostname: str) -> str:
     """Extract the blid from the hostname."""
-    return hostname.split("-")[1].split(".")[0].upper()
+    return hostname.split("-")[1].split(".", maxsplit=1)[0].upper()
 
 
 async def _async_discover_roombas(

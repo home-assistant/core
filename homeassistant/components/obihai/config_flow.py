@@ -1,7 +1,5 @@
 """Config flow to configure the Obihai integration."""
 
-from __future__ import annotations
-
 from socket import gaierror, gethostbyname
 from typing import Any
 
@@ -45,7 +43,8 @@ async def async_validate_creds(
             user_input[CONF_PASSWORD],
         )
 
-    # Don't bother authenticating if we've already determined the credentials are invalid
+    # Don't bother authenticating if we've already determined
+    # the credentials are invalid
     return None
 
 

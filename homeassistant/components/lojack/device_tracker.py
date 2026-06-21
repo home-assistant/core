@@ -1,8 +1,6 @@
 """Device tracker platform for LoJack integration."""
 
-from __future__ import annotations
-
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -48,11 +46,6 @@ class LoJackDeviceTracker(CoordinatorEntity[LoJackCoordinator], TrackerEntity):
             model=self.coordinator.vehicle.model,
             serial_number=self.coordinator.vehicle.vin,
         )
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return the source type of the device."""
-        return SourceType.GPS
 
     @property
     def latitude(self) -> float | None:

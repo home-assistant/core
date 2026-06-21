@@ -1,7 +1,5 @@
 """AirOS button component for Home Assistant."""
 
-from __future__ import annotations
-
 from airos.exceptions import AirOSException
 
 from homeassistant.components.button import (
@@ -31,7 +29,9 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the AirOS button from a config entry."""
-    async_add_entities([AirOSRebootButton(config_entry.runtime_data, REBOOT_BUTTON)])
+    async_add_entities(
+        [AirOSRebootButton(config_entry.runtime_data.status, REBOOT_BUTTON)]
+    )
 
 
 class AirOSRebootButton(AirOSEntity, ButtonEntity):

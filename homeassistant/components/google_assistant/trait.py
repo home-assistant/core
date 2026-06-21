@@ -1,7 +1,5 @@
 """Implement the Google Smart Home traits."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
@@ -79,6 +77,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import area_registry as ar, entity_registry as er
 from homeassistant.helpers.network import get_url
 from homeassistant.util import color as color_util, dt as dt_util
 from homeassistant.util.dt import utcnow
@@ -303,7 +302,7 @@ class _Trait(ABC):
         """Return the attributes of this trait for this entity."""
         raise NotImplementedError
 
-    def query_notifications(self) -> dict[str, Any] | None:
+    def query_notifications(self) -> dict[str, Any] | None:  # noqa: B027
         """Return notifications payload."""
 
     def can_execute(self, command, params):
@@ -875,11 +874,29 @@ class StartStopTrait(_Trait):
         """Return StartStop attributes for a sync request."""
         domain = self.state.domain
         if domain == vacuum.DOMAIN:
-            return {
+            sync_attributes = {
                 "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
                 & VacuumEntityFeature.PAUSE
                 != 0
             }
+            features = self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+            if features & VacuumEntityFeature.CLEAN_AREA:
+                available_zones = []
+                entity_registry = er.async_get(self.hass)
+                entry = entity_registry.async_get(self.state.entity_id)
+                area_registry = ar.async_get(self.hass)
+                if (
+                    entry
+                    and vacuum.DOMAIN in entry.options
+                    and "area_mapping" in entry.options[vacuum.DOMAIN]
+                ):
+                    area_mapping = entry.options[vacuum.DOMAIN]["area_mapping"]
+                    for area_id in area_mapping:
+                        area = area_registry.async_get_area(area_id)
+                        if area:
+                            available_zones.append(area.name)
+                sync_attributes["availableZones"] = available_zones
+            return sync_attributes
         if domain == lawn_mower.DOMAIN:
             return {
                 "pausable": self.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
@@ -943,15 +960,49 @@ class StartStopTrait(_Trait):
     async def _execute_vacuum(self, command, data, params, challenge):
         """Execute a StartStop command."""
         service: str | None = None
+        service_data: dict[str, Any] = {ATTR_ENTITY_ID: self.state.entity_id}
         if command == COMMAND_START_STOP:
             service = vacuum.SERVICE_START if params["start"] else vacuum.SERVICE_STOP
+            if params["start"]:
+                zones: list[str] = []
+                if "zone" in params:
+                    zones.append(params["zone"])
+                elif "multipleZones" in params:
+                    zones = params["multipleZones"]
+                if zones:
+                    entity_registry = er.async_get(self.hass)
+                    entry = entity_registry.async_get(self.state.entity_id)
+                    area_mapping: dict[str, list[str]] = {}
+                    if (
+                        entry
+                        and vacuum.DOMAIN in entry.options
+                        and "area_mapping" in entry.options[vacuum.DOMAIN]
+                    ):
+                        area_mapping = entry.options[vacuum.DOMAIN]["area_mapping"]
+                    area_registry = ar.async_get(self.hass)
+                    name_to_area_id = {
+                        area.name: area.id
+                        for area_id in area_mapping
+                        if (area := area_registry.async_get_area(area_id)) is not None
+                    }
+                    area_ids: list[str] = []
+                    for zone in zones:
+                        area_id = name_to_area_id.get(zone)
+                        if area_id is None:
+                            raise SmartHomeError(
+                                ERR_UNSUPPORTED_INPUT,
+                                f"Zone {zone} is not configured for this vacuum",
+                            )
+                        area_ids.append(area_id)
+                    service_data["cleaning_area_id"] = area_ids
+                    service = vacuum.SERVICE_CLEAN_AREA
         elif command == COMMAND_PAUSE_UNPAUSE:
             service = vacuum.SERVICE_PAUSE if params["pause"] else vacuum.SERVICE_START
         if service:
             await self.hass.services.async_call(
                 self.state.domain,
                 service,
-                {ATTR_ENTITY_ID: self.state.entity_id},
+                service_data,
                 blocking=not self.config.should_report_state,
                 context=data.context,
             )
@@ -1076,14 +1127,16 @@ class TemperatureControlTrait(_Trait):
                     float(attrs[water_heater.ATTR_MIN_TEMP]),
                     unit,
                     UnitOfTemperature.CELSIUS,
-                )
+                ),
+                1,
             )
             max_temp = round(
                 TemperatureConverter.convert(
                     float(attrs[water_heater.ATTR_MAX_TEMP]),
                     unit,
                     UnitOfTemperature.CELSIUS,
-                )
+                ),
+                1,
             )
             response["temperatureRange"] = {
                 "minThresholdCelsius": min_temp,
@@ -1201,6 +1254,17 @@ class TemperatureSettingTrait(_Trait):
     preset_to_google = {climate.PRESET_ECO: "eco"}
     google_to_preset = {value: key for key, value in preset_to_google.items()}
 
+    action_to_google = {
+        climate.HVACAction.OFF: "off",
+        climate.HVACAction.HEATING: "heat",
+        climate.HVACAction.DEFROSTING: "heat",
+        climate.HVACAction.PREHEATING: "heat",
+        climate.HVACAction.COOLING: "cool",
+        climate.HVACAction.DRYING: "dry",
+        climate.HVACAction.FAN: "fan-only",
+        climate.HVACAction.IDLE: "none",
+    }
+
     @staticmethod
     def supported(domain, features, device_class, _):
         """Test if state is supported."""
@@ -1236,14 +1300,16 @@ class TemperatureSettingTrait(_Trait):
                 float(attrs[climate.ATTR_MIN_TEMP]),
                 unit,
                 UnitOfTemperature.CELSIUS,
-            )
+            ),
+            1,
         )
         max_temp = round(
             TemperatureConverter.convert(
                 float(attrs[climate.ATTR_MAX_TEMP]),
                 unit,
                 UnitOfTemperature.CELSIUS,
-            )
+            ),
+            1,
         )
         response["thermostatTemperatureRange"] = {
             "minThresholdCelsius": min_temp,
@@ -1281,6 +1347,11 @@ class TemperatureSettingTrait(_Trait):
             response["thermostatMode"] = self.preset_to_google[preset]
         else:
             response["thermostatMode"] = self.hvac_to_google.get(operation, "none")
+
+        if (
+            action := self.action_to_google.get(attrs.get(climate.ATTR_HVAC_ACTION))
+        ) is not None:
+            response["activeThermostatMode"] = action
 
         current_temp = attrs.get(climate.ATTR_CURRENT_TEMPERATURE)
         if current_temp is not None:
@@ -1619,7 +1690,9 @@ class ArmDisArmTrait(_Trait):
         AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
         AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
         AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+        AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+            AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+        ),
         AlarmControlPanelState.TRIGGERED: AlarmControlPanelEntityFeature.TRIGGER,
     }
     """The list of states to support in increasing security state."""
@@ -2708,7 +2781,11 @@ class ChannelTrait(_Trait):
         if (
             domain == media_player.DOMAIN
             and (features & MediaPlayerEntityFeature.PLAY_MEDIA)
-            and device_class == media_player.MediaPlayerDeviceClass.TV
+            and device_class
+            in (
+                media_player.MediaPlayerDeviceClass.TV,
+                media_player.MediaPlayerDeviceClass.PROJECTOR,
+            )
         ):
             return True
 

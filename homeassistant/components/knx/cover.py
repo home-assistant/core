@@ -1,7 +1,5 @@
 """Support for KNX cover entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from xknx import XKNX

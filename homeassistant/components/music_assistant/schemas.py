@@ -1,7 +1,5 @@
 """Voluptuous schemas for Music Assistant integration service responses."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from music_assistant_models.enums import ImageType, MediaType

@@ -1,7 +1,5 @@
 """Test History stats component setup process."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
@@ -123,7 +121,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test the history_stats config entry is removed when the source entity is removed."""
+    """Test config entry is removed when source entity is removed."""
     assert await hass.config_entries.async_setup(history_stats_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -159,8 +157,12 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
         history_stats_config_entry.entry_id not in hass.config_entries.async_entry_ids()
     )
 
-    # Check we got the expected events
-    assert events == ["remove"]
+    # Check we got the expected events: the helper entity's device link is
+    # cleared when the source device is removed (the helper entity belongs to
+    # the history_stats config entry, not the removed source config entry),
+    # then the helper entity is removed when the history_stats config entry is
+    # removed. Both registry actions are observed in fire order.
+    assert events == ["update", "remove"]
 
 
 @pytest.mark.usefixtures("recorder_mock")
@@ -173,7 +175,7 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     sensor_device: dr.DeviceEntry,
     sensor_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test the history_stats config entry is removed when the source entity is removed."""
+    """Test config entry is removed when source entity is removed."""
     # Add another config entry to the sensor device
     other_config_entry = MockConfigEntry()
     other_config_entry.add_to_hass(hass)

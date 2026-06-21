@@ -70,7 +70,7 @@ def dsm_with_photos() -> MagicMock:
 
 @pytest.mark.usefixtures("setup_media_source")
 async def test_get_media_source(hass: HomeAssistant) -> None:
-    """Test the async_get_media_source function and SynologyPhotosMediaSource constructor."""
+    """Test async_get_media_source and SynologyPhotosMediaSource."""
 
     source = await async_get_media_source(hass)
     assert isinstance(source, SynologyPhotosMediaSource)

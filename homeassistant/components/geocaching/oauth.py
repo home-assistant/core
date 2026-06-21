@@ -1,7 +1,5 @@
 """oAuth2 functions and classes for Geocaching API integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.application_credentials import (
@@ -48,7 +46,8 @@ class GeocachingOAuth2Implementation(AuthImplementation):
             "redirect_uri": redirect_uri,
         }
         token = await self._token_request(data)
-        # Store the redirect_uri (Needed for refreshing token, but not according to oAuth2 spec!)
+        # Store the redirect_uri
+        # (Needed for refreshing token, but not per oAuth2 spec!)
         token["redirect_uri"] = redirect_uri
         return token
 
@@ -59,7 +58,8 @@ class GeocachingOAuth2Implementation(AuthImplementation):
             "client_secret": self.client_secret,
             "grant_type": "refresh_token",
             "refresh_token": token["refresh_token"],
-            # Add previously stored redirect_uri (Mandatory, but not according to oAuth2 spec!)
+            # Add previously stored redirect_uri
+            # (Mandatory, but not per oAuth2 spec!)
             "redirect_uri": token["redirect_uri"],
         }
 

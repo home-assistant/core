@@ -1,7 +1,5 @@
 """Shared fixtures for ZoneMinder integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import MagicMock, PropertyMock, patch
 

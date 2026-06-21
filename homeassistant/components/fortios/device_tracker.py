@@ -3,8 +3,6 @@
 This FortiOS integration provides a device_tracker platform.
 """
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 

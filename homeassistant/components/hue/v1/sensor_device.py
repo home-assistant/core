@@ -6,7 +6,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from ..const import CONF_ALLOW_UNREACHABLE, DEFAULT_ALLOW_UNREACHABLE, DOMAIN
 
 
-class GenericHueDevice(entity.Entity):  # pylint: disable=hass-enforce-class-module
+class GenericHueDevice(entity.Entity):  # pylint: disable=home-assistant-enforce-class-module
     """Representation of a Hue device."""
 
     def __init__(self, sensor, name, bridge, primary_sensor=None):

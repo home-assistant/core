@@ -1,7 +1,5 @@
 """The Aprilaire coordinator."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import logging
 from typing import Any
@@ -195,6 +193,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, data[Attribute.MAC_ADDRESS])},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
         )

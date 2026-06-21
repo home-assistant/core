@@ -1,7 +1,5 @@
 """Support for Met.no weather service."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import TYPE_CHECKING, Any
 
@@ -47,6 +45,8 @@ from .const import (
     FORECAST_MAP,
 )
 from .coordinator import MetDataUpdateCoordinator, MetWeatherConfigEntry
+
+PARALLEL_UPDATES = 0
 
 DEFAULT_NAME = "Met.no"
 

@@ -1,7 +1,5 @@
 """Component providing sensors for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import datetime
@@ -379,24 +377,6 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ),
 )
 
-DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
-        key="battery_level",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="battery_status.percentage",
-    ),
-    ProtectSensorEntityDescription(
-        key="paired_camera",
-        translation_key="paired_camera",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="camera.display_name",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-)
-
 NVR_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
     ProtectSensorEntityDescription(
         key="uptime",
@@ -583,7 +563,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
     ModelType.SENSOR: SENSE_SENSORS,
     ModelType.LIGHT: LIGHT_SENSORS,
-    ModelType.DOORLOCK: DOORLOCK_SENSORS,
     ModelType.CHIME: CHIME_SENSORS,
     ModelType.VIEWPORT: VIEWER_SENSORS,
 }

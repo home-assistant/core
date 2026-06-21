@@ -1,7 +1,5 @@
 """Support for the QNAP QSW binary sensors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, replace
 from typing import Final
 
@@ -20,14 +18,13 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED
 
-from .const import ATTR_MESSAGE, DOMAIN, QSW_COORD_DATA
-from .coordinator import QswDataCoordinator
+from .const import ATTR_MESSAGE
+from .coordinator import QnapQswConfigEntry, QswDataCoordinator
 from .entity import QswEntityDescription, QswEntityType, QswSensorEntity
 
 
@@ -79,11 +76,11 @@ PORT_BINARY_SENSOR_TYPES: Final[tuple[QswBinarySensorEntityDescription, ...]] = 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: QnapQswConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add QNAP QSW binary sensors from a config_entry."""
-    coordinator: QswDataCoordinator = hass.data[DOMAIN][entry.entry_id][QSW_COORD_DATA]
+    coordinator = entry.runtime_data.data_coordinator
 
     entities: list[QswBinarySensor] = [
         QswBinarySensor(coordinator, description, entry)
@@ -138,12 +135,12 @@ class QswBinarySensor(QswSensorEntity, BinarySensorEntity):
         self,
         coordinator: QswDataCoordinator,
         description: QswBinarySensorEntityDescription,
-        entry: ConfigEntry,
+        entry: QnapQswConfigEntry,
         type_id: int | None = None,
     ) -> None:
         """Initialize."""
         super().__init__(coordinator, entry, type_id)
-        if description.name == UNDEFINED:
+        if description.name is UNDEFINED:
             self._attr_has_entity_name = True
         else:
             self._attr_name = f"{self.product} {description.name}"

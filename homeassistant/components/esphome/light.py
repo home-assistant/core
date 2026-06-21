@@ -1,7 +1,5 @@
 """Support for ESPHome lights."""
 
-from __future__ import annotations
-
 from functools import lru_cache, partial
 from operator import methodcaller
 from typing import TYPE_CHECKING, Any, cast
@@ -259,15 +257,18 @@ class EsphomeLight(EsphomeEntity[LightInfo, LightState], LightEntity):
         if (color_temp_k := kwargs.get(ATTR_COLOR_TEMP_KELVIN)) is not None:
             # Do not use kelvin_to_mired here to prevent precision loss
             color_temp_mired = 1_000_000.0 / color_temp_k
+            data["color_temperature"] = color_temp_mired
             if color_temp_modes := _filter_color_modes(
                 color_modes, LightColorCapability.COLOR_TEMPERATURE
             ):
-                data["color_temperature"] = color_temp_mired
                 color_modes = color_temp_modes
             else:
-                # Convert color temperature to explicit cold/warm white
-                # values to avoid ESPHome applying brightness to both
-                # master brightness and white channels (b² effect).
+                # Also send explicit cold/warm white values to avoid
+                # ESPHome applying brightness to both master brightness
+                # and white channels (b² effect). The firmware skips
+                # deriving cwww from color_temperature when the channels
+                # are already set explicitly, but still stores
+                # color_temperature so HA can read it back.
                 data["cold_white"], data["warm_white"] = self._color_temp_to_cold_warm(
                     color_temp_mired
                 )

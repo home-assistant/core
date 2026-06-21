@@ -1,6 +1,4 @@
-"""Support for Droplet."""
-
-from __future__ import annotations
+"""Support for Droplet sensors."""
 
 from collections.abc import Callable
 from dataclasses import dataclass

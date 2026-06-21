@@ -1,7 +1,5 @@
 """Services for Google Mail integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 

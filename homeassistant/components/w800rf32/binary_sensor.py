@@ -1,7 +1,5 @@
 """Support for w800rf32 binary sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 

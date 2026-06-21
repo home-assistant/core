@@ -1,7 +1,5 @@
 """Config flow for ElevenLabs text-to-speech integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -10,7 +8,7 @@ from elevenlabs.core import ApiError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_API_KEY
+from homeassistant.const import CONF_API_KEY, CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.selector import (
@@ -22,7 +20,6 @@ from homeassistant.helpers.selector import (
 from . import ElevenLabsConfigEntry
 from .const import (
     CONF_CONFIGURE_VOICE,
-    CONF_MODEL,
     CONF_SIMILARITY,
     CONF_STABILITY,
     CONF_STT_AUTO_LANGUAGE,
