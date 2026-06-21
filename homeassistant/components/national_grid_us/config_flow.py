@@ -9,6 +9,7 @@ from py_nationalgrid.exceptions import (
     CannotConnectError,
     InvalidAuthError,
     NationalGridError,
+    RetryExhaustedError,
 )
 import voluptuous as vol
 
@@ -171,17 +172,22 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def _get_account_selection_schema(self) -> vol.Schema:
         """Get the schema for account selection."""
+        options: list[selector.SelectOptionDict] = []
+        for account in self._accounts:
+            label = f"Account {account['billingAccountId']}"
+            if address := account.get("service_address"):
+                label = f"{label} — {address}"
+            options.append(
+                selector.SelectOptionDict(
+                    value=account["billingAccountId"],
+                    label=label,
+                )
+            )
         return vol.Schema(
             {
                 vol.Required(CONF_SELECTED_ACCOUNTS): selector.SelectSelector(
                     selector.SelectSelectorConfig(
-                        options=[
-                            selector.SelectOptionDict(
-                                value=account["billingAccountId"],
-                                label=f"Account {account['billingAccountId']}",
-                            )
-                            for account in self._accounts
-                        ],
+                        options=options,
                         multiple=True,
                         mode=selector.SelectSelectorMode.LIST,
                     ),
@@ -192,7 +198,7 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _fetch_accounts(
         self, username: str, password: str
     ) -> list[dict[str, str]]:
-        """Fetch linked accounts from the API."""
+        """Fetch linked accounts, enriched with their service address."""
         session = async_create_clientsession(self.hass, cookie_jar=create_cookie_jar())
         client = NationalGridClient(
             config=NationalGridConfig(username=username, password=password),
@@ -200,4 +206,28 @@ class NationalGridUSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         async with client:
             accounts = await client.get_linked_accounts()
-            return [{"billingAccountId": str(a["billingAccountId"])} for a in accounts]
+            result: list[dict[str, str]] = []
+            for account in accounts:
+                account_id = str(account["billingAccountId"])
+                entry = {"billingAccountId": account_id}
+                # The service address is only used to label the account in the
+                # selection step, so a failed lookup degrades to the bare ID.
+                try:
+                    billing = await client.get_billing_account(account_id)
+                except (
+                    CannotConnectError,
+                    RetryExhaustedError,
+                    NationalGridError,
+                ) as err:
+                    _LOGGER.debug(
+                        "Could not fetch service address for account %s: %s",
+                        account_id,
+                        err,
+                    )
+                else:
+                    if address := billing.get("serviceAddress", {}).get(
+                        "serviceAddressCompressed"
+                    ):
+                        entry["service_address"] = address
+                result.append(entry)
+            return result

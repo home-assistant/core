@@ -27,12 +27,20 @@ PATCH_CLIENT = (
 )
 
 
-def _mock_client(accounts: list[dict[str, str]]) -> AsyncMock:
+def _mock_client(
+    accounts: list[dict[str, str]],
+    service_address: str = "123 Main St, NY",
+) -> AsyncMock:
     """Create a mock client that returns the given accounts."""
     client = AsyncMock()
     client.__aenter__ = AsyncMock(return_value=client)
     client.__aexit__ = AsyncMock(return_value=False)
     client.get_linked_accounts = AsyncMock(return_value=accounts)
+    client.get_billing_account = AsyncMock(
+        return_value={
+            "serviceAddress": {"serviceAddressCompressed": service_address},
+        }
+    )
     return client
 
 
@@ -118,6 +126,61 @@ async def test_user_step_no_accounts_aborts(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_accounts_found"
+
+
+def _select_labels(result: dict) -> list[str]:
+    """Extract the account-selection option labels from a form result."""
+    schema = result["data_schema"].schema
+    select = next(iter(schema.values()))
+    return [option["label"] for option in select.config["options"]]
+
+
+async def test_select_accounts_labels_include_service_address(
+    hass: HomeAssistant,
+) -> None:
+    """Test account selection labels are enriched with the service address."""
+    client = _mock_client(
+        [
+            {"billingAccountId": MOCK_ACCOUNT_ID},
+            {"billingAccountId": MOCK_ACCOUNT_ID_2},
+        ],
+        service_address="123 Main St, NY",
+    )
+    with patch(PATCH_CLIENT, return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+
+    assert _select_labels(result) == [
+        f"Account {MOCK_ACCOUNT_ID} — 123 Main St, NY",
+        f"Account {MOCK_ACCOUNT_ID_2} — 123 Main St, NY",
+    ]
+
+
+async def test_select_accounts_labels_fallback_when_address_unavailable(
+    hass: HomeAssistant,
+) -> None:
+    """Test labels fall back to the account ID when the address lookup fails."""
+    client = _mock_client(
+        [
+            {"billingAccountId": MOCK_ACCOUNT_ID},
+            {"billingAccountId": MOCK_ACCOUNT_ID_2},
+        ]
+    )
+    client.get_billing_account = AsyncMock(side_effect=CannotConnectError("Timeout"))
+    with patch(PATCH_CLIENT, return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+
+    assert _select_labels(result) == [
+        f"Account {MOCK_ACCOUNT_ID}",
+        f"Account {MOCK_ACCOUNT_ID_2}",
+    ]
 
 
 async def test_select_accounts_step(hass: HomeAssistant) -> None:
