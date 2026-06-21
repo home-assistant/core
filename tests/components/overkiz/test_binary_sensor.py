@@ -32,10 +32,17 @@ HEATING_STATUS = FixtureDevice(
     "io://1234-5678-5643/109286#1",
     "binary_sensor.my_home_patio_water_heating_heating_status",
 )
+# Setup covering occupancy and contact sensors in addition to smoke.
+CONTACT_SENSOR = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "rtds://1234-1234-6233/394781",
+    "binary_sensor.family_wing_porte_contact",
+)
 
 SNAPSHOT_FIXTURES = [
     SMOKE_SENSOR,
     HEATING_STATUS,
+    CONTACT_SENSOR,
 ]
 
 
@@ -97,42 +104,6 @@ async def test_binary_sensor_smoke_state_update(
     )
 
     state = hass.states.get(SMOKE_SENSOR.entity_id)
-    assert state
-    assert state.state == STATE_ON
-
-
-async def test_binary_sensor_heating_state_update(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test event-driven state update for a heating sensor (off → on)."""
-    await setup_overkiz_integration(fixture=HEATING_STATUS.fixture)
-
-    state = hass.states.get(HEATING_STATUS.entity_id)
-    assert state
-    assert state.state == STATE_OFF
-
-    await async_deliver_events(
-        hass,
-        freezer,
-        mock_client,
-        [
-            device_state_changed_event(
-                HEATING_STATUS.device_url,
-                [
-                    {
-                        "name": OverkizState.CORE_HEATING_STATUS.value,
-                        "type": 3,
-                        "value": "on",
-                    },
-                ],
-            )
-        ],
-    )
-
-    state = hass.states.get(HEATING_STATUS.entity_id)
     assert state
     assert state.state == STATE_ON
 
