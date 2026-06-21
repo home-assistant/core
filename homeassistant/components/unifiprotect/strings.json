@@ -326,9 +326,6 @@
       }
     },
     "number": {
-      "auto_lock_timeout": {
-        "name": "Auto-lock timeout"
-      },
       "auto_shutoff_duration": {
         "name": "Auto-shutoff duration"
       },

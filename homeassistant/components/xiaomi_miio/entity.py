@@ -139,11 +139,11 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
 
     @staticmethod
     def _parse_datetime_time(initial_time: datetime.time) -> str:
-        time = datetime.datetime.now().replace(
+        time = datetime.datetime.now().replace(  # pylint: disable=home-assistant-enforce-naive-now
             hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
-        if time < datetime.datetime.now():
+        if time < datetime.datetime.now():  # pylint: disable=home-assistant-enforce-naive-now
             time += datetime.timedelta(days=1)
 
         return time.isoformat()
@@ -177,6 +177,6 @@ class XiaomiGatewayDevice(CoordinatorEntity[GatewayDeviceCoordinator], Entity):
             manufacturer="Xiaomi",
             name=self._sub_device.name,
             model=self._sub_device.model,
-            sw_version=self._sub_device.firmware_version,
+            sw_version=str(self._sub_device.firmware_version),
             hw_version=self._sub_device.zigbee_model,
         )
