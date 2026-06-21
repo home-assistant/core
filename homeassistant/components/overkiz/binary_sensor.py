@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
-from pyoverkiz.enums import OverkizCommandParam, OverkizState, UIClass
+from pyoverkiz.enums import OverkizCommandParam, OverkizState, UIClass, UIWidget
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.binary_sensor import (
@@ -25,6 +25,10 @@ class OverkizBinarySensorDescription(BinarySensorEntityDescription):
     """Class to describe an Overkiz binary sensor."""
 
     value_fn: Callable[[OverkizStateType], bool]
+
+    # Restrict this sensor to the listed device types (UIWidget/UIClass).
+    # When omitted, the sensor applies to any device exposing the state.
+    device_types: list[UIWidget | UIClass] | None = None
 
 
 BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
@@ -135,21 +139,15 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
             )
         ),
     ),
-]
-
-SUPPORTED_STATES = {
-    description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
-}
-
-# core:OpenClosedState is also exposed by cover devices, so these descriptions
-# are only applied to ContactSensor devices (e.g. the Somfy IntelliTAG air).
-CONTACT_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     # ContactSensor/WindowStateSensor, ContactSensor/SlidingWindowStateSensor
     OverkizBinarySensorDescription(
+        # core:OpenClosedState is also exposed by cover devices, so restrict
+        # this to ContactSensor devices (e.g. the Somfy IntelliTAG).
         key=OverkizState.CORE_OPEN_CLOSED,
         name="Opening",
         device_class=BinarySensorDeviceClass.WINDOW,
         value_fn=lambda state: state == OverkizCommandParam.OPEN,
+        device_types=[UIClass.CONTACT_SENSOR],
     ),
     # ContactSensor/IntrusionSensor
     OverkizBinarySensorDescription(
@@ -159,11 +157,12 @@ CONTACT_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         name="Intrusion",
         device_class=BinarySensorDeviceClass.SAFETY,
         value_fn=bool,
+        device_types=[UIClass.CONTACT_SENSOR],
     ),
 ]
 
-SUPPORTED_CONTACT_SENSOR_STATES = {
-    description.key: description for description in CONTACT_SENSOR_DESCRIPTIONS
+SUPPORTED_STATES = {
+    description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
 }
 
 
@@ -191,18 +190,12 @@ async def async_setup_entry(
             )
             for state in device.definition.states
             if (description := SUPPORTED_STATES.get(state))
-        )
-
-        if device.ui_class == UIClass.CONTACT_SENSOR:
-            entities.extend(
-                OverkizBinarySensor(
-                    device.device_url,
-                    data.coordinator,
-                    description,
-                )
-                for state in device.definition.states
-                if (description := SUPPORTED_CONTACT_SENSOR_STATES.get(state))
+            and (
+                description.device_types is None
+                or device.widget in description.device_types
+                or device.ui_class in description.device_types
             )
+        )
 
     async_add_entities(entities)
 
