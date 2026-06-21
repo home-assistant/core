@@ -213,11 +213,11 @@ class AqvifyAggrDataCoordinator(
         devices = self.config_entry.runtime_data.coordinator.data.devices
 
         device_data: dict[str, AqvifyHourAggregatedValues] = {}
+        beg_time, end_time = self._get_times()
         for device in devices.devices.values():
             device_key = device.device_key
             if TYPE_CHECKING:
                 assert device_key is not None
-            beg_time, end_time = self._get_times()
             try:
                 aggr_data = await self.api_client.async_get_hour_aggregation(
                     device_key,
