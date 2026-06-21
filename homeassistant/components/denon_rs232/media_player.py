@@ -188,6 +188,18 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
         if self._is_main:
             self._attr_is_volume_muted = cast(MainPlayer, self._player).mute
 
+    def _other_zones_on(self) -> bool:
+        """Return whether any zone other than this one is powered on."""
+        return any(
+            player.power
+            for player in (
+                self._receiver.main,
+                self._receiver.zone_2,
+                self._receiver.zone_3,
+            )
+            if player is not self._player
+        )
+
     async def async_turn_on(self) -> None:
         """Turn the receiver on."""
         await self._player.power_on()
@@ -195,6 +207,9 @@ class DenonRS232MediaPlayer(MediaPlayerEntity):
     async def async_turn_off(self) -> None:
         """Turn the receiver off."""
         await self._player.power_standby()
+        # ensure device powers off when no zones are on
+        if not self._other_zones_on():
+            await self._receiver.power_standby()
 
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
