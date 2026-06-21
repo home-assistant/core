@@ -2,6 +2,9 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyoverkiz.exceptions import MaintenanceError, ServiceUnavailableError
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.overkiz.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -137,6 +140,35 @@ async def test_setup_token_transient_error_retries(
     client.login.side_effect = OAuth2TokenRequestError(
         request_info=MagicMock(), domain=DOMAIN
     )
+
+    with patch(
+        "homeassistant.components.overkiz.create_rexel_client", return_value=client
+    ):
+        await hass.config_entries.async_setup(mock_rexel_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        ServiceUnavailableError("Server is unavailable"),
+        MaintenanceError("Server is down for maintenance"),
+    ],
+    ids=["service_unavailable", "maintenance"],
+)
+async def test_setup_server_unavailable_retries(
+    hass: HomeAssistant,
+    mock_rexel_config_entry: MockConfigEntry,
+    exception: Exception,
+) -> None:
+    """A transient server error during setup retries instead of failing."""
+    mock_rexel_config_entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.login.side_effect = exception
 
     with patch(
         "homeassistant.components.overkiz.create_rexel_client", return_value=client
