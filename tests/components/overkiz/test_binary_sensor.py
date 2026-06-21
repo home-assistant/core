@@ -37,12 +37,6 @@ CONTACT_SENSOR = FixtureDevice(
     "rtds://1234-1234-6233/394781",
     "binary_sensor.family_wing_porte_contact",
 )
-# Somfy IntelliTAG air window sensor (io:SomfyWindowStateSensor)
-WINDOW_SENSOR = FixtureDevice(
-    "setup/local_somfy_tahoma_switch_europe.json",
-    "io://1234-5678-6508/8059108#1",
-    "binary_sensor.balcony_window_window",
-)
 # Somfy IntelliTAG air intrusion sensor (io:SomfyIDEOIIntrusionSensor)
 INTRUSION_SENSOR = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe.json",
@@ -54,7 +48,6 @@ SNAPSHOT_FIXTURES = [
     SMOKE_SENSOR,
     HEATING_STATUS,
     CONTACT_SENSOR,
-    WINDOW_SENSOR,
     INTRUSION_SENSOR,
 ]
 
