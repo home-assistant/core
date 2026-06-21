@@ -218,11 +218,11 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
                 LOGGER.debug("Ignoring HA app server in zeroconf discovery")
                 return self.async_abort(reason="already_discovered_addon")
 
-        if server_info.base_url is None:
-            return self.async_abort(reason="invalid_discovery_info")
-
         self.url = server_info.base_url
         self.server_info = server_info
+
+        if TYPE_CHECKING:
+            assert self.url is not None
 
         await self.async_set_unique_id(server_info.server_id)
         self._abort_if_unique_id_configured(updates={CONF_URL: self.url})
