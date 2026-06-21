@@ -105,7 +105,11 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
             return ATTR_CONDITION_EXCEPTIONAL
         if condition_code == "clear":
             dt = dt_util.parse_datetime(datetime_str)
-            return ATTR_CONDITION_SUNNY if sun.is_up(self.hass, dt) else ATTR_CONDITION_CLEAR_NIGHT
+            return (
+                ATTR_CONDITION_SUNNY
+                if sun.is_up(self.hass, dt)
+                else ATTR_CONDITION_CLEAR_NIGHT
+            )
         return _CONDITION_MAP.get(condition_code, ATTR_CONDITION_EXCEPTIONAL)
 
     @property

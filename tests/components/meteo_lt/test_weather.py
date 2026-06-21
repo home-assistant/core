@@ -6,7 +6,10 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.weather import ATTR_CONDITION_CLEAR_NIGHT, ATTR_CONDITION_SUNNY
+from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_SUNNY,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -41,8 +44,16 @@ async def test_weather_entity(
 @pytest.mark.parametrize(
     ("latitude", "longitude", "expected_condition"),
     [
-        (54.68705, 25.28291, ATTR_CONDITION_SUNNY),  # Vilnius: sun is up at 10:00 UTC (solar noon ~10:19 UTC)
-        (32.87336, -117.22743, ATTR_CONDITION_CLEAR_NIGHT),  # San Diego: sun rises ~13:44 UTC, still below horizon at 10:00 UTC
+        (
+            54.68705,
+            25.28291,
+            ATTR_CONDITION_SUNNY,
+        ),  # Vilnius: sun is up at 10:00 UTC (solar noon ~10:19 UTC)
+        (
+            32.87336,
+            -117.22743,
+            ATTR_CONDITION_CLEAR_NIGHT,
+        ),  # San Diego: sun rises ~13:44 UTC, still below horizon at 10:00 UTC
     ],
 )
 async def test_condition_clear_maps_day_night(
