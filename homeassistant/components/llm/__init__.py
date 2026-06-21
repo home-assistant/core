@@ -3,8 +3,7 @@
 Owns the LLM tools platform: integrations contribute tools to the LLM APIs
 through an ``<integration>/llm.py`` platform with an ``async_get_tools`` hook.
 The platforms are loaded lazily and queried per request. The framework
-(``Tool``, the APIs) lives in ``homeassistant.helpers.llm``; this integration
-owns the platform lifecycle, mirroring the ``intent`` helper/integration split.
+(``Tool``, the APIs) lives in ``homeassistant.helpers.llm``.
 """
 
 from dataclasses import dataclass
