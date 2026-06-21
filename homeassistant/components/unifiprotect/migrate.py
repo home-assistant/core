@@ -114,39 +114,38 @@ async def async_migrate_data(
     _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
 
     _LOGGER.debug("Start Migrate: async_remove_aiport_devices")
-    async_remove_aiport_devices(hass, entry, bootstrap)
+    async_remove_aiport_devices(hass, entry)
     _LOGGER.debug("Completed Migrate: async_remove_aiport_devices")
 
 
+# Device type (``ProtectAdoptableDeviceModel.type``) reported by AI Ports. Matched
+# in the registry so cleanup does not depend on the bundled library still exposing
+# the AI Port model.
+_AIPORT_DEVICE_TYPE = "AI Port"
+
+
 @callback
-def async_remove_aiport_devices(
-    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
-) -> None:
+def async_remove_aiport_devices(hass: HomeAssistant, entry: UFPConfigEntry) -> None:
     """Remove AI Port devices and their diagnostic-only entities.
 
     AI Ports only ever exposed diagnostic sensors (no automation-relevant
     functionality) and behave transparently, extending the camera they back.
-    They have no public API representation, so support is dropped. Remove this
-    migration once the library drops the AI Port model.
+    They have no public API representation, so support is dropped. Devices are
+    matched from the registry (by device type) rather than the live bootstrap, so
+    cleanup works even once the library drops the AI Port model.
 
     Added in 2026.7.0
     """
-    aiports = bootstrap.aiports
-    if not aiports:
-        return
-    macs = {aiport.mac for aiport in aiports.values()}
-    entity_registry = er.async_get(hass)
-    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
-        if any(entity.unique_id.startswith(f"{mac}_") for mac in macs):
-            entity_registry.async_remove(entity.entity_id)
     device_registry = dr.async_get(hass)
-    for aiport in aiports.values():
-        device = device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, aiport.mac)}
-        )
-        if device is not None:
-            device_registry.async_remove_device(device.id)
-        ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{aiport.id}")
+    entity_registry = er.async_get(hass)
+    for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
+        if device.model_id != _AIPORT_DEVICE_TYPE:
+            continue
+        for entity in er.async_entries_for_device(
+            entity_registry, device.id, include_disabled_entities=True
+        ):
+            entity_registry.async_remove(entity.entity_id)
+        device_registry.async_remove_device(device.id)
 
 
 @callback

@@ -2,7 +2,7 @@
 
 from unittest.mock import patch
 
-from uiprotect.data import AiPort, Camera
+from uiprotect.data import Camera
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
@@ -230,27 +230,27 @@ async def test_migrate_remove_aiport_device(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
     ufp: MockUFPFixture,
-    aiport: AiPort,
 ) -> None:
-    """AI Port devices and their diagnostic entities are removed on migration."""
+    """A leftover AI Port device/entity is removed by type, bootstrap-independent."""
+    mac = "AABBCCDDEEFF"
     device = device_registry.async_get_or_create(
         config_entry_id=ufp.entry.entry_id,
-        connections={(dr.CONNECTION_NETWORK_MAC, aiport.mac)},
+        connections={(dr.CONNECTION_NETWORK_MAC, mac)},
+        model_id="AI Port",
     )
     entity = entity_registry.async_get_or_create(
         Platform.SENSOR,
         DOMAIN,
-        f"{aiport.mac}_uptime",
+        f"{mac}_uptime",
         config_entry=ufp.entry,
         device_id=device.id,
     )
 
-    await init_entry(hass, ufp, [aiport], regenerate_ids=False)
+    # AI Port deliberately absent from the bootstrap — cleanup is registry-based
+    await init_entry(hass, ufp, [])
 
     assert entity_registry.async_get(entity.entity_id) is None
     assert (
-        device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, aiport.mac)}
-        )
+        device_registry.async_get_device(connections={(dr.CONNECTION_NETWORK_MAC, mac)})
         is None
     )
