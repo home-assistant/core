@@ -45,6 +45,12 @@
       "forced_hot_water": {
         "name": "Forced hot water"
       },
+      "frost_protection": {
+        "name": "Frost protection"
+      },
+      "overheat_protection": {
+        "name": "Overheat protection"
+      },
       "standby": {
         "name": "Standby"
       }

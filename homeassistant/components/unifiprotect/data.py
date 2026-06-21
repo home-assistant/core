@@ -9,6 +9,7 @@ import logging
 from typing import TYPE_CHECKING, Any, cast
 
 from uiprotect import ProtectApiClient
+from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
     NVR,
     Camera,
@@ -115,6 +116,20 @@ class ProtectData:
     def max_events(self) -> int:
         """Max number of events to load at once."""
         return self._entry.options.get(CONF_MAX_MEDIA, DEFAULT_MAX_MEDIA)  # type: ignore[no-any-return]
+
+    def get_rtsps_streams(self, camera_id: str) -> RTSPSStreams | None:
+        """Return the library-owned public-API RTSPS streams for a camera.
+
+        The library primes ``PublicCamera.rtsps_streams`` during
+        ``update_public()`` and keeps it fresh (reconnect refresh + create/delete
+        write-through), so the integration reads it synchronously and stores
+        nothing itself.
+        """
+        api = self.api
+        if not api.has_public_bootstrap:
+            return None
+        camera = api.public_bootstrap.cameras.get(camera_id)
+        return camera.rtsps_streams if camera is not None else None
 
     @callback
     def async_subscribe_adopt(
