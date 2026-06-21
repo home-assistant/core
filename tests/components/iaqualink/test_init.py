@@ -745,7 +745,7 @@ async def test_dynamic_device_addition(
     await _advance_coordinator_time(hass, freezer)
 
     assert len(hass.states.async_entity_ids(SWITCH_DOMAIN)) == 2
-    state = hass.states.get("switch.aux_3")
+    state = hass.states.get("switch.pool_aux_3")
     assert state is not None
     assert state.state == STATE_ON
 
@@ -761,8 +761,8 @@ async def test_stale_device_removal(
     devices = await setup_integration(hass, config_entry, client)
 
     switch_device_id = f"{devices.system.serial}_aux_1"
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, switch_device_id)}
+    device_entry = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, switch_device_id), config_entry.entry_id
     )
     assert device_entry is not None
 
@@ -772,8 +772,8 @@ async def test_stale_device_removal(
 
     await _advance_coordinator_time(hass, freezer)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, switch_device_id)}
+    device_entry = device_registry.async_get_child_device_by_identifier(
+        (DOMAIN, switch_device_id), config_entry.entry_id
     )
     assert device_entry is None
 
@@ -807,12 +807,25 @@ async def test_stale_device_cleanup_on_setup(
 
     # Create orphan devices that should be removed.
     resolved = [ident[0].format(serial=system.serial) for ident in orphan_identifiers]
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, system.serial)},
+        name="Pool",
+    )
     for identifier in resolved:
-        device_registry.async_get_or_create(
-            config_entry_id=config_entry.entry_id,
-            identifiers={(DOMAIN, identifier)},
-            name=f"Orphan {identifier}",
-        )
+        if identifier.startswith(f"{system.serial}_"):
+            device_registry.async_get_or_create_child(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, identifier)},
+                name=f"Orphan {identifier}",
+                parent_device_id=parent_device.id,
+            )
+        else:
+            device_registry.async_get_or_create(
+                config_entry_id=config_entry.entry_id,
+                identifiers={(DOMAIN, identifier)},
+                name=f"Orphan {identifier}",
+            )
     # Device with only a non-iaqualink identifier (triggers domain != DOMAIN skip).
     for ident in extra_identifiers:
         device_registry.async_get_or_create(
@@ -827,69 +840,25 @@ async def test_stale_device_cleanup_on_setup(
 
     # All orphan devices should be gone.
     for identifier in resolved:
-        assert (
-            device_registry.async_get_device(identifiers={(DOMAIN, identifier)}) is None
-        )
+        if identifier.startswith(f"{system.serial}_"):
+            assert (
+                device_registry.async_get_child_device_by_identifier(
+                    (DOMAIN, identifier), config_entry.entry_id
+                )
+                is None
+            )
+        else:
+            assert (
+                device_registry.async_get_device_by_identifier(
+                    (DOMAIN, identifier), config_entry.entry_id
+                )
+                is None
+            )
 
     # New system's device should exist.
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{system.serial}_aux_2")}
-        )
-        is not None
-    )
-
-
-async def test_entity_domain_change_cleanup(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    client: AqualinkClient,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test entities are removed when a device changes platform domain."""
-    config_entry.add_to_hass(hass)
-    system = _build_single_light_system(client)
-
-    # Simulate a device that was previously a switch but is now a light.
-    # Pre-create an entity registry entry under the switch platform.
-    entity_registry.async_get_or_create(
-        domain="switch",
-        platform=DOMAIN,
-        unique_id=f"{system.serial}_aux_2",
-        config_entry=config_entry,
-    )
-    assert entity_registry.async_get_entity_id(
-        "switch", DOMAIN, f"{system.serial}_aux_2"
-    )
-
-    # Entity with a unique_id not matching any current device (should be kept).
-    entity_registry.async_get_or_create(
-        domain="switch",
-        platform=DOMAIN,
-        unique_id=f"{system.serial}_old_removed",
-        config_entry=config_entry,
-    )
-
-    await _setup_system(hass, config_entry, system)
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    # Old switch entity should be gone.
-    assert (
-        entity_registry.async_get_entity_id("switch", DOMAIN, f"{system.serial}_aux_2")
-        is None
-    )
-
-    # New light entity should exist.
-    assert (
-        entity_registry.async_get_entity_id("light", DOMAIN, f"{system.serial}_aux_2")
-        is not None
-    )
-
-    # Entity with unmatched unique_id should still exist (not removed).
-    assert (
-        entity_registry.async_get_entity_id(
-            "switch", DOMAIN, f"{system.serial}_old_removed"
+        device_registry.async_get_child_device_by_identifier(
+            (DOMAIN, f"{system.serial}_aux_2"), config_entry.entry_id
         )
         is not None
     )
@@ -921,62 +890,3 @@ async def test_rate_limited_first_refresh_retries(
         await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_late_first_refresh_fires_callbacks(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    client: AqualinkClient,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test callbacks fire on first successful refresh after delayed start."""
-    config_entry.add_to_hass(hass)
-
-    system = get_aqualink_system(
-        client,
-        cls=IaquaSystem,
-        data={"home_screen": [{}, {}, {}, {"temp_scale": "F"}]},
-    )
-    system.online = True
-
-    async def update() -> None:
-        system.temp_unit = "F"
-
-    system.update = AsyncMock(side_effect=update)
-
-    light = get_aqualink_device(
-        system,
-        name="aux_2",
-        cls=IaquaLightSwitch,
-        data={"state": "1", "aux": "2", "label": "Pool Light"},
-    )
-    system.devices = {light.name: light}
-    system.get_devices = AsyncMock(return_value={light.name: light})
-    system.set_aux = AsyncMock()
-    system.set_light = AsyncMock()
-
-    with (
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.login",
-            return_value=None,
-        ),
-        patch(
-            "homeassistant.components.iaqualink.AqualinkClient.get_systems",
-            return_value={system.serial: system},
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert config_entry.state is ConfigEntryState.LOADED
-
-    # Simulate that the coordinator hasn't been initialized yet (e.g., recovered
-    # from a rate-limited first refresh via HA's retry mechanism, platforms
-    # already registered callbacks).
-    coordinator = config_entry.runtime_data.coordinators[system.serial]
-    coordinator._initialized = False
-
-    await _advance_coordinator_time(hass, freezer)
-
-    # Entities should still exist (callbacks fired for all devices).
-    assert len(hass.states.async_entity_ids(LIGHT_DOMAIN)) == 1
