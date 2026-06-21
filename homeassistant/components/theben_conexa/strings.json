@@ -20,7 +20,7 @@
           "password": "The password provided by your power grid operator",
           "username": "The username provided by your power grid operator"
         },
-        "description": "As a prerequisite you must be able to login to your smartmeter gateway from a web browser via \"https://'<'IP of your gateway'>'\"."
+        "description": "As a prerequisite you must be able to log in to your smartmeter gateway from a web browser via `https://[IP of your gateway]`."
       }
     }
   },
