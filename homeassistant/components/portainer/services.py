@@ -73,20 +73,26 @@ async def _get_endpoint_id(
     device_reg = dr.async_get(call.hass)
     device_id = call.data[ATTR_DEVICE_ID]
     device = device_reg.async_get(device_id)
-    assert device
+
+    if device is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_target",
+        )
+
     coordinator = config_entry.runtime_data
 
-    endpoint_data = None
     for data in coordinator.data.values():
         if (
             DOMAIN,
             f"{config_entry.entry_id}_{data.endpoint.id}",
         ) in device.identifiers:
-            endpoint_data = data
-            break
+            return data.endpoint.id
 
-    assert endpoint_data
-    return endpoint_data.endpoint.id
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="invalid_target",
+    )
 
 
 async def _get_container_and_endpoint_ids(
@@ -95,6 +101,7 @@ async def _get_container_and_endpoint_ids(
     """Get config entry, endpoint ID and container ID from the container device ID."""
     device_reg = dr.async_get(call.hass)
     device = device_reg.async_get(call.data[ATTR_CONTAINER_DEVICE_ID])
+
     if device is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,

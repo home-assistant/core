@@ -20,8 +20,8 @@ from homeassistant.components.notify import (
     NotifyEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_DEVICE_ID
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_MANUFACTURER
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
@@ -50,9 +50,11 @@ from .const import (
     DATA_NOTIFY,
     DATA_PUSH_CHANNEL,
     DOMAIN,
+    MANUFACTURER_APPLE,
     SIGNAL_RECORD_NOTIFICATION,
 )
 from .helpers import device_info
+from .live_activity import prepare_live_activity_remote_push
 from .push_notification import PushChannel
 from .util import supports_push
 
@@ -152,8 +154,8 @@ def log_rate_limits(device_name, resp, level=logging.INFO):
         return
 
     rate_limits = resp[ATTR_PUSH_RATE_LIMITS]
-    resetsAt = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
-    resetsAtTime = dt_util.parse_datetime(resetsAt) - dt_util.utcnow()
+    resets_at = rate_limits[ATTR_PUSH_RATE_LIMITS_RESETS_AT]
+    resets_at_time = dt_util.parse_datetime(resets_at) - dt_util.utcnow()
     rate_limit_msg = (
         "mobile_app push notification rate limits for %s: "
         "%d sent, %d allowed, %d errors, "
@@ -166,7 +168,7 @@ def log_rate_limits(device_name, resp, level=logging.INFO):
         rate_limits[ATTR_PUSH_RATE_LIMITS_SUCCESSFUL],
         rate_limits[ATTR_PUSH_RATE_LIMITS_MAXIMUM],
         rate_limits[ATTR_PUSH_RATE_LIMITS_ERRORS],
-        str(resetsAtTime).split(".", maxsplit=1)[0],
+        str(resets_at_time).split(".", maxsplit=1)[0],
     )
 
 
@@ -236,8 +238,13 @@ class MobileAppNotificationService(BaseNotificationService):
 
     async def _async_send_remote_message_target(
         self, entry: ConfigEntry, data: dict[str, Any]
-    ):
+    ) -> None:
         """Send a message to a target."""
+        on_success_callback: CALLBACK_TYPE | None = None
+        if entry.data[ATTR_MANUFACTURER] == MANUFACTURER_APPLE:
+            data, on_success_callback = prepare_live_activity_remote_push(
+                self.hass, entry.data, data
+            )
         try:
             await _send_message(async_get_clientsession(self.hass), entry, data)
         except HomeAssistantError as e:
@@ -245,6 +252,9 @@ class MobileAppNotificationService(BaseNotificationService):
                 _LOGGER.warning(str(e))
             else:
                 _LOGGER.error(str(e))
+        else:
+            if on_success_callback:
+                on_success_callback()
 
 
 async def _send_message(

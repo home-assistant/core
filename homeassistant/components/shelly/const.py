@@ -237,6 +237,7 @@ class BLEScannerMode(StrEnum):
     DISABLED = "disabled"
     ACTIVE = "active"
     PASSIVE = "passive"
+    AUTO = "auto"
 
 
 BLE_SCANNER_MIN_FIRMWARE = "1.5.1"

@@ -178,17 +178,21 @@ class HueLight(HueBaseEntity, LightEntity):
     @property
     def max_color_temp_mireds(self) -> int:
         """Return the warmest color_temp in mireds that this light supports."""
-        if color_temp := self.resource.color_temperature:
-            return color_temp.mirek_schema.mirek_maximum
-        # return a fallback value if the light doesn't provide limits
+        if (color_temp := self.resource.color_temperature) and (
+            mirek_max := color_temp.mirek_schema.mirek_maximum
+        ):
+            return mirek_max
+        # return a fallback value if the light doesn't provide valid limits
         return FALLBACK_MAX_MIREDS
 
     @property
     def min_color_temp_mireds(self) -> int:
         """Return the coldest color_temp in mireds that this light supports."""
-        if color_temp := self.resource.color_temperature:
-            return color_temp.mirek_schema.mirek_minimum
-        # return a fallback value if the light doesn't provide limits
+        if (color_temp := self.resource.color_temperature) and (
+            mirek_min := color_temp.mirek_schema.mirek_minimum
+        ):
+            return mirek_min
+        # return a fallback value if the light doesn't provide valid limits
         return FALLBACK_MIN_MIREDS
 
     @property

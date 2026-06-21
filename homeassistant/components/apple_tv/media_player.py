@@ -24,6 +24,7 @@ from pyatv.interface import (
     PushListener,
     PushUpdater,
 )
+from yarl import URL
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -37,11 +38,13 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import AppleTvConfigEntry, AppleTVManager
 from .browse_media import build_app_list
+from .const import DOMAIN
 from .entity import AppleTVEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -125,7 +128,6 @@ class AppleTvMediaPlayer(
     @callback
     def async_device_connected(self, atv: AppleTV) -> None:
         """Handle when connection is made to device."""
-        # NB: Do not use _is_feature_available here as it only works when playing
         if atv.features.in_state(FeatureState.Available, FeatureName.PushUpdates):
             atv.push_updater.listener = self
             atv.push_updater.start()
@@ -345,19 +347,47 @@ class AppleTvMediaPlayer(
             play_item = await media_source.async_resolve_media(
                 self.hass, media_id, self.entity_id
             )
-            media_id = async_process_play_media_url(self.hass, play_item.url)
+            if play_item.path and self._is_feature_available(FeatureName.StreamFile):
+                media_id = str(play_item.path)
+            else:
+                media_id = async_process_play_media_url(self.hass, play_item.url)
             media_type = MediaType.MUSIC
 
-        if self._is_feature_available(FeatureName.StreamFile) and (
+        use_stream_file = self._is_feature_available(FeatureName.StreamFile) and (
             media_type == MediaType.MUSIC or await is_streamable(media_id)
-        ):
-            _LOGGER.debug("Streaming %s via RAOP", media_id)
-            await self.atv.stream.stream_file(media_id)
-        elif self._is_feature_available(FeatureName.PlayUrl):
-            _LOGGER.debug("Playing %s via AirPlay", media_id)
-            await self.atv.stream.play_url(media_id)
-        else:
-            _LOGGER.error("Media streaming is not possible with current configuration")
+        )
+
+        try:
+            if use_stream_file:
+                _LOGGER.debug("Streaming %s via RAOP", media_id)
+                await self.atv.stream.stream_file(media_id)
+            elif self._is_feature_available(FeatureName.PlayUrl) and (
+                (parsed_url := URL(media_id)).is_absolute() and parsed_url.host
+            ):
+                _LOGGER.debug("Playing %s via AirPlay", media_id)
+                await self.atv.stream.play_url(media_id)
+            else:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="streaming_not_supported",
+                )
+        except exceptions.NotSupportedError as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="streaming_not_supported",
+            ) from ex
+        except (
+            exceptions.BlockedStateError,
+            exceptions.ConnectionLostError,
+            exceptions.InvalidStateError,
+            exceptions.OperationTimeoutError,
+            exceptions.PlaybackError,
+            exceptions.ProtocolError,
+        ) as ex:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="stream_failed",
+            ) from ex
 
     @property
     def media_image_hash(self) -> str | None:
@@ -451,7 +481,7 @@ class AppleTvMediaPlayer(
 
     def _is_feature_available(self, feature: FeatureName) -> bool:
         """Return if a feature is available."""
-        if self.atv and self._playing:
+        if self.atv:
             return self.atv.features.in_state(FeatureState.Available, feature)
         return False
 

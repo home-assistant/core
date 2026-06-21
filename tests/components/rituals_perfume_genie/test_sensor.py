@@ -14,6 +14,7 @@ from .common import (
     init_integration,
     mock_config_entry,
     mock_diffuser_v1_battery_cartridge,
+    mock_diffuser_v3_no_battery_no_fill,
 )
 
 
@@ -63,3 +64,19 @@ async def test_sensors_diffuser_v1_battery_cartridge(
     assert entry
     assert entry.unique_id == f"{hublot}-wifi_percentage"
     assert entry.entity_category == EntityCategory.DIAGNOSTIC
+
+
+async def test_sensors_diffuser_v3_no_fill(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test that a Genie 3.0 without fill sensor data does not create a fill entity."""
+    config_entry = mock_config_entry(unique_id="id_123_sensor_test_diffuser_v3")
+    diffuser = mock_diffuser_v3_no_battery_no_fill()
+    await init_integration(hass, config_entry, [diffuser])
+
+    assert hass.states.get("sensor.genie_v3_fill") is None
+    assert entity_registry.async_get("sensor.genie_v3_fill") is None
+
+    state = hass.states.get("sensor.genie_v3_perfume")
+    assert state
+    assert state.state == diffuser.perfume

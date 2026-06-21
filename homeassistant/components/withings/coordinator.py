@@ -1,7 +1,7 @@
 """Withings coordinator."""
 
 from abc import abstractmethod
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
 from aiowithings import (
@@ -270,7 +270,7 @@ class WithingsActivityDataUpdateCoordinator(
                 self._last_valid_update
             )
 
-        today = date.today()  # noqa: DTZ011
+        today = dt_util.now().date()
         for activity in activities:
             if activity.date == today:
                 self._previous_data = activity

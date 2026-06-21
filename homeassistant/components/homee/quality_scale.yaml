@@ -48,7 +48,7 @@ rules:
   discovery-update-info: done
   discovery: done
   docs-data-update: todo
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: todo
@@ -59,7 +59,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations: todo
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:

@@ -42,4 +42,8 @@ class SchlageEntity(CoordinatorEntity[SchlageDataUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        return super().available and self.device_id in self.coordinator.data.locks
+        return (
+            super().available
+            and self.device_id in self.coordinator.data.locks
+            and self._lock.connected
+        )

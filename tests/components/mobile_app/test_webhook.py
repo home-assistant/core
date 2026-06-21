@@ -833,6 +833,99 @@ async def test_webhook_update_location_with_location_name(
     assert state.state == STATE_NOT_HOME
 
 
+async def test_webhook_update_location_with_in_zones(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+) -> None:
+    """Test that in_zones can be set via the update_location webhook."""
+    with patch(
+        "homeassistant.config.load_yaml_config_file",
+        autospec=True,
+        return_value={
+            ZONE_DOMAIN: [
+                {
+                    "name": "zone_name",
+                    "latitude": 1.23,
+                    "longitude": -4.56,
+                    "radius": 200,
+                    "icon": "mdi:test-tube",
+                },
+            ]
+        },
+    ):
+        await hass.services.async_call(ZONE_DOMAIN, "reload", blocking=True)
+
+    resp = await webhook_client.post(
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
+        json={
+            "type": "update_location",
+            "data": {"in_zones": ["zone.zone_name"]},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.state == "zone_name"
+    assert state.attributes["in_zones"] == ["zone.zone_name"]
+
+    # Empty list reports not_home
+    resp = await webhook_client.post(
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
+        json={
+            "type": "update_location",
+            "data": {"in_zones": []},
+        },
+    )
+
+    assert resp.status == HTTPStatus.OK
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.state == STATE_NOT_HOME
+    assert state.attributes["in_zones"] == []
+
+
+async def test_webhook_update_location_in_zones_rejects_non_zone_entity(
+    hass: HomeAssistant,
+    create_registrations: tuple[dict[str, Any], dict[str, Any]],
+    webhook_client: TestClient,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that in_zones rejects entity_ids outside the zone domain."""
+    # First, set a valid state so we can verify it isn't overwritten by the
+    # rejected payload.
+    resp = await webhook_client.post(
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
+        json={
+            "type": "update_location",
+            "data": {"location_name": STATE_HOME},
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.state == STATE_HOME
+
+    # Send a payload with an invalid in_zones entry; the webhook responds OK
+    # but the payload is dropped.
+    resp = await webhook_client.post(
+        f"/api/webhook/{create_registrations[1]['webhook_id']}",
+        json={
+            "type": "update_location",
+            "data": {"in_zones": ["sensor.not_a_zone"]},
+        },
+    )
+    assert resp.status == HTTPStatus.OK
+    assert "Received invalid webhook payload" in caplog.text
+
+    state = hass.states.get("device_tracker.test_1_2")
+    assert state is not None
+    assert state.state == STATE_HOME
+
+
 async def test_webhook_enable_encryption(
     hass: HomeAssistant,
     create_registrations: tuple[dict[str, Any], dict[str, Any]],

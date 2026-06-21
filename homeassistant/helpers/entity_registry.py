@@ -31,7 +31,6 @@ from homeassistant.const import (
     MAX_LENGTH_STATE_DOMAIN,
     MAX_LENGTH_STATE_ENTITY_ID,
     STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
     EntityCategory,
     Platform,
 )
@@ -356,7 +355,7 @@ class RegistryEntry:
 
     @under_cached_property
     def extended_dict(self) -> dict[str, Any]:
-        """Return a extended dict representation of the entry."""
+        """Return an extended dict representation of the entry."""
         # Convert sets and tuples to lists
         # so the JSON serializer does not have to do
         # it every time
@@ -1140,7 +1139,7 @@ class EntityRegistry(BaseRegistry):
 
     @callback
     def async_get(self, entity_id_or_uuid: str) -> RegistryEntry | None:
-        """Get EntityEntry for an entity_id or entity entry id.
+        """Get RegistryEntry for an entity or entity entry id.
 
         We retrieve the RegistryEntry from the underlying dict to avoid
         the overhead of the UserDict __getitem__.
@@ -1951,9 +1950,10 @@ class EntityRegistry(BaseRegistry):
         This should only be used when an entity needs to be migrated between
         integrations.
         """
-        if (
-            state := self.hass.states.get(entity_id)
-        ) is not None and state.state != STATE_UNKNOWN:
+        # import here to avoid circular import
+        from .entity import entity_sources  # noqa: PLC0415
+
+        if entity_id in entity_sources(self.hass):
             raise ValueError("Only entities that haven't been loaded can be migrated")
 
         old = self.entities[entity_id]

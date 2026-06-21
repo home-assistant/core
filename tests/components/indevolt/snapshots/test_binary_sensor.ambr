@@ -46,7 +46,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'on',
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensor[1][binary_sensor.bk1600_meter_connected-entry]
@@ -383,7 +383,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'main_electric_heating_state',
-    'unique_id': 'SolidFlex2000-87654321_9079',
+    'unique_id': 'SolidFlex2000-87654321_9080',
     'unit_of_measurement': None,
   })
 # ---
