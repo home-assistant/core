@@ -160,6 +160,10 @@ def async_all_device_entities(
 
     device_model_type = ufp_device.model
     assert device_model_type is not None
+    # Runtime adoption must honor the same model-type allowlist as initial setup,
+    # so unsupported devices (e.g. AI Port) get no entities when adopted live.
+    if device_model_type not in _ALL_MODEL_TYPES:
+        return []
     descs = _combine_model_descs(device_model_type, model_descriptions, all_descs)
     return _async_device_entities(
         data, klass, device_model_type, descs, unadopted_descs, ufp_device

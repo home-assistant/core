@@ -553,3 +553,21 @@ async def test_aiport_no_sensor_entities(
     entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
     assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]
+
+
+async def test_aiport_no_sensor_entities_on_runtime_adopt(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+    aiport: AiPort,
+) -> None:
+    """An AI Port adopted while running still creates no entities."""
+    await init_entry(hass, ufp, [sensor_all])
+
+    aiport._api = ufp.api
+    aiport.feature_flags = Mock(is_ptz=False)
+    await adopt_devices(hass, ufp, [aiport])
+
+    entity_registry = er.async_get(hass)
+    entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
+    assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]
