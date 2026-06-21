@@ -41,7 +41,7 @@ CONTACT_SENSOR = FixtureDevice(
 WINDOW_SENSOR = FixtureDevice(
     "setup/local_somfy_tahoma_switch_europe.json",
     "io://1234-5678-6508/8059108#1",
-    "binary_sensor.balcony_window_opening",
+    "binary_sensor.balcony_window_window",
 )
 # Somfy IntelliTAG air intrusion sensor (io:SomfyIDEOIIntrusionSensor)
 INTRUSION_SENSOR = FixtureDevice(

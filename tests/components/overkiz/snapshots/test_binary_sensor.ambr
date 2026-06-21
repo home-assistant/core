@@ -458,7 +458,7 @@
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.balcony_window_opening-entry]
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.balcony_window_tilt-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -472,7 +472,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.balcony_window_opening',
+    'entity_id': 'binary_sensor.balcony_window_tilt',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -480,12 +480,63 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Opening',
+    'object_id_base': 'Tilt',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Tilt',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/8059108#1-core:TiltedState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.balcony_window_tilt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'Balcony Window Tilt',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.balcony_window_tilt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.balcony_window_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.balcony_window_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Opening',
+    'original_name': 'Window',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -495,14 +546,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.balcony_window_opening-state]
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.balcony_window_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'window',
-      'friendly_name': 'Balcony Window Opening',
+      'friendly_name': 'Balcony Window Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.balcony_window_opening',
+    'entity_id': 'binary_sensor.balcony_window_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -560,7 +611,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.garage_sliding_window_opening-entry]
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.garage_sliding_window_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -574,7 +625,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.garage_sliding_window_opening',
+    'entity_id': 'binary_sensor.garage_sliding_window_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -582,12 +633,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Opening',
+    'object_id_base': 'Window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Opening',
+    'original_name': 'Window',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -597,21 +648,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.garage_sliding_window_opening-state]
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json0][binary_sensor.garage_sliding_window_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'window',
-      'friendly_name': 'Garage Sliding Window Opening',
+      'friendly_name': 'Garage Sliding Window Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.garage_sliding_window_opening',
+    'entity_id': 'binary_sensor.garage_sliding_window_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.balcony_window_opening-entry]
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.balcony_window_tilt-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -625,7 +676,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.balcony_window_opening',
+    'entity_id': 'binary_sensor.balcony_window_tilt',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -633,12 +684,63 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Opening',
+    'object_id_base': 'Tilt',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.OPENING: 'opening'>,
+    'original_icon': None,
+    'original_name': 'Tilt',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-6508/8059108#1-core:TiltedState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.balcony_window_tilt-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'opening',
+      'friendly_name': 'Balcony Window Tilt',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.balcony_window_tilt',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.balcony_window_window-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': None,
+    'entity_id': 'binary_sensor.balcony_window_window',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Opening',
+    'original_name': 'Window',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -648,14 +750,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.balcony_window_opening-state]
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.balcony_window_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'window',
-      'friendly_name': 'Balcony Window Opening',
+      'friendly_name': 'Balcony Window Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.balcony_window_opening',
+    'entity_id': 'binary_sensor.balcony_window_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -713,7 +815,7 @@
     'state': 'on',
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.garage_sliding_window_opening-entry]
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.garage_sliding_window_window-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -727,7 +829,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.garage_sliding_window_opening',
+    'entity_id': 'binary_sensor.garage_sliding_window_window',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -735,12 +837,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Opening',
+    'object_id_base': 'Window',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.WINDOW: 'window'>,
     'original_icon': None,
-    'original_name': 'Opening',
+    'original_name': 'Window',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -750,14 +852,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.garage_sliding_window_opening-state]
+# name: test_binary_sensor_entities_snapshot[local_somfy_tahoma_switch_europe.json1][binary_sensor.garage_sliding_window_window-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'window',
-      'friendly_name': 'Garage Sliding Window Opening',
+      'friendly_name': 'Garage Sliding Window Window',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.garage_sliding_window_opening',
+    'entity_id': 'binary_sensor.garage_sliding_window_window',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

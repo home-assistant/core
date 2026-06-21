@@ -142,7 +142,7 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     # ContactSensor/WindowStateSensor, ContactSensor/SlidingWindowStateSensor
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_OPEN_CLOSED,
-        name="Opening",
+        name="Window",
         device_class=BinarySensorDeviceClass.WINDOW,
         value_fn=lambda state: state == OverkizCommandParam.OPEN,
         # core:OpenClosedState is also exposed by all cover devices,
@@ -154,6 +154,13 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         key=OverkizState.CORE_INTRUSION_DETECTED,
         name="Intrusion",
         device_class=BinarySensorDeviceClass.SAFETY,
+        value_fn=bool,
+    ),
+    # ContactSensor/WindowWithTiltSensor
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_TILTED,
+        name="Tilt",
+        device_class=BinarySensorDeviceClass.OPENING,
         value_fn=bool,
     ),
 ]
