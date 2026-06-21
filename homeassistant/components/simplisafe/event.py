@@ -11,7 +11,7 @@ from simplipy.websocket import (
     WebsocketEvent,
 )
 
-from homeassistant.components.event import EventEntity
+from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -30,6 +30,12 @@ SYSTEM_EVENT_TYPES = [
     for event in WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT
     if event not in (EVENT_CAMERA_MOTION_DETECTED, EVENT_DOORBELL_DETECTED)
 ]
+
+CAMERA_DEVICE_CLASSES: dict[CameraTypes, EventDeviceClass] = {
+    CameraTypes.CAMERA: EventDeviceClass.MOTION,
+    CameraTypes.OUTDOOR_CAMERA: EventDeviceClass.MOTION,
+    CameraTypes.DOORBELL: EventDeviceClass.DOORBELL,
+}
 
 
 async def async_setup_entry(
@@ -65,6 +71,9 @@ async def async_setup_entry(
                     system,
                     device=camera,
                     ws_serial=ws_serial,
+                    device_class=CAMERA_DEVICE_CLASSES.get(
+                        camera.camera_type, EventDeviceClass.MOTION
+                    ),
                     event_types=CAMERA_DEVICE_EVENT_TYPES.get(
                         camera.camera_type, [EVENT_CAMERA_MOTION_DETECTED]
                     ),
@@ -85,12 +94,14 @@ class SimpliSafeEvent(SimpliSafeEntity, EventEntity):
         system: SystemType,
         *,
         device: Device | None = None,
+        device_class: EventDeviceClass | None = None,
         ws_serial: str | None = None,
         event_types: list[str],
         translation_key: str,
         unique_id: str,
     ) -> None:
         """Initialize."""
+        self._attr_device_class = device_class
         self._attr_event_types = event_types
         self._attr_translation_key = translation_key
         self._ws_serial = ws_serial
