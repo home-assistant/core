@@ -147,6 +147,7 @@
     "sensor": {
       "battery": {
         "state": {
+          "absence": "Absent",
           "critical": "Critical",
           "full": "[%key:common::state::full%]",
           "good": "Good",
