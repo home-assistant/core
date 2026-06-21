@@ -40,7 +40,7 @@ def outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
         try:
             count = int(num_outlets)
         except ValueError:
-            _LOGGER.warning("Invalid outlet.count value: %s", num_outlets)
+            _LOGGER.debug("Invalid outlet.count value: %s", num_outlets)
         else:
             return set(range(1, count + 1))
 
