@@ -248,7 +248,7 @@ def _validate_currency(data: Any) -> Any:
 
 
 def validate_stun_or_turn_url(value: Any) -> str:
-    """Validate an URL."""
+    """Validate a URL."""
     url_in = str(value)
     url = urlparse(url_in)
 
