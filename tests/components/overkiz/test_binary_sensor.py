@@ -32,7 +32,6 @@ HEATING_STATUS = FixtureDevice(
     "io://1234-5678-5643/109286#1",
     "binary_sensor.my_home_patio_water_heating_heating_status",
 )
-# Setup covering occupancy and contact sensors in addition to smoke.
 CONTACT_SENSOR = FixtureDevice(
     "setup/cloud_somfy_tahoma_v2_europe.json",
     "rtds://1234-1234-6233/394781",
