@@ -131,7 +131,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=BYTES_RECEIVED,
-        translation_key="download_speed_no_rollover",
+        translation_key="download_speed_no_rollover_handling",
         value_key=KIBIBYTES_PER_SEC_RECEIVED_NO_ROLLOVER,
         unique_id="KiB/sec_received_no_rollover",
         device_class=SensorDeviceClass.DATA_RATE,
@@ -142,7 +142,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=BYTES_SENT,
-        translation_key="upload_speed_no_rollover",
+        translation_key="upload_speed_no_rollover_handling",
         value_key=KIBIBYTES_PER_SEC_SENT_NO_ROLLOVER,
         unique_id="KiB/sec_sent_no_rollover",
         device_class=SensorDeviceClass.DATA_RATE,
@@ -173,7 +173,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_RECEIVED,
-        translation_key="packet_download_speed_no_rollover",
+        translation_key="packet_download_speed_no_rollover_handling",
         value_key=PACKETS_PER_SEC_RECEIVED_NO_ROLLOVER,
         unique_id="packets/sec_received_no_rollover",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
@@ -183,7 +183,7 @@ SENSOR_DESCRIPTIONS: tuple[UpnpSensorEntityDescription, ...] = (
     ),
     UpnpSensorEntityDescription(
         key=PACKETS_SENT,
-        translation_key="packet_upload_speed_no_rollover",
+        translation_key="packet_upload_speed_no_rollover_handling",
         value_key=PACKETS_PER_SEC_SENT_NO_ROLLOVER,
         unique_id="packets/sec_sent_no_rollover",
         native_unit_of_measurement=DATA_RATE_PACKETS_PER_SECOND,
