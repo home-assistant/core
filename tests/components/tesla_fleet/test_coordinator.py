@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Literal
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -105,14 +105,10 @@ async def test_coordinator_first_run(
     mock_config_entry.add_to_hass(hass)
 
     # Create and run coordinator
-    with patch(
-        "homeassistant.components.tesla_fleet.coordinator.get_instance"
-    ) as mock_get_instance:
-        mock_get_instance.return_value = recorder_mock
-        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-            hass, mock_config_entry, mock_energy_site
-        )
-        await coordinator._async_update_data()
+    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+        hass, mock_config_entry, mock_energy_site
+    )
+    await coordinator._async_update_data()
 
     await async_wait_recording_done(hass)
 
@@ -203,14 +199,10 @@ async def test_coordinator_normalizes_timestamps_to_hour(
         }
     }
 
-    with patch(
-        "homeassistant.components.tesla_fleet.coordinator.get_instance"
-    ) as mock_get_instance:
-        mock_get_instance.return_value = recorder_mock
-        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-            hass, mock_config_entry, mock_energy_site
-        )
-        await coordinator._async_update_data()
+    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+        hass, mock_config_entry, mock_energy_site
+    )
+    await coordinator._async_update_data()
 
     await async_wait_recording_done(hass)
 
@@ -235,57 +227,53 @@ async def test_coordinator_updates_latest_hour_statistic(
     """Test the coordinator updates the latest hourly statistic bucket."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.components.tesla_fleet.coordinator.get_instance"
-    ) as mock_get_instance:
-        mock_get_instance.return_value = recorder_mock
-        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-            hass, mock_config_entry, mock_energy_site
-        )
+    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+        hass, mock_config_entry, mock_energy_site
+    )
 
-        mock_energy_site.energy_history.return_value = {
-            "response": {
-                "period": "day",
-                "time_series": [
-                    {
-                        "timestamp": "2023-06-01T08:00:00-07:00",
-                        "solar_energy_exported": 1000,
-                    },
-                    {
-                        "timestamp": "2023-06-01T08:05:00-07:00",
-                        "solar_energy_exported": 200,
-                    },
-                ],
-            }
+    mock_energy_site.energy_history.return_value = {
+        "response": {
+            "period": "day",
+            "time_series": [
+                {
+                    "timestamp": "2023-06-01T08:00:00-07:00",
+                    "solar_energy_exported": 1000,
+                },
+                {
+                    "timestamp": "2023-06-01T08:05:00-07:00",
+                    "solar_energy_exported": 200,
+                },
+            ],
         }
-        await coordinator._async_update_data()
-        await async_wait_recording_done(hass)
+    }
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
 
-        mock_energy_site.energy_history.return_value = {
-            "response": {
-                "period": "day",
-                "time_series": [
-                    {
-                        "timestamp": "2023-06-01T08:00:00-07:00",
-                        "solar_energy_exported": 1000,
-                    },
-                    {
-                        "timestamp": "2023-06-01T08:05:00-07:00",
-                        "solar_energy_exported": 200,
-                    },
-                    {
-                        "timestamp": "2023-06-01T08:10:00-07:00",
-                        "solar_energy_exported": 300,
-                    },
-                    {
-                        "timestamp": "2023-06-01T09:00:00-07:00",
-                        "solar_energy_exported": 400,
-                    },
-                ],
-            }
+    mock_energy_site.energy_history.return_value = {
+        "response": {
+            "period": "day",
+            "time_series": [
+                {
+                    "timestamp": "2023-06-01T08:00:00-07:00",
+                    "solar_energy_exported": 1000,
+                },
+                {
+                    "timestamp": "2023-06-01T08:05:00-07:00",
+                    "solar_energy_exported": 200,
+                },
+                {
+                    "timestamp": "2023-06-01T08:10:00-07:00",
+                    "solar_energy_exported": 300,
+                },
+                {
+                    "timestamp": "2023-06-01T09:00:00-07:00",
+                    "solar_energy_exported": 400,
+                },
+            ],
         }
-        await coordinator._async_update_data()
-        await async_wait_recording_done(hass)
+    }
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
 
     stats = await _get_hourly_stats(
         hass,
@@ -362,15 +350,11 @@ async def test_coordinator_handles_missing_timestamp(
         }
     }
 
-    with patch(
-        "homeassistant.components.tesla_fleet.coordinator.get_instance"
-    ) as mock_get_instance:
-        mock_get_instance.return_value = recorder_mock
-        coordinator = TeslaFleetEnergySiteHistoryCoordinator(
-            hass, mock_config_entry, mock_energy_site
-        )
-        await coordinator._async_update_data()
-        await async_wait_recording_done(hass)
+    coordinator = TeslaFleetEnergySiteHistoryCoordinator(
+        hass, mock_config_entry, mock_energy_site
+    )
+    await coordinator._async_update_data()
+    await async_wait_recording_done(hass)
 
     # Should only have one stat (the entry with timestamp)
     stats = await _get_hourly_stats(
