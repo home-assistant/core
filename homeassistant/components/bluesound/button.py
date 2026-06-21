@@ -105,7 +105,7 @@ class BluesoundButton(CoordinatorEntity[BluesoundCoordinator], ButtonEntity):
         if port == DEFAULT_PORT:
             self._attr_device_info = DeviceInfo(
                 identifiers={(DOMAIN, format_mac(sync_status.mac))},
-                connections={(CONNECTION_NETWORK_MAC, format_mac(sync_status.mac))},
+                connections={(CONNECTION_NETWORK_MAC, sync_status.mac)},
                 name=sync_status.name,
                 manufacturer=sync_status.brand,
                 model=sync_status.model_name,

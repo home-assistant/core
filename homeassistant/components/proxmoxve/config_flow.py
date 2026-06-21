@@ -125,7 +125,9 @@ def _get_nodes_data(data: dict[str, Any]) -> list[dict[str, Any]]:
         raise ProxmoxConnectionError from err
 
     if not nodes:
-        raise ProxmoxNoNodesFound("No nodes found")
+        raise ProxmoxNoNodesFound(
+            translation_domain=DOMAIN, translation_key="no_nodes_found"
+        )
 
     nodes_data: list[dict[str, Any]] = []
     for node in nodes:

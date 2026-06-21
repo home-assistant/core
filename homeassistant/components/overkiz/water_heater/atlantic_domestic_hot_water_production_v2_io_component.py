@@ -35,7 +35,6 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         WaterHeaterEntityFeature.TARGET_TEMPERATURE
         | WaterHeaterEntityFeature.OPERATION_MODE
         | WaterHeaterEntityFeature.AWAY_MODE
-        | WaterHeaterEntityFeature.ON_OFF
     )
     _attr_operation_list = [
         STATE_ECO,
@@ -48,7 +47,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     def min_temp(self) -> float:
         """Return the minimum temperature."""
 
-        min_temp = self.device.states[OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE]
+        min_temp = self.device.states.get(
+            OverkizState.CORE_MINIMAL_TEMPERATURE_MANUAL_MODE
+        )
         if min_temp:
             return cast(float, min_temp.value_as_float)
         return DEFAULT_MIN_TEMP
@@ -57,7 +58,9 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     def max_temp(self) -> float:
         """Return the maximum temperature."""
 
-        max_temp = self.device.states[OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE]
+        max_temp = self.device.states.get(
+            OverkizState.CORE_MAXIMAL_TEMPERATURE_MANUAL_MODE
+        )
         if max_temp:
             return cast(float, max_temp.value_as_float)
         return DEFAULT_MAX_TEMP
@@ -68,7 +71,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
 
         return cast(
             float,
-            self.executor.select_state(
+            self.device.states.get_value(
                 OverkizState.IO_MIDDLE_WATER_TEMPERATURE,
             ),
         )
@@ -79,7 +82,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
 
         return cast(
             float,
-            self.executor.select_state(OverkizState.CORE_TARGET_TEMPERATURE),
+            self.device.states.get_value(OverkizState.CORE_TARGET_TEMPERATURE),
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:
@@ -99,7 +102,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         """Return true if eco mode is on."""
 
         return (
-            self.executor.select_state(OverkizState.IO_DHW_MODE)
+            self.device.states.get_value(OverkizState.IO_DHW_MODE)
             == OverkizCommandParam.MANUAL_ECO_ACTIVE
         )
 
@@ -108,7 +111,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         """Return true if performance mode is on."""
 
         return (
-            self.executor.select_state(OverkizState.IO_DHW_MODE)
+            self.device.states.get_value(OverkizState.IO_DHW_MODE)
             == OverkizCommandParam.AUTO_MODE
         )
 
@@ -117,7 +120,7 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
         """Return true if heat pump mode is on."""
 
         return (
-            self.executor.select_state(OverkizState.IO_DHW_MODE)
+            self.device.states.get_value(OverkizState.IO_DHW_MODE)
             == OverkizCommandParam.MANUAL_ECO_INACTIVE
         )
 
@@ -125,9 +128,13 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
 
-        away_mode_duration = cast(
-            str, self.executor.select_state(OverkizState.IO_AWAY_MODE_DURATION)
+        away_mode_duration = self.device.states.get_value(
+            OverkizState.IO_AWAY_MODE_DURATION
         )
+        if away_mode_duration is None:
+            return False
+
+        away_mode_duration = cast(str, away_mode_duration)
         # away_mode_duration can be either a Literal["always"]
         if away_mode_duration == OverkizCommandParam.ALWAYS:
             return True
@@ -161,13 +168,13 @@ class AtlanticDomesticHotWaterProductionV2IOComponent(OverkizEntity, WaterHeater
     def is_boost_mode_on(self) -> bool:
         """Return true if boost mode is on."""
 
-        return (
-            cast(
-                int,
-                self.executor.select_state(OverkizState.CORE_BOOST_MODE_DURATION),
-            )
-            > 0
+        boost_mode_duration = self.device.states.get_value(
+            OverkizState.CORE_BOOST_MODE_DURATION
         )
+        if boost_mode_duration is None:
+            return False
+
+        return cast(int, boost_mode_duration) > 0
 
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""

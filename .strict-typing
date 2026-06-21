@@ -96,6 +96,7 @@ homeassistant.components.aprs.*
 homeassistant.components.apsystems.*
 homeassistant.components.aqualogic.*
 homeassistant.components.aquostv.*
+homeassistant.components.aqvify.*
 homeassistant.components.aranet.*
 homeassistant.components.arcam_fmj.*
 homeassistant.components.arris_tg2492lg.*
@@ -141,6 +142,7 @@ homeassistant.components.canary.*
 homeassistant.components.casper_glow.*
 homeassistant.components.centriconnect.*
 homeassistant.components.cert_expiry.*
+homeassistant.components.chef_iq.*
 homeassistant.components.clickatell.*
 homeassistant.components.clicksend.*
 homeassistant.components.climate.*
@@ -286,6 +288,7 @@ homeassistant.components.huawei_lte.*
 homeassistant.components.humidifier.*
 homeassistant.components.husqvarna_automower.*
 homeassistant.components.huum.*
+homeassistant.components.hvv_departures.*
 homeassistant.components.hydrawise.*
 homeassistant.components.hyperion.*
 homeassistant.components.hypontech.*
@@ -624,6 +627,7 @@ homeassistant.components.waqi.*
 homeassistant.components.water_heater.*
 homeassistant.components.watts.*
 homeassistant.components.watttime.*
+homeassistant.components.wattwaechter.*
 homeassistant.components.weather.*
 homeassistant.components.web_rtc.*
 homeassistant.components.webhook.*
@@ -640,6 +644,7 @@ homeassistant.components.xbox.*
 homeassistant.components.xiaomi_ble.*
 homeassistant.components.yale_smart_alarm.*
 homeassistant.components.yalexs_ble.*
+homeassistant.components.yoto.*
 homeassistant.components.youtube.*
 homeassistant.components.zeroconf.*
 homeassistant.components.zinvolt.*
