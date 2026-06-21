@@ -648,12 +648,12 @@ async def async_enable_logging(
     logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
     if log_file is None:
-        disabled_reason = _log_file_disabled_reason()
+        disabled_log_file_reason = _log_file_disabled_reason()
         default_log_path = hass.config.path(ERROR_LOG_FILENAME)
-        if disabled_reason:
+        if disabled_log_file_reason:
             # Rename the default log file if it exists, since previous versions created
             # it before Supervisor disabled duplicate file logging or
-            # HA_DISABLE_LOG_FILE disabled the managed log file.
+            # HA_DISABLE_LOG_FILE disabled the log file.
             def rename_old_file() -> None:
                 """Rename old log file in executor."""
                 if os.path.isfile(default_log_path):
@@ -665,7 +665,7 @@ async def async_enable_logging(
         else:
             err_log_path = default_log_path
     else:
-        disabled_reason = None
+        disabled_log_file_reason = None
         err_log_path = os.path.abspath(log_file)
 
     if err_log_path:
@@ -679,19 +679,16 @@ async def async_enable_logging(
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
         hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
+    elif disabled_log_file_reason == LOG_FILE_DISABLED_REASON_ENVIRONMENT:
+        hass.data[DATA_LOGGING_DISABLED_REASON] = disabled_log_file_reason
     else:
-        # Avoid exposing a stale API error-log path when this run has no managed log file.
-        hass.data.pop(DATA_LOGGING, None)
-        if disabled_reason is not None:
-            hass.data[DATA_LOGGING_DISABLED_REASON] = disabled_reason
-        else:
-            hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
+        hass.data.pop(DATA_LOGGING_DISABLED_REASON, None)
 
     async_activate_log_queue_handler(hass)
 
 
 def _log_file_disabled_reason() -> str | None:
-    """Return why the managed log file is disabled."""
+    """Return why the log file is disabled."""
     if ENV_SUPERVISOR in os.environ and ENV_DUPLICATE_LOG_FILE not in os.environ:
         return LOG_FILE_DISABLED_REASON_SUPERVISOR
 

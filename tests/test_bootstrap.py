@@ -144,7 +144,7 @@ async def test_async_enable_logging(
             0,
             1,
             None,
-            "supervisor",
+            None,
             id="supervisor",
         ),
         pytest.param(
@@ -181,7 +181,7 @@ async def test_async_enable_logging(
         ),
     ],
 )
-async def test_async_enable_logging_managed_log_file_disabled(
+async def test_async_enable_logging_log_file_disable_control(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
     env: dict[str, str],
@@ -190,7 +190,7 @@ async def test_async_enable_logging_managed_log_file_disabled(
     data_logging: str | None,
     data_logging_disabled_reason: str | None,
 ) -> None:
-    """Test to ensure the default managed log file can be disabled."""
+    """Test the default log file disable controls."""
 
     # Ensure we start with a clean slate
     cleanup_log_files()
@@ -208,7 +208,6 @@ async def test_async_enable_logging_managed_log_file_disabled(
         ) as mock_async_activate_log_queue_handler,
         patch("logging.getLogger"),
     ):
-        hass.data[bootstrap.DATA_LOGGING] = "old.log"
         await bootstrap.async_enable_logging(hass)
         assert len(glob.glob(CONFIG_LOG_FILE)) == log_file_count
         assert hass.data.get(bootstrap.DATA_LOGGING) == data_logging
@@ -216,9 +215,13 @@ async def test_async_enable_logging_managed_log_file_disabled(
             hass.data.get(bootstrap.DATA_LOGGING_DISABLED_REASON)
             == data_logging_disabled_reason
         )
+        expected_config_disabled_reason = (
+            data_logging_disabled_reason
+            if data_logging_disabled_reason == "environment"
+            else None
+        )
         assert hass.config.as_dict()["logging"] == {
-            "managed_log_file": data_logging is not None,
-            "managed_log_file_disabled_reason": data_logging_disabled_reason,
+            "log_file_disabled_reason": expected_config_disabled_reason,
         }
         mock_async_activate_log_queue_handler.assert_called_once()
         mock_async_activate_log_queue_handler.reset_mock()
@@ -264,7 +267,7 @@ async def test_async_enable_logging_log_file_ignores_disable_env(
     caplog: pytest.LogCaptureFixture,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Test an explicit log file ignores the managed log file disable env."""
+    """Test an explicit log file ignores the log file disable env."""
     cleanup_log_files()
 
     monkeypatch.setenv("HA_DISABLE_LOG_FILE", "invalid")

@@ -929,8 +929,7 @@ async def test_config_as_dict() -> None:
         "country": None,
         "language": "en",
         "logging": {
-            "managed_log_file": False,
-            "managed_log_file_disabled_reason": None,
+            "log_file_disabled_reason": None,
         },
         "safe_mode": False,
         "debug": False,

@@ -50,7 +50,6 @@ from .const import (
     CONF_URL,
     CONF_USERNAME,
     EVENT_CORE_CONFIG_UPDATE,
-    KEY_DATA_LOGGING,
     KEY_DATA_LOGGING_DISABLED_REASON,
     LEGACY_CONF_WHITELIST_EXTERNAL_DIRS,
     UnitOfLength,
@@ -698,8 +697,7 @@ class Config:
             "latitude": self.latitude,
             "location_name": self.location_name,
             "logging": {
-                "managed_log_file": KEY_DATA_LOGGING in self.hass.data,
-                "managed_log_file_disabled_reason": self.hass.data.get(
+                "log_file_disabled_reason": self.hass.data.get(
                     KEY_DATA_LOGGING_DISABLED_REASON
                 ),
             },
