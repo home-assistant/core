@@ -5,7 +5,10 @@ rules:
     comment: |
       This integration does not provide additional service actions.
       Light functionality is exposed through the standard light entity actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: exempt
+    comment: |
+      This integration does not poll.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
