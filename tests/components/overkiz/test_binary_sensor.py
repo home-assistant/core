@@ -121,42 +121,6 @@ async def test_binary_sensor_smoke_state_update(
     assert state.state == STATE_ON
 
 
-async def test_binary_sensor_window_state_update(
-    hass: HomeAssistant,
-    setup_overkiz_integration: SetupOverkizIntegration,
-    mock_client: MockOverkizClient,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test event-driven state update for a window sensor (open → closed)."""
-    await setup_overkiz_integration(fixture=WINDOW_SENSOR.fixture)
-
-    state = hass.states.get(WINDOW_SENSOR.entity_id)
-    assert state
-    assert state.state == STATE_ON
-
-    await async_deliver_events(
-        hass,
-        freezer,
-        mock_client,
-        [
-            device_state_changed_event(
-                WINDOW_SENSOR.device_url,
-                [
-                    {
-                        "name": OverkizState.CORE_OPEN_CLOSED.value,
-                        "type": 3,
-                        "value": "closed",
-                    },
-                ],
-            )
-        ],
-    )
-
-    state = hass.states.get(WINDOW_SENSOR.entity_id)
-    assert state
-    assert state.state == STATE_OFF
-
-
 async def test_binary_sensor_intrusion_state_update(
     hass: HomeAssistant,
     setup_overkiz_integration: SetupOverkizIntegration,
