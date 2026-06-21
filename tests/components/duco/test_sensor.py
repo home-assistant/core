@@ -202,13 +202,13 @@ async def test_time_filter_remaining_initial_fetch_failure_skips_sensor_creation
     ],
 )
 @pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
-async def test_time_filter_remaining_failures_keep_previous_value(
+async def test_time_filter_remaining_failures_clear_sensor_value(
     hass: HomeAssistant,
     mock_duco_client: AsyncMock,
     freezer: FrozenDateTimeFactory,
     exception: Exception,
 ) -> None:
-    """Test filter timer failures keep the previous value and other entities available."""
+    """Test filter timer failures clear the sensor value and keep other entities available."""
     state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
     assert state is not None
     assert state.state == "180"
@@ -221,7 +221,7 @@ async def test_time_filter_remaining_failures_keep_previous_value(
 
     state = hass.states.get(FILTER_REMAINING_ENTITY_ID)
     assert state is not None
-    assert state.state == "180"
+    assert state.state == STATE_UNKNOWN
 
     state = hass.states.get("sensor.office_co2_carbon_dioxide")
     assert state is not None

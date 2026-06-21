@@ -127,8 +127,9 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
             rssi_wifi = lan_info.rssi_wifi
 
         # Heat recovery info only backs the optional filter timer sensor, so
-        # failures on this supplemental endpoint should keep the last value.
-        time_filter_remain = previous_data.time_filter_remain if previous_data else None
+        # failures on this supplemental endpoint should not make the primary
+        # node entities unavailable.
+        time_filter_remain = None
         try:
             time_filter_remain = await self.client.async_get_time_filter_remaining()
         except DucoError as err:
