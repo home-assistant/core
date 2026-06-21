@@ -78,9 +78,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     http.async_setup(hass)
 
     # Local sources support
-    hass.data[DATA_LOCAL_SOURCE] = await _process_media_source_platform(
-        hass, DOMAIN, local_source
-    )
+    source = await local_source.async_get_media_source(hass)
+    hass.data[DATA_LOCAL_SOURCE] = source
+    hass.http.register_view(local_source.LocalMediaView(hass, source))
     hass.http.register_view(local_source.UploadMediaView)
     websocket_api.async_register_command(hass, local_source.websocket_remove_media)
 
@@ -93,7 +93,4 @@ async def _process_media_source_platform(
     platform: MediaSourceProtocol,
 ) -> MediaSource:
     """Process a media source platform."""
-    source = await platform.async_get_media_source(hass)
-    if isinstance(source, local_source.LocalSource):
-        hass.http.register_view(local_source.LocalMediaView(hass, source))
-    return source
+    return await platform.async_get_media_source(hass)
