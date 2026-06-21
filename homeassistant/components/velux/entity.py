@@ -21,11 +21,6 @@ def velux_unique_id(node: Node, config_entry_id: str) -> str:
     return node.serial_number or f"{config_entry_id}_{node.node_id}"
 
 
-def velux_unique_id(node: Node, config_entry_id: str) -> str:
-    """Build unique ID base for a Velux node."""
-    return node.serial_number or f"{config_entry_id}_{node.node_id}"
-
-
 def velux_device_info(node: Node, config_entry_id: str) -> DeviceInfo:
     """Build DeviceInfo for a Velux node."""
     unique_id = velux_unique_id(node, config_entry_id)

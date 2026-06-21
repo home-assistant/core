@@ -60,7 +60,7 @@ class VeluxRainSensor(
         await self.coordinator.async_request_refresh()
 
     @property
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if rain is detected."""
         # Velux windows with rain sensors report an opening
         # limitation when rain is detected. So far we've
