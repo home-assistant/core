@@ -117,7 +117,6 @@ def _async_device_entities(
 
 
 _ALL_MODEL_TYPES = (
-    ModelType.AIPORT,
     ModelType.CAMERA,
     ModelType.LIGHT,
     ModelType.SENSOR,

@@ -11,7 +11,11 @@ from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.issue_registry import IssueSeverity
 
 from .const import DOMAIN
@@ -108,6 +112,41 @@ async def async_migrate_data(
     _LOGGER.debug("Start Migrate: async_deprecate_hdr")
     async_deprecate_hdr(hass, entry)
     _LOGGER.debug("Completed Migrate: async_deprecate_hdr")
+
+    _LOGGER.debug("Start Migrate: async_remove_aiport_devices")
+    async_remove_aiport_devices(hass, entry, bootstrap)
+    _LOGGER.debug("Completed Migrate: async_remove_aiport_devices")
+
+
+@callback
+def async_remove_aiport_devices(
+    hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
+) -> None:
+    """Remove AI Port devices and their diagnostic-only entities.
+
+    AI Ports only ever exposed diagnostic sensors (no automation-relevant
+    functionality) and behave transparently, extending the camera they back.
+    They have no public API representation, so support is dropped. Remove this
+    migration once the library drops the AI Port model.
+
+    Added in 2026.7.0
+    """
+    aiports = bootstrap.aiports
+    if not aiports:
+        return
+    macs = {aiport.mac for aiport in aiports.values()}
+    entity_registry = er.async_get(hass)
+    for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id):
+        if any(entity.unique_id.startswith(f"{mac}_") for mac in macs):
+            entity_registry.async_remove(entity.entity_id)
+    device_registry = dr.async_get(hass)
+    for aiport in aiports.values():
+        device = device_registry.async_get_device(
+            connections={(dr.CONNECTION_NETWORK_MAC, aiport.mac)}
+        )
+        if device is not None:
+            device_registry.async_remove_device(device.id)
+        ir.async_delete_issue(hass, DOMAIN, f"rtsp_disabled_{aiport.id}")
 
 
 @callback
