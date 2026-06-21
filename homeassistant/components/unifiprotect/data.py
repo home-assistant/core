@@ -192,12 +192,13 @@ class ProtectData:
         """Process a message from the public devices websocket.
 
         DEVICES_WS_SUBSCRIBED_MODELS is an empty set, which the API client treats
-        as "all models", so messages are not pre-filtered. NVR messages signal
-        the private NVR so alarm entities pick up the new arm state. Relay messages
-        dispatch
-        the merged Relay object by mac so relay-output entities can refresh.
-        Siren messages dispatch the merged Siren object by mac so siren entities
-        can refresh.
+        as "all models", so messages are not pre-filtered. NVR messages signal the
+        private NVR so alarm entities pick up the new arm state. Relay and Siren
+        messages dispatch the merged object by mac so relay-output and siren
+        entities refresh. Any other public device is dispatched generically by mac
+        to entities whose description was migrated to the public path via
+        ``ufp_public_value`` (such as battery and battery_low); the NVR/Relay/Siren
+        returns above intentionally short-circuit that generic path.
         """
         new_obj = message.new_obj
         if new_obj is None:
