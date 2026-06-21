@@ -37,11 +37,25 @@ CONTACT_SENSOR = FixtureDevice(
     "rtds://1234-1234-6233/394781",
     "binary_sensor.family_wing_porte_contact",
 )
+# Somfy IntelliTAG air window sensor (io:SomfyWindowStateSensor)
+WINDOW_SENSOR = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe.json",
+    "io://1234-5678-6508/8059108#1",
+    "binary_sensor.balcony_window_opening",
+)
+# Somfy IntelliTAG air intrusion sensor (io:SomfyIDEOIIntrusionSensor)
+INTRUSION_SENSOR = FixtureDevice(
+    "setup/local_somfy_tahoma_switch_europe.json",
+    "io://1234-5678-6508/10538479#2",
+    "binary_sensor.garage_sliding_window_garage_sliding_window_intrusion",
+)
 
 SNAPSHOT_FIXTURES = [
     SMOKE_SENSOR,
     HEATING_STATUS,
     CONTACT_SENSOR,
+    WINDOW_SENSOR,
+    INTRUSION_SENSOR,
 ]
 
 
@@ -105,6 +119,78 @@ async def test_binary_sensor_smoke_state_update(
     state = hass.states.get(SMOKE_SENSOR.entity_id)
     assert state
     assert state.state == STATE_ON
+
+
+async def test_binary_sensor_window_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test event-driven state update for a window sensor (open → closed)."""
+    await setup_overkiz_integration(fixture=WINDOW_SENSOR.fixture)
+
+    state = hass.states.get(WINDOW_SENSOR.entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                WINDOW_SENSOR.device_url,
+                [
+                    {
+                        "name": OverkizState.CORE_OPEN_CLOSED.value,
+                        "type": 3,
+                        "value": "closed",
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(WINDOW_SENSOR.entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+
+async def test_binary_sensor_intrusion_state_update(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test event-driven state update for an intrusion sensor (detected → clear)."""
+    await setup_overkiz_integration(fixture=INTRUSION_SENSOR.fixture)
+
+    state = hass.states.get(INTRUSION_SENSOR.entity_id)
+    assert state
+    assert state.state == STATE_ON
+
+    await async_deliver_events(
+        hass,
+        freezer,
+        mock_client,
+        [
+            device_state_changed_event(
+                INTRUSION_SENSOR.device_url,
+                [
+                    {
+                        "name": OverkizState.CORE_INTRUSION_DETECTED.value,
+                        "type": 6,
+                        "value": False,
+                    },
+                ],
+            )
+        ],
+    )
+
+    state = hass.states.get(INTRUSION_SENSOR.entity_id)
+    assert state
+    assert state.state == STATE_OFF
 
 
 async def test_binary_sensor_unavailability(

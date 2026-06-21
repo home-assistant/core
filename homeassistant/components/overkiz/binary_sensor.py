@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import cast
 
-from pyoverkiz.enums import OverkizCommandParam, OverkizState
+from pyoverkiz.enums import OverkizCommandParam, OverkizState, UIClass
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.binary_sensor import (
@@ -141,6 +141,31 @@ SUPPORTED_STATES = {
     description.key: description for description in BINARY_SENSOR_DESCRIPTIONS
 }
 
+# core:OpenClosedState is also exposed by cover devices, so these descriptions
+# are only applied to ContactSensor devices (e.g. the Somfy IntelliTAG air).
+CONTACT_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
+    # ContactSensor/WindowStateSensor, ContactSensor/SlidingWindowStateSensor
+    OverkizBinarySensorDescription(
+        key=OverkizState.CORE_OPEN_CLOSED,
+        name="Opening",
+        device_class=BinarySensorDeviceClass.WINDOW,
+        value_fn=lambda state: state == OverkizCommandParam.OPEN,
+    ),
+    # ContactSensor/IntrusionSensor
+    OverkizBinarySensorDescription(
+        # core:IntrusionDetectedState is not yet exposed as an OverkizState enum
+        # (see iMicknl/python-overkiz-api#2141).
+        key="core:IntrusionDetectedState",
+        name="Intrusion",
+        device_class=BinarySensorDeviceClass.SAFETY,
+        value_fn=bool,
+    ),
+]
+
+SUPPORTED_CONTACT_SENSOR_STATES = {
+    description.key: description for description in CONTACT_SENSOR_DESCRIPTIONS
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -167,6 +192,17 @@ async def async_setup_entry(
             for state in device.definition.states
             if (description := SUPPORTED_STATES.get(state))
         )
+
+        if device.ui_class == UIClass.CONTACT_SENSOR:
+            entities.extend(
+                OverkizBinarySensor(
+                    device.device_url,
+                    data.coordinator,
+                    description,
+                )
+                for state in device.definition.states
+                if (description := SUPPORTED_CONTACT_SENSOR_STATES.get(state))
+            )
 
     async_add_entities(entities)
 
