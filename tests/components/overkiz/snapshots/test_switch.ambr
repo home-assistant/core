@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank_undefinedtype_singleton-entry]
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.hot_water_tank_undefinedtype_singleton',
+    'entity_id': 'switch.hot_water_tank',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Hot Water Tank UndefinedType._singleton',
+    'object_id_base': 'Hot Water Tank',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': 'mdi:water-boiler',
-    'original_name': 'Hot Water Tank UndefinedType._singleton',
+    'original_name': 'Hot Water Tank',
     'platform': 'overkiz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank_undefinedtype_singleton-state]
+# name: test_switch_entities_snapshot[cloud_somfy_myfox_europe.json][switch.hot_water_tank-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hot Water Tank UndefinedType._singleton',
+      'friendly_name': 'Hot Water Tank',
       'icon': 'mdi:water-boiler',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.hot_water_tank_undefinedtype_singleton',
+    'entity_id': 'switch.hot_water_tank',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
