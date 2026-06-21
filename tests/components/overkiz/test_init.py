@@ -2,7 +2,12 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from pyoverkiz.exceptions import MaintenanceError, ServiceUnavailableError
+from aiohttp import ClientError
+from pyoverkiz.exceptions import (
+    MaintenanceError,
+    ServiceUnavailableError,
+    TooManyRequestsError,
+)
 import pytest
 
 from homeassistant import config_entries
@@ -130,41 +135,31 @@ async def test_setup_token_reauth_error_starts_reauth(
     assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
 
 
-async def test_setup_token_transient_error_retries(
-    hass: HomeAssistant, mock_rexel_config_entry: MockConfigEntry
-) -> None:
-    """A recoverable token refresh failure retries setup."""
-    mock_rexel_config_entry.add_to_hass(hass)
-
-    client = AsyncMock()
-    client.login.side_effect = OAuth2TokenRequestError(
-        request_info=MagicMock(), domain=DOMAIN
-    )
-
-    with patch(
-        "homeassistant.components.overkiz.create_rexel_client", return_value=client
-    ):
-        await hass.config_entries.async_setup(mock_rexel_config_entry.entry_id)
-        await hass.async_block_till_done()
-
-    assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.config_entries.flow.async_progress()
-
-
 @pytest.mark.parametrize(
     "exception",
     [
-        ServiceUnavailableError("Server is unavailable"),
+        OAuth2TokenRequestError(request_info=MagicMock(), domain=DOMAIN),
+        TooManyRequestsError("Too many requests"),
         MaintenanceError("Server is down for maintenance"),
+        ServiceUnavailableError("Server is unavailable"),
+        TimeoutError("Timed out"),
+        ClientError("Connection error"),
     ],
-    ids=["service_unavailable", "maintenance"],
+    ids=[
+        "oauth2_token_request",
+        "too_many_requests",
+        "maintenance",
+        "service_unavailable",
+        "timeout",
+        "client_error",
+    ],
 )
-async def test_setup_server_unavailable_retries(
+async def test_setup_transient_error_retries(
     hass: HomeAssistant,
     mock_rexel_config_entry: MockConfigEntry,
     exception: Exception,
 ) -> None:
-    """A transient server error during setup retries instead of failing."""
+    """A recoverable error during setup retries instead of failing."""
     mock_rexel_config_entry.add_to_hass(hass)
 
     client = AsyncMock()
