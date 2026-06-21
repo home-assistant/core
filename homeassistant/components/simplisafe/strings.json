@@ -28,10 +28,29 @@
     },
     "event": {
       "camera_events": {
-        "name": "Camera events"
+        "name": "Camera events",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "camera_motion_detected": "Motion detected",
+              "doorbell_detected": "Doorbell detected"
+            }
+          }
+        }
       },
       "system_events": {
-        "name": "System events"
+        "name": "System events",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "automatic_test": "Automatic test",
+              "device_test": "Device test",
+              "secret_alert_triggered": "Secret alert triggered",
+              "sensor_paired_and_named": "Sensor paired and named",
+              "user_initiated_test": "User initiated test"
+            }
+          }
+        }
       }
     }
   },
