@@ -71,6 +71,7 @@ async def test_async_setup_entry_v3_no_keys(hass: HomeAssistant) -> None:
     """Test async_setup_entry with SNMP v3 and no auth/priv keys."""
     entry = MockConfigEntry(
         domain=DOMAIN,
+        title="1.2.3.4",
         data={
             CONF_HOST: "1.2.3.4",
             "baseoid": "1.3.6.1.2.1.1",
@@ -103,7 +104,7 @@ async def test_async_setup_entry_v3_no_keys(hass: HomeAssistant) -> None:
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    assert entry.title == "sys_name"
+    assert entry.title == "1.2.3.4"
 
 
 async def test_async_setup_entry_ipv6_fallback(hass: HomeAssistant) -> None:

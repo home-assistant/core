@@ -3,7 +3,7 @@
 import logging
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -26,16 +26,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
 
     await coordinator.async_config_entry_first_refresh()
 
-    if coordinator.sys_name:
-        hass.config_entries.async_update_entry(entry, title=coordinator.sys_name)
-
     device_registry = dr.async_get(hass)
     device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id)},
         manufacturer=coordinator.manufacturer,
         model=coordinator.model,
-        name=coordinator.sys_name or entry.data[CONF_HOST],
+        name=coordinator.sys_name,
         sw_version=coordinator.sw_version,
     )
 
@@ -46,7 +43,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: SnmpConfigEntry) -> bool:
     """Unload a config entry."""
-    # This line shuts down the platforms we started in 'async_setup_entry'.
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

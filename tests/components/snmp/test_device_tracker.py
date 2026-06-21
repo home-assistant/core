@@ -471,5 +471,3 @@ async def test_device_tracker_update_empty_data(
 
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=20))
     await hass.async_block_till_done()
-
-    # Line 84 should be hit (return if not coordinator.data)
