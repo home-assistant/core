@@ -191,9 +191,10 @@ class ProtectData:
     ) -> None:
         """Process a message from the public devices websocket.
 
-        The API client pre-filters messages to the model types listed in
-        DEVICES_WS_SUBSCRIBED_MODELS. NVR messages signal the private NVR so
-        alarm entities pick up the new arm state. Relay messages dispatch
+        DEVICES_WS_SUBSCRIBED_MODELS is an empty set, which the API client treats
+        as "all models", so messages are not pre-filtered. NVR messages signal
+        the private NVR so alarm entities pick up the new arm state. Relay messages
+        dispatch
         the merged Relay object by mac so relay-output entities can refresh.
         Siren messages dispatch the merged Siren object by mac so siren entities
         can refresh.
