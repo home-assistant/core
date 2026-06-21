@@ -1,0 +1,7 @@
+{
+  "services": {
+    "reload_ssl_certificate": {
+      "service": "mdi:certificate"
+    }
+  }
+}

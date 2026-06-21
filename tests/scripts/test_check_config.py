@@ -135,6 +135,7 @@ def test_secrets() -> None:
         "ip_ban_enabled": True,
         "login_attempts_threshold": -1,
         "server_port": 8123,
+        "ssl_auto_reload": True,
         "ssl_profile": "modern",
         "use_x_frame_options": True,
     }

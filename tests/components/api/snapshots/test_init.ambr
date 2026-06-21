@@ -2,6 +2,15 @@
 # name: test_api_get_services
   list([
     dict({
+      'domain': 'http',
+      'services': dict({
+        'reload_ssl_certificate': dict({
+          'fields': dict({
+          }),
+        }),
+      }),
+    }),
+    dict({
       'domain': 'group',
       'services': dict({
         'reload': dict({

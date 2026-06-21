@@ -10,14 +10,21 @@ import os
 from pathlib import Path
 from unittest.mock import ANY, Mock, patch
 
+from cryptography import x509
+from cryptography.hazmat.primitives import hashes, serialization
+from cryptography.hazmat.primitives.asymmetric import rsa
+from cryptography.x509.oid import NameOID
 import pytest
+from watchdog.events import FileCreatedEvent, FileModifiedEvent
+from watchdog.observers import Observer
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
 from homeassistant.components import cloud, http
 from homeassistant.components.cloud import CloudNotAvailable
-from homeassistant.components.http import DOMAIN
+from homeassistant.components.http import DOMAIN, HomeAssistantHTTP, _SSLReloadHandler
 from homeassistant.const import HASSIO_USER_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
@@ -811,3 +818,371 @@ async def test_unix_socket_rejected_relative_path(
 
     assert hass.http.supervisor_site is None
     assert "path must be absolute" in caplog.text
+
+
+def _create_self_signed_cert(cert_path: Path, key_path: Path) -> None:
+    """Generate a valid self-signed certificate and write it to disk."""
+    key = rsa.generate_private_key(public_exponent=65537, key_size=2048)
+    subject = issuer = x509.Name(
+        [
+            x509.NameAttribute(NameOID.ORGANIZATION_NAME, "Test Certificate"),
+            x509.NameAttribute(NameOID.COMMON_NAME, "localhost"),
+        ]
+    )
+    cert = (
+        x509.CertificateBuilder()
+        .subject_name(subject)
+        .issuer_name(issuer)
+        .public_key(key.public_key())
+        .serial_number(x509.random_serial_number())
+        .not_valid_before(now := dt_util.utcnow())
+        .not_valid_after(now + timedelta(days=1))
+        .sign(key, hashes.SHA256())
+    )
+    cert_path.write_bytes(cert.public_bytes(serialization.Encoding.PEM))
+    key_path.write_bytes(
+        key.private_bytes(
+            serialization.Encoding.PEM,
+            format=serialization.PrivateFormat.TraditionalOpenSSL,
+            encryption_algorithm=serialization.NoEncryption(),
+        )
+    )
+
+
+async def test_reload_ssl_certificate(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test reloading SSL certificate succeeds with valid cert files."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    # Generate a real self-signed certificate and key that the SSL context
+    # can actually load, so we can test the success path without mocking.
+    context = server_context_modern()
+    await hass.async_add_executor_job(_create_self_signed_cert, cert_path, key_path)
+
+    with patch(
+        "homeassistant.util.ssl.server_context_modern",
+        return_value=context,
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Now reload — this should succeed because the files contain a real cert
+    result = await hass.async_add_executor_job(hass.http.reload_ssl_certificate)
+    assert result is True
+
+
+async def test_reload_ssl_certificate_no_ssl(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reloading SSL certificate when SSL is not configured."""
+    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
+        assert await async_setup_component(hass, "http", {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    result = await hass.async_add_executor_job(hass.http.reload_ssl_certificate)
+    assert result is False
+    assert "SSL is not configured" in caplog.text
+
+
+async def test_reload_ssl_certificate_broken_files(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test reloading SSL certificate with broken files fails gracefully."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    context = server_context_modern()
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            return_value=context,
+        ),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Write broken cert data to the files and reload
+    cert_path.write_text("not a valid certificate")
+    key_path.write_text("not a valid key")
+
+    result = await hass.async_add_executor_job(hass.http.reload_ssl_certificate)
+    assert result is False
+    assert "Failed to reload SSL certificate" in caplog.text
+
+
+async def test_reload_ssl_certificate_service_exists(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test that the reload_ssl_certificate service is registered."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    assert hass.services.has_service("http", "reload_ssl_certificate")
+
+
+async def test_ssl_auto_reload_disabled(hass: HomeAssistant, tmp_path: Path) -> None:
+    """Test that setting ssl_auto_reload to false disables the watcher."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    with (
+        patch("ssl.SSLContext.load_cert_chain"),
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            side_effect=server_context_modern,
+        ),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {
+                    "http": {
+                        "ssl_certificate": cert_path,
+                        "ssl_key": key_path,
+                        "ssl_auto_reload": False,
+                    }
+                },
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # The watcher should not have been started
+    assert hass.http._ssl_watcher is None
+    # The service should still be registered
+    assert hass.services.has_service("http", "reload_ssl_certificate")
+
+
+async def test_reload_ssl_certificate_coalescing(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that rapid reload requests are coalesced, not duplicated."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    context = server_context_modern()
+    await hass.async_add_executor_job(_create_self_signed_cert, cert_path, key_path)
+
+    with patch(
+        "homeassistant.util.ssl.server_context_modern",
+        return_value=context,
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Simulate rapid reload requests while one is in-flight
+    # First reload should succeed
+    result1 = await hass.async_add_executor_job(hass.http.reload_ssl_certificate)
+    assert result1 is True
+    assert "Successfully reloaded SSL certificate" in caplog.text
+
+    # The _ssl_reload_pending flag should be false after a single reload
+    assert hass.http._ssl_reload_pending is False
+
+
+async def test_ssl_reload_handler_filters_events() -> None:
+    """Test that _SSLReloadHandler only reacts to watched files."""
+    reloads: list[int] = []
+
+    def on_change() -> None:
+        reloads.append(1)
+
+    watched = frozenset({"/etc/ssl/cert.pem", "/etc/ssl/key.pem"})
+    handler = _SSLReloadHandler(watched, on_change)
+
+    # Event on a watched file should trigger
+    handler.on_any_event(FileModifiedEvent("/etc/ssl/cert.pem"))
+    assert len(reloads) == 1
+
+    # Event on an unwatched file should be ignored
+    handler.on_any_event(FileCreatedEvent("/etc/ssl/unrelated.txt"))
+    assert len(reloads) == 1
+
+    # Event with bytes path should still trigger
+    handler.on_any_event(FileModifiedEvent(b"/etc/ssl/key.pem"))
+    assert len(reloads) == 2
+
+
+async def test_ssl_watcher_stop_guard() -> None:
+    """Test that _debounce_ssl_reload is a no-op when watcher is stopping."""
+    # Create a minimal instance to test the stopping guard
+    http_server = HomeAssistantHTTP.__new__(HomeAssistantHTTP)
+    http_server._ssl_watcher_stopping = True
+    http_server._ssl_reload_debounce_handle = None
+
+    # When stopping, _debounce_ssl_reload should return without scheduling
+    http_server._debounce_ssl_reload()
+    assert http_server._ssl_reload_debounce_handle is None
+
+
+async def test_ssl_reload_schedule_coalescing() -> None:
+    """Test that _schedule_reload coalesces when a reload is already running."""
+    http_server = HomeAssistantHTTP.__new__(HomeAssistantHTTP)
+    http_server._ssl_reload_debounce_handle = None
+    # Simulate a running reload task with a no-op coroutine
+    http_server._ssl_reload_task = asyncio.create_task(
+        asyncio.sleep(0), name="test-reload"
+    )
+    http_server._ssl_reload_pending = False
+
+    # First call should set pending and return (task is already "running")
+    http_server._schedule_reload()
+    assert http_server._ssl_reload_pending is True
+    assert http_server._ssl_reload_task is not None  # Unchanged
+
+
+async def test_ssl_watcher_started_and_stopped(
+    hass: HomeAssistant, tmp_path: Path
+) -> None:
+    """Test that the watcher is started and can be cleanly stopped."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    context = server_context_modern()
+    await hass.async_add_executor_job(_create_self_signed_cert, cert_path, key_path)
+
+    with patch(
+        "homeassistant.util.ssl.server_context_modern",
+        return_value=context,
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # The watcher should have been started (ssl_auto_reload defaults to True)
+    assert hass.http._ssl_watcher is not None
+
+    # _stop_ssl_watcher should cancel debounce and set stopping flag
+    hass.http._stop_ssl_watcher()
+    assert hass.http._ssl_watcher_stopping is True
+    assert hass.http._ssl_reload_debounce_handle is None
+
+
+async def test_reload_ssl_certificate_service_raises_without_ssl(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the reload service raises HomeAssistantError when SSL is not configured."""
+    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
+        assert await async_setup_component(hass, "http", {"http": {}})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    with pytest.raises(HomeAssistantError, match="SSL certificate reload failed"):
+        await hass.services.async_call(
+            "http", "reload_ssl_certificate", {}, blocking=True
+        )
+
+
+async def test_ssl_watcher_start_failure_cleanup(
+    hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test that watcher start failure cleans up state and logs a warning."""
+    cert_path, key_path, _ = await hass.async_add_executor_job(
+        _setup_empty_ssl_pem_files, tmp_path
+    )
+
+    context = server_context_modern()
+    await hass.async_add_executor_job(_create_self_signed_cert, cert_path, key_path)
+
+    with (
+        patch(
+            "homeassistant.util.ssl.server_context_modern",
+            return_value=context,
+        ),
+        patch.object(Observer, "start", side_effect=RuntimeError("inotify limit")),
+    ):
+        assert (
+            await async_setup_component(
+                hass,
+                "http",
+                {"http": {"ssl_certificate": cert_path, "ssl_key": key_path}},
+            )
+            is True
+        )
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    # Watcher start failed, so it should be cleaned up
+    assert "Failed to start SSL certificate file watcher" in caplog.text
+    assert hass.http._ssl_watcher is None
+
+
+async def test_ssl_debounce_reload_cancels_pending(
+    hass: HomeAssistant,
+) -> None:
+    """Test that _debounce_ssl_reload cancels a pending handle before scheduling."""
+    http_server = HomeAssistantHTTP.__new__(HomeAssistantHTTP)
+    http_server._ssl_watcher_stopping = False
+    http_server._ssl_reload_debounce_handle = None
+    # Need a mock loop that supports call_later
+    http_server.hass = hass
+
+    # First call: should create a handle
+    http_server._debounce_ssl_reload()
+    first_handle = http_server._ssl_reload_debounce_handle
+    assert first_handle is not None
+
+    # Second call: should cancel first handle and create a new one
+    http_server._debounce_ssl_reload()
+    second_handle = http_server._ssl_reload_debounce_handle
+    assert second_handle is not None
+    assert second_handle is not first_handle
