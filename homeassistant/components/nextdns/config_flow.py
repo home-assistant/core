@@ -45,22 +45,27 @@ async def async_init_nextdns(
 
 
 async def async_validate_new_api_key(
-    hass: HomeAssistant, user_input: dict[str, Any], profile_id: str
+    hass: HomeAssistant, user_input: dict[str, Any], profile_ids: list[str]
 ) -> dict[str, str]:
     """Validate the new API key during reconfiguration or reauth."""
     errors: dict[str, str] = {}
 
     try:
-        await async_init_nextdns(hass, user_input[CONF_API_KEY], profile_id)
+        nextdns = await async_init_nextdns(hass, user_input[CONF_API_KEY])
     except InvalidApiKeyError:
         errors["base"] = "invalid_api_key"
     except ApiError, ClientConnectorError, RetryError, TimeoutError:
         errors["base"] = "cannot_connect"
-    except ProfileNotAvailable:
-        errors["base"] = "profile_not_available"
     except Exception:
         _LOGGER.exception("Unexpected exception")
         errors["base"] = "unknown"
+        return errors
+
+    if not errors:
+        for profile_id in profile_ids:
+            if not any(profile.id == profile_id for profile in nextdns.profiles):
+                errors["base"] = "profile_not_available"
+                break
 
     return errors
 
@@ -163,8 +168,11 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         entry = self._get_reauth_entry()
 
         if user_input is not None:
+            profile_ids = [
+                subentry.data[CONF_PROFILE_ID] for subentry in entry.subentries.values()
+            ]
             errors = await async_validate_new_api_key(
-                self.hass, user_input, entry.data[CONF_PROFILE_ID]
+                self.hass, user_input, profile_ids
             )
             if errors.get("base") == "profile_not_available":
                 return self.async_abort(reason="profile_not_available")
@@ -189,8 +197,11 @@ class NextDnsFlowHandler(ConfigFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
 
         if user_input is not None:
+            profile_ids = [
+                subentry.data[CONF_PROFILE_ID] for subentry in entry.subentries.values()
+            ]
             errors = await async_validate_new_api_key(
-                self.hass, user_input, entry.data[CONF_PROFILE_ID]
+                self.hass, user_input, profile_ids
             )
             if errors.get("base") == "profile_not_available":
                 return self.async_abort(reason="profile_not_available")
