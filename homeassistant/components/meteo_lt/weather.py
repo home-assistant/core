@@ -5,6 +5,19 @@ from datetime import datetime
 from typing import Any
 
 from homeassistant.components.weather import (
+    ATTR_CONDITION_CLEAR_NIGHT,
+    ATTR_CONDITION_CLOUDY,
+    ATTR_CONDITION_EXCEPTIONAL,
+    ATTR_CONDITION_FOG,
+    ATTR_CONDITION_HAIL,
+    ATTR_CONDITION_LIGHTNING,
+    ATTR_CONDITION_LIGHTNING_RAINY,
+    ATTR_CONDITION_PARTLYCLOUDY,
+    ATTR_CONDITION_POURING,
+    ATTR_CONDITION_RAINY,
+    ATTR_CONDITION_SNOWY,
+    ATTR_CONDITION_SNOWY_RAINY,
+    ATTR_CONDITION_SUNNY,
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
@@ -26,24 +39,24 @@ from .const import ATTRIBUTION, DOMAIN, MANUFACTURER, MODEL
 from .coordinator import MeteoLtConfigEntry, MeteoLtUpdateCoordinator
 
 _CONDITION_MAP: dict[str, str] = {
-    "partly-cloudy": "partlycloudy",
-    "cloudy-with-sunny-intervals": "partlycloudy",
-    "cloudy": "cloudy",
-    "thunder": "lightning",
-    "isolated-thunderstorms": "lightning-rainy",
-    "thunderstorms": "lightning-rainy",
-    "heavy-rain-with-thunderstorms": "lightning-rainy",
-    "light-rain": "rainy",
-    "rain": "rainy",
-    "heavy-rain": "pouring",
-    "light-sleet": "snowy-rainy",
-    "sleet": "snowy-rainy",
-    "freezing-rain": "snowy-rainy",
-    "hail": "hail",
-    "light-snow": "snowy",
-    "snow": "snowy",
-    "heavy-snow": "snowy",
-    "fog": "fog",
+    "partly-cloudy": ATTR_CONDITION_PARTLYCLOUDY,
+    "cloudy-with-sunny-intervals": ATTR_CONDITION_PARTLYCLOUDY,
+    "cloudy": ATTR_CONDITION_CLOUDY,
+    "thunder": ATTR_CONDITION_LIGHTNING,
+    "isolated-thunderstorms": ATTR_CONDITION_LIGHTNING_RAINY,
+    "thunderstorms": ATTR_CONDITION_LIGHTNING_RAINY,
+    "heavy-rain-with-thunderstorms": ATTR_CONDITION_LIGHTNING_RAINY,
+    "light-rain": ATTR_CONDITION_RAINY,
+    "rain": ATTR_CONDITION_RAINY,
+    "heavy-rain": ATTR_CONDITION_POURING,
+    "light-sleet": ATTR_CONDITION_SNOWY_RAINY,
+    "sleet": ATTR_CONDITION_SNOWY_RAINY,
+    "freezing-rain": ATTR_CONDITION_SNOWY_RAINY,
+    "hail": ATTR_CONDITION_HAIL,
+    "light-snow": ATTR_CONDITION_SNOWY,
+    "snow": ATTR_CONDITION_SNOWY,
+    "heavy-snow": ATTR_CONDITION_SNOWY,
+    "fog": ATTR_CONDITION_FOG,
 }
 
 
@@ -87,12 +100,13 @@ class MeteoLtWeatherEntity(CoordinatorEntity[MeteoLtUpdateCoordinator], WeatherE
         )
 
     def _map_condition(self, condition_code: str | None, datetime_str: str) -> str:
+        """Map a meteo.lt condition code to a Home Assistant condition string."""
         if condition_code is None:
-            return "exceptional"
+            return ATTR_CONDITION_EXCEPTIONAL
         if condition_code == "clear":
             dt = dt_util.parse_datetime(datetime_str)
-            return "sunny" if sun.is_up(self.hass, dt) else "clear-night"
-        return _CONDITION_MAP.get(condition_code, "exceptional")
+            return ATTR_CONDITION_SUNNY if sun.is_up(self.hass, dt) else ATTR_CONDITION_CLEAR_NIGHT
+        return _CONDITION_MAP.get(condition_code, ATTR_CONDITION_EXCEPTIONAL)
 
     @property
     def native_temperature(self) -> float | None:
