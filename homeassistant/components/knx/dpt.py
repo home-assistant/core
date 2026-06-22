@@ -2,9 +2,9 @@
 
 from collections.abc import Mapping
 from functools import cache
-from typing import Any, Literal, NotRequired, TypedDict, cast
+from typing import Literal, NotRequired, TypedDict, cast
 
-from xknx.dpt import DPTBase, DPTComplex, DPTEnum, DPTNumeric
+from xknx.dpt import DPTBase, DPTComplex, DPTComplexFieldSchema, DPTEnum, DPTNumeric
 from xknx.dpt.dpt_16 import DPTString
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -35,7 +35,7 @@ class DPTInfo(TypedDict):
     options: NotRequired[list[str]]
 
     # complex specific
-    schema: NotRequired[list[dict[str, Any]]]
+    schema: NotRequired[list[DPTComplexFieldSchema]]
 
 
 @cache
@@ -92,7 +92,7 @@ def _add_enum_details(dpt_info: DPTInfo, dpt_cls: type[DPTEnum]) -> None:
 
 def _add_complex_details(dpt_info: DPTInfo, dpt_cls: type[DPTComplex]) -> None:
     """Add complex specific details to the DPTInfo."""
-    dpt_info["schema"] = dpt_cls.get_dict_schema()  # type: ignore[attr-defined]  # remove when xknx is updated
+    dpt_info["schema"] = dpt_cls.get_dict_schema()
 
 
 _sensor_device_classes: Mapping[str, SensorDeviceClass] = {
