@@ -26,6 +26,7 @@ from homeassistant.components.cover import (
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_later
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import STATE_ATTRIBUTE_ROOM_NAME
 from .coordinator import PowerviewShadeUpdateCoordinator
@@ -144,17 +145,19 @@ class PowerViewShadeBase(ShadeEntity, CoverEntity):
         return {STATE_ATTRIBUTE_ROOM_NAME: self._room_name}
 
     @property
-    def is_closed(self) -> bool:
+    def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
+        if self.positions.primary is None:
+            return None
         return self.positions.primary <= CLOSED_POSITION
 
     @property
-    def current_cover_position(self) -> int:
+    def current_cover_position(self) -> int | None:
         """Return the current position of cover."""
         return self.positions.primary
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
         return self.positions.primary
 
@@ -362,13 +365,16 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
         self._max_tilt = self._shade.shade_limits.tilt_max
 
     @property
-    def current_cover_tilt_position(self) -> int:
+    def current_cover_tilt_position(self) -> int | None:
         """Return the current cover tile position."""
         return self.positions.tilt
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
+        if self.positions.primary is None or self.positions.tilt is None:
+            return None
+            
         return self.positions.primary + self.positions.tilt
 
     @property
@@ -385,18 +391,23 @@ class PowerViewShadeWithTiltBase(PowerViewShadeBase):
 
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
-        self._async_schedule_update_for_transition(self.transition_steps)
+        if (steps := self.transition_steps) is None:
+            raise ServiceValidationError("Position data is missing")
+        self._async_schedule_update_for_transition(steps)
         await self._async_execute_move(self.close_tilt_position)
-        self.async_write_ha_state()
 
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
-        self._async_schedule_update_for_transition(100 - self.transition_steps)
+        if (steps := self.transition_steps) is None:
+            raise ServiceValidationError("Position data is missing")
+
+        self._async_schedule_update_for_transition(100 - steps)
         await self._async_execute_move(self.open_tilt_position)
-        self.async_write_ha_state()
 
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the tilt to a specific position."""
+        if (steps := self.transition_steps) is None:
+            raise ServiceValidationError("Position data is missing")
         await self._async_set_cover_tilt_position(kwargs[ATTR_TILT_POSITION])
 
     async def _async_set_cover_tilt_position(
@@ -527,7 +538,7 @@ class PowerViewShadeTiltOnly(PowerViewShadeWithTiltBase):
         return CLOSED_POSITION
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
         return self.positions.tilt
 
@@ -579,8 +590,10 @@ class PowerViewShadeDualRailBase(PowerViewShadeBase):
     """
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
+        if self.positions.primary is None or self.positions.secondary is None:
+            return None
         return self.positions.primary + self.positions.secondary
 
 
@@ -697,8 +710,10 @@ class PowerViewShadeDualOverlappedBase(PowerViewShadeBase):
     """
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
+        if self.positions.primary is None or self.positions.secondary is None:
+            return None
         # poskind 1 represents the second half of the shade in hass
         # front must be fully closed before rear can move
         # 51 - 100 is equiv to 1-100 on other shades - one motor, two shades
@@ -928,7 +943,7 @@ class PowerViewShadeDualOverlappedCombinedTilt(
     """
 
     @property
-    def transition_steps(self) -> int:
+    def transition_steps(self) -> int | None:
         """Return the steps to make a move."""
         # poskind 1 represents the second half of the shade in hass
         # front must be fully closed before rear can move
