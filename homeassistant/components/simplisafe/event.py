@@ -1,7 +1,5 @@
 """Support for SimpliSafe events."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
@@ -104,19 +102,19 @@ async def async_setup_entry(
             assert isinstance(system, SystemV3)
         for uuid, camera in system.cameras.items():
             ws_serial = system.camera_data[uuid]["serial"]
-            for description in CAMERA_EVENT_DESCRIPTIONS.get(
-                camera.camera_type, CAMERA_EVENT_DESCRIPTIONS[CameraTypes.CAMERA]
-            ):
-                entities.append(
-                    SimpliSafeEvent(
-                        simplisafe,
-                        system,
-                        entity_description=description,
-                        device=camera,
-                        ws_serial=ws_serial,
-                        unique_id=f"{camera.serial}-{description.key}",
-                    )
+            entities.extend(
+                SimpliSafeEvent(
+                    simplisafe,
+                    system,
+                    entity_description=description,
+                    device=camera,
+                    ws_serial=ws_serial,
+                    unique_id=f"{camera.serial}-{description.key}",
                 )
+                for description in CAMERA_EVENT_DESCRIPTIONS.get(
+                    camera.camera_type, CAMERA_EVENT_DESCRIPTIONS[CameraTypes.CAMERA]
+                )
+            )
     async_add_entities(entities)
 
 
