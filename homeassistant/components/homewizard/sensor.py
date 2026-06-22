@@ -827,7 +827,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         self.entity_description = description
         self._device_id = device_unique_id
         self._suggested_device_class = description.suggested_device_class
-        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"
+        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_unique_id)},
             name=description.device_name,

@@ -128,7 +128,7 @@ class AccountSensor(SensorEntity):
                 continue
             self._attr_name = f"Coinbase {account[API_ACCOUNT_NAME]}"
             self._attr_unique_id = (
-                f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"
+                f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
                 f"{account[API_ACCOUNT_CURRENCY]}"
             )
             self._attr_native_value = account[API_ACCOUNT_AMOUNT]
@@ -201,7 +201,7 @@ class ExchangeRateSensor(SensorEntity):
         self._currency = exchange_currency
         self._attr_name = f"{exchange_currency} Exchange Rate"
         self._attr_unique_id = (
-            f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"
+            f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self._precision = precision
         self._attr_icon = CURRENCY_ICONS.get(exchange_currency, DEFAULT_COIN_ICON)

@@ -34,7 +34,7 @@ class PlexScanClientsButton(ButtonEntity):
     def __init__(self, server_id: str, plex_server: PlexServer) -> None:
         """Initialize a scan_clients Plex button entity."""
         self.server_id = server_id
-        self._attr_unique_id = f"plex-scan_clients-{self.server_id}"
+        self._attr_unique_id = f"plex-scan_clients-{self.server_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, server_id)},
             name=plex_server.friendly_name,
