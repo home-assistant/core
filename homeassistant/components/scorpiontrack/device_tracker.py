@@ -1,5 +1,7 @@
 """Device tracker platform for ScorpionTrack."""
 
+from pyscorpiontrack import ScorpionTrackVehicle
+
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -34,13 +36,16 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
         super().__init__(coordinator, vehicle_id)
         self._attr_unique_id = f"{coordinator.data.id}_{vehicle_id}"
 
+    def _available_vehicle(self) -> ScorpionTrackVehicle | None:
+        """Return the vehicle if the tracker is available."""
+        if not super().available:
+            return None
+        return self.get_vehicle()
+
     @property
     def available(self) -> bool:
         """Return if the tracker is available."""
-        if not super().available:
-            return False
-
-        vehicle = self.get_vehicle()
+        vehicle = self._available_vehicle()
         if vehicle is None:
             return False
 
@@ -52,7 +57,7 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
     @property
     def latitude(self) -> float | None:
         """Return the latitude."""
-        vehicle = self.get_vehicle()
+        vehicle = self._available_vehicle()
         if vehicle is None:
             return None
         return vehicle.position.latitude
@@ -60,7 +65,7 @@ class ScorpionTrackTrackerEntity(ScorpionTrackEntity, TrackerEntity):
     @property
     def longitude(self) -> float | None:
         """Return the longitude."""
-        vehicle = self.get_vehicle()
+        vehicle = self._available_vehicle()
         if vehicle is None:
             return None
         return vehicle.position.longitude

@@ -21,9 +21,9 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
         vehicle = self.get_vehicle()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{self.share.id}_{vehicle_id}")},
-            manufacturer=(vehicle.make or MANUFACTURER) if vehicle else MANUFACTURER,
-            model=vehicle.model if vehicle else None,
-            name=vehicle.display_name if vehicle else f"Vehicle {vehicle_id}",
+            manufacturer=vehicle.make or MANUFACTURER,
+            model=vehicle.model,
+            name=vehicle.display_name,
         )
 
     @property
@@ -31,11 +31,11 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
         """Return the active share data."""
         return self.coordinator.data
 
-    def get_vehicle(self) -> ScorpionTrackVehicle | None:
+    def get_vehicle(self) -> ScorpionTrackVehicle:
         """Return the matching vehicle, if present."""
-        return self.coordinator.vehicles_by_id.get(self._vehicle_id)
+        return self.coordinator.vehicles_by_id[self._vehicle_id]
 
     @property
     def available(self) -> bool:
         """Return if the entity is available."""
-        return super().available and self.get_vehicle() is not None
+        return super().available and self._vehicle_id in self.coordinator.vehicles_by_id

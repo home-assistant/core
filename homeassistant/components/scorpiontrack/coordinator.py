@@ -35,6 +35,7 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
     ) -> None:
         """Initialize the coordinator."""
         self.client = client
+        self.vehicles_by_id: dict[int, ScorpionTrackVehicle] = {}
         super().__init__(
             hass,
             _LOGGER,
@@ -44,17 +45,10 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
             always_update=False,
         )
 
-    @property
-    def vehicles_by_id(self) -> dict[int, ScorpionTrackVehicle]:
-        """Return vehicles keyed by their ScorpionTrack ID."""
-        if self.data is None:
-            return {}
-        return {vehicle.id: vehicle for vehicle in self.data.vehicles}
-
     async def _async_update_data(self) -> ScorpionTrackShare:
         """Fetch updated share data."""
         try:
-            return await self.client.async_get_share()
+            share = await self.client.async_get_share()
         except ScorpionTrackConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -70,3 +64,6 @@ class ScorpionTrackCoordinator(DataUpdateCoordinator[ScorpionTrackShare]):
                 translation_domain=DOMAIN,
                 translation_key="share_unavailable",
             ) from err
+        else:
+            self.vehicles_by_id = {vehicle.id: vehicle for vehicle in share.vehicles}
+            return share
