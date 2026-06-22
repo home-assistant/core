@@ -1,7 +1,5 @@
 """The my-PV integration for Home Assistant."""
 
-import logging
-
 from my_pv import MyPVLocalDevice
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 
@@ -11,8 +9,6 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .const import DOMAIN
 from .coordinator import MyPVConfigEntry, MyPVCoordinator
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.WATER_HEATER,
