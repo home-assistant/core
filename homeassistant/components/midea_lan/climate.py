@@ -483,10 +483,10 @@ class MideaC3Climate(MideaClimate):
     _device: MideaC3Device
     _zone: int
 
-    _powers: list[C3Attributes] = [
+    _powers: tuple[C3Attributes, ...] = (
         C3Attributes.zone1_power,
         C3Attributes.zone2_power,
-    ]
+    )
     _attr_hvac_modes = [
         HVACMode.OFF,
         HVACMode.AUTO,
