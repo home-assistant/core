@@ -343,9 +343,6 @@
       "system_sounds_volume": {
         "name": "System sounds volume"
       },
-      "volume": {
-        "name": "[%key:component::sensor::entity_component::volume::name%]"
-      },
       "wide_dynamic_range": {
         "name": "Wide dynamic range"
       },
@@ -750,6 +747,10 @@
     "insecure_camera_removed": {
       "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Insecure camera entity removed"
+    },
+    "remove_chime_volume": {
+      "description": "The chime Volume number read the master volume but its setter only changed the per-camera ring volumes, so setting it never moved the master slider. As the UniFi Protect public API has no master-volume setter, the Volume number has been removed in favour of the per-camera ring volume numbers (Ring volume).\n\nBelow are the detected automations or scripts that use one or more of the removed entities:\n{items}\nThe above list may be incomplete and it does not include any template usages inside of dashboards. Please update any templates, automations or scripts accordingly.",
+      "title": "Chime Volume number removed"
     },
     "rtsp_disabled": {
       "fix_flow": {
