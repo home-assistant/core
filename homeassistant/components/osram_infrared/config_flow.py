@@ -17,13 +17,6 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
-    def _async_is_emitter_already_configured(self, emitter_entity_id: str) -> bool:
-        """Return if the infrared emitter is already configured."""
-        return any(
-            entry.data.get(CONF_IR_EMITTER_ENTITY_ID) == emitter_entity_id
-            for entry in self._async_current_entries()
-        )
-
     def _async_has_infrared_entities(self) -> bool:
         """Return if any infrared entities are available."""
         entity_registry = er.async_get(self.hass)
@@ -54,27 +47,20 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors: dict[str, str] = {}
-
         if user_input is not None:
             emitter_entity_id = user_input[CONF_IR_EMITTER_ENTITY_ID]
 
-            if self._async_is_emitter_already_configured(emitter_entity_id):
-                return self.async_abort(reason="already_configured")
-
-            entity_registry = er.async_get(self.hass)
-            entity_entry = entity_registry.async_get(emitter_entity_id)
-
-            entity_name = (
-                entity_entry.name or entity_entry.original_name or emitter_entity_id
-                if entity_entry
-                else emitter_entity_id
+            self._async_abort_entries_match(
+                {CONF_IR_EMITTER_ENTITY_ID: emitter_entity_id}
             )
 
             return self.async_create_entry(
-                title=f"OSRAM light via {entity_name}",
+                title=self._async_get_entry_title(emitter_entity_id),
                 data=user_input,
             )
+
+        if not self._async_has_infrared_entities():
+            return self.async_abort(reason="no_infrared_emitters")
 
         return self.async_show_form(
             step_id="user",
@@ -88,5 +74,4 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
-            errors=errors,
         )
