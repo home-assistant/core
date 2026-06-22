@@ -29,15 +29,13 @@ class PrusaLinkEntity(CoordinatorEntity[PrusaLinkUpdateCoordinator]):
     @property
     def available(self) -> bool:
         """Return if entity is available."""
-        # `coordinator.data` can be None when the underlying endpoint
-        # returns no payload — e.g. the job coordinator yields None when
-        # no job is running on pyprusalink >= 3.0.0. Short-circuit to
-        # avoid passing None into `available_fn` lambdas that assume a
-        # dict (.get(), index, etc.).
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and self.entity_description.available_fn(self.coordinator.data)
+        # Availability should only reflect coordinator connectivity or
+        # entity-specific data absence. Entities that stay available when their
+        # current value is not known, such as idle/no-job sensors, return True
+        # here and expose `native_value = None` so Home Assistant shows
+        # `unknown` instead of `unavailable`.
+        return super().available and self.entity_description.available_fn(
+            self.coordinator.data
         )
 
     @property
