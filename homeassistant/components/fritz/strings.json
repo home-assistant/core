@@ -13,6 +13,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "ignore_ip6_link_local": "IPv6 link local address is not supported.",
+      "no_host": "The discovered FRITZ! device did not advertise a usable address. Add it manually using its IP address or hostname.",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
