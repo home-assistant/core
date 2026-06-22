@@ -6171,7 +6171,7 @@
     "saj": {
       "name": "SAJ Solar Inverter",
       "integration_type": "hub",
-      "config_flow": false,
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "samsam": {
@@ -7288,12 +7288,6 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_polling"
-    },
-    "tikteck": {
-      "name": "Tikteck",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
     },
     "tile": {
       "name": "Tile",

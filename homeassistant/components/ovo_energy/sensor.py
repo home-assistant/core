@@ -164,7 +164,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator)
         self._attr_unique_id = (
-            f"{DOMAIN}_{coordinator.client.account_id}_{description.key}"
+            f"{DOMAIN}_{coordinator.client.account_id}_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self.entity_description = description
 

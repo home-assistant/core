@@ -781,8 +781,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/homevolt/ @danielhiversen @liudger
 /homeassistant/components/homewizard/ @DCSBL
 /tests/components/homewizard/ @DCSBL
-/homeassistant/components/honeywell/ @rdfurman @mkmer
-/tests/components/honeywell/ @rdfurman @mkmer
+/homeassistant/components/honeywell/ @mkmer
+/tests/components/honeywell/ @mkmer
 /homeassistant/components/honeywell_string_lights/ @balloob
 /tests/components/honeywell_string_lights/ @balloob
 /homeassistant/components/hr_energy_qube/ @MattieGit
@@ -1561,6 +1561,7 @@ CLAUDE.md @home-assistant/core
 /homeassistant/components/sabnzbd/ @shaiu @jpbede
 /tests/components/sabnzbd/ @shaiu @jpbede
 /homeassistant/components/saj/ @fredericvl
+/tests/components/saj/ @fredericvl
 /homeassistant/components/samsung_infrared/ @lmaertin
 /tests/components/samsung_infrared/ @lmaertin
 /homeassistant/components/samsungtv/ @chemelli74
