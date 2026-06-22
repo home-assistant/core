@@ -273,12 +273,12 @@ class MySubentryFlow(ConfigSubentryFlow):
     assert messages[0].msg_id == "home-assistant-subentry-flow-field-not-translated"
 
 
-def test_subentry_shared_handler_any_type_ok(
+def test_subentry_shared_handler_missing_in_one_type(
     linter: UnittestLinter,
     flow_translations_checker: ConfigFlowTranslationsChecker,
     tmp_path: Path,
 ) -> None:
-    """No warning when field exists in any of the mapped subentry types."""
+    """Warning when field is missing in one of the mapped subentry types."""
     integration_dir = _make_integration(
         tmp_path,
         {
@@ -315,9 +315,12 @@ class SharedFlow(ConfigSubentryFlow):
 
     walker = ASTWalker(linter)
     walker.add_checker(flow_translations_checker)
+    walker.walk(root_node)
 
-    with assert_no_messages(linter):
-        walker.walk(root_node)
+    messages = linter.release_messages()
+    assert len(messages) == 1
+    assert messages[0].msg_id == "home-assistant-subentry-flow-field-not-translated"
+    assert "type_b" in messages[0].args[2]
 
 
 def test_subentry_section_field_missing(

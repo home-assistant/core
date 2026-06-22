@@ -11,6 +11,7 @@ The expected translation paths are::
     options.step.{step_id}.data.{field_name}
     options.step.{step_id}.sections.{section_key}.data.{field_name}
     config_subentries.{subentry_type}.step.{step_id}.data.{field_name}
+    config_subentries.{subentry_type}.step.{step_id}.sections.{section_key}.data.{field_name}
 
 - ``W7425``: Missing config flow field translation
 - ``W7427``: Missing options flow field translation
@@ -418,41 +419,30 @@ class ConfigFlowTranslationsChecker(BaseChecker):
         assert self._translations is not None
         config_subentries = self._translations.get("config_subentries", {})
 
-        sub0 = subentry_types[0]
-        for item in schema_items:
-            if isinstance(item, _Section):
-                for field in item.fields:
-                    if not any(
-                        field
-                        in config_subentries.get(st, {})
-                        .get("step", {})
-                        .get(step_id, {})
-                        .get("sections", {})
-                        .get(item.key, {})
-                        .get("data", {})
-                        for st in subentry_types
-                    ):
-                        path = f"config_subentries.{sub0}.step.{step_id}.sections.{item.key}.data.{field}"
+        for st in subentry_types:
+            st_trans = config_subentries.get(st, {})
+            step_trans = st_trans.get("step", {}).get(step_id, {})
+            for item in schema_items:
+                if isinstance(item, _Section):
+                    section_data = (
+                        step_trans.get("sections", {}).get(item.key, {}).get("data", {})
+                    )
+                    for field in item.fields:
+                        if field not in section_data:
+                            path = f"config_subentries.{st}.step.{step_id}.sections.{item.key}.data.{field}"
+                            self.add_message(
+                                "home-assistant-subentry-flow-field-not-translated",
+                                node=node,
+                                args=(field, step_id, path),
+                            )
+                elif isinstance(item, _Field):
+                    if item.name not in step_trans.get("data", {}):
+                        path = f"config_subentries.{st}.step.{step_id}.data.{item.name}"
                         self.add_message(
                             "home-assistant-subentry-flow-field-not-translated",
                             node=node,
-                            args=(field, step_id, path),
+                            args=(item.name, step_id, path),
                         )
-            elif isinstance(item, _Field):
-                if not any(
-                    item.name
-                    in config_subentries.get(st, {})
-                    .get("step", {})
-                    .get(step_id, {})
-                    .get("data", {})
-                    for st in subentry_types
-                ):
-                    path = f"config_subentries.{sub0}.step.{step_id}.data.{item.name}"
-                    self.add_message(
-                        "home-assistant-subentry-flow-field-not-translated",
-                        node=node,
-                        args=(item.name, step_id, path),
-                    )
 
 
 def register(linter: PyLinter) -> None:
