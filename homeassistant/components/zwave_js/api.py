@@ -777,6 +777,7 @@ async def websocket_add_node(
             node.on("interview started", forward_event),
             node.on("interview completed", forward_event),
             node.on("interview stage completed", forward_stage),
+            node.on("interview progress", forward_progress),
             node.on("interview failed", forward_event),
         ]
         unsubs.extend(interview_unsubs)
@@ -810,6 +811,19 @@ async def websocket_add_node(
         connection.send_message(
             websocket_api.event_message(
                 msg[ID], {"event": event["event"], "stage": event["stageName"]}
+            )
+        )
+
+    @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
             )
         )
 
@@ -1863,11 +1877,25 @@ async def websocket_refresh_node_info(
             )
         )
 
+    @callback
+    def forward_progress(event: dict) -> None:
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": event["event"],
+                    "stage": event["stage"],
+                    "progress": event["progress"],
+                },
+            )
+        )
+
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         node.on("interview started", forward_event),
         node.on("interview completed", forward_event),
         node.on("interview stage completed", forward_stage),
+        node.on("interview progress", forward_progress),
         node.on("interview failed", forward_event),
     ]
 
