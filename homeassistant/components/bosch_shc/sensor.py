@@ -713,6 +713,8 @@ class EnergySensor(SHCEntity, SensorEntity):
     @property
     def native_value(self):
         """Return the state of the sensor."""
+        if self._device.energyconsumption is None:
+            return None
         return self._device.energyconsumption / 1000.0
 
 
