@@ -109,17 +109,9 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         """Get setup configuration for given key."""
         return self._device.get_setup_configuration(key)
 
-    def supports_data(self, key: str) -> bool:
-        """Test if data for the given key is supported."""
-        return self._device.supports_data(key)
-
     def get_data_configuration(self, key: str) -> dict[str, Any] | None:
         """Get data configuration for given key."""
         return self._device.get_data_configuration(key)
-
-    def supports_command(self, command: str) -> bool:
-        """Test if the given command is supported."""
-        return self._device.supports_command(command)
 
     async def async_disconnect(self) -> bool:
         """Disconnect from my-PV.
