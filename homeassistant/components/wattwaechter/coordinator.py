@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from aio_wattwaechter import (
     Wattwaechter,
@@ -50,6 +51,7 @@ class WattwaechterCoordinator(DataUpdateCoordinator[MeterData]):
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
 
+    @override
     async def _async_update_data(self) -> MeterData:
         """Fetch data from the WattWächter device."""
         try:

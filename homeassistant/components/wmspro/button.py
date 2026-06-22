@@ -1,5 +1,7 @@
 """Identify support for WMS WebControl pro."""
 
+from typing import override
+
 from wmspro.const import WMS_WebControl_pro_API_actionDescription
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
@@ -34,6 +36,7 @@ class WebControlProIdentifyButton(WebControlProGenericEntity, ButtonEntity):
 
     _attr_device_class = ButtonDeviceClass.IDENTIFY
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press to identify the device."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.Identify)
@@ -46,6 +49,7 @@ class WebControlProRotationResetButton(WebControlProGenericEntity, ButtonEntity)
     _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "rotation-reset"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press to reset the rotation range to the default."""
         action = self._dest.action(WMS_WebControl_pro_API_actionDescription.SlatRotate)
