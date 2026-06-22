@@ -70,7 +70,7 @@ rules:
     comment: Authorization is the only configuration; reauth covers re-linking the account.
   repair-issues:
     status: exempt
-    comment: No repair issues are raised yet.
+    comment: Auth failures go through the reauth flow; other errors are transient and retried by the coordinator.
   stale-devices: done
 
   # Platinum
