@@ -1,9 +1,10 @@
 """Platform providing event entities for UniFi Protect."""
 
 import dataclasses
-from typing import Any
+from typing import Any, override
 
-from uiprotect.data import ModelType
+from uiprotect import ProtectEvent
+from uiprotect.data import ModelType, SmartDetectObjectType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
 
 from homeassistant.components.event import (
@@ -22,6 +23,7 @@ from .const import (
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
     EVENT_TYPE_NFC_SCANNED,
+    EVENT_TYPE_PACKAGE_DETECTED,
     EVENT_TYPE_VEHICLE_DETECTED,
     KEYRINGS_KEY_TYPE_ID_NFC,
     KEYRINGS_ULP_ID,
@@ -79,6 +81,7 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
     entity_description: ProtectEventEntityDescription
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
@@ -104,6 +107,7 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
     entity_description: ProtectEventEntityDescription
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
@@ -148,6 +152,7 @@ class ProtectDeviceFingerprintEventEntity(
     entity_description: ProtectEventEntityDescription
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
@@ -204,6 +209,7 @@ class ProtectDeviceVehicleEventEntity(
     _fired_event_id: str | None = None  # Track last fired event to prevent duplicates
     _fired_event_data: dict[str, Any] | None = None  # Track event data when fired
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register cleanup callback when entity is added."""
         await super().async_added_to_hass()
@@ -317,6 +323,7 @@ class ProtectDeviceVehicleEventEntity(
         )
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
@@ -358,6 +365,40 @@ class ProtectDeviceVehicleEventEntity(
                 self._async_set_thumbnail_timer()
 
 
+class ProtectDeviceSmartDetectEventEntity(
+    EventEntityMixin, ProtectDeviceEntity, EventEntity
+):
+    """A UniFi Protect smart-detect event entity driven by the public events WS.
+
+    Used for object types that Protect models as discrete, point-in-time
+    detections (e.g. package): the camera fires once with a cooldown and the
+    smart-detect event is recorded already-ended, so a sustained binary sensor
+    can never reflect it. The public events websocket delivers these as proper
+    ``smartDetectZone`` events (the private API only exposes the unhandled
+    ``smartDetectObject`` model), so we subscribe there and fire a momentary
+    event when the description's object type matches.
+    """
+
+    entity_description: ProtectEventEntityDescription
+
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to public smart-detect events for this camera."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.data.async_subscribe_smart_detect(
+                self.device.mac, self._async_smart_detect_event
+            )
+        )
+
+    @callback
+    def _async_smart_detect_event(self, event: ProtectEvent) -> None:
+        description = self.entity_description
+        event_types = description.event_types
+        if event_types and description.ufp_obj_type in event.smart_detect_types:
+            self._trigger_event(event_types[0], {ATTR_EVENT_ID: event.id})
+            self.async_write_ha_state()
+
+
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
     ProtectEventEntityDescription(
         key="doorbell",
@@ -394,6 +435,14 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         ufp_event_obj="last_smart_detect_event",
         event_types=[EVENT_TYPE_VEHICLE_DETECTED],
         entity_class=ProtectDeviceVehicleEventEntity,
+    ),
+    ProtectEventEntityDescription(
+        key="package",
+        translation_key="package",
+        ufp_required_field="can_detect_package",
+        ufp_obj_type=SmartDetectObjectType.PACKAGE,
+        event_types=[EVENT_TYPE_PACKAGE_DETECTED],
+        entity_class=ProtectDeviceSmartDetectEventEntity,
     ),
 )
 

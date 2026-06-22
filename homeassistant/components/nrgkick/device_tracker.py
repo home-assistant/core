@@ -1,6 +1,6 @@
 """Device tracker platform for NRGkick."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant
@@ -55,16 +55,19 @@ class NRGkickDeviceTracker(NRGkickEntity, TrackerEntity):
         return float(value) if value is not None else None
 
     @property
+    @override
     def latitude(self) -> float | None:
         """Return latitude value of the device."""
         return self._gps_float("latitude")
 
     @property
+    @override
     def longitude(self) -> float | None:
         """Return longitude value of the device."""
         return self._gps_float("longitude")
 
     @property
+    @override
     def location_accuracy(self) -> float:
         """Return the location accuracy of the device."""
         return self._gps_float("accuracy") or 0.0

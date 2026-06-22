@@ -1,6 +1,6 @@
 """Support for Victron GX sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -101,6 +101,7 @@ class VictronSensor(VictronBaseEntity, SensorEntity):
         self._attr_native_value = VictronSensor._normalize_value(metric.value)
 
     @callback
+    @override
     def _on_update_cb(self, value: Any) -> None:
         self._attr_native_value = VictronSensor._normalize_value(value)
         self.async_write_ha_state()

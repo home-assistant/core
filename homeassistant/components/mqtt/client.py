@@ -1332,14 +1332,17 @@ class MQTT:
                 msg.payload[0:8192],
             )
             return
-        _LOGGER.debug(
-            "Received%s message on %s (qos=%s) IDs=%s: %s",
-            " retained" if msg.retain else "",
-            topic,
-            msg.qos,
-            identifiers,
-            msg.payload[0:8192],
-        )
+        if _LOGGER.isEnabledFor(logging.DEBUG):
+            # Guard the debug log so the payload is not sliced (copied) on
+            # every received message when debug logging is disabled.
+            _LOGGER.debug(
+                "Received%s message on %s (qos=%s) IDs=%s: %s",
+                " retained" if msg.retain else "",
+                topic,
+                msg.qos,
+                identifiers,
+                msg.payload[0:8192],
+            )
         msg_cache_by_subscription_topic: dict[str, ReceiveMessage] = {}
 
         for subscription in self._matching_subscriptions(topic, identifiers):

@@ -1,7 +1,7 @@
 """Support for SCSGate lights."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from scsgate.tasks import ToggleStatusTask
 import voluptuous as vol
@@ -75,6 +75,7 @@ class SCSGateLight(LightEntity):
         """Return the SCS ID."""
         return self._scs_id
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
 
@@ -83,6 +84,7 @@ class SCSGateLight(LightEntity):
         self._attr_is_on = True
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
 

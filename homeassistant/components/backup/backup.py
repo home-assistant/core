@@ -4,7 +4,7 @@ from collections.abc import AsyncIterator, Callable, Coroutine
 import json
 from pathlib import Path
 from tarfile import TarError
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.hassio import is_hassio
@@ -64,6 +64,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
                 LOGGER.warning("Unable to read backup %s: %s", backup_path, err)
         return backups
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -72,6 +73,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         """Download a backup file."""
         raise NotImplementedError
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -83,12 +85,14 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         """Upload a backup."""
         self._backups[backup.backup_id] = (backup, self.get_new_backup_path(backup))
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         if not self._loaded_backups:
             await self._load_backups()
         return [backup for backup, _ in self._backups.values()]
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -116,6 +120,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
 
         return backup
 
+    @override
     def get_backup_path(self, backup_id: str) -> Path:
         """Return the local path to an existing backup.
 
@@ -126,6 +131,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
         except KeyError as err:
             raise BackupNotFound(f"Backup {backup_id} does not exist") from err
 
+    @override
     def get_new_backup_path(self, backup: AgentBackup) -> Path:
         """Return the local path to a new backup."""
         candidate = self._backup_dir / suggested_filename(backup)
@@ -137,6 +143,7 @@ class CoreLocalBackupAgent(LocalBackupAgent):
             )
         return candidate
 
+    @override
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Delete a backup file."""
         if not self._loaded_backups:

@@ -2,6 +2,7 @@
 
 import functools
 import logging
+from typing import override
 
 from homeassistant.components.button import ButtonDeviceClass, ButtonEntity
 from homeassistant.config_entries import ConfigEntry
@@ -53,6 +54,7 @@ class ZHAButton(ZHAEntity, ButtonEntity):
             )
 
     @convert_zha_error_to_ha_error()
+    @override
     async def async_press(self) -> None:
         """Send out a update command."""
         await self.entity_data.entity.async_press()

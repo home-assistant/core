@@ -1,6 +1,6 @@
 """Support for Hitachi DHW."""
 
-from typing import Any
+from typing import Any, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -43,6 +43,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
     _attr_operation_list = [*OPERATION_MODE_TO_OVERKIZ]
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.device.states.get(OverkizState.CORE_DHW_TEMPERATURE)
@@ -53,6 +54,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         target_temperature = self.device.states.get(
@@ -64,6 +66,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.executor.async_execute_command(
@@ -72,6 +75,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
         )
 
     @property
+    @override
     def current_operation(self) -> str | None:
         """Return current operation ie. eco, electric, performance, ..."""
         modbus_control = self.device.states.get(OverkizState.MODBUS_CONTROL_DHW)
@@ -84,6 +88,7 @@ class HitachiDHW(OverkizEntity, WaterHeaterEntity):
 
         return None
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         # Turn water heater off

@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import cast, override
 
 from aiohomeconnect.model import EventKey, StatusKey
 
@@ -372,7 +372,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN20CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_20_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -380,7 +380,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN15CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_15_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -388,7 +388,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN10CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_10_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -396,7 +396,7 @@ EVENT_SENSORS = (
         appliance_types=("CoffeeMaker",),
     ),
     HomeConnectSensorEntityDescription(
-        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN5CUPS,
+        key=EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_CALC_N_CLEAN_IN_5_CUPS,
         device_class=SensorDeviceClass.ENUM,
         options=EVENT_OPTIONS,
         default_value="off",
@@ -554,6 +554,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 
     entity_description: HomeConnectSensorEntityDescription
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the sensor."""
         status = self.appliance.status[cast(StatusKey, self.bsh_key)].value
@@ -577,6 +578,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
             case _:
                 self._attr_native_value = status
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -602,6 +604,7 @@ class HomeConnectSensor(HomeConnectEntity, SensorEntity):
 class HomeConnectProgramSensor(HomeConnectSensor):
     """Sensor class for Home Connect running program information."""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register listener."""
         await super().async_added_to_hass()
@@ -632,6 +635,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         ]
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the sensor is available."""
         # These sensors are only available if the program is
@@ -639,6 +643,7 @@ class HomeConnectProgramSensor(HomeConnectSensor):
         # report erroneous values.
         return super().available and self.program_running
 
+    @override
     def update_native_value(self) -> None:
         """Update the program sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))
@@ -651,6 +656,7 @@ class HomeConnectEventSensor(HomeConnectSensor):
 
     _attr_entity_registry_enabled_default = False
 
+    @override
     def update_native_value(self) -> None:
         """Update the sensor's status."""
         event = self.appliance.events.get(cast(EventKey, self.bsh_key))

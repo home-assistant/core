@@ -1,6 +1,6 @@
 """Config flow to configure the Open-Meteo integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -17,6 +17,7 @@ class OpenMeteoFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
