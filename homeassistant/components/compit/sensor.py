@@ -575,6 +575,9 @@ DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
             CompitParameter.VENTILATION_ALARM: DESCRIPTIONS[
                 CompitParameter.VENTILATION_ALARM
             ],
+            CompitParameter.VENTILATION_GEAR: DESCRIPTIONS[
+                CompitParameter.VENTILATION_GEAR
+            ],
         },
     ),
     14: CompitDeviceDescription(
