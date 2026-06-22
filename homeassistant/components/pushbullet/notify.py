@@ -2,7 +2,7 @@
 
 import logging
 import mimetypes
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pushbullet import PushBullet, PushError
 from pushbullet.channel import Channel
@@ -57,6 +57,7 @@ class PushBulletNotificationService(BaseNotificationService):
             },
         }
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a specified target.
 

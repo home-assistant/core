@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiotedee import TedeeLock
 
@@ -75,6 +76,7 @@ class TedeeSensorEntity(TedeeDescriptionEntity, SensorEntity):
     entity_description: TedeeSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._lock)

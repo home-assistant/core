@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from volvocarsapi.api import VolvoCarsApi
 from volvocarsapi.models import (
@@ -108,6 +108,7 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
         self._api_calls: list[Callable[[], Coroutine[Any, Any, Any]]] = []
         self.context = context
 
+    @override
     async def _async_setup(self) -> None:
         try:
             self._api_calls = await self._async_determine_api_calls()
@@ -123,6 +124,7 @@ class VolvoBaseCoordinator(DataUpdateCoordinator[CoordinatorData]):
         if not self._api_calls:
             self.update_interval = None
 
+    @override
     async def _async_update_data(self) -> CoordinatorData:
         """Fetch data from API."""
 
@@ -224,6 +226,7 @@ class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
             "Volvo very slow interval coordinator",
         )
 
+    @override
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
@@ -236,6 +239,7 @@ class VolvoVerySlowIntervalCoordinator(VolvoBaseCoordinator):
             api.async_get_warnings,
         ]
 
+    @override
     async def _async_update_data(self) -> CoordinatorData:
         data = await super()._async_update_data()
 
@@ -286,6 +290,7 @@ class VolvoSlowIntervalCoordinator(VolvoBaseCoordinator):
             "Volvo location update",
         )
 
+    @override
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
@@ -380,6 +385,7 @@ class VolvoMediumIntervalCoordinator(VolvoBaseCoordinator):
 
         return data
 
+    @override
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:
@@ -450,6 +456,7 @@ class VolvoFastIntervalCoordinator(VolvoBaseCoordinator):
             "Volvo fast interval coordinator",
         )
 
+    @override
     async def _async_determine_api_calls(
         self,
     ) -> list[Callable[[], Coroutine[Any, Any, Any]]]:

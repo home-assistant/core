@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from pycasperglow import CasperGlow
 
@@ -66,6 +67,7 @@ class CasperGlowButton(CasperGlowEntity, ButtonEntity):
             f"{format_mac(coordinator.device.address)}_{description.key}"
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._async_command(self.entity_description.press_fn(self._device))

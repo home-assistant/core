@@ -29,6 +29,7 @@ from .const import (
     ATTR_PERIOD,
     ATTR_SETPOINT,
     DOMAIN,
+    REFRESH_BREAKS_IN_HA_VERSION,
     RESET_BREAKS_IN_HA_VERSION,
     SERVICE_BREAKS_IN_HA_VERSION,
     EvoService,
@@ -204,6 +205,11 @@ def setup_service_functions(
     @verify_domain_control(DOMAIN)
     async def force_refresh(call: ServiceCall) -> None:
         """Obtain the latest state data via the vendor's RESTful API."""
+        async_create_deprecation_issue_once(
+            hass,
+            "deprecated_refresh_system_service",
+            REFRESH_BREAKS_IN_HA_VERSION,
+        )
         await coordinator.async_refresh()
 
     @verify_domain_control(DOMAIN)

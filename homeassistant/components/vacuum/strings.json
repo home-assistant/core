@@ -190,18 +190,6 @@
   },
   "title": "Vacuum",
   "triggers": {
-    "docked": {
-      "description": "Triggers after one or more vacuums have returned to dock.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
-        },
-        "for": {
-          "name": "[%key:component::vacuum::common::trigger_for_name%]"
-        }
-      },
-      "name": "Vacuum returned to dock"
-    },
     "errored": {
       "description": "Triggers after one or more vacuums encounter an error.",
       "fields": {
@@ -225,6 +213,18 @@
         }
       },
       "name": "Vacuum cleaner paused cleaning"
+    },
+    "returned_to_dock": {
+      "description": "Triggers after one or more vacuums have returned to dock.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::vacuum::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::vacuum::common::trigger_for_name%]"
+        }
+      },
+      "name": "Vacuum returned to dock"
     },
     "started_cleaning": {
       "description": "Triggers after one or more vacuums start cleaning.",

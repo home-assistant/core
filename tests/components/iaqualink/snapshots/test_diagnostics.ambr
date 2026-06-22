@@ -1,0 +1,29 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'systems': list([
+      dict({
+        'data': dict({
+          'serial_number': '**REDACTED**',
+        }),
+        'devices': dict({
+          'aux_1': dict({
+            'class': 'IaquaLightSwitch',
+            'data': dict({
+              'name': 'aux_1',
+              'state': '1',
+            }),
+          }),
+          'pool_temp': dict({
+            'class': 'IaquaSensor',
+            'data': dict({
+              'name': 'pool_temp',
+              'value': '82',
+            }),
+          }),
+        }),
+        'online': True,
+      }),
+    ]),
+  })
+# ---

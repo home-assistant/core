@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pyliebherrhomeapi import TemperatureControl, TemperatureUnit
 
@@ -113,6 +113,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
             self._attr_translation_key = f"{description.translation_key}_{zone_key}"
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (temp_control := self.temperature_control) is None:
@@ -120,6 +121,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return self.entity_description.unit_fn(temp_control)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current value."""
         if TYPE_CHECKING:
@@ -127,6 +129,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return self.entity_description.value_fn(self.temperature_control)
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the minimum value."""
         if (temp_control := self.temperature_control) is None:
@@ -136,6 +139,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return min_val
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the maximum value."""
         if (temp_control := self.temperature_control) is None:
@@ -145,10 +149,12 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
         return max_val
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.temperature_control is not None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if TYPE_CHECKING:

@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_entry_flow
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
-from .const import DISPATCH_CONTROLLER_DISCOVERED, IZONE, TIMEOUT_DISCOVERY
+from .const import DISPATCH_CONTROLLER_DISCOVERED, DOMAIN, TIMEOUT_DISCOVERY
 from .discovery import async_start_discovery_service, async_stop_discovery_service
 
 _LOGGER = logging.getLogger(__name__)
@@ -39,4 +39,4 @@ async def _async_has_devices(hass: HomeAssistant) -> bool:
     return True
 
 
-config_entry_flow.register_discovery_flow(IZONE, "iZone Aircon", _async_has_devices)
+config_entry_flow.register_discovery_flow(DOMAIN, "iZone Aircon", _async_has_devices)

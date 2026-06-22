@@ -1,5 +1,7 @@
 """Casper Glow integration select platform for dimming time."""
 
+from typing import override
+
 from pycasperglow import GlowState
 
 from homeassistant.components.select import SelectEntity
@@ -39,12 +41,14 @@ class CasperGlowDimmingTimeSelect(CasperGlowEntity, SelectEntity, RestoreEntity)
         self._attr_unique_id = f"{format_mac(coordinator.device.address)}_dimming_time"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the currently selected dimming time from the coordinator."""
         if self.coordinator.last_dimming_time_minutes is None:
             return None
         return str(self.coordinator.last_dimming_time_minutes)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last known dimming time and register state update callback."""
         await super().async_added_to_hass()
@@ -75,6 +79,7 @@ class CasperGlowDimmingTimeSelect(CasperGlowEntity, SelectEntity, RestoreEntity)
             # to update the current state.
             self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set the dimming time."""
         await self._async_command(

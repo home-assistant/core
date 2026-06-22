@@ -1,5 +1,7 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
+from typing import override
+
 from pynobo import nobo
 
 from homeassistant.components.sensor import (
@@ -68,6 +70,7 @@ class NoboTemperatureSensor(NoboBaseEntity, SensorEntity):
         self._read_state()
 
     @callback
+    @override
     def _read_state(self) -> None:
         """Copy the current hub state onto the entity attributes."""
         if self._id not in self._nobo.components:
