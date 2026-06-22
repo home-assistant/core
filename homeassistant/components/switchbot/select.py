@@ -1,10 +1,9 @@
 """Select platform for SwitchBot."""
 
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-
-from collections.abc import Awaitable, Callable
 
 import switchbot
 from switchbot import NightLightState, SwitchbotOperationError
@@ -109,15 +108,17 @@ class SwitchBotOscillationSelectEntityDescription:
     setter: Callable[[switchbot.SwitchbotStandingFan, int], Awaitable[None]]
 
 
-OSCILLATION_SELECT_DESCRIPTIONS: tuple[SwitchBotOscillationSelectEntityDescription, ...] = (
+OSCILLATION_SELECT_DESCRIPTIONS: tuple[
+    SwitchBotOscillationSelectEntityDescription, ...
+] = (
     SwitchBotOscillationSelectEntityDescription(
-        translation_key=horizontal_oscillation_angle,
-        unique_id_suffix=horizontal_oscillation_angle,
+        translation_key="horizontal_oscillation_angle",
+        unique_id_suffix="horizontal_oscillation_angle",
         setter=lambda device, angle: device.set_horizontal_oscillation_angle(angle),
     ),
     SwitchBotOscillationSelectEntityDescription(
-        translation_key=vertical_oscillation_angle,
-        unique_id_suffix=vertical_oscillation_angle,
+        translation_key="vertical_oscillation_angle",
+        unique_id_suffix="vertical_oscillation_angle",
         setter=lambda device, angle: device.set_vertical_oscillation_angle(angle),
     ),
 )
@@ -146,7 +147,9 @@ class SwitchBotStandingFanOscillationSelect(SwitchbotEntity, SelectEntity):
         super().__init__(coordinator)
         self._description = description
         self._attr_translation_key = description.translation_key
-        self._attr_unique_id = f"{coordinator.base_unique_id}_{description.unique_id_suffix}"
+        self._attr_unique_id = (
+            f"{coordinator.base_unique_id}_{description.unique_id_suffix}"
+        )
 
     @exception_handler
     async def async_select_option(self, option: str) -> None:
