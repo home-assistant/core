@@ -6,7 +6,6 @@ from homeassistant.components.osram_infrared.const import (
     CONF_IR_EMITTER_ENTITY_ID,
     CONF_IR_RECEIVER_ENTITY_ID,
     DOMAIN,
-    get_unique_id,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
@@ -48,7 +47,6 @@ async def test_user_flow_success(hass: HomeAssistant) -> None:
         CONF_IR_EMITTER_ENTITY_ID: MOCK_INFRARED_EMITTER_ENTITY_ID,
         CONF_IR_RECEIVER_ENTITY_ID: MOCK_INFRARED_RECEIVER_ENTITY_ID,
     }
-    assert result["result"].unique_id == get_unique_id(MOCK_INFRARED_EMITTER_ENTITY_ID)
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")
@@ -75,18 +73,6 @@ async def test_user_flow_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-
-
-@pytest.mark.usefixtures("init_infrared")
-async def test_user_flow_no_emitters(hass: HomeAssistant) -> None:
-    """Test user flow aborts when no infrared emitter exists."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER},
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "no_infrared_emitters"
 
 
 @pytest.mark.usefixtures("mock_infrared_emitter_entity")

@@ -1,52 +1,70 @@
-"""Config flow for the OSRAM infrared integration."""
+"""Config flow for OSRAM Infrared."""
 
 from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.components.infrared import (
-    DOMAIN as INFRARED_DOMAIN,
-    async_get_emitters,
-    async_get_receivers,
-)
+from homeassistant.components.infrared import DOMAIN as INFRARED_DOMAIN
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from .const import (
-    CONF_IR_EMITTER_ENTITY_ID,
-    CONF_IR_RECEIVER_ENTITY_ID,
-    DOMAIN,
-    get_unique_id,
-)
+from .const import CONF_IR_EMITTER_ENTITY_ID, CONF_IR_RECEIVER_ENTITY_ID, DOMAIN
 
 
 class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for OSRAM infrared."""
+    """Handle a config flow for OSRAM Infrared."""
 
     VERSION = 2
+
+    def _async_is_emitter_already_configured(self, emitter_entity_id: str) -> bool:
+        """Return if the infrared emitter is already configured."""
+        return any(
+            entry.data.get(CONF_IR_EMITTER_ENTITY_ID) == emitter_entity_id
+            for entry in self._async_current_entries()
+        )
+
+    def _async_has_infrared_entities(self) -> bool:
+        """Return if any infrared entities are available."""
+        entity_registry = er.async_get(self.hass)
+
+        return any(
+            entity_entry.domain == INFRARED_DOMAIN
+            for entity_entry in entity_registry.entities.values()
+        )
+
+    def _async_get_entry_title(self, emitter_entity_id: str) -> str:
+        """Return config entry title for the selected emitter."""
+        entity_registry = er.async_get(self.hass)
+        entity_entry = entity_registry.async_get(emitter_entity_id)
+
+        if entity_entry is None:
+            emitter_name = emitter_entity_id
+        else:
+            emitter_name = (
+                entity_entry.name
+                or entity_entry.original_name
+                or entity_entry.entity_id
+            )
+
+        return f"OSRAM light via {emitter_name}"
 
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        emitter_entity_ids = async_get_emitters(self.hass)
-        receiver_entity_ids = async_get_receivers(self.hass)
-
-        # An emitter is mandatory because the integration controls a light.
-        # A receiver is optional and only improves assumed-state tracking.
-        if not emitter_entity_ids:
-            return self.async_abort(reason="no_infrared_emitters")
+        errors: dict[str, str] = {}
 
         if user_input is not None:
             emitter_entity_id = user_input[CONF_IR_EMITTER_ENTITY_ID]
 
-            await self.async_set_unique_id(get_unique_id(emitter_entity_id))
-            self._abort_if_unique_id_configured()
+            if self._async_is_emitter_already_configured(emitter_entity_id):
+                return self.async_abort(reason="already_configured")
 
             entity_registry = er.async_get(self.hass)
             entity_entry = entity_registry.async_get(emitter_entity_id)
+
             entity_name = (
                 entity_entry.name or entity_entry.original_name or emitter_entity_id
                 if entity_entry
@@ -63,17 +81,12 @@ class OsramIrConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=vol.Schema(
                 {
                     vol.Required(CONF_IR_EMITTER_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=emitter_entity_ids,
-                        )
+                        EntitySelectorConfig(domain=INFRARED_DOMAIN)
                     ),
                     vol.Optional(CONF_IR_RECEIVER_ENTITY_ID): EntitySelector(
-                        EntitySelectorConfig(
-                            domain=INFRARED_DOMAIN,
-                            include_entities=receiver_entity_ids,
-                        )
+                        EntitySelectorConfig(domain=INFRARED_DOMAIN)
                     ),
                 }
             ),
+            errors=errors,
         )
