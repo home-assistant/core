@@ -14,13 +14,6 @@ from pyatv.interface import AppleTV as AppleTVInterface, DeviceListener
 from homeassistant.components import zeroconf
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_CONNECTIONS,
-    ATTR_IDENTIFIERS,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
-    ATTR_NAME,
-    ATTR_SUGGESTED_AREA,
-    ATTR_SW_VERSION,
     CONF_ADDRESS,
     CONF_NAME,
     EVENT_HOMEASSISTANT_STOP,
@@ -354,12 +347,12 @@ class AppleTVManager(DeviceListener):
     @callback
     def _async_setup_device_registry(self) -> None:
         attrs = {
-            ATTR_IDENTIFIERS: {(DOMAIN, self.config_entry.unique_id)},
-            ATTR_MANUFACTURER: "Apple",
-            ATTR_NAME: self.config_entry.data[CONF_NAME],
+            dr.DeviceInfoAttribute.IDENTIFIERS: {(DOMAIN, self.config_entry.unique_id)},
+            dr.DeviceInfoAttribute.MANUFACTURER: "Apple",
+            dr.DeviceInfoAttribute.NAME: self.config_entry.data[CONF_NAME],
         }
-        attrs[ATTR_SUGGESTED_AREA] = (
-            attrs[ATTR_NAME]
+        attrs[dr.DeviceInfoAttribute.SUGGESTED_AREA] = (
+            attrs[dr.DeviceInfoAttribute.NAME]
             .removesuffix(f" {DEFAULT_NAME_TV}")
             .removesuffix(f" {DEFAULT_NAME_HP}")
         )
@@ -367,15 +360,17 @@ class AppleTVManager(DeviceListener):
         if self.atv:
             dev_info = self.atv.device_info
 
-            attrs[ATTR_MODEL] = (
+            attrs[dr.DeviceInfoAttribute.MODEL] = (
                 dev_info.raw_model
                 if dev_info.model is DeviceModel.Unknown and dev_info.raw_model
                 else model_str(dev_info.model)
             )
-            attrs[ATTR_SW_VERSION] = dev_info.version
+            attrs[dr.DeviceInfoAttribute.SW_VERSION] = dev_info.version
 
             if dev_info.mac:
-                attrs[ATTR_CONNECTIONS] = {(dr.CONNECTION_NETWORK_MAC, dev_info.mac)}
+                attrs[dr.DeviceInfoAttribute.CONNECTIONS] = {
+                    (dr.CONNECTION_NETWORK_MAC, dev_info.mac)
+                }
 
         device_registry = dr.async_get(self.hass)
         device_registry.async_get_or_create(
