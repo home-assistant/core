@@ -8,7 +8,6 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
-from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent, ProtectEventChannel
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
@@ -51,11 +50,6 @@ from .const import (
 from .utils import async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
-
-# Consecutive failed re-prime attempts (one per reconnect) before the retry log
-# escalates from debug to a single warning, so a dead public feed is visible.
-PUBLIC_EVENTS_RETRY_WARN_THRESHOLD = 3
-
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
 type UFPConfigEntry = ConfigEntry[ProtectData]
 
@@ -105,8 +99,6 @@ class ProtectData:
         ] = defaultdict(set)
         self._pending_camera_ids: set[str] = set()
         self._unsubs: list[CALLBACK_TYPE] = []
-        self._public_events_subscribed = False
-        self._public_events_retries = 0
         self._auth_failures = 0
         self.auth_retries = 0
         self.last_update_success = False
@@ -213,63 +205,16 @@ class ProtectData:
 
     @callback
     def async_subscribe_public_events(self) -> None:
-        """Subscribe to the public events websocket if the bootstrap is primed.
+        """Subscribe to the public events websocket.
 
-        Must run *after* ``update_public()`` primes the bootstrap, as
-        ``subscribe_events()`` raises otherwise. Idempotent and a no-op while
-        unprimed; if priming failed at setup it is retried on the next websocket
-        reconnect (see ``_async_resubscribe_public_events``), so package
-        detection self-heals instead of staying dead until reload.
+        Must run *after* ``update_public()`` has primed the public bootstrap;
+        the setup flow guarantees this (a failed prime aborts setup), and
+        ``subscribe_events()`` raises otherwise. This is the source of truth for
+        smart-detect events (e.g. package) that the private API only surfaces as
+        the unhandled ``smartDetectObject`` model. uiprotect owns websocket
+        reconnection and keeps the callback attached, so this is a one-shot.
         """
-        if self._public_events_subscribed:
-            return
-        if not self.api.has_public_bootstrap:
-            _LOGGER.debug(
-                "Public API bootstrap unavailable; smart-detect events such as "
-                "package detection will not be delivered until it is primed"
-            )
-            return
         self._unsubs.append(self.api.subscribe_events(self._async_process_public_event))
-        self._public_events_subscribed = True
-        # Reset so the next failure episode is measured (and warns) from zero.
-        self._public_events_retries = 0
-
-    async def _async_resubscribe_public_events(self) -> None:
-        """Re-prime the public bootstrap and subscribe to public events.
-
-        Runs on websocket reconnect to recover from a transient
-        ``update_public()`` failure at setup. ``has_public_bootstrap`` latches
-        true once primed, so this is skipped entirely once subscribed.
-        """
-        if self._public_events_subscribed:
-            return
-        if not self.api.has_public_bootstrap:
-            try:
-                await self.api.update_public()
-            except (
-                TimeoutError,
-                ClientError,
-                ServerDisconnectedError,
-                NotAuthorized,
-            ):
-                self._public_events_retries += 1
-                # Warn on the threshold and then periodically, so a sustained
-                # outage stays visible instead of going silent after one warning.
-                if (
-                    self._public_events_retries % PUBLIC_EVENTS_RETRY_WARN_THRESHOLD
-                    == 0
-                ):
-                    _LOGGER.warning(
-                        "Public API bootstrap still failing after %d attempts; "
-                        "smart-detect events such as package detection will not be "
-                        "delivered until it recovers",
-                        self._public_events_retries,
-                        exc_info=True,
-                    )
-                else:
-                    _LOGGER.debug("Public API bootstrap retry failed", exc_info=True)
-                return
-        self.async_subscribe_public_events()
 
     @callback
     def _async_process_public_devices_ws_message(
@@ -341,14 +286,7 @@ class ProtectData:
     @callback
     def _async_websocket_state_changed(self, state: WebsocketState) -> None:
         """Handle a change in the websocket state."""
-        connected = state is WebsocketState.CONNECTED
-        self._async_update_change(connected)
-        if connected and not self._public_events_subscribed:
-            self._entry.async_create_background_task(
-                self._hass,
-                self._async_resubscribe_public_events(),
-                "unifiprotect-resubscribe-public-events",
-            )
+        self._async_update_change(state is WebsocketState.CONNECTED)
 
     @callback
     def _async_public_ws_state_changed(self, state: WebsocketState) -> None:
@@ -405,8 +343,6 @@ class ProtectData:
         for unsub in self._unsubs:
             unsub()
         self._unsubs.clear()
-        self._public_events_subscribed = False
-        self._public_events_retries = 0
         await self.api.async_disconnect_ws()
 
     async def async_refresh(self) -> None:
