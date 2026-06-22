@@ -12,6 +12,7 @@ import pytest
 from python_open_router import KeyData, ModelsDataWrapper
 
 from homeassistant.components.open_router.const import (
+    CONF_OUTPUT_MODALITIES,
     CONF_PROMPT,
     CONF_WEB_SEARCH,
     DOMAIN,
@@ -61,10 +62,17 @@ def conversation_subentry_data(enable_assist: bool, web_search: bool) -> dict[st
 
 
 @pytest.fixture
-def ai_task_data_subentry_data() -> dict[str, Any]:
+def output_modalities() -> list[str]:
+    """Mock AI task output modalities."""
+    return ["text", "image"]
+
+
+@pytest.fixture
+def ai_task_data_subentry_data(output_modalities: list[str]) -> dict[str, Any]:
     """Mock AI task subentry data."""
     return {
-        CONF_MODEL: "google/gemini-1.5-pro",
+        CONF_MODEL: "google/gemini-2.5-flash-image",
+        CONF_OUTPUT_MODALITIES: output_modalities,
     }
 
 
@@ -78,6 +86,8 @@ def mock_config_entry(
     return MockConfigEntry(
         title="OpenRouter",
         domain=DOMAIN,
+        version=1,
+        minor_version=3,
         data={
             CONF_API_KEY: "bla",
         },
@@ -93,7 +103,7 @@ def mock_config_entry(
                 data=ai_task_data_subentry_data,
                 subentry_id="ABCDEG",
                 subentry_type="ai_task_data",
-                title="Gemini 1.5 Pro",
+                title="Gemini 2.5 Flash Image",
                 unique_id=None,
             ),
         ],
@@ -155,6 +165,21 @@ async def mock_open_router_client(hass: HomeAssistant) -> AsyncGenerator[AsyncMo
             limit_remaining=None,
             is_free_tier=True,
         )
+        models = await async_load_fixture(hass, "models.json", DOMAIN)
+        client.get_models.return_value = ModelsDataWrapper.from_json(models).data
+        yield client
+
+
+@pytest.fixture
+async def mock_open_router_client_setup(
+    hass: HomeAssistant,
+) -> AsyncGenerator[AsyncMock]:
+    """Mock the OpenRouter client used during entry setup and migration."""
+    with patch(
+        "homeassistant.components.open_router.OpenRouterClient",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
         models = await async_load_fixture(hass, "models.json", DOMAIN)
         client.get_models.return_value = ModelsDataWrapper.from_json(models).data
         yield client

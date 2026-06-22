@@ -1,14 +1,16 @@
 """The OpenRouter integration."""
 
 from openai import AsyncOpenAI, AuthenticationError, OpenAIError
+from python_open_router import OpenRouterClient, OpenRouterError
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_API_KEY, Platform
+from homeassistant.const import CONF_API_KEY, CONF_MODEL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.httpx_client import get_async_client
 
-from .const import CONF_WEB_SEARCH, LOGGER
+from .const import CONF_OUTPUT_MODALITIES, CONF_WEB_SEARCH, LOGGER
 
 PLATFORMS = [Platform.AI_TASK, Platform.CONVERSATION]
 
@@ -75,6 +77,37 @@ async def async_migrate_entry(
             )
 
         hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    if entry.version == 1 and entry.minor_version < 3:
+        client = OpenRouterClient(
+            entry.data[CONF_API_KEY], async_get_clientsession(hass)
+        )
+        try:
+            models = {model.id: model for model in await client.get_models()}
+        except OpenRouterError as err:
+            LOGGER.error("Error fetching models during migration: %s", err)
+            return False
+
+        for subentry in entry.subentries.values():
+            if subentry.subentry_type != "ai_task_data":
+                continue
+            if CONF_OUTPUT_MODALITIES in subentry.data:
+                continue
+
+            model = models.get(subentry.data[CONF_MODEL])
+            modalities = (
+                [str(modality) for modality in model.architecture.output_modalities]
+                if model
+                else []
+            )
+
+            hass.config_entries.async_update_subentry(
+                entry,
+                subentry,
+                data={**subentry.data, CONF_OUTPUT_MODALITIES: modalities},
+            )
+
+        hass.config_entries.async_update_entry(entry, minor_version=3)
 
     LOGGER.info(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
