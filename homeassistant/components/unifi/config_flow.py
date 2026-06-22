@@ -24,6 +24,7 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import (
     CONF_HOST,
+    CONF_NAME,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
@@ -192,7 +193,7 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.context["title_placeholders"] = {
             CONF_HOST: reauth_entry.data[CONF_HOST],
-            CONF_SITE_ID: reauth_entry.title,
+            CONF_NAME: reauth_entry.title,
         }
 
         self.reauth_schema = {
@@ -231,8 +232,13 @@ class UnifiFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates=self.config, reload_on_update=False)
 
         self.context["title_placeholders"] = {
-            CONF_HOST: host,
-            CONF_SITE_ID: DEFAULT_SITE_ID,
+            CONF_NAME: (
+                discovery_info.get("name")
+                or discovery_info.get("hostname")
+                or discovery_info.get("product_name")
+                or "UniFi Network"
+            ),
+            CONF_HOST: source_ip,
         }
         self.context["configuration_url"] = f"https://{host}"
 
