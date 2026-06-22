@@ -4,7 +4,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import Any
 
-from astral.location import Elevation, Location
+from astral import Observer
+import astral.sun
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -17,8 +18,8 @@ from homeassistant.helpers import event
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.sun import (
-    get_astral_location,
-    get_location_astral_event_next,
+    get_astral_observer,
+    get_observer_astral_event_next,
 )
 from homeassistant.util import dt as dt_util
 
@@ -66,6 +67,13 @@ PHASE_SMALL_DAY = "small_day"
 # > 10° above horizon
 PHASE_DAY = "day"
 
+# Depression angle (degrees below the horizon) of the sun at each dawn/dusk
+# phase boundary. A negative value means the sun is above the horizon.
+DEPRESSION_ASTRONOMICAL = 18.0
+DEPRESSION_NAUTICAL = 12.0
+DEPRESSION_CIVIL = 6.0
+DEPRESSION_SMALL_DAY = -10.0
+
 # 4 mins is one degree of arc change of the sun on its circle.
 # During the night and the middle of the day we don't update
 # that much since it's not important.
@@ -99,8 +107,7 @@ class Sun(Entity):
     _attr_name = "Sun"
     entity_id = ENTITY_ID
 
-    location: Location
-    elevation: Elevation
+    observer: Observer
     next_rising: datetime
     next_setting: datetime
     next_dawn: datetime
@@ -132,11 +139,10 @@ class Sun(Entity):
     @callback
     def update_location(self, _: Event | None = None, initial: bool = False) -> None:
         """Update location."""
-        location, elevation = get_astral_location(self.hass)
-        if not initial and location == self.location:
+        observer = get_astral_observer(self.hass)
+        if not initial and observer == self.observer:
             return
-        self.location = location
-        self.elevation = elevation
+        self.observer = observer
         if self._update_events_listener:
             self._update_events_listener()
         self.update_events()
@@ -176,10 +182,14 @@ class Sun(Entity):
         }
 
     def _check_event(
-        self, utc_point_in_time: datetime, sun_event: str, before: str | None
+        self,
+        utc_point_in_time: datetime,
+        sun_event: str,
+        before: str | None,
+        depression: float | None = None,
     ) -> datetime:
-        next_utc = get_location_astral_event_next(
-            self.location, self.elevation, sun_event, utc_point_in_time
+        next_utc = get_observer_astral_event_next(
+            self.observer, sun_event, utc_point_in_time, depression=depression
         )
         if next_utc < self._next_change:
             self._next_change = next_utc
@@ -195,39 +205,46 @@ class Sun(Entity):
 
         # Work our way around the solar cycle, figure out the next
         # phase. Some of these are stored.
-        self.location.solar_depression = "astronomical"
-        self._check_event(utc_point_in_time, "dawn", PHASE_NIGHT)
-        self.location.solar_depression = "nautical"
-        self._check_event(utc_point_in_time, "dawn", PHASE_ASTRONOMICAL_TWILIGHT)
-        self.location.solar_depression = "civil"
+        self._check_event(
+            utc_point_in_time, "dawn", PHASE_NIGHT, DEPRESSION_ASTRONOMICAL
+        )
+        self._check_event(
+            utc_point_in_time, "dawn", PHASE_ASTRONOMICAL_TWILIGHT, DEPRESSION_NAUTICAL
+        )
         self.next_dawn = self._check_event(
-            utc_point_in_time, "dawn", PHASE_NAUTICAL_TWILIGHT
+            utc_point_in_time, "dawn", PHASE_NAUTICAL_TWILIGHT, DEPRESSION_CIVIL
         )
         self.next_rising = self._check_event(
             utc_point_in_time, SUN_EVENT_SUNRISE, PHASE_TWILIGHT
         )
-        self.location.solar_depression = -10
-        self._check_event(utc_point_in_time, "dawn", PHASE_SMALL_DAY)
+        self._check_event(
+            utc_point_in_time, "dawn", PHASE_SMALL_DAY, DEPRESSION_SMALL_DAY
+        )
         self.next_noon = self._check_event(utc_point_in_time, "noon", None)
-        self._check_event(utc_point_in_time, "dusk", PHASE_DAY)
+        self._check_event(utc_point_in_time, "dusk", PHASE_DAY, DEPRESSION_SMALL_DAY)
         self.next_setting = self._check_event(
             utc_point_in_time, SUN_EVENT_SUNSET, PHASE_SMALL_DAY
         )
-        self.location.solar_depression = "civil"
-        self.next_dusk = self._check_event(utc_point_in_time, "dusk", PHASE_TWILIGHT)
-        self.location.solar_depression = "nautical"
-        self._check_event(utc_point_in_time, "dusk", PHASE_NAUTICAL_TWILIGHT)
-        self.location.solar_depression = "astronomical"
-        self._check_event(utc_point_in_time, "dusk", PHASE_ASTRONOMICAL_TWILIGHT)
+        self.next_dusk = self._check_event(
+            utc_point_in_time, "dusk", PHASE_TWILIGHT, DEPRESSION_CIVIL
+        )
+        self._check_event(
+            utc_point_in_time, "dusk", PHASE_NAUTICAL_TWILIGHT, DEPRESSION_NAUTICAL
+        )
+        self._check_event(
+            utc_point_in_time,
+            "dusk",
+            PHASE_ASTRONOMICAL_TWILIGHT,
+            DEPRESSION_ASTRONOMICAL,
+        )
         self.next_midnight = self._check_event(utc_point_in_time, "midnight", None)
-        self.location.solar_depression = "civil"
 
         # if the event was solar midday or midnight, phase will now
         # be None. Solar noon doesn't always happen when the sun is
         # even in the day at the poles, so we can't rely on it.
         # Need to calculate phase if next is noon or midnight
         if self.phase is None:
-            elevation = self.location.solar_elevation(self._next_change, self.elevation)
+            elevation = astral.sun.elevation(self.observer, self._next_change)
             if elevation >= 10:
                 self.phase = PHASE_DAY
             elif elevation >= 0:
@@ -263,10 +280,10 @@ class Sun(Entity):
         # Grab current time in case system clock changed since last time we ran.
         utc_point_in_time = dt_util.utcnow()
         self.solar_azimuth = round(
-            self.location.solar_azimuth(utc_point_in_time, self.elevation), 2
+            astral.sun.azimuth(self.observer, utc_point_in_time), 2
         )
         self.solar_elevation = round(
-            self.location.solar_elevation(utc_point_in_time, self.elevation), 2
+            astral.sun.elevation(self.observer, utc_point_in_time), 2
         )
 
         _LOGGER.debug(
