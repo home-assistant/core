@@ -13,6 +13,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_NAME
+from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
@@ -74,6 +75,7 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             return await self.async_step_hubv1()
         return await self.async_step_hubv2()
 
+    @callback
     def _async_finish_flow(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Update the existing entry when reconfiguring, otherwise create one."""
         if self.source == SOURCE_RECONFIGURE:
