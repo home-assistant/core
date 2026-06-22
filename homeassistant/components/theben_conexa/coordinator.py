@@ -3,12 +3,17 @@
 from datetime import datetime, timedelta
 import logging
 
-from theben_conexa_smgw import ConexaSMGW
+import aiohttp
+from theben_conexa_smgw import ConexaSMGW, checkNetworkConnection
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -47,16 +52,28 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
 
     async def async_init(self) -> None:
         """Asynchronous Initialization and registering the update schedule."""
-        # config_entry is set in __init__ but mypy seems not to understand...
+        # config_entry is set in __init__ but somebody might have reset it to None by now...
         if self.config_entry is None:
             raise ValueError("config_entry set in __init__ mysteriously disappeared")
 
-        self._api = await ConexaSMGW.create(
-            async_get_clientsession(self.hass),
-            self.config_entry.data[CONF_HOST],
-            self.config_entry.data[CONF_USERNAME],
-            self.config_entry.data[CONF_PASSWORD],
-        )
+        try:
+            # This function tries to establish a TCP connection and raises an exception on error
+            await checkNetworkConnection(self.config_entry.data[CONF_HOST])
+        except aiohttp.ClientError as e:
+            raise ConfigEntryNotReady("Device is not reachable") from e
+
+        # Unfortunately the Conexa 3.0 doesn't provide separate authentication feedback it just ignores
+        # all requests with invalid username/password, That's why here we need to assume it failed
+        # because of wrong credentials, as we checked for connectivity just before and the device was reachable.
+        try:
+            self._api = await ConexaSMGW.create(
+                async_get_clientsession(self.hass),
+                self.config_entry.data[CONF_HOST],
+                self.config_entry.data[CONF_USERNAME],
+                self.config_entry.data[CONF_PASSWORD],
+            )
+        except aiohttp.ClientError as e:
+            raise ConfigEntryAuthFailed("Authentication failed") from e
 
         self.gateway_info = self._api.gatewayInfo
 
