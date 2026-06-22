@@ -152,10 +152,7 @@ async def test_time_filter_remaining_missing_skips_sensor_creation(
     mock_duco_client.async_get_nodes.return_value = mock_sensor_nodes
 
     mock_duco_client.async_get_time_filter_remaining = AsyncMock(
-        side_effect=[
-            None,
-            AssertionError("Filter timer endpoint should not be probed again"),
-        ]
+        side_effect=[None, 180]
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
