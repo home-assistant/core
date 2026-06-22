@@ -26,8 +26,6 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 2
 
-    fetched_systems: list[Device]
-
     def __init__(self) -> None:
         """Initialize with empty username and password."""
         self.username: str | None = None
