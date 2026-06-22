@@ -372,11 +372,15 @@ class EsphomeAssistSatellite(
             data_to_send = {"tts_start_streaming": "1"}
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END:
             assert event.data is not None
+            intent_output = event.data["intent_output"]
             data_to_send = {
-                "conversation_id": event.data["intent_output"]["conversation_id"],
+                "conversation_id": intent_output["conversation_id"],
                 "continue_conversation": str(
-                    int(event.data["intent_output"]["continue_conversation"])
+                    int(intent_output["continue_conversation"])
                 ),
+                "speech": intent_output["response"]["speech"]
+                .get("plain", {})
+                .get("speech", ""),
             }
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START:
             assert event.data is not None
