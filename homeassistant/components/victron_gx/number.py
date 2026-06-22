@@ -1,6 +1,6 @@
 """Support for Victron GX number entities."""
 
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from victron_mqtt import (
     Device as VictronVenusDevice,
@@ -82,10 +82,12 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
             self._attr_native_step = metric.step
 
     @callback
+    @override
     def _on_update_cb(self, value: Any) -> None:
         self._attr_native_value = value
         self.async_write_ha_state()
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
         if TYPE_CHECKING:
