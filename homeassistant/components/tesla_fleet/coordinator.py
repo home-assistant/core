@@ -3,7 +3,7 @@
 from datetime import datetime, timedelta
 from random import randint
 from time import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
@@ -141,6 +141,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else [ep for ep in ENDPOINTS if ep is not VehicleDataEndpoint.LOCATION_DATA]
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
 
@@ -221,6 +222,7 @@ class TeslaFleetEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.data = {}
         self.updated_once = False
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using TeslaFleet API."""
 
@@ -292,6 +294,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self.data = {}
         self.updated_once = False
 
+    @override
     async def async_config_entry_first_refresh(self) -> None:
         """Set up the data coordinator."""
         await super().async_config_entry_first_refresh()
@@ -303,6 +306,7 @@ class TeslaFleetEnergySiteHistoryCoordinator(DataUpdateCoordinator[dict[str, Any
         self._schedule_refresh()
         self.update_interval = ENERGY_HISTORY_INTERVAL
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site history data using Tesla Fleet API."""
 
@@ -381,6 +385,7 @@ class TeslaFleetEnergySiteInfoCoordinator(DataUpdateCoordinator[dict[str, Any]])
         self.data = flatten(product)
         self.updated_once = False
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update energy site data using TeslaFleet API."""
 
