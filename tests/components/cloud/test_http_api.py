@@ -1518,6 +1518,69 @@ async def test_update_google_entity(
     }
 
 
+async def test_update_google_entity_name_aliases(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_ws_client: WebSocketGenerator,
+    setup_cloud: None,
+) -> None:
+    """Test that we can set and clear the Google name and aliases overrides."""
+    entry = entity_registry.async_get_or_create(
+        "light", "test", "unique", suggested_object_id="kitchen"
+    )
+    hass.states.async_set(entry.entity_id, "on")
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/google_assistant/entities/update",
+            "entity_id": entry.entity_id,
+            "name": "Override",
+            "aliases": ["nick1", "nick2"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    settings = exposed_entities.async_get_entity_settings(hass, entry.entity_id)
+    assert settings["cloud.google_assistant"] == {
+        "name": "Override",
+        "aliases": ["nick1", "nick2"],
+    }
+
+    await client.send_json_auto_id(
+        {"type": "cloud/google_assistant/entities/get", "entity_id": entry.entity_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "entity_id": entry.entity_id,
+        "traits": ["action.devices.traits.OnOff"],
+        "might_2fa": False,
+        "disable_2fa": None,
+        "name": "Override",
+        "aliases": ["nick1", "nick2"],
+    }
+
+    await client.send_json_auto_id(
+        {
+            "type": "cloud/google_assistant/entities/update",
+            "entity_id": entry.entity_id,
+            "name": None,
+            "aliases": [],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+
+    await client.send_json_auto_id(
+        {"type": "cloud/google_assistant/entities/get", "entity_id": entry.entity_id}
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    assert response["result"]["name"] is None
+    assert response["result"]["aliases"] == []
+
+
 async def test_list_alexa_entities(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
