@@ -78,7 +78,9 @@ def _run_mypy(code: str, tmp_path: Path, mypy_path: str | None = None) -> list[s
 
 
 _PRELUDE = """
+import dataclasses
 from enum import Enum, IntEnum, IntFlag, StrEnum
+from typing import NamedTuple
 
 class ConfigEntryState(Enum):
     LOADED = "loaded"
@@ -106,6 +108,36 @@ class AudioBitRates(int, Enum):
 class LegacyStr(str, Enum):
     A = "a"
     B = "b"
+
+class HomeeCoverState(float, Enum):
+    OPEN = 0.0
+    CLOSED = 1.0
+
+class LegacyBytes(bytes, Enum):
+    A = b"a"
+    B = b"b"
+
+@dataclasses.dataclass(frozen=True)
+class _VariantInfo:
+    label: str
+
+class HardwareVariant(_VariantInfo, Enum):
+    A = ("a",)
+    B = ("b",)
+
+class _NamedVariant(NamedTuple):
+    label: str
+
+class NamedTupleEnum(_NamedVariant, Enum):
+    A = ("a",)
+    B = ("b",)
+
+class _BaseStates(Enum):
+    pass
+
+class DerivedStates(_BaseStates):
+    ON = 1
+    OFF = 2
 """
 
 
@@ -180,6 +212,18 @@ def fn(source: SourceCodes | None) -> bool:
             _IS_EQ,
             id="optional_enum_under_strict_equality",
         ),
+        # An enum deriving from an intermediate ``Enum`` base (no data mixin)
+        # is still identity-based and must be flagged — the structural check
+        # must not mistake the intermediate base for a value mixin.
+        pytest.param(
+            """
+def fn(s: DerivedStates) -> bool:
+    return s == DerivedStates.ON
+""",
+            "DerivedStates",
+            _IS_EQ,
+            id="derived_from_intermediate_enum_base",
+        ),
     ],
 )
 def test_bad_plain_enum(
@@ -232,6 +276,39 @@ def fn(v: LegacyStr) -> bool:
     return v == LegacyStr.A
 """,
             id="str_enum_mixin_not_allowlisted",
+        ),
+        # A ``(float, Enum)`` mixin is value-based too (``__eq__`` from float).
+        pytest.param(
+            """
+def fn(s: HomeeCoverState) -> bool:
+    return s == HomeeCoverState.OPEN
+""",
+            id="float_enum_mixin_not_allowlisted",
+        ),
+        # And a ``(bytes, Enum)`` mixin likewise.
+        pytest.param(
+            """
+def fn(v: LegacyBytes) -> bool:
+    return v == LegacyBytes.A
+""",
+            id="bytes_enum_mixin_not_allowlisted",
+        ),
+        # A ``@dataclass`` mixin is value-based (generated ``__eq__`` compares
+        # by value), even though the mixin is not a builtin primitive.
+        pytest.param(
+            """
+def fn(v: HardwareVariant) -> bool:
+    return v == HardwareVariant.A
+""",
+            id="dataclass_mixin_not_flagged",
+        ),
+        # A ``NamedTuple`` mixin is value-based too (tuple ``__eq__``).
+        pytest.param(
+            """
+def fn(v: NamedTupleEnum) -> bool:
+    return v == NamedTupleEnum.A
+""",
+            id="namedtuple_mixin_not_flagged",
         ),
         # Comparing a raw ``str`` against a ``StrEnum`` member is legitimate.
         pytest.param(

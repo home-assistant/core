@@ -4,13 +4,21 @@ Scope is intentionally narrow: only **plain ``enum.Enum`` subclasses** are
 flagged by default, because Python's ``Enum.__eq__`` is identity-based —
 ``a == b`` and ``a is b`` produce the same result there.
 
-``StrEnum``/``IntEnum``/``ReprEnum`` (and the legacy mixin form
-``class X(str, Enum)`` / ``class X(int, Enum)``) are **skipped** because
-their ``__eq__`` delegates to the underlying ``str``/``int`` and accepts raw
-primitive values: callers routinely pass ``"on"`` where a ``HVACMode``
-parameter is annotated, and ``==`` silently makes that work while ``is``
-silently breaks it. Switching those sites to ``is`` is a runtime-behavior
-change, not a refactor.
+Any enum with a base outside the ``Enum`` hierarchy is **skipped**, because
+such a mixin typically gives it a value-based ``__eq__``: a primitive
+(``StrEnum``/``IntEnum`` or the legacy ``class X(str, Enum)`` /
+``class X(int, Enum)`` / ``class X(float, Enum)`` form), a ``@dataclass``, or a
+``NamedTuple``. Their ``==`` compares by value and accepts raw operands:
+callers routinely pass ``"on"`` where a ``HVACMode`` parameter is annotated,
+and ``==`` silently makes that work while ``is`` silently breaks it. Switching
+those sites to ``is`` is a runtime-behavior change, not a refactor.
+
+The check is deliberately conservative — it is decided from the MRO shape, not
+from where ``__eq__`` is defined (mypy does not model the ``__eq__`` a
+``@dataclass`` synthesizes). So an enum whose only non-``Enum`` base is a plain
+helper class that does not override ``__eq__`` is still skipped even though it
+is really identity-based. That under-flags such enums rather than risk an
+unsafe ``==``→``is`` rewrite — the safe direction.
 
 A small allowlist (``_FRAMEWORK_GUARANTEED_ENUMS``) carves back in
 ``StrEnum``/``IntEnum`` classes where the HA framework itself controls
@@ -40,16 +48,25 @@ ENUM_IDENTITY = ErrorCode(
 )
 
 _PLAIN_ENUM_BASE = "enum.Enum"
-_VALUE_BASED_ENUM_BASES = frozenset(
-    {
-        "enum.IntEnum",
-        "enum.ReprEnum",
-        "enum.StrEnum",
-        "builtins.int",
-        "builtins.str",
-    }
-)
 _FLAG_BASES = frozenset({"enum.Flag", "enum.IntFlag"})
+
+
+def _is_value_mixin(base: TypeInfo) -> bool:
+    """True if ``base`` gives an enum value-based ``__eq__``.
+
+    The plugin should fire only when ``==`` is identity-based, which holds iff
+    the enum has no mixin outside the ``Enum`` hierarchy. Any non-``Enum`` base
+    — a primitive (``str``/``int``/``float``/…), a ``@dataclass``, or a
+    ``NamedTuple`` — provides value comparison, so ``is`` is not equivalent to
+    ``==``. Decided structurally from the MRO (independent of how ``__eq__`` is
+    synthesized): a base is value-mixing unless it is ``object`` or is itself
+    part of the ``Enum`` hierarchy (e.g. an intermediate ``class Base(Enum)``,
+    which keeps the enum identity-based and therefore still flaggable).
+    """
+    if base.fullname == "builtins.object":
+        return False
+    return not any(b.fullname == _PLAIN_ENUM_BASE for b in base.mro)
+
 
 # StrEnum/IntEnum classes where every callsite assigning the value is
 # framework-controlled, so the runtime value is guaranteed to be the
@@ -73,8 +90,7 @@ def _enum_class(t: Type | None) -> TypeInfo | None:
 
     Returns ``None`` for:
     - ``Flag``/``IntFlag`` (bitwise ``==`` is idiomatic)
-    - value-based enums not in the framework allowlist: ``StrEnum``/
-      ``IntEnum``/``ReprEnum`` and the ``(str, Enum)``/``(int, Enum)`` mixin form
+    - value-based enums not in the framework allowlist
     - Anything else (``Any``, ``None``, mixed unions, etc.)
     """
     if t is None:
@@ -102,15 +118,16 @@ def _enum_class(t: Type | None) -> TypeInfo | None:
         fn = base.fullname
         if fn in _FLAG_BASES:
             return None
-        if fn in _VALUE_BASED_ENUM_BASES:
-            has_value_based_base = True
         if fn == _PLAIN_ENUM_BASE:
             has_enum_base = True
+            continue
+        if _is_value_mixin(base):
+            has_value_based_base = True
     if not has_enum_base:
         return None
     if has_value_based_base and info.fullname not in _FRAMEWORK_GUARANTEED_ENUMS:
         # Value-based enum without explicit trust — `is` may diverge from
-        # `==` when callers pass the underlying string/int.
+        # `==` when callers pass the underlying primitive value.
         return None
     return info
 
