@@ -23,6 +23,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DEVICE_SUPPORT_MAP, DOMAIN, ENTRY_TITLE
@@ -398,7 +399,12 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: SwitchbotCloudConfigEntry
 ) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+    if unload_ok and CONF_WEBHOOK_ID in entry.data:
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+
+    return unload_ok
 
 
 async def _initialize_webhook(
@@ -420,24 +426,31 @@ async def _initialize_webhook(
 
             hass.config_entries.async_update_entry(entry, data=new_data)
 
-        # register webhook
+        try:
+            webhook_url = webhook.async_generate_url(
+                hass,
+                entry.data[CONF_WEBHOOK_ID],
+                allow_internal=False,
+            )
+        except NoURLAvailableError:
+            _LOGGER.warning(
+                "SwitchBot Cloud webhook not configured because no external URL is available"
+            )
+            return
+
         webhook_name = ENTRY_TITLE
         if entry.title != ENTRY_TITLE:
             webhook_name = f"{ENTRY_TITLE} {entry.title}"
 
-        with contextlib.suppress(Exception):
-            webhook.async_register(
-                hass,
-                DOMAIN,
-                webhook_name,
-                entry.data[CONF_WEBHOOK_ID],
-                _create_handle_webhook(coordinators_by_id),
-            )
-
-        webhook_url = webhook.async_generate_url(
+        webhook.async_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        webhook.async_register(
             hass,
+            DOMAIN,
+            webhook_name,
             entry.data[CONF_WEBHOOK_ID],
+            _create_handle_webhook(coordinators_by_id),
         )
+
         # check if webhook is configured in switchbot cloud
 
         try:
@@ -472,9 +485,6 @@ async def _initialize_webhook(
                 _LOGGER.debug(
                     "Registered Switchbot cloud webhook at hass: %s", webhook_url
                 )
-
-            for coordinator in coordinators_by_id.values():
-                coordinator.webhook_subscription_listener(True)
 
             _LOGGER.debug("Registered Switchbot cloud webhook at: %s", webhook_url)
         except SwitchBotDeviceOfflineError as e:
@@ -526,6 +536,8 @@ def _create_handle_webhook(
             )
             return
 
-        coordinators_by_id[device_mac].async_set_updated_data(data["context"])
+        coordinator = coordinators_by_id[device_mac]
+        coordinator.webhook_subscription_listener(True)
+        coordinator.async_set_updated_data(data["context"])
 
     return _internal_handle_webhook
