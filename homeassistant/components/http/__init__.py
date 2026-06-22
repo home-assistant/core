@@ -16,6 +16,11 @@ from typing import Any, Final, cast
 
 from aiohttp import web
 from aiohttp.abc import AbstractStreamWriter
+from aiohttp.hdrs import (
+    ACCESS_CONTROL_ALLOW_CREDENTIALS,
+    ACCESS_CONTROL_ALLOW_ORIGIN,
+    ORIGIN,
+)
 from aiohttp.http_parser import RawRequestMessage
 from aiohttp.streams import StreamReader
 from aiohttp.typedefs import JSONDecoder, StrOrURL
@@ -698,7 +703,7 @@ class HomeAssistantHTTP:
         """
         if not self._port_transition_cors:
             return
-        origin = request.headers.get("Origin")
+        origin = request.headers.get(ORIGIN)
         if not origin:
             return
         try:
@@ -706,8 +711,8 @@ class HomeAssistantHTTP:
         except ValueError:
             return
         if origin_host and origin_host == request.url.host:
-            response.headers["Access-Control-Allow-Origin"] = origin
-            response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers[ACCESS_CONTROL_ALLOW_ORIGIN] = origin
+            response.headers[ACCESS_CONTROL_ALLOW_CREDENTIALS] = "true"
 
     async def _async_start_legacy_redirect(self) -> None:
         """Redirect the previous default port to the active port until onboarded."""
