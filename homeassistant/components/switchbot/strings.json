@@ -187,6 +187,25 @@
             }
           }
         }
+      },
+      "standing_fan": {
+        "state_attributes": {
+          "last_run_success": {
+            "state": {
+              "false": "[%key:component::binary_sensor::entity_component::problem::state::on%]",
+              "true": "[%key:component::binary_sensor::entity_component::problem::state::off%]"
+            }
+          },
+          "preset_mode": {
+            "state": {
+              "baby": "Baby",
+              "custom_natural": "Custom Natural",
+              "natural": "Natural",
+              "normal": "[%key:common::state::normal%]",
+              "sleep": "Sleep"
+            }
+          }
+        }
       }
     },
     "humidifier": {
