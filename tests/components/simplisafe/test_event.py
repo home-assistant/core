@@ -15,7 +15,7 @@ from tests.common import MockConfigEntry
 
 CAMERA_SERIAL = "1234567890"
 SYSTEM_EVENT_ENTITY_ID = "event.alarm_control_panel_system_events"
-CAMERA_EVENT_ENTITY_ID = "event.camera_camera_camera_events"
+CAMERA_EVENT_ENTITY_ID = "event.camera_camera_motion"
 
 
 async def test_system_event_entity_created(

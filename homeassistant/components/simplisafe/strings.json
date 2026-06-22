@@ -27,13 +27,22 @@
       }
     },
     "event": {
-      "camera_events": {
-        "name": "Camera events",
+      "motion": {
+        "name": "Motion",
         "state_attributes": {
           "event_type": {
             "state": {
-              "camera_motion_detected": "Motion detected",
-              "doorbell_detected": "Doorbell detected"
+              "camera_motion_detected": "Motion detected"
+            }
+          }
+        }
+      },
+      "ring": {
+        "name": "Ring",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "ring": "[%key:component::event::entity_component::doorbell::state_attributes::event_type::state::ring%]"
             }
           }
         }
