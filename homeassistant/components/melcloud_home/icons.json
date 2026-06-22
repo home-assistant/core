@@ -7,6 +7,9 @@
       "frost_protection": {
         "default": "mdi:snowflake"
       },
+      "holiday_mode": {
+        "default": "mdi:beach"
+      },
       "overheat_protection": {
         "default": "mdi:fire"
       },
