@@ -105,6 +105,20 @@
         }
       }
     },
+    "switch": {
+      "bluetooth_pairing": {
+        "name": "Bluetooth pairing"
+      },
+      "day_mode_auto_brightness": {
+        "name": "Day mode automatic brightness"
+      },
+      "max_headphone_volume": {
+        "name": "Maximum headphone volume"
+      },
+      "night_mode_auto_brightness": {
+        "name": "Night mode automatic brightness"
+      }
+    },
     "time": {
       "day_mode_start": {
         "name": "Day mode start"
