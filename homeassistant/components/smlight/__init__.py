@@ -1,4 +1,4 @@
-"""SMLIGHT SLZB Zigbee device integration."""
+"""SMLIGHT SLZB device integration."""
 
 from pysmlight import Api2
 
@@ -8,6 +8,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
+from .bluetooth import async_connect_scanner
 from .const import DOMAIN
 from .coordinator import (
     SmConfigEntry,
@@ -37,7 +38,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
-    """Set up SMLIGHT Zigbee from a config entry."""
+    """Set up SMLIGHT from a config entry."""
     client = Api2(host=entry.data[CONF_HOST], session=async_get_clientsession(hass))
 
     data_coordinator = SmDataUpdateCoordinator(hass, entry, client)
@@ -51,8 +52,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
             hass, client.sse.client(), "smlight-sse-client"
         )
 
+    info = data_coordinator.data.info
+    if info.u_device:
+        entry.async_on_unload(
+            async_connect_scanner(hass, entry, info.model, data_coordinator.device_id)
+        )
+
     entry.runtime_data = SmlightData(
-        data=data_coordinator, firmware=firmware_coordinator
+        data=data_coordinator,
+        firmware=firmware_coordinator,
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -60,5 +68,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: SmConfigEntry) -> bool:
-    """Unload a config entry."""
+    """Unload SMLIGHT config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

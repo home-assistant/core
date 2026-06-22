@@ -14,12 +14,18 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, LOGGER, SCAN_FIRMWARE_INTERVAL, SCAN_INTERVAL
+from .const import (
+    ATTR_MANUFACTURER,
+    DOMAIN,
+    LOGGER,
+    SCAN_FIRMWARE_INTERVAL,
+    SCAN_INTERVAL,
+)
 
 
 @dataclass(kw_only=True)
@@ -70,6 +76,7 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         self.client = client
         self.unique_id: str | None = None
         self.legacy_api: int = 0
+        self.device_id: str = ""
 
     @override
     async def _async_setup(self) -> None:
@@ -93,6 +100,18 @@ class SmBaseDataUpdateCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
         info = await self.client.get_info()
         self.unique_id = format_mac(info.MAC)
         self.legacy_api = info.legacy_api
+
+        device_registry = dr.async_get(self.hass)
+        device = device_registry.async_get_or_create(
+            config_entry_id=self.config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, self.unique_id)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=info.model,
+            name=self.config_entry.title,
+            sw_version=f"core: {info.sw_version} / zigbee: {info.zb_version}",
+        )
+        self.device_id = device.id
+
         if info.legacy_api == 2:
             ir.async_create_issue(
                 self.hass,
