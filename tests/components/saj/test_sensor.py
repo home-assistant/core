@@ -27,13 +27,12 @@ def platforms() -> list[Platform]:
     return [Platform.SENSOR]
 
 
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_pysaj_saj")
 async def test_sensors(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    mock_pysaj_saj: MagicMock,
 ) -> None:
     """Test the sensor entities."""
     await setup_integration(hass, mock_config_entry)

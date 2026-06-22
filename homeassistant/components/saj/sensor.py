@@ -172,11 +172,6 @@ class SAJsensor(SensorEntity):
         )
 
     @property
-    def available(self) -> bool:
-        """Keep reporting entity state; unknown values use None (same as before coordinator)."""
-        return True
-
-    @property
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._state

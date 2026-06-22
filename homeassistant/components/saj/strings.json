@@ -18,7 +18,7 @@
           "username": "[%key:common::config_flow::data::username%]"
         },
         "description": "The inverter required WiFi login. Enter or correct username and password.",
-        "title": "Device Credentials"
+        "title": "Device credentials"
       },
       "user": {
         "data": {

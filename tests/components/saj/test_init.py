@@ -14,10 +14,10 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize("connection_method", ["ethernet", "wifi"], indirect=True)
+@pytest.mark.usefixtures("mock_pysaj_saj")
 async def test_setup_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pysaj_saj: MagicMock,
 ) -> None:
     """Test async_setup_entry for ethernet and wifi connections."""
     entry = await setup_integration(hass, mock_config_entry)
@@ -81,10 +81,10 @@ async def test_setup_entry_unexpected_error(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
+@pytest.mark.usefixtures("mock_pysaj_saj")
 async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_pysaj_saj: MagicMock,
 ) -> None:
     """Test async_unload_entry."""
     entry = await setup_integration(hass, mock_config_entry)
