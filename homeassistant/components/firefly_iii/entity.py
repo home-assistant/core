@@ -1,6 +1,6 @@
 """Base entity for Firefly III integration."""
 
-from pyfirefly.models import Account, Budget, Category
+from pyfirefly.models import Account, Bill, Budget, Category
 from yarl import URL
 
 from homeassistant.const import CONF_URL
@@ -46,15 +46,16 @@ class FireflyAccountBaseEntity(FireflyBaseEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
-            name=account.attributes.name,
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/accounts/show/{account.id}",
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_account_{account.id}")
-            },
+            name="Accounts",
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "accounts"
+            ),
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_accounts")},
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_account_{account.id}_{key}"
         )
+        self._attr_translation_placeholders = {"name": account.attributes.name or ""}
 
     @property
     def _account(self) -> Account:
@@ -76,15 +77,16 @@ class FireflyCategoryBaseEntity(FireflyBaseEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
-            name=category.attributes.name,
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/categories/show/{category.id}",
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_category_{category.id}")
-            },
+            name="Categories",
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "categories"
+            ),
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_categories")},
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_category_{category.id}_{key}"
         )
+        self._attr_translation_placeholders = {"name": category.attributes.name or ""}
 
     @property
     def _category(self) -> Category:
@@ -106,16 +108,50 @@ class FireflyBudgetBaseEntity(FireflyBaseEntity):
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer=MANUFACTURER,
-            name=budget.attributes.name,
-            configuration_url=f"{URL(coordinator.config_entry.data[CONF_URL])}/budgets/show/{budget.id}",
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_budget_{budget.id}")
-            },
+            name="Budgets",
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "budgets"
+            ),
+            identifiers={(DOMAIN, f"{coordinator.config_entry.entry_id}_budgets")},
         )
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_budget_{budget.id}_{key}"
         )
+        self._attr_translation_placeholders = {"name": budget.attributes.name or ""}
 
     @property
     def _budget(self) -> Budget:
         return self.coordinator.data.budgets[self._budget_id]
+
+
+class FireflyBillBaseEntity(FireflyBaseEntity):
+    """Base class for Firefly III subscription (bill) entity."""
+
+    def __init__(
+        self,
+        coordinator: FireflyDataUpdateCoordinator,
+        bill: Bill,
+        key: str,
+    ) -> None:
+        """Initialize a Firefly subscription entity."""
+        super().__init__(coordinator)
+        self._bill_id = bill.id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer=MANUFACTURER,
+            name="Subscriptions",
+            configuration_url=str(
+                URL(coordinator.config_entry.data[CONF_URL]) / "subscriptions"
+            ),
+            identifiers={
+                (DOMAIN, f"{coordinator.config_entry.entry_id}_subscriptions")
+            },
+        )
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.unique_id}_bill_{bill.id}_{key}"
+        )
+        self._attr_translation_placeholders = {"name": bill.attributes.name or ""}
+
+    @property
+    def _bill(self) -> Bill:
+        return self.coordinator.data.bills[self._bill_id]

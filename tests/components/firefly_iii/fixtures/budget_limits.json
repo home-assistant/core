@@ -1,0 +1,38 @@
+[
+  {
+    "created_at": "2018-09-17T12:46:47+01:00",
+    "updated_at": "2018-09-17T12:46:47+01:00",
+    "budget_id": "2",
+    "budget_name": "Bills",
+    "start": "2024-01-01",
+    "end": "2024-01-31",
+    "start_date": "2024-01-01",
+    "end_date": "2024-01-31",
+    "amount": "500.00",
+    "pc_amount": "500.00",
+    "native_amount": "500.00",
+    "object_has_currency_setting": false,
+    "currency_id": "5",
+    "currency_name": "US Dollar",
+    "currency_code": "USD",
+    "currency_symbol": "$",
+    "currency_decimal_places": 2,
+    "primary_currency_id": "5",
+    "primary_currency_name": "US Dollar",
+    "primary_currency_code": "USD",
+    "primary_currency_symbol": "$",
+    "primary_currency_decimal_places": 2,
+    "period": "monthly",
+    "spent": [
+      {
+        "sum": "123.45",
+        "currency_id": "5",
+        "currency_code": "USD",
+        "currency_symbol": "$",
+        "currency_decimal_places": 2
+      }
+    ],
+    "pc_spent": [],
+    "notes": null
+  }
+]

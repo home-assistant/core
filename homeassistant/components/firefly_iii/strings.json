@@ -58,32 +58,34 @@
   "entity": {
     "sensor": {
       "account_balance": {
-        "name": "Account Balance"
-      },
-      "account_role": {
-        "name": "Account Role",
-        "state": {
-          "cash_wallet_asset": "Cash wallet asset",
-          "cc_asset": "Credit card asset",
-          "default_asset": "Default asset",
-          "saving_asset": "Saving asset",
-          "shared_asset": "Shared asset"
-        }
-      },
-      "account_type": {
-        "name": "Account Type",
-        "state": {
-          "asset": "Asset",
-          "expense": "Expense",
-          "liability": "Liability",
-          "revenue": "Revenue"
-        }
+        "name": "{name}"
       },
       "budget": {
-        "name": "Budget"
+        "name": "{name} spent"
+      },
+      "budget_limit": {
+        "name": "{name} limit"
+      },
+      "budget_remaining": {
+        "name": "{name} remaining"
       },
       "category": {
-        "name": "Earned/Spent"
+        "name": "{name}"
+      },
+      "subscription_already_paid": {
+        "name": "Already paid"
+      },
+      "subscription_amount": {
+        "name": "{name} expected amount"
+      },
+      "subscription_last_paid": {
+        "name": "{name} last paid"
+      },
+      "subscription_next_expected": {
+        "name": "{name} next expected"
+      },
+      "subscription_total_expected": {
+        "name": "Total expected"
       }
     }
   },
