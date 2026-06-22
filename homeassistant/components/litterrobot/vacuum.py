@@ -1,7 +1,7 @@
 """Support for Litter-Robot "Vacuum"."""
 
 from datetime import time
-from typing import Any
+from typing import Any, override
 
 from pylitterbot import LitterRobot
 from pylitterbot.enums import LitterBoxStatus
@@ -74,17 +74,20 @@ class LitterRobotCleaner(LitterRobotEntity[LitterRobot], StateVacuumEntity):
     )
 
     @property
+    @override
     def activity(self) -> VacuumActivity:
         """Return the state of the cleaner."""
         return LITTER_BOX_STATUS_STATE_MAP.get(self.robot.status, VacuumActivity.ERROR)
 
     @whisker_command
+    @override
     async def async_start(self) -> None:
         """Start a clean cycle."""
         await self.robot.set_power_status(True)
         await self.robot.start_cleaning()
 
     @whisker_command
+    @override
     async def async_stop(self, **kwargs: Any) -> None:
         """Stop the vacuum cleaner."""
         await self.robot.set_power_status(False)

@@ -1,7 +1,7 @@
 """Adds config flow for Trafikverket Camera integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pytrafikverket import (
     CameraInfoModel,
@@ -135,6 +135,7 @@ class TVCameraConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

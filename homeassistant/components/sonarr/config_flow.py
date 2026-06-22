@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiopyarr import ArrAuthenticationException, ArrException
 from aiopyarr.models.host_configuration import PyArrHostConfiguration
@@ -61,6 +61,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> SonarrOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SonarrOptionsFlowHandler()
@@ -86,6 +87,7 @@ class SonarrConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

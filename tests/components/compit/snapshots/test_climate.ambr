@@ -1,0 +1,171 @@
+# serializer version: 1
+# name: test_climate_entities_snapshot[climate.nano_color_2-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'off',
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_modes': list([
+        'home',
+        'eco',
+        'none',
+        'away',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.nano_color_2',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'compit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 25>,
+    'translation_key': None,
+    'unique_id': 'Nano Color 2_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entities_snapshot[climate.nano_color_2-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.0,
+      'fan_mode': 'auto',
+      'fan_modes': list([
+        'off',
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Nano Color 2',
+      'hvac_modes': list([
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': 'home',
+      'preset_modes': list([
+        'home',
+        'eco',
+        'none',
+        'away',
+      ]),
+      'supported_features': <ClimateEntityFeature: 25>,
+      'temperature': 22.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.nano_color_2',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---
+# name: test_climate_entities_snapshot[climate.r_900-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_modes': list([
+        'home',
+        'away',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.r_900',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'compit',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 16>,
+    'translation_key': None,
+    'unique_id': 'R 900_1',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_climate_entities_snapshot[climate.r_900-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 21.0,
+      'friendly_name': 'R 900',
+      'hvac_modes': list([
+        <HVACMode.HEAT: 'heat'>,
+        <HVACMode.OFF: 'off'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': 'home',
+      'preset_modes': list([
+        'home',
+        'away',
+      ]),
+      'supported_features': <ClimateEntityFeature: 16>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.r_900',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'heat',
+  })
+# ---

@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
 from dataclasses import dataclass, field
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiopurpleair import API
 from aiopurpleair.endpoints.sensors import NearbySensorResult
@@ -203,6 +203,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> PurpleAirOptionsFlowHandler:
@@ -287,6 +288,7 @@ class PurpleAirConfigFlow(ConfigFlow, domain=DOMAIN):
             self._get_reauth_entry(), data={CONF_API_KEY: api_key}
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

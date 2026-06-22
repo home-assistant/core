@@ -1,6 +1,7 @@
 """Models to represent various Plex objects used in the integration."""
 
 import logging
+from typing import override
 
 import plexapi.playqueue
 
@@ -60,6 +61,7 @@ class PlexSession:
 
         self.update_media(session)
 
+    @override
     def __repr__(self):
         """Return representation of the session."""
         return f"<{self.session_key}:{self.sensor_title}>"

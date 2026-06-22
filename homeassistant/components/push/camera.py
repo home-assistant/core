@@ -4,7 +4,7 @@ import asyncio
 from collections import deque
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import web
 import voluptuous as vol
@@ -124,6 +124,7 @@ class PushCamera(Camera):
         self.webhook_id = webhook_id
         self.webhook_url = webhook.async_generate_url(hass, webhook_id)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.hass.data[PUSH_CAMERA_DATA][self.webhook_id] = self
@@ -169,6 +170,7 @@ class PushCamera(Camera):
 
         self.async_write_ha_state()
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -181,6 +183,7 @@ class PushCamera(Camera):
         return self._current_image
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {

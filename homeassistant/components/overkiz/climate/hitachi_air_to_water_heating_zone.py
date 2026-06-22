@@ -1,6 +1,6 @@
 """Support for HitachiAirToWaterHeatingZone."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -57,6 +57,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
             self._attr_device_info["manufacturer"] = "Hitachi"
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if (
@@ -66,6 +67,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
 
         return HVACMode.OFF
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.executor.async_execute_command(
@@ -73,6 +75,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         if (
@@ -82,6 +85,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
 
         return PRESET_NONE
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.executor.async_execute_command(
@@ -89,6 +93,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         current_temperature = self.device.states.get(
@@ -101,6 +106,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         target_temperature = self.device.states.get(
@@ -112,6 +118,7 @@ class HitachiAirToWaterHeatingZone(OverkizEntity, ClimateEntity):
 
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = cast(float, kwargs.get(ATTR_TEMPERATURE))

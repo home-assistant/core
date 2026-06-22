@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioamazondevices.api import AmazonEchoApi
 from aioamazondevices.const.devices import SPEAKER_GROUP_FAMILY
@@ -90,6 +90,7 @@ class AmazonNotifyEntity(AmazonEntity, NotifyEntity):
             self.entity_description.is_available_fn(self.device) and super().available
         )
 
+    @override
     async def async_send_message(
         self, message: str, title: str | None = None, **kwargs: Any
     ) -> None:

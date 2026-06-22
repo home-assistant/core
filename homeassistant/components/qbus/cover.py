@@ -1,6 +1,6 @@
 """Support for Qbus cover."""
 
-from typing import Any
+from typing import Any, override
 
 from qbusmqttapi.const import (
     KEY_PROPERTIES_SHUTTER_POSITION,
@@ -88,6 +88,7 @@ class QbusCover(QbusEntity, CoverEntity):
         self._target_state: str | None = None
         self._previous_state: str | None = None
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
 
@@ -100,6 +101,7 @@ class QbusCover(QbusEntity, CoverEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
 
@@ -115,36 +117,42 @@ class QbusCover(QbusEntity, CoverEntity):
 
         await self._async_publish_output_state(state)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         state = QbusMqttShutterState(id=self._mqtt_output.id, type=StateType.STATE)
         state.write_state("stop")
         await self._async_publish_output_state(state)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         state = QbusMqttShutterState(id=self._mqtt_output.id, type=StateType.STATE)
         state.write_position(int(kwargs[ATTR_POSITION]))
         await self._async_publish_output_state(state)
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         state = QbusMqttShutterState(id=self._mqtt_output.id, type=StateType.STATE)
         state.write_slat_position(50)
         await self._async_publish_output_state(state)
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         state = QbusMqttShutterState(id=self._mqtt_output.id, type=StateType.STATE)
         state.write_slat_position(0)
         await self._async_publish_output_state(state)
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         state = QbusMqttShutterState(id=self._mqtt_output.id, type=StateType.STATE)
         state.write_slat_position(int(kwargs[ATTR_TILT_POSITION]))
         await self._async_publish_output_state(state)
 
+    @override
     async def _handle_state_received(self, state: QbusMqttShutterState) -> None:
         output_state = state.read_state()
         shutter_position = state.read_position()

@@ -3,7 +3,7 @@
 from functools import reduce
 import logging
 from operator import ior
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -125,31 +125,37 @@ class FanGroup(GroupEntity, FanEntity):
         self._attr_unique_id = unique_id
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return self._speed_count
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the entity is on."""
         return self._is_on
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed as a percentage."""
         return self._percentage
 
     @property
+    @override
     def current_direction(self) -> str | None:
         """Return the current direction of the fan."""
         return self._direction
 
     @property
+    @override
     def oscillating(self) -> bool | None:
         """Return whether or not the fan is currently oscillating."""
         return self._oscillating
 
     @callback
+    @override
     def async_update_supported_features(
         self,
         entity_id: str,
@@ -167,6 +173,7 @@ class FanGroup(GroupEntity, FanEntity):
                 else:
                     self._fans[feature].discard(entity_id)
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed of the fan, as a percentage."""
         if percentage == 0:
@@ -177,6 +184,7 @@ class FanGroup(GroupEntity, FanEntity):
             {ATTR_PERCENTAGE: percentage},
         )
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Oscillate the fan."""
         await self._async_call_supported_entities(
@@ -185,6 +193,7 @@ class FanGroup(GroupEntity, FanEntity):
             {ATTR_OSCILLATING: oscillating},
         )
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self._async_call_supported_entities(
@@ -193,6 +202,7 @@ class FanGroup(GroupEntity, FanEntity):
             {ATTR_DIRECTION: direction},
         )
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -207,6 +217,7 @@ class FanGroup(GroupEntity, FanEntity):
             SERVICE_TURN_ON, FanEntityFeature.TURN_ON, {}
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fans off."""
         await self._async_call_supported_entities(
@@ -248,6 +259,7 @@ class FanGroup(GroupEntity, FanEntity):
         setattr(self, attr, most_frequent_attribute(states, entity_attr))
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Update state and attributes."""
         self._update_assumed_state_from_members()
