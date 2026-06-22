@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from functools import lru_cache
 from math import floor, log10
+from typing import override
 
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_BILLION,
@@ -677,6 +678,7 @@ class SpeedConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float], float]:
@@ -691,6 +693,7 @@ class SpeedConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:
@@ -776,6 +779,7 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float], float]:
@@ -790,6 +794,7 @@ class TemperatureConverter(BaseUnitConverter):
 
     @classmethod
     @lru_cache
+    @override
     def converter_factory_allow_none(
         cls, from_unit: str | None, to_unit: str | None
     ) -> Callable[[float | None], float | None]:

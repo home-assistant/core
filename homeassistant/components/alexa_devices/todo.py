@@ -1,6 +1,6 @@
 """Platform for Alexa To-do integration."""
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aioamazondevices.structures import (
     AmazonListInfo,
@@ -88,6 +88,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
         )
 
     @property
+    @override
     def todo_items(self) -> list[TodoItem]:
         """Return all to-do items in the list."""
 
@@ -104,6 +105,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             for item in todo_items
         ]
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         _LOGGER.debug(
@@ -124,6 +126,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
             self._list.name,
         )
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete items from the to-do list."""
         _LOGGER.debug("Called async_delete_todo_items for %s item(s)", len(uids))
@@ -150,6 +153,7 @@ class AlexaToDoList(AmazonServiceEntity, TodoListEntity):
                 existing_item.version,
             )
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
         list_items_lookup = self.coordinator.todo_list_items[self._list.id]
