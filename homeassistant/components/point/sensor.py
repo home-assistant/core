@@ -77,7 +77,6 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(coordinator, device_id)
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = f"point.{device_id}-{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property

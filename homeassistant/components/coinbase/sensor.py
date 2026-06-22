@@ -127,7 +127,6 @@ class AccountSensor(SensorEntity):
             if account[API_ACCOUNT_CURRENCY] != currency or account[ACCOUNT_IS_VAULT]:
                 continue
             self._attr_name = f"Coinbase {account[API_ACCOUNT_NAME]}"
-            # Legacy unique_id; migration risks disrupting existing users.
             self._attr_unique_id = (
                 f"coinbase-{account[API_ACCOUNT_ID]}-wallet-"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
                 f"{account[API_ACCOUNT_CURRENCY]}"
@@ -201,7 +200,6 @@ class ExchangeRateSensor(SensorEntity):
         self._coinbase_data = coinbase_data
         self._currency = exchange_currency
         self._attr_name = f"{exchange_currency} Exchange Rate"
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = (
             f"coinbase-{coinbase_data.user_id}-xe-{exchange_currency}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )

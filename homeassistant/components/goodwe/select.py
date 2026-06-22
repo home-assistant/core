@@ -91,7 +91,6 @@ class InverterOperationModeEntity(SelectEntity):
     ) -> None:
         """Initialize the inverter operation mode setting entity."""
         self.entity_description = description
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = f"{DOMAIN}-{description.key}-{inverter.serial_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = device_info
         self._attr_options = supported_options

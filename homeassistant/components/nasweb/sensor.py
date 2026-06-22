@@ -141,7 +141,6 @@ class InputStateSensor(BaseSensorEntity):
         self._input = nasweb_input
         self._attr_native_value: str | None = None
         self._attr_translation_placeholders = {"index": f"{nasweb_input.index:2d}"}
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = (
             f"{DOMAIN}.{self._input.webio_serial}.input.{self._input.index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
@@ -176,7 +175,6 @@ class TemperatureSensor(BaseSensorEntity):
         """Initialize TemperatureSensor entity."""
         super().__init__(coordinator)
         self._temp_sensor = nasweb_temp_sensor
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = f"{DOMAIN}.{self._temp_sensor.webio_serial}.temp_sensor"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._temp_sensor.webio_serial)}

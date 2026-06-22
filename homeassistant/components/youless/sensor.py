@@ -335,7 +335,6 @@ class YouLessSensor(YouLessEntity, SensorEntity):
             f"{device}_{description.device_group}",
             description.device_group,
         )
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = f"{DOMAIN}_{device}_{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
 

@@ -26,7 +26,6 @@ class WithingsEntity[_T: WithingsDataUpdateCoordinator[Any]](CoordinatorEntity[_
     ) -> None:
         """Initialize the Withings entity."""
         super().__init__(coordinator)
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = f"withings_{coordinator.config_entry.unique_id}_{key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(coordinator.config_entry.unique_id))},

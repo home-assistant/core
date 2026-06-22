@@ -76,7 +76,6 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         super().__init__(coordinator, device_id)
         self._device_name = key
         self._events = EVENTS[key]
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = f"point.{device_id}-{key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_icon = DEVICES[key].get("icon")
 

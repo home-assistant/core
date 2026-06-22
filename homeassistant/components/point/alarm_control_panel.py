@@ -58,7 +58,6 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self._home = point.homes[self._home_id]
 
         self._attr_name = self._home["name"]
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = f"point.{home_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, home_id)},

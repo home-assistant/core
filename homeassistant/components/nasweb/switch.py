@@ -95,7 +95,6 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
         self._attr_has_entity_name = True
         self._attr_translation_key = OUTPUT_TRANSLATION_KEY
         self._attr_translation_placeholders = {"index": f"{nasweb_output.index:2d}"}
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = (
             f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )

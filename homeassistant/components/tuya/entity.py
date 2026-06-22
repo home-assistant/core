@@ -26,7 +26,6 @@ class TuyaEntity(Entity):
     ) -> None:
         """Init TuyaEntity."""
         self._attr_device_info = get_device_info(device)
-        # Legacy unique_id; migration risks disrupting existing users.
         self._attr_unique_id = f"tuya.{device.id}{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self.entity_description = description
         # TuyaEntity initialize mq can subscribe
