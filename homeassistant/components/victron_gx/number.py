@@ -76,7 +76,6 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
     ) -> None:
         """Initialize the number entity."""
         super().__init__(device, metric, device_info, installation_id)
-        self._attr_native_unit_of_measurement = None
         self._attr_device_class = METRIC_TYPE_TO_DEVICE_CLASS.get(metric.metric_type)
         self._attr_native_value = metric.value
         if metric.min_value is not None:
@@ -92,10 +91,12 @@ class VictronNumber(VictronBaseEntity, NumberEntity):
         self._attr_native_value = value
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._attr_native_unit_of_measurement = self._native_unit_of_measurement()
         await super().async_added_to_hass()
+
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set a new value."""
