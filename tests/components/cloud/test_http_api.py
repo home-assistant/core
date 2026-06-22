@@ -1435,6 +1435,8 @@ async def test_get_google_entity(
         "disable_2fa": None,
         "entity_id": "light.kitchen",
         "might_2fa": False,
+        "name": None,
+        "aliases": None,
         "traits": ["action.devices.traits.OnOff"],
     }
 
@@ -1448,6 +1450,8 @@ async def test_get_google_entity(
         "disable_2fa": None,
         "entity_id": "cover.garage",
         "might_2fa": True,
+        "name": None,
+        "aliases": None,
         "traits": ["action.devices.traits.OpenClose"],
     }
 
@@ -1473,6 +1477,8 @@ async def test_get_google_entity(
         "disable_2fa": True,
         "entity_id": "cover.garage",
         "might_2fa": True,
+        "name": None,
+        "aliases": None,
         "traits": ["action.devices.traits.OpenClose"],
     }
 

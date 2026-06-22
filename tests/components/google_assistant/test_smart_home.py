@@ -206,8 +206,6 @@ async def test_sync_message(hass: HomeAssistant, registries) -> None:
                                 "Demo Light",
                                 "Hello",
                                 "World",
-                                "Stay",
-                                "Healthy",
                             ]
                         ),
                     },
@@ -314,7 +312,7 @@ async def test_sync_in_area(area_on_device, hass: HomeAssistant, registries) -> 
     light._platform_state = EntityPlatformState.ADDED
     light.async_write_ha_state()
 
-    config = MockConfig(should_expose=lambda _: True, entity_config={})
+    config = MockConfig(hass=hass, should_expose=lambda _: True, entity_config={})
 
     events = async_capture_events(hass, EVENT_SYNC_RECEIVED)
 
