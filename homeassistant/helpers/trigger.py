@@ -697,6 +697,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
 
     _to_states: set[str]
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check the value changed and the origin was not already a target state."""
         from_value = self._get_tracked_value(from_state)
@@ -705,6 +706,7 @@ class EntityTargetStateTriggerBase(EntityTriggerBase):
             and from_value not in self._to_states
         )
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected state."""
         return self._get_tracked_value(state) in self._to_states
@@ -716,6 +718,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
     _from_states: set[str | bool]
     _to_states: set[str | bool]
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the origin state matches the expected ones."""
         from_value = self._get_tracked_value(from_state)
@@ -724,6 +727,7 @@ class EntityTransitionTriggerBase(EntityTriggerBase):
             and from_value in self._from_states
         )
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state matches the expected states."""
         return self._get_tracked_value(state) in self._to_states
@@ -734,6 +738,7 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
 
     _from_state: str
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if origin state matches expected and that the state changed."""
         return bool(
@@ -741,6 +746,7 @@ class EntityOriginStateTriggerBase(EntityTriggerBase):
             and self._get_tracked_value(to_state) != self._from_state
         )
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check that the new state is different from the origin state."""
         return bool(self._get_tracked_value(state) != self._from_state)
@@ -816,6 +822,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             # Entity state is not a valid number
             return None
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[state.domain]
@@ -833,6 +840,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
             # Entity state is not a valid number
             return None
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the new state or state attribute matches the expected one."""
         # Handle missing or None value case first to avoid expensive exceptions
@@ -877,6 +885,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
         """Get the unit of an entity from its state."""
         return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
+    @override
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -905,6 +914,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
             return None
 
+    @override
     def _get_tracked_value(self, state: State) -> float | None:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[state.domain]
@@ -934,6 +944,7 @@ class EntityNumericalStateChangedTriggerBase(EntityNumericalStateTriggerBase):
 
     _schema = NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check if the tracked numeric value has changed."""
         return self._get_tracked_value(from_state) != self._get_tracked_value(to_state)
@@ -965,6 +976,7 @@ class EntityNumericalStateChangedTriggerWithUnitBase(
 ):
     """Trigger for numerical state and state attribute changes."""
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -993,6 +1005,7 @@ class EntityNumericalStateCrossedThresholdTriggerBase(EntityNumericalStateTrigge
 
     _schema = NUMERICAL_ATTRIBUTE_CROSSED_THRESHOLD_SCHEMA
 
+    @override
     def is_valid_transition(self, from_state: State, to_state: State) -> bool:
         """Check that the tracked value crossed into the threshold range."""
         return not self.is_valid_state(from_state)
@@ -1026,6 +1039,7 @@ class EntityNumericalStateCrossedThresholdTriggerWithUnitBase(
 ):
     """Trigger for numerical state and state attribute changes."""
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)

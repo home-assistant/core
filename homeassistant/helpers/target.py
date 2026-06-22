@@ -6,7 +6,7 @@ from collections.abc import Callable, Coroutine, Mapping
 import dataclasses
 import logging
 from logging import Logger
-from typing import Any, TypeGuard
+from typing import Any, TypeGuard, override
 
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -397,6 +397,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         self._tracked_entity_states: dict[str, State | None] = {}
         self._update_tasks: set[asyncio.Task[None]] = set()
 
+    @override
     async def async_setup(self) -> Callable[[], None]:
         """Set up tracking, awaiting the update for the initial entity set.
 
@@ -410,6 +411,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         return self._unsubscribe
 
     @callback
+    @override
     def _handle_entities_update(self, tracked_entities: set[str]) -> None:
         """Handle a registry-driven change to the tracked entity set."""
         if (coro := self._apply_entities_update(tracked_entities)) is None:
@@ -473,6 +475,7 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
             previous_unsub()
         return result
 
+    @override
     def _unsubscribe(self) -> None:
         """Unsubscribe from all events."""
         super()._unsubscribe()

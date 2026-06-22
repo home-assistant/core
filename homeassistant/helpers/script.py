@@ -10,7 +10,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import itertools
 import logging
-from typing import Any, Literal, TypedDict, cast, overload
+from typing import Any, Literal, TypedDict, cast, overload, override
 
 import async_interrupt
 from propcache.api import cached_property
@@ -1340,6 +1340,7 @@ class _QueuedScriptRun(_ScriptRun):
 
     lock_acquired = False
 
+    @override
     async def async_run(self) -> ScriptRunResult | None:
         """Run script."""
         # Wait for previous run, if any, to finish by attempting to acquire the script's
@@ -1356,6 +1357,7 @@ class _QueuedScriptRun(_ScriptRun):
         # We've acquired the lock so we can go ahead and start the run.
         return await super().async_run()
 
+    @override
     def _finish(self) -> None:
         if self.lock_acquired:
             self._script._queue_lck.release()  # noqa: SLF001

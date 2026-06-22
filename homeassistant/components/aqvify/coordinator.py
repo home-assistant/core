@@ -210,6 +210,7 @@ class AqvifyAggrDataCoordinator(
         end_time = base_time.replace(minute=59).strftime(date_time_fmt)
         return beg_time, end_time
 
+    @override
     async def _async_update_data(self) -> dict[str, AqvifyHourAggregatedValues]:
         """Fetch device state."""
         devices = self.config_entry.runtime_data.coordinator.data.devices

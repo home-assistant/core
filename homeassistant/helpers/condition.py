@@ -364,6 +364,7 @@ class LegacyConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._checker = checker
 
+    @override
     def _async_check(self, variables: TemplateVarsType = None, **kwargs: Any) -> bool:
         return self._checker(self._hass, variables)
 
@@ -371,6 +372,7 @@ class LegacyConditionChecker(ConditionChecker):
 class DisabledConditionChecker(ConditionChecker):
     """Condition checker for disabled conditions."""
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> None:
         return None
 
@@ -383,6 +385,7 @@ class CompoundConditionChecker(ConditionChecker):
         super().__init__(hass)
         self._conditions = conditions
 
+    @override
     def _async_unload(self) -> None:
         """Clean up child conditions."""
         for condition in self._conditions:
@@ -850,6 +853,7 @@ class EntityConditionBase(Condition):
             for state in states
         )
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test state condition."""
         targeted_entities = async_extract_referenced_entity_ids(
@@ -877,6 +881,7 @@ class EntityStateConditionBase(EntityConditionBase):
     _states: set[str | bool]
 
     @property
+    @override
     def _needs_duration_tracking(self) -> bool:
         """Single-state conditions with no attribute tracking can use last_changed."""
         if len(self._states) != 1:
@@ -892,6 +897,7 @@ class EntityStateConditionBase(EntityConditionBase):
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state matches the expected state(s)."""
         return self._get_tracked_value(entity_state) in self._states
@@ -1007,6 +1013,7 @@ class EntityNumericalConditionBase(EntityConditionBase):
             return entity_state.state
         return entity_state.attributes.get(domain_spec.value_source)
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the state is within the specified range."""
         try:
@@ -1080,6 +1087,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
     _base_unit: str | None  # Base unit for the tracked value
     _unit_converter: type[BaseUnitConverter]
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Create a schema."""
         super().__init_subclass__(**kwargs)
@@ -1089,6 +1097,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
         """Get the unit of an entity from its state."""
         return entity_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
 
+    @override
     def _get_threshold_value(self, threshold: ThresholdConfig | None) -> float | None:
         """Get threshold value from float or entity state."""
         if threshold is None:
@@ -1119,6 +1128,7 @@ class EntityNumericalConditionWithUnitBase(EntityNumericalConditionBase):
             # Unit conversion failed (i.e. incompatible units), treat as invalid number
             return None
 
+    @override
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the tracked numerical value from a state."""
         domain_spec = self._domain_specs[entity_state.domain]
@@ -1372,6 +1382,7 @@ class AndConditionChecker(CompoundConditionChecker):
     """Condition checker for 'and' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test and condition."""
         errors = []
@@ -1406,6 +1417,7 @@ class OrConditionChecker(CompoundConditionChecker):
     """Condition checker for 'or' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test or condition."""
         errors = []
@@ -1440,6 +1452,7 @@ class NotConditionChecker(CompoundConditionChecker):
     """Condition checker for 'not' compound conditions."""
 
     @callback
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Test not condition."""
         errors = []

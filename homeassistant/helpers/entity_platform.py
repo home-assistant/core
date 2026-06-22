@@ -5,7 +5,7 @@ from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from contextvars import ContextVar
 from datetime import timedelta
 from logging import Logger, getLogger
-from typing import TYPE_CHECKING, Any, Protocol, overload
+from typing import TYPE_CHECKING, Any, Protocol, overload, override
 
 from homeassistant import config_entries
 from homeassistant.const import (
@@ -313,6 +313,7 @@ class EntityPlatform:
             hass, domain=domain, platform_name=platform_name
         )
 
+    @override
     def __repr__(self) -> str:
         """Represent an EntityPlatform."""
         return (

@@ -14,7 +14,7 @@ import platform
 import sys
 import threading
 from time import monotonic
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 # Import cryptography early since import openssl is not thread-safe
 # _frozen_importlib._DeadlockError: deadlock detected by
@@ -697,6 +697,7 @@ def _create_log_file(
 class _RotatingFileHandlerWithoutShouldRollOver(RotatingFileHandler):
     """RotatingFileHandler that does not check if it should roll over on every log."""
 
+    @override
     def shouldRollover(self, record: logging.LogRecord) -> bool:
         """Never roll over.
 
