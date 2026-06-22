@@ -292,27 +292,17 @@
   },
   "services": {
     "smokedetector_alarmstate": {
-      "description": "Name of the smoke detector entity to set",
+      "description": "Sets the alarm state of the targeted smoke detector entity.",
       "fields": {
         "command": {
           "description": "Command string to send to the smoke detector.",
           "name": "Custom command"
-        },
-        "entity_id": {
-          "description": "Name of the smoke detector entity.",
-          "name": "Entity id"
         }
       },
       "name": "Smokedetector Alarmstate"
     },
     "smokedetector_check": {
       "description": "Calls test routine of a smoke detector.",
-      "fields": {
-        "entity_id": {
-          "description": "Name of the smoke detector entity.",
-          "name": "Entity id"
-        }
-      },
       "name": "Smokedetector Check"
     },
     "trigger_rawscan": {

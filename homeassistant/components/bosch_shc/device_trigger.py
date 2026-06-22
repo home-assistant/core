@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.trigger import TriggerActionType
+from homeassistant.helpers.trigger import TriggerActionType, TriggerInfo
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -84,7 +84,7 @@ async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
         raise InvalidDeviceAutomationConfig(f"Device not found: {device_id}")
 
     if dev_type in {"WRC2", "SWITCH2"}:
-        input_triggers = []
+        input_triggers: list[tuple[str, str]] = []
         for trigger in SUPPORTED_INPUTS_EVENTS_TYPES:
             if trigger in ("PRESS_SHORT", "PRESS_LONG", "PRESS_LONG_RELEASED"):
                 match dev_type:
@@ -168,7 +168,7 @@ async def async_attach_trigger(
     hass: HomeAssistant,
     config: ConfigType,
     action: TriggerActionType,
-    automation_info: dict,
+    automation_info: TriggerInfo,
 ) -> CALLBACK_TYPE:
     """Attach a trigger."""
     event_config = None

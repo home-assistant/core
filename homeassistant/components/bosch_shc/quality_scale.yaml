@@ -186,16 +186,10 @@ rules:
   # ── TODO ─────────────────────────────────────────────────────────────────────
 
   brands:
-    status: todo
+    status: done
     comment: >
-      No brand assets exist in the repo or in home-assistant/brands.  For HACS
-      integrations the assets are not technically required by HACS validation,
-      but the HA Quality Scale rule has no HACS exemption — the integration
-      shows a generic icon in the HA UI.  To satisfy: submit a PR to
-      https://github.com/home-assistant/brands adding a bosch_shc/ directory
-      with icon.png (256x256) and logo.png (follows branding repo README spec).
-      Effort: S (asset creation) + external PR.  Can proceed in parallel with
-      code changes.
+      homeassistant/brands/bosch.json already lists bosch_shc as one of the
+      Bosch integrations in HA Core, satisfying the brands rule.
 
   # ── NOT APPLICABLE ────────────────────────────────────────────────────────────
 

@@ -14,5 +14,19 @@
         }
       }
     }
+  },
+  "services": {
+    "smokedetector_alarmstate": {
+      "service": "mdi:smoke-detector-alert"
+    },
+    "smokedetector_check": {
+      "service": "mdi:smoke-detector-variant"
+    },
+    "trigger_rawscan": {
+      "service": "mdi:magnify-scan"
+    },
+    "trigger_scenario": {
+      "service": "mdi:script-text-play"
+    }
   }
 }
