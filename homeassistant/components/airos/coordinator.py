@@ -5,6 +5,7 @@ from dataclasses import dataclass
 import logging
 from typing import Any, TypeVar, override
 
+from aiohttp import ClientSession
 from airos.airos6 import AirOS6, AirOS6Data
 from airos.airos8 import AirOS8, AirOS8Data
 from airos.exceptions import (
@@ -39,6 +40,8 @@ class AirOSRuntimeData:
 
     status: AirOSDataUpdateCoordinator
     firmware: AirOSFirmwareUpdateCoordinator | None
+    session: ClientSession
+    owns_session: bool = False
 
 
 async def async_fetch_airos_data(
