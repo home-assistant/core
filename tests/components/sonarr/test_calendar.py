@@ -28,7 +28,6 @@ def test_get_calendar_event_without_overview() -> None:
 
     event = _get_calendar_event(SonarrCalendar(raw))
 
-    assert event is not None
     assert event.description is None
     assert event.summary == "Bob's Burgers - S04E11 - Easy Com-mercial, Easy Go-mercial"
 

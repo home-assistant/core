@@ -1,7 +1,7 @@
 """Support for Sonarr calendar items."""
 
 from datetime import datetime, timedelta
-from typing import override
+from typing import cast, override
 
 from aiopyarr import SonarrCalendar
 
@@ -33,21 +33,20 @@ async def async_setup_entry(
     async_add_entities([SonarrCalendarEntity(coordinator, CALENDAR_TYPE)])
 
 
-def _get_calendar_event(episode: SonarrCalendar) -> CalendarEvent | None:
+def _get_calendar_event(episode: SonarrCalendar) -> CalendarEvent:
     """Return a CalendarEvent from a Sonarr calendar item."""
-    if episode.airDateUtc is None:
-        return None
+    series_title: str = episode.series.title  # type: ignore[misc]
+    runtime: int = episode.series.runtime  # type: ignore[misc]
     start = dt_util.as_utc(episode.airDateUtc)
     summary = (
-        f"{episode.series.title} - "
-        f"S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
+        f"{series_title} - S{episode.seasonNumber:02d}E{episode.episodeNumber:02d}"
     )
     if episode.title:
         summary = f"{summary} - {episode.title}"
     return CalendarEvent(
         summary=summary,
         start=start,
-        end=start + timedelta(minutes=episode.series.runtime),
+        end=start + timedelta(minutes=runtime),
         description=getattr(episode, "overview", None) or None,
     )
 
@@ -63,11 +62,7 @@ class SonarrCalendarEntity(SonarrEntity[list[SonarrCalendar]], CalendarEntity):
         """Return the next upcoming event."""
         now = dt_util.now()
         events = sorted(
-            (
-                event
-                for episode in self.coordinator.data
-                if (event := _get_calendar_event(episode)) is not None
-            ),
+            (_get_calendar_event(episode) for episode in self.coordinator.data),
             key=lambda event: event.start,
         )
         return next((event for event in events if event.end > now), None)
@@ -77,11 +72,10 @@ class SonarrCalendarEntity(SonarrEntity[list[SonarrCalendar]], CalendarEntity):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        episodes = await self.coordinator.api_client.async_get_calendar(
-            start_date=start_date, end_date=end_date, include_series=True
+        episodes = cast(
+            list[SonarrCalendar],
+            await self.coordinator.api_client.async_get_calendar(
+                start_date=start_date, end_date=end_date, include_series=True
+            ),
         )
-        return [
-            event
-            for episode in episodes
-            if (event := _get_calendar_event(episode)) is not None
-        ]
+        return [_get_calendar_event(episode) for episode in episodes]
