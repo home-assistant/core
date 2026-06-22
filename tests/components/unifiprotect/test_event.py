@@ -16,6 +16,7 @@ from uiprotect.data import (
     PublicBootstrap,
     SmartDetectObjectType,
 )
+from uiprotect.exceptions import ClientError
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.unifiprotect.const import (
@@ -25,6 +26,7 @@ from homeassistant.components.unifiprotect.const import (
 )
 from homeassistant.components.unifiprotect.data import (
     PUBLIC_EVENTS_RETRY_WARN_THRESHOLD,
+    ProtectData,
 )
 from homeassistant.components.unifiprotect.event import EVENT_DESCRIPTIONS
 from homeassistant.const import ATTR_ATTRIBUTION, Platform
@@ -371,24 +373,63 @@ async def test_public_events_resubscribe_warns_after_retries(
     await init_entry(hass, ufp, [doorbell])
     assert ufp.events_subscription is None
 
-    ufp.api.update_public = AsyncMock(side_effect=Exception("boom"))
+    ufp.api.update_public = AsyncMock(side_effect=ClientError("boom"))
     assert ufp.ws_state_subscription is not None
 
+    attempts = PUBLIC_EVENTS_RETRY_WARN_THRESHOLD * 2
     with caplog.at_level(
         logging.WARNING, logger="homeassistant.components.unifiprotect.data"
     ):
-        for _ in range(PUBLIC_EVENTS_RETRY_WARN_THRESHOLD):
+        for _ in range(attempts):
             ufp.ws_state_subscription(WebsocketState.CONNECTED)
             await hass.async_block_till_done()
 
     assert ufp.events_subscription is None
-    assert ufp.api.update_public.await_count == PUBLIC_EVENTS_RETRY_WARN_THRESHOLD
+    assert ufp.api.update_public.await_count == attempts
     warnings = [
         record
         for record in caplog.records
         if record.levelno == logging.WARNING and "still failing" in record.getMessage()
     ]
-    assert len(warnings) == 1
+    # Re-warn periodically so a sustained outage stays visible, not once-only.
+    assert len(warnings) == 2
+
+
+async def test_public_events_retries_reset_on_success(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+) -> None:
+    """A successful subscribe clears the retry counter so later episodes re-warn."""
+    ufp.api.has_public_bootstrap = False
+    await init_entry(hass, ufp, [doorbell])
+    data: ProtectData = ufp.entry.runtime_data
+
+    # Two transient failures accumulate without priming the bootstrap.
+    ufp.api.update_public = AsyncMock(side_effect=ClientError("boom"))
+    assert ufp.ws_state_subscription is not None
+    for _ in range(2):
+        ufp.ws_state_subscription(WebsocketState.CONNECTED)
+        await hass.async_block_till_done()
+    assert data._public_events_retries == 2
+
+    # A later success primes, subscribes, and resets the counter to zero.
+    def _prime() -> None:
+        ufp.api.has_public_bootstrap = True
+        ufp.api.public_bootstrap = Mock(
+            spec=PublicBootstrap,
+            relays={},
+            sirens={},
+            arm_mode=None,
+            arm_profiles={},
+        )
+
+    ufp.api.update_public = AsyncMock(side_effect=_prime)
+    ufp.ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert ufp.events_subscription is not None
+    assert data._public_events_retries == 0
 
 
 async def test_doorbell_nfc_scanned(

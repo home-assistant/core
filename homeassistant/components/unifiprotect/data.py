@@ -8,6 +8,7 @@ from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
+from aiohttp.client_exceptions import ServerDisconnectedError
 from uiprotect import EventChange, ProtectApiClient, ProtectEvent, ProtectEventChannel
 from uiprotect.api import RTSPSStreams
 from uiprotect.data import (
@@ -230,6 +231,8 @@ class ProtectData:
             return
         self._unsubs.append(self.api.subscribe_events(self._async_process_public_event))
         self._public_events_subscribed = True
+        # Reset so the next failure episode is measured (and warns) from zero.
+        self._public_events_retries = 0
 
     async def _async_resubscribe_public_events(self) -> None:
         """Re-prime the public bootstrap and subscribe to public events.
@@ -243,10 +246,19 @@ class ProtectData:
         if not self.api.has_public_bootstrap:
             try:
                 await self.api.update_public()
-            except Exception:  # noqa: BLE001
+            except (
+                TimeoutError,
+                ClientError,
+                ServerDisconnectedError,
+                NotAuthorized,
+            ):
                 self._public_events_retries += 1
-                # Debug for transient blips; warn once when clearly not recovering.
-                if self._public_events_retries == PUBLIC_EVENTS_RETRY_WARN_THRESHOLD:
+                # Warn on the threshold and then periodically, so a sustained
+                # outage stays visible instead of going silent after one warning.
+                if (
+                    self._public_events_retries % PUBLIC_EVENTS_RETRY_WARN_THRESHOLD
+                    == 0
+                ):
                     _LOGGER.warning(
                         "Public API bootstrap still failing after %d attempts; "
                         "smart-detect events such as package detection will not be "
@@ -394,6 +406,7 @@ class ProtectData:
             unsub()
         self._unsubs.clear()
         self._public_events_subscribed = False
+        self._public_events_retries = 0
         await self.api.async_disconnect_ws()
 
     async def async_refresh(self) -> None:
