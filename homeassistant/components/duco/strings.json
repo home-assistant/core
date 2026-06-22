@@ -73,6 +73,9 @@
       }
     },
     "sensor": {
+      "filter_remaining": {
+        "name": "Filter remaining"
+      },
       "iaq_co2": {
         "name": "CO2 air quality index"
       },
@@ -81,9 +84,6 @@
       },
       "target_flow_level": {
         "name": "Target flow level"
-      },
-      "time_filter_remain": {
-        "name": "Filter remaining time"
       },
       "time_state_end": {
         "name": "State end time"

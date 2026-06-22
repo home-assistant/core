@@ -139,8 +139,8 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
 
 BOX_SENSOR_DESCRIPTIONS: tuple[DucoBoxSensorEntityDescription, ...] = (
     DucoBoxSensorEntityDescription(
-        key="time_filter_remain",
-        translation_key="time_filter_remain",
+        key="filter_remaining",
+        translation_key="filter_remaining",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         suggested_display_precision=0,

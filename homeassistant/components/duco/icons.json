@@ -1,6 +1,9 @@
 {
   "entity": {
     "sensor": {
+      "filter_remaining": {
+        "default": "mdi:air-filter"
+      },
       "iaq_co2": {
         "default": "mdi:molecule-co2"
       },
@@ -9,9 +12,6 @@
       },
       "target_flow_level": {
         "default": "mdi:gauge"
-      },
-      "time_filter_remain": {
-        "default": "mdi:air-filter"
       },
       "time_state_end": {
         "default": "mdi:timer-outline"
