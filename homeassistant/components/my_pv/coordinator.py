@@ -141,7 +141,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
 
     @_my_pv_connection
     async def set_target_temperature(self, temperature: float) -> bool:
-        """Set setup value for the given key."""
+        """Set target temperature."""
         result = await self._device.set_target_temperature(temperature)
         self.async_update_listeners()
         return result
