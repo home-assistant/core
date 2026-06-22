@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 from http import HTTPStatus
 import logging
 import os
@@ -9,6 +10,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import ANY, Mock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.auth.providers.homeassistant import HassAuthProvider
@@ -17,6 +19,7 @@ from homeassistant.components.cloud import CloudNotAvailable
 from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.config import (
     _DEFAULT_CONFIG,
+    AUTO_REVERT_DELAY,
     HTTP_STORAGE_SCHEMA,
     default_server_port,
 )
@@ -27,9 +30,14 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.http import KEY_HASS
 from homeassistant.helpers.network import NoURLAvailableError
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 from homeassistant.util.ssl import server_context_intermediate, server_context_modern
 
-from tests.common import async_call_logger_set_level, async_mock_service
+from tests.common import (
+    async_call_logger_set_level,
+    async_fire_time_changed,
+    async_mock_service,
+)
 from tests.typing import ClientSessionGenerator, WebSocketGenerator
 
 
@@ -1258,7 +1266,11 @@ async def test_websocket_http_config(
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"] == {"stable": _DEFAULT_CONFIG, "pending": None}
+    assert response["result"] == {
+        "stable": _DEFAULT_CONFIG,
+        "pending": None,
+        "revert_at": None,
+    }
 
     new_config = {
         "server_port": 9123,
@@ -1287,7 +1299,11 @@ async def test_websocket_http_config(
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"] == {"stable": _DEFAULT_CONFIG, "pending": new_config}
+    assert response["result"] == {
+        "stable": _DEFAULT_CONFIG,
+        "pending": new_config,
+        "revert_at": None,
+    }
 
     # Promote: pending becomes stable, pending is cleared.
     await ws_client.send_json_auto_id({"type": "http/config/promote"})
@@ -1299,7 +1315,11 @@ async def test_websocket_http_config(
     await ws_client.send_json_auto_id({"type": "http/config"})
     response = await ws_client.receive_json()
     assert response["success"]
-    assert response["result"] == {"stable": new_config, "pending": None}
+    assert response["result"] == {
+        "stable": new_config,
+        "pending": None,
+        "revert_at": None,
+    }
 
     # Promoting again with no pending is rejected.
     await ws_client.send_json_auto_id({"type": "http/config/promote"})
@@ -1336,6 +1356,105 @@ async def test_websocket_http_config(
     assert response["result"] == {"restart": False}
     await hass.async_block_till_done()
     assert len(restart_calls) == 3
+
+
+async def test_pending_config_auto_reverts_to_stable(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """A loaded pending config reverts to stable if it is not confirmed in time."""
+    hass_storage["http"] = _stable_http_storage(
+        {"server_port": 9876}, pending={"server_port": 9999}
+    )
+
+    # A revert clears the pending config and restarts to apply stable.
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    # The revert deadline is anchored to the (frozen) load time.
+    revert_at = dt_util.utcnow() + AUTO_REVERT_DELAY
+
+    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
+        assert await async_setup_component(hass, "http", {})
+        await async_setup_component(hass, "websocket_api", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+
+    # While the unconfirmed pending config is active, a revert deadline is
+    # returned alongside it.
+    await ws_client.send_json_auto_id({"type": "http/config"})
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9876}),
+        "pending": HTTP_STORAGE_SCHEMA({"server_port": 9999}),
+        "revert_at": revert_at.isoformat(),
+    }
+
+    # After the delay elapses without a promotion, pending is dropped and a
+    # restart is requested so the stable config is applied.
+    freezer.tick(timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage["http"]["data"] == {
+        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9876}),
+        "pending": None,
+        "yaml_migration_done": True,
+    }
+    assert len(restart_calls) == 1
+
+
+async def test_pending_config_promote_cancels_revert(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Promoting a pending config cancels the scheduled revert."""
+    hass_storage["http"] = _stable_http_storage(
+        {"server_port": 9876}, pending={"server_port": 9999}
+    )
+
+    restart_calls = async_mock_service(hass, "homeassistant", "restart")
+
+    with patch("asyncio.BaseEventLoop.create_server", return_value=Mock()):
+        assert await async_setup_component(hass, "http", {})
+        await async_setup_component(hass, "websocket_api", {})
+        await hass.async_start()
+        await hass.async_block_till_done()
+
+    ws_client = await hass_ws_client(hass)
+
+    # Confirm the pending config before the revert fires.
+    await ws_client.send_json_auto_id({"type": "http/config/promote"})
+    response = await ws_client.receive_json()
+    assert response["success"]
+
+    # The deadline is cleared once the config is confirmed.
+    await ws_client.send_json_auto_id({"type": "http/config"})
+    response = await ws_client.receive_json()
+    assert response["success"]
+    assert response["result"] == {
+        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9999}),
+        "pending": None,
+        "revert_at": None,
+    }
+
+    # The cancelled revert must not fire after the delay.
+    freezer.tick(timedelta(minutes=5, seconds=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass_storage["http"]["data"] == {
+        "stable": HTTP_STORAGE_SCHEMA({"server_port": 9999}),
+        "pending": None,
+        "yaml_migration_done": True,
+    }
+    assert len(restart_calls) == 0
 
 
 @pytest.mark.parametrize(
