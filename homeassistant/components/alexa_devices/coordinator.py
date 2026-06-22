@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import timedelta
+from typing import override
 
 from aioamazondevices.api import AmazonEchoApi
 from aioamazondevices.exceptions import (
@@ -155,6 +156,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self.api.on_media_state_event.append(self.media_state_event_handler)
         self.api.on_media_state_event.freeze()
 
+    @override
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
         try:
@@ -190,8 +192,11 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 await self._async_remove_device_stale(stale_devices)
             self.previous_devices = current_devices
 
-            current_routines = {slugify(routine) for routine in self.api.routines}
-            if stale_routines := self.previous_routines - current_routines:
+            current_routines = {
+                f"{slugify(self.config_entry.unique_id)}-{slugify(routine)}"
+                for routine in self.api.routines
+            }
+            if stale_routines := (self.previous_routines - current_routines):
                 await self._async_remove_routine_stale(stale_routines)
             self.previous_routines = current_routines
 
@@ -225,17 +230,19 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         """Remove stale routine."""
         entity_registry = er.async_get(self.hass)
 
-        for routine in stale_routines:
-            _LOGGER.debug(
-                "Detected change in routines: routine %s removed",
-                routine,
-            )
+        for routine_unique_id in stale_routines:
             entity_id = entity_registry.async_get_entity_id(
                 Platform.BUTTON,
                 DOMAIN,
-                f"{slugify(self.config_entry.unique_id)}-{slugify(routine)}",
+                routine_unique_id,
             )
             if entity_id:
+                _LOGGER.debug(
+                    "Detected change in routines: routine %s removed",
+                    routine_unique_id.replace(
+                        f"{slugify(self.config_entry.unique_id)}-", ""
+                    ),
+                )
                 entity_registry.async_remove(entity_id)
 
     async def sync_history_state(self) -> None:
