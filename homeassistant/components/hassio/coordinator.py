@@ -4,7 +4,6 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, replace
-from functools import partial
 import logging
 from typing import TYPE_CHECKING, Any, cast, override
 from uuid import UUID
@@ -142,6 +141,7 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
         self._supervisor_client = get_supervisor_client(hass)
         self._subscriptions: set[JobSubscription] = set()
         self._dispatcher_disconnect: Callable[[], None] | None = None
+        self._noop_listener_disconnect: Callable[[], None] | None = None
 
     @property
     def current_jobs(self) -> list[Job]:
@@ -197,6 +197,10 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
         """
         self._subscriptions.add(subscription)
 
+        # Connect a stub listener to start the update interval polling on first subscriber
+        if self._noop_listener_disconnect is None:
+            self._noop_listener_disconnect = self.async_add_listener(lambda: None)
+
         # Run the callback on each existing match
         # We catch all errors to prevent an error in one from stopping the others
         for match in [job for job in self.current_jobs if subscription.matches(job)]:
@@ -211,7 +215,15 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
                     err,
                 )
 
-        return partial(self._subscriptions.discard, subscription)
+        def _unsubscribe() -> None:
+            self._subscriptions.discard(subscription)
+
+            # Stop polling if there are no more subscribers
+            if not self._subscriptions and self._noop_listener_disconnect is not None:
+                self._noop_listener_disconnect()
+                self._noop_listener_disconnect = None
+
+        return _unsubscribe
 
     @callback
     def _async_refresh_finished(self) -> None:
