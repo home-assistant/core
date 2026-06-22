@@ -1,8 +1,6 @@
 """Tests for the sensors provided by the Forecast.Solar integration."""
 
-from datetime import datetime
 from unittest.mock import MagicMock
-from zoneinfo import ZoneInfo
 
 import pytest
 
@@ -23,7 +21,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -51,25 +48,6 @@ async def test_sensors(
     assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfEnergy.KILO_WATT_HOUR
     assert state.attributes.get(ATTR_DEVICE_CLASS) == SensorDeviceClass.ENERGY
     assert ATTR_ICON not in state.attributes
-    # The watts/wh_period attributes expose the full forecast horizon
-    # emitted by the library, with ISO 8601 keys in the site/API
-    # timezone (``Europe/Amsterdam`` per the conftest mock). The mock
-    # seeds two entries timestamped at 13:00 in HA's default timezone;
-    # these are emitted with the Europe/Amsterdam offset.
-    api_tz = ZoneInfo("Europe/Amsterdam")
-    default_tz = dt_util.get_default_time_zone()
-    ts_2021 = (
-        datetime(2021, 6, 27, 13, 0, tzinfo=default_tz).astimezone(api_tz).isoformat()
-    )
-    ts_2022 = (
-        datetime(2022, 6, 27, 13, 0, tzinfo=default_tz).astimezone(api_tz).isoformat()
-    )
-    watts_attr = state.attributes.get("watts")
-    wh_attr = state.attributes.get("wh_period")
-    assert isinstance(watts_attr, dict)
-    assert isinstance(wh_attr, dict)
-    assert watts_attr == {ts_2021: 10, ts_2022: 100}
-    assert wh_attr == {ts_2021: 30, ts_2022: 300}
 
     state = hass.states.get("sensor.energy_production_today_remaining")
     entry = entity_registry.async_get("sensor.energy_production_today_remaining")

@@ -4,7 +4,6 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any
-from zoneinfo import ZoneInfo
 
 from forecast_solar.models import Estimate
 
@@ -34,34 +33,6 @@ class ForecastSolarSensorEntityDescription(SensorEntityDescription):
     """Describes a Forecast.Solar Sensor."""
 
     state: Callable[[Estimate], Any] | None = None
-    attributes: Callable[[Estimate], dict[str, Any]] | None = None
-
-
-def _series_in_tz(series: dict[datetime, int], tz: ZoneInfo) -> dict[str, int]:
-    """Return all ISO-keyed entries from a series, converted to ``tz``.
-
-    Keys are emitted with the site/API timezone offset (rather than
-    ``+00:00``) so downstream consumers parsing the attribute map
-    directly see local-zoned timestamps. No date filter is applied:
-    the full forecast horizon returned by the Forecast.Solar library
-    is preserved.
-    """
-    return {ts.astimezone(tz).isoformat(): val for ts, val in series.items()}
-
-
-def _forecast_attributes(estimate: Estimate) -> dict[str, Any]:
-    """Return the full forecast horizon as ``watts`` and ``wh_period`` maps.
-
-    Each map is ``{ISO 8601 timestamp -> number}`` keyed in the site
-    timezone, where ``watts`` is instantaneous power (W) and
-    ``wh_period`` is energy (Wh) for the interval starting at that
-    timestamp.
-    """
-    tz = ZoneInfo(estimate.timezone)
-    return {
-        "watts": _series_in_tz(estimate.watts, tz),
-        "wh_period": _series_in_tz(estimate.wh_period, tz),
-    }
 
 
 SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
@@ -69,7 +40,6 @@ SENSORS: tuple[ForecastSolarSensorEntityDescription, ...] = (
         key="energy_production_today",
         translation_key="energy_production_today",
         state=lambda estimate: estimate.energy_production_today,
-        attributes=_forecast_attributes,
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
@@ -187,7 +157,6 @@ class ForecastSolarSensorEntity(
 
     entity_description: ForecastSolarSensorEntityDescription
     _attr_has_entity_name = True
-    _unrecorded_attributes = frozenset({"watts", "wh_period"})
 
     def __init__(
         self,
@@ -222,10 +191,3 @@ class ForecastSolarSensorEntity(
             state = self.entity_description.state(self.coordinator.data)
 
         return state
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any] | None:
-        """Return any extra state attributes for the sensor."""
-        if self.entity_description.attributes is None:
-            return None
-        return self.entity_description.attributes(self.coordinator.data)
