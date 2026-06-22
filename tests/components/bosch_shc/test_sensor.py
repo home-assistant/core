@@ -26,8 +26,7 @@ def test_power_sensor_description_has_state_class() -> None:
 
 
 def test_energy_sensor_description_state_class_and_unit() -> None:
-    """Test that the energy sensor description has the attributes required by
-    the Energy Dashboard Individual Devices picker (unit_class='energy').
+    """Test the energy sensor description matches the Energy Dashboard picker.
 
     The picker filters statistics by unit_class.  For kWh sensors with
     device_class ENERGY and state_class TOTAL_INCREASING the recorder produces
