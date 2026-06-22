@@ -1,16 +1,15 @@
 """Module contains the CompitClimate class for controlling climate entities."""
 
+from dataclasses import dataclass
 import logging
 from typing import Any, override
 
-from compit_inext_api import Parameter
 from compit_inext_api.consts import (
     CompitFanMode,
     CompitHVACMode,
     CompitParameter,
     CompitPresetMode,
 )
-from propcache.api import cached_property
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -23,6 +22,7 @@ from homeassistant.components.climate import (
     PRESET_HOME,
     PRESET_NONE,
     ClimateEntity,
+    ClimateEntityDescription,
     ClimateEntityFeature,
     HVACMode,
 )
@@ -38,9 +38,18 @@ from .coordinator import CompitConfigEntry, CompitDataUpdateCoordinator
 
 _LOGGER: logging.Logger = logging.getLogger(__name__)
 
-# Device class for climate devices in Compit system
-CLIMATE_DEVICE_CLASS = 10
 PARALLEL_UPDATES = 0
+
+
+@dataclass(frozen=True, kw_only=True)
+class CompitDeviceDescription(ClimateEntityDescription):
+    """Class to describe a Compit climate entity."""
+
+    supported_features: ClimateEntityFeature
+    available_presets: list[str]
+    available_fan_modes: list[str]
+    available_hvac_modes: list[HVACMode]
+
 
 COMPIT_MODE_MAP = {
     CompitHVACMode.COOL: HVACMode.COOL,
@@ -68,6 +77,55 @@ HVAC_MODE_TO_COMPIT_MODE = {v: k for k, v in COMPIT_MODE_MAP.items()}
 FAN_MODE_TO_COMPIT_FAN_MODE = {v: k for k, v in COMPIT_FANSPEED_MAP.items()}
 PRESET_MODE_TO_COMPIT_PRESET_MODE = {v: k for k, v in COMPIT_PRESET_MAP.items()}
 
+DEVICE_DEFINITIONS: dict[int, CompitDeviceDescription] = {
+    224: CompitDeviceDescription(
+        key="R 900",
+        supported_features=ClimateEntityFeature.PRESET_MODE,
+        available_presets=[PRESET_HOME, PRESET_AWAY],
+        available_fan_modes=[],
+        available_hvac_modes=[HVACMode.HEAT, HVACMode.OFF],
+    ),
+    223: CompitDeviceDescription(
+        key="Nano Color 2",
+        supported_features=ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE,
+        available_presets=[PRESET_HOME, PRESET_ECO, PRESET_NONE, PRESET_AWAY],
+        available_fan_modes=[FAN_OFF, FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+        available_hvac_modes=[
+            HVACMode.COOL,
+            HVACMode.HEAT,
+            HVACMode.OFF,
+        ],
+    ),
+    12: CompitDeviceDescription(
+        key="Nano Color",
+        supported_features=ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE,
+        available_presets=[PRESET_HOME, PRESET_ECO, PRESET_NONE, PRESET_AWAY],
+        available_fan_modes=[FAN_OFF, FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+        available_hvac_modes=[
+            HVACMode.COOL,
+            HVACMode.HEAT,
+            HVACMode.OFF,
+        ],
+    ),
+    7: CompitDeviceDescription(
+        key="Nano One",
+        supported_features=ClimateEntityFeature.PRESET_MODE
+        | ClimateEntityFeature.FAN_MODE
+        | ClimateEntityFeature.TARGET_TEMPERATURE,
+        available_presets=[PRESET_HOME, PRESET_ECO, PRESET_NONE, PRESET_AWAY],
+        available_fan_modes=[FAN_OFF, FAN_AUTO, FAN_LOW, FAN_MEDIUM, FAN_HIGH],
+        available_hvac_modes=[
+            HVACMode.COOL,
+            HVACMode.HEAT,
+            HVACMode.OFF,
+        ],
+    ),
+}
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -77,64 +135,49 @@ async def async_setup_entry(
     """Set up the CompitClimate platform from a config entry."""
 
     coordinator = entry.runtime_data
-    climate_entities = []
-    for device_id in coordinator.connector.all_devices:
-        device = coordinator.connector.all_devices[device_id]
-
-        if device.definition.device_class == CLIMATE_DEVICE_CLASS:
-            climate_entities.append(
-                CompitClimate(
-                    coordinator,
-                    device_id,
-                    {
-                        parameter.parameter_code: parameter
-                        for parameter in device.definition.parameters
-                    },
-                    device.definition.name,
-                )
-            )
-
-    async_add_devices(climate_entities)
+    async_add_devices(
+        CompitClimate(
+            coordinator,
+            device_id,
+            device_definition,
+        )
+        for device_id, device in coordinator.connector.all_devices.items()
+        if (device_definition := DEVICE_DEFINITIONS.get(device.definition.code))
+    )
 
 
 class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntity):
     """Representation of a Compit climate device."""
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_hvac_modes = [*COMPIT_MODE_MAP.values()]
     _attr_name = None
     _attr_has_entity_name = True
-    _attr_supported_features = (
-        ClimateEntityFeature.TARGET_TEMPERATURE
-        | ClimateEntityFeature.FAN_MODE
-        | ClimateEntityFeature.PRESET_MODE
-    )
+    entity_description: CompitDeviceDescription
 
     def __init__(
         self,
         coordinator: CompitDataUpdateCoordinator,
         device_id: int,
-        parameters: dict[str, Parameter],
-        device_name: str,
+        entity_description: CompitDeviceDescription,
     ) -> None:
         """Initialize the climate device."""
         super().__init__(coordinator)
-        self._attr_unique_id = f"{device_name}_{device_id}"
+        self._attr_unique_id = f"{entity_description.key}_{device_id}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_id))},
-            name=device_name,
+            name=entity_description.key,
             manufacturer=MANUFACTURER_NAME,
-            model=device_name,
+            model=entity_description.key,
         )
 
-        self.parameters = parameters
         self.device_id = device_id
-        self.available_presets: Parameter | None = self.parameters.get(
-            CompitParameter.PRESET_MODE.value
-        )
-        self.available_fan_modes: Parameter | None = self.parameters.get(
-            CompitParameter.FAN_MODE.value
-        )
+        self.entity_description = entity_description
+        self._attr_supported_features = entity_description.supported_features
+        self._attr_preset_modes = entity_description.available_presets
+        self._attr_fan_modes = entity_description.available_fan_modes
+        self._attr_hvac_modes = [
+            HVACMode(mode) for mode in entity_description.available_hvac_modes
+        ]
 
     @property
     @override
@@ -163,38 +206,6 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             return None
         return float(value)
 
-    @cached_property
-    @override
-    def preset_modes(self) -> list[str] | None:
-        """Return the available preset modes."""
-        if self.available_presets is None or self.available_presets.details is None:
-            return []
-
-        preset_modes = []
-        for item in self.available_presets.details:
-            if item is not None:
-                ha_preset = COMPIT_PRESET_MAP.get(CompitPresetMode(item.state))
-                if ha_preset and ha_preset not in preset_modes:
-                    preset_modes.append(ha_preset)
-
-        return preset_modes
-
-    @cached_property
-    @override
-    def fan_modes(self) -> list[str] | None:
-        """Return the available fan modes."""
-        if self.available_fan_modes is None or self.available_fan_modes.details is None:
-            return []
-
-        fan_modes = []
-        for item in self.available_fan_modes.details:
-            if item is not None:
-                ha_fan_mode = COMPIT_FANSPEED_MAP.get(CompitFanMode(item.state))
-                if ha_fan_mode and ha_fan_mode not in fan_modes:
-                    fan_modes.append(ha_fan_mode)
-
-        return fan_modes
-
     @property
     @override
     def preset_mode(self) -> str | None:
@@ -202,7 +213,8 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         preset_mode = self.get_parameter_value(CompitParameter.PRESET_MODE)
 
         if preset_mode is not None:
-            return COMPIT_PRESET_MAP.get(CompitPresetMode(preset_mode))
+            compit_preset_mode = CompitPresetMode(preset_mode)
+            return COMPIT_PRESET_MAP.get(compit_preset_mode)
         return None
 
     @property
@@ -211,7 +223,8 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         """Return the current fan mode."""
         fan_mode = self.get_parameter_value(CompitParameter.FAN_MODE)
         if fan_mode is not None:
-            return COMPIT_FANSPEED_MAP.get(CompitFanMode(fan_mode))
+            compit_fan_mode = CompitFanMode(fan_mode)
+            return COMPIT_FANSPEED_MAP.get(compit_fan_mode)
         return None
 
     @property
@@ -220,7 +233,8 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         """Return the current HVAC mode."""
         hvac_mode = self.get_parameter_value(CompitParameter.HVAC_MODE)
         if hvac_mode is not None:
-            return COMPIT_MODE_MAP.get(CompitHVACMode(hvac_mode))
+            compit_hvac_mode = CompitHVACMode(hvac_mode)
+            return COMPIT_MODE_MAP.get(compit_hvac_mode)
         return None
 
     @override
