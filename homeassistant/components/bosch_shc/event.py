@@ -47,25 +47,25 @@ async def async_setup_entry(
     for switch_device in session.device_helper.universal_switches:
         if device_excluded(switch_device, entry.options):
             continue
-        for keystate in switch_device.keystates:
-            entities.append(
-                UniversalSwitchEvent(
-                    switch_device,
-                    entry_id=entry.entry_id,
-                    key_id=keystate,
-                )
+        entities.extend(
+            UniversalSwitchEvent(
+                switch_device,
+                entry_id=entry.entry_id,
+                key_id=keystate,
             )
+            for keystate in switch_device.keystates
+        )
 
     # Scenarios are not room devices — never filtered by device/room exclusion.
-    for scenario in session.scenarios:
-        entities.append(
-            SHCScenarioEvent(
-                scenario,
-                session,
-                hass,
-                entry_id=entry.entry_id,
-            )
+    entities.extend(
+        SHCScenarioEvent(
+            scenario,
+            session,
+            hass,
+            entry_id=entry.entry_id,
         )
+        for scenario in session.scenarios
+    )
 
     # #282: Light Control II configured as a non-switching push-button emits
     # Keypad events the user can react to. Only create the entity when the
