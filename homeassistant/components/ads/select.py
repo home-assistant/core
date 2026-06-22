@@ -1,5 +1,7 @@
 """Support for ADS select entities."""
 
+from typing import override
+
 import pyads
 import voluptuous as vol
 
@@ -61,6 +63,7 @@ class AdsSelect(AdsEntity, SelectEntity):
         self._attr_options = options
         self._attr_current_option = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_INT)
@@ -68,6 +71,7 @@ class AdsSelect(AdsEntity, SelectEntity):
             self._ads_var, pyads.PLCTYPE_INT, self._handle_ads_value
         )
 
+    @override
     def select_option(self, option: str) -> None:
         """Change the selected option."""
         if option in self._attr_options:

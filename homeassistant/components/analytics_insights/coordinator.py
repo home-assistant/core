@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from python_homeassistant_analytics import (
     CustomIntegration,
@@ -66,6 +66,7 @@ class HomeassistantAnalyticsDataUpdateCoordinator(DataUpdateCoordinator[Analytic
             CONF_TRACKED_CUSTOM_INTEGRATIONS
         ]
 
+    @override
     async def _async_update_data(self) -> AnalyticsData:
         try:
             apps_data = (

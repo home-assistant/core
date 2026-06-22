@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from pyaqvify import AqvifyDeviceData
 
@@ -101,6 +102,7 @@ class AqvifySensor(AqvifyBaseEntity, SensorEntity):
     entity_description: AqvifySensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(
