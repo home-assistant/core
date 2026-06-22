@@ -71,7 +71,6 @@ async def async_setup_entry(
 class SteamSensorEntity(SteamEntity, SensorEntity):
     """Representation of a Steam sensor entity."""
 
-    _attr_has_entity_name = True
     entity_description: SteamSensorEntityDescription
 
     def __init__(
