@@ -566,3 +566,337 @@ async def test_not_possible_to_use_favorite_program(
             },
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    ("temperature_option", "service_option"),
+    [
+        pytest.param(
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
+            "heating_ventilation_air_conditioning_air_conditioner_option_setpoint_temperature",
+            id="air_conditioner_setpoint_temperature",
+        ),
+        pytest.param(
+            OptionKey.COOKING_OVEN_SETPOINT_TEMPERATURE,
+            "cooking_oven_option_setpoint_temperature",
+            id="oven_setpoint_temperature",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("affects_to", "program", "get_program_information_method", "method_call"),
+    [
+        pytest.param(
+            "active_program",
+            "dishcare_dishwasher_program_eco_50",
+            "get_available_program",
+            "start_program",
+            id="start_program",
+        ),
+        pytest.param(
+            "selected_program",
+            "dishcare_dishwasher_program_eco_50",
+            "get_available_program",
+            "set_selected_program",
+            id="select_program",
+        ),
+        pytest.param(
+            "active_program",
+            None,
+            "get_active_program",
+            "set_active_program_options",
+            id="set_active_program_options",
+        ),
+        pytest.param(
+            "selected_program",
+            None,
+            "get_selected_program",
+            "set_selected_program_options",
+            id="set_selected_program_options",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("option_units", "expected_value"),
+    [
+        pytest.param("°C", 35, id="celsius"),
+        pytest.param("°F", 95, id="fahrenheit"),
+    ],
+)
+async def test_temperature_options_convert(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    affects_to: str,
+    program: str | None,
+    get_program_information_method: str,
+    method_call: str,
+    temperature_option: OptionKey,
+    service_option: str,
+    option_units: str,
+    expected_value: int,
+) -> None:
+    """Test that temperature options are converted correctly.
+
+    Note: The program and the options used in this test aren't related.
+    """
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    async def test(args: Any, kwargs: Any) -> None:
+        pass
+
+    get_program_information_method_mock = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[Option(key=temperature_option, value=0, unit=option_units)],
+        ),
+        wraps=test,
+    )
+    setattr(
+        client,
+        get_program_information_method,
+        get_program_information_method_mock,
+    )
+    # start_program and set_selected_program side effects
+    # does break the await counts. To avoid that mocks are reset.
+    setattr(client, method_call, AsyncMock())
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+    service_data = {
+        "device_id": device_entry.id,
+        "affects_to": affects_to,
+        service_option: 35,
+    }
+    if program:
+        service_data["program"] = program
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_program_and_options",
+        service_data,
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    kwargs = getattr(client, method_call).call_args.kwargs
+    call_options: list[Option] = (
+        kwargs.get("options") or kwargs["array_of_options"].options
+    )
+    assert call_options[0].value == expected_value
+    get_program_information_method_mock.assert_awaited_once()
+    assert get_program_information_method_mock.await_args.args[0] == appliance.ha_id
+    assert get_program_information_method_mock.await_args.kwargs.get("program_key") is (
+        ProgramKey.DISHCARE_DISHWASHER_ECO_50 if program else None
+    )
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    "service_option",
+    [
+        pytest.param(
+            "heating_ventilation_air_conditioning_air_conditioner_option_setpoint_temperature",
+            id="air_conditioner_setpoint_temperature",
+        ),
+        pytest.param(
+            "cooking_oven_option_setpoint_temperature",
+            id="oven_setpoint_temperature",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("affects_to", "program", "get_program_information_method", "method_call"),
+    [
+        pytest.param(
+            "active_program",
+            "dishcare_dishwasher_program_eco_50",
+            "get_available_program",
+            "start_program",
+            id="start_program",
+        ),
+        pytest.param(
+            "selected_program",
+            "dishcare_dishwasher_program_eco_50",
+            "get_available_program",
+            "set_selected_program",
+            id="select_program",
+        ),
+        pytest.param(
+            "active_program",
+            None,
+            "get_active_program",
+            "set_active_program_options",
+            id="set_active_program_options",
+        ),
+        pytest.param(
+            "selected_program",
+            None,
+            "get_selected_program",
+            "set_selected_program_options",
+            id="set_selected_program_options",
+        ),
+    ],
+)
+@pytest.mark.parametrize("options", [[], None])
+async def test_temperature_options_convert_missing_option(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    affects_to: str,
+    program: str | None,
+    get_program_information_method: str,
+    method_call: str,
+    service_option: str,
+    options: list[Option] | None,
+) -> None:
+    """Test that default units are used when the option is missing.
+
+    Note: The program and the options used in this test aren't related.
+    """
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    setattr(
+        client,
+        get_program_information_method,
+        AsyncMock(
+            return_value=Program(
+                key=ProgramKey.DISHCARE_DISHWASHER_ECO_50, options=options
+            )
+        ),
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+    service_data = {
+        "device_id": device_entry.id,
+        "affects_to": affects_to,
+        service_option: 35,
+    }
+    if program:
+        service_data["program"] = program
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_program_and_options",
+        service_data,
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    kwargs = getattr(client, method_call).call_args.kwargs
+    call_options: list[Option] = (
+        kwargs.get("options") or kwargs["array_of_options"].options
+    )
+    assert call_options[0].value == 35
+
+
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+@pytest.mark.parametrize(
+    "service_option",
+    [
+        pytest.param(
+            "heating_ventilation_air_conditioning_air_conditioner_option_setpoint_temperature",
+            id="air_conditioner_setpoint_temperature",
+        ),
+        pytest.param(
+            "cooking_oven_option_setpoint_temperature",
+            id="oven_setpoint_temperature",
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("affects_to", "program", "get_program_information_method", "method_call"),
+    [
+        pytest.param(
+            "active_program",
+            "dishcare_dishwasher_program_eco_50",
+            "get_available_program",
+            "start_program",
+            id="start_program",
+        ),
+        pytest.param(
+            "selected_program",
+            "dishcare_dishwasher_program_eco_50",
+            "get_available_program",
+            "set_selected_program",
+            id="select_program",
+        ),
+        pytest.param(
+            "active_program",
+            None,
+            "get_active_program",
+            "set_active_program_options",
+            id="set_active_program_options",
+        ),
+        pytest.param(
+            "selected_program",
+            None,
+            "get_selected_program",
+            "set_selected_program_options",
+            id="set_selected_program_options",
+        ),
+    ],
+)
+async def test_temperature_options_convert_api_error(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    affects_to: str,
+    program: str | None,
+    get_program_information_method: str,
+    method_call: str,
+    service_option: str,
+) -> None:
+    """Test that default units are used on API error.
+
+    Note: The program and the options used in this test aren't related.
+    """
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    setattr(
+        client,
+        get_program_information_method,
+        AsyncMock(side_effect=HomeConnectError("error.key")),
+    )
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+    service_data = {
+        "device_id": device_entry.id,
+        "affects_to": affects_to,
+        service_option: 35,
+    }
+    if program:
+        service_data["program"] = program
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_program_and_options",
+        service_data,
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+
+    kwargs = getattr(client, method_call).call_args.kwargs
+    call_options: list[Option] = (
+        kwargs.get("options") or kwargs["array_of_options"].options
+    )
+    assert call_options[0].value == 35
