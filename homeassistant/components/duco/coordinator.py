@@ -1,5 +1,6 @@
 """Data update coordinator for the Duco integration."""
 
+from contextlib import suppress
 from dataclasses import dataclass
 import logging
 from typing import cast
@@ -129,10 +130,8 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         # failures on this supplemental endpoint should not make the primary
         # node entities unavailable.
         time_filter_remain = None
-        try:
+        with suppress(DucoError):
             time_filter_remain = await self.client.async_get_time_filter_remaining()
-        except DucoError as err:
-            _LOGGER.debug("Could not fetch Duco heat recovery info", exc_info=err)
 
         return DucoData(
             nodes={node.node_id: node for node in nodes},
