@@ -2,6 +2,7 @@
 
 import datetime
 import logging
+from typing import override
 
 from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice
 import httpx
@@ -47,6 +48,7 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         """Get the host."""
         return self._host
 
+    @override
     async def _async_update_data(self) -> CCM15DeviceState:
         """Fetch data from Rain Bird device."""
         try:

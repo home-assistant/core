@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -617,6 +617,7 @@ class NextcloudSensor(NextcloudEntity, SensorEntity):
     entity_description: NextcloudSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str | int | float | datetime:
         """Return the state for this sensor."""
         val = self.coordinator.data.get(self.entity_description.key)

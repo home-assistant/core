@@ -374,7 +374,7 @@ def parametrize_condition_states_any(
     every other targeted entity has been set to the same state.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         condition_options: Options dict passed to the condition (typically
             includes the `threshold` block); merged into each generated tuple.
         target_states: States the condition is expected to evaluate True
@@ -433,7 +433,7 @@ def parametrize_condition_states_all(
     every other targeted entity has been set to the same state.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         condition_options: Options dict passed to the condition (typically
             includes the `threshold` block); merged into each generated tuple.
         target_states: States the condition is expected to evaluate True for
@@ -2136,7 +2136,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
 
     Uses behavior=any. Generates state sequences for a condition
     that reads its tracked value from a state attribute
-    (e.g. `climate.target_humidity`). The condition
+    (e.g. `climate.is_target_humidity`). The condition
     is exercised across three threshold types in turn — "above", "below",
     "between" — and for each, the helper invokes
     `parametrize_condition_states_any` with target/other states populated
@@ -2149,7 +2149,7 @@ def parametrize_numerical_attribute_condition_above_below_any(
     `("condition", "condition_options", "states")`.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         state: The `state.state` value to use for entities meant to match
             the condition (the attribute lives on top of this state).
         attribute: Name of the attribute the condition reads. The helper
@@ -2296,7 +2296,7 @@ def parametrize_numerical_attribute_condition_above_below_all(
     `("condition", "condition_options", "states")`.
 
     Args:
-        condition: Condition key, e.g. `"climate.target_humidity"`.
+        condition: Condition key, e.g. `"climate.is_target_humidity"`.
         state: The `state.state` value to use for entities meant to match
             the condition (the attribute lives on top of this state).
         attribute: Name of the attribute the condition reads. The helper
@@ -2511,7 +2511,7 @@ async def assert_numerical_condition_unit_conversion(
     entities whose unit_of_measurement is invalid (not convertible).
 
     Args:
-        condition: The condition key (e.g. "climate.target_temperature").
+        condition: The condition key (e.g. "climate.is_target_temperature").
         entity_id: The entity being evaluated by the condition.
         pass_states: Entity states that should make the condition pass.
         fail_states: Entity states that should make the condition fail.

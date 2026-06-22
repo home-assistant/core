@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import dataclasses
 from datetime import datetime, timedelta
-from typing import Final
+from typing import Final, override
 
 from ovoenergy.models import OVODailyUsage
 
@@ -169,6 +169,7 @@ class OVOEnergySensor(OVOEnergyDeviceEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         usage = self.coordinator.data

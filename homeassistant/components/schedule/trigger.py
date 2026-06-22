@@ -30,8 +30,8 @@ class ScheduleBackToBackTrigger(EntityTransitionTriggerBase):
 
 
 TRIGGERS: dict[str, type[Trigger]] = {
-    "turned_on": ScheduleBackToBackTrigger,
-    "turned_off": make_entity_target_state_trigger(DOMAIN, STATE_OFF),
+    "block_started": ScheduleBackToBackTrigger,
+    "block_ended": make_entity_target_state_trigger(DOMAIN, STATE_OFF),
 }
 
 

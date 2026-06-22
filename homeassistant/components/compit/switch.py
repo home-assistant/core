@@ -1,7 +1,7 @@
 """Switch platform for Compit integration."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from compit_inext_api.consts import CompitParameter
 
@@ -101,6 +101,7 @@ class CompitSwitch(CoordinatorEntity[CompitDataUpdateCoordinator], SwitchEntity)
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -109,6 +110,7 @@ class CompitSwitch(CoordinatorEntity[CompitDataUpdateCoordinator], SwitchEntity)
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the switch."""
         value = self.coordinator.connector.get_current_option(
@@ -117,6 +119,7 @@ class CompitSwitch(CoordinatorEntity[CompitDataUpdateCoordinator], SwitchEntity)
 
         return True if value == STATE_ON else False if value == STATE_OFF else None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.connector.select_device_option(
@@ -124,6 +127,7 @@ class CompitSwitch(CoordinatorEntity[CompitDataUpdateCoordinator], SwitchEntity)
         )
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.connector.select_device_option(

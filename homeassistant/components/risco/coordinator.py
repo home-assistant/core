@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyrisco import CannotConnectError, OperationError, RiscoCloud, UnauthorizedError
 from pyrisco.cloud.alarm import Alarm
@@ -46,6 +46,7 @@ class RiscoDataUpdateCoordinator(DataUpdateCoordinator[Alarm]):
             ),
         )
 
+    @override
     async def _async_update_data(self) -> Alarm:
         """Fetch data from risco."""
         try:
@@ -80,6 +81,7 @@ class RiscoEventsDataUpdateCoordinator(DataUpdateCoordinator[list[Event]]):
             update_interval=timedelta(seconds=60),
         )
 
+    @override
     async def _async_update_data(self) -> list[Event]:
         """Fetch data from risco."""
         last_store = await self._store.async_load() or {}
