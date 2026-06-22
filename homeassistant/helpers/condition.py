@@ -1245,12 +1245,7 @@ def condition_trace_update_result(**kwargs: Any) -> None:
 
 
 class trace_condition:
-    """Trace condition evaluation.
-
-    Implemented as a context manager class rather than a
-    @contextmanager-decorated generator to avoid the per-use generator
-    allocation and iteration overhead on the condition evaluation hot path.
-    """
+    """Trace condition evaluation."""
 
     __slots__ = ("_should_pop", "_trace_element", "_variables")
 
@@ -1279,10 +1274,12 @@ class trace_condition:
         self, exc_type: object, exc_val: BaseException | None, exc_tb: object
     ) -> None:
         """Finish tracing the condition evaluation."""
-        if exc_val is not None and isinstance(exc_val, Exception):
-            self._trace_element.set_error(exc_val)
-        if self._should_pop:
-            trace_stack_pop(trace_stack_cv)
+        try:
+            if exc_val is not None and isinstance(exc_val, Exception):
+                self._trace_element.set_error(exc_val)
+        finally:
+            if self._should_pop:
+                trace_stack_pop(trace_stack_cv)
 
 
 @overload

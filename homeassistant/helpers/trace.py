@@ -307,11 +307,6 @@ def script_execution_get() -> str | None:
 class trace_path:
     """Go deeper in the config tree.
 
-    Implemented as a context manager class rather than a
-    @contextmanager-decorated generator to avoid the per-use generator
-    allocation and iteration overhead; this runs on every traced step and
-    condition.
-
     Can not be used as a decorator on coroutine functions.
     """
 

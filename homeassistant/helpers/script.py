@@ -186,13 +186,7 @@ def action_trace_append(variables: TemplateVarsType, path: str) -> TraceElement:
 
 
 class trace_action:
-    """Trace action execution.
-
-    Implemented as a context manager class rather than an
-    @asynccontextmanager-decorated generator to avoid the per-use async
-    generator allocation and iteration overhead on the script execution
-    hot path.
-    """
+    """Trace action execution."""
 
     __slots__ = ("_hass", "_stop", "_trace_element", "_variables")
 
