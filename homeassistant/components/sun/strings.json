@@ -1,4 +1,10 @@
 {
+  "common": {
+    "trigger_for_name": "For at least",
+    "trigger_threshold_name": "Threshold type",
+    "trigger_twilight_description": "The twilight phase that defines when dawn and dusk occur.",
+    "trigger_twilight_name": "Twilight type"
+  },
   "config": {
     "step": {
       "user": {
@@ -36,5 +42,73 @@
       }
     }
   },
-  "title": "Sun"
+  "selector": {
+    "trigger_twilight": {
+      "options": {
+        "astronomical": "Astronomical",
+        "civil": "Civil",
+        "nautical": "Nautical"
+      }
+    }
+  },
+  "title": "Sun",
+  "triggers": {
+    "dawn": {
+      "description": "Triggers at dawn, when the morning twilight begins.",
+      "fields": {
+        "twilight": {
+          "description": "[%key:component::sun::common::trigger_twilight_description%]",
+          "name": "[%key:component::sun::common::trigger_twilight_name%]"
+        }
+      },
+      "name": "Dawn"
+    },
+    "dusk": {
+      "description": "Triggers at dusk, when the evening twilight ends.",
+      "fields": {
+        "twilight": {
+          "description": "[%key:component::sun::common::trigger_twilight_description%]",
+          "name": "[%key:component::sun::common::trigger_twilight_name%]"
+        }
+      },
+      "name": "Dusk"
+    },
+    "elevation_changed": {
+      "description": "Triggers when the elevation of the sun changes.",
+      "fields": {
+        "threshold": {
+          "name": "[%key:component::sun::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Sun elevation changed"
+    },
+    "elevation_crossed_threshold": {
+      "description": "Triggers when the elevation of the sun crosses a threshold.",
+      "fields": {
+        "for": {
+          "name": "[%key:component::sun::common::trigger_for_name%]"
+        },
+        "threshold": {
+          "name": "[%key:component::sun::common::trigger_threshold_name%]"
+        }
+      },
+      "name": "Sun elevation crossed threshold"
+    },
+    "solar_midnight": {
+      "description": "Triggers when the sun reaches its lowest point below the horizon.",
+      "name": "Solar midnight"
+    },
+    "solar_noon": {
+      "description": "Triggers when the sun reaches its highest point in the sky.",
+      "name": "Solar noon"
+    },
+    "sunrise": {
+      "description": "Triggers when the sun rises above the horizon.",
+      "name": "Sunrise"
+    },
+    "sunset": {
+      "description": "Triggers when the sun sets below the horizon.",
+      "name": "Sunset"
+    }
+  }
 }
