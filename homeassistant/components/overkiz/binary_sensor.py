@@ -143,7 +143,6 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
     # (io:SomfyWindowStateSensor, io:SomfySlidingWindowStateSensor)
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_OPEN_CLOSED,
-        name="Window",
         device_class=BinarySensorDeviceClass.WINDOW,
         value_fn=lambda state: state == OverkizCommandParam.OPEN,
         # core:OpenClosedState is also exposed by all cover devices,
