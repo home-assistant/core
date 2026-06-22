@@ -4,6 +4,7 @@ from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 import blebox_uniapi.sensor
 
@@ -239,11 +240,13 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
             self._attr_translation_placeholders = {"index": str(index)}
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self._feature.native_value)
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if implemented."""
         if self.state_class != SensorStateClass.TOTAL:

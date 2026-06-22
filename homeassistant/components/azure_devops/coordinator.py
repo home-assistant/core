@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 from aioazuredevops.client import DevOpsClient
 from aioazuredevops.helper import (
@@ -161,6 +161,7 @@ class AzureDevOpsDataUpdateCoordinator(DataUpdateCoordinator[AzureDevOpsData]):
             ignored_categories=IGNORED_CATEGORIES,
         )
 
+    @override
     async def _async_update_data(self) -> AzureDevOpsData:
         """Fetch data from Azure DevOps."""
         # Get the builds from the project
