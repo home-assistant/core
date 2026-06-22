@@ -45,7 +45,7 @@ from .const import (
     EvoService,
 )
 from .coordinator import EvoDataUpdateCoordinator
-from .entity import EvoChild, EvoEntity, _dt_to_iso, is_valid_zone, unique_zone_id
+from .entity import EvoChild, EvoEntity, is_valid_zone, unique_zone_id
 from .helpers import async_create_deprecation_issue_once
 
 _LOGGER = logging.getLogger(__name__)
@@ -480,7 +480,7 @@ class EvoController(EvoClimateEntity):
         """Handle updated data from the coordinator."""
 
         self._device_state_attrs = {
-            "activeSystemFaults": _dt_to_iso(
+            "activeSystemFaults": (
                 self._evo_device.active_faults + self._evo_device.gateway.active_faults
             )
         }
