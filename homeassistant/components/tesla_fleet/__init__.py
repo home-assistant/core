@@ -15,6 +15,7 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.tesla import VehicleFleet
 
+from homeassistant.components.recorder import get_instance as get_recorder_instance
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
@@ -33,12 +34,13 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 )
 from homeassistant.helpers.device_registry import DeviceInfo
 
-from .const import DOMAIN, LOGGER, MODELS
+from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER, MODELS
 from .coordinator import (
     TeslaFleetEnergySiteHistoryCoordinator,
     TeslaFleetEnergySiteInfoCoordinator,
     TeslaFleetEnergySiteLiveCoordinator,
     TeslaFleetVehicleDataCoordinator,
+    _statistic_id,
 )
 from .models import TeslaFleetData, TeslaFleetEnergyData, TeslaFleetVehicleData
 
@@ -270,3 +272,26 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -
 async def async_unload_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> bool:
     """Unload TeslaFleet Config."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+
+
+async def async_remove_entry(hass: HomeAssistant, entry: TeslaFleetConfigEntry) -> None:
+    """Handle removal of a config entry."""
+    device_registry = dr.async_get(hass)
+    devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+
+    # External statistics are only created for energy sites, whose device
+    # identifier is the numeric energy_site_id used to build the statistic IDs.
+    # Vehicle (VIN) and wall connector (DIN) identifiers are not numeric, so
+    # they are skipped. Note a wall connector's serial_number is derived from
+    # its DIN (e.g. "abd-123" -> "123") and can be numeric, so it must not be
+    # used to identify energy sites.
+    statistic_ids = [
+        _statistic_id(site_id, key)
+        for device in devices
+        for domain, site_id in device.identifiers
+        if domain == DOMAIN and site_id.isdigit()
+        for key in ENERGY_HISTORY_FIELDS
+    ]
+
+    if statistic_ids:
+        get_recorder_instance(hass).async_clear_statistics(statistic_ids)
