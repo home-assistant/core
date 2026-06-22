@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import cast
+from typing import cast, override
 
 from mill import Heater, Mill
 from mill_local import Mill as MillLocal
@@ -80,6 +80,7 @@ class MillHistoricDataUpdateCoordinator(DataUpdateCoordinator):
             config_entry=config_entry,
         )
 
+    @override
     async def _async_update_data(self):
         """Update historic data via API."""
         now = dt_util.utcnow()

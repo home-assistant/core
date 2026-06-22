@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from cieloconnectapi.exceptions import AuthenticationError
 
@@ -104,6 +104,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         self._attr_unique_id = device_id
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of temperature in Home Assistant format.
 
@@ -125,6 +126,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         return UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return dynamic feature flags based on the current mode."""
         flags = ClimateEntityFeature.TURN_OFF | ClimateEntityFeature.TURN_ON
@@ -148,6 +150,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         return flags
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity, if available."""
         if self.device_data:
@@ -155,58 +158,69 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the low target temperature for HEAT_COOL mode."""
         return self.client.target_temperature_low(self.temperature_unit)
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the high target temperature for HEAT_COOL mode."""
         return self.client.target_temperature_high(self.temperature_unit)
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         mode = self.client.hvac_mode()
         return CIELO_TO_HA_HVAC.get(mode, mode)
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available HVAC modes."""
         modes = self.client.hvac_modes() or []
         return [CIELO_TO_HA_HVAC.get(m, m) for m in modes]
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current indoor temperature."""
         return self.client.current_temperature()
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self.client.target_temperature()
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum possible target temperature."""
         return self.client.min_temp()
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum possible target temperature."""
         return self.client.max_temp()
 
     @property
+    @override
     def target_temperature_step(self) -> float | None:
         """Return the precision of the thermostat."""
         return self.client.target_temperature_step(self.temperature_unit)
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         return self.client.fan_mode()
 
     @property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes.
 
@@ -218,6 +232,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         return self.client.fan_modes()
 
     @property
+    @override
     def swing_modes(self) -> list[str] | None:
         """Return the list of available swing modes.
 
@@ -229,11 +244,13 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         return self.client.swing_modes()
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         return self.client.preset_mode()
 
     @property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return the list of available preset modes.
 
@@ -245,16 +262,19 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         return self.client.preset_modes()
 
     @property
+    @override
     def swing_mode(self) -> str | None:
         """Return the current swing mode."""
         return self.device_data.swing_mode if self.device_data else None
 
     @property
+    @override
     def precision(self) -> float:
         """Return the precision of the thermostat."""
         return self.client.precision(self.temperature_unit)
 
     @async_handle_api_call
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if self.hvac_mode == HVACMode.HEAT_COOL:
@@ -271,26 +291,31 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
         )
 
     @async_handle_api_call
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new fan mode."""
         return await self.client.async_set_fan_mode(fan_mode)
 
     @async_handle_api_call
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         return await self.client.async_set_preset_mode(preset_mode)
 
     @async_handle_api_call
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
         cielo_mode = HA_TO_CIELO_HVAC.get(hvac_mode)
         return await self.client.async_set_hvac_mode(cielo_mode)
 
     @async_handle_api_call
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set new swing mode."""
         return await self.client.async_set_swing_mode(swing_mode)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the climate device on."""
         modes = self.hvac_modes or []
@@ -303,6 +328,7 @@ class CieloClimate(CieloDeviceEntity, ClimateEntity):
 
         raise HomeAssistantError("No non-off HVAC modes available to turn on device")
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the climate device off."""
         await self.async_set_hvac_mode(HVACMode.OFF)

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from wolf_comm.models import (
     EnergyParameter,
@@ -179,6 +180,7 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state, storing old values for unchanged parameters."""
         if self.wolf_object.parameter_id in self.coordinator.data:
@@ -195,6 +197,7 @@ class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
         return {

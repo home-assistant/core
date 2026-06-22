@@ -1,6 +1,7 @@
 """Config flow for Wolf SmartSet Service integration."""
 
 import logging
+from typing import override
 
 from httpx import RequestError
 import voluptuous as vol
@@ -25,6 +26,14 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 2
     MINOR_VERSION = 2
 
+    fetched_systems: list[Device]
+
+    def __init__(self) -> None:
+        """Initialize with empty username and password."""
+        self.username: str | None = None
+        self.password: str | None = None
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

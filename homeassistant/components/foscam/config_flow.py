@@ -1,6 +1,6 @@
 """Config flow for foscam integration."""
 
-from typing import Any
+from typing import Any, override
 
 from libpyfoscamcgi import FoscamCamera
 from libpyfoscamcgi.foscamcgi import (
@@ -92,6 +92,7 @@ class FoscamConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=name, data=data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

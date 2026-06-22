@@ -2,7 +2,7 @@
 
 from io import BufferedReader
 import logging
-from typing import Any
+from typing import Any, override
 
 from notifications_android_tv.notifications import ConnectError, Notifications
 import requests
@@ -76,6 +76,7 @@ class NFAndroidTVNotificationService(BaseNotificationService):
         self.is_allowed_path = is_allowed_path
         self.notify: Notifications | None = None
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to an Android TV device."""
         if self.notify is None:

@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 import asyncio
 from http import HTTPStatus
 import logging
+from typing import override
 
 from aiohttp import ClientError, web
 from google_nest_sdm.camera_traits import CameraClipPreviewTrait
@@ -434,10 +435,12 @@ class NestEventMediaView(NestEventViewBase):
     url = "/api/nest/event_media/{device_id}/{event_token}"
     name = "api:nest:event_media"
 
+    @override
     async def load_media(self, nest_device: Device, event_token: str) -> Media | None:
         """Load the specified media."""
         return await nest_device.event_media_manager.get_media_from_token(event_token)
 
+    @override
     async def handle_media(self, media: Media) -> web.StreamResponse:
         """Process the specified media."""
         return web.Response(body=media.contents, content_type=media.content_type)
@@ -462,6 +465,7 @@ class NestEventMediaThumbnailView(NestEventViewBase):
         self._lock = asyncio.Lock()
         self.hass = hass
 
+    @override
     async def load_media(self, nest_device: Device, event_token: str) -> Media | None:
         """Load the specified media."""
         if CameraClipPreviewTrait.NAME in nest_device.traits:
@@ -473,6 +477,7 @@ class NestEventMediaThumbnailView(NestEventViewBase):
                 )
         return await nest_device.event_media_manager.get_media_from_token(event_token)
 
+    @override
     async def handle_media(self, media: Media) -> web.StreamResponse:
         """Start a GET request."""
         contents = media.contents
