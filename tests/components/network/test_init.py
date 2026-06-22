@@ -18,6 +18,7 @@ from homeassistant.components.network.const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from homeassistant.components.network.network import async_get_loaded_network
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
@@ -742,7 +743,8 @@ async def test_async_reload_adapters(hass: HomeAssistant) -> None:
     ):
         await network.async_reload_adapters(hass)
     assert len(signals) == 1
-    assert network.async_get_loaded_adapters(hass) == changed
+    # Read the singleton directly; async_get_loaded_adapters is globally mocked.
+    assert async_get_loaded_network(hass).adapters == changed
 
 
 async def test_async_get_announce_addresses(hass: HomeAssistant) -> None:
