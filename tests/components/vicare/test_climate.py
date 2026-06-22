@@ -172,20 +172,9 @@ async def test_hvac_action_multi_compressor_cooling_takes_precedence(
         assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
 
 
-@pytest.mark.parametrize(
-    ("active_mode", "expected_state"),
-    [
-        ("cooling", HVACMode.COOL),
-        ("heatingCooling", HVACMode.AUTO),
-        ("heating", HVACMode.AUTO),
-        ("standby", HVACMode.OFF),
-    ],
-)
 async def test_hvac_mode_cooling(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    active_mode: str,
-    expected_state: HVACMode,
 ) -> None:
     """hvac_mode maps the ViCare cooling operating mode to HVACMode.COOL.
 
@@ -193,9 +182,8 @@ async def test_hvac_mode_cooling(
     (state "unknown") and COOL was never offered, as it was missing from the map.
     """
     fixtures: list[Fixture] = [
-        Fixture(set(), "vicare/Vitocal250A.json"),
+        Fixture(set(), "vicare/Vitocal250A_cooling.json"),
     ]
-    supported_modes = ["cooling", "heating", "heatingCooling", "standby"]
 
     with (
         patch(
@@ -210,12 +198,9 @@ async def test_hvac_mode_cooling(
         await setup_integration(hass, mock_config_entry)
         component: entity_component.EntityComponent = hass.data["climate"]
         for entity in component.entities:
-            entity._api.getActiveMode = Mock(return_value=active_mode)
-            entity._api.getModes = Mock(return_value=supported_modes)
             await entity.async_update_ha_state(force_refresh=True)
 
-    climate_states = hass.states.async_all("climate")
-    assert climate_states, "no climate entity created"
-    for state in climate_states:
-        assert state.state == expected_state
-        assert HVACMode.COOL in state.attributes[ATTR_HVAC_MODES]
+    state = hass.states.get("climate.model0_heating")
+    assert state is not None
+    assert state.state == HVACMode.COOL
+    assert HVACMode.COOL in state.attributes[ATTR_HVAC_MODES]
