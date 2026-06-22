@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any, cast
+from urllib.parse import urlencode
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -12,12 +13,19 @@ from homeassistant.components.cover import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import CONF_DEVICE_KEY
 from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-STATES_MAP = {0: CoverState.CLOSED, 1: CoverState.OPEN}
+STATES_MAP = {
+    0: CoverState.CLOSED,
+    1: CoverState.OPEN,
+    2: CoverState.OPEN,  # stopped (partially open)
+    3: CoverState.CLOSING,
+    4: CoverState.OPENING,
+}
 
 
 async def async_setup_entry(
@@ -74,7 +82,8 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return
         self._state_before_move = self._state
         self._state = CoverState.CLOSING
-        await self._push_button()
+        self.async_write_ha_state()
+        await self._push_close_button()
 
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
@@ -82,7 +91,8 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
             return
         self._state_before_move = self._state
         self._state = CoverState.OPENING
-        await self._push_button()
+        self.async_write_ha_state()
+        await self._push_open_button()
 
     @callback
     def _update_attr(self) -> None:
@@ -97,18 +107,64 @@ class OpenGarageCover(OpenGarageEntity, CoverEntity):
         else:
             self._state = state
 
-    async def _push_button(self):
+    async def _push_close_button(self) -> None:
+        """Send a close command to the API."""
+        await self._push_button("close")
+
+    async def _push_open_button(self) -> None:
+        """Send an open command to the API."""
+        await self._push_button("open")
+
+    async def _push_button(self, command: str) -> None:
         """Send commands to API."""
-        result = await self.coordinator.open_garage_connection.push_button()
-        if result is None:
-            _LOGGER.error("Unable to connect to OpenGarage device")
-        if result == 1:
+        params = {
+            "dkey": self.coordinator.config_entry.data[CONF_DEVICE_KEY],
+            command: "1",
+        }
+        data = await self.coordinator.open_garage_connection._execute(  # noqa: SLF001
+            f"cc?{urlencode(params)}"
+        )
+        if not isinstance(data, dict):
+            _LOGGER.error(
+                "Unable to control %s: Invalid API response: %r", self.name, data
+            )
+            self._revert_state()
             return
 
-        if result == 2:
-            _LOGGER.error("Unable to control %s: Device key is incorrect", self.name)
-        elif result > 2:
-            _LOGGER.error("Unable to control %s: Error code %s", self.name, result)
+        result = data.get("result")
+        if isinstance(result, int):
+            if result == 1:
+                return
+
+            if result == 2:
+                _LOGGER.error(
+                    "Unable to control %s: Device key is incorrect", self.name
+                )
+            else:
+                _LOGGER.error(
+                    "Unable to control %s: Error code %s (response: %r)",
+                    self.name,
+                    result,
+                    data,
+                )
+        else:
+            _LOGGER.error(
+                "Unable to control %s: Invalid API result: %r (response: %r)",
+                self.name,
+                result,
+                data,
+            )
+
+        self._revert_state()
+
+    def _revert_state(self) -> None:
+        """Revert the optimistic state after a failed command."""
+        if self._state_before_move is None:
+            _LOGGER.warning(
+                "Unable to revert state for %s: no previous state was saved", self.name
+            )
+            return
 
         self._state = self._state_before_move
         self._state_before_move = None
+        self.async_write_ha_state()
