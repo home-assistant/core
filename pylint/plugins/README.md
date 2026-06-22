@@ -110,7 +110,7 @@ Every check has a code following the
 | `C7427` | [`home-assistant-enforce-naive-now`](#c7427-home-assistant-enforce-naive-now) | Use `homeassistant.util.dt.naive_now` instead of `datetime.now()` |
 | `W7423` | [`home-assistant-missing-entity-unique-id`](#w7423-home-assistant-missing-entity-unique-id) | Entity class does not statically guarantee a non-None unique id |
 | `W7424` | [`home-assistant-entity-unique-id-static`](#w7424-home-assistant-entity-unique-id-static) | Entity class sets `_attr_unique_id` to a static string at class level |
-| `W7425` | [`home-assistant-entity-unique-id-redundant-domain`](#w7425-home-assistant-entity-unique-id-redundant-domain) | `_attr_unique_id` references the `DOMAIN` constant or includes the integration's domain as a string-literal delimited segment |
+| `W7425` | [`home-assistant-entity-unique-id-redundant-domain`](#w7425-home-assistant-entity-unique-id-redundant-domain) | Entity unique ID references the `DOMAIN` constant or includes the integration's domain as a string-literal delimited segment |
 | `C7412` | [`home-assistant-entity-description-redundant-default`](#c7412-home-assistant-entity-description-redundant-default) | Setting an EntityDescription field to its default value is redundant |
 | `C7413` | [`home-assistant-duplicate-const`](#c7413-home-assistant-duplicate-const) | Constant duplicates one in `homeassistant.const` with the same value |
 | `E7405` | [`home-assistant-action-swallowed-exception`](#e7405-home-assistant-action-swallowed-exception) | Action handler must not swallow exceptions |
@@ -562,15 +562,16 @@ serial, MAC, etc.) or declaring the integration as
 
 ## `home_assistant_entity_unique_id_format` checker
 
-Hosts format-related checks on `_attr_unique_id` values. Unlike the
-gated `entity-unique-id` quality-scale checks, these checks are **not**
-gated on `quality_scale.yaml` claims, and they fire on every class
-inheriting from `Entity` anywhere inside an integration (including
-shared bases in `entity.py` and mixins/abstract bases subclassed by
-other classes in the same module). Once an integration ships with
-malformed unique_ids, the IDs cannot be changed without an
-entity-registry migration, so the antipatterns must be caught before
-they ship.
+Hosts format-related checks on the value an entity uses for its unique
+ID (`_attr_unique_id` assignments and `unique_id` property/method
+returns). Unlike the gated `entity-unique-id` quality-scale checks,
+these checks are **not** gated on `quality_scale.yaml` claims, and they
+fire on every class inheriting from `Entity` anywhere inside an
+integration (including shared bases in `entity.py` and mixins/abstract
+bases subclassed by other classes in the same module). Once an
+integration ships with malformed unique_ids, the IDs cannot be changed
+without an entity-registry migration, so the antipatterns must be
+caught before they ship.
 
 ### `W7425`: `home-assistant-entity-unique-id-redundant-domain`
 

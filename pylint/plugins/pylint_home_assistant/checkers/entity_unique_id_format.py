@@ -1,10 +1,11 @@
-"""Checker for ``_attr_unique_id`` value-format antipatterns.
+"""Checker for entity unique-ID value-format antipatterns.
 
-Hosts format-related checks on the value assigned to ``_attr_unique_id``.
-Once an integration ships with malformed unique_ids, the IDs cannot be
-changed without an entity-registry migration, so these checks are
-**not** gated on ``quality_scale.yaml`` claims, and they fire on every
-class inheriting from ``Entity`` anywhere inside an integration
+Hosts format-related checks on the value an entity uses for its unique
+ID (``_attr_unique_id`` assignments and ``unique_id`` property/method
+returns). Once an integration ships with malformed unique_ids, the IDs
+cannot be changed without an entity-registry migration, so these checks
+are **not** gated on ``quality_scale.yaml`` claims, and they fire on
+every class inheriting from ``Entity`` anywhere inside an integration
 (including shared bases in ``entity.py`` and mixins/abstract bases
 subclassed by other classes in the same module).
 
@@ -149,18 +150,18 @@ class EntityUniqueIdFormatChecker(BaseChecker):
         "W7425": (
             (
                 "Entity class `%s` embeds the integration's domain (its "
-                "manifest `domain` field) in `_attr_unique_id`; the entity "
+                "manifest `domain` field) in its unique ID; the entity "
                 "registry already namespaces unique IDs per integration, so "
                 "including the domain is redundant"
             ),
             "home-assistant-entity-unique-id-redundant-domain",
             (
-                "Used when an entity's _attr_unique_id value embeds the "
-                "integration's domain, either via a reference to the DOMAIN "
-                "constant or as a delimited substring of a string literal. "
-                "Entity registry uniqueness is keyed on (domain, platform, "
-                "unique_id), so including the domain duplicates information "
-                "already present in the entity_id namespace."
+                "Used when an entity's unique ID embeds the integration's "
+                "domain, either via a reference to the DOMAIN constant or as "
+                "a delimited substring of a string literal. Entity registry "
+                "uniqueness is keyed on (domain, platform, unique_id), so "
+                "including the domain duplicates information already present "
+                "in the entity_id namespace."
             ),
         ),
     }
