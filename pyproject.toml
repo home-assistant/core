@@ -80,7 +80,7 @@ dependencies = [
   "voluptuous-openapi==0.3.0",
   "yarl==1.24.2",
   "webrtc-models==0.3.0",
-  "zeroconf==0.149.16",
+  "zeroconf==0.150.0",
 ]
 
 [project.urls]
@@ -648,7 +648,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.15.16"
+required-version = ">=0.15.17"
 
 [tool.ruff.lint]
 select = [

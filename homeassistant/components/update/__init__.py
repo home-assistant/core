@@ -4,7 +4,7 @@ from datetime import timedelta
 from enum import StrEnum
 from functools import lru_cache
 import logging
-from typing import Any, Final, final
+from typing import Any, Final, final, override
 
 from awesomeversion import AwesomeVersion, AwesomeVersionCompareException
 from propcache.api import cached_property
@@ -245,6 +245,7 @@ class UpdateEntity(
         """Version installed and in use."""
         return self._attr_installed_version
 
+    @override
     def _default_to_device_class_name(self) -> bool:
         """Return True if an unnamed entity should be named by its device class.
 
@@ -253,6 +254,7 @@ class UpdateEntity(
         return self.device_class is not None
 
     @cached_property
+    @override
     def device_class(self) -> UpdateDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -271,6 +273,7 @@ class UpdateEntity(
         return 0
 
     @property
+    @override
     def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if hasattr(self, "_attr_entity_category"):
@@ -282,6 +285,7 @@ class UpdateEntity(
         return EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend.
 
@@ -320,6 +324,7 @@ class UpdateEntity(
         return self._attr_release_url
 
     @cached_property
+    @override
     def supported_features(self) -> UpdateEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
@@ -406,6 +411,7 @@ class UpdateEntity(
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         if (installed_version := self.installed_version) is None or (
@@ -427,6 +433,7 @@ class UpdateEntity(
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return state attributes."""
         if (release_summary := self.release_summary) is not None:
@@ -489,6 +496,7 @@ class UpdateEntity(
             self.__in_progress = False
             self.async_write_ha_state()
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the update entity is added to hass.
 

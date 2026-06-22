@@ -1,5 +1,7 @@
 """Support for inkbird ble sensors."""
 
+from typing import override
+
 from inkbird_ble import DeviceClass, DeviceKey, SensorUpdate, Units
 
 from homeassistant.components.bluetooth.passive_update_processor import (
@@ -131,6 +133,7 @@ class INKBIRDBluetoothSensorEntity(
     """Representation of a inkbird ble sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

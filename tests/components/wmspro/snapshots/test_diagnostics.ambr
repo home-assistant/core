@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_diagnostics[mock_hub_configuration_prod_awning_dimmer]
+# name: test_diagnostics[config_prod_awning_dimmer.json]
   dict({
     'config': dict({
       'command': 'getConfiguration',
@@ -256,7 +256,7 @@
     }),
   })
 # ---
-# name: test_diagnostics[mock_hub_configuration_prod_roller_shutter]
+# name: test_diagnostics[config_prod_roller_shutter.json]
   dict({
     'config': dict({
       'command': 'getConfiguration',
