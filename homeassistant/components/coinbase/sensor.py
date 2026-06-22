@@ -1,6 +1,7 @@
 """Support for Coinbase sensors."""
 
 import logging
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
@@ -154,6 +155,7 @@ class AccountSensor(SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str]:
         """Return the state attributes of the sensor."""
         return {

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from python_dropbox_api import DropboxAPIClient
 
@@ -21,10 +21,12 @@ class DropboxConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
     DOMAIN = DOMAIN
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Create an entry for the flow, or update existing entry."""
         access_token = data[CONF_TOKEN][CONF_ACCESS_TOKEN]

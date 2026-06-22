@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for Elgato."""
 
 from dataclasses import dataclass
+from typing import override
 
 from elgato import (
     BatteryInfo,
@@ -54,6 +55,7 @@ class ElgatoDataUpdateCoordinator(DataUpdateCoordinator[ElgatoData]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> ElgatoData:
         """Fetch data from the Elgato device."""
         try:

@@ -2,6 +2,7 @@
 
 from datetime import date, datetime
 import math
+from typing import override
 
 from aioesphomeapi import (
     EntityInfo,
@@ -73,6 +74,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
     """A sensor implementation for esphome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -99,6 +101,7 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
             self._attr_state_class = _STATE_CLASSES.from_esphome(state_class)
 
     @property
+    @override
     def native_value(self) -> datetime | int | float | None:
         """Return the state of the entity."""
         if not self._has_state or (state := self._state).missing_state:
@@ -115,6 +118,7 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
     """A text sensor implementation for ESPHome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -124,6 +128,7 @@ class EsphomeTextSensor(EsphomeEntity[TextSensorInfo, TextSensorState], SensorEn
         )
 
     @property
+    @override
     def native_value(self) -> str | datetime | date | None:
         """Return the state of the entity."""
         if not self._has_state or (state := self._state).missing_state:

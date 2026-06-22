@@ -1,5 +1,7 @@
 """Provides triggers for events."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIONS
@@ -39,6 +41,7 @@ class EventReceivedTrigger(StatelessEntityTriggerBase):
         super().__init__(hass, config)
         self._event_types = set(self._options[CONF_EVENT_TYPE])
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the event type matches one of the configured types."""
         return state.attributes.get(ATTR_EVENT_TYPE) in self._event_types

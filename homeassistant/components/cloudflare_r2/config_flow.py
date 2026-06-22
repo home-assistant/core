@@ -1,6 +1,6 @@
 """Config flow for the Cloudflare R2 integration."""
 
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aiobotocore.session import AioSession
@@ -50,6 +50,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class R2ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cloudflare R2."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

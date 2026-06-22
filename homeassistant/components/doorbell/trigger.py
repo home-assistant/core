@@ -1,5 +1,7 @@
 """Provides triggers for doorbells."""
 
+from typing import override
+
 from homeassistant.components.event import (
     ATTR_EVENT_TYPE,
     DOMAIN as EVENT_DOMAIN,
@@ -16,6 +18,7 @@ class DoorbellRangTrigger(StatelessEntityTriggerBase):
 
     _domain_specs = {EVENT_DOMAIN: DomainSpec(device_class=EventDeviceClass.DOORBELL)}
 
+    @override
     def is_valid_state(self, state: State) -> bool:
         """Check if the event type is ring."""
         return state.attributes.get(ATTR_EVENT_TYPE) == DoorbellEventType.RING

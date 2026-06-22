@@ -10,7 +10,7 @@ import json
 import logging
 from pathlib import Path
 import socket
-from typing import Any, cast
+from typing import Any, cast, override
 import wave
 
 from aioesphomeapi import (
@@ -186,6 +186,7 @@ class EsphomeAssistSatellite(
         )
 
     @property
+    @override
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
         return self.get_pipeline_entity(self._active_pipeline_index)
@@ -201,17 +202,20 @@ class EsphomeAssistSatellite(
         return self._get_entity_id(f"wake_word{id_suffix}")
 
     @property
+    @override
     def vad_sensitivity_entity_id(self) -> str | None:
         """Return the entity ID of the VAD sensitivity for the next conversation."""
         return self._get_entity_id("vad_sensitivity")
 
     @callback
+    @override
     def async_get_configuration(
         self,
     ) -> assist_satellite.AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
         return self._satellite_config
 
+    @override
     async def async_set_configuration(
         self, config: assist_satellite.AssistSatelliteConfiguration
     ) -> None:
@@ -255,6 +259,7 @@ class EsphomeAssistSatellite(
         # Inform listeners that config has been updated
         self._entry_data.async_assist_satellite_config_updated(self._satellite_config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -327,6 +332,7 @@ class EsphomeAssistSatellite(
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -334,6 +340,7 @@ class EsphomeAssistSatellite(
         self._is_running = False
         self._stop_pipeline()
 
+    @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
         try:
@@ -432,6 +439,7 @@ class EsphomeAssistSatellite(
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
     @convert_api_error_ha_error
+    @override
     async def async_announce(
         self, announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -442,6 +450,7 @@ class EsphomeAssistSatellite(
         await self._do_announce(announcement, run_pipeline_after=False)
 
     @convert_api_error_ha_error
+    @override
     async def async_start_conversation(
         self, start_announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -820,10 +829,12 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         super().__init__(*args, **kwargs)
         self._audio_queue = audio_queue
 
+    @override
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Store transport for later use."""
         self.transport = cast(asyncio.DatagramTransport, transport)
 
+    @override
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle incoming UDP packet."""
         if self.remote_addr is None:
@@ -831,6 +842,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         self._audio_queue.put_nowait(data)
 
+    @override
     def error_received(self, exc: Exception) -> None:
         """Handle when a send or receive operation raises an OSError.
 

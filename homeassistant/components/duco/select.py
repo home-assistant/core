@@ -1,6 +1,7 @@
 """Select platform for the Duco integration."""
 
 import logging
+from typing import override
 
 from duco_connectivity import (
     ActionItem,
@@ -106,6 +107,7 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
         self._attr_options = list(options)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current ventilation state when it is selectable."""
         if (ventilation := self._node.ventilation) is None:
@@ -120,6 +122,7 @@ class DucoVentilationStateSelect(DucoEntity, SelectEntity):
 
         return state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Set a new ventilation state on the node."""
         try:

@@ -1,5 +1,7 @@
 """Base entity for the Data Grand Lyon integration."""
 
+from typing import override
+
 from homeassistant.config_entries import ConfigSubentry
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -43,6 +45,7 @@ class DataGrandLyonEntity[_CoordinatorT: DataUpdateCoordinator](
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if subentry data is available."""
         return super().available and self._subentry_id in self.coordinator.data
