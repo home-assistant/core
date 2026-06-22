@@ -1,6 +1,7 @@
 """Coordinator for the Anthropic integration."""
 
 import datetime
+from typing import override
 
 import anthropic
 
@@ -50,6 +51,7 @@ class AnthropicCoordinator(DataUpdateCoordinator[list[anthropic.types.ModelInfo]
         )
 
     @callback
+    @override
     def async_set_updated_data(self, data: list[anthropic.types.ModelInfo]) -> None:
         """Manually update data, notify listeners and update refresh interval."""
         self.update_interval = UPDATE_INTERVAL_CONNECTED

@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from bsblan import (
     BSBLAN,
@@ -104,6 +104,7 @@ class BSBLanFastCoordinator(BSBLanCoordinator[BSBLanFastData]):
         )
         self.circuits: list[int] = circuits
 
+    @override
     async def _async_update_data(self) -> BSBLanFastData:
         """Fetch fast-changing data from the BSB-LAN device."""
         states: dict[int, State] = {}
@@ -168,6 +169,7 @@ class BSBLanSlowCoordinator(BSBLanCoordinator[BSBLanSlowData]):
             update_interval=SCAN_INTERVAL_SLOW,
         )
 
+    @override
     async def _async_update_data(self) -> BSBLanSlowData:
         """Fetch slow-changing data from the BSB-LAN device."""
         try:

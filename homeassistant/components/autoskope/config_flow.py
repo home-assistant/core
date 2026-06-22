@@ -1,7 +1,7 @@
 """Config flow for the Autoskope integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from autoskope_client.api import AutoskopeApi
 from autoskope_client.models import CannotConnect, InvalidAuth
@@ -71,6 +71,7 @@ class AutoskopeConfigFlow(ConfigFlow, domain=DOMAIN):
             return True
         return False
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

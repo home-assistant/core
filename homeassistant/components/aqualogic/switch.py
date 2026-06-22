@@ -1,6 +1,6 @@
 """Support for AquaLogic switches."""
 
-from typing import Any
+from typing import Any, override
 
 from aqualogic.core import States
 import voluptuous as vol
@@ -78,24 +78,28 @@ class AquaLogicSwitch(SwitchEntity):
         self._attr_name = f"AquaLogic {SWITCH_TYPES[switch_type]}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         if (panel := self._processor.panel) is None:
             return False
         return panel.get_state(self._state_name)  # type: ignore[no-any-return]
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if (panel := self._processor.panel) is None:
             return
         panel.set_state(self._state_name, True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if (panel := self._processor.panel) is None:
             return
         panel.set_state(self._state_name, False)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

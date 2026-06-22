@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from adguardhome import AdGuardHome, AdGuardHomeError
 
@@ -113,6 +113,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
             ]
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
@@ -124,6 +125,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
                 translation_key="error_while_turn_off",
             ) from err
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
@@ -135,6 +137,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
                 translation_key="error_while_turn_on",
             ) from err
 
+    @override
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
         self._attr_is_on = await self.entity_description.is_on_fn(self.adguard)()

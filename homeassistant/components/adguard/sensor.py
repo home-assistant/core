@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from adguardhome import AdGuardHome
 
@@ -118,6 +118,7 @@ class AdGuardHomeSensor(AdGuardHomeEntity, SensorEntity):
             ]
         )
 
+    @override
     async def _adguard_update(self) -> None:
         """Update AdGuard Home entity."""
         value = await self.entity_description.value_fn(self.adguard)

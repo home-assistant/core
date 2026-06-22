@@ -1,6 +1,7 @@
 """Support for Ambient Weather Network sensors."""
 
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -299,6 +300,7 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         """Initialize a sensor object."""
         super().__init__(coordinator, description, mac_address)
 
+    @override
     def _update_attrs(self) -> None:
         """Update sensor attributes."""
         value = self.coordinator.data.get(self.entity_description.key)

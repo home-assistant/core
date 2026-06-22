@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import dataclasses
-from typing import Any
+from typing import Any, override
 
 from bthome_ble import BTHomeBluetoothDeviceData as DeviceData
 from bthome_ble.parser import EncryptionScheme
@@ -43,6 +43,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_device: DeviceData | None = None
         self._discovered_devices: dict[str, Discovery] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -110,6 +111,7 @@ class BTHomeConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from blinkpy.auth import Auth, BlinkTwoFARequiredError, LoginError, TokenRefreshFailed
 from blinkpy.blinkpy import Blink, BlinkSetupError
@@ -64,6 +64,7 @@ class BlinkConfigFlow(ConfigFlow, domain=DOMAIN):
         await validate_input(self.blink)
         return self._async_finish_flow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

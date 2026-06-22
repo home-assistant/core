@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import timedelta
+from typing import override
 
 from aioamazondevices.api import AmazonEchoApi
 from aioamazondevices.exceptions import (
@@ -155,6 +156,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self.api.on_media_state_event.append(self.media_state_event_handler)
         self.api.on_media_state_event.freeze()
 
+    @override
     async def _async_update_data(self) -> dict[str, AmazonDevice]:
         """Update device data."""
         try:

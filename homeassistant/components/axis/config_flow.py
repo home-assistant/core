@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from ipaddress import ip_address
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlsplit
 
 import voluptuous as vol
@@ -65,6 +65,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> AxisOptionsFlowHandler:
@@ -76,6 +77,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         self.config: dict[str, Any] = {}
         self.discovery_schema: VolDictType | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -186,6 +188,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -199,6 +202,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -213,6 +217,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

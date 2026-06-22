@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, TypeVar
+from typing import Any, TypeVar, override
 
 from airos.airos6 import AirOS6, AirOS6Data
 from airos.airos8 import AirOS8, AirOS8Data
@@ -95,6 +95,7 @@ class AirOSDataUpdateCoordinator(DataUpdateCoordinator[AirOSDataDetect]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> AirOSDataDetect:
         """Fetch status data from AirOS."""
         return await async_fetch_airos_data(self.airos_device, self.airos_device.status)
@@ -121,6 +122,7 @@ class AirOSFirmwareUpdateCoordinator(DataUpdateCoordinator[AirOSUpdateData]):
             update_interval=UPDATE_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> AirOSUpdateData:
         """Fetch firmware data from AirOS."""
         return await async_fetch_airos_data(

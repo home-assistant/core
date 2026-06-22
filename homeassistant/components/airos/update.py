@@ -1,7 +1,7 @@
 """AirOS update component for Home Assistant."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from airos.exceptions import AirOSConnectionAuthenticationError, AirOSException
 
@@ -59,11 +59,13 @@ class AirOSUpdateEntity(AirOSEntity, UpdateEntity):
         self._attr_unique_id = f"{status.data.derived.mac}_firmware_update"
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Return the installed firmware version."""
         return self.status.data.host.fwversion
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Return the latest firmware version."""
         if not self.firmware.data.get("update", False):
@@ -71,10 +73,12 @@ class AirOSUpdateEntity(AirOSEntity, UpdateEntity):
         return self.firmware.data.get("version")
 
     @property
+    @override
     def release_url(self) -> str | None:
         """Return the release url of the latest firmware."""
         return self.firmware.data.get("changelog")
 
+    @override
     async def async_install(
         self,
         version: str | None,

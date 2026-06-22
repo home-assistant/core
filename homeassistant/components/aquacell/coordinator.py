@@ -3,6 +3,7 @@
 import asyncio
 from datetime import datetime
 import logging
+from typing import override
 
 from aioaquacell import (
     AquacellApi,
@@ -57,6 +58,7 @@ class AquacellCoordinator(DataUpdateCoordinator[dict[str, Softener]]):
         self.password = self.config_entry.data[CONF_PASSWORD]
         self.aquacell_api = aquacell_api
 
+    @override
     async def _async_update_data(self) -> dict[str, Softener]:
         """Fetch data from API endpoint.
 

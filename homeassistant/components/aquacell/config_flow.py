@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioaquacell import ApiException, AquacellApi, AuthenticationFailed
 from aioaquacell.const import SUPPORTED_BRANDS, Brand
@@ -44,6 +44,7 @@ class AquaCellConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
