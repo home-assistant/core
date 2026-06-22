@@ -109,7 +109,10 @@ class EsphomeSensor(EsphomeEntity[SensorInfo, SensorState], SensorEntity):
         state_float = state.state
         if not math.isfinite(state_float):
             return None
-        if self.device_class is SensorDeviceClass.TIMESTAMP:
+        if self.device_class in (
+            SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
+        ):
             return dt_util.utc_from_timestamp(state_float)
         return state_float
 
