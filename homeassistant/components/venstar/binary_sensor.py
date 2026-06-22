@@ -1,5 +1,7 @@
 """Alarm sensors for the Venstar Thermostat."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -40,6 +42,7 @@ class VenstarBinarySensor(VenstarEntity, BinarySensorEntity):
         self._attr_name = alert
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if self._client.alerts is None:

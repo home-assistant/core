@@ -16,6 +16,7 @@ import yarl
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import (
     CastRuntimeData,
+    _process_cast_platform,
     media_player as cast_media_player,
 )
 from homeassistant.components.cast.const import (
@@ -42,6 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -489,7 +491,9 @@ async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    entry.runtime_data = CastRuntimeData()
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+    )
     info = get_fake_chromecast_info(uuid=None)
     cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
@@ -499,7 +503,9 @@ async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    entry.runtime_data = CastRuntimeData()
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+    )
     added_casts = entry.runtime_data.added_cast_devices
     info = get_fake_chromecast_info()
 
@@ -2108,7 +2114,7 @@ async def test_disconnect_on_stop(hass: HomeAssistant) -> None:
 
 async def test_entry_setup_no_config(hass: HomeAssistant) -> None:
     """Test deprecated empty yaml config.."""
-    await async_setup_component(hass, "cast", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
 
     assert not hass.config_entries.async_entries("cast")
@@ -2130,6 +2136,10 @@ async def test_invalid_cast_platform(
 
     info = get_fake_chromecast_info()
     await async_setup_media_player_cast(hass, info)
+
+    # Cast platforms are loaded lazily on first use
+    entry = hass.config_entries.async_entries("cast")[0]
+    await entry.runtime_data.cast_platforms.async_get_platforms()
 
     assert "Invalid cast platform <Mock id" in caplog.text
 

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 from zoneinfo import ZoneInfo
 
 from data_grand_lyon_ha import TclPassage, TclPassageType, VelovStation
@@ -197,6 +198,7 @@ class DataGrandLyonStopSensor(DataGrandLyonTclEntity, SensorEntity):
     entity_description: DataGrandLyonStopSensorEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the departure index exists."""
         return super().available and self.entity_description.departure_index < len(
@@ -204,6 +206,7 @@ class DataGrandLyonStopSensor(DataGrandLyonTclEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
         departure = self.coordinator.data[self._subentry_id][
@@ -218,6 +221,7 @@ class DataGrandLyonVelovSensor(DataGrandLyonVelovEntity, SensorEntity):
     entity_description: DataGrandLyonVelovSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the sensor value."""
         return self.entity_description.value_fn(

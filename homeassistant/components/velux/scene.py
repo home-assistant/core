@@ -1,6 +1,6 @@
 """Support for VELUX scenes."""
 
-from typing import Any
+from typing import Any, override
 
 from pyvlx import Scene as PyVLXScene
 
@@ -22,7 +22,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the scenes for Velux platform."""
-    pyvlx = config_entry.runtime_data
+    pyvlx = config_entry.runtime_data.pyvlx
     async_add_entities(
         [VeluxScene(config_entry.entry_id, scene) for scene in pyvlx.scenes]
     )
@@ -51,6 +51,7 @@ class VeluxScene(Scene):
         )
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the scene."""
         await self.scene.run(wait_for_completion=False)
