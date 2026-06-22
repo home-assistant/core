@@ -733,7 +733,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
 
         # If already playing, or don't want to autoplay, no need to call Play
         autoplay = extra.get("autoplay", True)
-        if self._device.transport_state is TransportState.PLAYING or not autoplay:
+        if self._device.transport_state == TransportState.PLAYING or not autoplay:
             return
 
         # Play it
@@ -766,7 +766,7 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not (play_mode := self._device.play_mode):
             return None
 
-        if play_mode is PlayMode.VENDOR_DEFINED:
+        if play_mode == PlayMode.VENDOR_DEFINED:
             return None
 
         return play_mode in (PlayMode.SHUFFLE, PlayMode.RANDOM)
@@ -802,10 +802,10 @@ class DlnaDmrEntity(MediaPlayerEntity):
         if not (play_mode := self._device.play_mode):
             return None
 
-        if play_mode is PlayMode.VENDOR_DEFINED:
+        if play_mode == PlayMode.VENDOR_DEFINED:
             return None
 
-        if play_mode is PlayMode.REPEAT_ONE:
+        if play_mode == PlayMode.REPEAT_ONE:
             return RepeatMode.ONE
 
         if play_mode in (PlayMode.REPEAT_ALL, PlayMode.RANDOM):
