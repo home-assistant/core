@@ -93,6 +93,7 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
         return self.entity_description.value_fn(self.coordinator.data[self._steamid])
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
         return (
@@ -134,6 +135,7 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._steamid in self.coordinator.data
