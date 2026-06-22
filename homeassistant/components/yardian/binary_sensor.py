@@ -49,7 +49,8 @@ def _standby_value(coordinator: YardianUpdateCoordinator) -> bool:
     """Return True if the device is in standby mode safely."""
     standby_end = coordinator.data.oper_info.get("iStandby")
 
-    if not isinstance(standby_end, int):
+    # Guard against missing data (None)
+    if standby_end is None:
         return False
 
     return standby_end > dt_util.utcnow().timestamp()
