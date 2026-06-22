@@ -1,6 +1,7 @@
 """Test Steam config flow."""
 
-from unittest.mock import AsyncMock, patch
+from typing import Any
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import steam.api
@@ -19,14 +20,12 @@ from . import (
     CONF_DATA,
     CONF_OPTIONS,
     CONF_OPTIONS_2,
-    patch_interface,
-    patch_interface_private,
-    patch_user_interface_null,
 )
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("steam_api")
 async def test_flow_user(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
@@ -39,11 +38,10 @@ async def test_flow_user(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    with patch_interface():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_DATA,
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_DATA,
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ACCOUNT_NAME_1
@@ -59,34 +57,38 @@ async def test_flow_user(
         (steam.api.HTTPTimeoutError, "cannot_connect"),
         (steam.api.HTTPError("403"), "invalid_auth"),
         (ValueError, "unknown"),
+        ([{"response": {"players": {"player": [None]}}}], "invalid_account"),
     ],
 )
 async def test_flow_user_errors(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
-    side_effect: Exception,
+    side_effect: Exception | dict[str, Any],
     error_msg: str,
+    steam_api: MagicMock,
 ) -> None:
     """Test user initialized flow with unreachable server."""
+
+    steam_api.return_value.GetPlayerSummaries.side_effect = side_effect
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    with patch_interface() as servicemock:
-        servicemock.side_effect = side_effect
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_DATA,
-        )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["errors"] == {"base": error_msg}
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_DATA,
+    )
 
-    with patch_interface() as servicemock:
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_DATA,
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_msg}
+
+    steam_api.return_value.GetPlayerSummaries.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_DATA,
+    )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == ACCOUNT_NAME_1
@@ -96,17 +98,7 @@ async def test_flow_user_errors(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_flow_user_invalid_account(hass: HomeAssistant) -> None:
-    """Test user initialized flow with invalid account ID."""
-    with patch_user_interface_null():
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_DATA
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "user"
-        assert result["errors"]["base"] == "invalid_account"
-
-
+@pytest.mark.usefixtures("steam_api")
 async def test_flow_user_already_configured(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -117,16 +109,17 @@ async def test_flow_user_already_configured(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    with patch_interface():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=CONF_DATA,
-        )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=CONF_DATA,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("steam_api")
 async def test_flow_reauth(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -138,10 +131,9 @@ async def test_flow_reauth(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    with patch_interface():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], user_input={CONF_API_KEY: "1234567890"}
-        )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "1234567890"}
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
@@ -150,6 +142,7 @@ async def test_flow_reauth(
     assert len(hass.config_entries.async_entries()) == 1
 
 
+@pytest.mark.usefixtures("steam_api")
 async def test_options_flow(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -157,31 +150,24 @@ async def test_options_flow(
     """Test updating options."""
     config_entry.add_to_hass(hass)
 
-    with (
-        patch_interface(),
-        patch(
-            "homeassistant.components.steam_online.config_flow.MAX_IDS_TO_REQUEST",
-            return_value=2,
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_ACCOUNTS: [ACCOUNT_1, ACCOUNT_2]},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCOUNTS: [ACCOUNT_1, ACCOUNT_2]},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == CONF_OPTIONS_2
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_setup_entry", "steam_api")
 async def test_options_flow_deselect(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -189,26 +175,19 @@ async def test_options_flow_deselect(
 ) -> None:
     """Test deselecting user."""
     config_entry.add_to_hass(hass)
-    with (
-        patch_interface(),
-        patch(
-            "homeassistant.components.steam_online.config_flow.MAX_IDS_TO_REQUEST",
-            return_value=2,
-        ),
-    ):
-        await hass.config_entries.async_setup(config_entry.entry_id)
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
-        await hass.async_block_till_done()
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "init"
 
-    with patch_interface():
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_ACCOUNTS: []},
-        )
-        await hass.async_block_till_done()
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCOUNTS: []},
+    )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {CONF_ACCOUNTS: {}}
@@ -218,20 +197,21 @@ async def test_options_flow_deselect(
 async def test_options_flow_timeout(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    steam_api: MagicMock,
 ) -> None:
     """Test updating options timeout getting friends list."""
     config_entry.add_to_hass(hass)
-    with patch_interface() as servicemock:
-        servicemock.side_effect = steam.api.HTTPTimeoutError
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
+    steam_api.return_value.GetFriendList.side_effect = steam.api.HTTPTimeoutError
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_ACCOUNTS: [ACCOUNT_1]},
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCOUNTS: [ACCOUNT_1]},
+    )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -241,19 +221,20 @@ async def test_options_flow_timeout(
 async def test_options_flow_unauthorized(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    steam_api: MagicMock,
 ) -> None:
     """Test updating options when user's friends list is not public."""
     config_entry.add_to_hass(hass)
-    with patch_interface_private():
-        result = await hass.config_entries.options.async_init(config_entry.entry_id)
+    steam_api.return_value.GetFriendList.side_effect = steam.api.HTTPError
+    result = await hass.config_entries.options.async_init(config_entry.entry_id)
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "init"
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
 
-        result = await hass.config_entries.options.async_configure(
-            result["flow_id"],
-            user_input={CONF_ACCOUNTS: [ACCOUNT_1]},
-        )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ACCOUNTS: [ACCOUNT_1]},
+    )
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY

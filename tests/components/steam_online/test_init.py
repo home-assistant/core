@@ -1,25 +1,26 @@
-"""Tests for the Steam component."""
+"""Tests for the Steam integration."""
 
-import steam
+from unittest.mock import MagicMock
+
+import pytest
+import steam.api
 
 from homeassistant.components.steam_online.const import DEFAULT_NAME, DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-
-from . import patch_interface
 
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("steam_api")
 async def test_setup(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
     """Test unload."""
     config_entry.add_to_hass(hass)
-    with patch_interface():
-        await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
     assert config_entry.state is ConfigEntryState.LOADED
@@ -31,19 +32,33 @@ async def test_setup(
     assert not hass.data.get(DOMAIN)
 
 
-async def test_async_setup_entry_auth_failed(
+async def test_setup_auth_failed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    steam_api: MagicMock,
 ) -> None:
     """Test that it throws ConfigEntryAuthFailed when authentication fails."""
     config_entry.add_to_hass(hass)
-    with patch_interface() as interface:
-        interface.side_effect = steam.api.HTTPError("401")
-        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    steam_api.return_value.GetPlayerSummaries.side_effect = steam.api.HTTPError("401")
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
 
+    flow = flows[0]
+    assert flow.get("step_id") == "reauth_confirm"
+    assert flow.get("handler") == DOMAIN
+
+    assert "context" in flow
+    assert flow["context"].get("source") == SOURCE_REAUTH
+    assert flow["context"].get("entry_id") == config_entry.entry_id
+
+
+@pytest.mark.usefixtures("steam_api")
 async def test_device_info(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -51,11 +66,13 @@ async def test_device_info(
 ) -> None:
     """Test device info."""
     config_entry.add_to_hass(hass)
-    with patch_interface():
-        await hass.config_entries.async_setup(config_entry.entry_id)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, config_entry.entry_id)}
+    assert (
+        device := device_registry.async_get_device(
+            identifiers={(DOMAIN, config_entry.entry_id)}
+        )
     )
 
     assert device.configuration_url == "https://store.steampowered.com"
