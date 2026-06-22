@@ -51,13 +51,7 @@ rules:
     status: exempt
     comment: |
       This integration does not authenticate with a device or service.
-  test-coverage:
-    status: todo
-    comment: |
-      Add tests for integration setup, unloading, light commands, HS color
-      snapping, white selection, relative brightness changes, effects, and
-      emitter availability changes.
-
+  test-coverage: done
   # Gold
   devices: done
   diagnostics:
