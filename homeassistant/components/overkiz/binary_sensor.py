@@ -150,13 +150,6 @@ BINARY_SENSOR_DESCRIPTIONS: list[OverkizBinarySensorDescription] = [
         # restrict this to ContactSensor devices (e.g. the Somfy IntelliTAG)
         device_types=[UIClass.CONTACT_SENSOR],
     ),
-    # ContactSensor/IntrusionSensor
-    OverkizBinarySensorDescription(
-        key=OverkizState.CORE_INTRUSION_DETECTED,
-        name="Intrusion",
-        device_class=BinarySensorDeviceClass.SAFETY,
-        value_fn=bool,
-    ),
     # ContactSensor/IntrusionEventSensor (io:SomfyWindowStateSensor)
     OverkizBinarySensorDescription(
         key=OverkizState.CORE_TILTED,
