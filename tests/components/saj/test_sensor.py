@@ -1,6 +1,5 @@
 """Test the saj sensor platform."""
 
-from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -8,10 +7,10 @@ import pysaj
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.saj import MIN_INTERVAL_SEC
 from homeassistant.components.saj.const import DOMAIN
+from homeassistant.components.saj.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, STATE_UNKNOWN, Platform
+from homeassistant.const import CONF_HOST, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er, issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -45,28 +44,22 @@ async def test_sensor_update_failure(
     mock_pysaj_saj: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test sensor update handles failures."""
-    # Setup read + initial scheduled poll succeed; next poll fails (unknown state).
-    mock_pysaj_saj.read = AsyncMock(side_effect=[True, True, False])
-
+    """Test sensors become unavailable when an update fails."""
     entry = await setup_integration(hass, mock_config_entry)
     assert entry.state is ConfigEntryState.LOADED
-
-    await hass.async_block_till_done()
 
     state = hass.states.get("sensor.saj_current_power")
     assert state is not None
     assert state.state == "5000.0"
-    assert mock_pysaj_saj.read.await_count == 2
 
-    freezer.tick(timedelta(seconds=MIN_INTERVAL_SEC + 1))
+    mock_pysaj_saj.read = AsyncMock(return_value=False)
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert mock_pysaj_saj.read.await_count == 3
     state = hass.states.get("sensor.saj_current_power")
     assert state is not None
-    assert state.state == STATE_UNKNOWN
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_yaml_import_creates_deprecated_issue(
