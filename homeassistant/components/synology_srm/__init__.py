@@ -34,30 +34,12 @@ PLATFORMS = [Platform.DEVICE_TRACKER]
 type SynologySRMConfigEntry = ConfigEntry[SynologySrmDeviceScanner]
 
 
-def get_api(config: dict[str, Any]) -> synology_srm.Client:
-    """Validate the configuration and return Synology SRM API."""
-
-    client = synology_srm.Client(
-        host=config[CONF_HOST],
-        port=config[CONF_PORT],
-        username=config[CONF_USERNAME],
-        password=config[CONF_PASSWORD],
-        https=config[CONF_SSL],
-    )
-
-    if not config[CONF_VERIFY_SSL]:
-        client.http.disable_https_verify()
-
-    return client
-
-
 class SynologySrmDeviceScanner:
     """Scanner to interact with Synology SRM API."""
 
     def __init__(
         self,
         hass: HomeAssistant,
-        api: synology_srm.Client,
         config: SynologySRMConfigEntry,
     ) -> None:
         """Initialize the scanner."""
@@ -65,7 +47,15 @@ class SynologySrmDeviceScanner:
         self._entry = config
         self._host = config.data[CONF_HOST]
         self._on_close: list[Callable] = []
-        self.client = api
+        self.client = synology_srm.Client(
+            host=config.data[CONF_HOST],
+            port=config.data[CONF_PORT],
+            username=config.data[CONF_USERNAME],
+            password=config.data[CONF_PASSWORD],
+            https=config.data[CONF_SSL],
+        )
+        if not config.data[CONF_VERIFY_SSL]:
+            self.client.http.disable_https_verify()
         self.scan_interval = DEFAULT_SCAN_INTERVAL
         self.devices: dict[str, dict[str, Any]] = {}
         self.success_init = False
@@ -155,8 +145,7 @@ async def async_setup_entry(
     hass: HomeAssistant, config_entry: SynologySRMConfigEntry
 ) -> bool:
     """Set up the Synology SRM from a config entry."""
-    api = get_api(dict(config_entry.data))
-    scanner = SynologySrmDeviceScanner(hass, api, config_entry)
+    scanner = SynologySrmDeviceScanner(hass, config_entry)
     await scanner.setup()
 
     async def async_close_connection(event: Event) -> None:
