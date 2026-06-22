@@ -67,7 +67,7 @@ class NextBusDataUpdateCoordinator(
             # But only if we have a reset time to unthrottle
             and self.client.rate_limit_reset is not None
             # Unless we are after the reset time
-            and datetime.now() < self.client.rate_limit_reset
+            and datetime.now() < self.client.rate_limit_reset  # pylint: disable=home-assistant-enforce-naive-now
         ):
             self.logger.debug(
                 "Rate limit threshold reached. Skipping updates for. Routes: %s",

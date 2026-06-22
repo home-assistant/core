@@ -1,7 +1,15 @@
 """Tests for Overkiz integration init."""
 
+from unittest.mock import AsyncMock, MagicMock, patch
+
+from homeassistant import config_entries
 from homeassistant.components.overkiz.const import DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 
@@ -94,3 +102,47 @@ async def test_unique_id_migration(hass: HomeAssistant) -> None:
 
     # Test if the config entry is migrated to the latest minor version
     assert mock_entry.minor_version == 2
+
+
+async def test_setup_token_reauth_error_starts_reauth(
+    hass: HomeAssistant, mock_rexel_config_entry: MockConfigEntry
+) -> None:
+    """A non-recoverable token refresh failure triggers reauth."""
+    mock_rexel_config_entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.login.side_effect = OAuth2TokenRequestReauthError(
+        request_info=MagicMock(), domain=DOMAIN
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.create_rexel_client", return_value=client
+    ):
+        await hass.config_entries.async_setup(mock_rexel_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_ERROR
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+async def test_setup_token_transient_error_retries(
+    hass: HomeAssistant, mock_rexel_config_entry: MockConfigEntry
+) -> None:
+    """A recoverable token refresh failure retries setup."""
+    mock_rexel_config_entry.add_to_hass(hass)
+
+    client = AsyncMock()
+    client.login.side_effect = OAuth2TokenRequestError(
+        request_info=MagicMock(), domain=DOMAIN
+    )
+
+    with patch(
+        "homeassistant.components.overkiz.create_rexel_client", return_value=client
+    ):
+        await hass.config_entries.async_setup(mock_rexel_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_rexel_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()

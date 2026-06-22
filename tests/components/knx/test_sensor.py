@@ -24,6 +24,7 @@ from tests.common import (
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
 )
+from tests.typing import WebSocketGenerator
 
 
 async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -334,17 +335,25 @@ async def test_sensor_ui_load(knx: KNXTestKit) -> None:
 async def test_sensor_ui_create_attribute_validation(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    create_ui_entity: KnxEntityGenerator,
+    hass_ws_client: WebSocketGenerator,
     knx_config: dict[str, Any],
 ) -> None:
     """Test creating a sensor with invalid unit, state_class or device_class."""
     await knx.setup_integration()
-    with pytest.raises(AssertionError) as err:
-        await create_ui_entity(
-            platform=Platform.SENSOR,
-            entity_data={"name": "test"},
-            knx_data=knx_config,
-        )
-    assert "success" in err.value.args[0]
-    assert "error_base" in err.value.args[0]
-    assert "path" in err.value.args[0]
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": Platform.SENSOR,
+            "data": {
+                "entity": {"name": "test"},
+                "knx": knx_config,
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["error_base"]
+    assert res["result"]["errors"][0]["path"]

@@ -82,6 +82,7 @@ class TeslaFleetCableLockEntity(TeslaFleetVehicleEntity, LockEntity):
         """Update entity attributes."""
         if self._value is None:
             self._attr_is_locked = None
+            return
         self._attr_is_locked = self._value == ENGAGED
 
     async def async_lock(self, **kwargs: Any) -> None:
