@@ -10,8 +10,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_password": "Invalid password",
-      "unknown_error": "[%key:common::config_flow::error::unknown%]"
+      "invalid_password": "Invalid password"
     },
     "step": {
       "auth": {
