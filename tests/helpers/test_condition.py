@@ -1,7 +1,7 @@
 """Test the condition helper."""
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from contextlib import AbstractContextManager, nullcontext as does_not_raise
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
@@ -59,6 +59,7 @@ from homeassistant.helpers.automation import (
     move_top_level_schema_fields_to_options,
 )
 from homeassistant.helpers.condition import (
+    _DATA_HISTORY_PRIMING_MANAGER,
     ATTR_BEHAVIOR,
     BEHAVIOR_ALL,
     BEHAVIOR_ANY,
@@ -69,6 +70,7 @@ from homeassistant.helpers.condition import (
     EntityConditionBase,
     EntityNumericalConditionWithUnitBase,
     _async_get_condition_platform,
+    _HistoryPrimingManager,
     async_validate_condition_config,
     make_entity_numerical_condition,
     make_entity_numerical_condition_with_unit,
@@ -84,7 +86,6 @@ from homeassistant.util.yaml.loader import parse_yaml
 
 from tests.common import MockModule, MockPlatform, mock_integration, mock_platform
 from tests.components.recorder.common import async_wait_recording_done
-from tests.typing import WebSocketGenerator
 
 
 async def _create_primary_and_diagnostic_entities_in_area(
@@ -2789,7 +2790,6 @@ async def test_or_condition_with_disabled_condition(hass: HomeAssistant) -> None
 )
 async def test_async_get_all_descriptions(
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     sun_condition_descriptions: str,
 ) -> None:
     """Test async_get_all_descriptions."""
@@ -2818,8 +2818,6 @@ async def test_async_get_all_descriptions(
             entity:
               domain: light
         """
-
-    ws_client = await hass_ws_client(hass)
 
     assert await async_setup_component(hass, SUN_DOMAIN, {})
     assert await async_setup_component(hass, SYSTEM_HEALTH_DOMAIN, {})
@@ -2944,39 +2942,6 @@ async def test_async_get_all_descriptions(
     ):
         new_descriptions = await condition.async_get_all_descriptions(hass)
     assert new_descriptions is not descriptions
-    # No light conditions added, they are gated by the
-    # automation.new_triggers_conditions
-    # labs flag
-    assert new_descriptions == expected_descriptions
-
-    # Verify the cache returns the same object
-    assert await condition.async_get_all_descriptions(hass) is new_descriptions
-
-    # Enable the new_triggers_conditions flag and verify light conditions are loaded
-    assert await async_setup_component(hass, "labs", {})
-
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "annotatedyaml.loader.load_yaml",
-            side_effect=_load_yaml,
-        ),
-        patch.object(Integration, "has_conditions", return_value=True),
-    ):
-        new_descriptions = await condition.async_get_all_descriptions(hass)
-    assert new_descriptions is not descriptions
     # The light conditions should now be present
     assert new_descriptions == expected_descriptions | {
         "light.is_off": {
@@ -3016,37 +2981,6 @@ async def test_async_get_all_descriptions(
             },
         },
     }
-
-    # Verify the cache returns the same object
-    assert await condition.async_get_all_descriptions(hass) is new_descriptions
-
-    # Disable the new_triggers_conditions flag and verify light conditions are removed
-    assert await async_setup_component(hass, "labs", {})
-
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": False,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    with (
-        patch(
-            "annotatedyaml.loader.load_yaml",
-            side_effect=_load_yaml,
-        ),
-        patch.object(Integration, "has_conditions", return_value=True),
-    ):
-        new_descriptions = await condition.async_get_all_descriptions(hass)
-    assert new_descriptions is not descriptions
-    # The light conditions should no longer be present
-    assert new_descriptions == expected_descriptions
 
     # Verify the cache returns the same object
     assert await condition.async_get_all_descriptions(hass) is new_descriptions
@@ -3193,68 +3127,6 @@ async def test_subscribe_conditions(
 
 @patch("annotatedyaml.loader.load_yaml")
 @patch.object(Integration, "has_conditions", return_value=True)
-@pytest.mark.parametrize(
-    ("new_triggers_conditions_enabled", "expected_events"),
-    [
-        (True, [{"light.is_off", "light.is_on", "light.is_brightness"}]),
-        (False, []),
-    ],
-)
-async def test_subscribe_conditions_experimental_conditions(
-    mock_has_conditions: Mock,
-    mock_load_yaml: Mock,
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    caplog: pytest.LogCaptureFixture,
-    new_triggers_conditions_enabled: bool,
-    expected_events: list[set[str]],
-) -> None:
-    """Test async_subscribe_platform_events skips disabled conditions."""
-    # Return empty conditions.yaml for light integration, the actual condition
-    # descriptions are irrelevant for this test
-    light_condition_descriptions = ""
-
-    def _load_yaml(fname, secrets=None):
-        if fname.endswith("light/conditions.yaml"):
-            condition_descriptions = light_condition_descriptions
-        else:
-            raise FileNotFoundError
-        with io.StringIO(condition_descriptions) as file:
-            return parse_yaml(file)
-
-    mock_load_yaml.side_effect = _load_yaml
-
-    condition_events = []
-
-    async def good_subscriber(new_conditions: set[str]):
-        """Simulate a working subscriber."""
-        condition_events.append(new_conditions)
-
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(hass, "labs", {})
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": new_triggers_conditions_enabled,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
-
-    condition.async_subscribe_platform_events(hass, good_subscriber)
-
-    assert await async_setup_component(hass, "light", {})
-    await hass.async_block_till_done()
-    assert condition_events == expected_events
-
-
-@patch("annotatedyaml.loader.load_yaml")
-@patch.object(Integration, "has_conditions", return_value=True)
 @patch(
     "homeassistant.components.light.condition.async_get_conditions",
     new=AsyncMock(return_value={}),
@@ -3263,7 +3135,6 @@ async def test_subscribe_conditions_no_conditions(
     mock_has_conditions: Mock,
     mock_load_yaml: Mock,
     hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test async_subscribe_platform_events skips platforms without conditions."""
@@ -3286,22 +3157,6 @@ async def test_subscribe_conditions_no_conditions(
     async def good_subscriber(new_conditions: set[str]):
         """Simulate a working subscriber."""
         condition_events.append(new_conditions)
-
-    ws_client = await hass_ws_client(hass)
-
-    assert await async_setup_component(hass, "labs", {})
-    await ws_client.send_json_auto_id(
-        {
-            "type": "labs/update",
-            "domain": "automation",
-            "preview_feature": "new_triggers_conditions",
-            "enabled": True,
-        }
-    )
-
-    msg = await ws_client.receive_json()
-    assert msg["success"]
-    await hass.async_block_till_done()
 
     condition.async_subscribe_platform_events(hass, good_subscriber)
 
@@ -5860,6 +5715,197 @@ async def test_state_condition_attr_duration_history_flushes_before_query(
         )
 
     assert call_order == ["flush", "query"]
+
+
+async def test_async_setup_creates_history_priming_manager(
+    hass: HomeAssistant,
+) -> None:
+    """The priming manager is created during condition setup, not on demand."""
+    # condition.async_setup runs as part of the test hass fixture.
+    assert isinstance(hass.data[_DATA_HISTORY_PRIMING_MANAGER], _HistoryPrimingManager)
+
+
+async def test_history_priming_manager_serializes_queries(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """Queries run one at a time even when many conditions prime together."""
+    manager = _HistoryPrimingManager(hass)
+    instance = get_instance(hass)
+
+    running = 0
+    max_running = 0
+    release = asyncio.Event()
+    started = asyncio.Event()
+
+    async def _job(_recorder: Recorder) -> str:
+        nonlocal running, max_running
+        running += 1
+        max_running = max(max_running, running)
+        started.set()
+        await release.wait()
+        running -= 1
+        return "ok"
+
+    # No pending commit, so flushing is instant and only query serialization
+    # is exercised.
+    with patch.object(instance, "async_get_commit_future", return_value=None):
+        tasks = [asyncio.create_task(manager.async_prime(_job)) for _ in range(5)]
+        # The first job holds the query lock; the rest must queue behind it.
+        await started.wait()
+        await asyncio.sleep(0)
+        assert running == 1
+        release.set()
+        results = await asyncio.gather(*tasks)
+
+    assert results == ["ok"] * 5
+    assert max_running == 1
+
+
+async def _advance_until(predicate: Callable[[], bool]) -> None:
+    """Pump the event loop until predicate holds, failing if it never does.
+
+    Avoids coupling tests to an exact number of internal await hops while still
+    failing cleanly rather than hanging on a regression.
+    """
+    for _ in range(1000):
+        if predicate():
+            return
+        await asyncio.sleep(0)
+    pytest.fail("condition was not reached")
+
+
+async def test_history_priming_manager_does_not_ride_in_flight_flush(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """A priming never rides a flush that began before it arrived (the lobby).
+
+    The flush commits changes still queued in the recorder so the history read
+    sees them. A condition that started tracking after an in-flight flush began
+    could miss its own just-queued change if it rode that flush, so it waits the
+    flush out and a fresh one is performed for it. Without the lobby step this
+    test fails: the late arrivals would ride the first flush (it would stay at
+    one flush total) instead of sharing a second, fresh one.
+    """
+    manager = _HistoryPrimingManager(hass)
+    instance = get_instance(hass)
+
+    flush_futures: list[asyncio.Future[None]] = []
+
+    def _spy_commit_future() -> asyncio.Future[None]:
+        fut = hass.loop.create_future()
+        flush_futures.append(fut)
+        return fut
+
+    async def _job(_recorder: Recorder) -> str:
+        return "done"
+
+    with patch.object(instance, "async_get_commit_future", _spy_commit_future):
+        # C0 claims the flush and is mid-flush (its commit future is pending).
+        c0 = asyncio.create_task(manager.async_prime(_job))
+        await _advance_until(lambda: len(flush_futures) == 1)
+
+        # Two conditions arrive while C0's flush runs; they must not ride it.
+        c1 = asyncio.create_task(manager.async_prime(_job))
+        c2 = asyncio.create_task(manager.async_prime(_job))
+
+        # C0's flush completes; C1 then performs a fresh flush and C2 rides it.
+        flush_futures[0].set_result(None)
+        assert await c0 == "done"
+        await _advance_until(lambda: len(flush_futures) == 2)
+
+        flush_futures[1].set_result(None)
+        assert await asyncio.gather(c1, c2) == ["done", "done"]
+        # One fresh flush shared by C1 and C2, not one each (and not C0's stale
+        # one): C1 flushed, C2 rode it.
+        assert len(flush_futures) == 2
+
+
+async def test_history_priming_manager_retries_after_cancelled_flush(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """A rider re-flushes when the flush it rode was cancelled before completing.
+
+    If the condition performing a generation's shared flush is cancelled by its
+    timeout while awaiting the commit, the riders must not read against the
+    unflushed queue — they perform a fresh flush instead. Without that retry this
+    test fails: the rider would proceed on the cancelled flush and never make a
+    second one.
+    """
+    manager = _HistoryPrimingManager(hass)
+    instance = get_instance(hass)
+
+    flush_futures: list[asyncio.Future[None]] = []
+
+    def _spy_commit_future() -> asyncio.Future[None]:
+        fut = hass.loop.create_future()
+        flush_futures.append(fut)
+        return fut
+
+    async def _job(_recorder: Recorder) -> str:
+        return "done"
+
+    with patch.object(instance, "async_get_commit_future", _spy_commit_future):
+        # C0 takes the lobby so c1 and c2 form one generation behind it.
+        c0 = asyncio.create_task(manager.async_prime(_job))
+        await _advance_until(lambda: len(flush_futures) == 1)
+        c1 = asyncio.create_task(manager.async_prime(_job))
+        c2 = asyncio.create_task(manager.async_prime(_job))
+        flush_futures[0].set_result(None)
+        assert await c0 == "done"
+
+        # c1 performs the generation's flush (the second one) and c2 rides it.
+        await _advance_until(lambda: len(flush_futures) == 2)
+
+        # c1 is cancelled mid-flush, as its timeout would do. c2 must then run
+        # its own fresh flush rather than ride c1's cancelled one.
+        c1.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await c1
+        await _advance_until(lambda: len(flush_futures) == 3)
+
+        flush_futures[2].set_result(None)
+        assert await c2 == "done"
+
+
+async def test_history_priming_manager_cancelled_lobby_waiter(
+    recorder_mock: Recorder, hass: HomeAssistant
+) -> None:
+    """A priming cancelled while waiting in the lobby doesn't wedge later ones.
+
+    A condition whose timeout fires while it waits for an in-flight flush is
+    cancelled. That must leave the manager able to flush for the next priming.
+    """
+    manager = _HistoryPrimingManager(hass)
+    instance = get_instance(hass)
+
+    flush_futures: list[asyncio.Future[None]] = []
+
+    def _spy_commit_future() -> asyncio.Future[None]:
+        fut = hass.loop.create_future()
+        flush_futures.append(fut)
+        return fut
+
+    async def _job(_recorder: Recorder) -> str:
+        return "done"
+
+    with patch.object(instance, "async_get_commit_future", _spy_commit_future):
+        c0 = asyncio.create_task(manager.async_prime(_job))
+        await _advance_until(lambda: len(flush_futures) == 1)
+        # A second priming parks in the lobby (reached in one step, as its lock
+        # acquire is uncontended), then its timeout cancels it.
+        waiter = asyncio.create_task(manager.async_prime(_job))
+        await asyncio.sleep(0)
+        waiter.cancel()
+        with pytest.raises(asyncio.CancelledError):
+            await waiter
+
+        # C0 finishes; a later priming still flushes and completes normally.
+        flush_futures[0].set_result(None)
+        assert await c0 == "done"
+        later = asyncio.create_task(manager.async_prime(_job))
+        await _advance_until(lambda: len(flush_futures) == 2)
+        flush_futures[1].set_result(None)
+        assert await later == "done"
 
 
 async def test_state_condition_multi_state_duration_uses_history(

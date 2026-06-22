@@ -88,7 +88,7 @@ def mock_default_integrations():
     """Mock the default integrations set up during onboarding."""
     with (
         patch("homeassistant.components.rpi_power.config_flow.new_under_voltage"),
-        patch("homeassistant.components.rpi_power.binary_sensor.new_under_voltage"),
+        patch("homeassistant.components.rpi_power.new_under_voltage"),
         patch("homeassistant.components.met.async_setup_entry", return_value=True),
         patch(
             "homeassistant.components.radio_browser.async_setup_entry",

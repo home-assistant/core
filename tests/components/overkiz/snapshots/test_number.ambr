@@ -487,6 +487,186 @@
     'state': '85',
   })
 # ---
+# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_inlet_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.maple_residence_living_room_air_inlet_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10001-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_inlet_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Air Inlet My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.maple_residence_living_room_air_inlet_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_outlet_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.maple_residence_living_room_air_outlet_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10002-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_outlet_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Air Outlet My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.maple_residence_living_room_air_outlet_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_transfer_my_position-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'number',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'number.maple_residence_living_room_air_transfer_my_position',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'My position',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': 'mdi:content-save-cog',
+    'original_name': 'My position',
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'io://1234-5678-1698/10003-core:Memorized1PositionState',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_air_transfer_my_position-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Living Room Air Transfer My position',
+      'icon': 'mdi:content-save-cog',
+      'max': 100,
+      'min': 0,
+      'mode': <NumberMode.AUTO: 'auto'>,
+      'step': 1.0,
+    }),
+    'context': <ANY>,
+    'entity_id': 'number.maple_residence_living_room_air_transfer_my_position',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_number_entities_snapshot[cloud_nexity_rail_din_europe.json][number.maple_residence_living_room_radiator_comfort_room_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([

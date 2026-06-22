@@ -15,24 +15,25 @@ from homeassistant.helpers.trigger import (
     make_entity_target_state_trigger,
 )
 
-ILLUMINANCE_DOMAIN_SPECS: dict[str, DomainSpec] = {
+ILLUMINANCE_DETECTED_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.LIGHT),
+}
+ILLUMINANCE_VALUE_DOMAIN_SPECS: dict[str, DomainSpec] = {
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.ILLUMINANCE),
 }
 
 TRIGGERS: dict[str, type[Trigger]] = {
     "detected": make_entity_target_state_trigger(
-        {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.LIGHT)},
-        STATE_ON,
+        ILLUMINANCE_DETECTED_DOMAIN_SPECS, STATE_ON
     ),
     "cleared": make_entity_target_state_trigger(
-        {BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.LIGHT)},
-        STATE_OFF,
+        ILLUMINANCE_DETECTED_DOMAIN_SPECS, STATE_OFF
     ),
     "changed": make_entity_numerical_state_changed_trigger(
-        ILLUMINANCE_DOMAIN_SPECS, valid_unit=LIGHT_LUX
+        ILLUMINANCE_VALUE_DOMAIN_SPECS, valid_unit=LIGHT_LUX
     ),
     "crossed_threshold": make_entity_numerical_state_crossed_threshold_trigger(
-        ILLUMINANCE_DOMAIN_SPECS, valid_unit=LIGHT_LUX
+        ILLUMINANCE_VALUE_DOMAIN_SPECS, valid_unit=LIGHT_LUX
     ),
 }
 

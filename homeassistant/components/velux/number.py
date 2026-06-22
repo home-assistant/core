@@ -1,6 +1,7 @@
 """Support for Velux exterior heating number entities."""
 
 from dataclasses import replace
+from typing import override
 
 from pyvlx import ExteriorHeating, Intensity, OpeningDevice, Position
 
@@ -61,6 +62,7 @@ class VeluxExteriorHeatingNumber(VeluxEntity, NumberEntity):
     node: ExteriorHeating
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current heating intensity in percent."""
         return (
@@ -68,6 +70,7 @@ class VeluxExteriorHeatingNumber(VeluxEntity, NumberEntity):
         )
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the heating intensity."""
         await self.node.set_intensity(
@@ -114,6 +117,7 @@ class VeluxPositionLimitNumber(
             await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def available(self) -> bool:
         """Return False until coordinator has successfully populated data.
 
@@ -125,6 +129,7 @@ class VeluxPositionLimitNumber(
         return super().available
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current limitation in Home Assistant semantics."""
         if position := self._get_pyvlx_limit():
@@ -132,6 +137,7 @@ class VeluxPositionLimitNumber(
         return None
 
     @wrap_pyvlx_call_exceptions
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the limitation in Home Assistant semantics."""
         if self.coordinator.data is None:
@@ -203,6 +209,7 @@ class VeluxClosedPositionLimitNumber(VeluxPositionLimitNumber):
         )
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the upper bound: the current open limit (or 100 if unknown)."""
         sibling_value = self._sibling_value()
@@ -239,6 +246,7 @@ class VeluxOpenPositionLimitNumber(VeluxPositionLimitNumber):
         )
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the lower bound: the current closed limit (or 0 if unknown)."""
         sibling_value = self._sibling_value()

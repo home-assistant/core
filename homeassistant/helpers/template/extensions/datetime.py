@@ -204,7 +204,7 @@ class DateTimeExtension(BaseTemplateExtension):
                 return default
 
     def as_timedelta(self, value: str) -> timedelta | None:
-        """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
+        """Parse an ISO8601 duration like 'PT10M' to a timedelta."""
         return dt_util.parse_duration(value)
 
     def strptime(self, string: str, fmt: str, default: Any = _SENTINEL) -> Any:

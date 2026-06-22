@@ -1,6 +1,6 @@
 """Support for Velbus thermostat."""
 
-from typing import Any
+from typing import Any, override
 
 from velbusaio.channels import Temperature as VelbusTemp
 
@@ -46,11 +46,13 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
     _attr_preset_modes = list(PRESET_MODES)
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._channel.get_climate_target()
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current Preset for this channel."""
         return next(
@@ -63,16 +65,19 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._channel.get_state()
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current hvac mode based on cool_mode message."""
         return HVACMode.COOL if self._channel.get_cool_mode() else HVACMode.HEAT
 
     @api_call
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         if (temp := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -81,12 +86,14 @@ class VelbusClimate(VelbusEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @api_call
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the new preset mode."""
         await self._channel.set_preset(PRESET_MODES[preset_mode])
         self.async_write_ha_state()
 
     @api_call
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the new hvac mode."""
         if hvac_mode not in self._attr_hvac_modes:

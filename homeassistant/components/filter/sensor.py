@@ -8,7 +8,7 @@ from functools import partial
 import logging
 from numbers import Number
 import statistics
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -323,6 +323,7 @@ class SensorFilter(SensorEntity):
         if update_ha:
             self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
 
@@ -399,6 +400,7 @@ class SensorFilter(SensorEntity):
         self.async_on_remove(async_at_started(self.hass, _async_hass_started))
 
     @property
+    @override
     def native_value(self) -> datetime | StateType:
         """Return the state of the sensor."""
         if self._state is not None and self.device_class == SensorDeviceClass.TIMESTAMP:
@@ -426,10 +428,12 @@ class FilterState:
             value = round(float(self.state), precision)
             self.state = int(value) if precision == 0 else value
 
+    @override
     def __str__(self) -> str:
         """Return state as the string representation of FilterState."""
         return str(self.state)
 
+    @override
     def __repr__(self) -> str:
         """Return timestamp and state as the representation of FilterState."""
         return f"{self.timestamp} : {self.state}"
@@ -545,6 +549,7 @@ class RangeFilter(Filter, SensorEntity):
         self._upper_bound = upper_bound
         self._stats_internal: Counter = Counter()
 
+    @override
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement the range filter."""
 
@@ -602,6 +607,7 @@ class OutlierFilter(Filter, SensorEntity):
         self._stats_internal: Counter = Counter()
         self._store_raw = True
 
+    @override
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement the outlier filter."""
 
@@ -644,6 +650,7 @@ class LowPassFilter(Filter, SensorEntity):
         )
         self._time_constant = time_constant
 
+    @override
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement the low pass filter."""
 
@@ -694,6 +701,7 @@ class TimeSMAFilter(Filter, SensorEntity):
             else:
                 return
 
+    @override
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement the Simple Moving Average filter."""
 
@@ -731,6 +739,7 @@ class ThrottleFilter(Filter, SensorEntity):
         )
         self._only_numbers = False
 
+    @override
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement the throttle filter."""
         if not self.states or len(self.states) == self.states.maxlen:
@@ -760,6 +769,7 @@ class TimeThrottleFilter(Filter, SensorEntity):
         self._last_emitted_at: datetime | None = None
         self._only_numbers = False
 
+    @override
     def _filter_state(self, new_state: FilterState) -> FilterState:
         """Implement the filter."""
         window_start = new_state.timestamp - self._time_window

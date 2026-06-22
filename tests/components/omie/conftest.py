@@ -85,7 +85,7 @@ def mock_omie_results_jan15() -> OMIEResults:
         ],
     )
     return OMIEResults(
-        updated_at=dt.datetime.now(),
+        updated_at=dt.datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         market_date=test_date,
         contents=spot_data,
         raw=json.dumps(spot_data),
@@ -120,7 +120,7 @@ def mock_omie_results_jan16() -> OMIEResults:
         ],
     )
     return OMIEResults(
-        updated_at=dt.datetime.now(),
+        updated_at=dt.datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
         market_date=test_date,
         contents=spot_data,
         raw=json.dumps(spot_data),

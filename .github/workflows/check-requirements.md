@@ -51,11 +51,12 @@ jobs:
             echo "Artifact has no head_sha; running the agent."
             exit 0
           fi
-          # Recover the commit recorded in the most recent requirements-check comment.
+          # Recover the commit recorded in the most recent requirements-check
+          # comment from the "Checked at commit" link
           PRIOR=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/issues/${PR}/comments" \
             --jq '.[] | select(.body | contains("<!-- requirements-check -->")) | .body' \
-            | grep -oE '<!-- requirements-check-sha: [0-9a-f]{7,40} -->' \
-            | grep -oE '[0-9a-f]{7,40}' | tail -1 || true)
+            | grep -oiE '/commit/[0-9a-f]{40}' \
+            | grep -oiE '[0-9a-f]{40}' | tail -1 || true)
           if [ -z "${PRIOR}" ]; then
             echo "No previous comment with a recorded commit; running the agent."
             exit 0
@@ -163,6 +164,9 @@ Read the JSON directly for the full schema. Key fields:
   - `{{CHECK_DETAIL:<pkg>:<kind>}}` → `<icon> <one-line explanation>`
     (the bullet's `- **<label>**:` prefix is already rendered; replace
     only the placeholder).
+  - `{{SUMMARY}}` → the single top-of-comment summary line, present only
+    when at least one check needed resolving. Fill it **after** resolving
+    every check, based on the final cell verdicts (see Step 3).
 
 Do not modify other content in `rendered_comment`, do not re-evaluate
 deterministic checks, do not add or remove packages. If `needs_agent`
@@ -188,10 +192,15 @@ Then stop. Do not improvise a verdict.
 
 Replace every placeholder with the resolved value and emit
 `rendered_comment` via `add_comment`. Preserve the leading
-`<!-- requirements-check -->` marker and the
-`<!-- requirements-check-sha: … -->` marker that follows it — the next
-run reads the recorded commit from it to decide whether anything changed.
-The PR target is already wired; do not pass `item_number`.
+`<!-- requirements-check -->` marker. The PR target is already wired;
+do not pass `item_number`.
+
+If a `{{SUMMARY}}` placeholder is present, replace it last, once every
+`{{CHECK_CELL:…}}` is resolved:
+- `All requirements checks passed. ✅` — when every check cell across all
+  packages is `✅` or `☑️` (treat `—`/skipped as not a problem).
+- `⚠️ Some checks require attention — see the details below.` — when any
+  cell is `⚠️` or `❌`.
 
 ## Check instructions
 

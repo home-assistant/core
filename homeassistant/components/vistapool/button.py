@@ -1,6 +1,7 @@
 """Vistapool Button entities."""
 
 import asyncio
+from typing import override
 
 from aioaquarite import AquariteError
 
@@ -50,6 +51,7 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
         super().__init__(coordinator)
         self._attr_unique_id = self.build_unique_id("led_pulse")
 
+    @override
     async def async_press(self) -> None:
         """Send a color-advance pulse to the pool LED fixture."""
         try:

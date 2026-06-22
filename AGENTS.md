@@ -13,7 +13,7 @@ This repository contains the core of Home Assistant, a Python 3 based home autom
 
 ## Development Commands
 
-- When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing.
+- When entering a new environment or worktree, run `script/setup` to set up the virtual environment with all development dependencies (pylint, pre-commit hooks, etc.). This is required before committing. If uv reports that no download was found for the required Python version, the environment is running an outdated version of uv; upgrade it with `curl -LsSf https://astral.sh/uv/install.sh | sh` and run `script/setup` again.
 - .vscode/tasks.json contains useful commands used for development.
 - After finishing a code session, run `uv run prek run --all-files` to check for linting and formatting issues.
 
