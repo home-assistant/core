@@ -1,5 +1,6 @@
 """Mail (SMTP) notification service."""
 
+from contextlib import suppress
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import email.utils
@@ -236,7 +237,8 @@ class MailNotifyEntity(NotifyEntity):
                         translation_key="send_mail_connection_error",
                     ) from e
             finally:
-                client.quit()
+                with suppress(SMTPException):
+                    client.quit()
 
 
 class MailNotificationService(SmtpClient, BaseNotificationService):
@@ -316,10 +318,13 @@ class MailNotificationService(SmtpClient, BaseNotificationService):
                 _LOGGER.warning(
                     "SMTPServerDisconnected sending mail: retrying connection"
                 )
-                mail.quit()
+                with suppress(SMTPException):
+                    mail.quit()
                 mail = self.connect()
             except SMTPException:
                 _LOGGER.warning("SMTPException sending mail: retrying connection")
-                mail.quit()
+                with suppress(SMTPException):
+                    mail.quit()
                 mail = self.connect()
-        mail.quit()
+        with suppress(SMTPException):
+            mail.quit()
