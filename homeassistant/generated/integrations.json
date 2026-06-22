@@ -977,6 +977,11 @@
       "integration_type": "virtual",
       "supported_by": "opower"
     },
+    "bwt": {
+      "name": "BWT",
+      "integration_type": "virtual",
+      "supported_by": "pooldose"
+    },
     "caldav": {
       "name": "CalDAV",
       "integration_type": "service",

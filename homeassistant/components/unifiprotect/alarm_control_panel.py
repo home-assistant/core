@@ -1,5 +1,7 @@
 """Support for UniFi Protect NVR alarm control panel."""
 
+from typing import override
+
 from uiprotect.data import NVR, NvrArmModeStatus
 from uiprotect.exceptions import GlobalAlarmManagerError
 
@@ -89,11 +91,13 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
         )
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
         self._refresh_alarm_state()
 
     @async_ufp_instance_command
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         try:
@@ -105,6 +109,7 @@ class ProtectNVRAlarmControlPanel(ProtectNVREntity, AlarmControlPanelEntity):
             ) from err
 
     @async_ufp_instance_command
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command (arms with the currently selected profile)."""
         try:

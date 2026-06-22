@@ -1,5 +1,7 @@
 """The Keenetic Client class."""
 
+from typing import override
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -34,10 +36,12 @@ class RouterOnlineBinarySensor(BinarySensorEntity):
         self._attr_device_info = router.device_info
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the UPS is online, else false."""
         return self._router.available
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
         self.async_on_remove(

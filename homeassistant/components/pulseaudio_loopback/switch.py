@@ -1,7 +1,7 @@
 """Switch logic for loading/unloading pulseaudio loopback modules."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pulsectl import Pulse, PulseError
 import voluptuous as vol
@@ -103,20 +103,24 @@ class PALoopbackSwitch(SwitchEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return true when connected to server."""
         return self._pa_svr.connected
 
     @property
+    @override
     def name(self):
         """Return the name of the switch."""
         return self._name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if device is on."""
         return self._module_idx is not None
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if not self.is_on:
@@ -127,6 +131,7 @@ class PALoopbackSwitch(SwitchEntity):
         else:
             _LOGGER.warning(IGNORED_SWITCH_WARN)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self.is_on:

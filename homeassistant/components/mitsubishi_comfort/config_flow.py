@@ -2,7 +2,7 @@
 
 from ipaddress import ip_address
 import logging
-from typing import Any
+from typing import Any, override
 
 from mitsubishi_comfort import MitsubishiCloudAccount
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
@@ -40,10 +40,12 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Return the options flow."""
         return MitsubishiComfortOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -101,6 +103,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

@@ -1,5 +1,7 @@
 """Base class for iRobot devices."""
 
+from typing import override
+
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -49,6 +51,7 @@ class IRobotEntity(Entity):
         return f"roomba_{self._blid}"
 
     @property
+    @override
     def unique_id(self):
         """Return the uniqueid of the vacuum cleaner."""
         return self.robot_unique_id
@@ -87,6 +90,7 @@ class IRobotEntity(Entity):
             return None
         return dt_util.utc_from_timestamp(ts)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback function."""
         self.vacuum.register_on_message_callback(self.on_message)

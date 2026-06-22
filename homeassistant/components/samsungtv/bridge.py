@@ -6,7 +6,7 @@ from asyncio.exceptions import TimeoutError as AsyncioTimeoutError
 from collections.abc import Callable, Iterable, Mapping
 import contextlib
 from datetime import datetime, timedelta
-from typing import Any, cast
+from typing import Any, cast, override
 
 from samsungctl import Remote
 from samsungctl.exceptions import AccessDenied, ConnectionClosed, UnhandledResponse
@@ -274,6 +274,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
         }
         self._remote: Remote | None = None
 
+    @override
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
         return await self.hass.async_add_executor_job(self._is_on)
@@ -289,6 +290,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             # We got a response so it's working.
             return True
 
+    @override
     async def async_try_connect(self) -> str:
         """Try to connect to the Legacy TV."""
         return await self.hass.async_add_executor_job(self._try_connect)
@@ -321,10 +323,12 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             LOGGER.debug("Failing config: %s, error: %s", config, err)
             return RESULT_CANNOT_CONNECT
 
+    @override
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this device."""
         return None
 
+    @override
     def _notify_reauth_callback(self) -> None:
         """Notify access denied callback."""
         if self._reauth_callback is not None:
@@ -348,6 +352,7 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
                 pass
         return self._remote
 
+    @override
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using legacy protocol."""
         first_key = True
@@ -382,10 +387,12 @@ class SamsungTVLegacyBridge(SamsungTVBridge):
             # Different reasons, e.g. hostname not resolveable
             pass
 
+    @override
     async def _async_send_power_off(self) -> None:
         """Send power off command to remote."""
         await self.async_send_keys(["KEY_POWEROFF"])
 
+    @override
     async def async_close_remote(self) -> None:
         """Close remote object."""
         await self.hass.async_add_executor_job(self._close_remote)
@@ -419,6 +426,7 @@ class SamsungTVWSBaseBridge[
         self._remote: _RemoteT | None = None
         self._remote_lock = asyncio.Lock()
 
+    @override
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
         LOGGER.debug("Checking if TV %s is on using websocket", self.host)
@@ -462,6 +470,7 @@ class SamsungTVWSBaseBridge[
     async def _async_get_remote_under_lock(self) -> _RemoteT | None:
         """Create or return a remote control instance."""
 
+    @override
     async def async_close_remote(self) -> None:
         """Close remote object."""
         try:
@@ -499,6 +508,7 @@ class SamsungTVWSBridge(
             return None
         return device.get(key)
 
+    @override
     async def async_is_on(self) -> bool:
         """Tells if the TV is on."""
         # On some TVs, opening a websocket turns on the TV
@@ -512,6 +522,7 @@ class SamsungTVWSBridge(
 
         return await super().async_is_on()
 
+    @override
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
         temp_result = None
@@ -563,6 +574,7 @@ class SamsungTVWSBridge(
 
         return temp_result or RESULT_CANNOT_CONNECT
 
+    @override
     async def async_device_info(self, force: bool = False) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
         if self._rest_api is None:
@@ -594,14 +606,17 @@ class SamsungTVWSBridge(
         """Send the launch_app command using websocket protocol."""
         await self._async_send_commands([ChannelEmitCommand.launch_app(app_id)])
 
+    @override
     async def async_request_app_list(self) -> None:
         """Get installed app list."""
         await self._async_send_commands([ChannelEmitCommand.get_installed_app()])
 
+    @override
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using websocket protocol."""
         await self._async_send_commands([SendRemoteKey.click(key) for key in keys])
 
+    @override
     async def _async_get_remote_under_lock(self) -> SamsungTVWSAsyncRemote | None:
         """Create or return a remote control instance."""
         if self._remote is None or not self._remote.is_alive():
@@ -700,6 +715,7 @@ class SamsungTVWSBridge(
                     }
                 )
 
+    @override
     async def _async_send_power_off(self) -> None:
         """Send power off command to remote."""
         if self._get_device_spec("FrameTVSupport") == "true":
@@ -736,6 +752,7 @@ class SamsungTVEncryptedBridge(
         self._rest_api_port: int | None = None
         self._device_info: dict[str, Any] | None = None
 
+    @override
     async def async_try_connect(self) -> str:
         """Try to connect to the Websocket TV."""
         self.port = ENCRYPTED_WEBSOCKET_PORT
@@ -769,6 +786,7 @@ class SamsungTVEncryptedBridge(
 
         return RESULT_CANNOT_CONNECT
 
+    @override
     async def async_device_info(self) -> dict[str, Any] | None:
         """Try to gather infos of this TV."""
         # Default to try all ports
@@ -795,12 +813,14 @@ class SamsungTVEncryptedBridge(
 
         return self._device_info
 
+    @override
     async def async_send_keys(self, keys: list[str]) -> None:
         """Send a list of keys using websocket protocol."""
         await self._async_send_commands(
             [SendEncryptedRemoteKey.click(key) for key in keys]
         )
 
+    @override
     async def _async_get_remote_under_lock(
         self,
     ) -> SamsungTVEncryptedWSAsyncRemote | None:
@@ -826,6 +846,7 @@ class SamsungTVEncryptedBridge(
                 LOGGER.debug("Created SamsungTVEncryptedBridge for %s", self.host)
         return self._remote
 
+    @override
     async def _async_send_power_off(self) -> None:
         """Send power off command to remote."""
         power_off_commands: list[SamsungTVEncryptedCommand] = []
