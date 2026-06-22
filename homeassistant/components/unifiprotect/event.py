@@ -1,7 +1,7 @@
 """Platform providing event entities for UniFi Protect."""
 
 import dataclasses
-from typing import Any
+from typing import Any, override
 
 from uiprotect.data import ModelType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
@@ -79,6 +79,7 @@ class ProtectDeviceRingEventEntity(EventEntityMixin, ProtectDeviceEntity, EventE
     entity_description: ProtectEventEntityDescription
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
@@ -104,6 +105,7 @@ class ProtectDeviceNFCEventEntity(EventEntityMixin, ProtectDeviceEntity, EventEn
     entity_description: ProtectEventEntityDescription
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
@@ -148,6 +150,7 @@ class ProtectDeviceFingerprintEventEntity(
     entity_description: ProtectEventEntityDescription
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
@@ -204,6 +207,7 @@ class ProtectDeviceVehicleEventEntity(
     _fired_event_id: str | None = None  # Track last fired event to prevent duplicates
     _fired_event_data: dict[str, Any] | None = None  # Track event data when fired
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register cleanup callback when entity is added."""
         await super().async_added_to_hass()
@@ -317,6 +321,7 @@ class ProtectDeviceVehicleEventEntity(
         )
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         description = self.entity_description
 
