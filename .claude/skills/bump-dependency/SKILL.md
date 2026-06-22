@@ -21,7 +21,6 @@ Follow these systematic steps to successfully bump a python package requirement 
   ```bash
   uv run python3 ./.claude/skills/bump-dependency/scripts/resolve_dependency.py <package> <old_version> [--new-version <new_version>]
   ```
-  *(Note: If your workspace uses a different skills directory layout, adjust the script path relative to the workspace root accordingly.)*
 - [ ] **4. Plan-Validate-Execute (Draft Plan)**: Before modifying any files, write a brief, structured plan outlining the integrations to change, old version, new version, and the resolved comparison link. Show this draft plan to the user.
 
 ### Phase B: Execute and Validate (Local Changes)
