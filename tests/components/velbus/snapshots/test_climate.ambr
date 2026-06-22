@@ -69,6 +69,7 @@
       ]),
       'supported_features': <ClimateEntityFeature: 17>,
       'temperature': 21.0,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room_temperature',

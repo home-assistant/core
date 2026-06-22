@@ -83,6 +83,7 @@
       'supported_features': <ClimateEntityFeature: 25>,
       'target_temp_step': 1.0,
       'temperature': 80,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.saunum_leil',

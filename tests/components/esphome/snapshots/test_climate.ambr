@@ -34,5 +34,6 @@
     ]),
     'target_temp_step': 2,
     'temperature': 20,
+    'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
   })
 # ---

@@ -163,6 +163,7 @@
         'off',
       ]),
       'temperature': 22.0,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'climate.living_room',
