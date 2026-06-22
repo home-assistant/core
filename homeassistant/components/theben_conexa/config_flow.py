@@ -19,9 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(
-            CONF_HOST, description={"suggested_value": "192.168.1.200"}
-        ): str,  # TODO many electricity grid operators use this IP as 'hardcoded' static IP should this integration assume so also? pylint: disable=fixme
+        vol.Required(CONF_HOST, description={"suggested_value": "192.168.1.200"}): str,
         vol.Required(CONF_USERNAME): str,
         vol.Required(CONF_PASSWORD): str,
     }

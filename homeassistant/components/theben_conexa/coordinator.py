@@ -34,6 +34,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
 
     _api: ConexaSMGW
     gateway_info: ConexaSMGW.GatewayInfo
+    config_entry: ThebenConfigEntry
 
     def __init__(self, hass: HomeAssistant, entry: ThebenConfigEntry) -> None:
         """Initialize the coordinator."""
@@ -52,9 +53,6 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
 
     async def async_init(self) -> None:
         """Asynchronous Initialization and registering the update schedule."""
-        # config_entry is set in __init__ but somebody might have reset it to None by now...
-        if self.config_entry is None:
-            raise ValueError("config_entry set in __init__ mysteriously disappeared")
 
         try:
             # This function tries to establish a TCP connection and raises an exception on error

@@ -17,15 +17,11 @@ class ConexaSMGWEntity(CoordinatorEntity[SmgwSensorCoordinator]):
         """Initialize the Base entity."""
         super().__init__(coordinator)
         self._attr_device_info = DeviceInfo(
-            name=coordinator.gateway_info.smgwID,
+            name=coordinator.gateway_info.smgwID.upper(),
             identifiers={(DOMAIN, coordinator.gateway_info.smgwID)},
             manufacturer="Theben AG",
             model="CONEXA 3.0 Smart Meter Gateway",
             sw_version=coordinator.gateway_info.firmwareVersion,
             serial_number=coordinator.gateway_info.smgwID,
+            configuration_url=f"https://{coordinator.config_entry.data[CONF_HOST]}",
         )
-
-        if coordinator.config_entry:
-            self._attr_device_info["configuration_url"] = (
-                f"https://{coordinator.config_entry.data[CONF_HOST]}"
-            )
