@@ -1,6 +1,7 @@
 """Support for entities of the Evohome integration."""
 
 from collections.abc import Mapping
+from datetime import datetime
 from enum import StrEnum
 import logging
 from typing import Any
@@ -21,15 +22,19 @@ from .coordinator import EvoDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-def _enums_to_pascal_case(val: Any) -> Any:
-    """Recursively convert any string enums to PascalCase strings."""
+def _recurse_and_revert(val: Any, _key: str | None = None) -> Any:
+    """Recursively revert any values to native format."""
     if isinstance(val, dict):
-        return {k: _enums_to_pascal_case(v) for k, v in val.items()}
+        return {k: _recurse_and_revert(v, k) for k, v in val.items()}
     if isinstance(val, (list, tuple)):
-        return type(val)(_enums_to_pascal_case(v) for v in val)
-    if not isinstance(val, StrEnum):
+        return type(val)(_recurse_and_revert(v) for v in val)
+    if isinstance(val, StrEnum):
+        return "".join(word.capitalize() for word in val.value.split("_"))
+    if not isinstance(val, datetime):
         return val
-    return "".join(word.capitalize() for word in val.value.split("_"))
+    if _key in ("since", "until"):
+        return val.isoformat()
+    return val
 
 
 def is_valid_zone(zone: evo.Zone) -> bool:
@@ -83,7 +88,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
         for attr in self._evo_state_attr_names:
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)
 
-        self._device_state_attrs = _enums_to_pascal_case(self._device_state_attrs)
+        self._device_state_attrs = _recurse_and_revert(self._device_state_attrs)
 
         super()._handle_coordinator_update()
 
