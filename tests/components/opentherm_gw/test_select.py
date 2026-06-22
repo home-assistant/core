@@ -23,10 +23,8 @@ from homeassistant.components.opentherm_gw.const import (
     OpenThermDeviceIdentifier,
 )
 from homeassistant.components.opentherm_gw.select import (
-    OpenThermSelectDHWOvrdMode,
     OpenThermSelectGPIOMode,
     OpenThermSelectLEDMode,
-    PyotgwDHWOvrdMode,
     PyotgwGPIOMode,
     PyotgwLEDMode,
 )
@@ -157,26 +155,10 @@ async def test_select_change_value(
 @pytest.mark.parametrize(
     ("target_param", "pyotgw_return", "resulting_state"),
     [
-        (
-            PyotgwDHWOvrdMode.OFF.value,
-            0,
-            OpenThermSelectDHWOvrdMode.OFF,
-        ),
-        (
-            PyotgwDHWOvrdMode.ON.value,
-            1,
-            OpenThermSelectDHWOvrdMode.ON,
-        ),
-        (
-            PyotgwDHWOvrdMode.DISABLED.value,
-            "A",
-            OpenThermSelectDHWOvrdMode.DISABLED,
-        ),
-        (
-            PyotgwDHWOvrdMode.ON.value,
-            None,
-            OpenThermSelectDHWOvrdMode.ON,
-        ),
+        (0, 0, "force_off"),
+        (1, 1, "force_on"),
+        ("A", "A", "override_disabled"),
+        (1, None, "force_on"),
     ],
 )
 async def test_select_dhw_ovrd_change_value(
@@ -228,11 +210,11 @@ async def test_select_dhw_ovrd_change_value(
     [
         (
             OTGW_DHW_OVRD,
-            PyotgwDHWOvrdMode.DISABLED.value,
-            OpenThermSelectDHWOvrdMode.DISABLED,
+            "A",
+            "override_disabled",
         ),
-        (OTGW_DHW_OVRD, PyotgwDHWOvrdMode.OFF.value, OpenThermSelectDHWOvrdMode.OFF),
-        (OTGW_DHW_OVRD, PyotgwDHWOvrdMode.ON.value, OpenThermSelectDHWOvrdMode.ON),
+        (OTGW_DHW_OVRD, 1, "force_on"),
+        (OTGW_DHW_OVRD, 0, "force_off"),
         (OTGW_GPIO_A, PyotgwGPIOMode.AWAY, OpenThermSelectGPIOMode.AWAY),
         (OTGW_GPIO_B, PyotgwGPIOMode.LED_F, OpenThermSelectGPIOMode.LED_F),
         (
