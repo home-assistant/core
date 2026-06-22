@@ -40,15 +40,12 @@ async def async_setup_entry(
     for node in pyvlx.nodes:
         if isinstance(node, OpeningDevice):
             coordinator = limitation_coordinators[node.node_id]
-            closed_limit_entity = VeluxClosedPositionLimitNumber(
-                coordinator, config_entry.entry_id
+            entities.extend(
+                [
+                    VeluxOpenPositionLimitNumber(coordinator, config_entry.entry_id),
+                    VeluxClosedPositionLimitNumber(coordinator, config_entry.entry_id),
+                ]
             )
-            open_limit_entity = VeluxOpenPositionLimitNumber(
-                coordinator, config_entry.entry_id
-            )
-            closed_limit_entity.sibling = open_limit_entity
-            open_limit_entity.sibling = closed_limit_entity
-            entities.extend([closed_limit_entity, open_limit_entity])
     async_add_entities(entities)
 
 
@@ -96,7 +93,6 @@ class VeluxPositionLimitNumber(
     _attr_native_unit_of_measurement = PERCENTAGE
     _attr_has_entity_name = True
 
-    sibling: VeluxPositionLimitNumber | None = None
     _limitation_kind: str
 
     def __init__(
@@ -131,7 +127,7 @@ class VeluxPositionLimitNumber(
     @property
     def native_value(self) -> float | None:
         """Return the current limitation in Home Assistant semantics."""
-        if position := self._get_pyvlx_position():
+        if position := self._get_pyvlx_limit():
             return 100 - position.position_percent
         return None
 
@@ -147,8 +143,7 @@ class VeluxPositionLimitNumber(
                 translation_key="set_limitation_before_data",
             )
 
-        sibling_value = self.sibling.native_value if self.sibling else None
-        if sibling_value is not None and self._overlaps(value, sibling_value):
+        if self._overlaps(value):
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="limitation_overlap",
@@ -158,7 +153,7 @@ class VeluxPositionLimitNumber(
             Position(position_percent=100 - round(value))
         )
 
-    def _get_pyvlx_position(self) -> Position | None:
+    def _get_pyvlx_limit(self) -> Position | None:
         """Get the pyvlx limitation backing this HA-side entity."""
         raise NotImplementedError
 
@@ -188,7 +183,7 @@ class VeluxPositionLimitNumber(
             )
         )
 
-    def _overlaps(self, value: float, sibling_value: float) -> bool:
+    def _overlaps(self, value: float) -> bool:
         """Check if a value would overlap with sibling limitation."""
         raise NotImplementedError
 
@@ -199,13 +194,21 @@ class VeluxClosedPositionLimitNumber(VeluxPositionLimitNumber):
     _attr_native_min_value = 0
     _limitation_kind = "closed"
 
+    def _sibling_value(self) -> float | None:
+        """Return the sibling open limit value, or None if unknown."""
+        return (
+            100 - self.coordinator.data.limitation_min.position_percent
+            if self.coordinator.data
+            else None
+        )
+
     @property
     def native_max_value(self) -> float:
         """Return the upper bound: the current open limit (or 100 if unknown)."""
-        sibling_value = self.sibling.native_value if self.sibling else None
+        sibling_value = self._sibling_value()
         return sibling_value if sibling_value is not None else 100
 
-    def _get_pyvlx_position(self) -> Position | None:
+    def _get_pyvlx_limit(self) -> Position | None:
         """Get the pyvlx max limit backing the HA closed position limit."""
         return self.coordinator.data.limitation_max if self.coordinator.data else None
 
@@ -215,9 +218,10 @@ class VeluxClosedPositionLimitNumber(VeluxPositionLimitNumber):
         """Update pyvlx max and preserve pyvlx min for HA closed limit changes."""
         return current_min, updated_position
 
-    def _overlaps(self, value: float, sibling_value: float) -> bool:
+    def _overlaps(self, value: float) -> bool:
         """Check if the closed limit would overlap the open limit."""
-        return value > sibling_value
+        sibling_value = self._sibling_value()
+        return sibling_value is not None and value > sibling_value
 
 
 class VeluxOpenPositionLimitNumber(VeluxPositionLimitNumber):
@@ -226,13 +230,21 @@ class VeluxOpenPositionLimitNumber(VeluxPositionLimitNumber):
     _attr_native_max_value = 100
     _limitation_kind = "open"
 
+    def _sibling_value(self) -> float | None:
+        """Return the sibling open limit value, or None if unknown."""
+        return (
+            100 - self.coordinator.data.limitation_max.position_percent
+            if self.coordinator.data
+            else None
+        )
+
     @property
     def native_min_value(self) -> float:
         """Return the lower bound: the current closed limit (or 0 if unknown)."""
-        sibling_value = self.sibling.native_value if self.sibling else None
+        sibling_value = self._sibling_value()
         return sibling_value if sibling_value is not None else 0
 
-    def _get_pyvlx_position(self) -> Position | None:
+    def _get_pyvlx_limit(self) -> Position | None:
         """Get the pyvlx min limit backing the HA open position limit."""
         return self.coordinator.data.limitation_min if self.coordinator.data else None
 
@@ -242,6 +254,7 @@ class VeluxOpenPositionLimitNumber(VeluxPositionLimitNumber):
         """Update pyvlx min and preserve pyvlx max for HA open limit changes."""
         return updated_position, current_max
 
-    def _overlaps(self, value: float, sibling_value: float) -> bool:
+    def _overlaps(self, value: float) -> bool:
         """Check if the open limit would overlap the closed limit."""
-        return value < sibling_value
+        sibling_value = self._sibling_value()
+        return sibling_value is not None and value < sibling_value
