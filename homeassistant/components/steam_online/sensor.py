@@ -9,7 +9,7 @@ from typing import Any, cast, override
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType, UndefinedType
+from homeassistant.helpers.typing import StateType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -37,7 +37,7 @@ class SteamSensorEntityDescription(SensorEntityDescription):
     """Steam sensor description."""
 
     value_fn: Callable[[dict[str, Any]], StateType]
-    name_fn: Callable[[dict[str, Any]], str] | None = None
+    name_fn: Callable[[dict[str, Any]], str]
     entity_picture_fn: Callable[[dict[str, Any]], str] | None = None
 
 
@@ -84,21 +84,13 @@ class SteamSensorEntity(SteamEntity, SensorEntity):
         self._steamid = steamid
         self.entity_description = description
         self._attr_unique_id = f"sensor.steam_{steamid}"
+        self._attr_name = self.entity_description.name_fn(coordinator.data[steamid])
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self._steamid])
-
-    @property
-    def name(self) -> str | UndefinedType | None:
-        """Return the name of the entity."""
-        return (
-            fn(self.coordinator.data[self._steamid])
-            if (fn := self.entity_description.name_fn) is not None
-            else super().name
-        )
 
     @property
     def entity_picture(self) -> str | None:
