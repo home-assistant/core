@@ -9,11 +9,7 @@ from theben_conexa_smgw import ConexaSMGW, checkNetworkConnection
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.event import (
     async_track_point_in_utc_time,
@@ -74,12 +70,6 @@ class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValu
             raise ConfigEntryAuthFailed("Authentication failed") from e
 
         self.gateway_info = self._api.gatewayInfo
-
-        # Check if we got a different URL back -> Something is seriously wrong
-        if self._api.m2mUrl != self.config_entry.data["m2mUrl"]:
-            raise ConfigEntryError(
-                f"SMGW returned {self._api.m2mUrl} but it was originally configured with {self.config_entry.data['m2mUrl']}!"
-            )
 
         # Currently the SMGW provides new data only every 15 minutes at the starting of the hour (in UTC).
         # So we leverage this information to set up a scheduled poll at

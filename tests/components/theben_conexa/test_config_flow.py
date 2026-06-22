@@ -45,7 +45,6 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
-        "m2mUrl": "http://test.url",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -107,7 +106,6 @@ async def test_form_invalid_auth(
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
-        "m2mUrl": "http://test.url",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -165,7 +163,6 @@ async def test_form_cannot_connect(
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
-        "m2mUrl": "http://test.url",
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -205,7 +202,6 @@ async def test_form_already_configured(
             CONF_HOST: "1.1.1.1",
             CONF_USERNAME: "test-username",
             CONF_PASSWORD: "test-password",
-            "m2mUrl": "http://test.url",
         }
 
         result = await hass.config_entries.flow.async_init(
@@ -287,6 +283,5 @@ async def test_form_unknown_err(
         CONF_HOST: "1.1.1.1",
         CONF_USERNAME: "test-username",
         CONF_PASSWORD: "test-password",
-        "m2mUrl": "http://test.url",
     }
     assert len(mock_setup_entry.mock_calls) == 1

@@ -9,7 +9,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -24,34 +23,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_PASSWORD): str,
     }
 )
-
-
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-
-    try:
-        # This function tries to establish a TCP connection and raises an exception on error
-        await checkNetworkConnection(data[CONF_HOST])
-    except (OSError, aiohttp.ClientError) as e:
-        raise CannotConnect from e
-
-    try:
-        m2murl = await ConexaSMGW.buildCompleteUrl(
-            async_get_clientsession(hass),
-            data[CONF_HOST],
-            data[CONF_USERNAME],
-            data[CONF_PASSWORD],
-        )
-        _LOGGER.debug("SMGW returned valid query URL %s", m2murl)
-    except (OSError, aiohttp.ClientError) as e:
-        # The smgw unfortunately does not reply with invalid auth it just times out
-        # So after we checked that connection is possible we assume Invalid auth if something happens
-        raise InvalidAuth from e
-
-    return {"title": "Smartmeter Gateway", "m2mUrl": m2murl}
 
 
 class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -72,7 +43,25 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             )
             try:
-                info = await validate_input(self.hass, user_input)
+                try:
+                    # This function tries to establish a TCP connection and raises an exception on error
+                    await checkNetworkConnection(user_input[CONF_HOST])
+                except (OSError, aiohttp.ClientError) as e:
+                    raise CannotConnect from e
+
+                try:
+                    url = await ConexaSMGW.buildCompleteUrl(
+                        async_get_clientsession(self.hass),
+                        user_input[CONF_HOST],
+                        user_input[CONF_USERNAME],
+                        user_input[CONF_PASSWORD],
+                    )
+                    _LOGGER.debug("SMGW returned valid query URL %s", url)
+                except (OSError, aiohttp.ClientError) as e:
+                    # The smgw unfortunately does not reply with invalid auth it just times out
+                    # So after we checked that connection is possible we assume Invalid auth if something happens
+                    raise InvalidAuth from e
+
             except CannotConnect:
                 errors["base"] = "cannot_connect"
             except InvalidAuth:
@@ -81,8 +70,9 @@ class ThebenConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                user_input["m2mUrl"] = info["m2mUrl"]
-                return self.async_create_entry(title=info["title"], data=user_input)
+                return self.async_create_entry(
+                    title="Smartmeter Gateway", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
