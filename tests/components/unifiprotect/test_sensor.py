@@ -663,19 +663,20 @@ async def test_sensor_precision(
 
 async def test_aiport_no_sensor_entities(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     aiport: AiPort,
 ) -> None:
     """AI Port devices create no entities (support dropped)."""
     await init_entry(hass, ufp, [aiport])
 
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
     assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]
 
 
 async def test_aiport_no_sensor_entities_on_runtime_adopt(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
     aiport: AiPort,
@@ -687,6 +688,5 @@ async def test_aiport_no_sensor_entities_on_runtime_adopt(
     aiport.feature_flags = Mock(is_ptz=False)
     await adopt_devices(hass, ufp, [aiport])
 
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(entity_registry, ufp.entry.entry_id)
     assert not [e for e in entities if e.unique_id.startswith(f"{aiport.mac}_")]

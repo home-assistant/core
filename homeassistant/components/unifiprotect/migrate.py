@@ -141,15 +141,14 @@ def async_remove_aiport_devices(hass: HomeAssistant, entry: UFPConfigEntry) -> N
     Added in 2026.7.0
     """
     device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
     for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id):
         if device.model_id != _AIPORT_DEVICE_TYPE:
             continue
-        for entity in er.async_entries_for_device(
-            entity_registry, device.id, include_disabled_entities=True
-        ):
-            entity_registry.async_remove(entity.entity_id)
-        device_registry.async_remove_device(device.id)
+        # Detaching the config entry removes the device (it has no other entry)
+        # and its entities along with it.
+        device_registry.async_update_device(
+            device.id, remove_config_entry_id=entry.entry_id
+        )
 
 
 @callback
