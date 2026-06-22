@@ -388,13 +388,8 @@ class ProtectDeviceSmartDetectEventEntity(
     @callback
     def _async_smart_detect_event(self, event: ProtectEvent) -> None:
         description = self.entity_description
-        obj_type = description.ufp_obj_type
         event_types = description.event_types
-        if (
-            obj_type is not None
-            and event_types
-            and obj_type in event.smart_detect_types
-        ):
+        if event_types and description.ufp_obj_type in event.smart_detect_types:
             self._trigger_event(event_types[0], {ATTR_EVENT_ID: event.id})
             self.async_write_ha_state()
 

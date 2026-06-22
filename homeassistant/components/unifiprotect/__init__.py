@@ -181,10 +181,8 @@ async def _async_setup_entry(
             translation_key="public_bootstrap_failed",
         ) from err
 
-    # Subscribe to the public events websocket. update_public() above is
-    # best-effort (its failure is swallowed), so this is a no-op if the
-    # bootstrap was not primed; it is then retried on the next websocket
-    # reconnect.
+    # update_public() above is best-effort, so this no-ops if the bootstrap was
+    # not primed; it is retried on the next websocket reconnect.
     data_service.async_subscribe_public_events()
 
     # Load PTZ patrol data before loading platforms

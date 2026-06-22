@@ -51,9 +51,8 @@ from .utils import async_get_devices_by_type
 
 _LOGGER = logging.getLogger(__name__)
 
-# Number of consecutive failed public-bootstrap re-prime attempts (one per
-# websocket reconnect) before escalating the log from debug to a single
-# warning, so a persistently dead public events feed becomes visible.
+# Consecutive failed re-prime attempts (one per reconnect) before the retry log
+# escalates from debug to a single warning, so a dead public feed is visible.
 PUBLIC_EVENTS_RETRY_WARN_THRESHOLD = 3
 
 type ProtectDeviceType = ProtectAdoptableDeviceModel | NVR
@@ -215,17 +214,11 @@ class ProtectData:
     def async_subscribe_public_events(self) -> None:
         """Subscribe to the public events websocket if the bootstrap is primed.
 
-        Must be called *after* ``update_public()`` has primed the public
-        bootstrap: ``subscribe_events()`` raises if it has not (unlike the
-        devices websocket, which is subscribed before priming). This is the
-        source of truth for smart-detect events (e.g. package) that the private
-        API only surfaces as the unhandled ``smartDetectObject`` model.
-
-        Idempotent: a no-op once subscribed, and a no-op (debug log only) while
-        the bootstrap is unprimed. If priming failed at setup the subscription
-        is retried on the next websocket reconnect via
-        ``_async_resubscribe_public_events``, so package detection self-heals
-        instead of staying dead until the entry is reloaded.
+        Must run *after* ``update_public()`` primes the bootstrap, as
+        ``subscribe_events()`` raises otherwise. Idempotent and a no-op while
+        unprimed; if priming failed at setup it is retried on the next websocket
+        reconnect (see ``_async_resubscribe_public_events``), so package
+        detection self-heals instead of staying dead until reload.
         """
         if self._public_events_subscribed:
             return
@@ -252,8 +245,7 @@ class ProtectData:
                 await self.api.update_public()
             except Exception:  # noqa: BLE001
                 self._public_events_retries += 1
-                # Stay at debug for transient blips; warn exactly once it is
-                # clearly not recovering so the dead public feed is visible.
+                # Debug for transient blips; warn once when clearly not recovering.
                 if self._public_events_retries == PUBLIC_EVENTS_RETRY_WARN_THRESHOLD:
                     _LOGGER.warning(
                         "Public API bootstrap still failing after %d attempts; "
@@ -313,15 +305,12 @@ class ProtectData:
     ) -> None:
         """Process a smart-detect event from the public events websocket.
 
-        Only the start of a detection (a momentary event) is dispatched; the
-        per-camera smart-detect event entities decide whether their object type
-        matches. The camera is resolved through the private bootstrap by
-        ``device_id`` (the stable cross-API join key) rather than by the public
-        ``device_mac``: the resulting mac then comes from the same store the
-        event entities derive ``self.device.mac`` from, so the dispatch key
-        matches without assuming the public and private mac strings are
-        byte-identical. An event for a device absent from the private bootstrap
-        has no entity to dispatch to anyway.
+        Only the start of a detection is dispatched; the per-camera entities
+        filter by object type. The camera is resolved by ``device_id`` (the
+        stable cross-API join key), not the public ``device_mac``, so the
+        dispatch key comes from the same store the entities derive
+        ``self.device.mac`` from and matches without assuming both mac strings
+        are byte-identical.
         """
         if (
             change is not EventChange.STARTED
