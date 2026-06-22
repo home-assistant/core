@@ -23,7 +23,7 @@ import homeassistant.helpers.entity_registry as er
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
-from .const import API_MAX_RETRIES, DOMAIN
+from .const import API_MAX_RETRIES, CONF_DISK_SPACE_SENSORS, DOMAIN
 from .coordinator import PortainerCoordinator, PortainerDockerDiskSpaceCoordinator
 from .services import async_setup_services
 
@@ -59,29 +59,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) ->
     coordinator = PortainerCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    docker_system_df_client = Portainer(
-        api_url=entry.data[CONF_URL],
-        api_key=entry.data[CONF_API_TOKEN],
-        session=session,
-        request_timeout=120,
-        max_retries=API_MAX_RETRIES,
-    )
-
-    docker_disk_space_coordinator = PortainerDockerDiskSpaceCoordinator(
-        hass, entry, docker_system_df_client
-    )
-    coordinator.docker_disk_space = docker_disk_space_coordinator
-
-    async def _defer_docker_disk_space_refresh(_: HomeAssistant) -> None:
-        """Defer the first refresh until Home Assistant has started."""
-        hass.async_create_task(
-            docker_disk_space_coordinator.async_refresh(),
-            "portainer_docker_disk_space_initial_refresh",
+    if entry.options.get(CONF_DISK_SPACE_SENSORS, True):
+        docker_system_df_client = Portainer(
+            api_url=entry.data[CONF_URL],
+            api_key=entry.data[CONF_API_TOKEN],
+            session=session,
+            request_timeout=120,
+            max_retries=API_MAX_RETRIES,
         )
 
-    # On lower-end hardware, the DF endpoint can take long
-    # Do not block the setup, but defer the first refresh until HA is fully started
-    entry.async_on_unload(async_at_started(hass, _defer_docker_disk_space_refresh))
+        docker_disk_space_coordinator = PortainerDockerDiskSpaceCoordinator(
+            hass, entry, docker_system_df_client
+        )
+        coordinator.docker_disk_space = docker_disk_space_coordinator
+
+        async def _defer_docker_disk_space_refresh(_: HomeAssistant) -> None:
+            """Defer the first refresh until Home Assistant has started."""
+            hass.async_create_task(
+                docker_disk_space_coordinator.async_refresh(),
+                "portainer_docker_disk_space_initial_refresh",
+            )
+
+        # On lower-end hardware, the DF endpoint can take long
+        # Do not block the setup, but defer the first refresh until HA is fully started
+        entry.async_on_unload(async_at_started(hass, _defer_docker_disk_space_refresh))
 
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)

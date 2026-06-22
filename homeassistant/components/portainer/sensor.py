@@ -2,7 +2,6 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from itertools import chain
 
 from pyportainer import StackType
 from pyportainer.models.docker import DockerSystemDF
@@ -364,28 +363,25 @@ async def async_setup_entry(
     """Set up Portainer sensors based on a config entry."""
     coordinator = entry.runtime_data
     ds_coordinator = coordinator.docker_disk_space
-    assert ds_coordinator is not None
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint sensors."""
-        async_add_entities(
-            chain(
-                (
-                    PortainerEndpointSensor(coordinator, entity_description, endpoint)
-                    for entity_description in ENDPOINT_SENSORS
-                    for endpoint in endpoints
-                ),
-                (
-                    PortainerDockerSystemDiskSpaceSensor(
-                        ds_coordinator,
-                        entity_description,
-                        endpoint,
-                    )
-                    for entity_description in DOCKER_SYSTEM_DISK_SPACE_SENSORS
-                    for endpoint in endpoints
-                ),
+        entities: list[SensorEntity] = [
+            PortainerEndpointSensor(coordinator, entity_description, endpoint)
+            for entity_description in ENDPOINT_SENSORS
+            for endpoint in endpoints
+        ]
+        if ds_coordinator is not None:
+            entities.extend(
+                PortainerDockerSystemDiskSpaceSensor(
+                    ds_coordinator,
+                    entity_description,
+                    endpoint,
+                )
+                for entity_description in DOCKER_SYSTEM_DISK_SPACE_SENSORS
+                for endpoint in endpoints
             )
-        )
+        async_add_entities(entities)
 
     def _async_add_new_containers(
         containers: list[tuple[PortainerCoordinatorData, PortainerContainerData]],
