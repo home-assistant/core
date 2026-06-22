@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import datetime
 from datetime import time
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock.data import DnDTimer, ValleyElectricityTimer
 from roborock.exceptions import RoborockException
@@ -158,10 +158,12 @@ class RoborockTimeEntity(RoborockEntityV1, TimeEntity):
         self._trait = trait
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
         return self.entity_description.get_value(self._trait)
 
+    @override
     async def async_set_value(self, value: time) -> None:
         """Set the time."""
         try:

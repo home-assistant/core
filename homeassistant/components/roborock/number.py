@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.exceptions import RoborockException
@@ -93,10 +93,12 @@ class RoborockNumberEntity(RoborockEntityV1, NumberEntity):
         self._trait = trait
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Get native value."""
         return self.entity_description.get_value(self._trait)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set number value."""
         try:

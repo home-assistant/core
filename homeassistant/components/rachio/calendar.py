@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.calendar import (
     CalendarEntity,
@@ -70,6 +70,7 @@ class RachioCalendarEntity(
         self._previous_event: dict[str, Any] | None = None
 
     @property
+    @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
         if not (event := self._handle_upcoming_event()):
@@ -114,6 +115,7 @@ class RachioCalendarEntity(
         self._previous_event = event  # Store for future use
         return event
 
+    @override
     async def async_get_events(
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
@@ -156,6 +158,7 @@ class RachioCalendarEntity(
                 event_list.append(event)
         return event_list
 
+    @override
     async def async_delete_event(
         self,
         uid: str,
