@@ -7283,12 +7283,6 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
-    "tikteck": {
-      "name": "Tikteck",
-      "integration_type": "hub",
-      "config_flow": false,
-      "iot_class": "local_polling"
-    },
     "tile": {
       "name": "Tile",
       "integration_type": "hub",
