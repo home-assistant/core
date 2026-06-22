@@ -139,6 +139,7 @@ class SwitchBotStandingFanEntity(SwitchBotFanEntity):
 
     _device: switchbot.SwitchbotStandingFan
     _attr_preset_modes = StandingFanMode.get_modes()
+    _attr_translation_key = "standing_fan"
 
 
 class SwitchBotAirPurifierEntity(SwitchbotEntity, FanEntity):
