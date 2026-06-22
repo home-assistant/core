@@ -1,28 +1,22 @@
 """The Bosch Smart Home Controller integration."""
 
-from datetime import timedelta, time as dt_time
-
-import voluptuous as vol
+from datetime import time as dt_time, timedelta
 import inspect
 
 from boschshcpy import SHCSessionAsync, SHCUniversalSwitch
 from boschshcpy.api_async import build_ssl_context
-from boschshcpy.exceptions import (
-    SHCAuthenticationError,
-    SHCConnectionError,
-)
+from boschshcpy.exceptions import SHCAuthenticationError, SHCConnectionError
+import voluptuous as vol
 
-from .certificate import parse_certificate
-from .data import SHCData
 from homeassistant.components.persistent_notification import (
     async_create as pn_async_create,
 )
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import (
+    ATTR_COMMAND,
     ATTR_DEVICE_ID,
     ATTR_ID,
     ATTR_NAME,
-    ATTR_COMMAND,
     CONF_HOST,
     EVENT_HOMEASSISTANT_STOP,
     Platform,
@@ -30,8 +24,8 @@ from homeassistant.const import (
 from homeassistant.core import (
     HomeAssistant,
     ServiceCall,
-    SupportsResponse,
     ServiceResponse,
+    SupportsResponse,
     callback,
 )
 from homeassistant.exceptions import (
@@ -39,8 +33,7 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
     ServiceValidationError,
 )
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.event import (
     async_track_state_change_event,
     async_track_time_change,
@@ -48,6 +41,7 @@ from homeassistant.helpers.event import (
 )
 from homeassistant.util import dt as dt_util
 
+from .certificate import parse_certificate
 from .const import (
     ATTR_EVENT_SUBTYPE,
     ATTR_EVENT_TYPE,
@@ -57,27 +51,28 @@ from .const import (
     CERT_EXPIRY_WARNING_DAYS,
     CONF_SSL_CERTIFICATE,
     CONF_SSL_KEY,
-    DOMAIN_NOTIFICATION_ID,
     DATA_CERT_CHECK_UNSUB,
     DATA_POLLING_HANDLER,
     DATA_SESSION,
     DATA_SHC,
     DATA_TITLE,
     DOMAIN,
+    DOMAIN_NOTIFICATION_ID,
     EVENT_BOSCH_SHC,
     LOGGER,
+    OPT_CHILD_LOCK_ENABLED,
     OPT_ENABLE_RAWSCAN,
     OPT_LONG_POLL_TIMEOUT,
-    OPT_CHILD_LOCK_ENABLED,
     OPT_PRESENCE_ENTITY,
-    OPT_SSL_SKIP_VERIFY,
     OPT_SILENT_MODE_ENABLED,
-    OPT_SILENT_MODE_START,
     OPT_SILENT_MODE_END,
-    SERVICE_TRIGGER_SCENARIO,
+    OPT_SILENT_MODE_START,
+    OPT_SSL_SKIP_VERIFY,
     SERVICE_TRIGGER_RAWSCAN,
+    SERVICE_TRIGGER_SCENARIO,
     SUPPORTED_INPUTS_EVENTS_TYPES,
 )
+from .data import SHCData
 
 PLATFORMS = [
     Platform.ALARM_CONTROL_PANEL,
@@ -116,7 +111,8 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
     async def scenario_service_call(call: ServiceCall) -> None:
         """SHC Scenario service call."""
-        from boschshcpy.exceptions import SHCException, SHCConnectionError
+        from boschshcpy.exceptions import SHCConnectionError, SHCException
+
         name = call.data[ATTR_NAME]
         title = call.data[ATTR_TITLE]
         for config_entry in hass.config_entries.async_entries(DOMAIN):
@@ -381,7 +377,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if domain == "zone":
                 try:
                     return int(value) > 0
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     return False
             if domain in ("binary_sensor", "input_boolean"):
                 return value == "on"
@@ -414,24 +410,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async def _apply_child_lock(lock_state: bool):
             """Set child lock on all SHC devices (async; on the event loop)."""
             import asyncio
+
             import aiohttp
-            from boschshcpy.exceptions import SHCException, SHCConnectionError
             from boschshcpy.api import JSONRPCError
+            from boschshcpy.exceptions import SHCConnectionError, SHCException
+
             thermostats, bool_devices = _child_lock_devices(session)
             for device in thermostats + bool_devices:
                 try:
                     await device.async_set_child_lock(lock_state)
                 except (
+                    TimeoutError,
                     JSONRPCError,
                     SHCException,
                     SHCConnectionError,
                     AttributeError,
                     aiohttp.ClientError,
-                    asyncio.TimeoutError,
                 ) as err:
                     LOGGER.warning(
                         "Failed to set child_lock=%s on %s: %s",
-                        lock_state, device.id, err,
+                        lock_state,
+                        device.id,
+                        err,
                     )
 
         @callback
@@ -486,7 +486,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             minute = int(parts[1]) if len(parts) > 1 else 0
             second = int(parts[2]) if len(parts) > 2 else 0
             return dt_time(hour, minute, second)
-        except (ValueError, IndexError):
+        except ValueError, IndexError:
             return None
 
     silent_start = _parse_time(entry.options.get(OPT_SILENT_MODE_START))
@@ -503,7 +503,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if domain == "zone":
                 try:
                     return int(value) > 0
-                except (TypeError, ValueError):
+                except TypeError, ValueError:
                     return False
             if domain in ("binary_sensor", "input_boolean"):
                 return value == "on"
@@ -523,9 +523,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async def _apply_silent(silent_on: bool):
             """Set silent mode on all capable SHC devices (async; on the loop)."""
             import asyncio
+
             import aiohttp
-            from boschshcpy.exceptions import SHCException, SHCConnectionError
             from boschshcpy.api import JSONRPCError
+            from boschshcpy.exceptions import SHCConnectionError, SHCException
+
             dh = session.device_helper
             devices = [
                 d
@@ -536,16 +538,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
                 try:
                     await device.async_set_silentmode(silent_on)
                 except (
+                    TimeoutError,
                     JSONRPCError,
                     SHCException,
                     SHCConnectionError,
                     AttributeError,
                     aiohttp.ClientError,
-                    asyncio.TimeoutError,
                 ) as err:
                     LOGGER.warning(
                         "Failed to set silent_mode=%s on %s: %s",
-                        silent_on, device.id, err,
+                        silent_on,
+                        device.id,
+                        err,
                     )
 
         @callback
@@ -562,9 +566,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         # Re-evaluate on presence change and at the two window boundaries.
         entry.runtime_data.silent_mode_unsubs.append(
-            async_track_state_change_event(
-                hass, presence_entities, _evaluate_silent
-            )
+            async_track_state_change_event(hass, presence_entities, _evaluate_silent)
         )
         entry.runtime_data.silent_mode_unsubs.append(
             async_track_time_change(

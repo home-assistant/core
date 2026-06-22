@@ -12,8 +12,6 @@ homeassistant.components.diagnostics.async_redact_data, which walks the structur
 recursively and replaces matching keys.
 """
 
-from __future__ import annotations
-
 import json
 import pathlib
 from typing import Any

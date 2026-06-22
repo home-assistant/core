@@ -2,21 +2,17 @@
 
 from typing import Any
 
-from boschshcpy import (
-    SHCSession,
-    SHCShutterControl,
-    SHCMicromoduleShutterControl,
-)
+from boschshcpy import SHCMicromoduleShutterControl, SHCSession, SHCShutterControl
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
     ATTR_TILT_POSITION,
-    CoverEntityFeature,
     CoverDeviceClass,
     CoverEntity,
+    CoverEntityFeature,
 )
-from homeassistant.const import Platform
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -190,7 +186,9 @@ class ShutterControlCover(SHCEntity, CoverEntity):
 
             else:
                 # for other devices, we cannot determine the movement direction, so we set both to None
-                LOGGER.debug("Cannot determine movement direction for %s", self._device.name)
+                LOGGER.debug(
+                    "Cannot determine movement direction for %s", self._device.name
+                )
                 self._attr_is_closing = None
                 self._attr_is_opening = None
 
@@ -240,9 +238,8 @@ class ShutterControlCover(SHCEntity, CoverEntity):
             if self._target_position is not None:
                 return self._target_position
             return round(self._device.level * 100.0)
-        else:
-            # for BBL devices, we can rely on the level attribute to determine the current position, even when moving
-            return round(self._device.level * 100.0)
+        # for BBL devices, we can rely on the level attribute to determine the current position, even when moving
+        return round(self._device.level * 100.0)
 
     async def async_stop_cover(self, **kwargs):
         """Stop the cover."""

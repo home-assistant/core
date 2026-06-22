@@ -1,22 +1,14 @@
 """Platform for number integration."""
 
-from __future__ import annotations
-
-import asyncio
 import logging
 
 import aiohttp
-
-from boschshcpy import SHCThermostat, SHCSession
+from boschshcpy import SHCSession, SHCThermostat
 from boschshcpy.device import SHCDevice
 
-from homeassistant.components.number import (
-    NumberDeviceClass,
-    NumberEntity,
-    NumberMode,
-)
+from homeassistant.components.number import NumberDeviceClass, NumberEntity, NumberMode
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfPower
+from homeassistant.const import UnitOfPower, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -90,9 +82,8 @@ async def async_setup_entry(
         )
 
     # EnergySavingMode numbers: power threshold + enter duration (smart plugs).
-    for device in (
-        getattr(session.device_helper, "smart_plugs", [])
-        + getattr(session.device_helper, "smart_plugs_compact", [])
+    for device in getattr(session.device_helper, "smart_plugs", []) + getattr(
+        session.device_helper, "smart_plugs_compact", []
     ):
         if device_excluded(device, config_entry.options):
             continue
@@ -186,10 +177,8 @@ class SHCNumber(SHCEntity, NumberEntity):
         clamped = max(self.native_min_value, min(self.native_max_value, value))
         try:
             await self._device.async_set_offset(clamped)
-        except (AttributeError, KeyError, aiohttp.ClientError, asyncio.TimeoutError) as err:
-            LOGGER.warning(
-                "Unable to set offset for %s: %s", self._device.name, err
-            )
+        except (TimeoutError, AttributeError, KeyError, aiohttp.ClientError) as err:
+            LOGGER.warning("Unable to set offset for %s: %s", self._device.name, err)
 
     @property
     def native_value(self) -> float:
@@ -231,9 +220,7 @@ class ImpulseLengthNumber(SHCEntity, NumberEntity):
         """Initialize the impulse length number."""
         super().__init__(device, entry_id)
         self._attr_name = "Impulse Length"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_impulse_length"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_impulse_length"
 
     @property
     def native_value(self) -> float | None:
@@ -251,7 +238,7 @@ class ImpulseLengthNumber(SHCEntity, NumberEntity):
         )
         try:
             await self._device.async_set_impulse_length(round(clamped * 10))
-        except (AttributeError, KeyError, aiohttp.ClientError, asyncio.TimeoutError) as err:
+        except (TimeoutError, AttributeError, KeyError, aiohttp.ClientError) as err:
             LOGGER.warning(
                 "Unable to set impulse length for %s: %s", self._device.name, err
             )
@@ -313,9 +300,7 @@ class HeatingCircuitSetpointNumber(SHCEntity, NumberEntity):
         clamped = max(
             self._attr_native_min_value, min(self._attr_native_max_value, value)
         )
-        async_setter = getattr(
-            self._device, f"async_set_{self._setter_name}", None
-        )
+        async_setter = getattr(self._device, f"async_set_{self._setter_name}", None)
         if async_setter is None:
             LOGGER.warning(
                 "Async setter async_set_%s unavailable for %s",
@@ -325,7 +310,7 @@ class HeatingCircuitSetpointNumber(SHCEntity, NumberEntity):
             return
         try:
             await async_setter(clamped)
-        except (AttributeError, KeyError, aiohttp.ClientError, asyncio.TimeoutError) as err:
+        except (TimeoutError, AttributeError, KeyError, aiohttp.ClientError) as err:
             LOGGER.warning(
                 "Unable to write %s for %s: %s",
                 self._setter_name,
@@ -353,9 +338,7 @@ class PowerThresholdNumber(SHCEntity, NumberEntity):
         """Initialize the power threshold number."""
         super().__init__(device, entry_id)
         self._attr_name = "Energy Saving Power Threshold"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_power_threshold"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_power_threshold"
 
     @property
     def native_value(self) -> float | None:
@@ -369,7 +352,7 @@ class PowerThresholdNumber(SHCEntity, NumberEntity):
         )
         try:
             await self._device.async_set_power_threshold(clamped)
-        except (AttributeError, KeyError, aiohttp.ClientError, asyncio.TimeoutError) as err:
+        except (TimeoutError, AttributeError, KeyError, aiohttp.ClientError) as err:
             LOGGER.warning(
                 "Unable to set power threshold for %s: %s", self._device.name, err
             )
@@ -412,7 +395,7 @@ class EnterDurationNumber(SHCEntity, NumberEntity):
         )
         try:
             await self._device.async_set_enter_duration_seconds(int(clamped))
-        except (AttributeError, KeyError, aiohttp.ClientError, asyncio.TimeoutError) as err:
+        except (TimeoutError, AttributeError, KeyError, aiohttp.ClientError) as err:
             LOGGER.warning(
                 "Unable to set enter duration for %s: %s", self._device.name, err
             )
@@ -432,9 +415,7 @@ class LedBrightnessNumber(SHCEntity, NumberEntity):
         """Initialize the LED brightness number."""
         super().__init__(device, entry_id)
         self._attr_name = "LED Brightness"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_led_brightness"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_led_brightness"
 
     @property
     def native_min_value(self) -> float:
@@ -475,7 +456,7 @@ class LedBrightnessNumber(SHCEntity, NumberEntity):
         """Set the LED brightness."""
         try:
             await self._device.async_set_led_brightness(value)
-        except (AttributeError, KeyError, aiohttp.ClientError, asyncio.TimeoutError) as err:
+        except (TimeoutError, AttributeError, KeyError, aiohttp.ClientError) as err:
             LOGGER.warning(
                 "Unable to set LED brightness for %s: %s", self._device.name, err
             )
@@ -491,9 +472,7 @@ class DisplayBrightnessNumber(SHCEntity, NumberEntity):
         """Initialize the display brightness number."""
         super().__init__(device, entry_id)
         self._attr_name = "Display Brightness"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_display_brightness"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_display_brightness"
 
     @property
     def native_min_value(self) -> float:
@@ -534,7 +513,7 @@ class DisplayBrightnessNumber(SHCEntity, NumberEntity):
         """Set the display brightness."""
         try:
             await self._device.async_set_display_brightness(value)
-        except (AttributeError, KeyError, aiohttp.ClientError, asyncio.TimeoutError) as err:
+        except (TimeoutError, AttributeError, KeyError, aiohttp.ClientError) as err:
             LOGGER.warning(
                 "Unable to set display brightness for %s: %s", self._device.name, err
             )
@@ -554,9 +533,7 @@ class DisplayOnTimeNumber(SHCEntity, NumberEntity):
         """Initialize the display on-time number."""
         super().__init__(device, entry_id)
         self._attr_name = "Display On Time"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_display_on_time"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_display_on_time"
 
     @property
     def native_min_value(self) -> float:
@@ -600,7 +577,7 @@ class DisplayOnTimeNumber(SHCEntity, NumberEntity):
         """Set the display on-time."""
         try:
             await self._device.async_set_display_on_time(value)
-        except (AttributeError, KeyError, aiohttp.ClientError, asyncio.TimeoutError) as err:
+        except (TimeoutError, AttributeError, KeyError, aiohttp.ClientError) as err:
             LOGGER.warning(
                 "Unable to set display on-time for %s: %s", self._device.name, err
             )

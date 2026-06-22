@@ -1,14 +1,12 @@
 """Support for Bosch SHC event entities."""
 
-from __future__ import annotations
-
 from boschshcpy import (
-    SHCUniversalSwitch,
     SHCLightControl,
     SHCMotionDetector,
     SHCSession,
     SHCSmokeDetectionSystem,
     SHCSmokeDetector,
+    SHCUniversalSwitch,
 )
 
 from homeassistant.components.event import (
@@ -17,28 +15,22 @@ from homeassistant.components.event import (
     EventEntity,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_DEVICE_ID,
-    ATTR_ID,
-    ATTR_NAME,
-)
-
-from homeassistant.helpers.device_registry import DeviceEntry
-
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ID, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.util import slugify
 
-from .entity import SHCEntity, device_excluded
 from .const import (
-    ATTR_LAST_TIME_TRIGGERED,
-    ATTR_EVENT_TYPE,
     ATTR_EVENT_SUBTYPE,
+    ATTR_EVENT_TYPE,
+    ATTR_LAST_TIME_TRIGGERED,
     DATA_SESSION,
     DATA_SHC,
     DOMAIN,
     LOGGER,
 )
+from .entity import SHCEntity, device_excluded
 
 PARALLEL_UPDATES = 1
 
@@ -94,8 +86,7 @@ async def async_setup_entry(
         )
 
     for motion_detector in (
-        session.device_helper.motion_detectors
-        + session.device_helper.motion_detectors2
+        session.device_helper.motion_detectors + session.device_helper.motion_detectors2
     ):
         if device_excluded(motion_detector, entry.options):
             continue
@@ -200,9 +191,7 @@ class UniversalSwitchEvent(SHCEntity, EventEntity):
         try:
             self._trigger_event(event_type, event_attributes)
         except ValueError:
-            LOGGER.warning(
-                "Invalid event type %s for %s", event_type, self.entity_id
-            )
+            LOGGER.warning("Invalid event type %s for %s", event_type, self.entity_id)
             return
         self.schedule_update_ha_state()
 
@@ -226,9 +215,7 @@ class LightControlButtonEvent(SHCEntity, EventEntity):
         # Guard against phantom events: a Keypad update piggybacking on another
         # state change can replay the last eventTimestamp (cf. #192).
         self._last_fired_timestamp: int = -1
-        self.entity_id = ENTITY_ID_FORMAT.format(
-            f"{slugify(self._device.name)}_button"
-        )
+        self.entity_id = ENTITY_ID_FORMAT.format(f"{slugify(self._device.name)}_button")
         self._attr_name = "Button"
         self._attr_unique_id = f"{device.root_device_id}_{device.id}_button"
 
@@ -273,9 +260,7 @@ class LightControlButtonEvent(SHCEntity, EventEntity):
         try:
             self._trigger_event(event_type, event_attributes)
         except ValueError:
-            LOGGER.warning(
-                "Invalid event type %s for %s", event_type, self.entity_id
-            )
+            LOGGER.warning("Invalid event type %s for %s", event_type, self.entity_id)
             return
         self.schedule_update_ha_state()
 

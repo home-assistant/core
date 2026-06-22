@@ -1,13 +1,9 @@
 """Platform for binarysensor integration."""
 
-from __future__ import annotations
-
+from collections.abc import Callable
+from datetime import UTC, datetime, timedelta
 import json
-from datetime import datetime, timedelta, timezone
-from typing import Callable
 
-import homeassistant.helpers.config_validation as cv
-import voluptuous as vol
 from boschshcpy import (
     SHCBatteryDevice,
     SHCDevice,
@@ -19,6 +15,8 @@ from boschshcpy import (
     SHCSmokeDetector,
     SHCWaterLeakageSensor,
 )
+import voluptuous as vol
+
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -35,6 +33,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
+import homeassistant.helpers.config_validation as cv
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -372,9 +371,7 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
     async def async_added_to_hass(self):
         """Subscribe to SHC events and cache device_id."""
         await super().async_added_to_hass()
-        self._cached_device_id = await async_get_device_id(
-            self.hass, self._device.id
-        )
+        self._cached_device_id = await async_get_device_id(self.hass, self._device.id)
         # Subscribe AFTER device_id is cached so events never fire with
         # device_id=None during the startup window (#288-cluster).
         if self._service is not None:
@@ -411,14 +408,14 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
         try:
             latestmotion = datetime.strptime(
                 self._device.latestmotion, "%Y-%m-%dT%H:%M:%S.%fZ"
-            ).replace(tzinfo=timezone.utc)
-        except (ValueError, TypeError):
+            ).replace(tzinfo=UTC)
+        except ValueError, TypeError:
             # ValueError: unparseable timestamp; TypeError: latestmotion is None.
             # The trailing literal "Z" makes strptime return a naive datetime, so
             # it must be marked UTC-aware to subtract from datetime.now(timezone.utc).
             return False
 
-        elapsed = datetime.now(timezone.utc) - latestmotion
+        elapsed = datetime.now(UTC) - latestmotion
         if elapsed > timedelta(seconds=4 * 60):
             return False
         return True
@@ -463,9 +460,7 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
     async def async_added_to_hass(self):
         """Subscribe to SHC events and cache device_id."""
         await super().async_added_to_hass()
-        self._cached_device_id = await async_get_device_id(
-            self._hass, self._device.id
-        )
+        self._cached_device_id = await async_get_device_id(self._hass, self._device.id)
         # Subscribe AFTER device_id is cached so events never fire with
         # device_id=None during the startup window (#288-cluster).
         if self._service is not None:
@@ -513,7 +508,8 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
 
     async def async_request_smoketest(self):
         """Request smokedetector test."""
-        from boschshcpy.exceptions import SHCException, SHCConnectionError
+        from boschshcpy.exceptions import SHCConnectionError, SHCException
+
         LOGGER.debug("Requesting smoke test on entity %s", self.name)
         try:
             await self._device.async_smoketest_requested()
@@ -524,7 +520,7 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
 
     async def async_request_alarmstate(self, command: str):
         """Request smokedetector alarm state."""
-        from boschshcpy.exceptions import SHCException, SHCConnectionError
+        from boschshcpy.exceptions import SHCConnectionError, SHCException
 
         LOGGER.debug(
             "Requesting custom alarm state %s on entity %s", command, self.name
@@ -549,9 +545,7 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
         try:
             alarm_state = self._device.alarmstate.name
         except ValueError as err:
-            LOGGER.warning(
-                "Unknown alarmstate for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown alarmstate for %s: %s", self._device.name, err)
             alarm_state = None
         return {
             "smokedetectorcheck_state": check_state,
@@ -615,9 +609,7 @@ class SmokeDetectionSystemSensor(SHCEntity, BinarySensorEntity):
     async def async_added_to_hass(self):
         """Subscribe to SHC events and cache device_id."""
         await super().async_added_to_hass()
-        self._cached_device_id = await async_get_device_id(
-            self._hass, self._device.id
-        )
+        self._cached_device_id = await async_get_device_id(self._hass, self._device.id)
         # Subscribe AFTER device_id is cached so events never fire with
         # device_id=None during the startup window (#288-cluster).
         if self._service is not None:
@@ -722,7 +714,9 @@ class TwinguardAlarmTracker:
             )
             return None
 
-    def register_listener(self, hass: HomeAssistant, listener: Callable[[], None]) -> None:
+    def register_listener(
+        self, hass: HomeAssistant, listener: Callable[[], None]
+    ) -> None:
         """Register a listener (called from event loop via async_added_to_hass)."""
         self._listeners.append((hass, listener))
 
@@ -843,7 +837,7 @@ class TwinguardAlarmTracker:
             return []
         try:
             parsed = json.loads(raw_events)
-        except (TypeError, json.JSONDecodeError):
+        except TypeError, json.JSONDecodeError:
             return []
         if not isinstance(parsed, list):
             return []
@@ -943,9 +937,7 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
             LOGGER.warning("Battery state of device %s is critical low", self.name)
 
         if level == BatteryState.CRITICALLY_LOW_BATTERY:
-            LOGGER.warning(
-                "Battery state of device %s is critically low", self.name
-            )
+            LOGGER.warning("Battery state of device %s is critically low", self.name)
 
         if level == BatteryState.LOW_BATTERY:
             LOGGER.warning("Battery state of device %s is low", self.name)

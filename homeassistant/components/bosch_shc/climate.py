@@ -2,12 +2,13 @@
 
 from boschshcpy import SHCClimateControl, SHCHeatingCircuit, SHCSession
 from boschshcpy.exceptions import JSONRPCError, SHCException
+
 from homeassistant.components.climate import ClimateEntity
 from homeassistant.components.climate.const import (
     ATTR_HVAC_MODE,
+    ClimateEntityFeature,
     HVACAction,
     HVACMode,
-    ClimateEntityFeature,
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 

@@ -1,14 +1,9 @@
 """Platform for valve integration."""
 
-from __future__ import annotations
-
-from boschshcpy import SHCThermostat, SHCSession
+from boschshcpy import SHCSession, SHCThermostat
 from boschshcpy.device import SHCDevice
 
-from homeassistant.components.valve import (
-    ValveDeviceClass,
-    ValveEntity,
-)
+from homeassistant.components.valve import ValveDeviceClass, ValveEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory

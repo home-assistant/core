@@ -1,13 +1,9 @@
 """Platform for select integration."""
 
-from __future__ import annotations
-
 import logging
 
-from boschshcpy import (
-    SHCSession,
-    SHCShutterContact2Plus,
-)
+from boschshcpy import SHCSession, SHCShutterContact2Plus
+from boschshcpy.device import SHCDevice
 from boschshcpy.services_impl import (
     DisplayDirection,
     DisplayedTemperatureConfiguration,
@@ -21,7 +17,6 @@ from boschshcpy.services_impl import (
     VibrationSensorService,
     WallThermostatConfiguration,
 )
-from boschshcpy.device import SHCDevice
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.config_entries import ConfigEntry
@@ -184,9 +179,8 @@ async def async_setup_entry(
         )
 
     # PowerSwitchConfiguration: state after power outage (smart plugs).
-    for device in (
-        getattr(session.device_helper, "smart_plugs", [])
-        + getattr(session.device_helper, "smart_plugs_compact", [])
+    for device in getattr(session.device_helper, "smart_plugs", []) + getattr(
+        session.device_helper, "smart_plugs_compact", []
     ):
         if device_excluded(device, config_entry.options):
             continue
@@ -202,9 +196,8 @@ async def async_setup_entry(
         )
 
     # SmokeSensitivity: level select for smoke detectors and twinguards.
-    for device in (
-        getattr(session.device_helper, "smoke_detectors", [])
-        + getattr(session.device_helper, "twinguards", [])
+    for device in getattr(session.device_helper, "smoke_detectors", []) + getattr(
+        session.device_helper, "twinguards", []
     ):
         if device_excluded(device, config_entry.options):
             continue
@@ -220,9 +213,8 @@ async def async_setup_entry(
         )
 
     # DisplayDirection select (ThermostatGen2 / RoomThermostat2).
-    for device in (
-        getattr(session.device_helper, "thermostats", [])
-        + getattr(session.device_helper, "roomthermostats", [])
+    for device in getattr(session.device_helper, "thermostats", []) + getattr(
+        session.device_helper, "roomthermostats", []
     ):
         if device_excluded(device, config_entry.options):
             continue
@@ -280,9 +272,8 @@ async def async_setup_entry(
             )
 
     # SwitchConfiguration selects (MicromoduleRelay + LightControl).
-    for device in (
-        getattr(session.device_helper, "micromodule_relays", [])
-        + getattr(session.device_helper, "micromodule_light_controls", [])
+    for device in getattr(session.device_helper, "micromodule_relays", []) + getattr(
+        session.device_helper, "micromodule_light_controls", []
     ):
         if device_excluded(device, config_entry.options):
             continue
@@ -366,9 +357,7 @@ class MotionSensitivitySelect(SHCEntity, SelectEntity):
         """Initialize the motion sensitivity select entity."""
         super().__init__(device, entry_id)
         self._attr_name = "Motion Sensitivity"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_motion_sensitivity"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_motion_sensitivity"
 
     @property
     def current_option(self) -> str | None:
@@ -491,7 +480,9 @@ class StateAfterPowerOutageSelect(SHCEntity, SelectEntity):
     async def async_select_option(self, option: str) -> None:
         """Set the state-after-power-outage."""
         StateAfterPowerOutage = PowerSwitchConfigurationService.StateAfterPowerOutage
-        await self._device.async_set_state_after_power_outage(StateAfterPowerOutage[option])
+        await self._device.async_set_state_after_power_outage(
+            StateAfterPowerOutage[option]
+        )
 
 
 class SmokeSensitivitySelect(SHCEntity, SelectEntity):
@@ -504,9 +495,7 @@ class SmokeSensitivitySelect(SHCEntity, SelectEntity):
         """Initialize the smoke sensitivity select."""
         super().__init__(device, entry_id)
         self._attr_name = "Smoke Sensitivity"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_smoke_sensitivity"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_smoke_sensitivity"
 
     @property
     def current_option(self) -> str | None:
@@ -541,9 +530,7 @@ class DisplayDirectionSelect(SHCEntity, SelectEntity):
         """Initialize the display direction select."""
         super().__init__(device, entry_id)
         self._attr_name = "Display Direction"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_display_direction"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_display_direction"
 
     @property
     def current_option(self) -> str | None:
@@ -615,9 +602,7 @@ class TerminalTypeSelect(SHCEntity, SelectEntity):
         """Initialize the terminal type select."""
         super().__init__(device, entry_id)
         self._attr_name = "Terminal Type"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_terminal_type"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_terminal_type"
 
     @property
     def current_option(self) -> str | None:
@@ -631,9 +616,7 @@ class TerminalTypeSelect(SHCEntity, SelectEntity):
                 return None
             return name
         except (AttributeError, ValueError) as err:
-            LOGGER.warning(
-                "Unknown terminal_type for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown terminal_type for %s: %s", self._device.name, err)
             return None
 
     async def async_select_option(self, option: str) -> None:
@@ -652,9 +635,7 @@ class ValveTypeSelect(SHCEntity, SelectEntity):
         """Initialize the valve type select."""
         super().__init__(device, entry_id)
         self._attr_name = "Valve Type"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_valve_type"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_valve_type"
 
     @property
     def current_option(self) -> str | None:
@@ -668,9 +649,7 @@ class ValveTypeSelect(SHCEntity, SelectEntity):
                 return None
             return name
         except (AttributeError, ValueError) as err:
-            LOGGER.warning(
-                "Unknown valve_type for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown valve_type for %s: %s", self._device.name, err)
             return None
 
     async def async_select_option(self, option: str) -> None:
@@ -689,9 +668,7 @@ class HeaterTypeSelect(SHCEntity, SelectEntity):
         """Initialize the heater type select."""
         super().__init__(device, entry_id)
         self._attr_name = "Heater Type"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_heater_type"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_heater_type"
 
     @property
     def current_option(self) -> str | None:
@@ -705,9 +682,7 @@ class HeaterTypeSelect(SHCEntity, SelectEntity):
                 return None
             return name
         except (AttributeError, ValueError) as err:
-            LOGGER.warning(
-                "Unknown heater_type for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown heater_type for %s: %s", self._device.name, err)
             return None
 
     async def async_select_option(self, option: str) -> None:
@@ -726,9 +701,7 @@ class SwitchTypeSelect(SHCEntity, SelectEntity):
         """Initialize the switch type select."""
         super().__init__(device, entry_id)
         self._attr_name = "Switch Type"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_switch_type"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_switch_type"
 
     @property
     def current_option(self) -> str | None:
@@ -742,9 +715,7 @@ class SwitchTypeSelect(SHCEntity, SelectEntity):
                 return None
             return name
         except (AttributeError, ValueError) as err:
-            LOGGER.warning(
-                "Unknown switch_type for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown switch_type for %s: %s", self._device.name, err)
             return None
 
     async def async_select_option(self, option: str) -> None:
@@ -763,9 +734,7 @@ class ActuatorTypeSelect(SHCEntity, SelectEntity):
         """Initialize the actuator type select."""
         super().__init__(device, entry_id)
         self._attr_name = "Actuator Type"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_actuator_type"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_actuator_type"
 
     @property
     def current_option(self) -> str | None:
@@ -779,9 +748,7 @@ class ActuatorTypeSelect(SHCEntity, SelectEntity):
                 return None
             return name
         except (AttributeError, ValueError) as err:
-            LOGGER.warning(
-                "Unknown actuator_type for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown actuator_type for %s: %s", self._device.name, err)
             return None
 
     async def async_select_option(self, option: str) -> None:
@@ -800,9 +767,7 @@ class OutputModeSelect(SHCEntity, SelectEntity):
         """Initialize the output mode select."""
         super().__init__(device, entry_id)
         self._attr_name = "Output Mode"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_output_mode"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_output_mode"
 
     @property
     def current_option(self) -> str | None:
@@ -816,9 +781,7 @@ class OutputModeSelect(SHCEntity, SelectEntity):
                 return None
             return name
         except (AttributeError, ValueError) as err:
-            LOGGER.warning(
-                "Unknown output_mode for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown output_mode for %s: %s", self._device.name, err)
             return None
 
     async def async_select_option(self, option: str) -> None:

@@ -1,4 +1,5 @@
 """Constants for the Bosch SHC integration."""
+
 import logging
 
 ATTR_NAME = "name"

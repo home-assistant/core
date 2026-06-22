@@ -1,14 +1,13 @@
 """Platform for alarm control panel integration."""
 
 from boschshcpy import SHCIntrusionSystem, SHCSession
+
 from homeassistant.components.alarm_control_panel import AlarmControlPanelEntity
 from homeassistant.components.alarm_control_panel.const import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.const import (
-    Platform,
-)
+from homeassistant.const import Platform
 from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import DATA_SESSION, DOMAIN

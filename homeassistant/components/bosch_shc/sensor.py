@@ -1,7 +1,5 @@
 """Platform for sensor integration."""
 
-from __future__ import annotations
-
 from boschshcpy import SHCSession
 from boschshcpy.device import SHCDevice
 
@@ -15,10 +13,10 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    Platform,
     UnitOfEnergy,
     UnitOfPower,
     UnitOfTemperature,
-    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import EntityCategory
@@ -320,7 +318,10 @@ async def async_setup_entry(
             )
         )
         # WalkTest state sensor: only created when WalkTest service is present.
-        if getattr(sensor, "supports_walk_test", False) and sensor.walk_state is not None:
+        if (
+            getattr(sensor, "supports_walk_test", False)
+            and sensor.walk_state is not None
+        ):
             entities.append(
                 WalkStateSensor(
                     device=sensor,
@@ -537,7 +538,7 @@ class AirQualitySensor(SHCEntity, SensorEntity):
             service = getattr(self._device, "_airqualitylevel_service", None)
             if service is not None:
                 comfort_zone = service.comfortZone
-        except (AttributeError, KeyError):
+        except AttributeError, KeyError:
             pass
         attrs = {
             "rating_description": self._device.description,
@@ -608,9 +609,7 @@ class HumidityRatingSensor(SHCEntity, SensorEntity):
         try:
             return self._device.humidity_rating.name
         except ValueError as err:
-            LOGGER.warning(
-                "Unknown humidity rating for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown humidity rating for %s: %s", self._device.name, err)
             return None
 
 
@@ -629,9 +628,7 @@ class PurityRatingSensor(SHCEntity, SensorEntity):
         try:
             return self._device.purity_rating.name
         except ValueError as err:
-            LOGGER.warning(
-                "Unknown purity rating for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown purity rating for %s: %s", self._device.name, err)
             return None
 
 
@@ -731,9 +728,7 @@ class EnergyYieldSensor(SHCEntity, SensorEntity):
         """Initialize the energy yield sensor."""
         super().__init__(device, entry_id)
         self._attr_name = "Energy Yield"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{self._device.id}_energy_yield"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{self._device.id}_energy_yield"
 
     @property
     def native_value(self):
@@ -759,9 +754,7 @@ class PowerYieldSensor(SHCEntity, SensorEntity):
         """Initialize the power yield sensor."""
         super().__init__(device, entry_id)
         self._attr_name = "Power Yield"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{self._device.id}_power_yield"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{self._device.id}_power_yield"
 
     @property
     def native_value(self):
@@ -867,9 +860,7 @@ class BatteryLevelSensor(SHCEntity, SensorEntity):
         """Initialize a battery-level sensor."""
         super().__init__(device, entry_id)
         self._attr_name = "Battery Level"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_battery_level"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_battery_level"
 
     @property
     def native_value(self):
@@ -877,9 +868,7 @@ class BatteryLevelSensor(SHCEntity, SensorEntity):
         try:
             return self._device.batterylevel.value
         except (ValueError, AttributeError) as err:
-            LOGGER.warning(
-                "Unknown battery level for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown battery level for %s: %s", self._device.name, err)
             return None
 
 
@@ -900,9 +889,7 @@ class TwinguardCombinedRatingSensor(SHCEntity, SensorEntity):
         """Initialize a Twinguard combined-rating diagnostic sensor."""
         super().__init__(device, entry_id)
         self._attr_name = "Combined Rating"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_combined_rating"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_combined_rating"
 
     @property
     def native_value(self):
@@ -910,9 +897,7 @@ class TwinguardCombinedRatingSensor(SHCEntity, SensorEntity):
         try:
             return self._device.combined_rating.name
         except (ValueError, AttributeError) as err:
-            LOGGER.warning(
-                "Unknown combined rating for %s: %s", self._device.name, err
-            )
+            LOGGER.warning("Unknown combined rating for %s: %s", self._device.name, err)
             return None
 
 
@@ -929,9 +914,7 @@ class TwinguardDescriptionSensor(SHCEntity, SensorEntity):
         """Initialize a Twinguard air-quality description diagnostic sensor."""
         super().__init__(device, entry_id)
         self._attr_name = "Air Quality Description"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_description"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_description"
 
     @property
     def native_value(self):
@@ -954,9 +937,7 @@ class WalkStateSensor(SHCEntity, SensorEntity):
         """Initialize the walk-state sensor."""
         super().__init__(device, entry_id)
         self._attr_name = "Walk Test State"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_walk_state"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_walk_state"
 
     @property
     def native_value(self) -> str | None:
@@ -966,7 +947,7 @@ class WalkStateSensor(SHCEntity, SensorEntity):
             if val is None:
                 return None
             return val.name
-        except (AttributeError, ValueError):
+        except AttributeError, ValueError:
             return None
 
 
@@ -989,9 +970,7 @@ class DetectionStateSensor(SHCEntity, SensorEntity):
         """Initialize the detection-state sensor."""
         super().__init__(device, entry_id)
         self._attr_name = "Detection Test State"
-        self._attr_unique_id = (
-            f"{device.root_device_id}_{device.id}_detection_state"
-        )
+        self._attr_unique_id = f"{device.root_device_id}_{device.id}_detection_state"
 
     @property
     def native_value(self) -> str | None:
@@ -1001,7 +980,7 @@ class DetectionStateSensor(SHCEntity, SensorEntity):
             if val is None:
                 return None
             return val.name
-        except (AttributeError, ValueError):
+        except AttributeError, ValueError:
             return None
 
 

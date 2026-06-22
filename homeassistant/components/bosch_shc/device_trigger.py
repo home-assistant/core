@@ -1,10 +1,8 @@
 """Provides device triggers for Bosch Smart Home Controller integration."""
 
-from typing import List, Tuple
-
-import voluptuous as vol
 from boschshcpy import SHCDevice, SHCSession
-from homeassistant.helpers.trigger import TriggerActionType
+import voluptuous as vol
+
 from homeassistant.components.device_automation import DEVICE_TRIGGER_BASE_SCHEMA
 from homeassistant.components.device_automation.exceptions import (
     InvalidDeviceAutomationConfig,
@@ -20,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.trigger import TriggerActionType
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -31,8 +30,8 @@ from .const import (
     DATA_SESSION,
     DOMAIN,
     EVENT_BOSCH_SHC,
-    INPUTS_EVENTS_SUBTYPES_WRC2,
     INPUTS_EVENTS_SUBTYPES_SWITCH2,
+    INPUTS_EVENTS_SUBTYPES_WRC2,
     LOGGER,
     SUPPORTED_INPUTS_EVENTS_TYPES,
 )
@@ -45,7 +44,7 @@ TRIGGER_SCHEMA = DEVICE_TRIGGER_BASE_SCHEMA.extend(
 )
 
 
-async def get_device_from_id(hass, device_id) -> Tuple[SHCDevice, str]:
+async def get_device_from_id(hass, device_id) -> tuple[SHCDevice, str]:
     """Get the device for the given device id."""
     dev_registry = dr.async_get(hass)
     for config_entry in hass.data[DOMAIN]:
@@ -76,7 +75,7 @@ async def get_device_from_id(hass, device_id) -> Tuple[SHCDevice, str]:
     return None, ""
 
 
-async def async_get_triggers(hass: HomeAssistant, device_id: str) -> List[dict]:
+async def async_get_triggers(hass: HomeAssistant, device_id: str) -> list[dict]:
     """List device triggers for SHC devices."""
     triggers = []
 

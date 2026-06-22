@@ -1,8 +1,6 @@
 """Helper functions for Bosch SHC client certificate handling."""
 
-from __future__ import annotations
-
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import NamedTuple
 
@@ -38,13 +36,13 @@ def parse_certificate(cert_path: str) -> CertificateInfo:
     except Exception as exc:  # pragma: no cover - defensive
         raise HomeAssistantError(f"Invalid certificate: {cert_path}") from exc
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     # Use *_utc properties (cryptography >= 41), fallback to naive + replace for older.
     if hasattr(cert, "not_valid_before_utc"):
         not_before = cert.not_valid_before_utc
         not_after = cert.not_valid_after_utc
     else:
-        not_before = cert.not_valid_before.replace(tzinfo=timezone.utc)
-        not_after = cert.not_valid_after.replace(tzinfo=timezone.utc)
+        not_before = cert.not_valid_before.replace(tzinfo=UTC)
+        not_after = cert.not_valid_after.replace(tzinfo=UTC)
     days_remaining = int((not_after - now).total_seconds() // 86400)
     return CertificateInfo(not_before, not_after, days_remaining)

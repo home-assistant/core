@@ -1,11 +1,10 @@
 """Runtime data dataclass for the Bosch SHC integration."""
 
-from __future__ import annotations
-
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 
 from boschshcpy import SHCSession
+
 from homeassistant.helpers.device_registry import DeviceEntry
 
 

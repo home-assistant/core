@@ -3,7 +3,6 @@
 from os import makedirs
 from typing import Any
 
-import voluptuous as vol
 from boschshcpy import SHCRegisterClient, SHCSession
 from boschshcpy.exceptions import (
     SHCAuthenticationError,
@@ -11,6 +10,8 @@ from boschshcpy.exceptions import (
     SHCRegistrationError,
     SHCSessionError,
 )
+import voluptuous as vol
+
 from homeassistant import config_entries, core
 from homeassistant.components import zeroconf
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_TOKEN
@@ -49,11 +50,11 @@ from .const import (
     OPT_LONG_POLL_TIMEOUT,
     OPT_PRESENCE_ENTITY,
     OPT_SCENARIOS_AS_BUTTONS,
-    OPT_SSL_VERIFY_HOSTNAME,
-    OPT_SSL_SKIP_VERIFY,
     OPT_SILENT_MODE_ENABLED,
-    OPT_SILENT_MODE_START,
     OPT_SILENT_MODE_END,
+    OPT_SILENT_MODE_START,
+    OPT_SSL_SKIP_VERIFY,
+    OPT_SSL_VERIFY_HOSTNAME,
 )
 
 # ── Section layout (single source of truth) ──────────────────────────────────
@@ -235,9 +236,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(
                         CONF_HOST, default=entry.data.get(CONF_HOST, "")
-                    ): TextSelector(
-                        TextSelectorConfig(type=TextSelectorType.TEXT)
-                    ),
+                    ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
                 }
             ),
             errors=errors,
@@ -292,17 +291,13 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         current_host = entry.data.get(CONF_HOST, "")
         schema = vol.Schema(
             {
-                vol.Required(
-                    CONF_HOST, default=current_host
-                ): TextSelector(
+                vol.Required(CONF_HOST, default=current_host): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
                 vol.Required(CONF_PASSWORD): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.PASSWORD)
                 ),
-                vol.Optional(
-                    CONF_NAME, default="HomeAssistant"
-                ): TextSelector(
+                vol.Optional(CONF_NAME, default="HomeAssistant"): TextSelector(
                     TextSelectorConfig(type=TextSelectorType.TEXT)
                 ),
             }
@@ -393,14 +388,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             {
                 vol.Required(
                     CONF_PASSWORD, default=user_input.get(CONF_PASSWORD, "")
-                ): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
-                ),
+                ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
                 vol.Optional(
                     CONF_NAME, default=user_input.get(CONF_NAME, "HomeAssistant")
-                ): TextSelector(
-                    TextSelectorConfig(type=TextSelectorType.TEXT)
-                ),
+                ): TextSelector(TextSelectorConfig(type=TextSelectorType.TEXT)),
             }
         )
 
@@ -487,18 +478,13 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithReload):
                 rooms = {r.id: r.name for r in session.rooms}
                 for dev in session.devices:
                     room_name = rooms.get(getattr(dev, "room_id", None), "")
-                    label = (
-                        f"{dev.name} ({room_name})" if room_name else dev.name
-                    )
+                    label = f"{dev.name} ({room_name})" if room_name else dev.name
                     device_options.append({"value": dev.id, "label": label})
                 room_options = [
-                    {"value": rid, "label": name}
-                    for rid, name in rooms.items()
+                    {"value": rid, "label": name} for rid, name in rooms.items()
                 ]
         except Exception:  # never break the options flow if session is unavailable
-            LOGGER.debug(
-                "Could not build device/room filter options", exc_info=True
-            )
+            LOGGER.debug("Could not build device/room filter options", exc_info=True)
 
         schema = vol.Schema(
             {
@@ -548,21 +534,15 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithReload):
                             ),
                             vol.Optional(
                                 OPT_SILENT_MODE_ENABLED,
-                                default=current.get(
-                                    OPT_SILENT_MODE_ENABLED, False
-                                ),
+                                default=current.get(OPT_SILENT_MODE_ENABLED, False),
                             ): BooleanSelector(),
                             vol.Optional(
                                 OPT_SILENT_MODE_START,
-                                default=current.get(
-                                    OPT_SILENT_MODE_START, "22:00:00"
-                                ),
+                                default=current.get(OPT_SILENT_MODE_START, "22:00:00"),
                             ): TimeSelector(),
                             vol.Optional(
                                 OPT_SILENT_MODE_END,
-                                default=current.get(
-                                    OPT_SILENT_MODE_END, "06:00:00"
-                                ),
+                                default=current.get(OPT_SILENT_MODE_END, "06:00:00"),
                             ): TimeSelector(),
                         }
                     ),

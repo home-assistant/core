@@ -1,27 +1,15 @@
 """Platform for button integration."""
 
-from boschshcpy import (
-    SHCDevice,
-    SHCSession,
-)
+from boschshcpy import SHCDevice, SHCSession
 from boschshcpy.services_impl import DetectionTestService, WalkTestService
 
-from homeassistant.components.button import (
-    ButtonEntity,
-)
+from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-
-from .const import (
-    DATA_SESSION,
-    DATA_SHC,
-    DOMAIN,
-    LOGGER,
-    OPT_SCENARIOS_AS_BUTTONS,
-)
+from .const import DATA_SESSION, DATA_SHC, DOMAIN, LOGGER, OPT_SCENARIOS_AS_BUTTONS
 from .entity import SHCEntity, device_excluded
 
 PARALLEL_UPDATES = 1
@@ -201,7 +189,7 @@ class SHCScenarioButton(ButtonEntity):
         """Initialize a scenario button."""
         self._scenario = scenario
         self._shc_device = shc_device
-        prefix = entry_unique_id if entry_unique_id else entry_id
+        prefix = entry_unique_id or entry_id
         self._attr_unique_id = f"{prefix}_scenario_{scenario.id}"
         self._attr_name = scenario.name
 

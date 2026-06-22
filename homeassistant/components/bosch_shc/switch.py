@@ -1,24 +1,20 @@
 """Platform for switch integration."""
 
-from __future__ import annotations
-
-import asyncio
-import logging
 from dataclasses import dataclass
+import logging
 
 import aiohttp
-
 from boschshcpy import (
     SHCCamera360,
     SHCCameraEyes,
     SHCCameraOutdoorGen2,
     SHCLightSwitch,
-    SHCSession,
-    SHCSmartPlug,
     SHCMicromoduleRelay,
-    SHCSmartPlugCompact,
+    SHCSession,
     SHCShutterContact2,
     SHCShutterContact2Plus,
+    SHCSmartPlug,
+    SHCSmartPlugCompact,
     SHCThermostat,
     SHCUserDefinedState,
 )
@@ -31,15 +27,15 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.util import slugify
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import slugify
 
-from .const import DATA_SESSION, DOMAIN, DATA_SHC
+from .const import DATA_SESSION, DATA_SHC, DOMAIN
 from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
 
 LOGGER = logging.getLogger(__name__)
@@ -592,11 +588,16 @@ async def async_setup_entry(
         # Frontlight uid; async_migrate skips if the target already exists, so
         # already-upgraded users are unaffected.
         await async_migrate_to_new_unique_id(
-            hass=hass, platform=Platform.SWITCH, device=switch,
-            attr_name="Frontlight", old_unique_id=f"{switch.serial}_light",
+            hass=hass,
+            platform=Platform.SWITCH,
+            device=switch,
+            attr_name="Frontlight",
+            old_unique_id=f"{switch.serial}_light",
         )
         await async_migrate_to_new_unique_id(
-            hass=hass, platform=Platform.SWITCH, device=switch,
+            hass=hass,
+            platform=Platform.SWITCH,
+            device=switch,
             attr_name="Frontlight",
             old_unique_id=f"{switch.root_device_id}_{switch.id}_light",
         )
@@ -612,11 +613,16 @@ async def async_setup_entry(
         # claimed by Frontlight above, so these no-op for upgraders but cover a
         # registry where only AmbientLight's id survived.
         await async_migrate_to_new_unique_id(
-            hass=hass, platform=Platform.SWITCH, device=switch,
-            attr_name="AmbientLight", old_unique_id=f"{switch.serial}_light",
+            hass=hass,
+            platform=Platform.SWITCH,
+            device=switch,
+            attr_name="AmbientLight",
+            old_unique_id=f"{switch.serial}_light",
         )
         await async_migrate_to_new_unique_id(
-            hass=hass, platform=Platform.SWITCH, device=switch,
+            hass=hass,
+            platform=Platform.SWITCH,
+            device=switch,
             attr_name="AmbientLight",
             old_unique_id=f"{switch.root_device_id}_{switch.id}_light",
         )
@@ -921,7 +927,7 @@ class SHCSwitch(SHCEntity, SwitchEntity):
                 "turn_on skipped for %s: service not available (no load/service?)",
                 self.entity_id,
             )
-        except (aiohttp.ClientError, asyncio.TimeoutError):
+        except TimeoutError, aiohttp.ClientError:
             LOGGER.debug(
                 "turn_on skipped for %s: service not available (no load/service?)",
                 self.entity_id,
@@ -942,7 +948,7 @@ class SHCSwitch(SHCEntity, SwitchEntity):
                 "turn_off skipped for %s: service not available (no load/service?)",
                 self.entity_id,
             )
-        except (aiohttp.ClientError, asyncio.TimeoutError):
+        except TimeoutError, aiohttp.ClientError:
             LOGGER.debug(
                 "turn_off skipped for %s: service not available (no load/service?)",
                 self.entity_id,
