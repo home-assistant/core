@@ -109,8 +109,8 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_heating": make_entity_state_condition(
         {DOMAIN: DomainSpec(value_source=ATTR_HVAC_ACTION)}, HVACAction.HEATING
     ),
-    "target_humidity": ClimateTargetHumidityCondition,
-    "target_temperature": ClimateTargetTemperatureCondition,
+    "is_target_humidity": ClimateTargetHumidityCondition,
+    "is_target_temperature": ClimateTargetTemperatureCondition,
 }
 
 
