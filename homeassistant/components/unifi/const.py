@@ -46,6 +46,8 @@ DEFAULT_TRACK_WIRED_CLIENTS = True
 DEFAULT_DETECTION_TIME = 300
 
 ATTR_MANUFACTURER = "Ubiquiti Networks"
+ATTR_UNIFI_NAME = "unifi_name"
+ATTR_UNIFI_NOTE = "unifi_note"
 
 BLOCK_SWITCH = "block"
 DPI_SWITCH = "dpi"

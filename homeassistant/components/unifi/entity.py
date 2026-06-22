@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -13,6 +13,7 @@ from aiounifi.interfaces.api_handlers import (
     UnsubscribeType,
 )
 from aiounifi.models.api import ApiItem
+from aiounifi.models.client import Client
 from aiounifi.models.event import Event, EventKey
 
 from homeassistant.core import callback
@@ -25,7 +26,7 @@ from homeassistant.helpers.device_registry import (
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
-from .const import ATTR_MANUFACTURER, DOMAIN
+from .const import ATTR_MANUFACTURER, ATTR_UNIFI_NAME, ATTR_UNIFI_NOTE, DOMAIN
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -91,6 +92,17 @@ def async_client_device_info_fn(hub: UnifiHub, obj_id: str) -> DeviceInfo:
     )
 
 
+@callback
+def async_client_extra_state_attributes_fn(client: Client) -> Mapping[str, Any] | None:
+    """Return UniFi client metadata as entity state attributes."""
+    attributes: dict[str, Any] = {}
+    if name := client.raw.get("name"):
+        attributes[ATTR_UNIFI_NAME] = name
+    if note := client.raw.get("note"):
+        attributes[ATTR_UNIFI_NOTE] = note
+    return attributes or None
+
+
 @dataclass(frozen=True, kw_only=True)
 class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescription):
     """UniFi Entity Description."""
@@ -111,6 +123,8 @@ class UnifiEntityDescription[HandlerT: APIHandler, ItemT: ApiItem](EntityDescrip
     """Determine if entity is available, default is if connection is working."""
     name_fn: Callable[[ItemT], str | None] = lambda obj: None
     """Entity name function, can be used to extend entity name beyond device name."""
+    extra_state_attributes_fn: Callable[[ItemT], Mapping[str, Any] | None] | None = None
+    """Entity state attribute function."""
     supported_fn: Callable[[UnifiHub, str], bool] = lambda hub, obj_id: True
     """Determine if UniFi object supports providing relevant data for entity."""
     translation_placeholders_fn: Callable[[ItemT], Mapping[str, str]] | None = None
@@ -265,6 +279,13 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     def get_object(self) -> ItemT:
         """Return the latest object for this entity."""
         return self.entity_description.object_fn(self.api, self._obj_id)
+
+    @property
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
+        """Return the entity state attributes."""
+        if self.entity_description.extra_state_attributes_fn is None:
+            return None
+        return self.entity_description.extra_state_attributes_fn(self.get_object())
 
     @callback
     @abstractmethod
