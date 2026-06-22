@@ -14,7 +14,7 @@ from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionE
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -139,18 +139,26 @@ async def async_setup_entry(
             len(no_credentials),
             ", ".join(sorted(no_credentials)),
         )
+    # A device the cloud cannot locate stays unaddressable across restarts until
+    # DHCP discovery reaches it or the user enters an IP in the options. Surface
+    # that as a repair issue rather than a warning that re-logs every setup;
+    # clear it once every device has an address.
+    issue_id = f"missing_address_{entry.entry_id}"
     if no_address:
-        # Surface the gap rather than leaving entities silently missing; the
-        # message below tells the user how to resolve it.
-        _LOGGER.warning(
-            "No local IP address is known for %d of %d Mitsubishi Comfort device(s)"
-            " (%s); they have no entities yet. Devices on Home Assistant's network"
-            " are added automatically via DHCP discovery; for devices on another"
-            " subnet or VLAN, enter their IP address in the integration options",
-            len(no_address),
-            len(devices),
-            ", ".join(sorted(no_address)),
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            issue_id,
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="missing_address",
+            translation_placeholders={
+                "count": str(len(no_address)),
+                "devices": ", ".join(sorted(no_address)),
+            },
         )
+    else:
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
     # The three buckets reconcile: set up + awaiting address + missing credentials
     # equals the number of devices on the account.
     _LOGGER.debug(
@@ -174,6 +182,7 @@ async def async_unload_entry(
     hass: HomeAssistant, entry: MitsubishiComfortConfigEntry
 ) -> bool:
     """Unload a config entry."""
+    ir.async_delete_issue(hass, DOMAIN, f"missing_address_{entry.entry_id}")
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         await asyncio.gather(
             *(c.device.close() for c in entry.runtime_data.values()),

@@ -15,7 +15,11 @@ from homeassistant.components.mitsubishi_comfort.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from .conftest import MOCK_ADDRESS, MOCK_MAC, MOCK_PASSWORD, MOCK_SERIAL, MOCK_USERNAME
 
@@ -81,8 +85,8 @@ async def test_setup_entry_no_address_loads_and_registers(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_cloud_account: AsyncMock,
-    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test setup with no known LAN address loads and registers the device.
 
@@ -91,7 +95,7 @@ async def test_setup_entry_no_address_loads_and_registers(
     it is registered with its MAC so "registered_devices" DHCP discovery can
     supply the IP and reload the entry. Setup must not retry (which would hammer
     the cloud API) since retrying can never resolve the address. The missing
-    address is surfaced with a warning rather than failing silently.
+    address is surfaced as a repair issue rather than failing silently.
     """
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -108,7 +112,7 @@ async def test_setup_entry_no_address_loads_and_registers(
     assert device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, dr.format_mac(MOCK_MAC))}
     )
-    assert "No local IP address is known" in caplog.text
+    assert issue_registry.async_get_issue(DOMAIN, f"missing_address_{entry.entry_id}")
 
 
 async def test_setup_entry_caches_and_replays_credentials(
@@ -138,6 +142,7 @@ async def test_setup_entry_caches_and_replays_credentials(
 async def test_setup_entry_resolves_address_from_entry(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     mock_config_entry: MockConfigEntry,
     mock_setup_integration: tuple[AsyncMock, MagicMock],
 ) -> None:
@@ -155,6 +160,10 @@ async def test_setup_entry_resolves_address_from_entry(
     assert entity_registry.async_get_entity_id("climate", DOMAIN, "SERIAL001")
     assert mock_config_entry.data[CONF_ADDRESSES][dr.format_mac(MOCK_MAC)] == (
         MOCK_ADDRESS
+    )
+    # Every device has an address, so no repair issue is raised.
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"missing_address_{mock_config_entry.entry_id}"
     )
 
 
