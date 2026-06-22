@@ -28,10 +28,9 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import Platform
+from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util import slugify
@@ -44,20 +43,20 @@ LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
-@dataclass
+@dataclass(frozen=True)
 class SHCSwitchRequiredKeysMixin:
     """Mixin for SHC switch required keys."""
 
     key: str
     on_key: str
     on_value: StateType
-    should_poll: bool | False
+    should_poll: bool = False
     device_class: SwitchDeviceClass | None = None
     icon: str | None = None
     entity_category: EntityCategory | None = None
 
 
-@dataclass
+@dataclass(frozen=True)
 class SHCSwitchEntityDescription(
     SwitchEntityDescription,
     SHCSwitchRequiredKeysMixin,

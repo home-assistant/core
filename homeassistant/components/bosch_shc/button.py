@@ -21,7 +21,7 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SHC binary sensor platform."""
-    entities = []
+    entities: list[ButtonEntity] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     for button in getattr(session.device_helper, "micromodule_impulse_relays", []):

@@ -41,10 +41,9 @@ async def async_setup_entry(
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the BoschSHC event entities."""
-    entities = []
     session: SHCSession = hass.data[DOMAIN][entry.entry_id][DATA_SESSION]
 
-    entities = []
+    entities: list[EventEntity] = []
     for switch_device in session.device_helper.universal_switches:
         if device_excluded(switch_device, entry.options):
             continue

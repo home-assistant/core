@@ -1,0 +1,59 @@
+trigger_scenario:
+  fields:
+    title:
+      default: ""
+      selector:
+        text:
+    name:
+      required: true
+      selector:
+        text:
+
+trigger_rawscan:
+  fields:
+    title:
+      default: ""
+      selector:
+        text:
+    command:
+      required: true
+      selector:
+        select:
+          options:
+            - "devices"
+            - "device"
+            - "services"
+            - "device_services"
+            - "device_service"
+            - "rooms"
+            - "scenarios"
+            - "messages"
+            - "info"
+            - "information"
+            - "public_information"
+            - "intrusion_detection"
+    device_id:
+      default: ""
+      selector:
+        text:
+    service_id:
+      default: ""
+      selector:
+        text:
+
+smokedetector_check:
+  target:
+    entity:
+      domain: binary_sensor
+      integration: bosch_shc
+
+smokedetector_alarmstate:
+  target:
+    entity:
+      domain: binary_sensor
+      integration: bosch_shc
+  fields:
+    command:
+      required: true
+      selector:
+        text:

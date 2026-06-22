@@ -6,9 +6,9 @@
           "preset_mode": {
             "state": {
               "auto": "mdi:clock-outline",
-              "manual": "mdi:hand-pointing-up",
+              "boost": "mdi:rocket-launch",
               "eco": "mdi:leaf",
-              "boost": "mdi:rocket-launch"
+              "manual": "mdi:hand-pointing-up"
             }
           }
         }

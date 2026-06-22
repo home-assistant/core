@@ -30,13 +30,13 @@ from homeassistant.const import (
     ATTR_ID,
     ATTR_NAME,
     EVENT_HOMEASSISTANT_STOP,
+    EntityCategory,
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 import homeassistant.helpers.config_validation as cv
-from homeassistant.helpers.entity import EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
 from .const import (
@@ -66,7 +66,7 @@ async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type
     async_add_entities: AddEntitiesCallback,
 ) -> None:
     """Set up the SHC binary sensor platform."""
-    entities = []
+    entities: list[BinarySensorEntity] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     @callback
@@ -270,18 +270,19 @@ async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type
 
     platform = entity_platform.current_platform.get()
 
-    platform.async_register_entity_service(
-        SERVICE_SMOKEDETECTOR_CHECK,
-        {},
-        "async_request_smoketest",
-    )
-    platform.async_register_entity_service(
-        SERVICE_SMOKEDETECTOR_ALARMSTATE,
-        {
-            vol.Required(ATTR_COMMAND): cv.string,
-        },
-        "async_request_alarmstate",
-    )
+    if platform is not None:
+        platform.async_register_entity_service(
+            SERVICE_SMOKEDETECTOR_CHECK,
+            {},
+            "async_request_smoketest",
+        )
+        platform.async_register_entity_service(
+            SERVICE_SMOKEDETECTOR_ALARMSTATE,
+            {
+                vol.Required(ATTR_COMMAND): cv.string,
+            },
+            "async_request_alarmstate",
+        )
 
     if entities:
         async_add_entities(entities)
@@ -410,7 +411,7 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
                 self._device.latestmotion, "%Y-%m-%dT%H:%M:%S.%fZ"
             ).replace(tzinfo=UTC)
         except ValueError, TypeError:
-            # ValueError: unparseable timestamp; TypeError: latestmotion is None.
+            # ValueError: unparsable timestamp; TypeError: latestmotion is None.
             # The trailing literal "Z" makes strptime return a naive datetime, so
             # it must be marked UTC-aware to subtract from datetime.now(timezone.utc).
             return False

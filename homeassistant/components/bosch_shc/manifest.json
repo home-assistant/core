@@ -10,5 +10,5 @@
   "loggers": ["boschshcpy"],
   "quality_scale": "bronze",
   "requirements": ["boschshcpy==0.3.5"],
-  "zeroconf": [{ "type": "_http._tcp.local.", "name": "bosch shc*" }]
+  "zeroconf": [{ "name": "bosch shc*", "type": "_http._tcp.local." }]
 }

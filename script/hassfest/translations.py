@@ -31,6 +31,7 @@ RE_URL = re.compile(
 
 # Only allow translation of integration names if they contain non-brand names
 ALLOW_NAME_TRANSLATION = {
+    "bosch_shc",
     "cert_expiry",
     "cpuspeed",
     "emulated_roku",
