@@ -16,6 +16,8 @@ from .const import (
     CONST_FAN_CMD_MAP,
     CONST_STATE_CMD_MAP,
     DEFAULT_INTERVAL,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DEFAULT_TIMEOUT,
 )
 
@@ -28,7 +30,13 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Class to coordinate multiple CCM15Climate devices."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: CCM15ConfigEntry, host: str, port: int
+        self,
+        hass: HomeAssistant,
+        entry: CCM15ConfigEntry,
+        host: str,
+        port: int,
+        min_temp: int = DEFAULT_MIN_TEMP,
+        max_temp: int = DEFAULT_MAX_TEMP,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -42,10 +50,22 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             host, port, DEFAULT_TIMEOUT, client=get_async_client(hass)
         )
         self._host = host
+        self._min_temp = min_temp
+        self._max_temp = max_temp
 
     def get_host(self) -> str:
         """Get the host."""
         return self._host
+
+    @property
+    def min_temp(self) -> int:
+        """Return the configured minimum target temperature."""
+        return self._min_temp
+
+    @property
+    def max_temp(self) -> int:
+        """Return the configured maximum target temperature."""
+        return self._max_temp
 
     async def _async_update_data(self) -> CCM15DeviceState:
         """Fetch data from Rain Bird device."""
