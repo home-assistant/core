@@ -584,7 +584,7 @@ async def ws_start_preview(
     if user_input.get(CONF_STILL_IMAGE_URL):
         ha_still_url = (
             "/api/generic/preview_flow_image"
-            f"/{msg['flow_id']}?t={datetime.now().isoformat()}"
+            f"/{msg['flow_id']}?t={datetime.now().isoformat()}"  # pylint: disable=home-assistant-enforce-naive-now
         )
         _LOGGER.debug("Got preview still URL: %s", ha_still_url)
 

@@ -42,7 +42,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
         if self.update_time is None:
             return True
 
-        return datetime.now() - self.update_time >= timedelta(
+        return datetime.now() - self.update_time >= timedelta(  # pylint: disable=home-assistant-enforce-naive-now
             seconds=UPDATE_INTERVAL_ENERGY
         )
 
@@ -52,7 +52,7 @@ class VeSyncDataCoordinator(DataUpdateCoordinator[None]):
             await self.manager.update_all_devices()
 
             if self.should_update_energy():
-                self.update_time = datetime.now()
+                self.update_time = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
                 for outlet in self.manager.devices.outlets:
                     await outlet.update_energy()
         except VeSyncError as err:

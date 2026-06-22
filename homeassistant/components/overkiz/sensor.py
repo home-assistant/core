@@ -79,6 +79,26 @@ SENSOR_DESCRIPTIONS: list[OverkizSensorDescription] = [
         options=["good", "medium", "low", "critical"],
         translation_key="battery",
     ),
+    # SmokeSensor with separate batteries for the radio and sensor parts,
+    # e.g. the Somfy smoke sensor (9V radio block + 3V CR123 sensor cell).
+    OverkizSensorDescription(
+        key=OverkizState.IO_MAINTENANCE_RADIO_PART_BATTERY,
+        name="Radio battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=["low", "normal"],
+        translation_key="battery",
+    ),
+    OverkizSensorDescription(
+        key=OverkizState.IO_MAINTENANCE_SENSOR_PART_BATTERY,
+        name="Sensor battery",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        icon="mdi:battery",
+        device_class=SensorDeviceClass.ENUM,
+        options=["absence", "low", "normal"],
+        translation_key="battery",
+    ),
     OverkizSensorDescription(
         key=OverkizState.CORE_RSSI_LEVEL,
         name="RSSI level",

@@ -54,6 +54,8 @@ aio-georss-gdacs==0.10 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aio-ownet==0.0.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
+aio-wattwaechter==1.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+    # via -r requirements_all.txt
 aioacaia==0.1.18 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aioairq==0.4.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
@@ -62,7 +64,7 @@ aioairzone==1.0.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aioairzone-cloud==0.7.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-aioamazondevices==14.0.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
+aioamazondevices==14.1.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aioambient==2024.8.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -94,7 +96,7 @@ aiocoap==0.4.17 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   aiohomekit
     #   pytradfri
-aiocomelit==2.0.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
+aiocomelit==2.0.7 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aioconsole==0.8.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -186,7 +188,7 @@ aioharmony==1.0.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aiohasupervisor==0.5.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-aiohomeconnect==0.36.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+aiohomeconnect==0.38.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aiohomekit==3.2.20 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -210,6 +212,7 @@ aiohttp==3.14.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   aio-geojson-nsw-rfs-incidents
     #   aio-geojson-usgs-earthquakes
     #   aio-georss-client
+    #   aio-wattwaechter
     #   aioairq
     #   aioairzone
     #   aioairzone-cloud
@@ -334,6 +337,7 @@ aiohttp==3.14.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   eliqonline
     #   elvia
     #   emulated-roku
+    #   energieleser
     #   energyid-webhooks
     #   energyzero
     #   enturclient
@@ -459,7 +463,6 @@ aiohttp==3.14.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   progettihwsw
     #   pvo
     #   py-aosmith
-    #   py-ccm15
     #   py-melissa-climate
     #   py-nightscout
     #   py-nymta
@@ -720,7 +723,7 @@ aiohue==4.8.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aioimaplib==2.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-aioimmich==0.14.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+aioimmich==0.15.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aioitertools==0.13.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via aiobotocore
@@ -749,7 +752,7 @@ aiolyric==2.1.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aiomealie==1.2.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-aiomelcloudhome==0.1.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
+aiomelcloudhome==0.1.9 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aiomodernforms==0.1.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -814,7 +817,7 @@ aioruuvigateway==0.1.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aioserial==1.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via phone-modem
-aioshelly==13.26.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+aioshelly==13.26.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 aiosignal==1.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via aiohttp
@@ -1153,7 +1156,7 @@ autocommand==2.2.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   jaraco-net
     #   oathtool
-automower-ble==0.2.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
+automower-ble==0.2.9 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 autoskope-client==1.4.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -1192,9 +1195,9 @@ awesomeversion==25.8.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   wled
 aws-request-signer==1.2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via aioaquacell
-awscrt==0.32.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+awscrt==0.34.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via awsiotsdk
-awsiotsdk==1.29.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+awsiotsdk==1.30.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via thinqconnect
 axis==72 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -1227,7 +1230,7 @@ azure-storage-blob==12.24.0 ; sys_platform == 'darwin' or sys_platform == 'linux
     # via
     #   -r requirements_all.txt
     #   azure-kusto-ingest
-azure-storage-queue==12.16.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+azure-storage-queue==12.17.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via azure-kusto-ingest
 b2sdk==2.10.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -1284,7 +1287,7 @@ bellows==0.49.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   zha
 bidict==0.23.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via python-socketio
-bitarray==3.8.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+bitarray==3.8.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   airtouch5py
     #   bitstring
@@ -1418,6 +1421,7 @@ bluetooth-data-tools==1.29.18 ; sys_platform == 'darwin' or sys_platform == 'lin
     #   bluemaestro-ble
     #   bluetooth-sensor-state-data
     #   bthome-ble
+    #   chefiq-ble
     #   govee-ble
     #   habluetooth
     #   inkbird-ble
@@ -1439,6 +1443,7 @@ bluetooth-sensor-state-data==1.9.0 ; sys_platform == 'darwin' or sys_platform ==
     # via
     #   bluemaestro-ble
     #   bthome-ble
+    #   chefiq-ble
     #   govee-ble
     #   inkbird-ble
     #   kegtron-ble
@@ -1487,7 +1492,7 @@ bring-api==1.1.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 broadlink==0.19.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-brother==6.1.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+brother==6.1.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 brotli==1.2.0 ; (implementation_name == 'cpython' and sys_platform == 'darwin') or (implementation_name == 'cpython' and sys_platform == 'linux') or (platform_python_implementation == 'CPython' and sys_platform == 'darwin') or (platform_python_implementation == 'CPython' and sys_platform == 'linux')
     # via
@@ -1518,7 +1523,7 @@ btsocket==0.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   habluetooth
 buienradar==1.0.9 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-bx-py-utils==118 ; sys_platform == 'darwin' or sys_platform == 'linux'
+bx-py-utils==119 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via jaraco-abode
 cachebox==5.2.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via deepdiff
@@ -1546,7 +1551,7 @@ cbor2==5.9.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   airthings-ble
     #   freenub
-certifi==2026.5.20 ; sys_platform == 'darwin' or sys_platform == 'linux'
+certifi==2026.6.17 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   -c homeassistant/package_constraints.txt
     #   -r requirements.txt
@@ -1595,6 +1600,8 @@ charset-normalizer==3.4.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   -c homeassistant/package_constraints.txt
     #   requests
+chefiq-ble==1.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+    # via -r requirements_all.txt
 chess-com-api==1.1.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 cielo-connect-api==1.0.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
@@ -1627,7 +1634,6 @@ click==8.1.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   gtts
     #   micloud
     #   openwrt-luci-rpc
-    #   pyicloud
     #   pykulersky
     #   pymysensors
     #   pyomie
@@ -1692,7 +1698,7 @@ commentjson==0.9.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via aiohomekit
 commonmark==0.9.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via rich
-compit-inext-api==0.8.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+compit-inext-api==0.9.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 concord232==0.15.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -1745,7 +1751,7 @@ crownstone-sse==2.0.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 crownstone-uart==2.1.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-cryptography==48.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+cryptography==48.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   -c homeassistant/package_constraints.txt
     #   -r requirements.txt
@@ -1789,6 +1795,7 @@ cryptography==48.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   pyanglianwater
     #   pyatv
     #   pyfritzhome
+    #   pyicloud
     #   pyjwt
     #   pylamarzocco
     #   pylutron-caseta
@@ -1838,7 +1845,7 @@ datadog==0.52.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 datapoint==0.12.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-dateparser==1.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+dateparser==1.4.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via georss-ign-sismologia-client
 dbus-fast==5.0.16 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -1863,7 +1870,7 @@ deebot-client==18.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 deepdiff==9.1.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pylitterbot
-deepmerge==2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+deepmerge==2.1.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pyipp
 defusedxml==0.7.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -1917,7 +1924,7 @@ discogs-client==2.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 discovery30303==0.3.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-distlib==0.4.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+distlib==0.4.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via virtualenv
 distro==1.9.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -1947,7 +1954,7 @@ dremel3dpy==2.1.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 dropmqttapi==1.0.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-dsmr-parser==1.7.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+dsmr-parser==1.9.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 dtlssocket==0.1.19 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pytradfri
@@ -1977,9 +1984,9 @@ ekey-bionyxpy==1.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 electrickiwi-api==0.9.14 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-elementpath==5.1.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+elementpath==5.1.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via xmlschema
-elevenlabs==2.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+elevenlabs==2.51.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 elgato==5.1.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -1996,6 +2003,8 @@ elvia==0.1.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
 emoji==2.8.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 emulated-roku==0.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+    # via -r requirements_all.txt
+energieleser==0.1.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 energyflip-client==0.2.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -2025,7 +2034,7 @@ epaper-dithering==5.0.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via py-opendisplay
 ephem==4.1.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-epicstore-api==0.1.7 ; sys_platform == 'darwin' or sys_platform == 'linux'
+epicstore-api==0.1.9 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 epion==0.0.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -2051,7 +2060,7 @@ events==0.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pysnooz
 evohome-async==1.2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-evolutionhttp==0.0.18 ; sys_platform == 'darwin' or sys_platform == 'linux'
+evolutionhttp==0.0.19 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 exceptiongroup==1.3.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via nibe
@@ -2078,7 +2087,7 @@ file-read-backwards==2.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   -c homeassistant/package_constraints.txt
     #   -r requirements_all.txt
-filelock==3.29.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+filelock==3.29.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   python-discovery
     #   virtualenv
@@ -2244,7 +2253,7 @@ google-api-python-client==2.71.0 ; sys_platform == 'darwin' or sys_platform == '
     # via
     #   -r requirements_all.txt
     #   google-photos-library-api
-google-auth==2.53.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+google-auth==2.55.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   aioaquarite
     #   gassist-text
@@ -2304,7 +2313,7 @@ govee-ble==1.2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 govee-local-api==2.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-gpiod==2.4.2 ; sys_platform == 'linux'
+gpiod==2.5.0 ; sys_platform == 'linux'
     # via universal-silabs-flasher
 gpiozero==1.6.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -2330,7 +2339,7 @@ greencell-client==1.0.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 greeneye-monitor==3.0.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-greenlet==3.5.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+greenlet==3.5.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via sqlalchemy
 greenplanet-energy-api==0.1.10 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -2465,6 +2474,7 @@ home-assistant-bluetooth==2.0.0 ; sys_platform == 'darwin' or sys_platform == 'l
     # via
     #   -c homeassistant/package_constraints.txt
     #   -r requirements.txt
+    #   chefiq-ble
     #   govee-ble
     #   ibeacon-ble
     #   moat-ble
@@ -2475,7 +2485,7 @@ home-assistant-bluetooth==2.0.0 ; sys_platform == 'darwin' or sys_platform == 'l
     #   ruuvitag-ble
     #   sensirion-ble
     #   xiaomi-ble
-home-assistant-frontend==20260527.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
+home-assistant-frontend==20260527.7 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   -c homeassistant/package_constraints.txt
     #   -r requirements_all.txt
@@ -2488,7 +2498,7 @@ homekit-audio-proxy==1.2.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 homelink-integration-api==0.0.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-homematicip==2.13.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+homematicip==2.13.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 homevolt==0.5.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -2664,7 +2674,7 @@ imageio==2.37.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via dremel3dpy
 imeon-inverter-api==0.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-imgw-pib==2.2.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+imgw-pib==2.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 importlib-resources==6.5.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -2688,7 +2698,7 @@ influxdb==5.3.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 influxdb-client==1.50.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-infrared-protocols==6.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+infrared-protocols==6.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   -r requirements.txt
     #   -r requirements_all.txt
@@ -2806,7 +2816,7 @@ josepy==2.2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   hass-nabucasa
 joserfc==1.7.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via authlib
-jsonpath==0.82.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+jsonpath-python==1.1.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 jsonpickle==4.1.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -2940,7 +2950,7 @@ lru-dict==1.4.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   yalexs-ble
 luftdaten==0.7.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-lunatone-rest-api-client==0.9.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+lunatone-rest-api-client==0.9.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 lupupy==0.3.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -3109,7 +3119,7 @@ miniaudio==1.71 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pyatv
 minio==7.1.12 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-mitsubishi-comfort==0.3.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+mitsubishi-comfort==0.3.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 moat-ble==0.1.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -3152,11 +3162,11 @@ msal==1.37.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   msal-extensions
 msal-extensions==1.3.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via azure-identity
-msgpack==1.1.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+msgpack==1.2.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   influxdb
     #   pysignalr
-mt-940==4.30.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+mt-940==5.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via fints
 mullvad-api==1.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -3171,9 +3181,9 @@ multidict==6.7.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   yarl
 munch==4.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via plugwise
-music-assistant-client==1.3.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
+music-assistant-client==1.3.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-music-assistant-models==1.1.115 ; sys_platform == 'darwin' or sys_platform == 'linux'
+music-assistant-models==1.1.139 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via music-assistant-client
 mutagen==1.47.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -3225,7 +3235,7 @@ nextcloudmonitor==1.5.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 nextcord==3.1.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-nextdns==5.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+nextdns==5.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 nhc==0.8.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -3340,7 +3350,7 @@ openwrt-luci-rpc==1.1.17 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 openwrt-ubus-rpc==0.0.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-opower==0.18.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
+opower==0.18.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 opuslib-next==1.1.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via voip-utils
@@ -3659,6 +3669,7 @@ protobuf==6.32.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   pyatv
     #   pychromecast
     #   pycomfoconnect
+    #   pyicloud
     #   python-clementine-remote
     #   python-roborock
     #   starlink-grpc-core
@@ -3699,7 +3710,7 @@ py-aosmith==1.0.18 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 py-canary==0.5.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-py-ccm15==0.1.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+py-ccm15==0.6.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 py-cpuinfo==9.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -3749,11 +3760,11 @@ pyairobotrest==0.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyairvisual==2023.8.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-pyanglianwater==3.1.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+pyanglianwater==3.2.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyaprilaire==0.9.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-pyaqvify==0.0.10 ; sys_platform == 'darwin' or sys_platform == 'linux'
+pyaqvify==0.0.11 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyasn1==0.6.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -3777,7 +3788,7 @@ pyatmo==9.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyatome==0.1.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-pyatv==0.17.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+pyatv==0.18.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyaussiebb==0.1.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -3912,6 +3923,7 @@ pydantic==2.13.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   pydantic-extra-types
     #   pydantic-settings
     #   pygti
+    #   pyicloud
     #   pykoplenti
     #   python-bsblan
     #   python-xbox
@@ -3932,7 +3944,7 @@ pydantic-core==2.46.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   pydantic
 pydantic-extra-types==2.11.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via uiprotect
-pydantic-settings==2.14.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+pydantic-settings==2.14.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   mcp
     #   pyteleinfo
@@ -4047,7 +4059,7 @@ pyhomeworks==1.1.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyialarm==2.2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-pyicloud==2.4.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+pyicloud==2.6.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyimouapi==1.2.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -4183,7 +4195,7 @@ pymitv==1.4.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pymochad==0.2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-pymodbus==3.11.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+pymodbus==3.13.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   -c homeassistant/package_constraints.txt
     #   -r requirements_all.txt
@@ -4231,19 +4243,19 @@ pynzbgetapi==0.2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyobihai==1.4.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-pyobjc-core==12.2 ; sys_platform == 'darwin'
+pyobjc-core==12.2.1 ; sys_platform == 'darwin'
     # via
     #   bleak
     #   pyobjc-framework-cocoa
     #   pyobjc-framework-corebluetooth
     #   pyobjc-framework-libdispatch
-pyobjc-framework-cocoa==12.2 ; sys_platform == 'darwin'
+pyobjc-framework-cocoa==12.2.1 ; sys_platform == 'darwin'
     # via
     #   pyobjc-framework-corebluetooth
     #   pyobjc-framework-libdispatch
-pyobjc-framework-corebluetooth==12.2 ; sys_platform == 'darwin'
+pyobjc-framework-corebluetooth==12.2.1 ; sys_platform == 'darwin'
     # via bleak
-pyobjc-framework-libdispatch==12.2 ; sys_platform == 'darwin'
+pyobjc-framework-libdispatch==12.2.1 ; sys_platform == 'darwin'
     # via bleak
 pyoctoprintapi==0.1.14 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -4273,7 +4285,7 @@ pyotp==2.9.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   -r requirements_all.txt
     #   aiounifi
     #   opower
-pyoverkiz==2.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+pyoverkiz==2.0.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pypalazzetti==0.1.20 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -4598,17 +4610,17 @@ python-didl-lite==1.5.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via async-upnp-client
 python-digitalocean==1.13.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-python-discovery==1.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+python-discovery==1.4.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via virtualenv
 python-dotenv==1.2.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pydantic-settings
 python-dropbox-api==0.1.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-python-duco-connectivity==0.6.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+python-duco-connectivity==0.7.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 python-ecobee-api==0.4.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-python-engineio==4.13.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+python-engineio==4.13.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   aioambient
     #   python-socketio
@@ -4676,7 +4688,7 @@ python-overseerr==0.9.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 python-picnic-api2==1.3.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-python-pooldose==0.9.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+python-pooldose==0.9.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 python-qube-heatpump==1.11.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -4697,7 +4709,7 @@ python-sn2==0.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 python-snoo==0.8.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-python-socketio==5.16.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+python-socketio==5.16.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   aioambient
     #   pyaxencoapi
@@ -4784,7 +4796,6 @@ pytz==2026.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   upb-lib
     #   victron-vrm
     #   vobject
-    #   zeep
 pyuptimerobot==25.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyusb==1.3.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
@@ -4851,7 +4862,7 @@ pyyaml==6.0.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   pyvlx
     #   scsgate
     #   yamllint
-pyyardian==1.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+pyyardian==1.4.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 pyzbar==0.1.9 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -4897,7 +4908,7 @@ refoss-ha==1.2.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 regenmaschine==2024.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-regex==2024.11.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
+regex==2026.5.9 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   dateparser
     #   sentence-stream
@@ -5218,7 +5229,7 @@ rsa==4.9.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   python-jose
 rtmapi==0.7.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-ruff==0.15.16 ; sys_platform == 'darwin' or sys_platform == 'linux'
+ruff==0.15.17 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_test_pre_commit.txt
 ruuvitag-ble==0.4.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -5240,7 +5251,7 @@ scapy==2.7.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   aiodhcpwatcher
 schedule==1.2.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pysmappee
-scipy==1.17.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+scipy==1.18.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via reverse-geocode
 screenlogicpy==0.10.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -5259,7 +5270,7 @@ segno==1.6.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   aiovodafone
     #   devolo-plc-api
     #   fritzconnection
-selenium==4.44.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+selenium==4.45.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pypasser
 semver==3.0.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via vilfo-api-client
@@ -5274,6 +5285,7 @@ sensor-state-data==2.20.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   bluemaestro-ble
     #   bluetooth-sensor-state-data
     #   bthome-ble
+    #   chefiq-ble
     #   govee-ble
     #   inkbird-ble
     #   kegtron-ble
@@ -5303,7 +5315,7 @@ sensorpush-ha==1.3.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 sensoterra==2.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-sentence-stream==1.2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+sentence-stream==1.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   -r requirements_all.txt
     #   hass-nabucasa
@@ -5463,7 +5475,7 @@ srpenergy==1.3.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 srptools==1.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pyatv
-sse-starlette==3.4.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
+sse-starlette==3.4.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via mcp
 standard-aifc==3.13.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -5477,7 +5489,7 @@ standard-telnetlib==3.13.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   -r requirements.txt
 starkbank-ecdsa==2.3.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via sendgrid
-starlette==1.2.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+starlette==1.3.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   mcp
     #   sse-starlette
@@ -5493,7 +5505,7 @@ stdiomask==0.0.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via subarulink
 steamloop==1.2.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-steamodd==4.21 ; sys_platform == 'darwin' or sys_platform == 'linux'
+steamodd==5.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 stevedore==5.8.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -5542,7 +5554,7 @@ tellcore-py==1.1.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 tellduslive==0.10.12 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-telnetlib3==4.0.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
+telnetlib3==4.0.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pylutron
 teltasync==0.3.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -5600,12 +5612,12 @@ thinqconnect==1.0.12 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 tibs==0.5.7 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via bitstring
-tikteck==0.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
-    # via -r requirements_all.txt
 tilt-ble==1.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 tilt-pi==0.2.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
+tinyhtml==1.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+    # via pyicloud
 tinytag==2.2.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pyatv
 titlecase==2.4.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
@@ -5624,7 +5636,7 @@ toonapi==0.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 total-connect-client==2025.12.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-tplink-omada-client==1.5.7 ; sys_platform == 'darwin' or sys_platform == 'linux'
+tplink-omada-client==1.5.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 tqdm==4.67.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -5816,9 +5828,9 @@ uasiren==0.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 uhooapi==1.2.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-uiprotect==13.1.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+uiprotect==14.0.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-ujson==5.12.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
+ujson==5.13.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via ayla-iot-unofficial
 ulid-transform==2.2.9 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
@@ -5941,7 +5953,7 @@ vilfo-api-client==0.5.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 vincenty==0.1.4 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via buienradar
-virtualenv==21.4.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+virtualenv==21.5.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via pre-commit
 visionpluspython==1.1.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -6061,6 +6073,7 @@ websockets==15.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     #   livisi
     #   pyhomee
     #   pysignalr
+    #   python-pooldose
     #   python-sn2
     #   pytibber
     #   ring-doorbell
@@ -6108,7 +6121,7 @@ x-wr-timezone==2.0.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via recurring-ical-events
 xiaomi-ble==1.11.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-xknx==3.15.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+xknx==3.16.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 xknxproject==3.9.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -6259,7 +6272,7 @@ yeelightsunflower==0.0.10 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 yolink-api==0.6.5 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-yoto-api==4.3.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
+yoto-api==4.3.1 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 youless-api==2.2.0 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
@@ -6275,7 +6288,7 @@ zamg==0.3.6 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
 zcc-helper==3.8 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via -r requirements_all.txt
-zeep==4.3.2 ; sys_platform == 'darwin' or sys_platform == 'linux'
+zeep==4.3.3 ; sys_platform == 'darwin' or sys_platform == 'linux'
     # via
     #   noaa-coops
     #   onvif-parsers
