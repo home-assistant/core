@@ -5,17 +5,10 @@ import string
 from unittest.mock import patch
 import urllib.parse
 
-import steam
+import steam.api
 
-from homeassistant.components.steam_online.const import (
-    CONF_ACCOUNT,
-    CONF_ACCOUNTS,
-    DOMAIN,
-)
+from homeassistant.components.steam_online.const import CONF_ACCOUNT, CONF_ACCOUNTS
 from homeassistant.const import CONF_API_KEY
-from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 API_KEY = "abc123"
 ACCOUNT_1 = "12345678901234567"
@@ -38,18 +31,6 @@ CONF_OPTIONS_2 = {
 }
 
 MAX_LENGTH_STEAM_IDS = 30
-
-
-def create_entry(hass: HomeAssistant) -> MockConfigEntry:
-    """Add config entry in Home Assistant."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data=CONF_DATA,
-        options=CONF_OPTIONS,
-        unique_id=ACCOUNT_1,
-    )
-    entry.add_to_hass(hass)
-    return entry
 
 
 class MockedUserInterfaceNull:

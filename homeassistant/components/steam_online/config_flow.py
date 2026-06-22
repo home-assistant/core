@@ -3,15 +3,10 @@
 from collections.abc import Iterator, Mapping
 from typing import Any, override
 
-import steam
+import steam.api
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    SOURCE_REAUTH,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -21,6 +16,14 @@ from .coordinator import SteamConfigEntry
 
 # To avoid too long request URIs, the amount of ids to request is limited
 MAX_IDS_TO_REQUEST = 275
+
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_API_KEY): str,
+        vol.Required(CONF_ACCOUNT): str,
+    }
+)
+STEP_REAUTH_DATA_SCHEMA = vol.Schema({vol.Required(CONF_API_KEY): str})
 
 
 def validate_input(user_input: dict[str, str]) -> dict[str, str | int]:
@@ -49,9 +52,9 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a flow initiated by the user."""
         errors = {}
-        if user_input is None and self.source == SOURCE_REAUTH:
-            user_input = {CONF_ACCOUNT: self._get_reauth_entry().data[CONF_ACCOUNT]}
-        elif user_input is not None:
+        if user_input is not None:
+            await self.async_set_unique_id(user_input[CONF_ACCOUNT])
+            self._abort_if_unique_id_configured()
             try:
                 res = await self.hass.async_add_executor_job(validate_input, user_input)
                 if res is not None:
@@ -59,19 +62,13 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
                 else:
                     errors["base"] = "invalid_account"
             except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
-                errors["base"] = "cannot_connect"
-                if "403" in str(ex):
-                    errors["base"] = "invalid_auth"
+                errors["base"] = (
+                    "invalid_auth" if "403" in str(ex) else "cannot_connect"
+                )
             except Exception as ex:  # noqa: BLE001
                 LOGGER.exception("Unknown exception: %s", ex)
                 errors["base"] = "unknown"
             if not errors:
-                entry = await self.async_set_unique_id(user_input[CONF_ACCOUNT])
-                if entry and self.source == SOURCE_REAUTH:
-                    self.hass.config_entries.async_update_entry(entry, data=user_input)
-                    await self.hass.config_entries.async_reload(entry.entry_id)
-                    return self.async_abort(reason="reauth_successful")
-                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=name,
                     data=user_input,
@@ -80,15 +77,8 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
         user_input = user_input or {}
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(
-                        CONF_API_KEY, default=user_input.get(CONF_API_KEY) or ""
-                    ): str,
-                    vol.Required(
-                        CONF_ACCOUNT, default=user_input.get(CONF_ACCOUNT) or ""
-                    ): str,
-                }
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_USER_DATA_SCHEMA, suggested_values=user_input
             ),
             errors=errors,
             description_placeholders=PLACEHOLDERS,
@@ -104,12 +94,34 @@ class SteamFlowHandler(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
         """Confirm reauth dialog."""
-        if user_input is not None:
-            return await self.async_step_user()
+        errors: dict[str, str] = {}
+        entry = self._get_reauth_entry()
 
-        self._set_confirm_only()
+        if user_input is not None:
+            try:
+                if not await self.hass.async_add_executor_job(
+                    validate_input, {**entry.data, **user_input}
+                ):
+                    errors["base"] = "invalid_account"
+            except (steam.api.HTTPError, steam.api.HTTPTimeoutError) as ex:
+                errors["base"] = (
+                    "invalid_auth" if "403" in str(ex) else "cannot_connect"
+                )
+            except Exception as ex:  # noqa: BLE001
+                LOGGER.exception("Unknown exception: %s", ex)
+                errors["base"] = "unknown"
+
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
         return self.async_show_form(
-            step_id="reauth_confirm", description_placeholders=PLACEHOLDERS
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                data_schema=STEP_REAUTH_DATA_SCHEMA, suggested_values=user_input
+            ),
+            errors=errors,
+            description_placeholders=PLACEHOLDERS,
         )
 
 

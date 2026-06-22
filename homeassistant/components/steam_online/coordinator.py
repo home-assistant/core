@@ -3,7 +3,7 @@
 from datetime import timedelta
 from typing import override
 
-import steam
+import steam.api
 from steam.api import _interface_method as INTMethod
 
 from homeassistant.config_entries import ConfigEntry
