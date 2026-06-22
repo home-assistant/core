@@ -112,7 +112,7 @@ def _lock_entity_id(
     raise AssertionError(f"No lock entity found for device {device_id}")
 
 
-async def test_set_user_auto_find(
+async def test_set_user_new_user_auto_find(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -120,8 +120,9 @@ async def test_set_user_auto_find(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test set_user with auto-find user slot returns allocated user_id."""
+    """Without a user_id, set_user creates a new user via addUser."""
     api = _mock_access_control(lock_schlage_be469)
+    api.add_user.return_value = AddUserResult(user=SetUserResult.OK)
     entity_id = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
     )
@@ -139,7 +140,9 @@ async def test_set_user_auto_find(
         return_response=True,
     )
 
-    api.set_user.assert_called_once_with(
+    # No user_id => addUser, auto-allocating the first free user slot.
+    api.set_user.assert_not_called()
+    api.add_user.assert_called_once_with(
         1,
         SetUserOptions(
             active=True,
@@ -147,11 +150,12 @@ async def test_set_user_auto_find(
             user_name="Alice",
             credential_rule=None,
         ),
+        None,
     )
-    assert result == {entity_id: {"user_id": 1}}
+    assert result == {entity_id: {"user_id": 1, "credential_slot": None}}
 
 
-async def test_set_user_explicit_index(
+async def test_set_user_existing_user(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -159,7 +163,7 @@ async def test_set_user_explicit_index(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test set_user with explicit user index echoes it back."""
+    """With a user_id, set_user updates the existing user via setUser."""
     api = _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
@@ -177,6 +181,8 @@ async def test_set_user_explicit_index(
         return_response=True,
     )
 
+    # A user_id => setUser, not the addUser create path.
+    api.add_user.assert_not_called()
     api.set_user.assert_called_once_with(
         5,
         SetUserOptions(
@@ -186,7 +192,7 @@ async def test_set_user_explicit_index(
             credential_rule=None,
         ),
     )
-    assert result == {entity_id: {"user_id": 5}}
+    assert result == {entity_id: {"user_id": 5, "credential_slot": None}}
 
 
 async def test_set_user_no_slots(
@@ -223,12 +229,12 @@ async def test_set_user_no_slots(
         )
 
     assert exc.value.translation_key == "no_available_user_slots"
-    # Here, we fail trying to find a free user slot, meaning
-    # before we even call set_user.
+    # We fail while searching for a free user slot, before issuing addUser.
+    api.add_user.assert_not_called()
     api.set_user.assert_not_called()
 
 
-async def test_add_user_auto_find(
+async def test_set_user_new_user_with_credential(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -236,7 +242,7 @@ async def test_add_user_auto_find(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test add_user auto-finds a free user slot and credential slot."""
+    """A new user and its credential are written in one addUser call."""
     api = _mock_access_control(lock_schlage_be469)
     entity_id = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
@@ -244,7 +250,7 @@ async def test_add_user_auto_find(
 
     result = await hass.services.async_call(
         DOMAIN,
-        "add_user",
+        "set_user",
         {
             ATTR_ENTITY_ID: entity_id,
             "user_name": "Alice",
@@ -257,7 +263,7 @@ async def test_add_user_auto_find(
         return_response=True,
     )
 
-    # The combined addUser API is used; the legacy two-call path is not.
+    # The combined addUser API is used, not the two-call setUser/setCredential path
     api.set_user.assert_not_called()
     api.set_credential.assert_not_called()
     api.add_user.assert_called_once_with(
@@ -277,7 +283,7 @@ async def test_add_user_auto_find(
     assert result == {entity_id: {"user_id": 1, "credential_slot": 1}}
 
 
-async def test_add_user_rolls_back_on_credential_failure(
+async def test_set_user_rolls_back_on_credential_failure(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -296,7 +302,7 @@ async def test_add_user_rolls_back_on_credential_failure(
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            "add_user",
+            "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -315,7 +321,7 @@ async def test_add_user_rolls_back_on_credential_failure(
     api.delete_user.assert_called_once_with(1)
 
 
-async def test_add_user_rollback_failure_still_raises_credential_error(
+async def test_set_user_rollback_failure_still_raises_credential_error(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -334,7 +340,7 @@ async def test_add_user_rollback_failure_still_raises_credential_error(
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            "add_user",
+            "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -355,14 +361,14 @@ async def test_add_user_rollback_failure_still_raises_credential_error(
     ("supports_users_without_credentials", "expected_credential_slot"),
     [
         # User Credential CC: the credential gets its own slot, auto-allocated
-        # to the first free one (1) independently of the user's slot (5).
+        # to the first free one (1) independently of the user's slot (3).
         pytest.param(True, 1, id="user_credential_cc_independent_slot"),
         # User Code CC: the credential shares the user's slot, so it must match
-        # the user ID (5) rather than being auto-allocated.
-        pytest.param(False, 5, id="user_code_cc_shared_slot"),
+        # the auto-allocated user ID (3).
+        pytest.param(False, 3, id="user_code_cc_shared_slot"),
     ],
 )
-async def test_add_user_explicit_index(
+async def test_set_user_new_user_credential_slot_allocation(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -372,21 +378,28 @@ async def test_add_user_explicit_index(
     supports_users_without_credentials: bool,
     expected_credential_slot: int,
 ) -> None:
-    """Test add_user credential slot allocation for both command classes."""
+    """A new user's credential slot resolution differs by command class."""
     api = _mock_access_control(
         lock_schlage_be469,
         supports_users_without_credentials=supports_users_without_credentials,
     )
+    # Occupy user slots 1 and 2 so the new user gets slot 3, while all credential
+    # slots stay free (first free is 1). This makes the user's slot and the first
+    # free credential slot diverge so the two command classes pick different ones.
+    user1 = MagicMock()
+    user1.user_id = 1
+    user2 = MagicMock()
+    user2.user_id = 2
+    api.get_users_cached.return_value = [user1, user2]
     entity_id = _lock_entity_id(
         entity_registry, device_registry, client, lock_schlage_be469
     )
 
     result = await hass.services.async_call(
         DOMAIN,
-        "add_user",
+        "set_user",
         {
             ATTR_ENTITY_ID: entity_id,
-            "user_id": 5,
             "user_name": "Bob",
             "credential_type": "pin_code",
             "credential_data": "5678",
@@ -395,8 +408,10 @@ async def test_add_user_explicit_index(
         return_response=True,
     )
 
+    api.set_user.assert_not_called()
+    api.set_credential.assert_not_called()
     api.add_user.assert_called_once_with(
-        5,
+        3,
         SetUserOptions(
             active=None,
             user_type=None,
@@ -410,11 +425,75 @@ async def test_add_user_explicit_index(
         ),
     )
     assert result == {
+        entity_id: {"user_id": 3, "credential_slot": expected_credential_slot}
+    }
+
+
+@pytest.mark.parametrize(
+    ("supports_users_without_credentials", "expected_credential_slot"),
+    [
+        # User Credential CC: the credential is auto-allocated its own free slot.
+        pytest.param(True, 1, id="user_credential_cc_independent_slot"),
+        # User Code CC: the credential shares the existing user's slot (5).
+        pytest.param(False, 5, id="user_code_cc_shared_slot"),
+    ],
+)
+async def test_set_user_existing_user_with_credential(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+    supports_users_without_credentials: bool,
+    expected_credential_slot: int,
+) -> None:
+    """Updating an existing user with a credential uses setUser + setCredential."""
+    api = _mock_access_control(
+        lock_schlage_be469,
+        supports_users_without_credentials=supports_users_without_credentials,
+    )
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "set_user",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "user_id": 5,
+            "user_name": "Bob",
+            "credential_type": "pin_code",
+            "credential_data": "5678",
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    # A user_id => setUser, then the credential is written separately.
+    api.add_user.assert_not_called()
+    api.set_user.assert_called_once_with(
+        5,
+        SetUserOptions(
+            active=None,
+            user_type=None,
+            user_name="Bob",
+            credential_rule=None,
+        ),
+    )
+    api.set_credential.assert_called_once_with(
+        5,
+        UserCredentialType.PIN_CODE,
+        expected_credential_slot,
+        "5678",
+    )
+    assert result == {
         entity_id: {"user_id": 5, "credential_slot": expected_credential_slot}
     }
 
 
-async def test_add_user_invalid_pin(
+async def test_set_user_existing_user_explicit_credential_slot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -422,13 +501,57 @@ async def test_add_user_invalid_pin(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test add_user validates the credential before adding the user."""
+    """An explicit credential_slot is honored on the existing-user path."""
+    api = _mock_access_control(lock_schlage_be469)
+    entity_id = _lock_entity_id(
+        entity_registry, device_registry, client, lock_schlage_be469
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "set_user",
+        {
+            ATTR_ENTITY_ID: entity_id,
+            "user_id": 5,
+            "credential_type": "pin_code",
+            "credential_data": "5678",
+            "credential_slot": 7,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    api.add_user.assert_not_called()
+    api.set_user.assert_called_once_with(
+        5,
+        SetUserOptions(
+            active=None,
+            user_type=None,
+            user_name=None,
+            credential_rule=None,
+        ),
+    )
+    api.set_credential.assert_called_once_with(
+        5, UserCredentialType.PIN_CODE, 7, "5678"
+    )
+    assert result == {entity_id: {"user_id": 5, "credential_slot": 7}}
+
+
+async def test_set_user_invalid_pin(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    lock_schlage_be469: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """set_user validates the credential before creating the user."""
     api = _mock_access_control(lock_schlage_be469)
 
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            "add_user",
+            "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469
@@ -444,7 +567,7 @@ async def test_add_user_invalid_pin(
     api.add_user.assert_not_called()
 
 
-async def test_add_user_without_credential(
+async def test_set_user_requires_credential_on_user_code_cc(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
@@ -452,49 +575,7 @@ async def test_add_user_without_credential(
     lock_schlage_be469: Node,
     integration: MockConfigEntry,
 ) -> None:
-    """Test add_user can create a user without a credential."""
-    api = _mock_access_control(lock_schlage_be469)
-    api.add_user.return_value = AddUserResult(user=SetUserResult.OK)
-    entity_id = _lock_entity_id(
-        entity_registry, device_registry, client, lock_schlage_be469
-    )
-
-    result = await hass.services.async_call(
-        DOMAIN,
-        "add_user",
-        {
-            ATTR_ENTITY_ID: entity_id,
-            "user_name": "Alice",
-            "user_type": "general",
-        },
-        blocking=True,
-        return_response=True,
-    )
-
-    api.set_user.assert_not_called()
-    api.set_credential.assert_not_called()
-    api.add_user.assert_called_once_with(
-        1,
-        SetUserOptions(
-            active=None,
-            user_type=UserCredentialUserType.GENERAL,
-            user_name="Alice",
-            credential_rule=None,
-        ),
-        None,
-    )
-    assert result == {entity_id: {"user_id": 1, "credential_slot": None}}
-
-
-async def test_add_user_requires_credential_on_user_code_cc(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    device_registry: dr.DeviceRegistry,
-    client: MagicMock,
-    lock_schlage_be469: Node,
-    integration: MockConfigEntry,
-) -> None:
-    """User Code CC locks reject adding a user without a credential."""
+    """User Code CC locks reject creating a user without a credential."""
     api = _mock_access_control(
         lock_schlage_be469, supports_users_without_credentials=False
     )
@@ -502,7 +583,7 @@ async def test_add_user_requires_credential_on_user_code_cc(
     with pytest.raises(HomeAssistantError) as exc:
         await hass.services.async_call(
             DOMAIN,
-            "add_user",
+            "set_user",
             {
                 ATTR_ENTITY_ID: _lock_entity_id(
                     entity_registry, device_registry, client, lock_schlage_be469

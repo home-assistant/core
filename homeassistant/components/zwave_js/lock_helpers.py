@@ -196,6 +196,8 @@ class SetUserReturn(TypedDict):
     """Return type for set_user."""
 
     user_id: int
+    # None unless a credential was written in the same call.
+    credential_slot: int | None
 
 
 class SetCredentialReturn(TypedDict):
@@ -203,17 +205,6 @@ class SetCredentialReturn(TypedDict):
 
     credential_slot: int
     user_id: int
-
-
-class AddUserReturn(TypedDict):
-    """Return type for add_user.
-
-    ``credential_slot`` is ``None`` when the user was created without a
-    credential.
-    """
-
-    user_id: int
-    credential_slot: int | None
 
 
 async def _validate_credential_data(
@@ -307,6 +298,28 @@ async def _async_find_available_credential_slot(
             },
         )
     return slot
+
+
+async def _async_resolve_credential_slot(
+    node: Node,
+    user_id: int,
+    credential_type: UserCredentialType,
+    type_cap: UserCredentialCapability,
+    credential_slot: int | None,
+) -> int:
+    """Resolve the slot a credential should be written to for a user."""
+    # An explicit slot is honored as-is.
+    if credential_slot is not None:
+        return credential_slot
+    # When the lock supports independent user and credentials, find the first
+    # available slot for the credential.
+    user_caps = await node.access_control.get_user_capabilities_cached()
+    if user_caps.supports_users_without_credentials:
+        return await _async_find_available_credential_slot(
+            node, credential_type, type_cap
+        )
+    # Otherwise the credential must live in the user's own slot.
+    return user_id
 
 
 # --- Business logic functions ---
@@ -407,18 +420,16 @@ async def async_set_user(
     user_type: UserCredentialUserType | None = None,
     credential_rule: UserCredentialRule | None = None,
     active: bool | None = None,
+    credential_slot: int | None = None,
+    credential_type: UserCredentialType | None = None,
+    credential_data: str | None = None,
 ) -> SetUserReturn:
-    """Create or update an access-control user. Returns the allocated user_id."""
-    supported = await node.access_control.is_supported()
-    if not supported:
+    """Create or update an access-control user, optionally with a credential."""
+    if not await node.access_control.is_supported():
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="access_control_not_supported",
         )
-
-    # Auto-find first available user slot
-    if user_id is None:
-        user_id = await _async_find_available_user_slot(node)
 
     options = SetUserOptions(
         active=active,
@@ -427,74 +438,68 @@ async def async_set_user(
         credential_rule=credential_rule,
     )
 
-    status = await node.access_control.set_user(user_id, options)
-    _raise_on_set_user_error(status)
-    return SetUserReturn(user_id=user_id)
-
-
-async def async_add_user(
-    node: Node,
-    user_id: int | None = None,
-    user_name: str | None = None,
-    user_type: UserCredentialUserType | None = None,
-    credential_rule: UserCredentialRule | None = None,
-    active: bool | None = None,
-    credential_type: UserCredentialType | None = None,
-    credential_data: str | None = None,
-) -> AddUserReturn:
-    """Create a new user, optionally writing a credential in the same call.
-
-    On devices that do not support users without a credential,
-    credential_type and credential_data are required.
-    """
-    supported = await node.access_control.is_supported()
-    if not supported:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="access_control_not_supported",
+    # No user_id => create a new user via addUser, which handles locks that require
+    # credentials to be created alongside their user.
+    if user_id is None:
+        return await _async_create_user(
+            node, options, credential_slot, credential_type, credential_data
         )
 
-    if user_id is None:
-        user_id = await _async_find_available_user_slot(node)
+    # A user_id => update the existing user via setUser, then write any
+    # credential separately (addUser only creates new users).
+    status = await node.access_control.set_user(user_id, options)
+    _raise_on_set_user_error(status)
 
-    user_caps = await node.access_control.get_user_capabilities_cached()
-
-    credential: AddUserCredential | None = None
-    credential_slot: int | None = None
+    resolved_slot: int | None = None
     if credential_type is not None and credential_data is not None:
         type_cap = await _validate_credential_data(
             node, credential_type, credential_data
         )
-        if user_caps.supports_users_without_credentials:
-            # Users and credentials are independent here, so the credential can
-            # go in any free slot of its type.
-            credential_slot = await _async_find_available_credential_slot(
-                node, credential_type, type_cap
-            )
-        else:
-            # Users and credentials share a slot (User Code CC), so the
-            # credential must be written to the user's own slot.
-            credential_slot = user_id
+        resolved_slot = await _async_resolve_credential_slot(
+            node, user_id, credential_type, type_cap, credential_slot
+        )
+        cred_status = await node.access_control.set_credential(
+            user_id, credential_type, resolved_slot, credential_data
+        )
+        _raise_on_set_credential_error(cred_status)
+
+    return SetUserReturn(user_id=user_id, credential_slot=resolved_slot)
+
+
+async def _async_create_user(
+    node: Node,
+    options: SetUserOptions,
+    credential_slot: int | None,
+    credential_type: UserCredentialType | None,
+    credential_data: str | None,
+) -> SetUserReturn:
+    """Create a new user via addUser, optionally bundling a credential."""
+    user_id = await _async_find_available_user_slot(node)
+
+    credential: AddUserCredential | None = None
+    resolved_slot: int | None = None
+    if credential_type is not None and credential_data is not None:
+        type_cap = await _validate_credential_data(
+            node, credential_type, credential_data
+        )
+        resolved_slot = await _async_resolve_credential_slot(
+            node, user_id, credential_type, type_cap, credential_slot
+        )
         credential = AddUserCredential(
             credential_type=credential_type,
-            credential_slot=credential_slot,
+            credential_slot=resolved_slot,
             data=credential_data,
         )
-    elif not user_caps.supports_users_without_credentials:
-        # On User Code CC a user cannot exist without its code, so zwave-js
-        # rejects addUser without a credential. Fail early with a clear error
-        # instead of letting the command fail downstream.
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="credential_required",
-        )
-
-    options = SetUserOptions(
-        active=active,
-        user_type=user_type,
-        user_name=user_name,
-        credential_rule=credential_rule,
-    )
+    else:
+        user_caps = await node.access_control.get_user_capabilities_cached()
+        if not user_caps.supports_users_without_credentials:
+            # On User Code CC a user cannot exist without its code, so zwave-js
+            # rejects addUser without a credential. Fail early with a clear
+            # error instead of letting the command fail downstream.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="credential_required",
+            )
 
     result = await node.access_control.add_user(user_id, options, credential)
     _raise_on_set_user_error(result.user)
@@ -502,11 +507,10 @@ async def async_add_user(
         result.credential is not None
         and result.credential is not SetCredentialResult.OK
     ):
-        # zwave-js's addUser is not atomic on User Credential CC: it creates the
-        # user first, so a failed credential write leaves a user with no
-        # credential. Roll the user back so the lock returns to its prior state
-        # before surfacing the credential error. On User Code CC the user and
-        # credential share a slot, so this partial failure cannot occur.
+        # addUser creates the user before writing the credential, so on User
+        # Credential CC a failed credential write leaves a credential-less user
+        # behind. Roll it back before surfacing the error. (On User Code CC the
+        # user and credential share a slot, so this cannot occur.)
         try:
             await node.access_control.delete_user(user_id)
         except FailedZWaveCommand:
@@ -516,7 +520,7 @@ async def async_add_user(
             )
         _raise_on_set_credential_error(result.credential)
 
-    return AddUserReturn(user_id=user_id, credential_slot=credential_slot)
+    return SetUserReturn(user_id=user_id, credential_slot=resolved_slot)
 
 
 async def async_delete_user(node: Node, user_id: int) -> None:

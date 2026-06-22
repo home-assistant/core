@@ -57,9 +57,6 @@
     }
   },
   "services": {
-    "add_user": {
-      "service": "mdi:account-key"
-    },
     "bulk_set_partial_config_parameters": {
       "service": "mdi:cogs"
     },
