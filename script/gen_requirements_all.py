@@ -645,7 +645,7 @@ def main(validate: bool, ci: bool) -> int:
         with tempfile.TemporaryDirectory() as tmp_dir:
             for lock_file, source_files in PIP_COMPILE_LOCK_FILES.items():
                 tmp_lock = str(Path(tmp_dir) / lock_file)
-                # The header contains the generated command, which we need to ignore when comparing the existing lock file with the generated one due the tempoary folder used for generation.
+                # The header contains the generated command, which we need to ignore when comparing the existing lock file with the generated one due to the temporary folder used for generation.
                 lock_content = [
                     f"{line}\n"
                     for line in Path(lock_file).read_text(encoding="utf-8").split("\n")
