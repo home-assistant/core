@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+from pyicloud.exceptions import PyiCloudFailedLoginException
 import pytest
 
 from homeassistant.components.icloud.account import IcloudAccount
@@ -165,3 +166,270 @@ async def test_setup_success_with_devices(
     assert account.owner_fullname == "user name"
     assert "johntravolta" in account.family_members_fullname
     assert account.family_members_fullname["johntravolta"] == "John TRAVOLTA"
+
+
+async def test_setup_requires_2fa_logs_warning_not_error(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test setup logs a warning (not error) when requires_2fa is True.
+
+    PyiCloudFailedLoginException is raised internally for the 2FA path; logging
+    'password no longer working' in that case would mislead the user.
+    """
+    account = _make_account(hass, mock_store)
+
+    service_instance = MagicMock()
+    service_instance.requires_2fa = True
+
+    with (
+        patch(
+            "homeassistant.components.icloud.account.PyiCloudService",
+            return_value=service_instance,
+        ),
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        account.setup()
+
+    mock_reauth.assert_called_once()
+    assert account.api is None
+    mock_logger.warning.assert_called_once()
+    mock_logger.error.assert_not_called()
+
+
+def _make_account(hass: HomeAssistant, mock_store: Mock) -> IcloudAccount:
+    """Build an IcloudAccount with mocked config entry."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN, data=MOCK_CONFIG, entry_id="test", unique_id=USERNAME
+    )
+    config_entry.add_to_hass(hass)
+    return IcloudAccount(
+        hass,
+        MOCK_CONFIG[CONF_USERNAME],
+        MOCK_CONFIG[CONF_PASSWORD],
+        mock_store,
+        MOCK_CONFIG[CONF_WITH_FAMILY],
+        MOCK_CONFIG[CONF_MAX_INTERVAL],
+        MOCK_CONFIG[CONF_GPS_ACCURACY_THRESHOLD],
+        config_entry,
+    )
+
+
+async def test_keep_alive_reschedules_when_setup_returns_api_none(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive reschedules at max interval when setup() returns with api None (2FA path).
+
+    Before this fix, keep_alive() would call setup() (because api was None), then return
+    early without calling _schedule_next_fetch(), permanently killing the polling loop.
+    """
+    account = _make_account(hass, mock_store)
+    # api starts as None, so keep_alive will call setup()
+
+    with (
+        patch.object(
+            account, "setup"
+        ),  # setup() leaves api as None (simulates 2FA path)
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.keep_alive()
+
+    mock_schedule.assert_called_once()
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
+
+
+async def test_keep_alive_does_not_reschedule_when_setup_detects_bad_password(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive stops polling when setup() detects a permanent credential failure.
+
+    Rescheduling every max_interval with bad credentials would spam the user with
+    reauth notifications. The _setup_credential_failure flag set by setup() prevents
+    keep_alive from rescheduling in this case.
+    """
+    account = _make_account(hass, mock_store)
+    account._setup_credential_failure = True
+
+    with (
+        patch.object(account, "setup"),
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.keep_alive()
+
+    mock_schedule.assert_not_called()
+    assert not account._setup_credential_failure
+
+
+async def test_keep_alive_reschedules_when_setup_raises(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive reschedules when setup() raises (e.g. transient Apple API outage).
+
+    ConfigEntryNotReady raised by setup() during a keep_alive cycle would propagate
+    uncaught and permanently kill the polling loop. The exception is now caught and
+    the next fetch is still scheduled at max interval.
+    """
+    account = _make_account(hass, mock_store)
+
+    with (
+        patch.object(
+            account, "setup", side_effect=ConfigEntryNotReady("Apple API unavailable")
+        ),
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.keep_alive()
+
+    mock_schedule.assert_called_once()
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
+
+
+async def test_keep_alive_clears_api_and_reschedules_when_setup_raises_after_partial_init(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive clears api and reschedules when setup() sets api then raises.
+
+    setup() can assign self.api (PyiCloudService) and then raise ConfigEntryNotReady
+    (e.g. PyiCloudServiceUnavailable during device fetch). Without clearing api in the
+    except block, keep_alive would proceed to authenticate() with a partially-initialized
+    api instead of taking the reschedule path.
+    """
+    account = _make_account(hass, mock_store)
+
+    def setup_sets_api_then_raises():
+        account.api = MagicMock()
+        raise ConfigEntryNotReady("Service unavailable")
+
+    with (
+        patch.object(account, "setup", side_effect=setup_sets_api_then_raises),
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.keep_alive()
+
+    assert account.api is None
+    mock_schedule.assert_called_once()
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
+
+
+async def test_keep_alive_auth_exception_reschedules(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive reschedules on transient auth error instead of dying permanently.
+
+    Before this fix, any exception from authenticate() propagated out of keep_alive()
+    without scheduling the next call, permanently killing the polling loop.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.authenticate.side_effect = Exception("Session expired")
+
+    with patch.object(account, "_schedule_next_fetch") as mock_schedule:
+        account.keep_alive()
+
+    mock_schedule.assert_called_once()
+    assert account.fetch_interval == 2
+
+
+async def test_keep_alive_failed_login_triggers_reauth(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive triggers reauth on PyiCloudFailedLoginException instead of retrying.
+
+    Permanent credential failures (bad password) must not be retried — the integration
+    should stop polling and prompt the user to re-enter credentials via reauth.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.requires_2fa = False
+    account.api.authenticate.side_effect = PyiCloudFailedLoginException("bad password")
+
+    with (
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        account.keep_alive()
+
+    mock_reauth.assert_called_once()
+    mock_schedule.assert_not_called()
+    assert account.api is None
+    mock_logger.error.assert_called_once()
+    mock_logger.warning.assert_not_called()
+
+
+async def test_keep_alive_failed_login_2fa_logs_warning_not_error(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive logs a warning (not error) when the failure is due to 2FA.
+
+    PyiCloudFailedLoginException is also raised for 2FA flows; logging 'password
+    no longer working' in that case would mislead the user.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.requires_2fa = True
+    account.api.authenticate.side_effect = PyiCloudFailedLoginException("2FA required")
+
+    with (
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+        patch("homeassistant.components.icloud.account._LOGGER") as mock_logger,
+    ):
+        account.keep_alive()
+
+    mock_reauth.assert_called_once()
+    mock_schedule.assert_called_once()
+    assert account.api is None
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
+    mock_logger.warning.assert_called_once()
+    mock_logger.error.assert_not_called()
+
+
+async def test_keep_alive_success_sends_locate_before_update(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test keep_alive sends an active locate push before updating devices."""
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.requires_2fa = False
+
+    with (
+        patch.object(account, "update_devices") as mock_update,
+        patch.object(account, "_schedule_next_fetch"),
+    ):
+        account.keep_alive()
+
+    account.api.devices.refresh.assert_called_once_with(locate=True)
+    mock_update.assert_called_once()
+
+
+async def test_update_devices_requires_2fa_reschedules(
+    hass: HomeAssistant,
+    mock_store: Mock,
+) -> None:
+    """Test update_devices reschedules the next poll even when requires_2fa is True.
+
+    Before this fix, the requires_2fa early return skipped _schedule_next_fetch(),
+    permanently killing the polling loop while waiting for re-authentication.
+    """
+    account = _make_account(hass, mock_store)
+    account.api = MagicMock()
+    account.api.requires_2fa = True
+
+    with (
+        patch.object(account, "_require_reauth") as mock_reauth,
+        patch.object(account, "_schedule_next_fetch") as mock_schedule,
+    ):
+        account.update_devices()
+
+    mock_reauth.assert_called_once()
+    mock_schedule.assert_called_once()
+    assert account.fetch_interval == MOCK_CONFIG[CONF_MAX_INTERVAL]
