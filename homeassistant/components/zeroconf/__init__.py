@@ -180,6 +180,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     def _async_adapters_changed() -> None:
         """Reconcile the zeroconf sockets when the network adapters change."""
         zc_args = _async_get_zc_args(hass)
+        # async_update_interfaces serializes concurrent calls and no-ops when
+        # the interface set is unchanged, so overlapping tasks are safe.
         hass.async_create_background_task(
             aio_zc.async_update_interfaces(
                 interfaces=zc_args["interfaces"],
