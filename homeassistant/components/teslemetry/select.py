@@ -82,7 +82,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.REAR_LEFT, level
         ),
-        supported_fn=lambda data: data.get("vehicle_config_rear_seat_heaters") != 0,
+        supported_fn=lambda data: bool(data.get("rear_seat_heaters")),
         streaming_listener=lambda x, y: x.listen_SeatHeaterRearLeft(y),
         entity_registry_enabled_default=False,
         options=[
@@ -97,7 +97,9 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.REAR_CENTER, level
         ),
-        supported_fn=lambda data: data.get("vehicle_config_rear_seat_heaters") != 0,
+        # Center is heated only on the full-bench configs (1, 3); value 2 is
+        # outboard-only rear heating (no center), seen on classic Model S.
+        supported_fn=lambda data: data.get("rear_seat_heaters") in (1, 3),
         streaming_listener=lambda x, y: x.listen_SeatHeaterRearCenter(y),
         entity_registry_enabled_default=False,
         options=[
@@ -112,7 +114,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.REAR_RIGHT, level
         ),
-        supported_fn=lambda data: data.get("vehicle_config_rear_seat_heaters") != 0,
+        supported_fn=lambda data: bool(data.get("rear_seat_heaters")),
         streaming_listener=lambda x, y: x.listen_SeatHeaterRearRight(y),
         entity_registry_enabled_default=False,
         options=[
@@ -127,7 +129,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.THIRD_LEFT, level
         ),
-        supported_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
+        # Heated third row only on Model X (value 3) that actually has a third
+        # row; some 5-seat Model X also report 3 but have no third row.
+        # third_row_seats is a string ("None" when absent), not a bool.
+        supported_fn=lambda data: (
+            data.get("rear_seat_heaters") == 3
+            and data.get("third_row_seats", "None") != "None"
+        ),
         entity_registry_enabled_default=False,
         options=[
             OFF,
@@ -141,7 +149,13 @@ VEHICLE_DESCRIPTIONS: tuple[TeslemetrySelectEntityDescription, ...] = (
         select_fn=lambda api, level: api.remote_seat_heater_request(
             Seat.THIRD_RIGHT, level
         ),
-        supported_fn=lambda self: self.get("vehicle_config_third_row_seats") != "None",
+        # Heated third row only on Model X (value 3) that actually has a third
+        # row; some 5-seat Model X also report 3 but have no third row.
+        # third_row_seats is a string ("None" when absent), not a bool.
+        supported_fn=lambda data: (
+            data.get("rear_seat_heaters") == 3
+            and data.get("third_row_seats", "None") != "None"
+        ),
         entity_registry_enabled_default=False,
         options=[
             OFF,
@@ -186,7 +200,11 @@ async def async_setup_entry(
                 )
                 for description in VEHICLE_DESCRIPTIONS
                 for vehicle in entry.runtime_data.vehicles
-                if description.supported_fn(vehicle.coordinator.data)
+                if description.supported_fn(
+                    entry.runtime_data.metadata_coordinator.data.get("vehicles", {})
+                    .get(vehicle.vin, {})
+                    .get("config", {})
+                )
             ),
             (
                 TeslemetryOperationSelectEntity(energysite, entry.runtime_data.scopes)
