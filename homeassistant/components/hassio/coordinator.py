@@ -100,7 +100,7 @@ class JobSubscription:
     and safe to call in the event loop.
     """
 
-    event_callback: Callable[[Job], Any]
+    event_callback: Callable[[Job], None]
     uuid: str | None = None
     name: str | None = None
     reference: str | None = None
@@ -205,7 +205,7 @@ class SupervisorJobsCoordinator(DataUpdateCoordinator[dict[UUID, Job]]):
         # We catch all errors to prevent an error in one from stopping the others
         for match in [job for job in self.current_jobs if subscription.matches(job)]:
             try:
-                return subscription.event_callback(match)
+                subscription.event_callback(match)
             except Exception as err:  # noqa: BLE001
                 _LOGGER.error(
                     "Error encountered processing Supervisor Job (%s %s %s) - %s",
