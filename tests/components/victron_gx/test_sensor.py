@@ -1,12 +1,20 @@
 """Tests for Victron GX MQTT sensors."""
 
+from unittest.mock import MagicMock
+
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.victron_gx.const import DOMAIN
+from homeassistant.components.victron_gx.sensor import VictronSensor
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_platform,
+    entity_registry as er,
+)
+from homeassistant.helpers.device_registry import DeviceInfo
 
 from .const import MOCK_INSTALLATION_ID
 
@@ -152,3 +160,166 @@ async def test_victron_main_topic_sensor(
     assert state.state == "mppt_active"
     # Entity uses device name only (no separate entity name)
     assert state.attributes["friendly_name"] == "Multi RS Solar"
+
+
+async def test_native_unit_of_measurement_with_device_class(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test native_unit_of_measurement returns unit for metrics with device class."""
+    victron_hub, mock_config_entry = init_integration
+
+    # Inject a current sensor (has device class)
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current",
+        '{"value": 10.5}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    # Get the battery current entity
+    entity = next(
+        (e for e in entities if e.entity_id == "sensor.battery_dc_bus_current"), None
+    )
+    assert entity is not None
+
+    # Get the actual entity object from the platform and call the property directly
+    platforms = entity_platform.async_get_platforms(hass, DOMAIN)
+    sensor_platform = next(p for p in platforms if p.domain == "sensor")
+    actual_entity = next(
+        (
+            e
+            for e in sensor_platform.entities.values()
+            if e.entity_id == entity.entity_id
+        ),
+        None,
+    )
+
+    assert actual_entity is not None
+    # CURRENT metric type has device class, so native_unit_of_measurement should return "A"
+    # This exercises the "or self._attr_device_class is not None" path
+    assert actual_entity.native_unit_of_measurement == "A"
+
+
+async def test_native_unit_of_measurement_special_unit(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test native_unit_of_measurement returns special units like %."""
+    victron_hub, mock_config_entry = init_integration
+
+    # Inject battery state of charge (percentage metric with % unit)
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Soc",
+        '{"value": 85}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    # Get any battery entity with % unit
+    entity = next(
+        (e for e in entities if e.unit_of_measurement == "%"),
+        None,
+    )
+    assert entity is not None
+
+    # Get the actual entity object from the platform and call the property directly
+    platforms = entity_platform.async_get_platforms(hass, DOMAIN)
+    sensor_platform = next(p for p in platforms if p.domain == "sensor")
+    actual_entity = next(
+        (
+            e
+            for e in sensor_platform.entities.values()
+            if e.entity_id == entity.entity_id
+        ),
+        None,
+    )
+
+    assert actual_entity is not None
+    # Even though this metric has a device class, the special unit "%" should still be returned
+    # This exercises the "unit_of_measurement in SPECIAL_NATIVE_UNITS" path (checked first in the condition)
+    assert actual_entity.native_unit_of_measurement == "%"
+
+
+async def test_native_unit_of_measurement_return_none(
+    hass: HomeAssistant,
+) -> None:
+    """Test native_unit_of_measurement returns None when no conditions are met."""
+    # Create mock device and metric without special conditions
+    mock_device = MagicMock()
+    mock_metric = MagicMock()
+    # Use a metric type without device class
+    mock_metric.metric_type = MagicMock()  # Not any known type
+    mock_metric.unit_of_measurement = "arbitrary_unit"  # Not in SPECIAL_NATIVE_UNITS
+    mock_metric.precision = 0
+    mock_metric.generic_short_id = "test_metric"
+    mock_metric.key_values = {}
+    mock_metric.main_topic = False
+    mock_metric.unique_id = "test_unique_id"
+
+    device_info = DeviceInfo(
+        identifiers={(DOMAIN, "test_device")},
+        manufacturer="Victron Energy",
+        model="Test",
+        name="Test Device",
+    )
+
+    # Create sensor entity
+    sensor = VictronSensor(mock_device, mock_metric, device_info, "installation_123")
+    sensor.hass = hass
+    # Ensure no device class is set
+    sensor._attr_device_class = None
+
+    # Assert that native_unit_of_measurement returns None (line 87)
+    assert sensor.native_unit_of_measurement is None
+
+
+async def test_native_unit_of_measurement_cost_metric(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test native_unit_of_measurement returns currency for COST metric type."""
+    victron_hub, mock_config_entry = init_integration
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/evcharger/0/Session/Cost",
+        '{"value": 12.34}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    entity = next(
+        e
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if e.translation_key == "evcharger_session_cost"
+    )
+
+    platforms = entity_platform.async_get_platforms(hass, DOMAIN)
+    sensor_platform = next(p for p in platforms if p.domain == "sensor")
+    actual_entity = next(
+        (
+            e
+            for e in sensor_platform.entities.values()
+            if e.entity_id == entity.entity_id
+        ),
+        None,
+    )
+
+    assert actual_entity is not None
+    assert actual_entity.native_unit_of_measurement == hass.config.currency
