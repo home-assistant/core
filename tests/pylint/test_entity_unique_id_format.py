@@ -50,28 +50,11 @@ def _parse(
 def _find_attr_value_node(
     root_node: nodes.Module, attr_name: str = "_attr_unique_id"
 ) -> nodes.NodeNG:
-    """Find the value AST node of the first class-body ``attr_name = ...`` assign."""
-    for class_node in root_node.nodes_of_class(nodes.ClassDef):
-        for item in class_node.body:
-            if (
-                isinstance(item, nodes.Assign)
-                and any(
-                    isinstance(t, nodes.AssignName) and t.name == attr_name
-                    for t in item.targets
-                )
-            ) or (
-                isinstance(item, nodes.AnnAssign)
-                and isinstance(item.target, nodes.AssignName)
-                and item.target.name == attr_name
-            ):
-                return item.value
-    raise AssertionError(f"no class-body assignment to {attr_name} found")
+    """Find the value AST node of the first assignment to *attr_name*.
 
-
-def _find_self_attr_value_node(
-    root_node: nodes.Module, attr_name: str = "_attr_unique_id"
-) -> nodes.NodeNG:
-    """Find the value AST node of the first `self.<attr> = ...` assignment."""
+    Matches both class-body ``attr_name = ...`` assignments and
+    ``self.attr_name = ...`` assignments at any depth.
+    """
     for assign in root_node.nodes_of_class((nodes.Assign, nodes.AnnAssign)):
         targets = (
             list(assign.targets)
@@ -79,6 +62,8 @@ def _find_self_attr_value_node(
             else [assign.target]
         )
         for target in targets:
+            if isinstance(target, nodes.AssignName) and target.name == attr_name:
+                return assign.value
             if (
                 isinstance(target, nodes.AssignAttr)
                 and target.attrname == attr_name
@@ -86,7 +71,7 @@ def _find_self_attr_value_node(
                 and target.expr.name == "self"
             ):
                 return assign.value
-    raise AssertionError(f"no self.{attr_name} assignment found")
+    raise AssertionError(f"no assignment to {attr_name} found")
 
 
 def _expect_redundant_domain(value_node: nodes.NodeNG, class_name: str) -> MessageTest:
@@ -103,7 +88,7 @@ def _expect_redundant_domain(value_node: nodes.NodeNG, class_name: str) -> Messa
 
 
 @pytest.mark.parametrize(
-    ("code", "in_method"),
+    "code",
     [
         pytest.param(
             """
@@ -113,7 +98,6 @@ from homeassistant.helpers.entity import Entity
 class MySensor(Entity):
     _attr_unique_id = DOMAIN
 """,
-            False,
             id="class_body_name_only",
         ),
         pytest.param(
@@ -125,7 +109,6 @@ class MySensor(Entity):
     def __init__(self, entry, key):
         self._attr_unique_id = f"{DOMAIN}_{entry.entry_id}_{key}"
 """,
-            True,
             id="self_assign_fstring_leading_domain",
         ),
         pytest.param(
@@ -137,7 +120,6 @@ class MySensor(Entity):
     def __init__(self, entry, key):
         self._attr_unique_id = f"{key}_{DOMAIN}_{entry.entry_id}"
 """,
-            True,
             id="self_assign_fstring_embedded_domain",
         ),
         pytest.param(
@@ -152,7 +134,6 @@ class MySensor(Entity):
         else:
             self._attr_unique_id = entry.entry_id
 """,
-            True,
             id="self_assign_inside_if_branch",
         ),
         pytest.param(
@@ -163,7 +144,6 @@ from homeassistant.helpers.entity import Entity
 class MySensor(Entity):
     _attr_unique_id: str = DOMAIN
 """,
-            False,
             id="class_body_annassign_name",
         ),
         pytest.param(
@@ -175,7 +155,6 @@ class MySensor(Entity):
     def __init__(self, host, port, key):
         self._attr_unique_id = "_".join([DOMAIN, host, str(port), key])
 """,
-            True,
             id="self_assign_name_buried_in_call_args",
         ),
         pytest.param(
@@ -187,7 +166,6 @@ class MySensor(Entity):
     async def async_added_to_hass(self):
         self._attr_unique_id = f"{DOMAIN}_{self._key}"
 """,
-            True,
             id="async_method_self_assign",
         ),
     ],
@@ -197,17 +175,12 @@ def test_redundant_domain_fires(
     checker: EntityUniqueIdFormatChecker,
     tmp_path: Path,
     code: str,
-    in_method: bool,
 ) -> None:
     """W7425 fires when _attr_unique_id references DOMAIN."""
     integration_dir = _make_integration(tmp_path)
 
     root_node = _parse(code, integration_dir)
-    value_node = (
-        _find_self_attr_value_node(root_node)
-        if in_method
-        else _find_attr_value_node(root_node)
-    )
+    value_node = _find_attr_value_node(root_node)
     walker = ASTWalker(linter)
     walker.add_checker(checker)
     with assert_adds_messages(linter, _expect_redundant_domain(value_node, "MySensor")):
@@ -666,7 +639,7 @@ class MyEntity(Entity):
         module_name=module_name,
         file_name=file_name,
     )
-    value_node = _find_self_attr_value_node(root_node)
+    value_node = _find_attr_value_node(root_node)
     walker = ASTWalker(linter)
     walker.add_checker(checker)
     with assert_adds_messages(linter, _expect_redundant_domain(value_node, "MyEntity")):
@@ -700,7 +673,7 @@ class MyConcreteSensor(MyBaseSensor):
 """,
         integration_dir,
     )
-    value_node = _find_self_attr_value_node(root_node)
+    value_node = _find_attr_value_node(root_node)
     walker = ASTWalker(linter)
     walker.add_checker(checker)
     with assert_adds_messages(
