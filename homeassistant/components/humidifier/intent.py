@@ -1,5 +1,7 @@
 """Intents for the humidifier integration."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE, STATE_OFF
@@ -37,6 +39,7 @@ class HumidityHandler(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass
@@ -92,6 +95,7 @@ class SetModeHandler(intent.IntentHandler):
     }
     platforms = {DOMAIN}
 
+    @override
     async def async_handle(self, intent_obj: intent.Intent) -> intent.IntentResponse:
         """Handle the hass intent."""
         hass = intent_obj.hass

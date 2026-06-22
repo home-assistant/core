@@ -1,5 +1,7 @@
 """The homee button platform."""
 
+from typing import override
+
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -85,6 +87,7 @@ class HomeeButton(HomeeEntity, ButtonEntity):
             self._attr_translation_key = f"{description.key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.async_set_homee_value(1)

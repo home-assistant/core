@@ -1,6 +1,7 @@
 """Home Assistant Connect ZBT-2 firmware update entity."""
 
 import logging
+from typing import override
 
 from universal_silabs_flasher.flasher import Zbt2Flasher
 
@@ -166,6 +167,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
                 source="homeassistant_connect_zbt2",
             )
 
+    @override
     def _update_attributes(self) -> None:
         """Recompute the attributes of the entity."""
         super()._update_attributes()
@@ -181,6 +183,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
         )
 
     @callback
+    @override
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
         """Handle updated firmware info being pushed by an integration."""
         self.hass.config_entries.async_update_entry(

@@ -1,7 +1,7 @@
 """Creates a switch entity for the mower."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aioautomower.model import MowerModes, StayOutZones, Zone
 
@@ -104,16 +104,19 @@ class AutomowerScheduleSwitchEntity(AutomowerControlEntity, SwitchEntity):
         self._attr_unique_id = f"{self.mower_id}_{self._attr_translation_key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return self.mower_attributes.mower.mode != MowerModes.HOME
 
     @handle_sending_exception
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.coordinator.api.commands.park_until_further_notice(self.mower_id)
 
     @handle_sending_exception
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.coordinator.api.commands.resume_schedule(self.mower_id)
@@ -152,16 +155,19 @@ class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         return self.stay_out_zones.zones[self.stay_out_zone_uid]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return self.stay_out_zone.enabled
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the device is available and the zones are not `dirty`."""
         return super().available and not self.stay_out_zones.dirty
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.switch_stay_out_zone(
@@ -169,6 +175,7 @@ class StayOutZoneSwitchEntity(AutomowerControlEntity, SwitchEntity):
         )
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.switch_stay_out_zone(
@@ -198,11 +205,13 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
             self._attr_name = self.work_area_attributes.name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the switch."""
         return self.work_area_attributes.enabled
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.coordinator.api.commands.workarea_settings(
@@ -210,6 +219,7 @@ class WorkAreaSwitchEntity(WorkAreaControlEntity, SwitchEntity):
         ).enabled(enabled=False)
 
     @handle_sending_exception(poll_after_sending=True)
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.coordinator.api.commands.workarea_settings(

@@ -7,6 +7,7 @@ characteristics that don't map to a Home Assistant feature.
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from aiohomekit.model.characteristics import Characteristic, CharacteristicsTypes
 
@@ -119,17 +120,20 @@ class HomeKitButton(BaseHomeKitButton):
         self.entity_description = description
         super().__init__(conn, info, char)
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return [self._char.type]
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         if name := self.accessory.name:
             return f"{name} {self.entity_description.name}"
         return f"{self.entity_description.name}"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         key = self.entity_description.key
@@ -140,11 +144,13 @@ class HomeKitButton(BaseHomeKitButton):
 class HomeKitEcobeeClearHoldButton(BaseHomeKitButton):
     """Representation of a Button control for Ecobee clear hold request."""
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         prefix = ""
@@ -152,6 +158,7 @@ class HomeKitEcobeeClearHoldButton(BaseHomeKitButton):
             prefix = name
         return f"{prefix} Clear Hold"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         key = self._char.type
@@ -171,11 +178,13 @@ class HomeKitProvisionPreferredThreadCredentials(BaseHomeKitButton):
 
     _attr_entity_category = EntityCategory.CONFIG
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity is tracking."""
         return []
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device if any."""
         prefix = ""
@@ -183,6 +192,7 @@ class HomeKitProvisionPreferredThreadCredentials(BaseHomeKitButton):
             prefix = name
         return f"{prefix} Provision Preferred Thread Credentials"
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._accessory.async_thread_provision()

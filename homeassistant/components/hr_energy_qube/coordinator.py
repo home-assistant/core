@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from python_qube_heatpump import QubeClient
 from python_qube_heatpump.models import QubeState
@@ -43,6 +43,7 @@ class QubeCoordinator(DataUpdateCoordinator[QubeData]):
             config_entry=entry,
         )
 
+    @override
     async def _async_update_data(self) -> QubeData:
         """Fetch data from the device."""
         try:

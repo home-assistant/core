@@ -5,7 +5,7 @@ from collections import defaultdict
 from collections.abc import Awaitable
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiohasupervisor import SupervisorError, SupervisorNotFoundError
 from aiohasupervisor.models import (
@@ -491,6 +491,7 @@ class HassioStatsDataUpdateCoordinator(DataUpdateCoordinator[HassioStatsData]):
             lambda: defaultdict(set)
         )
 
+    @override
     async def _async_update_data(self) -> HassioStatsData:
         """Update stats data via library."""
         try:
@@ -611,6 +612,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.supervisor_client = get_supervisor_client(hass)
         self.jobs = jobs
 
+    @override
     async def _async_update_data(self) -> HassioAddonData:
         """Update data via library."""
         is_first_update = not self.data
@@ -723,6 +725,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
 
         return _remove
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,
@@ -812,6 +815,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         ):
             self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
+    @override
     async def _async_update_data(self) -> HassioMainData:
         """Update data via library."""
         is_first_update = not self.data
@@ -915,6 +919,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
 
         return new_data
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,
@@ -941,6 +946,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             log_failures, raise_on_auth_failed, scheduled, raise_on_entry_error
         )
 
+    @override
     async def async_shutdown(self) -> None:
         """Shut down and clean up when config entry unloaded."""
         await super().async_shutdown()

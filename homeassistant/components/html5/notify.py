@@ -6,7 +6,7 @@ from http import HTTPStatus
 import json
 import logging
 import time
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 from urllib.parse import urlparse
 import uuid
 import warnings
@@ -452,6 +452,7 @@ class HTML5NotificationService(BaseNotificationService):
         )
 
     @property
+    @override
     def targets(self) -> dict[str, str]:
         """Return a dictionary of registered targets."""
         return {registration: registration for registration in self.registrations}
@@ -470,6 +471,7 @@ class HTML5NotificationService(BaseNotificationService):
 
         await self._push_message(payload, **kwargs)
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
 
@@ -616,6 +618,7 @@ class HTML5NotifyEntity(HTML5Entity, NotifyEntity):
     _attr_supported_features = NotifyEntityFeature.TITLE
     _key = "device"
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to a device via notify.send_message action."""
         await self._webpush(

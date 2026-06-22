@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Any, Final, TypedDict, final
+from typing import Any, Final, TypedDict, final, override
 
 import voluptuous as vol
 
@@ -153,6 +153,7 @@ class ImageProcessingEntity(Entity):
         return None
 
     @property
+    @override
     def device_class(self) -> ImageProcessingDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -203,6 +204,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
         self.total_faces = 0
 
     @property
+    @override
     def state(self) -> str | int | None:
         """Return the state of the entity."""
         confidence: float = 0
@@ -228,6 +230,7 @@ class ImageProcessingFaceEntity(ImageProcessingEntity):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {ATTR_FACES: self.faces, ATTR_TOTAL_FACES: self.total_faces}

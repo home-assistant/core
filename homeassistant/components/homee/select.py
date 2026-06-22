@@ -1,5 +1,7 @@
 """The Homee select platform."""
 
+from typing import override
+
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -69,10 +71,12 @@ class HomeeSelect(HomeeEntity, SelectEntity):
         self._attr_translation_key = description.key
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the current selected option."""
         return self.options[int(self._attribute.current_value)]
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.async_set_homee_value(self.options.index(option))

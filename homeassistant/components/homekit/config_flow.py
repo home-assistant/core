@@ -6,7 +6,7 @@ from operator import itemgetter
 import random
 import re
 import string
-from typing import Any, Final, TypedDict
+from typing import Any, Final, TypedDict, override
 
 import voluptuous as vol
 
@@ -208,6 +208,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self.hk_data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -358,6 +359,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:

@@ -8,7 +8,7 @@ import math
 import queue
 import threading
 import time
-from typing import Any
+from typing import Any, override
 
 from influxdb import InfluxDBClient, exceptions
 from influxdb_client import InfluxDBClient as InfluxDBClientV2
@@ -666,6 +666,7 @@ class InfluxThread(threading.Thread):
                         _LOGGER.error(err)
                     self.write_errors += len(json)
 
+    @override
     def run(self):
         """Process incoming events."""
         while not self._shutdown:

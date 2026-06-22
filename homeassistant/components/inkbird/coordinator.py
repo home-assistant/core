@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from inkbird_ble import INKBIRDBluetoothDeviceData, SensorUpdate
 
@@ -98,6 +98,7 @@ class INKBIRDActiveBluetoothProcessorCoordinator(
         await self._data.async_start(service_info, service_info.device)
         self._entry.async_on_unload(self._data.async_stop)
 
+    @override
     async def _async_poll_data(
         self, last_service_info: BluetoothServiceInfoBleak
     ) -> SensorUpdate:

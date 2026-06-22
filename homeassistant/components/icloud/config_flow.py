@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -162,6 +162,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_reload(entry.entry_id)
         return self.async_abort(reason="reauth_successful")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

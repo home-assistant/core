@@ -6,7 +6,7 @@ from contextlib import suppress
 import logging
 import os
 from pathlib import Path, PurePath
-from typing import Any, cast
+from typing import Any, cast, override
 from uuid import UUID
 
 from aiohasupervisor import SupervisorClient
@@ -161,6 +161,7 @@ class SupervisorBackupAgent(BackupAgent):
         self.name = self.unique_id = name
         self.location = location
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -177,6 +178,7 @@ class SupervisorBackupAgent(BackupAgent):
         except SupervisorNotFoundError as err:
             raise BackupNotFound(f"Backup {backup_id} not found") from err
 
+    @override
     async def async_upload_backup(
         self,
         *,
@@ -216,6 +218,7 @@ class SupervisorBackupAgent(BackupAgent):
             upload_options,
         )
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List backups."""
         backup_list = await self._client.backups.list()
@@ -227,6 +230,7 @@ class SupervisorBackupAgent(BackupAgent):
             result.append(_backup_details_to_agent_backup(details, self.location))
         return result
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,
@@ -241,6 +245,7 @@ class SupervisorBackupAgent(BackupAgent):
             raise BackupNotFound(f"Backup {backup_id} not found")
         return _backup_details_to_agent_backup(details, self.location)
 
+    @override
     async def async_delete_backup(self, backup_id: str, **kwargs: Any) -> None:
         """Remove a backup."""
         try:
@@ -262,6 +267,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         self._hass = hass
         self._client = get_supervisor_client(hass)
 
+    @override
     async def async_create_backup(
         self,
         *,
@@ -493,6 +499,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    @override
     async def async_receive_backup(
         self,
         *,
@@ -539,6 +546,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             release_stream=remove_backup,
         )
 
+    @override
     async def async_restore_backup(
         self,
         backup_id: str,
@@ -637,6 +645,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
         finally:
             unsub()
 
+    @override
     async def async_resume_restore_progress_after_restart(
         self,
         *,
@@ -699,6 +708,7 @@ class SupervisorBackupReaderWriter(BackupReaderWriter):
             _LOGGER.debug("Could not get restore job %s: %s", restore_job_id, err)
             unsub()
 
+    @override
     async def async_validate_config(self, *, config: BackupConfig) -> None:
         """Validate backup config.
 

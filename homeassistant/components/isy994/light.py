@@ -1,6 +1,6 @@
 """Support for ISY lights."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyisy.constants import ISY_VALUE_UNKNOWN
 from pyisy.helpers import NodeProperty
@@ -55,6 +55,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         self._restore_light_state = restore_light_state
 
     @property
+    @override
     def is_on(self) -> bool:
         """Get whether the ISY light is on."""
         if self._node.status == ISY_VALUE_UNKNOWN:
@@ -62,6 +63,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
         return int(self._node.status) != 0
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Get the brightness of the ISY light."""
         if self._node.status == ISY_VALUE_UNKNOWN:
@@ -71,6 +73,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             return round(cast(float, self._node.status) * 255.0 / 100.0)
         return int(self._node.status)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Send the turn off command to the ISY light device."""
         self._last_brightness = self.brightness
@@ -78,6 +81,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             _LOGGER.debug("Unable to turn off light")
 
     @callback
+    @override
     def async_on_update(self, event: NodeProperty) -> None:
         """Save brightness in the update event from the ISY Node."""
         if self._node.status not in (0, ISY_VALUE_UNKNOWN):
@@ -87,6 +91,7 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
                 self._last_brightness = self._node.status
         super().async_on_update(event)
 
+    @override
     async def async_turn_on(self, brightness: int | None = None, **kwargs: Any) -> None:
         """Send the turn on command to the ISY light device."""
         if self._restore_light_state and brightness is None and self._last_brightness:
@@ -98,12 +103,14 @@ class ISYLightEntity(ISYNodeEntity, LightEntity, RestoreEntity):
             _LOGGER.debug("Unable to turn on light")
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the light attributes."""
         attribs = super().extra_state_attributes
         attribs[ATTR_LAST_BRIGHTNESS] = self._last_brightness
         return attribs
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last_brightness on restart."""
         await super().async_added_to_hass()

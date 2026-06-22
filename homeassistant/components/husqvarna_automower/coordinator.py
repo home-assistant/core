@@ -68,6 +68,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._on_data_update()
         super().async_update_listeners()
 
+    @override
     async def _async_setup(self) -> None:
         """Initialize websocket connection and callbacks."""
         await self.api.connect()
@@ -85,6 +86,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
         self.api.register_ws_ready_callback(start_watchdog)
 
+    @override
     async def _async_update_data(self) -> MowerDictionary:
         """Poll data from the API."""
         try:
@@ -143,6 +145,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.async_set_updated_data(ws_data)
 
     @callback
+    @override
     def async_set_updated_data(self, data: MowerDictionary) -> None:
         """Override DataUpdateCoordinator to preserve fixed polling interval.
 

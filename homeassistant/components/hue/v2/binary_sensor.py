@@ -1,6 +1,7 @@
 """Support for Hue binary sensors."""
 
 from functools import partial
+from typing import override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.config import (
@@ -140,6 +141,7 @@ class HueMotionSensor(HueBaseEntity, BinarySensorEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.resource.enabled:
@@ -194,6 +196,7 @@ class HueMotionAwareSensor(HueMotionSensor):
     )
 
     @property
+    @override
     def name(self) -> str:
         """Return sensor name."""
         return self.controller.get_motion_area_configuration(self.resource.id).name
@@ -216,6 +219,7 @@ class HueMotionAwareSensor(HueMotionSensor):
             identifiers={(DOMAIN, self.hue_group.id)},
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added."""
         await super().async_added_to_hass()
@@ -239,11 +243,13 @@ class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         return self.resource.status == EntertainmentStatus.ACTIVE
 
     @property
+    @override
     def name(self) -> str:
         """Return sensor name."""
         return self.resource.metadata.name
@@ -263,6 +269,7 @@ class HueContactSensor(HueBaseEntity, BinarySensorEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.resource.enabled:
@@ -286,6 +293,7 @@ class HueTamperSensor(HueBaseEntity, BinarySensorEntity):
     )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the binary sensor is on."""
         if not self.resource.tamper_reports:

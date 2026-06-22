@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from energyflip.const import (
     SOURCE_TYPE_ELECTRICITY,
@@ -246,6 +247,7 @@ class EnergyFlipSensor(CoordinatorEntity[EnergyFlipUpdateCoordinator], SensorEnt
         )
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the sensor."""
         if (
@@ -257,6 +259,7 @@ class EnergyFlipSensor(CoordinatorEntity[EnergyFlipUpdateCoordinator], SensorEnt
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return bool(
