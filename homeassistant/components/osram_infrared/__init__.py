@@ -21,7 +21,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Unload a OSRAM IR config entry."""
+    """Unload an OSRAM IR config entry."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
