@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -107,10 +107,12 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._value_template = MqttValueTemplate(
@@ -141,17 +143,20 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self._attr_location_name = msg.payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
             CONF_STATE_TOPIC, self._tracker_message_received, {"_attr_location_name"}
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @callback
+    @override
     def _process_update_extra_state_attributes(
         self, extra_state_attributes: dict[str, Any]
     ) -> None:

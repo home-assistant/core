@@ -413,8 +413,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
-        sort_by=None,
         username=None,
+        sort_by=None,
     )
 
     # test simple play_media call with URI and enqueue specified
@@ -437,8 +437,8 @@ async def test_media_player_play_media_action(
         option=QueueOption.ADD,
         radio_mode=False,
         start_item=None,
-        sort_by=None,
         username=None,
+        sort_by=None,
     )
 
     # test basic play_media call with URL and radio mode specified
@@ -461,8 +461,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=True,
         start_item=None,
-        sort_by=None,
         username=None,
+        sort_by=None,
     )
 
     # test play_media call with media id and media type specified
@@ -490,8 +490,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
-        sort_by=None,
         username=None,
+        sort_by=None,
     )
 
     # test play_media call by name
@@ -524,8 +524,8 @@ async def test_media_player_play_media_action(
         option=None,
         radio_mode=False,
         start_item=None,
-        sort_by=None,
         username=None,
+        sort_by=None,
     )
 
     # test with username

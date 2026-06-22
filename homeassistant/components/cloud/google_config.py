@@ -3,7 +3,7 @@
 import asyncio
 from http import HTTPStatus
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from hass_nabucasa import Cloud
 from hass_nabucasa.google_report_state import ErrorResponse
@@ -146,6 +146,7 @@ class CloudGoogleConfig(AbstractConfig):
         self._sync_entities_lock = asyncio.Lock()
 
     @property
+    @override
     def enabled(self) -> bool:
         """Return if Google is enabled."""
         return (
@@ -155,24 +156,29 @@ class CloudGoogleConfig(AbstractConfig):
         )
 
     @property
+    @override
     def entity_config(self) -> dict[str, Any]:
         """Return entity config."""
         return self._config.get(CONF_ENTITY_CONFIG) or {}
 
     @property
+    @override
     def secure_devices_pin(self) -> str | None:
         """Return entity config."""
         return self._prefs.google_secure_devices_pin
 
     @property
+    @override
     def should_report_state(self) -> bool:
         """Return if states should be proactively reported."""
         return self.enabled and self._prefs.google_report_state
 
+    @override
     def get_local_webhook_id(self, agent_user_id: Any) -> str:
         """Return the webhook ID for actions for an agent user id via the local SDK."""
         return self._prefs.google_local_webhook_id
 
+    @override
     def get_local_user_id(self, webhook_id: Any) -> str:
         """Map webhook ID to a Home Assistant user ID.
 
@@ -211,6 +217,7 @@ class CloudGoogleConfig(AbstractConfig):
                     _2fa_disabled,
                 )
 
+    @override
     async def async_initialize(self) -> None:
         """Perform async initialization of config."""
         _LOGGER.debug("async_initialize")
@@ -275,6 +282,7 @@ class CloudGoogleConfig(AbstractConfig):
             )
         )
 
+    @override
     def should_expose(self, entity_id: str) -> bool:
         """If an entity should be exposed."""
         entity_filter: EntityFilter = self._config[CONF_FILTER]
@@ -322,10 +330,12 @@ class CloudGoogleConfig(AbstractConfig):
         """Return if we have a Agent User Id registered."""
         return len(self.async_get_agent_users()) > 0
 
+    @override
     def get_agent_user_id_from_context(self, context: Any) -> str:
         """Get agent user ID making request."""
         return self.agent_user_id
 
+    @override
     def get_agent_user_id_from_webhook(self, webhook_id: str) -> str | None:
         """Map webhook ID to a Google agent user ID.
 
@@ -342,6 +352,7 @@ class CloudGoogleConfig(AbstractConfig):
         entity_config = entity_configs.get(entity_id, {})
         return entity_config.get(PREF_DISABLE_2FA)
 
+    @override
     def should_2fa(self, state: State) -> bool:
         """If an entity should be checked for 2FA."""
         try:
@@ -353,6 +364,7 @@ class CloudGoogleConfig(AbstractConfig):
         assistant_options = settings.get(CLOUD_GOOGLE, {})
         return not assistant_options.get(PREF_DISABLE_2FA, DEFAULT_DISABLE_2FA)
 
+    @override
     async def async_report_state(
         self, message: Any, agent_user_id: str, event_id: str | None = None
     ) -> None:
@@ -362,6 +374,7 @@ class CloudGoogleConfig(AbstractConfig):
         except ErrorResponse as err:
             _LOGGER.warning("Error reporting state - %s: %s", err.code, err.message)
 
+    @override
     async def _async_request_sync_devices(self, agent_user_id: str) -> HTTPStatus | int:
         """Trigger a sync with Google."""
         if self._sync_entities_lock.locked():
@@ -371,6 +384,7 @@ class CloudGoogleConfig(AbstractConfig):
             resp = await self._cloud.google_report_state.request_sync()
             return resp.status
 
+    @override
     async def async_connect_agent_user(self, agent_user_id: str) -> None:
         """Add a synced and known agent_user_id.
 
@@ -378,6 +392,7 @@ class CloudGoogleConfig(AbstractConfig):
         """
         await self._prefs.async_update(google_connected=True)
 
+    @override
     async def async_disconnect_agent_user(self, agent_user_id: str) -> None:
         """Turn off report state and disable further state reporting.
 
@@ -389,6 +404,7 @@ class CloudGoogleConfig(AbstractConfig):
         await self._prefs.async_update(google_connected=False)
 
     @callback
+    @override
     def async_get_agent_users(self) -> tuple:
         """Return known agent users."""
         if (
