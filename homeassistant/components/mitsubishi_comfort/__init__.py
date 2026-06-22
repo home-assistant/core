@@ -140,10 +140,8 @@ async def async_setup_entry(
             ", ".join(sorted(no_credentials)),
         )
     if no_address:
-        # The cloud never returns a device's LAN IP. Surface the gap instead of
-        # leaving the user with silently missing entities: DHCP discovery adds
-        # devices on Home Assistant's own network, but devices on another
-        # subnet/VLAN need their IP entered in the integration options.
+        # Surface the gap rather than leaving entities silently missing; the
+        # message below tells the user how to resolve it.
         _LOGGER.warning(
             "No local IP address is known for %d of %d Mitsubishi Comfort device(s)"
             " (%s); they have no entities yet. Devices on Home Assistant's network"
