@@ -39,6 +39,7 @@ from homeassistant.helpers.trigger import (
     Trigger,
     TriggerActionRunner,
     TriggerConfig,
+    TriggerNotTriggeredReporter,
 )
 from homeassistant.helpers.typing import ConfigType
 
@@ -127,7 +128,9 @@ class LegacyZoneTrigger(Trigger):
         self._options = config.options
 
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Listen for state changes based on configuration."""
         entity_id: list[str] = self._options[CONF_ENTITY_ID]

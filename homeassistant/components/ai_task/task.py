@@ -6,7 +6,7 @@ import io
 import mimetypes
 from pathlib import Path
 import tempfile
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -259,6 +259,7 @@ class GenDataTask:
     llm_api: llm.API | None = None
     """API to provide to the LLM."""
 
+    @override
     def __str__(self) -> str:
         """Return task as a string."""
         return f"<GenDataTask {self.name}: {id(self)}>"
@@ -295,6 +296,7 @@ class GenImageTask:
     attachments: list[conversation.Attachment] | None = None
     """List of attachments to go along the instructions."""
 
+    @override
     def __str__(self) -> str:
         """Return task as a string."""
         return f"<GenImageTask {self.name}: {id(self)}>"
