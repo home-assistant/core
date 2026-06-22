@@ -1,12 +1,15 @@
 """Sensor for Steam account status."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import datetime
-from typing import cast, override
+from enum import StrEnum
+from typing import Any, cast, override
 
-from homeassistant.components.sensor import SensorEntity
+from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.typing import StateType, UndefinedType
 from homeassistant.util import dt as dt_util
 
 from .const import (
@@ -23,6 +26,32 @@ from .entity import SteamEntity
 PARALLEL_UPDATES = 1
 
 
+class SteamSensor(StrEnum):
+    """Steam sensors."""
+
+    ACCOUNT = "account"
+
+
+@dataclass(kw_only=True, frozen=True)
+class SteamSensorEntityDescription(SensorEntityDescription):
+    """Steam sensor description."""
+
+    value_fn: Callable[[dict[str, Any]], StateType]
+    name_fn: Callable[[dict[str, Any]], str] | None = None
+    entity_picture_fn: Callable[[dict[str, Any]], str] | None = None
+
+
+SENSOR_DESCRIPTIONS: tuple[SteamSensorEntityDescription, ...] = (
+    SteamSensorEntityDescription(
+        key=SteamSensor.ACCOUNT,
+        translation_key=SteamSensor.ACCOUNT,
+        value_fn=lambda x: STEAM_STATUSES[x["personastate"]],
+        name_fn=lambda x: x["personaname"],
+        entity_picture_fn=lambda x: x["avatarfull"],
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: SteamConfigEntry,
@@ -32,39 +61,58 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
 
     async_add_entities(
-        SteamSensor(coordinator, steamid)
+        SteamSensorEntity(coordinator, steamid, description)
         for steamid in entry.options[CONF_ACCOUNTS]
+        for description in SENSOR_DESCRIPTIONS
         if steamid in coordinator.data
     )
 
 
-class SteamSensor(SteamEntity, SensorEntity):
-    """A class for the Steam account."""
+class SteamSensorEntity(SteamEntity, SensorEntity):
+    """Representation of a Steam sensor entity."""
 
-    _attr_translation_key = "account"
     _attr_has_entity_name = True
+    entity_description: SteamSensorEntityDescription
 
-    def __init__(self, coordinator: SteamDataUpdateCoordinator, steamid: str) -> None:
+    def __init__(
+        self,
+        coordinator: SteamDataUpdateCoordinator,
+        steamid: str,
+        description: SteamSensorEntityDescription,
+    ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
         self._steamid = steamid
+        self.entity_description = description
         self._attr_unique_id = f"sensor.steam_{steamid}"
-        self._attr_name = str(coordinator.data[steamid]["personaname"])
-        self._attr_entity_picture = (
-            str(coordinator.data[steamid]["avatarmedium"]) or None
-        )
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
-        return STEAM_STATUSES[
-            cast(int, self.coordinator.data[self._steamid]["personastate"])
-        ]
+        return self.entity_description.value_fn(self.coordinator.data[self._steamid])
+
+    @property
+    def name(self) -> str | UndefinedType | None:
+        """Return the name of the entity."""
+        return (
+            fn(self.coordinator.data[self._steamid])
+            if (fn := self.entity_description.name_fn) is not None
+            else super().name
+        )
+
+    @property
+    def entity_picture(self) -> str | None:
+        """Return the entity picture to use in the frontend, if any."""
+        return (
+            fn(self.coordinator.data[self._steamid])
+            if (fn := self.entity_description.entity_picture_fn) is not None
+            else super().entity_picture
+        )
 
     @property
     @override
-    def extra_state_attributes(self) -> dict[str, str | int | datetime]:
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         player = self.coordinator.data[self._steamid]
 
@@ -97,5 +145,4 @@ class SteamSensor(SteamEntity, SensorEntity):
     @property
     def available(self) -> bool:
         """Return True if entity is available."""
-
         return super().available and self._steamid in self.coordinator.data

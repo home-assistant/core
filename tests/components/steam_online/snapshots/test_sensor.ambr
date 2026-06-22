@@ -31,7 +31,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'account',
+    'translation_key': <SteamSensor.ACCOUNT: 'account'>,
     'unique_id': 'sensor.steam_12345678901234567',
     'unit_of_measurement': None,
   })
@@ -40,7 +40,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by Steam',
+      'entity_picture': 'https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg',
       'friendly_name': 'Steam testaccount1',
+      'game': 'The Witcher: Enhanced Edition',
+      'game_id': '20900',
+      'game_image_header': 'https://steamcdn-a.akamaihd.net/steam/apps/20900/header.jpg',
+      'game_image_main': 'https://steamcdn-a.akamaihd.net/steam/apps/20900/capsule_616x353.jpg',
+      'last_online': datetime.datetime(2026, 4, 5, 10, 18, 7, tzinfo=zoneinfo.ZoneInfo(key='US/Pacific')),
       'level': 10,
     }),
     'context': <ANY>,
