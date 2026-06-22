@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot3, LitterRobot5, Robot
 from pylitterbot.sleep_schedule import DayOfWeek
@@ -124,17 +124,20 @@ class RobotSwitchEntity(LitterRobotEntity[_WhiskerEntityT], SwitchEntity):
     entity_description: RobotSwitchEntityDescription[_WhiskerEntityT]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if switch is on."""
         return self.entity_description.value_fn(self.robot)
 
     @whisker_command
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if not await self.entity_description.set_fn(self.robot, True):
             raise_update_failed(self.entity_id)
 
     @whisker_command
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         if not await self.entity_description.set_fn(self.robot, False):

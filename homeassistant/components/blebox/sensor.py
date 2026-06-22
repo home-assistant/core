@@ -4,6 +4,7 @@ from collections import Counter
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 import blebox_uniapi.sensor
 
@@ -24,6 +25,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
+    UnitOfReactiveEnergy,
     UnitOfReactivePower,
     UnitOfSpeed,
     UnitOfTemperature,
@@ -96,6 +98,20 @@ SENSOR_TYPES: tuple[BleBoxSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.ILLUMINANCE,
         native_unit_of_measurement=LIGHT_LUX,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    BleBoxSensorEntityDescription(
+        key="forwardReactiveEnergy",
+        translation_key="forward_reactive_energy",
+        device_class=SensorDeviceClass.REACTIVE_ENERGY,
+        native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+    ),
+    BleBoxSensorEntityDescription(
+        key="reverseReactiveEnergy",
+        translation_key="reverse_reactive_energy",
+        device_class=SensorDeviceClass.REACTIVE_ENERGY,
+        native_unit_of_measurement=UnitOfReactiveEnergy.KILO_VOLT_AMPERE_REACTIVE_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     BleBoxSensorEntityDescription(
         key="forwardActiveEnergy",
@@ -224,11 +240,13 @@ class BleBoxSensorEntity(BleBoxEntity[blebox_uniapi.sensor.BaseSensor], SensorEn
             self._attr_translation_placeholders = {"index": str(index)}
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self._feature.native_value)
 
     @property
+    @override
     def last_reset(self) -> datetime | None:
         """Return the time when the sensor was last reset, if implemented."""
         if self.state_class != SensorStateClass.TOTAL:

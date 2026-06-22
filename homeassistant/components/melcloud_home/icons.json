@@ -4,8 +4,28 @@
       "forced_hot_water": {
         "default": "mdi:water-boiler"
       },
+      "frost_protection": {
+        "default": "mdi:snowflake"
+      },
+      "overheat_protection": {
+        "default": "mdi:fire"
+      },
       "standby": {
         "default": "mdi:power-sleep"
+      }
+    },
+    "sensor": {
+      "room_temperature": {
+        "default": "mdi:home-thermometer"
+      },
+      "room_temperature_zone_1": {
+        "default": "mdi:home-thermometer"
+      },
+      "room_temperature_zone_2": {
+        "default": "mdi:home-thermometer"
+      },
+      "tank_water_temperature": {
+        "default": "mdi:water-thermometer"
       }
     }
   }

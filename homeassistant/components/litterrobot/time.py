@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime, time
 from functools import partial
-from typing import Any, Generic
+from typing import Any, Generic, override
 
 from pylitterbot import LitterRobot3, LitterRobot5, Robot
 from pylitterbot.sleep_schedule import DayOfWeek, SleepScheduleDay
@@ -145,11 +145,13 @@ class LitterRobotTimeEntity(LitterRobotEntity[_WhiskerEntityT], TimeEntity):
     entity_description: RobotTimeEntityDescription[_WhiskerEntityT]
 
     @property
+    @override
     def native_value(self) -> time | None:
         """Return the value reported by the time."""
         return self.entity_description.value_fn(self.robot)
 
     @whisker_command
+    @override
     async def async_set_value(self, value: time) -> None:
         """Update the current value."""
         if not await self.entity_description.set_fn(self.robot, value):

@@ -364,14 +364,14 @@ async def test_cover_entities_snapshot(
             TILT_ONLY_VENETIAN_BLIND,
             SERVICE_OPEN_COVER_TILT,
             "tiltPositive",
-            [1, 0],
+            [5, 0],
             CoverState.OPENING,
         ),
         (
             TILT_ONLY_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER_TILT,
             "tiltNegative",
-            [1, 0],
+            [5, 0],
             CoverState.CLOSING,
         ),
         (
@@ -387,14 +387,14 @@ async def test_cover_entities_snapshot(
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_OPEN_COVER_TILT,
             "tiltPositive",
-            [15, 1],
+            [5, 0],
             CoverState.OPENING,
         ),
         (
             UP_DOWN_VENETIAN_BLIND,
             SERVICE_CLOSE_COVER_TILT,
             "tiltNegative",
-            [15, 1],
+            [5, 0],
             CoverState.CLOSING,
         ),
         (
@@ -408,14 +408,14 @@ async def test_cover_entities_snapshot(
             UP_DOWN_SHEER_SCREEN,
             SERVICE_OPEN_COVER_TILT,
             "tiltPositive",
-            [15, 1],
+            [5, 0],
             CoverState.OPENING,
         ),
         (
             UP_DOWN_SHEER_SCREEN,
             SERVICE_CLOSE_COVER_TILT,
             "tiltNegative",
-            [15, 1],
+            [5, 0],
             CoverState.CLOSING,
         ),
         (
@@ -1315,20 +1315,17 @@ async def test_set_cover_position_and_tilt_unsupported_command_raises(
     handler still checks the atomic command and aborts cleanly if it is
     missing.
     """
-    await setup_overkiz_integration(fixture=DYNAMIC_EXTERIOR_VENETIAN_BLIND.fixture)
+    # DYNAMIC_VENETIAN_BLIND supports setClosure and setOrientation (so it passes
+    # the SET_POSITION | SET_TILT_POSITION required_features filter) but not the
+    # atomic setClosureAndOrientation command, exactly the case this guard handles.
+    await setup_overkiz_integration(fixture=DYNAMIC_VENETIAN_BLIND.fixture)
 
-    with (
-        patch(
-            "homeassistant.components.overkiz.executor.OverkizExecutor.has_command",
-            return_value=False,
-        ),
-        pytest.raises(ServiceValidationError),
-    ):
+    with pytest.raises(ServiceValidationError):
         await hass.services.async_call(
             DOMAIN,
             "set_cover_position_and_tilt",
             {
-                ATTR_ENTITY_ID: DYNAMIC_EXTERIOR_VENETIAN_BLIND.entity_id,
+                ATTR_ENTITY_ID: DYNAMIC_VENETIAN_BLIND.entity_id,
                 ATTR_POSITION: 50,
                 ATTR_TILT_POSITION: 50,
             },

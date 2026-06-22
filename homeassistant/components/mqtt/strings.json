@@ -184,17 +184,6 @@
           },
           "description": "Enter the MQTT device details:",
           "sections": {
-            "advanced_settings": {
-              "data": {
-                "hw_version": "Hardware version",
-                "sw_version": "Software version"
-              },
-              "data_description": {
-                "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
-                "sw_version": "The software version of the device. E.g. '2025.1.0'."
-              },
-              "name": "Advanced device settings"
-            },
             "mqtt_settings": {
               "data": {
                 "message_expiry_interval": "Message Expiry Interval",
@@ -205,6 +194,17 @@
                 "qos": "The Quality of Service value the device's entities should use."
               },
               "name": "MQTT settings"
+            },
+            "other_settings": {
+              "data": {
+                "hw_version": "Hardware version",
+                "sw_version": "Software version"
+              },
+              "data_description": {
+                "hw_version": "The hardware version of the device. E.g. 'v1.0 rev a'.",
+                "sw_version": "The software version of the device. E.g. '2025.1.0'."
+              },
+              "name": "Other device settings"
             }
           },
           "title": "Configure MQTT device details"
@@ -286,14 +286,14 @@
           },
           "description": "Please configure specific details for {platform} entity \"{entity}\":",
           "sections": {
-            "advanced_settings": {
+            "other_settings": {
               "data": {
                 "suggested_display_precision": "Suggested display precision"
               },
               "data_description": {
                 "suggested_display_precision": "The number of decimals which should be used in the {platform} entity state after rounding. [Learn more.]({url}#suggested_display_precision)"
               },
-              "name": "Advanced options"
+              "name": "Other settings"
             }
           },
           "title": "Configure MQTT device \"{mqtt_device}\""
@@ -438,29 +438,6 @@
           },
           "description": "Please configure MQTT specific details for {platform} entity \"{entity}\":",
           "sections": {
-            "advanced_settings": {
-              "data": {
-                "expire_after": "Expire after",
-                "flash": "Flash support",
-                "flash_time_long": "Flash time long",
-                "flash_time_short": "Flash time short",
-                "max_kelvin": "Max Kelvin",
-                "min_kelvin": "Min Kelvin",
-                "off_delay": "OFF delay",
-                "transition": "Transition support"
-              },
-              "data_description": {
-                "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. If not set, the sensor's state never expires. [Learn more.]({url}#expire_after)",
-                "flash": "Enable the flash feature for this light",
-                "flash_time_long": "The duration, in seconds, of a \"long\" flash.",
-                "flash_time_short": "The duration, in seconds, of a \"short\" flash.",
-                "max_kelvin": "The maximum color temperature in Kelvin.",
-                "min_kelvin": "The minimum color temperature in Kelvin.",
-                "off_delay": "For sensors that only send \"on\" state updates (like PIRs), this variable sets a delay in seconds after which the sensor’s state will be updated back to \"off\".",
-                "transition": "Enable the transition feature for this light"
-              },
-              "name": "Advanced settings"
-            },
             "alarm_control_panel_payload_settings": {
               "data": {
                 "payload_arm_away": "Payload \"arm away\"",
@@ -916,14 +893,37 @@
               },
               "name": "Lock payload settings"
             },
-            "siren_advanced_settings": {
+            "other_settings": {
+              "data": {
+                "expire_after": "Expire after",
+                "flash": "Flash support",
+                "flash_time_long": "Flash time long",
+                "flash_time_short": "Flash time short",
+                "max_kelvin": "Max Kelvin",
+                "min_kelvin": "Min Kelvin",
+                "off_delay": "OFF delay",
+                "transition": "Transition support"
+              },
+              "data_description": {
+                "expire_after": "If set, it defines the number of seconds after the sensor’s state expires, if it’s not updated. After expiry, the sensor’s state becomes unavailable. If not set, the sensor's state never expires. [Learn more.]({url}#expire_after)",
+                "flash": "Enable the flash feature for this light",
+                "flash_time_long": "The duration, in seconds, of a \"long\" flash.",
+                "flash_time_short": "The duration, in seconds, of a \"short\" flash.",
+                "max_kelvin": "The maximum color temperature in Kelvin.",
+                "min_kelvin": "The minimum color temperature in Kelvin.",
+                "off_delay": "For sensors that only send \"on\" state updates (like PIRs), this variable sets a delay in seconds after which the sensor’s state will be updated back to \"off\".",
+                "transition": "Enable the transition feature for this light"
+              },
+              "name": "Other settings"
+            },
+            "siren_other_settings": {
               "data": {
                 "command_off_template": "Command \"off\" template"
               },
               "data_description": {
                 "command_off_template": "The [template]({command_templating_url}) for \"off\" state changes. By default the \"[Command template]({url}#command_template)\" will be used.  [Learn more.]({url}#command_off_template)"
               },
-              "name": "Advanced siren settings"
+              "name": "Other siren settings"
             },
             "target_humidity_settings": {
               "data": {
@@ -985,7 +985,7 @@
               },
               "name": "Target temperature settings"
             },
-            "text_advanced_settings": {
+            "text_other_settings": {
               "data": {
                 "max": "Maximum length",
                 "min": "Minimum length",
@@ -998,7 +998,7 @@
                 "mode": "Mode of the text input",
                 "pattern": "A valid regex pattern"
               },
-              "name": "Advanced text entity settings"
+              "name": "Other text entity settings"
             },
             "valve_payload_settings": {
               "data": {

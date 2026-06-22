@@ -7,8 +7,10 @@ from typing import TYPE_CHECKING, Any
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
+    InternalServerError,
     InvalidToken,
     LoginRequired,
+    NotFound,
     OAuthExpired,
     RateLimited,
     TeslaFleetError,
@@ -35,6 +37,29 @@ VEHICLE_WAIT = timedelta(minutes=15)
 ENERGY_INTERVAL_SECONDS = 60
 ENERGY_INTERVAL = timedelta(seconds=ENERGY_INTERVAL_SECONDS)
 ENERGY_HISTORY_INTERVAL = timedelta(minutes=5)
+
+
+def _stale_site_info_error(err: BaseException | None) -> TeslaFleetError | None:
+    """Return the stale site_info error from an exception cause chain."""
+    while err is not None:
+        if isinstance(err, TeslaFleetError) and _is_stale_site_info_error(err):
+            return err
+        err = err.__cause__
+    return None
+
+
+def _is_stale_site_info_error(err: TeslaFleetError) -> bool:
+    """Return whether a Tesla API site_info error indicates a stale energy site."""
+    if isinstance(err, NotFound):
+        return True
+    if not isinstance(err, InternalServerError) or not isinstance(err.data, dict):
+        return False
+    return (
+        "response" in err.data
+        and err.data["response"] is None
+        and err.data.get("error") == "upstream internal error"
+    )
+
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -109,7 +134,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.api = api
         self.data = flatten(product)
         self.updated_once = False
-        self.last_active = datetime.now()
+        self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         self.endpoints = (
             ENDPOINTS
             if location
@@ -159,12 +184,12 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 or data["vehicle_state"].get("sentry_mode")
             ):
                 # Vehicle is active, reset timer
-                self.last_active = datetime.now()
+                self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
             else:
-                elapsed = datetime.now() - self.last_active
+                elapsed = datetime.now() - self.last_active  # pylint: disable=home-assistant-enforce-naive-now
                 if elapsed > timedelta(minutes=20):
                     # Vehicle didn't sleep, try again in 15 minutes
-                    self.last_active = datetime.now()
+                    self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
                 elif elapsed > timedelta(minutes=15):
                     # Let vehicle go to sleep now
                     self.update_interval = VEHICLE_WAIT
