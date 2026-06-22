@@ -1,6 +1,6 @@
 """Support for Atlantic Pass APC Heating Control."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -105,6 +105,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         if self.temperature_device is not None and (
@@ -117,6 +118,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         return OVERKIZ_TO_HVAC_MODE[
@@ -153,15 +155,18 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
             OverkizCommand.REFRESH_PASS_APC_HEATING_PROFILE
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         await self.async_set_heating_mode(HVAC_MODE_TO_OVERKIZ[hvac_mode])
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.async_set_heating_mode(PRESET_MODES_TO_OVERKIZ[preset_mode])
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         heating_mode = cast(
@@ -182,6 +187,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
         return OVERKIZ_TO_PRESET_MODES[heating_mode]
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return hvac target temperature."""
         current_heating_profile = self.current_heating_profile
@@ -196,6 +202,7 @@ class AtlanticPassAPCHeatingZone(OverkizEntity, ClimateEntity):
             float, self.device.states.get_value(OverkizState.CORE_TARGET_TEMPERATURE)
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]

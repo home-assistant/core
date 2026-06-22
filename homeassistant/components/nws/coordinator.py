@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiohttp
 from aiohttp import ClientResponseError
@@ -135,6 +135,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         await runtime_data.coordinator_forecast.async_refresh()
         await runtime_data.coordinator_forecast_hourly.async_refresh()
 
+    @override
     async def _async_update_data(self) -> None:
         """Update data via library."""
         if self._location_entity_id:

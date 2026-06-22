@@ -1,5 +1,7 @@
 """Platform for sensor integration."""
 
+from typing import override
+
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
@@ -143,6 +145,7 @@ class OndiloICO(CoordinatorEntity[OndiloIcoMeasuresCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Last value of the sensor."""
         return self.coordinator.data.sensors[self.entity_description.key]

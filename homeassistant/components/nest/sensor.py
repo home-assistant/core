@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+from typing import override
 
 from google_nest_sdm.device import Device
 from google_nest_sdm.device_traits import FanTrait, HumidityTrait, TemperatureTrait
@@ -67,10 +68,12 @@ class SensorBase(SensorEntity):
         self._attr_device_info = self._device_info.device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return the device availability."""
         return self._device_info.available
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
         self.async_on_remove(
@@ -90,6 +93,7 @@ class TemperatureSensor(SensorBase):
         self._attr_unique_id = f"{device.name}-temperature"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the state of the sensor."""
         trait: TemperatureTrait = self._device.traits[TemperatureTrait.NAME]
@@ -111,6 +115,7 @@ class HumiditySensor(SensorBase):
         self._attr_unique_id = f"{device.name}-humidity"
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the state of the sensor."""
         trait: HumidityTrait = self._device.traits[HumidityTrait.NAME]
@@ -131,6 +136,7 @@ class FanTimerSensor(SensorBase):
         self._attr_unique_id = f"{device.name}-fan-timer"
 
     @property
+    @override
     def native_value(self) -> datetime | None:
         """Return the state of the sensor."""
         trait: FanTrait = self._device.traits[FanTrait.NAME]

@@ -1,7 +1,7 @@
 """Support for Netatmo/Bubendorff fans."""
 
 import logging
-from typing import Final
+from typing import Final, override
 
 from pyatmo import modules as NaModules
 
@@ -67,11 +67,13 @@ class NetatmoFan(NetatmoModuleEntity, FanEntity):
             f"{self.device.entity_id}-{device_type_to_str(self.device_type)}"
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self.device.async_set_fan_speed(PRESET_MAPPING[preset_mode])
 
     @callback
+    @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
         if self.device.fan_speed is None:

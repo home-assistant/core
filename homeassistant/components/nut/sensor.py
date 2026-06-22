@@ -1,7 +1,7 @@
 """Provides a sensor to track various status aspects of a NUT device."""
 
 import logging
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -1136,6 +1136,7 @@ class NUTSensor(NUTBaseEntity, SensorEntity):
     """Representation of a sensor entity for NUT status values."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return entity state from NUT device."""
         status = self.coordinator.data

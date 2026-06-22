@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import ClientConnectorCertificateError, ClientError
 from pyoverkiz.auth.credentials import (
@@ -76,6 +76,7 @@ class OverkizConfigFlow(
     _rexel_oauth_data: dict[str, Any]
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
@@ -116,6 +117,7 @@ class OverkizConfigFlow(
 
         return user_input
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -334,6 +336,7 @@ class OverkizConfigFlow(
             errors=errors,
         )
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Resolve the gateway after a successful Rexel OAuth2 authorization."""
         self._rexel_oauth_data = data
@@ -411,6 +414,7 @@ class OverkizConfigFlow(
 
         return self.async_create_entry(title=gateway.label or "Rexel", data=data)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -422,6 +426,7 @@ class OverkizConfigFlow(
         LOGGER.debug("DHCP discovery detected gateway %s", obfuscate_id(gateway_id))
         return await self._process_discovery(gateway_id)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

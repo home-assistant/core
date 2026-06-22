@@ -1,5 +1,7 @@
 """The nuki component."""
 
+from typing import override
+
 from pynuki.device import NukiDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,6 +29,7 @@ class NukiEntity[_NukiDeviceT: NukiDevice](CoordinatorEntity[NukiCoordinator]):
         self._nuki_device = nuki_device
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Device info for Nuki entities."""
         return DeviceInfo(

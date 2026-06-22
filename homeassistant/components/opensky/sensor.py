@@ -1,5 +1,7 @@
 """Sensor for the Open Sky Network."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -57,6 +59,7 @@ class OpenSkySensor(CoordinatorEntity[OpenSkyDataUpdateCoordinator], SensorEntit
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the state of the sensor."""
         return self.coordinator.data

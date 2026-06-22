@@ -1,6 +1,6 @@
 """Support for Atlantic Pass APC DHW."""
 
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyoverkiz.enums import OverkizCommand, OverkizCommandParam, OverkizState
 
@@ -29,6 +29,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
     _attr_operation_list = [STATE_OFF, STATE_HEAT_PUMP, STATE_PERFORMANCE]
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature corresponding to the PRESET."""
         if self.is_boost_mode_on:
@@ -52,6 +53,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
             self.device.states.get_value(OverkizState.CORE_TARGET_DWH_TEMPERATURE),
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new temperature."""
         temperature = kwargs[ATTR_TEMPERATURE]
@@ -91,6 +93,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
         )
 
     @property
+    @override
     def is_away_mode_on(self) -> bool:
         """Return true if away mode is on."""
         return (
@@ -99,6 +102,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
         )
 
     @property
+    @override
     def current_operation(self) -> str:
         """Return current operation."""
         if self.is_boost_mode_on:
@@ -109,6 +113,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
             return STATE_OFF
         return STATE_HEAT_PUMP
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         boost_state = OverkizCommandParam.OFF
@@ -126,6 +131,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
             OverkizCommand.SET_DHW_ON_OFF_STATE, regular_state
         )
 
+    @override
     async def async_turn_away_mode_on(self) -> None:
         """Turn away mode on."""
         await self.executor.async_execute_command(
@@ -135,6 +141,7 @@ class AtlanticPassAPCDHW(OverkizEntity, WaterHeaterEntity):
             OverkizCommand.SET_DHW_ON_OFF_STATE, OverkizCommandParam.OFF
         )
 
+    @override
     async def async_turn_away_mode_off(self) -> None:
         """Turn away mode off."""
         await self.executor.async_execute_command(

@@ -1,7 +1,7 @@
 """Update entities for Netgear devices."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.update import (
     UpdateDeviceClass,
@@ -46,6 +46,7 @@ class NetgearUpdateEntity(
         self._attr_unique_id = f"{coordinator.router.serial_number}-update"
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version currently in use."""
         if self.coordinator.data is not None:
@@ -53,6 +54,7 @@ class NetgearUpdateEntity(
         return None
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if self.coordinator.data is not None:
@@ -64,12 +66,14 @@ class NetgearUpdateEntity(
         return self.installed_version
 
     @property
+    @override
     def release_summary(self) -> str | None:
         """Release summary."""
         if self.coordinator.data is not None:
             return self.coordinator.data.get("ReleaseNote")
         return None
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -77,5 +81,6 @@ class NetgearUpdateEntity(
         await self._router.async_update_new_firmware()
 
     @callback
+    @override
     def async_update_device(self) -> None:
         """Update the Netgear device."""
