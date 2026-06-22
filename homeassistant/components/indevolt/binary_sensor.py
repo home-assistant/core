@@ -1,7 +1,7 @@
 """Binary sensor platform for Indevolt integration."""
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from indevolt_api import IndevoltBattery, IndevoltGrid, IndevoltSystem
 
@@ -139,6 +139,7 @@ class IndevoltBinarySensorEntity(IndevoltEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return on/active state of the binary sensor."""
         raw_value = self.coordinator.data.get(self.entity_description.key)

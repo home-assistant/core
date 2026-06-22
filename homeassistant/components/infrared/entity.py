@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import final
+from typing import final, override
 
 from infrared_protocols.commands import Command as InfraredCommand
 from propcache.api import cached_property
@@ -51,6 +51,7 @@ class InfraredEmitterEntity(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         return self.__last_command_sent
@@ -66,6 +67,7 @@ class InfraredEmitterEntity(RestoreEntity):
         self.async_write_ha_state()
 
     @final
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the infrared entity is added to hass."""
         await super().async_internal_added_to_hass()
@@ -106,11 +108,13 @@ class InfraredReceiverEntity(RestoreEntity):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the entity state."""
         return self.__last_signal_received
 
     @final
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the infrared entity is added to hass."""
         await super().async_internal_added_to_hass()
