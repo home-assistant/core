@@ -9,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import BleBoxConfigEntry
+from .coordinator import BleBoxCoordinator
 from .entity import BleBoxEntity
 from .util import blebox_command
 
@@ -33,6 +34,16 @@ class BleBoxSwitchEntity(BleBoxEntity[blebox_uniapi.switch.Switch], SwitchEntity
     """Representation of a BleBox switch feature."""
 
     _attr_device_class = SwitchDeviceClass.SWITCH
+
+    _attr_name = None
+
+    def __init__(
+        self, coordinator: BleBoxCoordinator, feature: blebox_uniapi.switch.Switch
+    ) -> None:
+        """Initialize a BleBox switch feature."""
+        super().__init__(coordinator, feature)
+        if feature.name:
+            self._attr_name = feature.name
 
     @property
     def is_on(self) -> bool | None:

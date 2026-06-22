@@ -91,7 +91,7 @@ class ProtectSiren(SirenEntity):
     @callback
     def _update_from_siren(self, siren: Siren) -> None:
         """Refresh cached attributes from the siren object."""
-        self._attr_available = self.data.last_update_success
+        self._attr_available = self.data.last_public_update_success
         self._attr_is_on = siren.is_active
 
     @callback
