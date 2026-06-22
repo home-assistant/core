@@ -40,7 +40,6 @@ RUN \
     fi \
     && uv pip install \
         --no-build \
-        --require-hashes \
         -r homeassistant/requirements_all.lock
 
 ## Setup Home Assistant Core

@@ -575,11 +575,11 @@ def diff_file(filename: str, content: str) -> list[str]:
 
 
 def generate_lock_file(output_path: str, source_files: tuple[str, ...]) -> None:
-    """Resolve requirements_all.txt into a hash-pinned lock file.
+    """Resolve requirements_all.txt into a pinned lock file.
 
-    This shells out to `uv pip compile --generate-hashes`, which performs a
-    full networked dependency resolution, so callers should only invoke it
-    when requirements/dependencies have changed.
+    This shells out to `uv pip compile`, which performs a full networked
+    dependency resolution, so callers should only invoke it when
+    requirements/dependencies have changed.
 
     uv records its invocation in the lock file header, which lets Renovate's
     pip-compile manager parse and re-run it to refresh the lock file when it
@@ -590,7 +590,6 @@ def generate_lock_file(output_path: str, source_files: tuple[str, ...]) -> None:
             "uv",
             "pip",
             "compile",
-            "--generate-hashes",
             "--quiet",
             "--universal",
             "--output-file",
