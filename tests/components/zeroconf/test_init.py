@@ -14,7 +14,7 @@ from zeroconf.asyncio import AsyncServiceInfo
 
 from homeassistant import config_entries
 from homeassistant.components import zeroconf
-from homeassistant.components.network.const import SIGNAL_NETWORK_ADAPTERS_CHANGED
+from homeassistant.components.network import SIGNAL_NETWORK_ADAPTERS_CHANGED
 from homeassistant.components.zeroconf import discovery
 from homeassistant.const import (
     EVENT_COMPONENT_LOADED,
