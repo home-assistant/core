@@ -7,7 +7,8 @@ from typing import Any
 
 from yarl import URL
 
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, State, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 
 from .const import DOMAIN
@@ -77,6 +78,10 @@ class AbstractConfig(ABC):
     @abstractmethod
     def user_identifier(self) -> str:
         """Return an identifier for the user that represents this config."""
+
+    @abstractmethod
+    def get_entity_name(self, entry: er.RegistryEntry | None, state: State) -> str:
+        """Return the friendly name for an entity."""
 
     async def async_enable_proactive_mode(self) -> None:
         """Enable proactive mode."""

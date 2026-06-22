@@ -1587,7 +1587,7 @@ async def test_get_alexa_entity(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] is None
+    assert response["result"] == {"name": None}
 
     # Test getting an unknown sensor
     await client.send_json_auto_id(
@@ -1614,7 +1614,7 @@ async def test_get_alexa_entity(
     response = await client.receive_json()
 
     assert response["success"]
-    assert response["result"] is None
+    assert response["result"] == {"name": None}
 
     await client.send_json_auto_id(
         {"type": "cloud/alexa/entities/get", "entity_id": "water_heater.basement"}
