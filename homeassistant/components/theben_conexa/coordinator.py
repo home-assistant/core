@@ -24,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 type ThebenConfigEntry = ConfigEntry[SmgwSensorCoordinator]
 
 
-class SmgwSensorCoordinator(DataUpdateCoordinator):
+class SmgwSensorCoordinator(DataUpdateCoordinator[dict[str, ConexaSMGW.MeterValue]]):
     """The data update coordinator for the Theben Conexa Smartmeter gateway integration."""
 
     _api: ConexaSMGW
@@ -43,7 +43,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
         )
         self._scheduled_updates: CALLBACK_TYPE | None = None
         self._unscheduled_updates: CALLBACK_TYPE | None = None
-        self.retries = 0
+        self._retries = 0
 
     async def async_init(self) -> None:
         """Asynchronous Initialization and registering the update schedule."""
@@ -76,7 +76,7 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
             second=40,
         )
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, ConexaSMGW.MeterValue]:
         """Fetch data from API endpoint."""
         # If data is None, this is the first refresh cycle
         is_first_update = self.data is None
@@ -98,9 +98,9 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
             age = (now_utc - meter_datetime).total_seconds()
             _LOGGER.debug("Data age in seconds: %s", age)
 
-            if age < MAX_MEASUREMENT_AGE:
-                self.retries = 0
-            elif self.retries < MAX_RETRIES:
+            if age <= MAX_MEASUREMENT_AGE:
+                self._retries = 0
+            elif self._retries < MAX_RETRIES:
                 _LOGGER.debug(
                     "Data is quite old (age: %s seconds). Likely because the SMGW was busy, retrying in 60 seconds",
                     age,
@@ -110,12 +110,12 @@ class SmgwSensorCoordinator(DataUpdateCoordinator):
                     self._unscheduled_update,
                     dt_util.utcnow() + timedelta(seconds=60),
                 )
-                self.retries += 1
+                self._retries += 1
             else:
                 _LOGGER.debug(
                     "Giving up on retrying, next update will be according to schedule"
                 )
-                self.retries = 0
+                self._retries = 0
 
         return vals
 

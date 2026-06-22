@@ -27,10 +27,10 @@
   "entity": {
     "sensor": {
       "power_consumed": {
-        "name": "Total Power Consumed"
+        "name": "Total power consumed"
       },
       "power_supplied": {
-        "name": "Total Power Supplied"
+        "name": "Total power supplied"
       }
     }
   }

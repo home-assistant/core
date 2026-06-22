@@ -1,7 +1,5 @@
 """The Theben Conexa Smartmeter gateway integration."""
 
-import logging
-
 import aiohttp
 from theben_conexa_smgw import checkNetworkConnection
 
@@ -10,8 +8,6 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 
 from .coordinator import SmgwSensorCoordinator, ThebenConfigEntry
-
-_LOGGER = logging.getLogger(__name__)
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
