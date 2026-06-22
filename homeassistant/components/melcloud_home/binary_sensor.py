@@ -93,6 +93,21 @@ ATW_SENSORS: tuple[ATWBinarySensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     ATWBinarySensorEntityDescription(
+        key="frost_protection",
+        translation_key="frost_protection",
+        state_fn=lambda unit: (
+            unit.frost_protection.enabled if unit.frost_protection else None
+        ),
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ATWBinarySensorEntityDescription(
+        key="overheat_protection",
+        translation_key="overheat_protection",
+        state_fn=lambda unit: (
+            unit.overheat_protection.enabled if unit.overheat_protection else None
+        ),
+    ),
+    ATWBinarySensorEntityDescription(
         key="holiday_mode",
         translation_key="holiday_mode",
         state_fn=lambda unit: unit.holiday_mode.enabled if unit.holiday_mode else None,
