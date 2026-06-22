@@ -758,6 +758,10 @@
       "description": "The camera entity `{entity_id}` used plain RTSP, which is no longer available now that streams come from the UniFi Protect public API (RTSPS only). It has been removed; use `{replacement}` instead.\n\nUpdate the following automations and scripts:\n{items}",
       "title": "Insecure camera entity removed"
     },
+    "package_binary_sensor_removed": {
+      "description": "The binary sensor `{entity_id}` for package detection has been removed. Package detection is a momentary smart-detect event, so it is now provided by the package event entity instead.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Package binary sensor removed"
+    },
     "rtsp_disabled": {
       "fix_flow": {
         "step": {
