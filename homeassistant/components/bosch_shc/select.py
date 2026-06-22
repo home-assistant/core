@@ -140,7 +140,7 @@ _SMART_SENSITIVITY_OPTIONS = [
 ]
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type dispatch
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -372,8 +372,8 @@ class MotionSensitivitySelect(SHCEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the motion sensitivity."""
-        MotionSensitivity = PirSensorConfigurationService.MotionSensitivity
-        await self._device.async_set_motion_sensitivity(MotionSensitivity[option])
+        motion_sensitivity = PirSensorConfigurationService.MotionSensitivity
+        await self._device.async_set_motion_sensitivity(motion_sensitivity[option])
 
 
 class OrientationLightResponseSelect(SHCEntity, SelectEntity):
@@ -402,12 +402,13 @@ class OrientationLightResponseSelect(SHCEntity, SelectEntity):
             val = self._device.long_poll_interval
             if val is None or val.name not in self._attr_options:
                 return None
-            return val.name
         except (AttributeError, ValueError) as err:
             LOGGER.warning(
                 "Unknown long_poll_interval for %s: %s", self._device.name, err
             )
             return None
+        else:
+            return val.name
 
     async def async_select_option(self, option: str) -> None:
         """Set the orientation-light response time (poll interval)."""
@@ -442,8 +443,8 @@ class VibrationSensitivitySelect(SHCEntity, SelectEntity):
 
     async def async_select_option(self, option: str) -> None:
         """Set the vibration sensitivity."""
-        SensitivityState = VibrationSensorService.SensitivityState
-        await self._device.async_set_sensitivity(SensitivityState[option])
+        sensitivity_state = VibrationSensorService.SensitivityState
+        await self._device.async_set_sensitivity(sensitivity_state[option])
 
 
 class StateAfterPowerOutageSelect(SHCEntity, SelectEntity):
@@ -470,18 +471,19 @@ class StateAfterPowerOutageSelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning(
                 "Unknown state_after_power_outage for %s: %s", self._device.name, err
             )
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the state-after-power-outage."""
-        StateAfterPowerOutage = PowerSwitchConfigurationService.StateAfterPowerOutage
+        state_after_power_outage = PowerSwitchConfigurationService.StateAfterPowerOutage
         await self._device.async_set_state_after_power_outage(
-            StateAfterPowerOutage[option]
+            state_after_power_outage[option]
         )
 
 
@@ -507,17 +509,18 @@ class SmokeSensitivitySelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning(
                 "Unknown smoke_sensitivity for %s: %s", self._device.name, err
             )
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the smoke sensitivity level."""
-        SmokeSensitivityLevel = SmokeSensitivityService.SmokeSensitivityLevel
-        await self._device.async_set_smoke_sensitivity(SmokeSensitivityLevel[option])
+        smoke_sensitivity_level = SmokeSensitivityService.SmokeSensitivityLevel
+        await self._device.async_set_smoke_sensitivity(smoke_sensitivity_level[option])
 
 
 class DisplayDirectionSelect(SHCEntity, SelectEntity):
@@ -542,17 +545,18 @@ class DisplayDirectionSelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning(
                 "Unknown display_direction for %s: %s", self._device.name, err
             )
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the display direction."""
-        Direction = DisplayDirection.Direction
-        await self._device.async_set_display_direction(Direction[option])
+        direction = DisplayDirection.Direction
+        await self._device.async_set_display_direction(direction[option])
 
 
 class DisplayedTemperatureSelect(SHCEntity, SelectEntity):
@@ -579,17 +583,20 @@ class DisplayedTemperatureSelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning(
                 "Unknown displayed_temperature for %s: %s", self._device.name, err
             )
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the displayed-temperature type."""
-        DisplayedTemperature = DisplayedTemperatureConfiguration.DisplayedTemperature
-        await self._device.async_set_displayed_temperature(DisplayedTemperature[option])
+        displayed_temperature = DisplayedTemperatureConfiguration.DisplayedTemperature
+        await self._device.async_set_displayed_temperature(
+            displayed_temperature[option]
+        )
 
 
 class TerminalTypeSelect(SHCEntity, SelectEntity):
@@ -614,15 +621,16 @@ class TerminalTypeSelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning("Unknown terminal_type for %s: %s", self._device.name, err)
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the terminal type."""
-        Type = TerminalConfiguration.Type
-        await self._device.async_set_terminal_type(Type[option])
+        terminal_type = TerminalConfiguration.Type
+        await self._device.async_set_terminal_type(terminal_type[option])
 
 
 class ValveTypeSelect(SHCEntity, SelectEntity):
@@ -647,15 +655,16 @@ class ValveTypeSelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning("Unknown valve_type for %s: %s", self._device.name, err)
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the valve type."""
-        ValveType = WallThermostatConfiguration.ValveType
-        await self._device.async_set_valve_type(ValveType[option])
+        valve_type = WallThermostatConfiguration.ValveType
+        await self._device.async_set_valve_type(valve_type[option])
 
 
 class HeaterTypeSelect(SHCEntity, SelectEntity):
@@ -680,15 +689,16 @@ class HeaterTypeSelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning("Unknown heater_type for %s: %s", self._device.name, err)
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the heater type."""
-        HeaterType = WallThermostatConfiguration.HeaterType
-        await self._device.async_set_heater_type(HeaterType[option])
+        heater_type = WallThermostatConfiguration.HeaterType
+        await self._device.async_set_heater_type(heater_type[option])
 
 
 class SwitchTypeSelect(SHCEntity, SelectEntity):
@@ -713,15 +723,16 @@ class SwitchTypeSelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning("Unknown switch_type for %s: %s", self._device.name, err)
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the switch type."""
-        SwitchType = SwitchConfiguration.SwitchType
-        await self._device.async_set_switch_type(SwitchType[option])
+        switch_type = SwitchConfiguration.SwitchType
+        await self._device.async_set_switch_type(switch_type[option])
 
 
 class ActuatorTypeSelect(SHCEntity, SelectEntity):
@@ -746,15 +757,16 @@ class ActuatorTypeSelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning("Unknown actuator_type for %s: %s", self._device.name, err)
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the actuator type."""
-        ActuatorType = SwitchConfiguration.ActuatorType
-        await self._device.async_set_actuator_type(ActuatorType[option])
+        actuator_type = SwitchConfiguration.ActuatorType
+        await self._device.async_set_actuator_type(actuator_type[option])
 
 
 class OutputModeSelect(SHCEntity, SelectEntity):
@@ -779,15 +791,16 @@ class OutputModeSelect(SHCEntity, SelectEntity):
             name = val.name
             if name not in self._attr_options:
                 return None
-            return name
         except (AttributeError, ValueError) as err:
             LOGGER.warning("Unknown output_mode for %s: %s", self._device.name, err)
             return None
+        else:
+            return name
 
     async def async_select_option(self, option: str) -> None:
         """Set the output mode."""
-        OutputMode = SwitchConfiguration.OutputMode
-        await self._device.async_set_output_mode(OutputMode[option])
+        output_mode = SwitchConfiguration.OutputMode
+        await self._device.async_set_output_mode(output_mode[option])
 
 
 class SmartSensitivitySecurityLevelSelect(SHCEntity, SelectEntity):

@@ -1,5 +1,6 @@
 """Platform for switch integration."""
 
+import contextlib
 from dataclasses import dataclass
 import logging
 
@@ -324,7 +325,7 @@ SWITCH_TYPES: dict[str, SHCSwitchEntityDescription] = {
 }
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type dispatch
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -860,10 +861,8 @@ async def async_setup_entry(
     session.subscribe(_uds_subscriber)
 
     def _unsubscribe_uds():
-        try:
-            session._subscribers.remove(_uds_subscriber)
-        except ValueError:
-            pass
+        with contextlib.suppress(ValueError):
+            session._subscribers.remove(_uds_subscriber)  # noqa: SLF001  # accessing lib-internal subscriber list for cleanup
 
     config_entry.async_on_unload(_unsubscribe_uds)
 

@@ -98,7 +98,7 @@ def _flatten_sections(user_input: dict[str, Any]) -> dict[str, Any]:
     flat: dict[str, Any] = {}
     seen_section_keys: set[str] = set()
 
-    for section_key, _fields in OPTIONS_SECTIONS.items():
+    for section_key in OPTIONS_SECTIONS:
         seen_section_keys.add(section_key)
         sec_payload = user_input.get(section_key)
         if sec_payload is None or not isinstance(sec_payload, dict):
@@ -219,7 +219,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 info = await self._get_info(new_host)
             except SHCConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001  # broad catch intentional: unknown errors map to "unknown"
                 LOGGER.exception("Unexpected exception during reconfigure_host")
                 errors["base"] = "unknown"
             else:
@@ -267,7 +267,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SHCRegistrationError as err:
                 LOGGER.warning("Registration error: %s", err.message)
                 errors["base"] = "pairing_failed"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001  # broad catch intentional: unknown errors map to "unknown"
                 LOGGER.exception("Unexpected exception during repair_credentials")
                 errors["base"] = "unknown"
             else:
@@ -318,7 +318,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self.info = info = await self._get_info(host)
             except SHCConnectionError:
                 errors["base"] = "cannot_connect"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001  # broad catch intentional: unknown errors map to "unknown"
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -354,7 +354,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             except SHCRegistrationError as err:
                 LOGGER.warning("Registration error: %s", err.message)
                 errors["base"] = "pairing_failed"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:  # noqa: BLE001  # broad catch intentional: unknown errors map to "unknown"
                 LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
@@ -483,7 +483,7 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithReload):
                 room_options = [
                     {"value": rid, "label": name} for rid, name in rooms.items()
                 ]
-        except Exception:  # never break the options flow if session is unavailable
+        except Exception:  # noqa: BLE001  # never break the options flow if session is unavailable
             LOGGER.debug("Could not build device/room filter options", exc_info=True)
 
         schema = vol.Schema(

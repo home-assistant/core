@@ -206,7 +206,7 @@ class ImpulseLengthNumber(SHCEntity, NumberEntity):
 
     The lib stores impulse_length in tenths of seconds (integer units of 100 ms).
     We expose it in seconds for a user-friendly display.
-    Range 1–60 s (lib range: 10–600 tenths). Step 0.1 s.
+    Range 1-60 s (lib range: 10-600 tenths). Step 0.1 s.
     """
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -248,7 +248,7 @@ class HeatingCircuitSetpointNumber(SHCEntity, NumberEntity):
     """NumberEntity for HeatingCircuit eco/comfort setpoint temperatures.
 
     The HeatingCircuitService exposes setpoint_temperature_eco and
-    setpoint_temperature_comfort as read/write float properties. Range 5–30 °C,
+    setpoint_temperature_comfort as read/write float properties. Range 5-30 °C,
     step 0.5 °C (Bosch app convention).
     """
 
@@ -323,7 +323,7 @@ class PowerThresholdNumber(SHCEntity, NumberEntity):
     """NumberEntity for the energy-saving power threshold of a smart plug.
 
     When the plug draws less than this value for enterDurationSeconds, energy
-    saving mode turns the outlet off.  Watt range 0–3680 W (16 A socket), step 1 W.
+    saving mode turns the outlet off.  Watt range 0-3680 W (16 A socket), step 1 W.
     """
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -362,7 +362,7 @@ class EnterDurationNumber(SHCEntity, NumberEntity):
     """NumberEntity for the energy-saving enter duration of a smart plug.
 
     Number of seconds the plug must draw below the threshold before turning off.
-    Range 1–3600 s, step 1 s.
+    Range 1-3600 s, step 1 s.
     """
 
     _attr_entity_category = EntityCategory.CONFIG
@@ -405,7 +405,7 @@ class LedBrightnessNumber(SHCEntity, NumberEntity):
     """NumberEntity for the LED brightness of a smart plug.
 
     Bounds are read from the lib service (min/max/step from device state).
-    Falls back to 0–100 if not yet populated.
+    Falls back to 0-100 if not yet populated.
     """
 
     _attr_entity_category = EntityCategory.CONFIG

@@ -3,9 +3,15 @@
 from datetime import time as dt_time, timedelta
 import inspect
 
+import aiohttp
 from boschshcpy import SHCSessionAsync, SHCUniversalSwitch
+from boschshcpy.api import JSONRPCError
 from boschshcpy.api_async import build_ssl_context
-from boschshcpy.exceptions import SHCAuthenticationError, SHCConnectionError
+from boschshcpy.exceptions import (
+    SHCAuthenticationError,
+    SHCConnectionError,
+    SHCException,
+)
 import voluptuous as vol
 
 from homeassistant.components.persistent_notification import (
@@ -102,7 +108,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     their respective platform setup (binary_sensor.py) as allowed by the rule.
     """
 
-    SCENARIO_TRIGGER_SCHEMA = vol.Schema(
+    scenario_trigger_schema = vol.Schema(
         {
             vol.Optional(ATTR_TITLE, default=""): cv.string,
             vol.Required(ATTR_NAME): cv.string,
@@ -111,8 +117,6 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
     async def scenario_service_call(call: ServiceCall) -> None:
         """SHC Scenario service call."""
-        from boschshcpy.exceptions import SHCConnectionError, SHCException
-
         name = call.data[ATTR_NAME]
         title = call.data[ATTR_TITLE]
         for config_entry in hass.config_entries.async_entries(DOMAIN):
@@ -133,7 +137,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         DOMAIN,
         SERVICE_TRIGGER_SCENARIO,
         scenario_service_call,
-        SCENARIO_TRIGGER_SCHEMA,
+        scenario_trigger_schema,
     )
 
     return True
@@ -144,7 +148,7 @@ def _register_rawscan_service(hass: HomeAssistant) -> None:
     if hass.services.has_service(DOMAIN, SERVICE_TRIGGER_RAWSCAN):
         return
 
-    RAWSCAN_TRIGGER_SCHEMA = vol.Schema(
+    rawscan_trigger_schema = vol.Schema(
         {
             vol.Optional(ATTR_TITLE, default=""): cv.string,
             vol.Required(ATTR_COMMAND): cv.string,
@@ -169,11 +173,15 @@ def _register_rawscan_service(hass: HomeAssistant) -> None:
                 # async API (mirrors SHCSession.rawscan_commands).
                 commands = {
                     "devices": api.get_devices,
-                    "device": lambda: api.get_device(device_id),
+                    "device": lambda api=api, device_id=device_id: api.get_device(
+                        device_id
+                    ),
                     "services": api.get_services,
-                    "device_services": lambda: api.get_device_services(device_id),
-                    "device_service": lambda: api.get_device_service(
-                        device_id, service_id
+                    "device_services": lambda api=api, device_id=device_id: (
+                        api.get_device_services(device_id)
+                    ),
+                    "device_service": lambda api=api, device_id=device_id, service_id=service_id: (
+                        api.get_device_service(device_id, service_id)
                     ),
                     "rooms": api.get_rooms,
                     "scenarios": api.get_scenarios,
@@ -190,17 +198,18 @@ def _register_rawscan_service(hass: HomeAssistant) -> None:
                     )
                 rawscan = await commands[command]()
                 return {command: rawscan}
+        return None
 
     hass.services.async_register(
         DOMAIN,
         SERVICE_TRIGGER_RAWSCAN,
         rawscan_service_call,
-        schema=RAWSCAN_TRIGGER_SCHEMA,
+        schema=rawscan_trigger_schema,
         supports_response=SupportsResponse.ONLY,
     )
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:  # noqa: C901  # complexity of the main setup entry is inherent; splitting would harm readability
     """Set up Bosch SHC from a config entry."""
     data = entry.data
 
@@ -212,7 +221,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             if cert_path
             else None
         )
-    except Exception as err:  # broad: parsing issues shouldn't fully block reauth paths
+    except (OSError, ValueError) as err:  # file-read or crypto-parse errors
         LOGGER.warning("Unable to parse Bosch SHC certificate (%s): %s", cert_path, err)
         cert_info = None
 
@@ -325,7 +334,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             return  # no cert configured — nothing to check (mirrors startup guard)
         try:
             info = await hass.async_add_executor_job(parse_certificate, cert_path)
-        except Exception:  # silently ignore parsing issues
+        except OSError, ValueError:  # file-read or crypto-parse errors; silently skip
             return
         if info.days_remaining < 0:
             LOGGER.error(
@@ -409,12 +418,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _apply_child_lock(lock_state: bool):
             """Set child lock on all SHC devices (async; on the event loop)."""
-            import asyncio
-
-            import aiohttp
-            from boschshcpy.api import JSONRPCError
-            from boschshcpy.exceptions import SHCConnectionError, SHCException
-
             thermostats, bool_devices = _child_lock_devices(session)
             for device in thermostats + bool_devices:
                 try:
@@ -522,12 +525,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         async def _apply_silent(silent_on: bool):
             """Set silent mode on all capable SHC devices (async; on the loop)."""
-            import asyncio
-
-            import aiohttp
-            from boschshcpy.api import JSONRPCError
-            from boschshcpy.exceptions import SHCConnectionError, SHCException
-
             dh = session.device_helper
             devices = [
                 d

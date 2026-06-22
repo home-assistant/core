@@ -1,6 +1,7 @@
 """Platform for binarysensor integration."""
 
 from collections.abc import Callable
+import contextlib
 from datetime import UTC, datetime, timedelta
 import json
 
@@ -15,6 +16,7 @@ from boschshcpy import (
     SHCSmokeDetector,
     SHCWaterLeakageSensor,
 )
+from boschshcpy.exceptions import SHCConnectionError, SHCException
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -58,7 +60,7 @@ from .entity import (
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type dispatch
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -98,10 +100,8 @@ async def async_setup_entry(
     session.subscribe(_shutter_subscriber)
 
     def _unsubscribe_shutter():
-        try:
-            session._subscribers.remove(_shutter_subscriber)
-        except ValueError:
-            pass
+        with contextlib.suppress(ValueError):
+            session._subscribers.remove(_shutter_subscriber)  # noqa: SLF001
 
     config_entry.async_on_unload(_unsubscribe_shutter)
 
@@ -508,8 +508,6 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
 
     async def async_request_smoketest(self):
         """Request smokedetector test."""
-        from boschshcpy.exceptions import SHCConnectionError, SHCException
-
         LOGGER.debug("Requesting smoke test on entity %s", self.name)
         try:
             await self._device.async_smoketest_requested()
@@ -520,8 +518,6 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
 
     async def async_request_alarmstate(self, command: str):
         """Request smokedetector alarm state."""
-        from boschshcpy.exceptions import SHCConnectionError, SHCException
-
         LOGGER.debug(
             "Requesting custom alarm state %s on entity %s", command, self.name
         )
@@ -818,7 +814,7 @@ class TwinguardAlarmTracker:
                     if trigger_id:
                         trigger_ids.add(trigger_id)
 
-        except Exception as err:  # pylint: disable=broad-except
+        except Exception as err:  # noqa: BLE001  # broad catch intentional: network/JSON errors vary
             LOGGER.warning("Unable to fetch Bosch SHC messages: %s", err)
             return self._active_trigger_ids
 
@@ -927,22 +923,22 @@ class BatterySensor(SHCEntity, BinarySensorEntity):
         condition.
         """
         level = self._device.batterylevel
-        BatteryState = SHCBatteryDevice.BatteryLevelService.State
+        battery_state = SHCBatteryDevice.BatteryLevelService.State
 
-        if level == BatteryState.NOT_AVAILABLE:
+        if level == battery_state.NOT_AVAILABLE:
             LOGGER.debug("Battery state of device %s is not available", self.name)
             return False
 
-        if level == BatteryState.CRITICAL_LOW:
+        if level == battery_state.CRITICAL_LOW:
             LOGGER.warning("Battery state of device %s is critical low", self.name)
 
-        if level == BatteryState.CRITICALLY_LOW_BATTERY:
+        if level == battery_state.CRITICALLY_LOW_BATTERY:
             LOGGER.warning("Battery state of device %s is critically low", self.name)
 
-        if level == BatteryState.LOW_BATTERY:
+        if level == battery_state.LOW_BATTERY:
             LOGGER.warning("Battery state of device %s is low", self.name)
 
-        return level != BatteryState.OK
+        return level != battery_state.OK
 
 
 class OccupancyDetectionSensor(SHCEntity, BinarySensorEntity):

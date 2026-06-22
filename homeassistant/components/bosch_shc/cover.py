@@ -219,6 +219,7 @@ class ShutterControlCover(SHCEntity, CoverEntity):
 
     @property
     def device_class(self) -> CoverDeviceClass | None:
+        """Return the device class based on the model type."""
         return (
             CoverDeviceClass.AWNING
             if self._device.device_model == "MICROMODULE_AWNING"
@@ -367,6 +368,7 @@ class BlindsControlCover(ShutterControlCover, CoverEntity):
         self._app_command = True
 
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
+        """Stop the cover tilt using the blind-specific stop endpoint."""
         await self._device.async_stop_blinds()
 
     @property

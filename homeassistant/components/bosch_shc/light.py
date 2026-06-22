@@ -59,6 +59,7 @@ class LightSwitch(SHCEntity, LightEntity):
     """Representation of a SHC controlled light."""
 
     def __init__(self, device, entry_id) -> None:
+        """Initialize the SHC light switch entity."""
         super().__init__(device=device, entry_id=entry_id)
         self._attr_supported_color_modes: set[ColorMode] = set()
 

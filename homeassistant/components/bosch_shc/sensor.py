@@ -1,6 +1,6 @@
 """Platform for sensor integration."""
 
-from boschshcpy import SHCSession
+from boschshcpy import SHCEmma, SHCSession
 from boschshcpy.device import SHCDevice
 
 from homeassistant.components.sensor import (
@@ -28,7 +28,7 @@ from .entity import SHCEntity, async_migrate_to_new_unique_id, device_excluded
 PARALLEL_UPDATES = 1
 
 
-async def async_setup_entry(
+async def async_setup_entry(  # noqa: C901  # inherent complexity of device-type dispatch
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     async_add_entities: AddEntitiesCallback,
@@ -655,8 +655,6 @@ class PowerSensor(SHCEntity, SensorEntity):
 class EmmaPowerSensor(SHCEntity, SensorEntity):
     """Representation of an SHC power reporting sensor."""
 
-    from boschshcpy import SHCEmma
-
     _attr_entity_registry_enabled_default = False
     _attr_device_class = SensorDeviceClass.POWER
     _attr_native_unit_of_measurement = UnitOfPower.WATT
@@ -948,9 +946,10 @@ class WalkStateSensor(SHCEntity, SensorEntity):
             val = self._device.walk_state
             if val is None:
                 return None
-            return val.name
         except AttributeError, ValueError:
             return None
+        else:
+            return val.name
 
 
 class DetectionStateSensor(SHCEntity, SensorEntity):
@@ -981,9 +980,10 @@ class DetectionStateSensor(SHCEntity, SensorEntity):
             val = self._device.detection_state
             if val is None:
                 return None
-            return val.name
         except AttributeError, ValueError:
             return None
+        else:
+            return val.name
 
 
 class InstallationProfileSensor(SHCEntity, SensorEntity):

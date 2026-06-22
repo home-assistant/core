@@ -3,7 +3,7 @@
 from boschshcpy.device import SHCDevice
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo, async_get as get_dev_reg
 from homeassistant.helpers.entity import Entity
 
@@ -59,7 +59,7 @@ async def async_migrate_to_new_unique_id(
             else f"{device.serial}_{attr_name.lower()}"
         )
 
-    ent_reg = entity_registry.async_get(hass)
+    ent_reg = er.async_get(hass)
     entity_id = ent_reg.async_get_entity_id(platform, DOMAIN, old_unique_id)
 
     if entity_id is not None:
