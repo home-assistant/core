@@ -64,7 +64,7 @@ async def async_setup_entry(
     # slow, rate-limited Socket.IO password fetch (and the status calls). The
     # config flow seeds these; without them a second Socket.IO call right after
     # the flow's own is throttled to empty, leaving devices unconfigurable.
-    cached_credentials: dict = entry.data.get(CONF_CREDENTIALS, {})
+    cached_credentials: dict[str, dict[str, str]] = entry.data.get(CONF_CREDENTIALS, {})
     try:
         await account.login()
         devices = await account.discover_devices(cached_credentials=cached_credentials)
@@ -140,9 +140,9 @@ async def async_setup_entry(
             ", ".join(sorted(no_credentials)),
         )
     # A device the cloud cannot locate stays unaddressable across restarts until
-    # DHCP discovery reaches it or the user enters an IP in the options. Surface
-    # that as a repair issue rather than a warning that re-logs every setup;
-    # clear it once every device has an address.
+    # DHCP discovery reaches it or the user enters an IP in the options; raise a
+    # repair issue while any device lacks an address and clear it once they all
+    # have one.
     issue_id = f"missing_address_{entry.entry_id}"
     if no_address:
         ir.async_create_issue(
