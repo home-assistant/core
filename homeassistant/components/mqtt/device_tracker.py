@@ -7,7 +7,12 @@ from typing import TYPE_CHECKING, Any
 import voluptuous as vol
 
 from homeassistant.components import device_tracker
-from homeassistant.components.device_tracker import SourceType, TrackerEntity
+from homeassistant.components.device_tracker import (
+    ATTR_IN_ZONES,
+    SourceType,
+    TrackerEntity,
+)
+from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_GPS_ACCURACY,
@@ -48,6 +53,10 @@ CONF_SOURCE_TYPE = "source_type"
 DEFAULT_PAYLOAD_RESET = "None"
 DEFAULT_SOURCE_TYPE = SourceType.GPS
 
+DOCS_URL_IN_ZONES = (
+    "https://www.home-assistant.io/integrations/device_tracker.mqtt/#in_zones"
+)
+
 
 def valid_config(config: ConfigType) -> ConfigType:
     """Check if there is a state topic or json_attributes_topic."""
@@ -57,6 +66,15 @@ def valid_config(config: ConfigType) -> ConfigType:
             f" {CONF_STATE_TOPIC} or"
             f" {CONF_JSON_ATTRS_TOPIC}, got: {config}"
         )
+    if CONF_STATE_TOPIC in config:
+        _LOGGER.warning(
+            "Using `state_topic` and `value_template` is deprecated "
+            "for MQTT device tracker. This will stop working with HA Core 2027.1.0. "
+            "Please use the `in_zones` attribute via `json_attributes_topic`. Got %s, "
+            "See %s for more information",
+            config,
+            DOCS_URL_IN_ZONES,
+        )
     return config
 
 
@@ -65,19 +83,37 @@ PLATFORM_SCHEMA_MODERN_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_STATE_TOPIC): valid_subscribe_topic,
         vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
         vol.Optional(CONF_NAME): vol.Any(cv.string, None),
-        vol.Optional(CONF_PAYLOAD_HOME, default=STATE_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_NOT_HOME, default=STATE_NOT_HOME): cv.string,
-        vol.Optional(CONF_PAYLOAD_RESET, default=DEFAULT_PAYLOAD_RESET): cv.string,
+        vol.Optional(CONF_PAYLOAD_HOME): cv.string,
+        vol.Optional(CONF_PAYLOAD_NOT_HOME): cv.string,
+        vol.Optional(CONF_PAYLOAD_RESET): cv.string,
         vol.Optional(CONF_SOURCE_TYPE, default=DEFAULT_SOURCE_TYPE): vol.Coerce(
             SourceType
         ),
     },
 ).extend(MQTT_ENTITY_COMMON_SCHEMA.schema)
-PLATFORM_SCHEMA_MODERN = vol.All(PLATFORM_SCHEMA_MODERN_BASE, valid_config)
 
+PLATFORM_SCHEMA_MODERN = vol.All(
+    PLATFORM_SCHEMA_MODERN_BASE,
+    valid_config,
+    # The use of state_topic and value_template is deprecated
+    # and support is planned for removal with HA Core 2027.1.0
+    cv.deprecated(CONF_STATE_TOPIC),
+    cv.deprecated(CONF_VALUE_TEMPLATE),
+    cv.deprecated(CONF_PAYLOAD_HOME),
+    cv.deprecated(CONF_PAYLOAD_NOT_HOME),
+    cv.deprecated(CONF_PAYLOAD_RESET),
+)
 
 DISCOVERY_SCHEMA = vol.All(
-    PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=vol.REMOVE_EXTRA), valid_config
+    PLATFORM_SCHEMA_MODERN_BASE.extend({}, extra=vol.REMOVE_EXTRA),
+    valid_config,
+    # The use of state_topic and value_template is deprecated
+    # and support is planned for removal with HA Core 2027.1.0
+    cv.deprecated(CONF_STATE_TOPIC),
+    cv.deprecated(CONF_VALUE_TEMPLATE),
+    cv.deprecated(CONF_PAYLOAD_HOME),
+    cv.deprecated(CONF_PAYLOAD_NOT_HOME),
+    cv.deprecated(CONF_PAYLOAD_RESET),
 )
 
 
@@ -104,6 +140,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     _default_name = None
     _entity_id_format = device_tracker.ENTITY_ID_FORMAT
     _location_name: str | None = None
+    _payloads: dict[str, str]
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
@@ -113,10 +150,15 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
+        self._payloads = {
+            CONF_PAYLOAD_HOME: config.get(CONF_PAYLOAD_HOME, STATE_HOME),
+            CONF_PAYLOAD_NOT_HOME: config.get(CONF_PAYLOAD_NOT_HOME, STATE_NOT_HOME),
+            CONF_PAYLOAD_RESET: config.get(CONF_PAYLOAD_RESET, DEFAULT_PAYLOAD_RESET),
+        }
         self._value_template = MqttValueTemplate(
             config.get(CONF_VALUE_TEMPLATE), entity=self
         ).async_render_with_possible_json_value
-        self._attr_source_type = self._config[CONF_SOURCE_TYPE]
+        self._attr_source_type = config[CONF_SOURCE_TYPE]
 
     @callback
     def _tracker_message_received(self, msg: ReceiveMessage) -> None:
@@ -129,11 +171,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                 msg.topic,
             )
             return
-        if payload == self._config[CONF_PAYLOAD_HOME]:
+        if payload == self._payloads[CONF_PAYLOAD_HOME]:
             self._attr_location_name = STATE_HOME
-        elif payload == self._config[CONF_PAYLOAD_NOT_HOME]:
+        elif payload == self._payloads[CONF_PAYLOAD_NOT_HOME]:
             self._attr_location_name = STATE_NOT_HOME
-        elif payload == self._config[CONF_PAYLOAD_RESET]:
+        elif payload == self._payloads[CONF_PAYLOAD_RESET]:
             self._attr_location_name = None
         else:
             if TYPE_CHECKING:
@@ -152,10 +194,16 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
 
     @callback
+    def _ensure_entity_id_from_zone_id(self, zone_id: str) -> str:
+        """Return an entity id for a zone_id."""
+        _, _, object_id = zone_id.partition(".")
+        return f"zone.{zone_id}" if object_id == "" else zone_id
+
+    @callback
     def _process_update_extra_state_attributes(
         self, extra_state_attributes: dict[str, Any]
     ) -> None:
-        """Extract the location from the extra state attributes."""
+        """Extract the location or zone from the extra state attributes."""
         if (
             ATTR_LATITUDE in extra_state_attributes
             or ATTR_LONGITUDE in extra_state_attributes
@@ -170,6 +218,7 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             ):
                 self._attr_latitude = latitude
                 self._attr_longitude = longitude
+                self._attr_in_zones = None
             else:
                 # Invalid or incomplete coordinates, reset location
                 self._attr_latitude = None
@@ -201,9 +250,45 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
 
             else:
                 self._attr_location_accuracy = 0
+        elif ATTR_IN_ZONES in extra_state_attributes:
+            attr_in_zones: list[str] | Any = extra_state_attributes[ATTR_IN_ZONES]
+            if not isinstance(attr_in_zones, list):
+                _LOGGER.warning(
+                    "Extra state attributes received at %s and template %s "
+                    "contains invalid in_zones attribute, "
+                    "expected a list of strings. Got %s",
+                    self._config.get(CONF_JSON_ATTRS_TOPIC),
+                    self._config.get(CONF_JSON_ATTRS_TEMPLATE),
+                    extra_state_attributes,
+                )
+                return
+            # Determine zones
+            self._attr_latitude = None
+            self._attr_longitude = None
+            reported_zones: set[str] = {str(zone) for zone in attr_in_zones}
+            zone_names: dict[str, str] = {
+                zone_state.name: zone_state.entity_id
+                for zone_state in self.hass.states.async_all(ZONE_DOMAIN)
+            }
+            zone_entity_ids = set(zone_names.values())
+            # Match zone with entity, object_id or zone name
+            self._attr_in_zones = list(
+                {
+                    self._ensure_entity_id_from_zone_id(zone_id)
+                    for zone_id in reported_zones
+                    if zone_id in zone_entity_ids
+                    or f"zone.{zone_id}" in zone_entity_ids
+                }
+                | {
+                    entity_id
+                    for name, entity_id in zone_names.items()
+                    if name in reported_zones
+                }
+            )
 
         self._attr_extra_state_attributes = {
             attribute: value
             for attribute, value in extra_state_attributes.items()
-            if attribute not in {ATTR_GPS_ACCURACY, ATTR_LATITUDE, ATTR_LONGITUDE}
+            if attribute
+            not in {ATTR_GPS_ACCURACY, ATTR_IN_ZONES, ATTR_LATITUDE, ATTR_LONGITUDE}
         }
