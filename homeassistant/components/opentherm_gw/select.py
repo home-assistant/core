@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from enum import Enum, IntEnum, StrEnum
+from enum import IntEnum, StrEnum
 from functools import partial
 
 from pyotgw.vars import (
@@ -32,13 +32,14 @@ from .const import (
 )
 from .entity import OpenThermEntityDescription, OpenThermStatusEntity
 
+MAP_DHW_OVRD_MODES = {
+    "force_off": 0,
+    "force_on": 1,
+    "override_disabled": "A",
+}
 
-class OpenThermSelectDHWOvrdMode(StrEnum):
-    """OpenTherm Gateway Hot Water Override modes."""
 
-    OFF = "force_off"
-    ON = "force_on"
-    DISABLED = "override_disabled"
+INVERSE_MAP_DHW_OVRD_MODES = {v: k for k, v in MAP_DHW_OVRD_MODES.items()}
 
 
 class OpenThermSelectGPIOMode(StrEnum):
@@ -70,14 +71,6 @@ class OpenThermSelectLEDMode(StrEnum):
     TX_ERROR_DETECTED = "transmit_error_detected"
     BOILER_MAINTENANCE_REQUIRED = "boiler_maintenance_required"
     RAISED_POWER_MODE_ACTIVE = "raised_power_mode_active"
-
-
-class PyotgwDHWOvrdMode(Enum):
-    """pyotgw Hot Water Override modes."""
-
-    OFF = 0
-    ON = 1
-    DISABLED = "A"
 
 
 class PyotgwGPIOMode(IntEnum):
@@ -122,18 +115,10 @@ def pyotgw_led_mode_to_ha_led_mode(
     )
 
 
-async def set_dhw_ovrd_mode(
-    gw_hub: OpenThermGatewayHub, mode: str
-) -> OpenThermSelectDHWOvrdMode | None:
+async def set_dhw_ovrd_mode(gw_hub: OpenThermGatewayHub, mode: str) -> str | None:
     """Set hot water override mode, return selected option."""
-    value = await gw_hub.gateway.set_hot_water_ovrd(
-        PyotgwDHWOvrdMode[OpenThermSelectDHWOvrdMode(mode).name].value
-    )
-    return (
-        OpenThermSelectDHWOvrdMode[PyotgwDHWOvrdMode(value).name]
-        if value in PyotgwDHWOvrdMode
-        else None
-    )
+    value = await gw_hub.gateway.set_hot_water_ovrd(MAP_DHW_OVRD_MODES[mode])
+    return INVERSE_MAP_DHW_OVRD_MODES.get(value)
 
 
 async def set_gpio_mode(
@@ -179,15 +164,9 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
         key=OTGW_DHW_OVRD,
         translation_key="dhw_ovrd_mode",
         device_description=GATEWAY_DEVICE_DESCRIPTION,
-        options=list(OpenThermSelectDHWOvrdMode),
+        options=list(MAP_DHW_OVRD_MODES.keys()),
         select_action=set_dhw_ovrd_mode,
-        convert_pyotgw_state_to_ha_state=(
-            lambda state: (
-                OpenThermSelectDHWOvrdMode[PyotgwDHWOvrdMode(state).name]
-                if state in PyotgwDHWOvrdMode
-                else None
-            )
-        ),
+        convert_pyotgw_state_to_ha_state=INVERSE_MAP_DHW_OVRD_MODES.get,
     ),
     OpenThermSelectEntityDescription(
         key=OTGW_GPIO_A,
