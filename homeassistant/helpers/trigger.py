@@ -4,6 +4,7 @@ import abc
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Coroutine, Iterable, Mapping
+from contextvars import copy_context
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import functools
@@ -304,8 +305,15 @@ class Trigger(abc.ABC):
         self,
         action: TriggerAction,
         action_payload_builder: TriggerActionPayloadBuilder,
+        *,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
-        """Attach the trigger to an action."""
+        """Attach the trigger to an action.
+
+        The optional ``did_not_trigger`` reporter is the sibling of the action
+        runner: triggers may call it - in certain interesting cases - when they
+        evaluate a relevant change but decide not to fire.
+        """
 
         @callback
         def run_action(
@@ -318,11 +326,13 @@ class Trigger(abc.ABC):
             payload = action_payload_builder(extra_trigger_payload, description)
             return self._hass.async_create_task(action(payload, context))
 
-        return await self.async_attach_runner(run_action)
+        return await self.async_attach_runner(run_action, did_not_trigger)
 
     @abc.abstractmethod
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
@@ -555,7 +565,9 @@ class EntityTriggerBase(Trigger):
 
     @override
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach the trigger to an action runner."""
 
@@ -1233,6 +1245,27 @@ class TriggerConfig:
     options: dict[str, Any] | None = None
 
 
+@dataclass(slots=True, frozen=True)
+class NotTriggeredInfo:
+    """Diagnostics describing why a trigger evaluated a change but did not fire.
+
+    Passed by a trigger to its ``did_not_trigger`` reporter, the sibling of the
+    action runner that is called - in certain interesting cases - when the
+    trigger does not fire. ``reason`` is a stable, machine-readable code; the
+    optional ``data`` carries the evaluated context for the trace.
+    """
+
+    reason: str
+    data: Mapping[str, Any] | None = None
+
+    def as_dict(self) -> dict[str, Any]:
+        """Return a JSON-serializable dict for storing in a trace."""
+        result: dict[str, Any] = {"reason": self.reason}
+        if self.data is not None:
+            result["data"] = dict(self.data)
+        return result
+
+
 class TriggerActionRunner(Protocol):
     """Protocol type for the trigger action runner helper callback."""
 
@@ -1248,6 +1281,39 @@ class TriggerActionRunner(Protocol):
         Returns:
             A Task that allows awaiting for the action to finish.
         """
+
+
+class TriggerNotTriggeredReporter(Protocol):
+    """Protocol type for the did_not_trigger reporter passed to a trigger runner.
+
+    A trigger calls this to report that it evaluated a relevant change but
+    decided not to fire, supplying diagnostics for tracing.
+    """
+
+    @callback
+    def __call__(
+        self,
+        info: NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        """Report that the trigger did not fire."""
+
+
+class TriggerNotTriggeredAction(Protocol):
+    """Protocol type for the did_not_trigger consumer callback.
+
+    Sibling of the action callback. Invoked - instead of the action - when a
+    trigger evaluated a relevant change but reported it did not fire.
+    """
+
+    @callback
+    def __call__(
+        self,
+        run_variables: dict[str, Any],
+        info: NotTriggeredInfo,
+        context: Context | None = None,
+    ) -> None:
+        """Define did_not_trigger consumer callback type."""
 
 
 class TriggerActionPayloadBuilder(Protocol):
@@ -1534,6 +1600,7 @@ async def _async_attach_trigger_cls(
     conf: ConfigType,
     action: Callable,
     trigger_info: TriggerInfo,
+    did_not_trigger: TriggerNotTriggeredAction | None = None,
 ) -> CALLBACK_TYPE:
     """Initialize a new Trigger class and attach it."""
 
@@ -1553,6 +1620,26 @@ async def _async_attach_trigger_cls(
             trigger_variables = conf[CONF_VARIABLES]
             payload.update(trigger_variables.async_render(hass, payload))
         return payload
+
+    report_not_triggered: TriggerNotTriggeredReporter | None = None
+    if did_not_trigger is not None:
+        not_triggered_action = did_not_trigger
+
+        @callback
+        def report_not_triggered(
+            info: NotTriggeredInfo, context: Context | None = None
+        ) -> None:
+            """Forward a did-not-fire report to the consumer."""
+            run_variables = {
+                "trigger": {
+                    **trigger_info["trigger_data"],
+                    CONF_PLATFORM: trigger_key,
+                }
+            }
+            # The consumer records a trace using the trace context variables.
+            # Run it in a copied context so it does not disturb the trace of the
+            # run that produced this state change (e.g. a chained automation).
+            copy_context().run(not_triggered_action, run_variables, info, context)
 
     # Wrap sync action so that it is always async.
     # This simplifies the Trigger action runner interface by
@@ -1592,7 +1679,9 @@ async def _async_attach_trigger_cls(
             options=conf.get(CONF_OPTIONS),
         ),
     )
-    return await trigger.async_attach_action(action, action_payload_builder)
+    return await trigger.async_attach_action(
+        action, action_payload_builder, did_not_trigger=report_not_triggered
+    )
 
 
 async def async_initialize_triggers(
@@ -1604,8 +1693,14 @@ async def async_initialize_triggers(
     log_cb: Callable,
     home_assistant_start: bool = False,
     variables: TemplateVarsType = None,
+    did_not_trigger: TriggerNotTriggeredAction | None = None,
 ) -> CALLBACK_TYPE | None:
-    """Initialize triggers."""
+    """Initialize triggers.
+
+    The optional ``did_not_trigger`` consumer is the sibling of ``action``,
+    invoked - for new-style triggers that support it - when a trigger evaluates
+    a relevant change but reports it did not fire. Old-style triggers ignore it.
+    """
     triggers: list[asyncio.Task[CALLBACK_TYPE]] = []
     for idx, conf in enumerate(trigger_config):
         # Skip triggers that are not enabled
@@ -1641,7 +1736,7 @@ async def async_initialize_triggers(
             )
             trigger_cls = trigger_descriptors[relative_trigger_key]
             coro = _async_attach_trigger_cls(
-                hass, trigger_cls, trigger_key, conf, action, info
+                hass, trigger_cls, trigger_key, conf, action, info, did_not_trigger
             )
         else:
             action_wrapper = _trigger_action_wrapper(hass, action, conf)
