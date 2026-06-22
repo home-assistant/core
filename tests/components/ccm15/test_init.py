@@ -9,7 +9,7 @@ from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -39,10 +39,10 @@ async def test_load_unload(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.usefixtures("ccm15_device")
-async def test_coordinator_set_state_wrong_password_raises(
+async def test_coordinator_set_state_wrong_password_starts_reauth(
     hass: HomeAssistant,
 ) -> None:
-    """WRONG_PASSWORD from the library surfaces as ConfigEntryAuthFailed."""
+    """WRONG_PASSWORD raises HomeAssistantError and kicks off the reauth flow."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         unique_id="1.1.1.1",
@@ -60,9 +60,12 @@ async def test_coordinator_set_state_wrong_password_raises(
             "async_set_state",
             AsyncMock(return_value=CCM15ReturnCode.WRONG_PASSWORD),
         ),
-        pytest.raises(ConfigEntryAuthFailed),
+        patch.object(entry, "async_start_reauth") as mock_reauth,
+        pytest.raises(HomeAssistantError),
     ):
         await coordinator.async_set_state(0, coordinator.data.devices[0])
+
+    mock_reauth.assert_called_once_with(hass)
 
 
 @pytest.mark.usefixtures("ccm15_device")

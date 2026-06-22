@@ -9,7 +9,7 @@ import httpx
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -74,7 +74,12 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
         # branch — compare by identity instead.
         result = await self._ccm15.async_set_state(ac_index, data)
         if result is CCM15ReturnCode.WRONG_PASSWORD:
-            raise ConfigEntryAuthFailed("CCM15 rejected the configured password")
+            # HA only auto-starts reauth from _async_update_data /
+            # async_setup_entry. Service-call paths have to kick the flow
+            # themselves.
+            if self.config_entry is not None:
+                self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError("CCM15 rejected the configured password")
         if result is CCM15ReturnCode.OK:
             await self.async_request_refresh()
             return

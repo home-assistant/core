@@ -89,6 +89,9 @@ class CCM15ConfigFlow(ConfigFlow, domain=DOMAIN):
                 password=user_input.get(CONF_PASSWORD) or None,
             )
             try:
+                # The controller only enforces the password on writes, so
+                # this probe just confirms reachability — a wrong password
+                # will resurface on the next set_state and re-trigger reauth.
                 if not await ccm15.async_test_connection():
                     errors["base"] = "cannot_connect"
             except Exception:
