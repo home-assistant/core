@@ -65,6 +65,7 @@ class SynologyDSMFanSpeedMode(
         super().__init__(api, coordinator, description)
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return FAN_SPEED_MAP[self._api.dsm.hardware.fan_speed]

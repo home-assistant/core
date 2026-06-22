@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -83,6 +84,7 @@ class StreamLabsSensor(StreamlabsWaterEntity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the current daily usage."""
         return self.entity_description.value_fn(self.location_data)

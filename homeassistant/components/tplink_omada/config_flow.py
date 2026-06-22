@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import logging
 import re
-from typing import Any, NamedTuple
+from typing import Any, NamedTuple, override
 from urllib.parse import urlsplit
 
 from aiohttp import CookieJar
@@ -102,6 +102,7 @@ class TpLinkOmadaConfigFlow(ConfigFlow, domain=DOMAIN):
         self._controller_name = ""
         self._controller_id = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
