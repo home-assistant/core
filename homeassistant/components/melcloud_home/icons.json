@@ -36,6 +36,20 @@
       "tank_water_temperature": {
         "default": "mdi:water-thermometer"
       }
+    },
+    "switch": {
+      "frost_protection": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "overheat_protection": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
+      }
     }
   }
 }
