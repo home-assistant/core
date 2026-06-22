@@ -10,7 +10,7 @@ from .coordinator import SteamDataUpdateCoordinator
 class SteamEntity(CoordinatorEntity[SteamDataUpdateCoordinator]):
     """Representation of a Steam entity."""
 
-    _attr_attribution = "Data provided by Steam"
+    _attr_has_entity_name = True
 
     def __init__(self, coordinator: SteamDataUpdateCoordinator) -> None:
         """Initialize a Steam entity."""

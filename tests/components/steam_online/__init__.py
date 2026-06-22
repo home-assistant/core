@@ -87,15 +87,34 @@ class MockedInterface(dict):
                     "player": [
                         {
                             "steamid": ACCOUNT_1,
+                            "communityvisibilitystate": 1,
+                            "profilestate": 1,
                             "personaname": ACCOUNT_NAME_1,
+                            "profileurl": "https://steamcommunity.com/profiles/123456789/",
+                            "avatar": "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg",
+                            "avatarmedium": "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg",
+                            "avatarfull": "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
+                            "avatarhash": "fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb",
+                            "lastlogoff": 1775409487,
                             "personastate": 1,
-                            "avatarmedium": "",
+                            "realname": "John Dough",
+                            "personastateflags": 0,
+                            "gameextrainfo": "The Witcher: Enhanced Edition",
+                            "gameid": "20900",
                         },
                         {
                             "steamid": ACCOUNT_2,
+                            "communityvisibilitystate": 1,
+                            "profilestate": 1,
                             "personaname": ACCOUNT_NAME_2,
+                            "profileurl": "https://steamcommunity.com/profiles/987654321/",
+                            "avatar": "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb.jpg",
+                            "avatarmedium": "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_medium.jpg",
+                            "avatarfull": "https://avatars.steamstatic.com/fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb_full.jpg",
+                            "avatarhash": "fef49e7fa7e1997310d705b2a6158ff8dc1cdfeb",
+                            "lastlogoff": 1775409487,
                             "personastate": 2,
-                            "avatarmedium": "",
+                            "personastateflags": 0,
                         },
                     ]
                 }
@@ -106,7 +125,13 @@ class MockedInterface(dict):
         """Get owned games."""
         return {
             "response": {"game_count": 1},
-            "games": [{"appid": 1, "img_icon_url": "1234567890"}],
+            "games": [
+                {"appid": 1, "img_icon_url": "1234567890"},
+                {
+                    "appid": 20900,
+                    "img_icon_url": "746d1cd48fb2e57d579b05b6e9eccba95859e549",
+                },
+            ],
         }
 
     def GetSteamLevel(self, steamid: str) -> dict:
