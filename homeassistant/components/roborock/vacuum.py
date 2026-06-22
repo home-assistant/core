@@ -24,6 +24,7 @@ from homeassistant.exceptions import (
     ServiceNotSupported,
     ServiceValidationError,
 )
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
@@ -31,6 +32,7 @@ from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
 )
 from .entity import (
@@ -112,16 +114,29 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Roborock sensor."""
-    async_add_entities(
-        RoborockVacuum(coordinator) for coordinator in config_entry.runtime_data.v1
-    )
-    async_add_entities(
-        RoborockQ7Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01_q7
-    )
-    async_add_entities(
-        RoborockQ10Vacuum(coordinator)
-        for coordinator in config_entry.runtime_data.b01_q10
+    coordinators = config_entry.runtime_data
+
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            async_add_entities([RoborockVacuum(coordinator)])
+        elif isinstance(coordinator, RoborockB01Q7UpdateCoordinator):
+            async_add_entities([RoborockQ7Vacuum(coordinator)])
+        elif isinstance(coordinator, RoborockB01Q10UpdateCoordinator):
+            async_add_entities([RoborockQ10Vacuum(coordinator)])
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
+        )
     )
 
 

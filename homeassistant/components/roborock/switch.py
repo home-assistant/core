@@ -12,13 +12,15 @@ from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProto
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import (
     RoborockConfigEntry,
+    RoborockCoordinatorType,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
@@ -93,30 +95,45 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock switch platform."""
-    # V1 switches - using trait pattern from HEAD
-    async_add_entities(
-        [
-            RoborockSwitch(
-                f"{description.key}_{coordinator.duid_slug}",
-                coordinator,
-                description,
-                trait,
-            )
-            for coordinator in config_entry.runtime_data.v1
-            for description in SWITCH_DESCRIPTIONS
-            if (trait := description.trait(coordinator.properties_api)) is not None
-        ]
-    )
+    coordinators = config_entry.runtime_data
 
-    # A01 switches
-    async_add_entities(
-        RoborockSwitchA01(
-            coordinator,
-            description,
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        entities: list[SwitchEntity] = []
+        if isinstance(coordinator, RoborockDataUpdateCoordinator):
+            entities.extend(
+                RoborockSwitch(
+                    f"{description.key}_{coordinator.duid_slug}",
+                    coordinator,
+                    description,
+                    trait,
+                )
+                for description in SWITCH_DESCRIPTIONS
+                if (trait := description.trait(coordinator.properties_api)) is not None
+            )
+        elif isinstance(coordinator, RoborockDataUpdateCoordinatorA01):
+            entities.extend(
+                RoborockSwitchA01(
+                    coordinator,
+                    description,
+                )
+                for description in A01_SWITCH_DESCRIPTIONS
+                if description.data_protocol in coordinator.request_protocols
+            )
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
         )
-        for coordinator in config_entry.runtime_data.a01
-        for description in A01_SWITCH_DESCRIPTIONS
-        if description.data_protocol in coordinator.request_protocols
     )
 
 
