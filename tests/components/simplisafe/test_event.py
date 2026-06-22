@@ -25,9 +25,7 @@ async def test_event_entities(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that all event entities are created."""
-    with patch(
-        "homeassistant.components.simplisafe.PLATFORMS", [Platform.EVENT]
-    ):
+    with patch("homeassistant.components.simplisafe.PLATFORMS", [Platform.EVENT]):
         await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
