@@ -63,6 +63,7 @@
       'target_temp_low': None,
       'target_temp_step': 1,
       'temperature': 55.0,
+      'temperature_unit': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'water_heater.r_900',
