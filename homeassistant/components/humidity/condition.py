@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import Condition, EntityNumericalConditionBase
 
-HUMIDITY_DOMAIN_SPECS = {
+HUMIDITY_DOMAIN_SPECS: dict[str, DomainSpec] = {
     CLIMATE_DOMAIN: DomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
