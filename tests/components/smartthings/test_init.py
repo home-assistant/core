@@ -1,8 +1,7 @@
 """Tests for the SmartThings component init module."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aiohttp import ClientResponseError, RequestInfo
 from pysmartthings import (
     Attribute,
     Capability,
@@ -35,14 +34,42 @@ from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
+from homeassistant.exceptions import (
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
 
-from . import setup_integration, trigger_update
+from . import (
+    DEVICE_FIXTURES,
+    get_device_response,
+    get_fixture_name,
+    setup_integration,
+    trigger_update,
+)
 
 from tests.common import MockConfigEntry, async_load_fixture
+
+
+async def test_fixtures() -> None:
+    """Test all fixtures."""
+    device_ids = set()
+    device_labels = set()
+    for fixture_name in DEVICE_FIXTURES:
+        for device_details in get_device_response(fixture_name).items:
+            assert device_details.device_id not in device_ids, (
+                f"Duplicate device ID {device_details.device_id}"
+                f" found in fixture {fixture_name}"
+            )
+            device_ids.add(device_details.device_id)
+            assert (label := device_details.label.lower()) not in device_labels, (
+                f"Duplicate device label {device_details.label}"
+                f" found in fixture {fixture_name}"
+            )
+            device_labels.add(label)
 
 
 async def test_devices(
@@ -55,12 +82,13 @@ async def test_devices(
     """Test all entities."""
     await setup_integration(hass, mock_config_entry)
 
-    device_id = devices.get_devices.return_value[0].device_id
+    for specs in devices.get_devices.return_value:
+        device_id = specs.device_id
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+        device = device_registry.async_get_device({(DOMAIN, device_id)})
 
-    assert device is not None
-    assert device == snapshot
+        assert device is not None
+        assert device == snapshot(name=get_fixture_name(device_id))
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -326,15 +354,9 @@ async def test_refreshing_expired_token(
     """Test removing stale devices."""
     with patch(
         "homeassistant.components.smartthings.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientResponseError(
-            request_info=RequestInfo(
-                url="http://example.com",
-                method="GET",
-                headers={},
-                real_url="http://example.com",
-            ),
-            status=400,
-            history=(),
+        side_effect=OAuth2TokenRequestReauthError(
+            request_info=MagicMock(),
+            domain=DOMAIN,
         ),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -349,18 +371,12 @@ async def test_error_refreshing_token(
     devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test removing stale devices."""
+    """Test retrying setup after a transient token refresh error."""
     with patch(
         "homeassistant.components.smartthings.OAuth2Session.async_ensure_token_valid",
-        side_effect=ClientResponseError(
-            request_info=RequestInfo(
-                url="http://example.com",
-                method="GET",
-                headers={},
-                real_url="http://example.com",
-            ),
-            status=500,
-            history=(),
+        side_effect=OAuth2TokenRequestTransientError(
+            request_info=MagicMock(),
+            domain=DOMAIN,
         ),
     ):
         await setup_integration(hass, mock_config_entry)
@@ -408,14 +424,14 @@ async def test_deleted_device_runtime(
     """Test devices that are deleted in runtime."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("climate.ac_office_granit").state == HVACMode.OFF
+    assert hass.states.get("climate.theater_ac_office_granit").state == HVACMode.OFF
 
     for call in devices.add_device_lifecycle_event_listener.call_args_list:
         if call[0][0] == Lifecycle.DELETE:
             call[0][1]("96a5ef74-5832-a84b-f1f7-ca799957065d")
     await hass.async_block_till_done()
 
-    assert hass.states.get("climate.ac_office_granit") is None
+    assert hass.states.get("climate.theater_ac_office_granit") is None
 
 
 @pytest.mark.parametrize(
@@ -753,10 +769,10 @@ async def test_oauth_implementation_not_available(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_3_3_migration(
     hass: HomeAssistant,
     mock_migrated_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_smartthings: AsyncMock,
 ) -> None:
     """Test migration from minor version 2 to 3."""
@@ -783,10 +799,10 @@ async def test_3_3_migration(
     )
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_3_3_migration_fail(
     hass: HomeAssistant,
     mock_migrated_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_smartthings: AsyncMock,
 ) -> None:
     """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
@@ -810,10 +826,10 @@ async def test_3_3_migration_fail(
 
 
 @pytest.mark.parametrize("old_data", [({})])
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_3_3_migration_no_old_data(
     hass: HomeAssistant,
     mock_migrated_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
     mock_smartthings: AsyncMock,
 ) -> None:
     """Test migration from minor version 2 to 3 when no old data is present."""

@@ -44,20 +44,12 @@ rules:
   diagnostics: done
   discovery-update-info: done
   discovery: done
-  docs-data-update:
-    status: todo
-    comment: add info about polling the bridge every 10 seconds
+  docs-data-update: done
   docs-examples: done
   docs-known-limitations: done
-  docs-supported-devices:
-    status: todo
-    comment: be more specific about supported devices
-  docs-supported-functions:
-    status: todo
-    comment: be more specific about supported functions
-  docs-troubleshooting:
-    status: todo
-    comment: split that up to proper troubleshooting and known limitations section
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices:
     status: exempt
@@ -76,9 +68,7 @@ rules:
   icon-translations:
     status: done
     comment: no custom icons, only default icons
-  reconfiguration-flow:
-    status: todo
-    comment: handle at least host change
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: no known repair use case so far

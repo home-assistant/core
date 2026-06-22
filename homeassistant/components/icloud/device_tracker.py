@@ -1,7 +1,5 @@
 """Support for tracking for iCloud devices."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.device_tracker import TrackerEntity
@@ -88,11 +86,6 @@ class IcloudTrackerEntity(TrackerEntity):
         if TYPE_CHECKING:
             assert self._device.location is not None
         return self._device.location[DEVICE_LOCATION_LONGITUDE]
-
-    @property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the device."""
-        return self._device.battery_level
 
     @property
     def icon(self) -> str:

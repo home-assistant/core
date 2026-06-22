@@ -1,7 +1,5 @@
 """Support for PCA 301 smart switch."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -15,8 +13,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
-
-DEFAULT_NAME = "PCA 301"
 
 
 def setup_platform(
@@ -54,25 +50,8 @@ class SmartPlugSwitch(SwitchEntity):
     def __init__(self, pca, device_id):
         """Initialize the switch."""
         self._device_id = device_id
-        self._name = "PCA 301"
-        self._state = None
-        self._available = True
+        self._attr_name = "PCA 301"
         self._pca = pca
-
-    @property
-    def name(self):
-        """Return the name of the Smart Plug, if any."""
-        return self._name
-
-    @property
-    def available(self) -> bool:
-        """Return if switch is available."""
-        return self._available
-
-    @property
-    def is_on(self):
-        """Return true if switch is on."""
-        return self._state
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
@@ -85,10 +64,10 @@ class SmartPlugSwitch(SwitchEntity):
     def update(self) -> None:
         """Update the PCA switch's state."""
         try:
-            self._state = self._pca.get_state(self._device_id)
-            self._available = True
+            self._attr_is_on = self._pca.get_state(self._device_id)
+            self._attr_available = True
 
         except OSError as ex:
-            if self._available:
+            if self._attr_available:
                 _LOGGER.warning("Could not read state for %s: %s", self.name, ex)
-                self._available = False
+                self._attr_available = False

@@ -1,10 +1,11 @@
 """Custom uhoo data update coordinator."""
 
 from uhooapi import Client, Device
-from uhooapi.errors import UhooError
+from uhooapi.errors import ForbiddenError, UhooError, UnauthorizedError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER, UPDATE_INTERVAL
@@ -34,6 +35,8 @@ class UhooDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             if self.client.devices:
                 for device_id in self.client.devices:
                     await self.client.get_latest_data(device_id)
+        except (UnauthorizedError, ForbiddenError) as error:
+            raise ConfigEntryAuthFailed(f"Invalid API credentials: {error}") from error
         except UhooError as error:
             raise UpdateFailed(f"The device is unavailable: {error}") from error
         else:

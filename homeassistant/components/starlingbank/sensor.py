@@ -1,7 +1,5 @@
 """Support for balance data via the Starling Bank API."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 

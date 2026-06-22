@@ -13,7 +13,6 @@ ATTR_ENDPOINT_NAMES = "endpoint_names"
 ATTR_IEEE = "ieee"
 ATTR_LAST_SEEN = "last_seen"
 ATTR_LQI = "lqi"
-ATTR_MANUFACTURER = "manufacturer"
 ATTR_MANUFACTURER_CODE = "manufacturer_code"
 ATTR_NEIGHBORS = "neighbors"
 ATTR_NWK = "nwk"
@@ -67,6 +66,8 @@ DEVICE_PAIRING_STATUS = "pairing_status"
 
 DOMAIN = "zha"
 
+LEGACY_ZEROCONF_PORT = 6638
+
 GROUP_ID = "group_id"
 
 
@@ -77,3 +78,7 @@ MFG_CLUSTER_ID_START = 0xFC00
 
 ZHA_ALARM_OPTIONS = "zha_alarm_options"
 ZHA_OPTIONS = "zha_options"
+
+# Dispatcher signal carrying device reconfigure progress events (bind result,
+# attribute reporting result, configure complete) to the websocket subscriber.
+SIGNAL_DEVICE_RECONFIGURE_EVENT = "zha_device_reconfigure_event"

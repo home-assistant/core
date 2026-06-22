@@ -1,7 +1,5 @@
 """Support for Rain Bird Irrigation system LNK Wi-Fi Module."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -115,6 +113,6 @@ class RainBirdSwitch(CoordinatorEntity[RainbirdUpdateCoordinator], SwitchEntity)
         await self.coordinator.async_request_refresh()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if switch is on."""
         return self._zone in self.coordinator.data.active_zones

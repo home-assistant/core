@@ -4,6 +4,7 @@
       "already_configured": "Integration already configured. Host with same address, port and backup location already exists."
     },
     "error": {
+      "backup_location_relative": "The remote path must be an absolute path (starting with `/`).",
       "invalid_key": "Invalid key uploaded. Please make sure key corresponds to valid SSH key algorithm.",
       "key_or_password_needed": "Please configure password or private key file location for SFTP Storage.",
       "os_error": "{error_message}. Please check if host and/or port are correct.",

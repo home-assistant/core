@@ -26,6 +26,7 @@ def mock_device() -> MagicMock:
     device.ozone = 30.0
     device.virus_index = 2.0
     device.mold_index = 1.5
+    device.influenza_index = 3.0
     device.device_name = "Test Device"
     device.serial_number = "23f9239m92m3ffkkdkdd"
     device.user_settings = {"temp": "c"}
@@ -47,6 +48,7 @@ def mock_device2() -> MagicMock:
     device.ozone = 25.0
     device.virus_index = 1.0
     device.mold_index = 1.0
+    device.influenza_index = 2.0
     device.device_name = "Test Device 2"
     device.serial_number = "13e2r2fi2ii2i3993822"
     device.user_settings = {"temp": "c"}
@@ -82,6 +84,7 @@ def mock_uhoo_client(mock_device) -> Generator[AsyncMock]:
                 "ozone": 25.0,
                 "virusIndex": 1.0,
                 "moldIndex": 1.0,
+                "influenzaIndex": 3.0,
                 "userSettings": {"temp": "c"},
             }
         ]

@@ -56,6 +56,10 @@
     },
     {
       "connectable": false,
+      "local_name": "GV5140*"
+    },
+    {
+      "connectable": false,
       "manufacturer_id": 1,
       "service_uuid": "0000ec88-0000-1000-8000-00805f9b34fb"
     },
@@ -140,5 +144,5 @@
   "documentation": "https://www.home-assistant.io/integrations/govee_ble",
   "integration_type": "device",
   "iot_class": "local_push",
-  "requirements": ["govee-ble==0.44.0"]
+  "requirements": ["govee-ble==1.2.0"]
 }

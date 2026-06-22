@@ -1,7 +1,5 @@
 """Support for customised Kankun SP3 Wifi switch."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -79,8 +77,8 @@ class KankunSwitch(SwitchEntity):
     def __init__(self, hass, name, host, port, path, user, passwd):
         """Initialize the device."""
         self._hass = hass
-        self._name = name
-        self._state = False
+        self._attr_name = name
+        self._attr_is_on = False
         self._url = f"http://{host}:{port}{path}"
         if user is not None:
             self._auth = (user, passwd)
@@ -109,26 +107,16 @@ class KankunSwitch(SwitchEntity):
         except requests.RequestException:
             _LOGGER.error("State query failed")
 
-    @property
-    def name(self):
-        """Return the name of the switch."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
     def update(self) -> None:
         """Update device state."""
-        self._state = self._query_state()
+        self._attr_is_on = self._query_state()
 
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if self._switch("on"):
-            self._state = True
+            self._attr_is_on = True
 
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._switch("off"):
-            self._state = False
+            self._attr_is_on = False

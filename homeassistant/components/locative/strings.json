@@ -2,6 +2,7 @@
   "config": {
     "abort": {
       "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
+      "reconfigure_successful": "**Reconfiguration was successful**\n\nGo to webhooks in the Locative app and update webhook with the following settings:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details.",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]",
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },
@@ -9,6 +10,10 @@
       "default": "To send locations to Home Assistant, you will need to set up the webhook feature in the Locative app.\n\nFill in the following info:\n\n- URL: `{webhook_url}`\n- Method: POST\n\nSee [the documentation]({docs_url}) for further details."
     },
     "step": {
+      "reconfigure": {
+        "description": "Do you want to start reconfiguration?",
+        "title": "Reconfigure Locative webhook"
+      },
       "user": {
         "description": "[%key:common::config_flow::description::confirm_setup%]",
         "title": "Set up the Locative webhook"

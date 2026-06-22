@@ -11,14 +11,11 @@ from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
 from homeassistant.components.sftp_storage import SFTPConfigEntryData
 from homeassistant.components.sftp_storage.const import (
     CONF_BACKUP_LOCATION,
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
     CONF_PRIVATE_KEY_FILE,
-    CONF_USERNAME,
     DEFAULT_PKEY_NAME,
     DOMAIN,
 )
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_PORT, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.setup import async_setup_component
@@ -31,7 +28,7 @@ from tests.common import MockConfigEntry
 type ComponentSetup = Callable[[], Awaitable[None]]
 
 BACKUP_METADATA = {
-    "file_path": "backup_location/backup.tar",
+    "file_path": "/backup_location/backup.tar",
     "metadata": {
         "addons": [{"name": "Test", "slug": "test", "version": "1.0.0"}],
         "backup_id": "test-backup",
@@ -60,7 +57,7 @@ USER_INPUT = {
     CONF_USERNAME: "username",
     CONF_PASSWORD: "password",
     CONF_PRIVATE_KEY_FILE: PRIVATE_KEY_FILE_UUID,
-    CONF_BACKUP_LOCATION: "backup_location",
+    CONF_BACKUP_LOCATION: "/backup_location",
 }
 TEST_AGENT_ID = ulid()
 
@@ -118,7 +115,7 @@ def mock_config_entry(hass: HomeAssistant) -> MockConfigEntry:
             CONF_USERNAME: "username",
             CONF_PASSWORD: "password",
             CONF_PRIVATE_KEY_FILE: str(private_key),
-            CONF_BACKUP_LOCATION: "backup_location",
+            CONF_BACKUP_LOCATION: "/backup_location",
         },
     )
 

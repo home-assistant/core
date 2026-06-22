@@ -33,13 +33,24 @@ def mock_growatt_v1_api():
     Methods mocked for MIN device coordinator refresh:
     - min_detail: Provides device state (e.g., acChargeEnable, chargePowerCommand)
     - min_settings: Provides settings (e.g. TOU periods)
-    - min_energy: Provides energy data (empty for switch/number tests, sensors need real data)
+    - min_energy: Provides energy data (empty for switch/number tests,
+      sensors need real data)
 
     Methods mocked for switch and number operations:
     - min_write_parameter: Called by switch/number entities to change settings
 
-    Methods mocked for service operations:
+    Methods mocked for MIN service operations:
     - min_write_time_segment: Called by time segment management services
+
+    Methods mocked for SPH device coordinator refresh:
+    - sph_detail: Provides device state and charge/discharge settings
+    - sph_energy: Provides energy data and last-update timestamp
+
+    Methods mocked for SPH service operations:
+    - sph_write_ac_charge_times: Called by write_ac_charge_times service
+    - sph_write_ac_discharge_times: Called by write_ac_discharge_times service
+    - sph_read_ac_charge_times: Called by read_ac_charge_times service
+    - sph_read_ac_discharge_times: Called by read_ac_discharge_times service
     """
     with patch(
         "homeassistant.components.growatt_server.config_flow.growattServer.OpenApiV1",
@@ -64,8 +75,8 @@ def mock_growatt_v1_api():
             "chargePowerCommand": 50,  # 50% charge power - read by number entity
             "wchargeSOCLowLimit": 10,  # 10% charge stop SOC - read by number entity
             "disChargePowerCommand": 80,  # 80% discharge power - read by number entity
-            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC (off-grid) - read by number entity
-            "onGridDischargeStopSOC": 15,  # 15% on-grid discharge stop SOC - read by number entity
+            "wdisChargeSOCLowLimit": 20,  # 20% discharge stop SOC (off-grid)
+            "onGridDischargeStopSOC": 15,  # 15% on-grid discharge stop SOC
         }
 
         # Called by MIN device coordinator during refresh
@@ -127,23 +138,151 @@ def mock_growatt_v1_api():
         }
 
         # Called by total coordinator during refresh
+        # Note: V1 API returns current_power in kW; the coordinator
+        # converts it to W when mapping to invTodayPpv.
         mock_v1_api.plant_energy_overview.return_value = {
             "today_energy": 12.5,
             "total_energy": 1250.0,
-            "current_power": 2500,
+            "current_power": 2.5,
         }
 
         # Called by switch/number entities during turn_on/turn_off/set_value
         mock_v1_api.min_write_parameter.return_value = None
 
-        # Called by time segment management services
-        # Note: Don't use autospec for this method as it needs to accept variable arguments
+        # Called by MIN time segment management services
+        # Note: Don't use autospec for this method as it needs to
+        # accept variable arguments
         mock_v1_api.min_write_time_segment = Mock(
             return_value={
                 "error_code": 0,
                 "error_msg": "Success",
             }
         )
+
+        # Called by SPH device coordinator during refresh
+        mock_v1_api.sph_detail.return_value = {
+            # Real-time data read by sensor entities
+            "bmsSOC": 75,
+            "vbat": 52.4,
+            "vpv1": 380.0,
+            "vpv2": 370.0,
+            "vac1": 230.0,
+            "pcharge1": 1200,
+            "pdischarge1": 0,
+            "pacToGridTotal": 0.5,
+            "pacToUserR": 0.2,
+            "fac": 50.0,
+            "temp1": 35.0,
+            "temp2": 36.0,
+            "temp3": 34.0,
+            "temp4": 33.0,
+            "temp5": 32.0,
+            # Charge settings (also used by sph_read_ac_charge_times)
+            "chargePowerCommand": 100,
+            "wchargeSOCLowLimit": 90,
+            "acChargeEnable": 1,
+            "forcedChargeTimeStart1": "01:00",
+            "forcedChargeTimeStop1": "05:00",
+            "forcedChargeStopSwitch1": 1,
+            "forcedChargeTimeStart2": "00:00",
+            "forcedChargeTimeStop2": "00:00",
+            "forcedChargeStopSwitch2": 0,
+            "forcedChargeTimeStart3": "00:00",
+            "forcedChargeTimeStop3": "00:00",
+            "forcedChargeStopSwitch3": 0,
+            # Discharge settings (also used by sph_read_ac_discharge_times)
+            "disChargePowerCommand": 100,
+            "wdisChargeSOCLowLimit": 10,
+            "forcedDischargeTimeStart1": "10:00",
+            "forcedDischargeTimeStop1": "16:00",
+            "forcedDischargeStopSwitch1": 1,
+            "forcedDischargeTimeStart2": "00:00",
+            "forcedDischargeTimeStop2": "00:00",
+            "forcedDischargeStopSwitch2": 0,
+            "forcedDischargeTimeStart3": "00:00",
+            "forcedDischargeTimeStop3": "00:00",
+            "forcedDischargeStopSwitch3": 0,
+        }
+
+        # Called by SPH device coordinator during refresh
+        mock_v1_api.sph_energy.return_value = {
+            "ppv1": 800,
+            "ppv2": 700,
+            "ppv": 1500,
+            "echarge1Today": 5.0,
+            "echarge1Total": 120.0,
+            "edischarge1Today": 3.0,
+            "edischarge1Total": 90.0,
+            "epvtoday": 8.0,
+            "epvTotal": 2000.0,
+            "esystemtoday": 10.0,
+            "eselfToday": 7.5,
+            "etoUserToday": 1.5,
+            "etoGridToday": 2.0,
+            "etogridTotal": 500.0,
+            "elocalLoadToday": 9.0,
+            "elocalLoadTotal": 1800.0,
+            "echarge1": 3.5,
+            "eChargeToday": 4.5,
+            "time": "2024-01-15 12:30:00",
+        }
+
+        # Called by read_ac_charge_times service (returns parsed data from cache)
+        mock_v1_api.sph_read_ac_charge_times.return_value = {
+            "charge_power": 100,
+            "charge_stop_soc": 90,
+            "mains_enabled": True,
+            "periods": [
+                {
+                    "period_id": 1,
+                    "start_time": "01:00",
+                    "end_time": "05:00",
+                    "enabled": True,
+                },
+                {
+                    "period_id": 2,
+                    "start_time": "00:00",
+                    "end_time": "00:00",
+                    "enabled": False,
+                },
+                {
+                    "period_id": 3,
+                    "start_time": "00:00",
+                    "end_time": "00:00",
+                    "enabled": False,
+                },
+            ],
+        }
+
+        # Called by read_ac_discharge_times service (returns parsed data from cache)
+        mock_v1_api.sph_read_ac_discharge_times.return_value = {
+            "discharge_power": 100,
+            "discharge_stop_soc": 10,
+            "periods": [
+                {
+                    "period_id": 1,
+                    "start_time": "10:00",
+                    "end_time": "16:00",
+                    "enabled": True,
+                },
+                {
+                    "period_id": 2,
+                    "start_time": "00:00",
+                    "end_time": "00:00",
+                    "enabled": False,
+                },
+                {
+                    "period_id": 3,
+                    "start_time": "00:00",
+                    "end_time": "00:00",
+                    "enabled": False,
+                },
+            ],
+        }
+
+        # Called by write_ac_charge_times / write_ac_discharge_times services
+        mock_v1_api.sph_write_ac_charge_times = Mock(return_value=None)
+        mock_v1_api.sph_write_ac_discharge_times = Mock(return_value=None)
 
         yield mock_v1_api
 
@@ -184,7 +323,7 @@ def mock_growatt_classic_api():
 
         # Called during setup to discover devices
         mock_classic_api.device_list.return_value = [
-            {"deviceSn": "MIN123456", "deviceType": "min"}
+            {"deviceSn": "INV123456", "deviceType": "inverter"}
         ]
 
         # Called by total coordinator during refresh for Classic API
@@ -290,9 +429,10 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up the Growatt Server integration for testing (V1 API).
 
-    This combines mock_config_entry and mock_growatt_v1_api to provide a fully
-    initialized integration ready for testing. Use @pytest.mark.usefixtures("init_integration")
-    to automatically set up the integration before your test runs.
+    This combines mock_config_entry and mock_growatt_v1_api to provide a
+    fully initialized integration ready for testing.
+    Use @pytest.mark.usefixtures("init_integration") to automatically
+    set up the integration before your test runs.
 
     For Classic API tests, manually set up using mock_config_entry_classic and
     mock_growatt_classic_api instead.

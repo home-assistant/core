@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[LPH31][select.garden_light_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -59,8 +60,9 @@
 # ---
 # name: test_all_entities[LPH31][select.garden_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -117,8 +119,9 @@
 # ---
 # name: test_all_entities[LPH62][select.garden_light_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -175,8 +178,9 @@
 # ---
 # name: test_all_entities[LPH62][select.garden_temperature_unit_on_display-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

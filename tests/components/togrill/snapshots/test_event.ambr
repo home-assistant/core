@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_setup[no_data][event.probe_1_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -80,8 +81,9 @@
 # ---
 # name: test_setup[no_data][event.probe_2_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -159,8 +161,9 @@
 # ---
 # name: test_setup[non_event_packet][event.probe_1_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -238,8 +241,9 @@
 # ---
 # name: test_setup[non_event_packet][event.probe_2_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -317,8 +321,9 @@
 # ---
 # name: test_setup[non_known_message][event.probe_1_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([
@@ -396,8 +401,9 @@
 # ---
 # name: test_setup[non_known_message][event.probe_2_event-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'event_types': list([

@@ -1,7 +1,5 @@
 """Support for Blink system camera."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -172,7 +170,6 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
             await self._camera.save_recent_clips(output_dir=file_path)
         except OSError as err:
             raise ServiceValidationError(
-                str(err),
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
             ) from err
@@ -193,7 +190,6 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
             await self._camera.video_to_file(filename)
         except OSError as err:
             raise ServiceValidationError(
-                str(err),
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
             ) from err

@@ -1,7 +1,7 @@
 {
   "Items": [
     {
-      "BackdropImageTags": [],
+      "BackdropImageTags": ["c22fd826-17fc-44f4-9b04-1eb3e8fb9173"],
       "ChannelId": "string",
       "Id": "SEASON-UUID",
       "ImageBlurHashes": {},
@@ -10,9 +10,12 @@
       "IsFolder": true,
       "LocationType": "FileSystem",
       "Name": "SEASON",
+      "ParentBackdropItemId": "c22fd826-17fc-44f4-9b04-1eb3e8fb9173",
+      "ParentBackdropImageTags": ["string"],
+      "ParentId": "SERIES-UUID",
       "SeriesId": "SERIES-UUID",
       "SeriesName": "SERIES",
-      "ServerId": "SEASON-UUID",
+      "ServerId": "SERVER-UUID",
       "Type": "Season",
       "UserData": {
         "IsFavorite": false,

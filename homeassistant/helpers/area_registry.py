@@ -1,7 +1,5 @@
 """Provide a way to connect devices to one physical location."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses
@@ -15,7 +13,7 @@ from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
-from . import device_registry as dr, entity_registry as er
+from . import device_registry as dr
 from .json import json_bytes, json_fragment
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -325,6 +323,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     @callback
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
+        from . import entity_registry as er  # noqa: PLC0415  # Circular dependency
+
         self.hass.verify_event_loop_thread("area_registry.async_delete")
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
@@ -447,7 +447,7 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
             EventAreaRegistryUpdatedData(action="reorder", area_id=None),
         )
 
-    async def async_load(self) -> None:
+    async def _async_load(self) -> None:
         """Load the area registry."""
         self._async_setup_cleanup()
 
@@ -549,10 +549,10 @@ def async_get(hass: HomeAssistant) -> AreaRegistry:
     return AreaRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
 
 
 @callback

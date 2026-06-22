@@ -1,7 +1,5 @@
 """Number entities for the Seko PoolDose integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, cast
 
@@ -14,6 +12,7 @@ from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     EntityCategory,
     UnitOfElectricPotential,
+    UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -86,6 +85,46 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
         translation_key="ofa_cl_upper",
         entity_category=EntityCategory.CONFIG,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    ),
+    NumberEntityDescription(
+        key="time_off_ph_dosing",
+        translation_key="time_off_ph_dosing",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    NumberEntityDescription(
+        key="time_off_orp_dosing",
+        translation_key="time_off_orp_dosing",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    NumberEntityDescription(
+        key="time_off_cl_dosing",
+        translation_key="time_off_cl_dosing",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    NumberEntityDescription(
+        key="power_on_delay_timer",
+        translation_key="power_on_delay_timer",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+    ),
+    NumberEntityDescription(
+        key="flow_delay_timer",
+        translation_key="flow_delay_timer",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        device_class=NumberDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
     ),
 )
 

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_light_snapshot[light.another_test_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 7000,
@@ -78,8 +79,9 @@
 # ---
 # name: test_light_snapshot[light.test_light_light_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 500,
@@ -157,8 +159,9 @@
 # ---
 # name: test_light_snapshot[light.test_light_light_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max_color_temp_kelvin': 4000,
@@ -226,8 +229,9 @@
 # ---
 # name: test_light_snapshot[light.test_light_light_3-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -285,8 +289,9 @@
 # ---
 # name: test_light_snapshot[light.test_light_light_4-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([

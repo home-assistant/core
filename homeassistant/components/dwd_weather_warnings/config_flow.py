@@ -1,7 +1,5 @@
 """Config flow for the dwd_weather_warnings integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from dwdwfsapi import DwdWeatherWarningsAPI

@@ -1,9 +1,9 @@
 """Config flow for the Home Assistant Connect ZBT-2 integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any, Protocol
+
+from universal_silabs_flasher.flasher import Zbt2Flasher
 
 from homeassistant.components import usb
 from homeassistant.components.homeassistant_hardware import firmware_config_flow
@@ -13,12 +13,8 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
-    ResetTarget,
 )
-from homeassistant.components.usb import (
-    usb_service_info_from_device,
-    usb_unique_id_from_service_info,
-)
+from homeassistant.components.usb import usb_service_info_from_device
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigEntryBaseFlow,
@@ -76,15 +72,7 @@ class ZBT2FirmwareMixin(ConfigEntryBaseFlow, FirmwareInstallFlowProtocol):
     context: ConfigFlowContext
 
     ZIGBEE_BAUDRATE = 460800
-
-    # Early ZBT-2 samples used RTS/DTR to trigger the bootloader, later ones use the
-    # baudrate method. Since the two are mutually exclusive we just use both.
-    BOOTLOADER_RESET_METHODS = [ResetTarget.RTS_DTR, ResetTarget.BAUDRATE]
-    APPLICATION_PROBE_METHODS = [
-        (ApplicationType.GECKO_BOOTLOADER, 115200),
-        (ApplicationType.EZSP, ZIGBEE_BAUDRATE),
-        (ApplicationType.SPINEL, 460800),
-    ]
+    _flasher_cls = Zbt2Flasher
 
     async def async_step_install_zigbee_firmware(
         self, user_input: dict[str, Any] | None = None
@@ -121,7 +109,7 @@ class HomeAssistantConnectZBT2ConfigFlow(
     """Handle a config flow for Home Assistant Connect ZBT-2."""
 
     VERSION = 1
-    MINOR_VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         """Initialize the config flow."""
@@ -139,14 +127,12 @@ class HomeAssistantConnectZBT2ConfigFlow(
 
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle usb discovery."""
-        unique_id = usb_unique_id_from_service_info(discovery_info)
-
         discovery_info.device = await self.hass.async_add_executor_job(
             usb.get_serial_by_id, discovery_info.device
         )
 
         try:
-            await self.async_set_unique_id(unique_id)
+            await self.async_set_unique_id(discovery_info.serial_number)
         finally:
             self._abort_if_unique_id_configured(updates={DEVICE: discovery_info.device})
 
@@ -164,9 +150,10 @@ class HomeAssistantConnectZBT2ConfigFlow(
         """Handle import from ZHA/OTBR firmware notification."""
         assert fw_discovery_info["usb_device"] is not None
         usb_info = usb_service_info_from_device(fw_discovery_info["usb_device"])
-        unique_id = usb_unique_id_from_service_info(usb_info)
 
-        if await self.async_set_unique_id(unique_id, raise_on_progress=False):
+        if await self.async_set_unique_id(
+            usb_info.serial_number, raise_on_progress=False
+        ):
             self._abort_if_unique_id_configured(updates={DEVICE: usb_info.device})
 
         self._usb_info = usb_info

@@ -48,7 +48,7 @@ async def test_scene_activate(
     assert len(mock_hub_ping.mock_calls) == 1
     assert len(mock_hub_configuration_test.mock_calls) == 1
 
-    entity = hass.states.get("scene.raum_0_gute_nacht")
+    entity = hass.states.get("scene.raum_0_raum_0_gute_nacht")
     assert entity is not None
     assert entity == snapshot
 

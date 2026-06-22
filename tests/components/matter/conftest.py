@@ -1,7 +1,5 @@
 """Provide common fixtures."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator
 from typing import Any
@@ -12,9 +10,13 @@ from matter_server.common.const import SCHEMA_VERSION
 from matter_server.common.models import ServerInfoMessage
 import pytest
 
+from homeassistant.components.matter import DOMAIN
 from homeassistant.core import HomeAssistant
 
-from .common import FIXTURES, setup_integration_with_node_fixture
+from .common import (
+    setup_integration_with_node_fixture,
+    setup_integration_with_node_fixtures,
+)
 
 from tests.common import MockConfigEntry
 
@@ -64,7 +66,7 @@ async def integration_fixture(
     hass: HomeAssistant, matter_client: MagicMock
 ) -> MockConfigEntry:
     """Set up the Matter integration."""
-    entry = MockConfigEntry(domain="matter", data={"url": "ws://localhost:5580/ws"})
+    entry = MockConfigEntry(domain=DOMAIN, data={"url": "ws://localhost:5580/ws"})
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
@@ -72,12 +74,10 @@ async def integration_fixture(
     return entry
 
 
-@pytest.fixture(params=FIXTURES)
-async def matter_devices(
-    hass: HomeAssistant, matter_client: MagicMock, request: pytest.FixtureRequest
-) -> MatterNode:
-    """Fixture for a Matter device."""
-    return await setup_integration_with_node_fixture(hass, request.param, matter_client)
+@pytest.fixture
+async def matter_devices(hass: HomeAssistant, matter_client: MagicMock) -> None:
+    """Fixture for all Matter devices."""
+    await setup_integration_with_node_fixtures(hass, matter_client)
 
 
 @pytest.fixture

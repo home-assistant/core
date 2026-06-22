@@ -1,14 +1,11 @@
 """Support for the Rainforest Eagle energy monitor."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -17,7 +14,7 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import EagleDataCoordinator
+from .coordinator import EagleDataCoordinator, RainforestEagleConfigEntry
 
 SENSORS = (
     SensorEntityDescription(
@@ -46,11 +43,11 @@ SENSORS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: RainforestEagleConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     entities = [EagleSensor(coordinator, description) for description in SENSORS]
 
     if coordinator.data.get("zigbee:Price") not in (None, "invalid"):
@@ -78,7 +75,11 @@ class EagleSensor(CoordinatorEntity[EagleDataCoordinator], SensorEntity):
         """Initialize the sensor."""
         super().__init__(coordinator)
         self.entity_description = entity_description
-        self._attr_unique_id = f"{coordinator.cloud_id}-${coordinator.hardware_address}-{entity_description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.cloud_id}"
+            f"-${coordinator.hardware_address}"
+            f"-{entity_description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, coordinator.cloud_id)},
             manufacturer="Rainforest Automation",

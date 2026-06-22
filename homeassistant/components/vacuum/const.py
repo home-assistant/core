@@ -1,7 +1,5 @@
 """Support for vacuum cleaner robots (botvacs)."""
 
-from __future__ import annotations
-
 from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING
 
@@ -44,3 +42,4 @@ class VacuumEntityFeature(IntFlag):
     MAP = 2048
     STATE = 4096  # Must be set by vacuum platforms derived from StateVacuumEntity
     START = 8192
+    CLEAN_AREA = 16384

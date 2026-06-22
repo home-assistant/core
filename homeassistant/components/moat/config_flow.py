@@ -1,7 +1,5 @@
 """Config flow for moat ble integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from moat_ble import MoatBluetoothDeviceData as DeviceData

@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_sensor[sensor.nord_pool_se3_currency-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_currency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -35,7 +36,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_currency-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_currency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Currency',
@@ -48,10 +49,11 @@
     'state': 'SEK',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_current_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_current_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -89,7 +91,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_current_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_current_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Current price',
@@ -104,10 +106,11 @@
     'state': '1.99796',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_daily_average-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_daily_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -145,7 +148,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_daily_average-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_daily_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Daily average',
@@ -160,10 +163,11 @@
     'state': '1.03398',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_exchange_rate-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_exchange_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -198,7 +202,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_exchange_rate-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_exchange_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Exchange rate',
@@ -212,10 +216,11 @@
     'state': '11.05186',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_highest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -251,7 +256,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_highest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end': '2025-10-01T17:15:00+00:00',
@@ -267,10 +272,11 @@
     'state': '3.82803',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_last_updated-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_last_updated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -303,7 +309,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_last_updated-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_last_updated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -317,10 +323,11 @@
     'state': '2025-09-30T12:08:16+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_lowest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,7 +363,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_lowest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end': '2025-10-01T02:15:00+00:00',
@@ -372,10 +379,11 @@
     'state': '0.44196',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_next_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_next_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -411,7 +419,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_next_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_next_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Next price',
@@ -425,10 +433,11 @@
     'state': '1.42403',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_average-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -466,7 +475,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_average-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Off-peak 1 average',
@@ -481,10 +490,11 @@
     'state': '0.74593',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_highest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -522,7 +532,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_highest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Off-peak 1 highest price',
@@ -537,10 +547,11 @@
     'state': '1.80996',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_lowest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -578,7 +589,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_lowest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Off-peak 1 lowest price',
@@ -593,10 +604,11 @@
     'state': '0.44196',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_from-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -629,7 +641,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_from-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -643,10 +655,11 @@
     'state': '2025-09-30T22:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_until-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -679,7 +692,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_1_time_until-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_1_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -693,10 +706,11 @@
     'state': '2025-10-01T06:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_average-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -734,7 +748,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_average-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Off-peak 2 average',
@@ -749,10 +763,11 @@
     'state': '1.05461',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_highest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -790,7 +805,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_highest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Off-peak 2 highest price',
@@ -805,10 +820,11 @@
     'state': '1.99796',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_lowest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -846,7 +862,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_lowest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Off-peak 2 lowest price',
@@ -861,10 +877,11 @@
     'state': '0.78568',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_from-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -897,7 +914,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_from-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -911,10 +928,11 @@
     'state': '2025-10-01T18:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_until-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -947,7 +965,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_off_peak_2_time_until-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_off_peak_2_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -961,10 +979,11 @@
     'state': '2025-10-01T22:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_average-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1002,7 +1021,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_average-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Peak average',
@@ -1017,10 +1036,11 @@
     'state': '1.21913',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_highest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1058,7 +1078,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_highest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Peak highest price',
@@ -1073,10 +1093,11 @@
     'state': '3.82803',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_lowest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1114,7 +1135,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_lowest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Peak lowest price',
@@ -1129,10 +1150,11 @@
     'state': '0.60774',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_time_from-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1165,7 +1187,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_time_from-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -1179,10 +1201,11 @@
     'state': '2025-10-01T06:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_time_until-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1215,7 +1238,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_peak_time_until-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_peak_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -1229,10 +1252,11 @@
     'state': '2025-10-01T18:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_previous_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_previous_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1268,7 +1292,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se3_previous_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se3_previous_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE3 Previous price',
@@ -1282,10 +1306,11 @@
     'state': '2.30807',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_currency-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_currency-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1318,7 +1343,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_currency-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_currency-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Currency',
@@ -1331,10 +1356,11 @@
     'state': 'SEK',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_current_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_current_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1372,7 +1398,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_current_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_current_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Current price',
@@ -1387,10 +1413,11 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_daily_average-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_daily_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1428,7 +1455,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_daily_average-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_daily_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Daily average',
@@ -1443,10 +1470,11 @@
     'state': '1.18078',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_exchange_rate-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_exchange_rate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1481,7 +1509,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_exchange_rate-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_exchange_rate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Exchange rate',
@@ -1495,10 +1523,11 @@
     'state': '11.05186',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_highest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1534,7 +1563,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_highest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end': '2025-10-01T17:15:00+00:00',
@@ -1550,10 +1579,11 @@
     'state': '4.44274',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_last_updated-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_last_updated-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1586,7 +1616,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_last_updated-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_last_updated-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -1600,10 +1630,11 @@
     'state': '2025-09-30T12:08:16+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_lowest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1639,7 +1670,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_lowest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'end': '2025-10-01T18:15:00+00:00',
@@ -1655,10 +1686,11 @@
     'state': '0.0',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_next_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_next_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1694,7 +1726,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_next_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_next_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Next price',
@@ -1708,10 +1740,11 @@
     'state': '1.64617',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_average-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1749,7 +1782,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_average-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Off-peak 1 average',
@@ -1764,10 +1797,11 @@
     'state': '0.86099',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_highest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1805,7 +1839,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_highest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Off-peak 1 highest price',
@@ -1820,10 +1854,11 @@
     'state': '2.02934',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_lowest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1861,7 +1896,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_lowest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Off-peak 1 lowest price',
@@ -1876,10 +1911,11 @@
     'state': '0.51546',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_from-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1912,7 +1948,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_from-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -1926,10 +1962,11 @@
     'state': '2025-09-30T22:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_until-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1962,7 +1999,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_1_time_until-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_1_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -1976,10 +2013,11 @@
     'state': '2025-10-01T06:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_average-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2017,7 +2055,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_average-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Off-peak 2 average',
@@ -2032,10 +2070,11 @@
     'state': '1.21907',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_highest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2073,7 +2112,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_highest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Off-peak 2 highest price',
@@ -2088,10 +2127,11 @@
     'state': '2.31216',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_lowest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2129,7 +2169,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_lowest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Off-peak 2 lowest price',
@@ -2144,10 +2184,11 @@
     'state': '0.91222',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_from-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2180,7 +2221,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_from-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -2194,10 +2235,11 @@
     'state': '2025-10-01T18:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_until-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2230,7 +2272,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_off_peak_2_time_until-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_off_peak_2_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -2244,10 +2286,11 @@
     'state': '2025-10-01T22:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_average-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_average-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2285,7 +2328,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_average-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_average-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Peak average',
@@ -2300,10 +2343,11 @@
     'state': '1.38122',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_highest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_highest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2341,7 +2385,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_highest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_highest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Peak highest price',
@@ -2356,10 +2400,11 @@
     'state': '4.44274',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_lowest_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_lowest_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -2397,7 +2442,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_lowest_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_lowest_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Peak lowest price',
@@ -2412,10 +2457,11 @@
     'state': '0.68312',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_time_from-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_time_from-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2448,7 +2494,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_time_from-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_time_from-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -2462,10 +2508,11 @@
     'state': '2025-10-01T06:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_time_until-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_time_until-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2498,7 +2545,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_peak_time_until-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_peak_time_until-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
@@ -2512,10 +2559,11 @@
     'state': '2025-10-01T18:00:00+00:00',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_previous_price-entry]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_previous_price-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2551,7 +2599,7 @@
     'unit_of_measurement': 'SEK/kWh',
   })
 # ---
-# name: test_sensor[sensor.nord_pool_se4_previous_price-state]
+# name: test_sensor[load_platforms0][sensor.nord_pool_se4_previous_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Nord Pool SE4 Previous price',

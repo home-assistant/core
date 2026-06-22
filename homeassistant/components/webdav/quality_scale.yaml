@@ -124,15 +124,12 @@ rules:
     status: exempt
     comment: |
       This integration does not have entities.
-  exception-translations: done
+  exception-translations: todo
   icon-translations:
     status: exempt
     comment: |
       This integration does not have entities.
-  reconfiguration-flow:
-    status: exempt
-    comment: |
-      Nothing to reconfigure.
+  reconfiguration-flow: todo
   repair-issues: todo
   stale-devices:
     status: exempt

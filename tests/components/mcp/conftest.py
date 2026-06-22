@@ -13,20 +13,20 @@ from homeassistant.components.application_credentials import (
     async_import_client_credential,
 )
 from homeassistant.components.mcp.const import (
-    CONF_ACCESS_TOKEN,
     CONF_AUTHORIZATION_URL,
     CONF_SCOPE,
     CONF_TOKEN_URL,
     DOMAIN,
 )
-from homeassistant.const import CONF_TOKEN, CONF_URL
+from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN, CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
 TEST_API_NAME = "Memory Server"
-MCP_SERVER_URL = "http://1.1.1.1:8080/sse"
+MCP_SERVER_URL = "http://1.1.1.1:8080/mcp"
 CLIENT_ID = "test-client-id"
 CLIENT_SECRET = "test-client-secret"
 AUTH_DOMAIN = "some-auth-domain"
@@ -105,7 +105,7 @@ async def mock_credential(hass: HomeAssistant) -> None:
 @pytest.fixture(name="config_entry_token_expiration")
 def mock_config_entry_token_expiration() -> datetime.datetime:
     """Fixture to mock the token expiration."""
-    return datetime.datetime.now(datetime.UTC) + datetime.timedelta(days=1)
+    return dt_util.utcnow() + datetime.timedelta(days=1)
 
 
 @pytest.fixture(name="config_entry_with_auth")

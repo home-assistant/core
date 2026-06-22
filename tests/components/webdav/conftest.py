@@ -42,6 +42,7 @@ async def _download_mock(path: str, timeout=None) -> AsyncIterator[bytes]:
     """Mock the download function."""
     if path.endswith(".json"):
         yield dumps(BACKUP_METADATA).encode()
+        return
 
     yield b"backup data"
 

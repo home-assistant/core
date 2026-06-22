@@ -1,0 +1,63 @@
+# serializer version: 1
+# name: test_device_registry_integration
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://app.aqvify.com',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'aqvify',
+          'test_account_id_DeviceKey_1',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Aqvify',
+      'model': None,
+      'model_id': None,
+      'name': 'Device 1',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': 'DeviceKey_1',
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': 'https://app.aqvify.com',
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'aqvify',
+          'test_account_id_DeviceKey_2',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Aqvify',
+      'model': None,
+      'model_id': None,
+      'name': 'Device 2',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': 'DeviceKey_2',
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---

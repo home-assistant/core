@@ -1,7 +1,5 @@
 """Data update coordinator for Traccar Server."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime
 from logging import DEBUG as LOG_LEVEL_DEBUG
@@ -83,6 +81,9 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
     async def _async_update_data(self) -> TraccarServerCoordinatorData:
         """Fetch data from Traccar Server."""
         LOGGER.debug("Updating device data")
+        get_custom_attrs = (
+            self._return_custom_attributes_if_not_filtered_by_accuracy_configuration
+        )
         data: TraccarServerCoordinatorData = {}
         try:
             (
@@ -120,12 +121,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 )
                 continue
 
-            if (
-                attr
-                := self._return_custom_attributes_if_not_filtered_by_accuracy_configuration(
-                    device, position
-                )
-            ) is None:
+            attr = get_custom_attrs(device, position)
+            if attr is None:
                 self.logger.debug(
                     "Skipping position update %s for %s due to accuracy filter",
                     position["id"],
@@ -149,18 +146,17 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         """Handle subscription data."""
         self.logger.debug("Received subscription data: %s", data)
         self._should_log_subscription_error = True
+        get_custom_attrs = (
+            self._return_custom_attributes_if_not_filtered_by_accuracy_configuration
+        )
         update_devices = set()
         for device in data.get("devices") or []:
             if (device_id := device["id"]) not in self.data:
                 self.logger.debug("Device %s not found in data", device_id)
                 continue
 
-            if (
-                attr
-                := self._return_custom_attributes_if_not_filtered_by_accuracy_configuration(
-                    device, self.data[device_id]["position"]
-                )
-            ) is None:
+            attr = get_custom_attrs(device, self.data[device_id]["position"])
+            if attr is None:
                 continue
 
             self.data[device_id]["device"] = device
@@ -176,12 +172,8 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
                 )
                 continue
 
-            if (
-                attr
-                := self._return_custom_attributes_if_not_filtered_by_accuracy_configuration(
-                    self.data[device_id]["device"], position
-                )
-            ) is None:
+            attr = get_custom_attrs(self.data[device_id]["device"], position)
+            if attr is None:
                 self.logger.debug(
                     "Skipping position update %s for %s due to accuracy filter",
                     position["id"],
@@ -257,7 +249,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         device: DeviceModel,
         position: PositionModel,
     ) -> dict[str, Any] | None:
-        """Return a dictionary of custom attributes if not filtered by accuracy configuration."""
+        """Return custom attributes if not filtered by accuracy."""
         attr = {}
         skip_accuracy_filter = False
 

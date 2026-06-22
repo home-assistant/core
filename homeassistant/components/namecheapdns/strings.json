@@ -30,7 +30,7 @@
           "password": "[%key:component::namecheapdns::config::step::user::data_description::password%]"
         },
         "description": "You can find the Dynamic DNS password in your Namecheap account under [Domain List > {domain} > Manage > Advanced DNS > Dynamic DNS]({account_panel}).",
-        "title": "Re-configure {name}"
+        "title": "Reconfigure {name}"
       },
       "user": {
         "data": {

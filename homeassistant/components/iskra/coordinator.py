@@ -47,11 +47,13 @@ class IskraDataUpdateCoordinator(DataUpdateCoordinator[None]):
             await self.device.update_status()
         except DeviceTimeoutError as e:
             raise UpdateFailed(
-                f"Timeout error occurred while updating data for device {self.device.serial}"
+                "Timeout error occurred while updating"
+                f" data for device {self.device.serial}"
             ) from e
         except DeviceConnectionError as e:
             raise UpdateFailed(
-                f"Connection error occurred while updating data for device {self.device.serial}"
+                "Connection error occurred while updating"
+                f" data for device {self.device.serial}"
             ) from e
         except NotAuthorised as e:
             raise UpdateFailed(

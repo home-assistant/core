@@ -1,7 +1,5 @@
 """Support to set a numeric value from a slider or text box."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import Any, Self
@@ -243,7 +241,7 @@ class InputNumber(collection.CollectionEntity, RestoreEntity):
         return self._config.get(CONF_NAME)
 
     @property
-    def icon(self):
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 

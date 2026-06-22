@@ -1,7 +1,5 @@
 """Validate integration quality scale files."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 import voluptuous as vol
@@ -11,16 +9,11 @@ from homeassistant.const import Platform
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.yaml import load_yaml_dict
 
-from .model import Config, Integration, ScaledQualityScaleTiers
+from .model import Config, Integration, IntegrationType, ScaledQualityScaleTiers
 from .quality_scale_validation import (
     RuleValidationProtocol,
-    action_setup,
-    config_entry_unloading,
     config_flow,
-    diagnostics,
     discovery,
-    parallel_updates,
-    reauthentication_flow,
     reconfiguration_flow,
     runtime_data,
     strict_typing,
@@ -42,7 +35,7 @@ class Rule:
 
 ALL_RULES = [
     # BRONZE
-    Rule("action-setup", ScaledQualityScaleTiers.BRONZE, action_setup),
+    Rule("action-setup", ScaledQualityScaleTiers.BRONZE),
     Rule("appropriate-polling", ScaledQualityScaleTiers.BRONZE),
     Rule("brands", ScaledQualityScaleTiers.BRONZE),
     Rule("common-modules", ScaledQualityScaleTiers.BRONZE),
@@ -62,22 +55,18 @@ ALL_RULES = [
     Rule("unique-config-entry", ScaledQualityScaleTiers.BRONZE, unique_config_entry),
     # SILVER
     Rule("action-exceptions", ScaledQualityScaleTiers.SILVER),
-    Rule(
-        "config-entry-unloading", ScaledQualityScaleTiers.SILVER, config_entry_unloading
-    ),
+    Rule("config-entry-unloading", ScaledQualityScaleTiers.SILVER),
     Rule("docs-configuration-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("docs-installation-parameters", ScaledQualityScaleTiers.SILVER),
     Rule("entity-unavailable", ScaledQualityScaleTiers.SILVER),
     Rule("integration-owner", ScaledQualityScaleTiers.SILVER),
     Rule("log-when-unavailable", ScaledQualityScaleTiers.SILVER),
-    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER, parallel_updates),
-    Rule(
-        "reauthentication-flow", ScaledQualityScaleTiers.SILVER, reauthentication_flow
-    ),
+    Rule("parallel-updates", ScaledQualityScaleTiers.SILVER),
+    Rule("reauthentication-flow", ScaledQualityScaleTiers.SILVER),
     Rule("test-coverage", ScaledQualityScaleTiers.SILVER),
     # GOLD: [
     Rule("devices", ScaledQualityScaleTiers.GOLD),
-    Rule("diagnostics", ScaledQualityScaleTiers.GOLD, diagnostics),
+    Rule("diagnostics", ScaledQualityScaleTiers.GOLD),
     Rule("discovery", ScaledQualityScaleTiers.GOLD, discovery),
     Rule("discovery-update-info", ScaledQualityScaleTiers.GOLD),
     Rule("docs-data-update", ScaledQualityScaleTiers.GOLD),
@@ -129,7 +118,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "aftership",
     "agent_dvr",
     "airly",
-    "airnow",
     "airq",
     "airthings",
     "airthings_ble",
@@ -212,6 +200,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "bluetooth",
     "bluetooth_adapters",
     "bluetooth_le_tracker",
+    "bmw_connected_drive",
     "bond",
     "bosch_shc",
     "braviatv",
@@ -220,7 +209,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "browser",
     "brunt",
     "bryant_evolution",
-    "bsblan",
     "bt_home_hub_5",
     "bt_smarthub",
     "bthome",
@@ -229,7 +217,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "canary",
     "cast",
     "ccm15",
-    "cert_expiry",
     "chacon_dio",
     "channels",
     "circuit",
@@ -296,7 +283,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "dsmr",
     "dsmr_reader",
     "dublin_bus_transport",
-    "duke_energy",
     "dunehd",
     "duotecno",
     "dwd_weather_warnings",
@@ -449,7 +435,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "hdmi_cec",
     "heatmiser",
     "here_travel_time",
-    "hikvision",
     "hikvisioncam",
     "hisense_aehw4a1",
     "history_stats",
@@ -466,19 +451,16 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "honeywell",
     "horizon",
     "hp_ilo",
-    "html5",
     "http",
     "hue",
     "huisbaasje",
     "hunterdouglas_powerview",
     "husqvarna_automower_ble",
-    "huum",
     "hvv_departures",
     "hydrawise",
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
@@ -627,7 +609,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "modern_forms",
     "moehlenhoff_alpha2",
     "mold_indicator",
-    "monarch_money",
     "monoprice",
     "monzo",
     "moon",
@@ -655,7 +636,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nasweb",
     "neato",
     "nederlandse_spoorwegen",
-    "ness_alarm",
     "netatmo",
     "netdata",
     "netgear",
@@ -676,7 +656,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nmbs",
     "no_ip",
     "noaa_tides",
-    "nobo_hub",
     "norway_air",
     "notify_events",
     "notion",
@@ -757,8 +736,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "prosegur",
     "prowl",
     "proximity",
-    "proxmoxve",
-    "prusalink",
     "ps4",
     "pulseaudio_loopback",
     "pure_energie",
@@ -872,7 +849,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "sma",
     "smappee",
     "smart_meter_texas",
-    "smarttub",
     "smarty",
     "smhi",
     "sms",
@@ -890,7 +866,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "sony_projector",
     "soundtouch",
     "spc",
-    "speedtestdotnet",
     "spider",
     "spotify",
     "sql",
@@ -941,10 +916,7 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "telnet",
     "temper",
     "template",
-    "tesla_fleet",
     "tesla_wall_connector",
-    "tessie",
-    "tfiac",
     "thermobeacon",
     "thermopro",
     "thermoworks_smoke",
@@ -955,7 +927,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "thread",
     "threshold",
     "tibber",
-    "tikteck",
     "tile",
     "tilt_ble",
     "time_date",
@@ -992,7 +963,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",
@@ -1028,11 +998,9 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "wake_on_lan",
     "wallbox",
     "waqi",
-    "waterfurnace",
     "watson_tts",
     "watttime",
     "waze_travel_time",
-    "weatherflow",
     "weatherflow_cloud",
     "weatherkit",
     "webmin",
@@ -1053,7 +1021,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "wsdot",
     "wyoming",
     "x10",
-    "xbox",
     "xeoma",
     "xiaomi",
     "xiaomi_aqara",
@@ -1082,7 +1049,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "zeroconf",
     "zerproc",
     "zestimate",
-    "zeversolar",
     "zha",
     "zhong_hong",
     "ziggo_mediabox_xl",
@@ -1134,7 +1100,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "anel_pwrctrl",
     "anova",
     "anthemav",
-    "anthropic",
     "aosmith",
     "apache_kafka",
     "apple_tv",
@@ -1202,7 +1167,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "browser",
     "brunt",
     "bryant_evolution",
-    "bsblan",
     "bt_home_hub_5",
     "bt_smarthub",
     "bthome",
@@ -1279,7 +1243,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "dsmr",
     "dsmr_reader",
     "dublin_bus_transport",
-    "duke_energy",
     "dunehd",
     "duotecno",
     "dwd_weather_warnings",
@@ -1306,7 +1269,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "eliqonline",
     "elkm1",
     "elmax",
-    "elgato",
     "elv",
     "elvia",
     "emby",
@@ -1431,7 +1393,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "greenwave",
     "group",
     "gtfs",
-    "growatt_server",
     "guardian",
     "harman_kardon_avr",
     "harmony",
@@ -1465,13 +1426,11 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "huisbaasje",
     "hunterdouglas_powerview",
     "husqvarna_automower_ble",
-    "huum",
     "hvv_departures",
     "hydrawise",
     "hyperion",
     "ialarm",
     "iammeter",
-    "iaqualink",
     "ibeacon",
     "icloud",
     "idteck_prox",
@@ -1676,7 +1635,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nmbs",
     "no_ip",
     "noaa_tides",
-    "nobo_hub",
     "norway_air",
     "notify_events",
     "notion",
@@ -1831,7 +1789,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "rympro",
     "saj",
     "sanix",
-    "satel_integra",
     "schlage",
     "schluter",
     "scrape",
@@ -1897,7 +1854,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "spc",
     "speedtestdotnet",
     "spider",
-    "splunk",
     "spotify",
     "sql",
     "srp_energy",
@@ -1937,7 +1893,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "systemmonitor",
     "tado",
     "tailscale",
-    "tailwind",
     "tami4",
     "tank_utility",
     "tapsaff",
@@ -1954,9 +1909,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "template",
     "tesla_fleet",
     "tesla_wall_connector",
-    "teslemetry",
-    "tessie",
-    "tfiac",
     "thermobeacon",
     "thermopro",
     "thermoworks_smoke",
@@ -1967,7 +1919,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "thread",
     "threshold",
     "tibber",
-    "tikteck",
     "tile",
     "tilt_ble",
     "time_date",
@@ -2005,7 +1956,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "ubus",
     "uk_transport",
     "ukraine_alarm",
-    "unifi",
     "unifi_direct",
     "unifiled",
     "universal",
@@ -2042,7 +1992,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "wake_on_lan",
     "wallbox",
     "waqi",
-    "waterfurnace",
     "watson_tts",
     "watttime",
     "waze_travel_time",
@@ -2068,7 +2017,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "wsdot",
     "wyoming",
     "x10",
-    "xbox",
     "xeoma",
     "xiaomi",
     "xiaomi_aqara",
@@ -2097,7 +2045,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "zeroconf",
     "zerproc",
     "zestimate",
-    "zeversolar",
     "zha",
     "zhong_hong",
     "ziggo_mediabox_xl",
@@ -2113,7 +2060,9 @@ NO_QUALITY_SCALE = [
     "application_credentials",
     "auth",
     "automation",
+    "battery",
     "blueprint",
+    "brands",
     "config",
     "configurator",
     "counter",
@@ -2121,9 +2070,13 @@ NO_QUALITY_SCALE = [
     "device_automation",
     "device_tracker",
     "diagnostics",
+    "door",
+    "doorbell",
     "ffmpeg",
     "file_upload",
     "frontend",
+    "garage_door",
+    "gate",
     "hardkernel",
     "hardware",
     "history",
@@ -2133,6 +2086,8 @@ NO_QUALITY_SCALE = [
     "homeassistant_hardware",
     "homeassistant_sky_connect",
     "homeassistant_yellow",
+    "humidity",
+    "illuminance",
     "image_upload",
     "input_boolean",
     "input_button",
@@ -2147,9 +2102,13 @@ NO_QUALITY_SCALE = [
     "logger",
     "lovelace",
     "media_source",
+    "moisture",
+    "motion",
     "my",
+    "occupancy",
     "onboarding",
     "panel_custom",
+    "power",
     "proxy",
     "python_script",
     "raspberry_pi",
@@ -2160,13 +2119,16 @@ NO_QUALITY_SCALE = [
     "search",
     "system_health",
     "system_log",
+    "unifi_discovery",
     "tag",
+    "temperature",
     "timer",
     "trace",
     "usage_prediction",
     "web_rtc",
     "webhook",
     "websocket_api",
+    "window",
     "zone",
 ]
 
@@ -2179,7 +2141,7 @@ SCHEMA = vol.Schema(
                     vol.Schema(
                         {
                             vol.Required("status"): vol.In(["todo", "done"]),
-                            vol.Optional("comment"): str,
+                            vol.Required("comment"): str,
                         }
                     ),
                     vol.Schema(
@@ -2209,25 +2171,32 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         if (
             integration.domain not in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE
             and integration.domain not in NO_QUALITY_SCALE
-            and integration.integration_type != "virtual"
+            and integration.integration_type != IntegrationType.VIRTUAL
         ):
             integration.add_error(
                 "quality_scale",
                 (
-                    "New integrations marked as internal should be added to NO_QUALITY_SCALE in script/hassfest/quality_scale.py."
+                    "New integrations marked as internal"
+                    " should be added to NO_QUALITY_SCALE"
+                    " in script/hassfest/quality_scale.py."
                     if integration.quality_scale == "internal"
-                    else "Quality scale definition not found. New integrations are required to at least reach the Bronze tier."
+                    else "Quality scale definition not found."
+                    " New integrations are required to at"
+                    " least reach the Bronze tier."
                 ),
             )
             return
         if declared_quality_scale is not None:
             integration.add_error(
                 "quality_scale",
-                "Quality scale definition not found. Integrations that set a manifest quality scale must have a quality scale definition.",
+                "Quality scale definition not found."
+                " Integrations that set a manifest quality"
+                " scale must have a quality scale"
+                " definition.",
             )
             return
         return
-    if integration.integration_type == "virtual":
+    if integration.integration_type == IntegrationType.VIRTUAL:
         integration.add_error(
             "quality_scale",
             "Virtual integrations are not allowed to have a quality scale file.",
@@ -2242,7 +2211,9 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     if integration.domain in INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE:
         integration.add_error(
             "quality_scale",
-            "Quality scale file found! Please remove from `INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE`"
+            "Quality scale file found! Please"
+            " remove from"
+            " `INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE`"
             " in script/hassfest/quality_scale.py",
         )
         return
@@ -2252,7 +2223,8 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
     ):
         integration.add_error(
             "quality_scale",
-            "This integration is graded and should be removed from `INTEGRATIONS_WITHOUT_SCALE`"
+            "This integration is graded and should be"
+            " removed from `INTEGRATIONS_WITHOUT_SCALE`"
             " in script/hassfest/quality_scale.py",
         )
         return
@@ -2263,7 +2235,10 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
         integration.add_error(
             "quality_scale",
             (
-                "New integrations marked as internal should be added to INTEGRATIONS_WITHOUT_SCALE in script/hassfest/quality_scale.py."
+                "New integrations marked as internal"
+                " should be added to"
+                " INTEGRATIONS_WITHOUT_SCALE in"
+                " script/hassfest/quality_scale.py."
                 if integration.quality_scale == "internal"
                 else "New integrations are required to at least reach the Bronze tier."
             ),
@@ -2317,7 +2292,9 @@ def validate_iqs_file(config: Config, integration: Integration) -> None:
             )
             integration.add_error(
                 "quality_scale",
-                f"Quality scale tier {scale.name.lower()} requires quality scale rules to be met:\n{friendly_rule_str}",
+                f"Quality scale tier {scale.name.lower()}"
+                " requires quality scale rules to be"
+                f" met:\n{friendly_rule_str}",
             )
 
 

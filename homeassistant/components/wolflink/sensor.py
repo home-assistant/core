@@ -1,7 +1,5 @@
 """The Wolf SmartSet sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -26,7 +24,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
@@ -43,7 +40,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import COORDINATOR, DEVICE_ID, DOMAIN, MANUFACTURER, PARAMETERS, STATES
+from .const import DOMAIN, MANUFACTURER, STATES
+from .coordinator import WolflinkConfigEntry, WolfLinkCoordinator
 
 
 def get_listitem_resolve_state(wolf_object, state):
@@ -68,29 +66,34 @@ SENSOR_DESCRIPTIONS = [
         key="temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        state_class=SensorStateClass.MEASUREMENT,
         supported_fn=lambda param: isinstance(param, Temperature),
     ),
     WolflinkSensorEntityDescription(
         key="pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.BAR,
+        state_class=SensorStateClass.MEASUREMENT,
         supported_fn=lambda param: isinstance(param, Pressure),
     ),
     WolflinkSensorEntityDescription(
         key="energy",
         device_class=SensorDeviceClass.ENERGY,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         supported_fn=lambda param: isinstance(param, EnergyParameter),
     ),
     WolflinkSensorEntityDescription(
         key="power",
         device_class=SensorDeviceClass.POWER,
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
         supported_fn=lambda param: isinstance(param, PowerParameter),
     ),
     WolflinkSensorEntityDescription(
         key="percentage",
         native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
         supported_fn=lambda param: isinstance(param, PercentageParameter),
     ),
     WolflinkSensorEntityDescription(
@@ -101,20 +104,24 @@ SENSOR_DESCRIPTIONS = [
     ),
     WolflinkSensorEntityDescription(
         key="hours",
+        device_class=SensorDeviceClass.DURATION,
         icon="mdi:clock",
         native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         supported_fn=lambda param: isinstance(param, HoursParameter),
     ),
     WolflinkSensorEntityDescription(
         key="flow",
         device_class=SensorDeviceClass.VOLUME_FLOW_RATE,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
+        state_class=SensorStateClass.MEASUREMENT,
         supported_fn=lambda param: isinstance(param, FlowParameter),
     ),
     WolflinkSensorEntityDescription(
         key="frequency",
         device_class=SensorDeviceClass.FREQUENCY,
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
+        state_class=SensorStateClass.MEASUREMENT,
         supported_fn=lambda param: isinstance(param, FrequencyParameter),
     ),
     WolflinkSensorEntityDescription(
@@ -132,17 +139,15 @@ SENSOR_DESCRIPTIONS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WolflinkConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up all entries for Wolf Platform."""
-    coordinator = hass.data[DOMAIN][config_entry.entry_id][COORDINATOR]
-    parameters = hass.data[DOMAIN][config_entry.entry_id][PARAMETERS]
-    device_id = hass.data[DOMAIN][config_entry.entry_id][DEVICE_ID]
+    coordinator = config_entry.runtime_data
 
     entities: list[WolfLinkSensor] = [
-        WolfLinkSensor(coordinator, parameter, device_id, description)
-        for parameter in parameters
+        WolfLinkSensor(coordinator, parameter, coordinator.device_id, description)
+        for parameter in coordinator.parameters
         for description in SENSOR_DESCRIPTIONS
         if description.supported_fn(parameter)
     ]
@@ -150,16 +155,16 @@ async def async_setup_entry(
     async_add_entities(entities, True)
 
 
-class WolfLinkSensor(CoordinatorEntity, SensorEntity):
+class WolfLinkSensor(CoordinatorEntity[WolfLinkCoordinator], SensorEntity):
     """Base class for all Wolf entities."""
 
     entity_description: WolflinkSensorEntityDescription
 
     def __init__(
         self,
-        coordinator,
+        coordinator: WolfLinkCoordinator,
         wolf_object: Parameter,
-        device_id: str,
+        device_id: int,
         description: WolflinkSensorEntityDescription,
     ) -> None:
         """Initialize."""
@@ -168,7 +173,7 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
         self.wolf_object = wolf_object
         self._attr_name = wolf_object.name
         self._attr_unique_id = f"{device_id}:{wolf_object.parameter_id}"
-        self._state = None
+        self._state: str | None = None
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, str(device_id))},
             configuration_url="https://www.wolf-smartset.com/",
@@ -177,7 +182,7 @@ class WolfLinkSensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self) -> str | None:
-        """Return the state. Wolf Client is returning only changed values so we need to store old value here."""
+        """Return the state, storing old values for unchanged parameters."""
         if self.wolf_object.parameter_id in self.coordinator.data:
             new_state = self.coordinator.data[self.wolf_object.parameter_id]
             self.wolf_object.value_id = new_state[0]

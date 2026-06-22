@@ -1,0 +1,21 @@
+{
+  "entity": {
+    "sensor": {
+      "heart_rate_avg": {
+        "default": "mdi:heart-pulse"
+      },
+      "hrv": {
+        "default": "mdi:heart-flash"
+      },
+      "respiratory_rate_avg": {
+        "default": "mdi:lungs"
+      },
+      "sleep_duration": {
+        "default": "mdi:sleep"
+      },
+      "sleep_score": {
+        "default": "mdi:sleep"
+      }
+    }
+  }
+}

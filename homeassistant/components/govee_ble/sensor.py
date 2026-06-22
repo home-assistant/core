@@ -1,7 +1,5 @@
 """Support for govee ble sensors."""
 
-from __future__ import annotations
-
 from datetime import date, datetime
 from decimal import Decimal
 
@@ -21,6 +19,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import (
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
     SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     UnitOfTemperature,
@@ -70,6 +69,12 @@ SENSOR_DESCRIPTIONS = {
         key=f"{DeviceClass.PM25}_{Units.CONCENTRATION_MICROGRAMS_PER_CUBIC_METER}",
         device_class=SensorDeviceClass.PM25,
         native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    (DeviceClass.CO2, Units.CONCENTRATION_PARTS_PER_MILLION): SensorEntityDescription(
+        key=f"{DeviceClass.CO2}_{Units.CONCENTRATION_PARTS_PER_MILLION}",
+        device_class=SensorDeviceClass.CO2,
+        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -140,6 +145,6 @@ class GoveeBluetoothSensorEntity(
         )
 
     @property
-    def native_value(self) -> _SensorValueType:  # pylint: disable=hass-return-type
+    def native_value(self) -> _SensorValueType:  # pylint: disable=home-assistant-return-type
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)

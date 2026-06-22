@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud climate devices."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homematicip.base.enums import AbsenceType
@@ -72,9 +70,11 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
 
     Heat mode is supported for all heating devices incl. their defined profiles.
     Boost is available for radiator thermostats only.
-    Cool mode is only available for floor heating systems, if basically enabled in the hmip app.
+    Cool mode is only available for floor heating systems, if
+    basically enabled in the hmip app.
     """
 
+    _attr_has_entity_name = False
     _attr_supported_features = (
         ClimateEntityFeature.PRESET_MODE | ClimateEntityFeature.TARGET_TEMPERATURE
     )
@@ -83,10 +83,21 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     def __init__(self, hap: HomematicipHAP, device: HeatingGroup) -> None:
         """Initialize heating group."""
         device.modelType = "HmIP-Heating-Group"
-        super().__init__(hap, device)
+        super().__init__(hap, device, feature_id="climate")
         self._simple_heating = None
         if device.actualTemperature is None:
             self._simple_heating = self._first_radiator_thermostat
+
+    @property
+    def available(self) -> bool:
+        """Heating group available.
+
+        A heating group must be available, and should not be affected by the
+        individual availability of group members.
+        This allows controlling the temperature even when individual group
+        members are not available.
+        """
+        return True
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -276,7 +287,7 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
         ]
 
     def _get_qualified_profile_name(self, profile: HeatingCoolingProfile) -> str:
-        """Get a name for the given profile. If exists, this is the name of the profile."""
+        """Get a name for the given profile."""
         if profile.name != "":
             return profile.name
         if profile.index in NICE_PROFILE_NAMES:

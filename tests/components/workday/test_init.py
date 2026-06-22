@@ -1,30 +1,35 @@
 """Test Workday component setup process."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from freezegun.api import FrozenDateTimeFactory
 from holidays.utils import country_holidays
 
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.workday.const import (
+    DEFAULT_OFFSET,
+    DEFAULT_WORKDAYS,
+    DOMAIN,
+)
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.util.dt import UTC
 
 from . import TEST_CONFIG_EXAMPLE_1, TEST_CONFIG_WITH_PROVINCE, init_integration
+
+from tests.common import MockConfigEntry
 
 
 async def test_load_unload_entry(hass: HomeAssistant) -> None:
     """Test load and unload entry."""
     entry = await init_integration(hass, TEST_CONFIG_EXAMPLE_1)
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_us")
     assert state
 
     await hass.config_entries.async_remove(entry.entry_id)
     await hass.async_block_till_done()
 
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_us")
     assert not state
 
 
@@ -38,7 +43,7 @@ async def test_update_options(
     entry = await init_integration(hass, TEST_CONFIG_WITH_PROVINCE)
     assert entry.state is ConfigEntryState.LOADED
     assert entry.update_listeners is not None
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state.state == "on"
 
     new_options = TEST_CONFIG_WITH_PROVINCE.copy()
@@ -50,7 +55,7 @@ async def test_update_options(
 
     entry_check = hass.config_entries.async_get_entry("1")
     assert entry_check.state is ConfigEntryState.LOADED
-    state = hass.states.get("binary_sensor.workday_sensor")
+    state = hass.states.get("binary_sensor.workday_sensor_de_bw")
     assert state.state == "off"
 
 
@@ -63,3 +68,37 @@ async def test_workday_subdiv_aliases() -> None:
     )
     subdiv_aliases = country.get_subdivision_aliases()
     assert subdiv_aliases["6AE"] == ["Alsace"]
+
+
+async def test_migrate_minor_version_1_to_2(hass: HomeAssistant) -> None:
+    """Test migrates to version 1.2."""
+    config = {
+        "name": "Test sensor",
+        "country": "US",
+        "excludes": ["sat", "sun"],
+        "days_offset": DEFAULT_OFFSET,
+        "workdays": DEFAULT_WORKDAYS,
+        "add_holidays": [],
+        "remove_holidays": [],
+        "language": "en_US",
+    }
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_USER,
+        data={},
+        options=config,
+        entry_id="1",
+        title="Test sensor",
+        minor_version=1,
+    )
+    config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("binary_sensor.test_sensor")
+    assert state
+
+    assert config_entry.version == 1
+    assert config_entry.minor_version == 2
+    assert config_entry.options == config

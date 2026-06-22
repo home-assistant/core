@@ -1,7 +1,5 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import re
@@ -74,9 +72,11 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
 ]
 
 
@@ -293,7 +293,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
 
     elk_temp_unit = elk.panel.temperature_units
     if elk_temp_unit == "C":
-        temperature_unit = UnitOfTemperature.CELSIUS
+        temperature_unit = UnitOfTemperature.CELSIUS  # type: ignore[unreachable]
     else:
         temperature_unit = UnitOfTemperature.FAHRENHEIT
     config["temperature_unit"] = temperature_unit

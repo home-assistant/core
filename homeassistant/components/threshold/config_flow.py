@@ -1,7 +1,5 @@
 """Config flow for Threshold integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -139,7 +137,7 @@ def ws_start_preview(
         name=name,
         lower=msg["user_input"].get(CONF_LOWER),
         upper=msg["user_input"].get(CONF_UPPER),
-        hysteresis=msg["user_input"].get(CONF_HYSTERESIS),
+        hysteresis=msg["user_input"].get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS),
         device_class=None,
         unique_id=None,
     )

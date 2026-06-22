@@ -1,7 +1,5 @@
 """Support for Envisalink zone bypass switches."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -77,7 +75,7 @@ class EnvisalinkSwitch(EnvisalinkEntity, SwitchEntity):
         )
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the boolean response if the zone is bypassed."""
         return self._info["bypassed"]
 

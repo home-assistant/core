@@ -1,10 +1,8 @@
 """Common fixtures for the IDrive e2 tests."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Generator
 import json
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
@@ -53,16 +51,20 @@ def mock_client(agent_backup: AgentBackup) -> Generator[AsyncMock]:
         client = create_client.return_value
 
         tar_file, metadata_file = suggested_filenames(agent_backup)
-        client.list_objects_v2.return_value = {
-            "Contents": [{"Key": tar_file}, {"Key": metadata_file}]
-        }
+        # Mock the paginator for list_objects_v2
+        client.get_paginator = MagicMock()
+        paginate = client.get_paginator.return_value.paginate
+        paginate.return_value.__aiter__.return_value = [
+            {"Contents": [{"Key": tar_file}, {"Key": metadata_file}]}
+        ]
         client.create_multipart_upload.return_value = {"UploadId": "upload_id"}
         client.upload_part.return_value = {"ETag": "etag"}
         client.list_buckets.return_value = {
             "Buckets": [{"Name": USER_INPUT[CONF_BUCKET]}]
         }
 
-        # To simplify this mock, we assume that backup is always "iterated" over, while metadata is always "read" as a whole
+        # To simplify this mock, we assume that backup is always
+        # "iterated" over, while metadata is always "read" as a whole
         class MockStream:
             async def iter_chunks(self) -> AsyncIterator[bytes]:
                 yield b"backup data"

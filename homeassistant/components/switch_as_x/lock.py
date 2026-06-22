@@ -1,7 +1,5 @@
 """Lock support for switch entities."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN, LockEntity

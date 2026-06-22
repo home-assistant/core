@@ -1,7 +1,5 @@
 """Config flow for Nibe Heat Pump integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from nibe.connection.modbus import Modbus

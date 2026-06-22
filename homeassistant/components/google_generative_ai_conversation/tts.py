@@ -1,7 +1,5 @@
 """Text to speech support for Google Generative AI."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -20,7 +18,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, LOGGER, RECOMMENDED_TTS_MODEL
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_TEMPERATURE,
+    LOGGER,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TTS_MODEL,
+)
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
 
@@ -193,7 +197,10 @@ class GoogleGenerativeAITextToSpeechEntity(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        config = self.create_generate_content_config()
+        config = types.GenerateContentConfig()
+        config.temperature = self.subentry.data.get(
+            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+        )
         config.response_modalities = ["AUDIO"]
         config.speech_config = types.SpeechConfig(
             voice_config=types.VoiceConfig(

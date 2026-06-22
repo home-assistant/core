@@ -1,7 +1,5 @@
 """Platform for Control4 Climate/Thermostat."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import Any
@@ -75,11 +73,12 @@ C4_TO_HA_HVAC_MODE = {
 
 HA_TO_C4_HVAC_MODE = {v: k for k, v in C4_TO_HA_HVAC_MODE.items()}
 
-# Map the five known Control4 HVAC states to Home Assistant HVAC actions
+# Map Control4 HVAC states to Home Assistant HVAC actions
 C4_TO_HA_HVAC_ACTION = {
     "off": HVACAction.OFF,
     "heat": HVACAction.HEATING,
     "cool": HVACAction.COOLING,
+    "idle": HVACAction.IDLE,
     "dry": HVACAction.DRYING,
     "fan": HVACAction.FAN,
 }
@@ -203,7 +202,8 @@ class Control4Climate(Control4Entity, ClimateEntity):
     def _create_api_object(self) -> C4Climate:
         """Create a pyControl4 device object.
 
-        This exists so the director token used is always the latest one, without needing to re-init the entire entity.
+        This exists so the director token used is always the
+        latest one, without needing to re-init the entire entity.
         """
         return C4Climate(self.runtime_data.director, self._idx)
 
@@ -272,7 +272,10 @@ class Control4Climate(Control4Entity, ClimateEntity):
         if data is None:
             return None
         humidity = data.get(CONTROL4_HUMIDITY)
-        return int(humidity) if humidity is not None else None
+        try:
+            return int(humidity) if humidity is not None else None
+        except ValueError, TypeError:
+            return None
 
     @property
     def hvac_mode(self) -> HVACMode:
@@ -292,8 +295,14 @@ class Control4Climate(Control4Entity, ClimateEntity):
         c4_state = data.get(CONTROL4_HVAC_STATE)
         if c4_state is None:
             return None
-        # Convert state to lowercase for mapping
         action = C4_TO_HA_HVAC_ACTION.get(str(c4_state).lower())
+        # Substring match for multi-stage systems that report
+        # e.g. "Stage 1 Heat", "Stage 2 Cool"
+        if action is None:
+            if "heat" in str(c4_state).lower():
+                action = HVACAction.HEATING
+            elif "cool" in str(c4_state).lower():
+                action = HVACAction.COOLING
         if action is None:
             _LOGGER.debug("Unknown HVAC state received from Control4: %s", c4_state)
         return action

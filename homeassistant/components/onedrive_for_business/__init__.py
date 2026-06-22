@@ -1,7 +1,5 @@
 """The OneDrive for Business integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 import logging
 from typing import cast
@@ -18,6 +16,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
@@ -92,7 +91,13 @@ async def _get_onedrive_client(
 ) -> tuple[OneDriveClient, Callable[[], Awaitable[str]]]:
     """Get OneDrive client."""
     with tenant_id_context(entry.data[CONF_TENANT_ID]):
-        implementation = await async_get_config_entry_implementation(hass, entry)
+        try:
+            implementation = await async_get_config_entry_implementation(hass, entry)
+        except ImplementationUnavailableError as err:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="oauth2_implementation_unavailable",
+            ) from err
     session = OAuth2Session(hass, entry, implementation)
 
     async def get_access_token() -> str:

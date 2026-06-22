@@ -484,7 +484,7 @@ async def test_purge_method(
     await async_wait_purge_done(hass)
 
     # run purge method - no service data, use defaults
-    await hass.services.async_call("recorder", "purge")
+    await hass.services.async_call(DOMAIN, "purge")
     await hass.async_block_till_done()
 
     # Small wait for recorder thread
@@ -503,7 +503,7 @@ async def test_purge_method(
         assert statistics.count() == 4
 
     # run purge method - correct service data
-    await hass.services.async_call("recorder", "purge", service_data=service_data)
+    await hass.services.async_call(DOMAIN, "purge", service_data=service_data)
     await hass.async_block_till_done()
 
     # Small wait for recorder thread
@@ -539,7 +539,7 @@ async def test_purge_method(
 
     # run purge method - correct service data, with repack
     service_data["repack"] = True
-    await hass.services.async_call("recorder", "purge", service_data=service_data)
+    await hass.services.async_call(DOMAIN, "purge", service_data=service_data)
     await hass.async_block_till_done()
     await async_wait_purge_done(hass)
     assert (
@@ -554,7 +554,7 @@ async def test_purge_edge_case(
     recorder_mock: Recorder,
     use_sqlite: bool,
 ) -> None:
-    """Test states and events are purged even if they occurred shortly before purge_before."""
+    """Test states and events purged even if shortly before purge_before."""
 
     async def _add_db_entries(hass: HomeAssistant, timestamp: datetime) -> None:
         with session_scope(hass=hass) as session:
@@ -622,7 +622,7 @@ async def test_purge_edge_case(
 
 
 async def test_purge_cutoff_date(hass: HomeAssistant, recorder_mock: Recorder) -> None:
-    """Test states and events are purged only if they occurred before "now() - keep_days"."""
+    """Test purge only removes entries before now() - keep_days."""
 
     async def _add_db_entries(hass: HomeAssistant, cutoff: datetime, rows: int) -> None:
         timestamp_keep = cutoff
@@ -1212,7 +1212,7 @@ async def test_purge_without_state_attributes_filtered_states_to_empty(
     recorder_mock: Recorder,
     use_sqlite: bool,
 ) -> None:
-    """Test filtered legacy states without state attributes are purged all the way to an empty db."""
+    """Test filtered legacy states without attributes are fully purged."""
     assert recorder_mock.entity_filter("sensor.old_format") is False
 
     def _add_db_entries(hass: HomeAssistant) -> None:
@@ -1380,7 +1380,7 @@ async def test_purge_filtered_events(
 async def test_purge_filtered_events_state_changed(
     hass: HomeAssistant, recorder_mock: Recorder
 ) -> None:
-    """Test filtered state_changed events are purged. This should also remove all states."""
+    """Test filtered state_changed events and states are purged."""
     # Assert entity_id is NOT excluded
     assert recorder_mock.entity_filter("sensor.excluded") is False
     assert recorder_mock.entity_filter("sensor.old_format") is False

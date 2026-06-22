@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_config_entry_diagnostics
+  dict({
+    'coordinator': dict({
+      'cert_error': None,
+      'expiry_datetime': '2020-09-20T15:01:00+00:00',
+      'host': '**REDACTED**',
+      'is_cert_valid': True,
+      'last_update_success': True,
+      'name': '**REDACTED**',
+      'port': 443,
+    }),
+    'entry': dict({
+      'created_at': '2020-06-12T08:00:00+00:00',
+      'data': dict({
+        'host': '**REDACTED**',
+        'port': 443,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'cert_expiry',
+      'entry_id': 'test-entry',
+      'minor_version': 1,
+      'modified_at': '2020-06-12T08:00:00+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---
+# name: test_config_entry_diagnostics_with_cert_error
+  dict({
+    'coordinator': dict({
+      'cert_error': 'homeassistant.components.cert_expiry.errors.ValidationFailure',
+      'expiry_datetime': None,
+      'host': '**REDACTED**',
+      'is_cert_valid': False,
+      'last_update_success': True,
+      'name': '**REDACTED**',
+      'port': 443,
+    }),
+    'entry': dict({
+      'created_at': '2020-06-12T08:00:00+00:00',
+      'data': dict({
+        'host': '**REDACTED**',
+        'port': 443,
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'cert_expiry',
+      'entry_id': 'test-entry-error',
+      'minor_version': 1,
+      'modified_at': '2020-06-12T08:00:00+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': '**REDACTED**',
+      'unique_id': '**REDACTED**',
+      'version': 1,
+    }),
+  })
+# ---

@@ -1,7 +1,5 @@
 """Simplepush notification service."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -98,6 +96,7 @@ class SimplePushNotificationService(BaseNotificationService):
                     event=event,
                 )
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except BadRequest:
             _LOGGER.error("Bad request. Title or message are too long")
         except UnknownError:

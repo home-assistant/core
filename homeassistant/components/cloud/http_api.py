@@ -1,7 +1,5 @@
 """The HTTP api to control the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
@@ -26,12 +24,12 @@ from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
 )
+from homeassistant.components.frontend import DATA_THEMES
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.system_health import get_info as get_system_health_info
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -140,7 +138,8 @@ def async_setup(hass: HomeAssistant) -> None:
             ),
             MFAExpiredOrNotStarted: (
                 HTTPStatus.BAD_REQUEST,
-                "Multi-factor authentication expired, or not started. Please try again.",
+                "Multi-factor authentication expired,"
+                " or not started. Please try again.",
             ),
             AlreadyConnectedError: (
                 HTTPStatus.CONFLICT,
@@ -510,12 +509,23 @@ class DownloadSupportPackageView(HomeAssistantView):
             "custom_integrations": custom_integrations,
         }
 
+    @callback
+    def _get_themes_info(self, hass: HomeAssistant) -> dict[str, Any]:
+        """Collect information about user-installed custom themes."""
+        themes: dict[str, Any] = hass.data.get(DATA_THEMES, {})
+        return {
+            "count": len(themes),
+            "themes": sorted(themes),
+        }
+
     async def _generate_markdown(
         self,
         hass: HomeAssistant,
         hass_info: dict[str, Any],
         domains_info: dict[str, dict[str, str]],
     ) -> str:
+        cloud = hass.data[DATA_CLOUD]
+
         def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
             if len(domain_info) == 0:
                 return "No information available\n"
@@ -561,7 +571,31 @@ class DownloadSupportPackageView(HomeAssistantView):
                 markdown += "--- | --- | --- | ---\n"
                 for integration in integration_info["custom_integrations"]:
                     doc_url = integration.get("documentation") or "N/A"
-                    markdown += f"{integration['domain']} | {integration['name']} | {integration['version']} | {doc_url}\n"
+                    markdown += (
+                        f"{integration['domain']} | "
+                        f"{integration['name']} | "
+                        f"{integration['version']} | "
+                        f"{doc_url}\n"
+                    )
+                markdown += "\n</details>\n\n"
+
+        # Add custom themes information
+        try:
+            themes_info = self._get_themes_info(hass)
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Custom Themes\n\n"
+            markdown += "Unable to collect themes information\n\n"
+        else:
+            markdown += "## Custom Themes\n\n"
+            markdown += f"Custom themes: {themes_info['count']}\n\n"
+
+            if themes_info["themes"]:
+                markdown += "<details><summary>Custom themes</summary>\n\n"
+                markdown += "Name\n"
+                markdown += "---\n"
+                for theme in themes_info["themes"]:
+                    markdown += f"{theme}\n"
                 markdown += "\n</details>\n\n"
 
         for domain, domain_info in domains_info.items():
@@ -571,6 +605,15 @@ class DownloadSupportPackageView(HomeAssistantView):
                 f"{domain_info_md}"
                 "</details>\n\n"
             )
+
+        # Add stored latency response if available
+        if locations := cloud.remote.latency_by_location:
+            markdown += "## Latency by location\n\n"
+            markdown += "Location | Latency (ms)\n"
+            markdown += "--- | ---\n"
+            for location in sorted(locations):
+                markdown += f"{location} | {locations[location]['avg'] or 'N/A'}\n"
+            markdown += "\n"
 
         # Add installed packages section
         try:
@@ -604,6 +647,7 @@ class DownloadSupportPackageView(HomeAssistantView):
 
         return markdown
 
+    @require_admin
     async def get(self, request: web.Request) -> web.Response:
         """Download support package file."""
 
@@ -698,6 +742,7 @@ def _require_cloud_login(
     return with_cloud_auth
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
 @websocket_api.async_response
@@ -739,6 +784,7 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     return value
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -798,6 +844,7 @@ async def websocket_update_prefs(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -818,6 +865,7 @@ async def websocket_hook_create(
     connection.send_message(websocket_api.result_message(msg["id"], hook))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -953,7 +1001,7 @@ async def google_assistant_get(
         return
 
     entity = google_helpers.GoogleEntity(hass, gconf, state)
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity.is_supported():
+    if not entity.is_supported():
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,
@@ -1055,9 +1103,7 @@ async def alexa_get(
     """Get data for a single alexa entity."""
     entity_id: str = msg["entity_id"]
 
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
-        hass, entity_id
-    ):
+    if not entity_supported_by_alexa(hass, entity_id):
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,

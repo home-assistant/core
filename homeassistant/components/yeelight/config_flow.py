@@ -1,7 +1,5 @@
 """Config flow for Yeelight integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Self
 from urllib.parse import urlparse
@@ -13,7 +11,6 @@ from yeelight.main import get_known_models
 
 from homeassistant.components import onboarding
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -28,6 +25,7 @@ from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
+from . import YeelightConfigEntry
 from .const import (
     CONF_DETECTED_MODEL,
     CONF_MODE_MUSIC,
@@ -62,7 +60,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: YeelightConfigEntry,
     ) -> OptionsFlowHandler:
         """Return the options flow."""
         return OptionsFlowHandler()
@@ -108,7 +106,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ID
             ):
                 continue
-            reload = entry.state == ConfigEntryState.SETUP_RETRY
+            reload = entry.state is ConfigEntryState.SETUP_RETRY
             if entry.data.get(CONF_HOST) != self._discovered_ip:
                 self.hass.config_entries.async_update_entry(
                     entry, data={**entry.data, CONF_HOST: self._discovered_ip}
@@ -145,7 +143,7 @@ class YeelightConfigFlow(ConfigFlow, domain=DOMAIN):
 
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
-        return other_flow._discovered_ip == self._discovered_ip  # noqa: SLF001
+        return other_flow._discovered_ip == self._discovered_ip
 
     async def async_step_discovery_confirm(
         self, user_input: dict[str, Any] | None = None

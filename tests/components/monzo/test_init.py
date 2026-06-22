@@ -7,8 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 from monzopy import AuthorisationExpiredError
 
 from homeassistant.components.monzo.const import DOMAIN
-from homeassistant.config_entries import SOURCE_REAUTH
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from . import setup_integration
 
@@ -61,3 +64,20 @@ async def test_migrate_entry_minor_version_1_2(hass: HomeAssistant) -> None:
         assert entry.version == 1
         assert entry.minor_version == 2
         assert entry.unique_id == "600"
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    polling_config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    polling_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.monzo.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(polling_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert polling_config_entry.state is ConfigEntryState.SETUP_RETRY

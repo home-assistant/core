@@ -1,7 +1,5 @@
 """Implementation of the musiccast media player."""
 
-from __future__ import annotations
-
 import contextlib
 import logging
 from typing import Any
@@ -21,7 +19,6 @@ from homeassistant.components.media_player import (
     RepeatMode,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity import Entity
@@ -38,7 +35,7 @@ from .const import (
     MEDIA_CLASS_MAPPING,
     NULL_GROUP,
 )
-from .coordinator import MusicCastDataUpdateCoordinator
+from .coordinator import MusicCastConfigEntry
 from .entity import MusicCastDeviceEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -55,11 +52,11 @@ MUSIC_PLAYER_BASE_SUPPORT = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MusicCastConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up MusicCast sensor based on a config entry."""
-    coordinator: MusicCastDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     name = coordinator.data.network_name
 
@@ -80,6 +77,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     _attr_media_content_type = MediaType.MUSIC
     _attr_should_poll = False
+    _attr_translation_key = "zone"
 
     def __init__(self, zone_id, name, entry_id, coordinator):
         """Initialize the musiccast device."""
@@ -157,7 +155,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def source_mapping(self):
-        """Return a mapping of the actual source names to their labels configured in the MusicCast App."""
+        """Return a mapping of source names to MusicCast App labels."""
         ret = {}
         for inp in self.coordinator.data.zones[self._zone_id].input_list:
             label = self.coordinator.data.input_names.get(inp, "")
@@ -373,6 +371,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
         ]
 
         if add_media_source:
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             with contextlib.suppress(BrowseError):
                 item = await media_source.async_browse_media(
                     self.hass,
@@ -560,7 +559,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def is_network_server(self) -> bool:
-        """Return only true if the current entity is a network server and not a main zone with an attached zone2."""
+        """Return true if entity is a network server, not a main zone with zone2."""
         return (
             self.coordinator.data.group_role == "server"
             and self.coordinator.data.group_id != NULL_GROUP
@@ -596,7 +595,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def is_network_client(self) -> bool:
-        """Return True if the current entity is a network client and not just a main syncing entity."""
+        """Return True if entity is a network client, not just a main sync."""
         return (
             self.coordinator.data.group_role == "client"
             and self.coordinator.data.group_id != NULL_GROUP
@@ -613,22 +612,25 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     def get_all_mc_entities(self) -> list[MusicCastMediaPlayer]:
         """Return all media player entities of the musiccast system."""
+        entries: list[MusicCastConfigEntry] = (
+            self.hass.config_entries.async_loaded_entries(DOMAIN)
+        )
         entities = []
-        for coordinator in self.hass.data[DOMAIN].values():
+        for entry in entries:
             entities += [
                 entity
-                for entity in coordinator.entities
+                for entity in entry.runtime_data.entities
                 if isinstance(entity, MusicCastMediaPlayer)
             ]
         return entities
 
     def get_all_server_entities(self) -> list[MusicCastMediaPlayer]:
-        """Return all media player entities in the musiccast system, which are in server mode."""
+        """Return all media player entities in server mode."""
         entities = self.get_all_mc_entities()
         return [entity for entity in entities if entity.is_server]
 
     def get_distribution_num(self) -> int:
-        """Return the distribution_num (number of clients in the whole musiccast system)."""
+        """Return the distribution_num (number of clients)."""
         return sum(
             len(server.coordinator.data.group_client_list)
             for server in self.get_all_server_entities()
@@ -665,9 +667,10 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def musiccast_group(self) -> list[MusicCastMediaPlayer]:
-        """Return all media players of the current group, if the media player is server."""
+        """Return all media players of the current group."""
         if self.is_client:
-            # If we are a client we can still share group information, but we will take them from the server.
+            # If we are a client we can still share group
+            # information, but we will take them from the server.
             if (server := self.group_server) != self:
                 return server.musiccast_group
 
@@ -680,9 +683,11 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     @property
     def musiccast_zone_entity(self) -> MusicCastMediaPlayer:
-        """Return the entity of the zone, which is using MusicCast at the moment, if there is one, self else.
+        """Return the entity of the zone using MusicCast.
 
-        It is possible that multiple zones use MusicCast as client at the same time. In this case the first one is
+        It is possible that multiple zones use MusicCast
+        as client at the same time. In this case the first
+        one is
         returned.
         """
         for entity in self.other_zones:
@@ -693,7 +698,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
 
     async def update_all_mc_entities(self, check_clients=False):
         """Update the whole musiccast system when group data change."""
-        # First update all servers as they provide the group information for their clients
+        # First update all servers as they provide the
+        # group information for their clients
         for entity in self.get_all_server_entities():
             if check_clients or self.coordinator.musiccast.group_reduce_by_source:
                 await entity.async_check_client_list()
@@ -727,7 +733,9 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             await self.async_turn_on()
 
         if not self.is_server and self.musiccast_zone_entity.is_server:
-            # The MusicCast Distribution Module of this device is already in use. To use it as a server, we first
+            # The MusicCast Distribution Module of this
+            # device is already in use. To use it as a server,
+            # we first
             # have to unjoin and wait until the servers are updated.
             await self.musiccast_zone_entity.async_server_close_group()
         elif self.musiccast_zone_entity.is_client:
@@ -745,6 +753,7 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             if client != self:
                 try:
                     network_join = await client.async_client_join(group, self)
+                # pylint: disable-next=home-assistant-action-swallowed-exception
                 except MusicCastGroupException:
                     _LOGGER.warning(
                         (
@@ -844,7 +853,8 @@ class MusicCastMediaPlayer(MusicCastDeviceEntity, MediaPlayerEntity):
             and self.coordinator.data.group_id == server.coordinator.data.group_id
             and self.coordinator.data.group_role == "client"
         ):
-            # The device is already part of this group (e.g. main zone is also a client of this group).
+            # The device is already part of this group
+            # (e.g. main zone is also a client of this group).
             # Just select mc_link as source
             await self.coordinator.musiccast.zone_join(self._zone_id)
             return False

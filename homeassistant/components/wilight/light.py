@@ -1,7 +1,5 @@
 """Support for WiLight lights."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pywilight.const import ITEM_LIGHT, LIGHT_COLOR, LIGHT_DIMMER, LIGHT_ON_OFF
@@ -13,13 +11,11 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
 from .entity import WiLightDevice
-from .parent_device import WiLightParent
+from .parent_device import WiLightConfigEntry
 
 
 def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> list[LightEntity]:
@@ -42,11 +38,11 @@ def entities_from_discovered_wilight(api_device: PyWiLightDevice) -> list[LightE
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WiLightConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WiLight lights from a config entry."""
-    parent: WiLightParent = hass.data[DOMAIN][entry.entry_id]
+    parent = entry.runtime_data
 
     # Handle a discovered WiLight device.
     assert parent.api

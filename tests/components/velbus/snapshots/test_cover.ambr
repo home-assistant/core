@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[cover.basement_covername-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -40,6 +41,7 @@
     'attributes': ReadOnlyDict({
       'current_position': 50,
       'friendly_name': 'Basement CoverName',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -52,8 +54,9 @@
 # ---
 # name: test_entities[cover.basement_covernamenopos-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -91,6 +94,7 @@
     'attributes': ReadOnlyDict({
       'assumed_state': True,
       'friendly_name': 'Basement CoverNameNoPos',
+      'is_closed': False,
       'supported_features': <CoverEntityFeature: 11>,
     }),
     'context': <ANY>,

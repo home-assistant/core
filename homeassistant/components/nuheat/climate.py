@@ -18,7 +18,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import event as event_helper
@@ -27,6 +26,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER, NUHEAT_API_STATE_SHIFT_DELAY
+from .coordinator import NuHeatConfigEntry, NuHeatCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -54,14 +54,15 @@ SCHEDULE_MODE_TO_PRESET_MODE_MAP = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NuHeatConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the NuHeat thermostat(s)."""
-    thermostat, coordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     temperature_unit = hass.config.units.temperature_unit
-    entity = NuHeatThermostat(coordinator, thermostat, temperature_unit)
+
+    entity = NuHeatThermostat(coordinator, coordinator.thermostat, temperature_unit)
 
     # No longer need a service as set_hvac_mode to auto does this
     # since climate 1.0 has been implemented
@@ -69,7 +70,7 @@ async def async_setup_entry(
     async_add_entities([entity], True)
 
 
-class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
+class NuHeatThermostat(CoordinatorEntity[NuHeatCoordinator], ClimateEntity):
     """Representation of a NuHeat Thermostat."""
 
     _attr_hvac_modes = OPERATION_LIST
@@ -98,7 +99,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         return UnitOfTemperature.FAHRENHEIT
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> int | None:
         """Return the current temperature."""
         if self._temperature_unit == "C":
             return self._thermostat.celsius
@@ -146,7 +147,7 @@ class NuHeatThermostat(CoordinatorEntity, ClimateEntity):
         return self._thermostat.max_fahrenheit
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> int:
         """Return the currently programmed temperature."""
         if self._temperature_unit == "C":
             return nuheat_to_celsius(self._target_temperature)

@@ -1,7 +1,5 @@
 """The Droplet integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import Platform
@@ -10,6 +8,7 @@ from homeassistant.core import HomeAssistant
 from .coordinator import DropletConfigEntry, DropletDataCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.SENSOR,
 ]
 

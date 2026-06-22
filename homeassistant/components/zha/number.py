@@ -1,11 +1,10 @@
 """Support for ZHA AnalogOutput cluster."""
 
-from __future__ import annotations
-
 import functools
 import logging
+from typing import Any
 
-from homeassistant.components.number import RestoreNumber
+from homeassistant.components.number import NumberDeviceClass, NumberMode, RestoreNumber
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -15,6 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .entity import ZHAEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
+    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     get_zha_data,
@@ -45,6 +45,14 @@ async def async_setup_entry(
 class ZhaNumber(ZHAEntity, RestoreNumber):
     """Representation of a ZHA Number entity."""
 
+    def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
+        """Initialize the ZHA number entity."""
+        super().__init__(entity_data, **kwargs)
+        entity = entity_data.entity
+        if entity.device_class is not None:
+            self._attr_device_class = NumberDeviceClass(entity.device_class)
+        self._attr_mode = NumberMode(entity.mode)
+
     @property
     def native_value(self) -> float | None:
         """Return the current value."""
@@ -70,7 +78,7 @@ class ZhaNumber(ZHAEntity, RestoreNumber):
         """Return the unit the value is expressed in."""
         return self.entity_data.entity.native_unit_of_measurement
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value from HA."""
         await self.entity_data.entity.async_set_native_value(value=value)

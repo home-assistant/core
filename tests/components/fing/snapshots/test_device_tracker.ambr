@@ -1,10 +1,13 @@
 # serializer version: 1
 # name: test_all_entities[device_tracker.freebsd_router-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -40,9 +43,13 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'FreeBSD router',
       'icon': 'mdi:router-network',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.50.1',
       'mac': '00:00:00:00:00:01',
       'source_type': <SourceType.ROUTER: 'router'>,
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.freebsd_router',
@@ -54,10 +61,13 @@
 # ---
 # name: test_all_entities[device_tracker.pc_home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -93,9 +103,13 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'PC_HOME',
       'icon': 'mdi:desktop-tower',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.50.3',
       'mac': '00:00:00:00:00:03',
       'source_type': <SourceType.ROUTER: 'router'>,
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.pc_home',
@@ -107,10 +121,13 @@
 # ---
 # name: test_all_entities[device_tracker.samsung_the_frame_55-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -146,9 +163,13 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'Samsung The Frame 55',
       'icon': 'mdi:television',
+      'in_zones': list([
+        'zone.home',
+      ]),
       'ip': '192.168.50.2',
       'mac': '00:00:00:00:00:02',
       'source_type': <SourceType.ROUTER: 'router'>,
+      'tracking_type': <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.samsung_the_frame_55',

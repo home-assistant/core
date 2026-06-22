@@ -1,14 +1,11 @@
 """An abstract class common to all Switchbot entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 import logging
 from typing import Any, Concatenate
 
 import switchbot
-from switchbot import Switchbot, SwitchbotDevice
-from switchbot.devices.device import SwitchbotOperationError
+from switchbot import Switchbot, SwitchbotDevice, SwitchbotOperationError
 
 from homeassistant.components.bluetooth.passive_update_coordinator import (
     PassiveBluetoothCoordinatorEntity,
@@ -44,7 +41,8 @@ class SwitchbotEntity(
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_BLUETOOTH, self._address)},
             manufacturer=MANUFACTURER,
-            model=coordinator.model,  # Sometimes the modelName is missing from the advertisement data
+            # Sometimes the modelName is missing from ads
+            model=coordinator.model,
             name=coordinator.device_name,
         )
         self._channel: int | None = None

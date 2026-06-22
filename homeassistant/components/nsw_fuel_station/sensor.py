@@ -1,7 +1,5 @@
 """Sensor platform to display the current fuel prices at a NSW fuel station."""
 
-from __future__ import annotations
-
 import logging
 
 import voluptuous as vol
@@ -15,12 +13,10 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DATA_NSW_FUEL_STATION, StationPriceData
+from .const import DATA_NSW_FUEL_STATION
+from .coordinator import NSWFuelStationCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -65,11 +61,7 @@ def setup_platform(
     station_id = config[CONF_STATION_ID]
     fuel_types = config[CONF_FUEL_TYPES]
 
-    coordinator = hass.data[DATA_NSW_FUEL_STATION]
-
-    if coordinator.data is None:
-        _LOGGER.error("Initial fuel station price data not available")
-        return
+    coordinator: NSWFuelStationCoordinator = hass.data[DATA_NSW_FUEL_STATION]
 
     entities = []
     for fuel_type in fuel_types:
@@ -86,16 +78,14 @@ def setup_platform(
     add_entities(entities)
 
 
-class StationPriceSensor(
-    CoordinatorEntity[DataUpdateCoordinator[StationPriceData]], SensorEntity
-):
+class StationPriceSensor(CoordinatorEntity[NSWFuelStationCoordinator], SensorEntity):
     """Implementation of a sensor that reports the fuel price for a station."""
 
     _attr_attribution = "Data provided by NSW Government FuelCheck"
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[StationPriceData],
+        coordinator: NSWFuelStationCoordinator,
         station_id: int,
         fuel_type: str,
     ) -> None:
@@ -114,9 +104,6 @@ class StationPriceSensor(
     @property
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
-        if self.coordinator.data is None:
-            return None
-
         prices = self.coordinator.data.prices
         return prices.get((self._station_id, self._fuel_type))
 
@@ -133,16 +120,13 @@ class StationPriceSensor(
         """Return the units of measurement."""
         return f"{CURRENCY_CENT}/{UnitOfVolume.LITERS}"
 
-    def _get_station_name(self):
-        default_name = f"station {self._station_id}"
-        if self.coordinator.data is None:
-            return default_name
+    def _get_station_name(self) -> str:
+        if (
+            station := self.coordinator.data.stations.get(self._station_id)
+        ) is not None:
+            return station.name
 
-        station = self.coordinator.data.stations.get(self._station_id)
-        if station is None:
-            return default_name
-
-        return station.name
+        return f"station {self._station_id}"
 
     @property
     def unique_id(self) -> str | None:

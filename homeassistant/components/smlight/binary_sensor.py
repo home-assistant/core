@@ -1,7 +1,5 @@
 """Support for SLZB-06 binary sensors."""
 
-from __future__ import annotations
-
 from _collections_abc import Callable
 from dataclasses import dataclass
 

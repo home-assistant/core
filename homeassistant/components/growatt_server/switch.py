@@ -1,7 +1,5 @@
 """Switch platform for Growatt."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Any
@@ -10,15 +8,15 @@ from growattServer import GrowattV1ApiError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
-from .sensor.sensor_entity_description import GrowattRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,9 +26,10 @@ PARALLEL_UPDATES = (
 
 
 @dataclass(frozen=True, kw_only=True)
-class GrowattSwitchEntityDescription(SwitchEntityDescription, GrowattRequiredKeysMixin):
+class GrowattSwitchEntityDescription(SwitchEntityDescription):
     """Describes Growatt switch entity."""
 
+    api_key: str
     write_key: str | None = None  # Parameter ID for writing (if different from api_key)
 
 
@@ -47,6 +46,17 @@ MIN_SWITCH_TYPES: tuple[GrowattSwitchEntityDescription, ...] = (
 )
 
 
+def _create_switches_for_device(
+    coordinator: GrowattCoordinator,
+) -> list[GrowattSwitch]:
+    """Create switch entities for a device coordinator."""
+    if coordinator.device_type == "min" and coordinator.api_version == "v1":
+        return [
+            GrowattSwitch(coordinator, description) for description in MIN_SWITCH_TYPES
+        ]
+    return []
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GrowattConfigEntry,
@@ -55,15 +65,29 @@ async def async_setup_entry(
     """Set up Growatt switch entities."""
     runtime_data = entry.runtime_data
 
-    # Add switch entities for each MIN device (only supported with V1 API)
     async_add_entities(
-        GrowattSwitch(device_coordinator, description)
-        for device_coordinator in runtime_data.devices.values()
-        if (
-            device_coordinator.device_type == "min"
-            and device_coordinator.api_version == "v1"
+        entity
+        for coordinator in runtime_data.devices.values()
+        for entity in _create_switches_for_device(coordinator)
+    )
+
+    @callback
+    def _async_new_device(coordinators: list[GrowattCoordinator]) -> None:
+        """Add switch entities for new devices."""
+        new_entities = [
+            entity
+            for coordinator in coordinators
+            for entity in _create_switches_for_device(coordinator)
+        ]
+        if new_entities:
+            async_add_entities(new_entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_new_device_{entry.entry_id}",
+            _async_new_device,
         )
-        for description in MIN_SWITCH_TYPES
     )
 
 
@@ -87,6 +111,7 @@ class GrowattSwitch(CoordinatorEntity[GrowattCoordinator], SwitchEntity):
             identifiers={(DOMAIN, coordinator.device_id)},
             manufacturer="Growatt",
             name=coordinator.device_id,
+            serial_number=coordinator.device_id,
         )
 
     @property
@@ -124,7 +149,11 @@ class GrowattSwitch(CoordinatorEntity[GrowattCoordinator], SwitchEntity):
                 api_value,
             )
         except GrowattV1ApiError as e:
-            raise HomeAssistantError(f"Error while setting switch state: {e}") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(e)},
+            ) from e
 
         # If no exception was raised, the write was successful
         _LOGGER.debug(

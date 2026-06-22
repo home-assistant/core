@@ -116,7 +116,7 @@ async def test_browse_media_accounts(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
-    xbox_live_client.people.get_friends_by_xuid.return_value = PeopleResponse(
+    xbox_live_client.people.get_friend_by_xuid.return_value = PeopleResponse(
         **(await async_load_json_object_fixture(hass, "people_batch2.json", DOMAIN))  # type: ignore[reportArgumentType]
     )
 

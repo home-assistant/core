@@ -1,7 +1,5 @@
 """Support for KNX light entities."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from propcache.api import cached_property
@@ -353,7 +351,8 @@ class _KnxLight(LightEntity):
             rgb, _ = self._device.current_color
             if rgb is not None:
                 if not self._device.supports_brightness:
-                    # brightness will be calculated from color so color must not hold brightness again
+                    # brightness will be calculated from color
+                    # so color must not hold brightness again
                     return cast(
                         tuple[int, int, int], color_util.match_max_scale((255,), rgb)
                     )
@@ -367,7 +366,8 @@ class _KnxLight(LightEntity):
             rgb, white = self._device.current_color
             if rgb is not None and white is not None:
                 if not self._device.supports_brightness:
-                    # brightness will be calculated from color so color must not hold brightness again
+                    # brightness will be calculated from color
+                    # so color must not hold brightness again
                     return cast(
                         tuple[int, int, int, int],
                         color_util.match_max_scale((255,), (*rgb, white)),
@@ -378,7 +378,8 @@ class _KnxLight(LightEntity):
     @property
     def hs_color(self) -> tuple[float, float] | None:
         """Return the hue and saturation color value [float, float]."""
-        # Hue is scaled 0..360 int encoded in 1 byte in KNX (-> only 256 possible values)
+        # Hue is scaled 0..360 int encoded in 1 byte in KNX
+        # (-> only 256 possible values)
         # Saturation is scaled 0..100 int
         return self._device.current_hs_color
 
@@ -558,15 +559,16 @@ class KnxYamlLight(_KnxLight, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of KNX light."""
+        self._device = _create_yaml_light(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_yaml_light(knx_module.xknx, config),
+            unique_id=self._device_unique_id(),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._attr_color_mode = next(iter(self.supported_color_modes))
         self._attr_max_color_temp_kelvin: int = config[LightSchema.CONF_MAX_KELVIN]
         self._attr_min_color_temp_kelvin: int = config[LightSchema.CONF_MIN_KELVIN]
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = self._device_unique_id()
 
     def _device_unique_id(self) -> str:
         """Return unique id for this device."""

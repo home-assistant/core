@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_number_snapshot[number.test_mower_1_back_lawn_cutting_height-entry]
+# name: test_number_snapshot[number.garden_test_mower_1_back_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -17,7 +18,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.test_mower_1_back_lawn_cutting_height',
+    'entity_id': 'number.garden_test_mower_1_back_lawn_cutting_height',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -40,7 +41,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_number_snapshot[number.test_mower_1_back_lawn_cutting_height-state]
+# name: test_number_snapshot[number.garden_test_mower_1_back_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Back lawn cutting height',
@@ -51,17 +52,18 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.test_mower_1_back_lawn_cutting_height',
+    'entity_id': 'number.garden_test_mower_1_back_lawn_cutting_height',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '25',
   })
 # ---
-# name: test_number_snapshot[number.test_mower_1_cutting_height-entry]
+# name: test_number_snapshot[number.garden_test_mower_1_cutting_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 9,
@@ -76,7 +78,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.test_mower_1_cutting_height',
+    'entity_id': 'number.garden_test_mower_1_cutting_height',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -99,7 +101,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_number_snapshot[number.test_mower_1_cutting_height-state]
+# name: test_number_snapshot[number.garden_test_mower_1_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Cutting height',
@@ -109,17 +111,18 @@
       'step': 1.0,
     }),
     'context': <ANY>,
-    'entity_id': 'number.test_mower_1_cutting_height',
+    'entity_id': 'number.garden_test_mower_1_cutting_height',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '4',
   })
 # ---
-# name: test_number_snapshot[number.test_mower_1_front_lawn_cutting_height-entry]
+# name: test_number_snapshot[number.garden_test_mower_1_front_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -134,7 +137,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.test_mower_1_front_lawn_cutting_height',
+    'entity_id': 'number.garden_test_mower_1_front_lawn_cutting_height',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -157,7 +160,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_number_snapshot[number.test_mower_1_front_lawn_cutting_height-state]
+# name: test_number_snapshot[number.garden_test_mower_1_front_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Front lawn cutting height',
@@ -168,17 +171,18 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.test_mower_1_front_lawn_cutting_height',
+    'entity_id': 'number.garden_test_mower_1_front_lawn_cutting_height',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
 # ---
-# name: test_number_snapshot[number.test_mower_1_my_lawn_cutting_height-entry]
+# name: test_number_snapshot[number.garden_test_mower_1_my_lawn_cutting_height-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -193,7 +197,7 @@
     'disabled_by': None,
     'domain': 'number',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'number.test_mower_1_my_lawn_cutting_height',
+    'entity_id': 'number.garden_test_mower_1_my_lawn_cutting_height',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -216,7 +220,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_number_snapshot[number.test_mower_1_my_lawn_cutting_height-state]
+# name: test_number_snapshot[number.garden_test_mower_1_my_lawn_cutting_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 My lawn cutting height',
@@ -227,7 +231,7 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'number.test_mower_1_my_lawn_cutting_height',
+    'entity_id': 'number.garden_test_mower_1_my_lawn_cutting_height',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

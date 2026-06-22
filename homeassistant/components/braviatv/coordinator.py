@@ -1,7 +1,5 @@
 """Update coordinator for Bravia TV integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from datetime import datetime, timedelta
 from functools import wraps
@@ -173,6 +171,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
             self.skipped_updates = 0
+            self.update_interval = (
+                timedelta(seconds=120) if power_status == "standby" else SCAN_INTERVAL
+            )
 
             if not self.system_info:
                 self.system_info = await self.client.get_system_info()
@@ -238,11 +239,11 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         self.source = None
         if start_datetime := playing_info.get("startDateTime"):
             start_datetime = datetime.fromisoformat(start_datetime)
-            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)
+            current_datetime = datetime.now().replace(tzinfo=start_datetime.tzinfo)  # pylint: disable=home-assistant-enforce-naive-now
             self.media_position = int(
                 (current_datetime - start_datetime).total_seconds()
             )
-            self.media_position_updated_at = datetime.now()
+            self.media_position_updated_at = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         else:
             self.media_position = None
             self.media_position_updated_at = None

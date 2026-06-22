@@ -1,7 +1,5 @@
 """Support for the Swedish weather institute weather service."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, Final
 

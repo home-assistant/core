@@ -12,6 +12,9 @@ TRIGGERS: dict[str, type[Trigger]] = {
     "started_mowing": make_entity_target_state_trigger(
         DOMAIN, LawnMowerActivity.MOWING
     ),
+    "started_returning": make_entity_target_state_trigger(
+        DOMAIN, LawnMowerActivity.RETURNING
+    ),
 }
 
 

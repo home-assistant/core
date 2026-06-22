@@ -1,7 +1,5 @@
 """Definition of air-Q number platform used to control the LED strips."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging

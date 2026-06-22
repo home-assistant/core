@@ -1,7 +1,5 @@
 """Support for functionality to interact with Android / Fire TV devices."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import hashlib
 import logging
@@ -36,7 +34,7 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 from .entity import AndroidTVEntity, adb_decorator
-from .services import ATTR_ADB_RESPONSE, ATTR_HDMI_INPUT, SERVICE_LEARN_SENDEVENT
+from .services import ATTR_ADB_RESPONSE, ATTR_HDMI_INPUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -271,7 +269,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
             msg = (
-                f"Output from service '{SERVICE_LEARN_SENDEVENT}' from"
+                f"Output from service 'learn_sendevent' from"
                 f" {self.entity_id}: '{output}'"
             )
             persistent_notification.async_create(
@@ -283,7 +281,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
 
     @adb_decorator()
     async def service_download(self, device_path: str, local_path: str) -> None:
-        """Download a file from your Android / Fire TV device to your Home Assistant instance."""
+        """Download a file from your Android / Fire TV device."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return
@@ -292,7 +290,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
 
     @adb_decorator()
     async def service_upload(self, device_path: str, local_path: str) -> None:
-        """Upload a file from your Home Assistant instance to an Android / Fire TV device."""
+        """Upload a file to an Android / Fire TV device."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return

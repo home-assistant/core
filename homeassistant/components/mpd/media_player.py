@@ -1,7 +1,5 @@
 """Support to interact with a Music Player Daemon."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import asynccontextmanager, suppress
 from datetime import timedelta
@@ -93,6 +91,7 @@ class MpdDevice(MediaPlayerEntity):
     _attr_media_content_type = MediaType.MUSIC
     _attr_has_entity_name = True
     _attr_name = None
+    _attr_volume_step = 0.05
 
     def __init__(
         self, server: str, port: int, password: str | None, unique_id: str
@@ -293,8 +292,9 @@ class MpdDevice(MediaPlayerEntity):
                 bytes(response["binary"])
             ).hexdigest()[:16]
         else:
-            # If there is no image, this hash has to be None, else the media player component
-            # assumes there is an image and returns an error trying to load it and the
+            # If there is no image, this hash has to be None,
+            # else the media player component assumes there is an
+            # image and returns an error trying to load it and the
             # frontend media control card breaks.
             self._media_image_hash = None
 
@@ -323,7 +323,8 @@ class MpdDevice(MediaPlayerEntity):
                         error,
                     )
 
-        # read artwork contained in the media directory (cover.{jpg,png,tiff,bmp}) if none is embedded
+        # read artwork contained in the media directory
+        # (cover.{jpg,png,tiff,bmp}) if none is embedded
         if can_albumart and not response:
             try:
                 with suppress(mpd.ConnectionError):
@@ -392,24 +393,6 @@ class MpdDevice(MediaPlayerEntity):
         async with self.connection():
             if "volume" in self._status:
                 await self._client.setvol(int(volume * 100))
-
-    async def async_volume_up(self) -> None:
-        """Service to send the MPD the command for volume up."""
-        async with self.connection():
-            if "volume" in self._status:
-                current_volume = int(self._status["volume"])
-
-                if current_volume <= 100:
-                    self._client.setvol(current_volume + 5)
-
-    async def async_volume_down(self) -> None:
-        """Service to send the MPD the command for volume down."""
-        async with self.connection():
-            if "volume" in self._status:
-                current_volume = int(self._status["volume"])
-
-                if current_volume >= 0:
-                    await self._client.setvol(current_volume - 5)
 
     async def async_media_play(self) -> None:
         """Service to send the MPD the command for play/pause."""

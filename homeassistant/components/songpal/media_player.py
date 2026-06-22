@@ -1,7 +1,5 @@
 """Support for Songpal-enabled (Sony) media devices."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 import logging
@@ -288,6 +286,8 @@ class SongpalEntity(MediaPlayerEntity):
             self._volume_min = volume.minVolume
             self._volume = volume.volume
             self._volume_control = volume
+            if self._volume_max:
+                self._attr_volume_step = 1 / self._volume_max
             self._attr_is_volume_muted = self._volume_control.is_muted
 
             status = await self._dev.get_power()
@@ -343,7 +343,8 @@ class SongpalEntity(MediaPlayerEntity):
     def sound_mode_list(self) -> list[str] | None:
         """Return list of available sound modes.
 
-        When active mode is None it means that sound mode is unavailable on the sound bar.
+        When active mode is None it means that sound mode is
+        unavailable on the sound bar.
         Can be due to incompatible sound bar or the sound bar is in a mode that does not
         support sound mode changes.
         """
@@ -380,14 +381,6 @@ class SongpalEntity(MediaPlayerEntity):
         volume = int(volume * self._volume_max)
         _LOGGER.debug("Setting volume to %s", volume)
         return await self._volume_control.set_volume(volume)
-
-    async def async_volume_up(self) -> None:
-        """Set volume up."""
-        return await self._volume_control.set_volume(self._volume + 1)
-
-    async def async_volume_down(self) -> None:
-        """Set volume down."""
-        return await self._volume_control.set_volume(self._volume - 1)
 
     async def async_turn_on(self) -> None:
         """Turn the device on."""

@@ -1,7 +1,5 @@
 """Config flow for Anova."""
 
-from __future__ import annotations
-
 import logging
 
 from anova_wifi import AnovaApi, InvalidLogin

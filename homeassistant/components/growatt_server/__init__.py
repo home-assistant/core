@@ -1,16 +1,48 @@
-"""The Growatt server PV inverter sensor integration."""
+"""The Growatt server PV inverter sensor integration.
+
+This integration supports two distinct Growatt APIs with different auth models:
+
+Classic API (username/password):
+- Authenticates via api.login(), which returns a dict with a "success" key.
+- Auth failure is signalled by success=False and msg="502" (LOGIN_INVALID_AUTH_CODE).
+- A failed login does NOT raise an exception — the return value must be checked.
+- The coordinator calls api.login() on every update cycle to maintain the session.
+
+Open API V1 (API token):
+- Stateless — no login call, token is sent as a Bearer header on every request.
+- Auth failure is signalled by raising GrowattV1ApiError with
+  error_code=GrowattV1ApiErrorCode.NO_PRIVILEGE. The library NEVER returns a failure silently;
+  any non-zero error_code raises an exception via _process_response().
+- Because the library always raises on error, return-value validation after a
+  successful V1 API call is unnecessary — if it returned, the token was valid.
+
+Error handling pattern for reauth:
+- Classic API: check NOT login_response["success"] and msg == LOGIN_INVALID_AUTH_CODE
+  → raise ConfigEntryAuthFailed
+- V1 API: catch GrowattV1ApiError with error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE
+  → raise ConfigEntryAuthFailed
+- All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
+"""
 
 from collections.abc import Mapping
+import datetime
 from json import JSONDecodeError
 import logging
 
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 from requests import RequestException
 
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_URL, CONF_USERNAME
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
+from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
@@ -22,9 +54,12 @@ from .const import (
     DEFAULT_PLANT_ID,
     DEFAULT_URL,
     DEPRECATED_URLS,
+    DEVICE_SCAN_INTERVAL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
     PLATFORMS,
+    SUPPORTED_DEVICE_TYPES,
+    V1_DEVICE_TYPES,
 )
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
 from .models import GrowattRuntimeData
@@ -63,7 +98,8 @@ async def async_migrate_entry(
     achieve:
         Migration: login() → plant_list() → [cache API instance]
         Setup:     [reuse cached API] → device_list()
-    This reduces to just 1 login() call during the migration+setup cycle and prevent account lockout.
+    This reduces to just 1 login() call during the
+    migration+setup cycle and prevent account lockout.
     """
     _LOGGER.debug(
         "Migrating config entry from version %s.%s",
@@ -100,7 +136,8 @@ async def async_migrate_entry(
 
         # Handle DEFAULT_PLANT_ID resolution
         if config.get(CONF_PLANT_ID) == DEFAULT_PLANT_ID:
-            # V1 API should never have DEFAULT_PLANT_ID (plant selection happens in config flow)
+            # V1 API should never have DEFAULT_PLANT_ID
+            # (plant selection happens in config flow)
             # If it does, this indicates a corrupted config entry
             if config.get(CONF_AUTH_TYPE) == AUTH_API_TOKEN:
                 _LOGGER.error(
@@ -201,15 +238,24 @@ def _login_classic_api(
         login_response = api.login(username, password)
     except (RequestException, JSONDecodeError) as ex:
         raise ConfigEntryError(
-            f"Error communicating with Growatt API during login: {ex}"
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+            translation_placeholders={"error": str(ex)},
         ) from ex
 
     if not login_response.get("success"):
         msg = login_response.get("msg", "Unknown error")
         _LOGGER.debug("Growatt login failed: %s", msg)
         if msg == LOGIN_INVALID_AUTH_CODE:
-            raise ConfigEntryAuthFailed("Username, Password or URL may be incorrect!")
-        raise ConfigEntryError(f"Growatt login failed: {msg}")
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_credentials",
+            )
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="login_failed",
+            translation_placeholders={"message": msg},
+        )
 
     return login_response
 
@@ -227,22 +273,38 @@ def get_device_list_v1(
     try:
         devices_dict = api.device_list(plant_id)
     except growattServer.GrowattV1ApiError as e:
+        if e.error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE:
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+                translation_placeholders={"error": e.error_msg or str(e)},
+            ) from e
+        if e.error_code == GrowattV1ApiErrorCode.RATE_LIMITED:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="rate_limited",
+                translation_placeholders={"error": e.error_msg or str(e)},
+            ) from e
         raise ConfigEntryError(
-            f"API error during device list: {e} (Code: {getattr(e, 'error_code', None)}, Message: {getattr(e, 'error_msg', None)})"
+            translation_domain=DOMAIN,
+            translation_key="api_error_with_code",
+            translation_placeholders={
+                "error": e.error_msg or str(e),
+                "code": str(e.error_code),
+            },
         ) from e
     devices = devices_dict.get("devices", [])
-    # Only MIN device (type = 7) support implemented in current V1 API
     supported_devices = [
         {
             "deviceSn": device.get("device_sn", ""),
-            "deviceType": "min",
+            "deviceType": V1_DEVICE_TYPES[device.get("type")],
         }
         for device in devices
-        if device.get("type") == 7
+        if device.get("type") in V1_DEVICE_TYPES
     ]
 
     for device in devices:
-        if device.get("type") != 7:
+        if device.get("type") not in V1_DEVICE_TYPES:
             _LOGGER.warning(
                 "Device %s with type %s not supported in Open API V1, skipping",
                 device.get("device_sn", ""),
@@ -272,6 +334,7 @@ async def async_setup_entry(
         # V1 API (token-based, no login needed)
         token = config[CONF_TOKEN]
         api = growattServer.OpenApiV1(token=token)
+        api.server_url = url
         devices, plant_id = await hass.async_add_executor_job(
             get_device_list_v1, api, config
         )
@@ -302,10 +365,15 @@ async def async_setup_entry(
             devices = await hass.async_add_executor_job(api.device_list, plant_id)
         except (RequestException, JSONDecodeError) as ex:
             raise ConfigEntryError(
-                f"Error communicating with Growatt API during device list: {ex}"
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(ex)},
             ) from ex
     else:
-        raise ConfigEntryError("Unknown authentication type in config entry.")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unknown_auth_type",
+        )
 
     # Create a coordinator for the total sensors
     total_coordinator = GrowattCoordinator(
@@ -318,7 +386,7 @@ async def async_setup_entry(
             hass, config_entry, device["deviceSn"], device["deviceType"], plant_id
         )
         for device in devices
-        if device["deviceType"] in ["inverter", "tlx", "storage", "mix", "min"]
+        if device["deviceType"] in SUPPORTED_DEVICE_TYPES
     }
 
     # Perform the first refresh for the total coordinator
@@ -336,6 +404,96 @@ async def async_setup_entry(
 
     # Set up all the entities
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
+
+    async def _async_scan_for_new_devices(_now: datetime.datetime) -> None:
+        """Scan for new or removed devices and update HA accordingly."""
+        # Fetch current config (in case it was updated via reauth or options)
+        current_plant_id = config_entry.data[CONF_PLANT_ID]
+
+        total_coordinator = config_entry.runtime_data.total_coordinator
+        # Signal the coordinator to also fetch the device list on its next
+        # _sync_update_data run, then force an immediate refresh.  This keeps
+        # the device_list call in the same executor thread as the existing
+        # login() + plant-overview call, so for Classic API there is no extra
+        # login and no thread-safety concern with the shared session.
+        total_coordinator.request_device_list_scan()
+        await total_coordinator.async_refresh()
+
+        if not total_coordinator.last_update_success:
+            _LOGGER.debug("Coordinator refresh failed during device scan, skipping")
+            return
+
+        current_devices = total_coordinator.device_list
+        if current_devices is None:
+            _LOGGER.debug(
+                "Device list not populated after coordinator refresh, skipping scan"
+            )
+            return
+
+        runtime_data = config_entry.runtime_data
+        current_device_sns = {device["deviceSn"] for device in current_devices}
+
+        # Remove stale devices
+        device_registry = dr.async_get(hass)
+        for device_entry in dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        ):
+            device_domain_ids = {
+                identifier[1]
+                for identifier in device_entry.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if not device_domain_ids:
+                continue
+            # Skip the plant "total" device
+            if current_plant_id in device_domain_ids:
+                continue
+            if device_domain_ids.isdisjoint(current_device_sns):
+                for device_sn in device_domain_ids:
+                    if coordinator := runtime_data.devices.pop(device_sn, None):
+                        await coordinator.async_shutdown()
+                device_registry.async_update_device(
+                    device_entry.id,
+                    remove_config_entry_id=config_entry.entry_id,
+                )
+
+        # Add new devices
+        new_coordinators: list[GrowattCoordinator] = []
+        for device in current_devices:
+            device_sn = device["deviceSn"]
+            device_type = device["deviceType"]
+            if device_sn in runtime_data.devices:
+                continue
+            if device_type not in SUPPORTED_DEVICE_TYPES:
+                _LOGGER.debug(
+                    "New device %s with type %s is not supported, skipping",
+                    device_sn,
+                    device_type,
+                )
+                continue
+            coordinator = GrowattCoordinator(
+                hass, config_entry, device_sn, device_type, current_plant_id
+            )
+            await coordinator.async_refresh()
+            if not coordinator.last_update_success:
+                _LOGGER.debug("Failed to refresh new device %s, skipping", device_sn)
+                await coordinator.async_shutdown()
+                continue
+            runtime_data.devices[device_sn] = coordinator
+            new_coordinators.append(coordinator)
+
+        if new_coordinators:
+            async_dispatcher_send(
+                hass,
+                f"{DOMAIN}_new_device_{config_entry.entry_id}",
+                new_coordinators,
+            )
+
+    config_entry.async_on_unload(
+        async_track_time_interval(
+            hass, _async_scan_for_new_devices, DEVICE_SCAN_INTERVAL
+        )
+    )
 
     return True
 

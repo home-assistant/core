@@ -43,10 +43,8 @@ class LutronBaseEntity(Entity):
     @property
     def unique_id(self) -> str:
         """Return a unique ID."""
-
-        if self._lutron_device.uuid is None:
-            return f"{self._controller.guid}_{self._lutron_device.legacy_uuid}"
-        return f"{self._controller.guid}_{self._lutron_device.uuid}"
+        device_uuid = self._lutron_device.uuid or self._lutron_device.legacy_uuid
+        return f"{self._controller.guid}_{device_uuid}"
 
     def update(self) -> None:
         """Update the entity's state."""
@@ -83,8 +81,9 @@ class LutronKeypad(LutronBaseEntity):
     ) -> None:
         """Initialize the device."""
         super().__init__(area_name, lutron_device, controller)
+        device_uuid = keypad.uuid or keypad.legacy_uuid
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, keypad.id)},
+            identifiers={(DOMAIN, f"{controller.guid}_{device_uuid}")},
             manufacturer="Lutron",
             name=keypad.name,
         )

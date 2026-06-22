@@ -1,7 +1,5 @@
 """Application credentials platform for Model Context Protocol."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from contextlib import contextmanager
 import contextvars

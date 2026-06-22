@@ -4,6 +4,7 @@
   "codeowners": ["@boralyl"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/todoist",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["todoist"],
   "requirements": ["todoist-api-python==3.1.0"]

@@ -4,6 +4,7 @@
   "codeowners": ["@PaulAnnekov"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ukraine_alarm",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": ["uasiren==0.0.1"]
 }

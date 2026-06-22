@@ -1,5 +1,8 @@
 {
   "exceptions": {
+    "failed_to_reload": {
+      "message": "Failed to reload dashboard resources. Please check your configuration and try again."
+    },
     "url_already_exists": {
       "message": "The URL \"{url}\" is already in use. Please choose a different one."
     }
@@ -13,7 +16,7 @@
   "services": {
     "reload_resources": {
       "description": "Reloads dashboard resources from the YAML-configuration.",
-      "name": "Reload resources"
+      "name": "Reload dashboard resources"
     }
   },
   "system_health": {

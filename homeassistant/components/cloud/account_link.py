@@ -1,8 +1,7 @@
 """Account linking via the cloud."""
 
-from __future__ import annotations
-
 from datetime import datetime
+from http import HTTPStatus
 import logging
 from typing import Any
 
@@ -12,6 +11,11 @@ from hass_nabucasa import account_link
 
 from homeassistant.const import __version__ as HA_VERSION
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import (
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+    OAuth2TokenRequestTransientError,
+)
 from homeassistant.helpers import config_entry_oauth2_flow, event
 
 from .const import DATA_CLOUD, DOMAIN
@@ -130,8 +134,10 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
                     flow_id=flow_id, user_input=tokens
                 )
 
-        # It's a background task because it should be cancelled on shutdown and there's nothing else
-        # we can do in such case. There's also no need to wait for this during setup.
+        # It's a background task because it should be cancelled
+        # on shutdown and there's nothing else we can do in
+        # such case. There's also no need to wait for this
+        # during setup.
         self.hass.async_create_background_task(
             await_tokens(), name="Awaiting OAuth tokens"
         )
@@ -146,7 +152,35 @@ class CloudOAuth2Implementation(config_entry_oauth2_flow.AbstractOAuth2Implement
 
     async def _async_refresh_token(self, token: dict) -> dict:
         """Refresh a token."""
-        new_token = await account_link.async_fetch_access_token(
-            self.hass.data[DATA_CLOUD], self.service, token["refresh_token"]
-        )
+        try:
+            new_token = await account_link.async_fetch_access_token(
+                self.hass.data[DATA_CLOUD], self.service, token["refresh_token"]
+            )
+        except aiohttp.ClientResponseError as err:
+            if err.status == HTTPStatus.TOO_MANY_REQUESTS or 500 <= err.status <= 599:
+                raise OAuth2TokenRequestTransientError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self.service,
+                ) from err
+            if 400 <= err.status <= 499:
+                raise OAuth2TokenRequestReauthError(
+                    request_info=err.request_info,
+                    history=err.history,
+                    status=err.status,
+                    message=err.message,
+                    headers=err.headers,
+                    domain=self.service,
+                ) from err
+            raise OAuth2TokenRequestError(
+                request_info=err.request_info,
+                history=err.history,
+                status=err.status,
+                message=err.message,
+                headers=err.headers,
+                domain=self.service,
+            ) from err
         return {**token, **new_token}

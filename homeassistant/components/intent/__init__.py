@@ -1,7 +1,5 @@
 """The Intent integration."""
 
-from __future__ import annotations
-
 from collections.abc import Collection
 import logging
 from typing import Any, Protocol
@@ -112,7 +110,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_ON,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_ON,
-            description="Turns on/opens/presses a device or entity. For locks, this performs a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.",
+            description=(
+                "Turns on/opens/presses a device or entity."
+                " For locks, this performs a 'lock' action."
+                " Use for requests like 'turn on',"
+                " 'activate', 'enable', or 'lock'."
+            ),
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -122,7 +125,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             intent.INTENT_TURN_OFF,
             HOMEASSISTANT_DOMAIN,
             SERVICE_TURN_OFF,
-            description="Turns off/closes a device or entity. For locks, this performs an 'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable', or 'unlock'.",
+            description=(
+                "Turns off/closes a device or entity."
+                " For locks, this performs an 'unlock' action."
+                " Use for requests like 'turn off',"
+                " 'deactivate', 'disable', or 'unlock'."
+            ),
             device_classes=ONOFF_DEVICE_CLASSES,
         ),
     )
@@ -627,13 +635,17 @@ class IntentHandleView(http.HomeAssistantView):
             {
                 vol.Required("name"): cv.string,
                 vol.Optional("data"): vol.Schema({cv.string: object}),
+                vol.Optional("language"): cv.string,
+                vol.Optional("assistant"): vol.Any(cv.string, None),
+                vol.Optional("device_id"): vol.Any(cv.string, None),
+                vol.Optional("satellite_id"): vol.Any(cv.string, None),
             }
         )
     )
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle intent with name/data."""
         hass = request.app[http.KEY_HASS]
-        language = hass.config.language
+        language = data.get("language", hass.config.language)
 
         try:
             intent_name = data["name"]
@@ -641,14 +653,21 @@ class IntentHandleView(http.HomeAssistantView):
                 key: {"value": value} for key, value in data.get("data", {}).items()
             }
             intent_result = await intent.async_handle(
-                hass, DOMAIN, intent_name, slots, "", self.context(request)
+                hass,
+                DOMAIN,
+                intent_name,
+                slots,
+                "",
+                self.context(request),
+                language=language,
+                assistant=data.get("assistant"),
+                device_id=data.get("device_id"),
+                satellite_id=data.get("satellite_id"),
             )
         except (intent.IntentHandleError, intent.MatchFailedError) as err:
             intent_result = intent.IntentResponse(language=language)
-            intent_result.async_set_speech(str(err))
-
-        if intent_result is None:
-            intent_result = intent.IntentResponse(language=language)  # type: ignore[unreachable]
-            intent_result.async_set_speech("Sorry, I couldn't handle that")
+            intent_result.async_set_error(
+                intent.IntentResponseErrorCode.FAILED_TO_HANDLE, str(err)
+            )
 
         return self.json(intent_result)

@@ -1,20 +1,29 @@
 """Test for airOS integration setup."""
 
-from __future__ import annotations
+from unittest.mock import ANY, AsyncMock, MagicMock
 
-from unittest.mock import ANY, MagicMock
-
+from airos.exceptions import (
+    AirOSConnectionAuthenticationError,
+    AirOSConnectionSetupError,
+    AirOSDeviceConnectionError,
+    AirOSKeyDataMissingError,
+)
 import pytest
 
 from homeassistant.components.airos.const import (
     DEFAULT_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
 )
+from homeassistant.components.airos.coordinator import async_fetch_airos_data
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryAuthFailed,
+    ConfigEntryState,
+)
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -37,7 +46,7 @@ MOCK_CONFIG_PLAIN = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "ubnt",
     CONF_PASSWORD: "test-password",
-    SECTION_ADVANCED_SETTINGS: {
+    SECTION_ADDITIONAL_SETTINGS: {
         CONF_SSL: False,
         CONF_VERIFY_SSL: False,
     },
@@ -47,7 +56,7 @@ MOCK_CONFIG_V1_2 = {
     CONF_HOST: "1.1.1.1",
     CONF_USERNAME: "ubnt",
     CONF_PASSWORD: "test-password",
-    SECTION_ADVANCED_SETTINGS: {
+    SECTION_ADDITIONAL_SETTINGS: {
         CONF_SSL: DEFAULT_SSL,
         CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
     },
@@ -57,8 +66,9 @@ MOCK_CONFIG_V1_2 = {
 async def test_setup_entry_with_default_ssl(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_airos_client: MagicMock,
     mock_airos_class: MagicMock,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test setting up a config entry with default SSL options."""
     mock_config_entry.add_to_hass(hass)
@@ -76,14 +86,15 @@ async def test_setup_entry_with_default_ssl(
         use_ssl=DEFAULT_SSL,
     )
 
-    assert mock_config_entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL] is True
-    assert mock_config_entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL] is False
+    assert mock_config_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL] is True
+    assert mock_config_entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL] is False
 
 
 async def test_setup_entry_without_ssl(
     hass: HomeAssistant,
-    mock_airos_client: MagicMock,
     mock_airos_class: MagicMock,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test setting up a config entry adjusted to plain HTTP."""
     entry = MockConfigEntry(
@@ -109,12 +120,14 @@ async def test_setup_entry_without_ssl(
         use_ssl=False,
     )
 
-    assert entry.data[SECTION_ADVANCED_SETTINGS][CONF_SSL] is False
-    assert entry.data[SECTION_ADVANCED_SETTINGS][CONF_VERIFY_SSL] is False
+    assert entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_SSL] is False
+    assert entry.data[SECTION_ADDITIONAL_SETTINGS][CONF_VERIFY_SSL] is False
 
 
 async def test_ssl_migrate_entry(
-    hass: HomeAssistant, mock_airos_client: MagicMock
+    hass: HomeAssistant,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test migrate entry SSL options."""
     entry = MockConfigEntry(
@@ -145,11 +158,12 @@ async def test_ssl_migrate_entry(
 )
 async def test_uid_migrate_entry(
     hass: HomeAssistant,
-    mock_airos_client: MagicMock,
     device_registry: dr.DeviceRegistry,
     sensor_domain: str,
     sensor_name: str,
     mock_id: str,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test migrate entry unique id."""
     entity_registry = er.async_get(hass)
@@ -205,6 +219,7 @@ async def test_uid_migrate_entry(
 async def test_migrate_future_return(
     hass: HomeAssistant,
     mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test migrate entry unique id."""
     entry = MockConfigEntry(
@@ -225,8 +240,9 @@ async def test_migrate_future_return(
 
 async def test_load_unload_entry(
     hass: HomeAssistant,
-    mock_airos_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
 ) -> None:
     """Test setup and unload config entry."""
     mock_config_entry.add_to_hass(hass)
@@ -240,3 +256,40 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.parametrize(
+    ("exception", "state"),
+    [
+        (AirOSConnectionAuthenticationError, ConfigEntryState.SETUP_ERROR),
+        (AirOSConnectionSetupError, ConfigEntryState.SETUP_RETRY),
+        (AirOSDeviceConnectionError, ConfigEntryState.SETUP_RETRY),
+        (AirOSKeyDataMissingError, ConfigEntryState.SETUP_ERROR),
+        (Exception, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_setup_entry_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_airos_class: MagicMock,
+    mock_airos_client: MagicMock,
+    mock_async_get_firmware_data: AsyncMock,
+    exception: Exception,
+    state: ConfigEntryState,
+) -> None:
+    """Test config entry setup failure."""
+    mock_async_get_firmware_data.side_effect = exception
+
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert result is False
+    assert mock_config_entry.state is state
+
+
+async def test_fetch_airos_data_auth_error(mock_airos_client: MagicMock) -> None:
+    """Test login auth error triggers ConfigEntryAuthFailed."""
+    mock_airos_client.login.side_effect = AirOSConnectionAuthenticationError
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await async_fetch_airos_data(mock_airos_client, mock_airos_client.status)

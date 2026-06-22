@@ -1,7 +1,5 @@
 """Sensor for door state."""
 
-from __future__ import annotations
-
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
@@ -11,6 +9,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(

@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:remote-off"
+    },
+    "is_on": {
+      "condition": "mdi:remote"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:remote",
@@ -25,6 +33,14 @@
     },
     "turn_on": {
       "service": "mdi:remote"
+    }
+  },
+  "triggers": {
+    "turned_off": {
+      "trigger": "mdi:remote-off"
+    },
+    "turned_on": {
+      "trigger": "mdi:remote"
     }
   }
 }

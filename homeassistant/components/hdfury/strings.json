@@ -40,6 +40,20 @@
         "name": "Issue hotplug"
       }
     },
+    "number": {
+      "audio_unmute": {
+        "name": "Unmute delay"
+      },
+      "earc_unmute": {
+        "name": "eARC unmute delay"
+      },
+      "oled_fade": {
+        "name": "OLED fade timer"
+      },
+      "reboot_timer": {
+        "name": "Restart timer"
+      }
+    },
     "select": {
       "opmode": {
         "name": "Operation mode",

@@ -51,7 +51,7 @@ async def test_theme_select(
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "select.my_bulb_theme"
+    entity_id = "select.my_group_my_bulb_theme"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -90,7 +90,7 @@ async def test_infrared_brightness(
         await hass.async_block_till_done()
 
     unique_id = f"{SERIAL}_infrared_brightness"
-    entity_id = "select.my_bulb_infrared_brightness"
+    entity_id = "select.my_group_my_bulb_infrared_brightness"
 
     entity = entity_registry.async_get(entity_id)
     assert entity
@@ -121,7 +121,7 @@ async def test_set_infrared_brightness_25_percent(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "select.my_bulb_infrared_brightness"
+    entity_id = "select.my_group_my_bulb_infrared_brightness"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -163,7 +163,7 @@ async def test_set_infrared_brightness_50_percent(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "select.my_bulb_infrared_brightness"
+    entity_id = "select.my_group_my_bulb_infrared_brightness"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -205,7 +205,7 @@ async def test_set_infrared_brightness_100_percent(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "select.my_bulb_infrared_brightness"
+    entity_id = "select.my_group_my_bulb_infrared_brightness"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -247,7 +247,7 @@ async def test_disable_infrared(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "select.my_bulb_infrared_brightness"
+    entity_id = "select.my_group_my_bulb_infrared_brightness"
 
     await hass.services.async_call(
         SELECT_DOMAIN,
@@ -289,7 +289,7 @@ async def test_invalid_infrared_brightness(hass: HomeAssistant) -> None:
         await async_setup_component(hass, lifx.DOMAIN, {lifx.DOMAIN: {}})
         await hass.async_block_till_done()
 
-    entity_id = "select.my_bulb_infrared_brightness"
+    entity_id = "select.my_group_my_bulb_infrared_brightness"
 
     bulb.get_infrared = MockLifxCommand(bulb, infrared_brightness=12345)
 

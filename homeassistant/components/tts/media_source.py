@@ -1,7 +1,5 @@
 """Text-to-speech media source."""
 
-from __future__ import annotations
-
 import json
 from typing import TypedDict
 
@@ -152,7 +150,9 @@ class TTSMediaSource(MediaSource):
         if stream is None:
             raise Unresolvable("Stream not found")
 
-        return PlayMedia(stream.url, stream.content_type)
+        return PlayMedia(
+            stream.url, stream.content_type, path=stream.async_get_media_path()
+        )
 
     async def async_browse_media(
         self,
@@ -214,7 +214,7 @@ class TTSMediaSource(MediaSource):
             media_class=MediaClass.APP,
             media_content_type="provider",
             title=engine_instance.name,
-            thumbnail=f"https://brands.home-assistant.io/_/{engine_domain}/logo.png",
+            thumbnail=f"/api/brands/integration/{engine_domain}/logo.png",
             can_play=False,
             can_expand=True,
         )

@@ -1,10 +1,13 @@
 # serializer version: 1
 # name: test_sensors[sensor.publicuniversalfriend_bronze_trophies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -39,6 +42,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Bronze trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -51,10 +55,13 @@
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_gold_trophies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -89,6 +96,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Gold trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -101,8 +109,9 @@
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_last_online-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -151,10 +160,13 @@
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_next_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -189,6 +201,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Next level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -201,8 +214,9 @@
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -250,8 +264,9 @@
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_online_id-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -299,8 +314,9 @@
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_online_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -362,10 +378,13 @@
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_platinum_trophies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -400,6 +419,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Platinum trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -412,10 +432,13 @@
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_silver_trophies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -450,6 +473,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Silver trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -462,10 +486,13 @@
 # ---
 # name: test_sensors[sensor.publicuniversalfriend_trophy_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -500,6 +527,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'PublicUniversalFriend Trophy level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.publicuniversalfriend_trophy_level',
@@ -511,10 +539,13 @@
 # ---
 # name: test_sensors[sensor.testuser_bronze_trophies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -549,6 +580,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Bronze trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -561,10 +593,13 @@
 # ---
 # name: test_sensors[sensor.testuser_gold_trophies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -599,6 +634,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Gold trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -611,8 +647,9 @@
 # ---
 # name: test_sensors[sensor.testuser_last_online-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -661,10 +698,13 @@
 # ---
 # name: test_sensors[sensor.testuser_next_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -699,6 +739,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Next level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
@@ -711,8 +752,9 @@
 # ---
 # name: test_sensors[sensor.testuser_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -760,8 +802,9 @@
 # ---
 # name: test_sensors[sensor.testuser_online_id-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -810,8 +853,9 @@
 # ---
 # name: test_sensors[sensor.testuser_online_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -873,10 +917,13 @@
 # ---
 # name: test_sensors[sensor.testuser_platinum_trophies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -911,6 +958,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Platinum trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -923,10 +971,13 @@
 # ---
 # name: test_sensors[sensor.testuser_silver_trophies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -961,6 +1012,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Silver trophies',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
       'unit_of_measurement': 'trophies',
     }),
     'context': <ANY>,
@@ -973,10 +1025,13 @@
 # ---
 # name: test_sensors[sensor.testuser_trophy_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1011,6 +1066,7 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'testuser Trophy level',
+      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.testuser_trophy_level',

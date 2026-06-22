@@ -1,7 +1,5 @@
 """The Netio switch component."""
 
-from __future__ import annotations
-
 from collections import namedtuple
 from datetime import timedelta
 import logging
@@ -174,7 +172,7 @@ class NetioSwitch(SwitchEntity):
         self.schedule_update_ha_state()
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the switch's status."""
         return self.netio.states[int(self.outlet) - 1]
 

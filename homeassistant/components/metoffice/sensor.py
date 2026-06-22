@@ -1,11 +1,7 @@
 """Support for UK Met Office weather service."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from typing import Any
-
-from datapoint.Forecast import Forecast
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -15,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     PERCENTAGE,
@@ -29,19 +24,14 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import get_device_info
-from .const import (
-    ATTRIBUTION,
-    CONDITION_MAP,
-    DOMAIN,
-    METOFFICE_COORDINATES,
-    METOFFICE_HOURLY_COORDINATOR,
-    METOFFICE_NAME,
+from .const import ATTRIBUTION, CONDITION_MAP, DOMAIN
+from .coordinator import (
+    MetOfficeConfigEntry,
+    MetOfficeRuntimeData,
+    MetOfficeUpdateCoordinator,
 )
 from .helpers import get_attribute
 
@@ -68,8 +58,7 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         key="weather",
         native_attr_name="significantWeatherCode",
         name="Weather",
-        icon="mdi:weather-sunny",  # but will adapt to current conditions
-        entity_registry_enabled_default=True,
+        icon="mdi:weather-sunny",
     ),
     MetOfficeSensorEntityDescription(
         key="temperature",
@@ -78,7 +67,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
         key="feels_like_temperature",
@@ -87,7 +75,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        icon=None,
         entity_registry_enabled_default=False,
     ),
     MetOfficeSensorEntityDescription(
@@ -100,7 +87,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         suggested_unit_of_measurement=UnitOfSpeed.MILES_PER_HOUR,
         device_class=SensorDeviceClass.WIND_SPEED,
         state_class=SensorStateClass.MEASUREMENT,
-        entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
         key="wind_direction",
@@ -140,7 +126,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         name="UV index",
         native_unit_of_measurement=UV_INDEX,
         icon="mdi:weather-sunny-alert",
-        entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
         key="precipitation",
@@ -149,7 +134,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         name="Probability of precipitation",
         native_unit_of_measurement=PERCENTAGE,
         icon="mdi:weather-rainy",
-        entity_registry_enabled_default=True,
     ),
     MetOfficeSensorEntityDescription(
         key="humidity",
@@ -158,7 +142,6 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
-        icon=None,
         entity_registry_enabled_default=False,
     ),
     MetOfficeSensorEntityDescription(
@@ -176,19 +159,19 @@ SENSOR_TYPES: tuple[MetOfficeSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: MetOfficeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Met Office weather sensor platform."""
     entity_registry = er.async_get(hass)
-    hass_data = hass.data[DOMAIN][entry.entry_id]
+    hass_data = entry.runtime_data
 
     # Remove daily entities from legacy config entries
     for description in SENSOR_TYPES:
         if entity_id := entity_registry.async_get_entity_id(
             SENSOR_DOMAIN,
             DOMAIN,
-            f"{description.key}_{hass_data[METOFFICE_COORDINATES]}_daily",
+            f"{description.key}_{hass_data.coordinates}_daily",
         ):
             entity_registry.async_remove(entity_id)
 
@@ -196,20 +179,20 @@ async def async_setup_entry(
     if entity_id := entity_registry.async_get_entity_id(
         SENSOR_DOMAIN,
         DOMAIN,
-        f"visibility_distance_{hass_data[METOFFICE_COORDINATES]}_daily",
+        f"visibility_distance_{hass_data.coordinates}_daily",
     ):
         entity_registry.async_remove(entity_id)
     if entity_id := entity_registry.async_get_entity_id(
         SENSOR_DOMAIN,
         DOMAIN,
-        f"visibility_distance_{hass_data[METOFFICE_COORDINATES]}",
+        f"visibility_distance_{hass_data.coordinates}",
     ):
         entity_registry.async_remove(entity_id)
 
     async_add_entities(
         [
             MetOfficeCurrentSensor(
-                hass_data[METOFFICE_HOURLY_COORDINATOR],
+                hass_data.hourly_coordinator,
                 hass_data,
                 description,
             )
@@ -220,7 +203,7 @@ async def async_setup_entry(
 
 
 class MetOfficeCurrentSensor(
-    CoordinatorEntity[DataUpdateCoordinator[Forecast]], SensorEntity
+    CoordinatorEntity[MetOfficeUpdateCoordinator], SensorEntity
 ):
     """Implementation of a Met Office current weather condition sensor."""
 
@@ -231,8 +214,8 @@ class MetOfficeCurrentSensor(
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator[Forecast],
-        hass_data: dict[str, Any],
+        coordinator: MetOfficeUpdateCoordinator,
+        hass_data: MetOfficeRuntimeData,
         description: MetOfficeSensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
@@ -241,9 +224,9 @@ class MetOfficeCurrentSensor(
         self.entity_description = description
 
         self._attr_device_info = get_device_info(
-            coordinates=hass_data[METOFFICE_COORDINATES], name=hass_data[METOFFICE_NAME]
+            coordinates=hass_data.coordinates, name=hass_data.name
         )
-        self._attr_unique_id = f"{description.key}_{hass_data[METOFFICE_COORDINATES]}"
+        self._attr_unique_id = f"{description.key}_{hass_data.coordinates}"
 
     @property
     def native_value(self) -> StateType:

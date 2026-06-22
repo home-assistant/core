@@ -1,7 +1,5 @@
 """Config flow for Group integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Mapping
 from functools import partial
 from typing import Any, cast

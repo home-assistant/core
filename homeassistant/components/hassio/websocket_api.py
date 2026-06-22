@@ -18,7 +18,6 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
 )
 
-from . import HassioAPIError
 from .config import HassioUpdateParametersDict
 from .const import (
     ATTR_DATA,
@@ -39,7 +38,9 @@ from .const import (
     WS_TYPE_EVENT,
     WS_TYPE_SUBSCRIBE,
 )
-from .coordinator import get_supervisor_info
+from .coordinator import get_addons_list
+from .exceptions import HassioNotReadyError
+from .handler import HassioAPIError
 from .update_helper import update_addon, update_core
 
 SCHEMA_WEBSOCKET_EVENT = vol.Schema(
@@ -47,15 +48,16 @@ SCHEMA_WEBSOCKET_EVENT = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-# Endpoints needed for ingress can't require admin because addons can set `panel_admin: false`
-# fmt: off
+# Endpoints needed for ingress can't require admin because
+# add-ons can set `panel_admin: false`
+RE_ADDONS_INFO_ENDPOINT = r"/addons/[^/]+/info"
+WS_ADDONS_INFO_ENDPOINT = re.compile(r"^" + RE_ADDONS_INFO_ENDPOINT + r"$")
 WS_NO_ADMIN_ENDPOINTS = re.compile(
     r"^(?:"
-    r"|/ingress/(session|validate_session)"
-    r"|/addons/[^/]+/info"
+    r"/ingress/(session|validate_session)"
+    f"|{RE_ADDONS_INFO_ENDPOINT}"
     r")$"
 )
-# fmt: on
 
 _LOGGER: logging.Logger = logging.getLogger(__package__)
 
@@ -92,6 +94,7 @@ def websocket_subscribe(
 
 
 @callback
+@websocket_api.ws_require_user(only_supervisor=True)
 @websocket_api.websocket_command(
     {
         vol.Required(WS_TYPE): WS_TYPE_EVENT,
@@ -131,8 +134,9 @@ async def websocket_supervisor_api(
     payload = msg.get(ATTR_DATA, {})
 
     if command == "/ingress/session":
-        # Send user ID on session creation, so the supervisor can correlate session tokens with users
-        # for every request that is authenticated with the given ingress session token.
+        # Send user ID on session creation, so the supervisor can
+        # correlate session tokens with users for every request that
+        # is authenticated with the given ingress session token.
         payload[ATTR_SESSION_DATA_USER_ID] = connection.user.id
 
     try:
@@ -150,7 +154,12 @@ async def websocket_supervisor_api(
             msg[WS_ID], code=websocket_api.ERR_UNKNOWN_ERROR, message=str(err)
         )
     else:
-        connection.send_result(msg[WS_ID], result.get(ATTR_DATA, {}))
+        data = result.get(ATTR_DATA, {})
+        # Remove options from add-on info for non-admin users, as options can contain
+        # sensitive information and the frontend does not require it for ingress.
+        if not connection.user.is_admin and WS_ADDONS_INFO_ENDPOINT.match(command):
+            data.pop("options", None)
+        connection.send_result(msg[WS_ID], data)
 
 
 @websocket_api.require_admin
@@ -168,8 +177,21 @@ async def websocket_update_addon(
     """Websocket handler to update an addon."""
     addon_name: str | None = None
     addon_version: str | None = None
-    addons: list = (get_supervisor_info(hass) or {}).get("addons", [])
-    for addon in addons:
+    try:
+        addons_list: list[dict[str, Any]] = get_addons_list(hass)
+    except HassioNotReadyError:
+        _LOGGER.error(
+            "Update command received for app %s but apps list is not available",
+            msg["addon"],
+        )
+        connection.send_error(
+            msg[WS_ID],
+            code=websocket_api.ERR_UNKNOWN_ERROR,
+            message="Apps list is not available",
+        )
+        return
+
+    for addon in addons_list:
         if addon[ATTR_SLUG] == msg["addon"]:
             addon_name = addon[ATTR_NAME]
             addon_version = addon[ATTR_VERSION]

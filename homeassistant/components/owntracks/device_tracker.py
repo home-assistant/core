@@ -1,4 +1,5 @@
 """Device tracker platform that adds support for OwnTracks over MQTT."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 from typing import Any
 
@@ -20,8 +21,26 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
+from homeassistant.util import dt as dt_util
 
-from . import DOMAIN
+from .const import (
+    ATTR_ADDRESS,
+    ATTR_BATTERY_STATUS,
+    ATTR_COURSE,
+    ATTR_TID,
+    ATTR_UPDATE_TIMESTAMP,
+    ATTR_VELOCITY,
+    DOMAIN,
+)
+
+_RESTORED_OWNTRACKS_ATTRIBUTES: tuple[str, ...] = (
+    ATTR_ADDRESS,
+    ATTR_BATTERY_STATUS,
+    ATTR_COURSE,
+    ATTR_TID,
+    ATTR_UPDATE_TIMESTAMP,
+    ATTR_VELOCITY,
+)
 
 
 async def async_setup_entry(
@@ -140,12 +159,19 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
             return
 
         attr = state.attributes
+        attributes = {
+            key: attr[key] for key in _RESTORED_OWNTRACKS_ATTRIBUTES if key in attr
+        }
+        if isinstance(update_timestamp := attributes.get(ATTR_UPDATE_TIMESTAMP), str):
+            attributes[ATTR_UPDATE_TIMESTAMP] = dt_util.parse_datetime(update_timestamp)
+
         self._data = {
             "host_name": state.name,
             "gps": (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)),
             "gps_accuracy": attr.get(ATTR_GPS_ACCURACY),
             "battery": attr.get(ATTR_BATTERY_LEVEL),
             "source_type": attr.get(ATTR_SOURCE_TYPE),
+            "attributes": attributes,
         }
 
     @callback

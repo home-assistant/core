@@ -1,7 +1,5 @@
 """Dune HD implementation of the media player."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 from pdunehd import DuneHDPlayer
@@ -33,6 +31,8 @@ DUNEHD_PLAYER_SUPPORT: Final[MediaPlayerEntityFeature] = (
     | MediaPlayerEntityFeature.PLAY
     | MediaPlayerEntityFeature.PLAY_MEDIA
     | MediaPlayerEntityFeature.BROWSE_MEDIA
+    | MediaPlayerEntityFeature.VOLUME_STEP
+    | MediaPlayerEntityFeature.VOLUME_MUTE
 )
 
 

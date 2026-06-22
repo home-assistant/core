@@ -1,7 +1,5 @@
 """Support for Verizon FiOS Quantum Gateways."""
 
-from __future__ import annotations
-
 from quantum_gateway import QuantumGatewayScanner
 from requests.exceptions import RequestException
 import voluptuous as vol

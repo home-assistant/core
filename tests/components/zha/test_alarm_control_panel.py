@@ -4,6 +4,7 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import AsyncMock, call, patch, sentinel
 
 import pytest
+from zha.application.platforms.alarm_control_panel import AlarmControlPanel
 from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl import Cluster
@@ -336,17 +337,20 @@ async def test_set_entry_delay_service(
 
     zha_device = gateway.get_device(zigpy_device.ieee)
 
-    # Get the IAS ACE cluster handler
-    ias_ace_ch = None
-    for endpoint in zha_device.endpoints.values():
-        if hasattr(endpoint, "client_cluster_handlers_by_name"):
-            ias_ace_ch = endpoint.client_cluster_handlers_by_name.get("ias_ace")
-            if ias_ace_ch:
-                break
-    assert ias_ace_ch is not None, "IAS ACE cluster handler not found"
+    alarm_entity = next(
+        (
+            entity
+            for entity in zha_device.platform_entities.values()
+            if isinstance(entity, AlarmControlPanel)
+        ),
+        None,
+    )
+    assert alarm_entity is not None, "Alarm control panel entity not found"
 
     # Test setting entry delay successfully
-    with patch.object(ias_ace_ch, "start_entry_delay") as mock_start_entry_delay:
+    with patch.object(
+        alarm_entity, "async_start_entry_delay", new_callable=AsyncMock
+    ) as mock_start_entry_delay:
         await hass.services.async_call(
             "zha",
             "set_entry_delay",
@@ -360,7 +364,9 @@ async def test_set_entry_delay_service(
         mock_start_entry_delay.assert_called_once_with(45)
 
     # Test with different duration
-    with patch.object(ias_ace_ch, "start_entry_delay") as mock_start_entry_delay:
+    with patch.object(
+        alarm_entity, "async_start_entry_delay", new_callable=AsyncMock
+    ) as mock_start_entry_delay:
         await hass.services.async_call(
             "zha",
             "set_entry_delay",
@@ -420,20 +426,23 @@ async def test_set_exit_delay_service(
 
     zha_device = gateway.get_device(zigpy_device.ieee)
 
-    # Get the IAS ACE cluster handler
-    ias_ace_ch = None
-    for endpoint in zha_device.endpoints.values():
-        if hasattr(endpoint, "client_cluster_handlers_by_name"):
-            ias_ace_ch = endpoint.client_cluster_handlers_by_name.get("ias_ace")
-            if ias_ace_ch:
-                break
-    assert ias_ace_ch is not None, "IAS ACE cluster handler not found"
+    alarm_entity = next(
+        (
+            entity
+            for entity in zha_device.platform_entities.values()
+            if isinstance(entity, AlarmControlPanel)
+        ),
+        None,
+    )
+    assert alarm_entity is not None, "Alarm control panel entity not found"
 
     # Test exit delay for "away" mode
     with (
-        patch.object(ias_ace_ch, "start_exit_delay") as mock_start_exit_delay,
         patch.object(
-            ias_ace_ch, "arm_response", new_callable=AsyncMock
+            alarm_entity, "async_start_exit_delay", new_callable=AsyncMock
+        ) as mock_start_exit_delay,
+        patch.object(
+            alarm_entity._cluster, "arm_response", new_callable=AsyncMock
         ) as mock_arm_response,
     ):
         await hass.services.async_call(
@@ -447,18 +456,18 @@ async def test_set_exit_delay_service(
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_start_exit_delay.assert_called_once_with(
-            60, security.IasAce.PanelStatus.Armed_Away
-        )
+        mock_start_exit_delay.assert_called_once_with(60, arm_mode="away")
         mock_arm_response.assert_called_once_with(
             security.IasAce.ArmNotification.All_Zones_Armed
         )
 
     # Test exit delay for "home" mode
     with (
-        patch.object(ias_ace_ch, "start_exit_delay") as mock_start_exit_delay,
         patch.object(
-            ias_ace_ch, "arm_response", new_callable=AsyncMock
+            alarm_entity, "async_start_exit_delay", new_callable=AsyncMock
+        ) as mock_start_exit_delay,
+        patch.object(
+            alarm_entity._cluster, "arm_response", new_callable=AsyncMock
         ) as mock_arm_response,
     ):
         await hass.services.async_call(
@@ -472,18 +481,18 @@ async def test_set_exit_delay_service(
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_start_exit_delay.assert_called_once_with(
-            90, security.IasAce.PanelStatus.Armed_Stay
-        )
+        mock_start_exit_delay.assert_called_once_with(90, arm_mode="home")
         mock_arm_response.assert_called_once_with(
             security.IasAce.ArmNotification.Only_Day_Home_Zones_Armed
         )
 
     # Test exit delay for "night" mode
     with (
-        patch.object(ias_ace_ch, "start_exit_delay") as mock_start_exit_delay,
         patch.object(
-            ias_ace_ch, "arm_response", new_callable=AsyncMock
+            alarm_entity, "async_start_exit_delay", new_callable=AsyncMock
+        ) as mock_start_exit_delay,
+        patch.object(
+            alarm_entity._cluster, "arm_response", new_callable=AsyncMock
         ) as mock_arm_response,
     ):
         await hass.services.async_call(
@@ -497,9 +506,7 @@ async def test_set_exit_delay_service(
             blocking=True,
         )
         await hass.async_block_till_done()
-        mock_start_exit_delay.assert_called_once_with(
-            30, security.IasAce.PanelStatus.Armed_Night
-        )
+        mock_start_exit_delay.assert_called_once_with(30, arm_mode="night")
         mock_arm_response.assert_called_once_with(
             security.IasAce.ArmNotification.Only_Night_Sleep_Zones_Armed
         )

@@ -115,6 +115,21 @@ async def test_climate_entities(
             HVACAction.FAN,
             id="fan",
         ),
+        pytest.param(
+            _make_climate_data(hvac_state="Idle"),
+            HVACAction.IDLE,
+            id="idle",
+        ),
+        pytest.param(
+            _make_climate_data(hvac_state="Stage 1 Heat"),
+            HVACAction.HEATING,
+            id="stage_1_heat",
+        ),
+        pytest.param(
+            _make_climate_data(hvac_state="Stage 2 Cool", hvac_mode="Cool"),
+            HVACAction.COOLING,
+            id="stage_2_cool",
+        ),
     ],
 )
 @pytest.mark.usefixtures(
@@ -368,6 +383,40 @@ async def test_climate_missing_variables(
     assert state.attributes.get("current_temperature") is None
     assert state.attributes.get("current_humidity") is None
     assert state.attributes["temperature"] == 68.0
+
+
+@pytest.mark.parametrize(
+    "mock_climate_variables",
+    [
+        {
+            123: {
+                "HVAC_STATE": "Off",
+                "HVAC_MODE": "Heat",
+                "TEMPERATURE_F": 72.0,
+                "HUMIDITY": "Undefined",
+                "COOL_SETPOINT_F": 75.0,
+                "HEAT_SETPOINT_F": 68.0,
+                "SCALE": "FAHRENHEIT",
+            }
+        }
+    ],
+)
+@pytest.mark.usefixtures(
+    "mock_c4_account",
+    "mock_c4_director",
+    "mock_climate_update_variables",
+    "init_integration",
+)
+async def test_climate_undefined_humidity(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test climate entity handles 'Undefined' humidity string gracefully."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == HVACMode.HEAT
+    assert state.attributes.get("current_temperature") == 72.0
+    assert state.attributes.get("current_humidity") is None
 
 
 @pytest.mark.parametrize(

@@ -6,7 +6,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
@@ -51,6 +51,19 @@ async def async_setup_entry(
     hub = config_entry.runtime_data = UnifiHub(hass, config_entry, api)
     await hub.initialize()
 
+    # Pre-populate device registry with UniFi devices before forwarding to
+    # platforms. Without this, device_tracker entities may be registered as
+    # disabled-by-default if their platform is set up before another platform
+    # creates the device entry, since their default enabled state depends on
+    # the matching device existing in the registry. Other fields are populated
+    # when entities with DeviceInfo are added by their respective platforms.
+    device_registry = dr.async_get(hass)
+    for device in hub.api.devices.values():
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            connections={(dr.CONNECTION_NETWORK_MAC, device.mac)},
+        )
+
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
     hub.async_update_device_registry()
     hub.entity_loader.load_entities()
@@ -76,9 +89,7 @@ async def async_remove_config_entry_device(
     """Remove config entry from a device."""
     hub = config_entry.runtime_data
     return not any(
-        identifier
-        for _, identifier in device_entry.connections
-        if identifier in hub.api.clients or identifier in hub.api.devices
+        identifier in hub.api.devices for _, identifier in device_entry.connections
     )
 
 

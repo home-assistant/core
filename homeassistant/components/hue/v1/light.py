@@ -1,7 +1,5 @@
 """Support for the Philips Hue lights."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from functools import partial
@@ -315,7 +313,7 @@ def hass_to_hue_brightness(value):
     return max(1, round((value / 255) * 254))
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueLight(CoordinatorEntity, LightEntity):
     """Representation of a Hue light."""
 
@@ -483,7 +481,7 @@ class HueLight(CoordinatorEntity, LightEntity):
         return color_util.color_temperature_mired_to_kelvin(max_mireds)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if device is on."""
         if self.is_group:
             return self.light.state["any_on"]

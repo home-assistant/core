@@ -1,7 +1,5 @@
 """Support for Broadlink device time."""
 
-from __future__ import annotations
-
 from datetime import time
 from typing import Any
 
@@ -22,6 +20,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Broadlink time."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     device = hass.data[DOMAIN].devices[config_entry.entry_id]
     async_add_entities([BroadlinkTime(device)])
 

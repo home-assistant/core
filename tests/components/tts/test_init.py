@@ -21,6 +21,7 @@ from homeassistant.components.media_player import (
     SERVICE_PLAY_MEDIA,
     MediaType,
 )
+from homeassistant.components.tts import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
@@ -175,7 +176,10 @@ async def test_service(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_en-us_-_{expected_url_suffix}.mp3"
+            )
         ).is_file()
 
 
@@ -301,7 +305,10 @@ async def test_service_default_special_language(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_en-us_-_{expected_url_suffix}.mp3"
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_en-us_-_{expected_url_suffix}.mp3"
+            )
         ).is_file()
 
 
@@ -361,7 +368,10 @@ async def test_service_language(
         await hass.async_block_till_done(wait_background_tasks=True)
         assert (
             mock_tts_cache_dir
-            / f"42f18378fd4393d18c8dd11d03fa9563c1e54491_de-de_-_{expected_url_suffix}.mp3"
+            / (
+                "42f18378fd4393d18c8dd11d03fa9563c1e54491"
+                f"_de-de_-_{expected_url_suffix}.mp3"
+            )
         ).is_file()
 
 
@@ -1692,7 +1702,7 @@ async def test_ws_list_engines_deprecated(
     mock_integration(hass, MockModule(domain="test_2"))
     mock_platform(hass, "test_2.tts", MockTTS(mock_provider_2))
     await async_setup_component(
-        hass, "tts", {"tts": [{"platform": "test"}, {"platform": "test_2"}]}
+        hass, DOMAIN, {"tts": [{"platform": "test"}, {"platform": "test_2"}]}
     )
     await mock_config_entry_setup(hass, mock_tts_entity)
 
@@ -1954,6 +1964,46 @@ async def test_stream(hass: HomeAssistant, mock_tts_entity: MockTTSEntity) -> No
     assert result_data == data
 
 
+async def test_result_stream_message_set_idempotent(
+    hass: HomeAssistant, mock_tts_entity: MockTTSEntity
+) -> None:
+    """Test setting a result stream message more than once."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream.async_set_message("hello")
+    cache_first = stream._result_cache.result()
+    stream.async_set_message("world")
+    assert stream._result_cache.result() is cache_first
+
+    async def async_stream_tts_audio(
+        request: tts.TTSAudioRequest,
+    ) -> tts.TTSAudioResponse:
+        """Mock stream TTS audio."""
+
+        async def gen_data():
+            async for msg in request.message_gen:
+                yield msg.encode()
+
+        return tts.TTSAudioResponse(
+            extension="mp3",
+            data_gen=gen_data(),
+        )
+
+    mock_tts_entity.async_stream_tts_audio = async_stream_tts_audio
+    mock_tts_entity.async_supports_streaming_input = Mock(return_value=True)
+
+    async def stream_message():
+        """Mock stream message."""
+        yield "h"
+
+    stream2 = tts.async_create_stream(hass, mock_tts_entity.entity_id)
+    stream2.async_set_message_stream(stream_message())
+    cache_first = stream2._result_cache.result()
+    stream2.async_set_message_stream(stream_message())
+    assert stream2._result_cache.result() is cache_first
+
+
 async def test_tts_cache() -> None:
     """Test TTSCache."""
 
@@ -2042,7 +2092,7 @@ async def test_async_internal_get_tts_audio_called(
     mock_tts_entity: MockTTSEntity,
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test that non-streaming entity has its async_internal_get_tts_audio method called."""
+    """Test non-streaming entity calls async_internal_get_tts_audio."""
 
     await mock_config_entry_setup(hass, mock_tts_entity)
 
@@ -2075,7 +2125,6 @@ async def test_stream_override(
     await mock_config_entry_setup(hass, mock_tts_entity)
 
     stream = tts.async_create_stream(hass, mock_tts_entity.entity_id)
-    stream.async_set_message("beer")
 
     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
         with wave.open(wav_file, "wb") as wav_writer:
@@ -2087,6 +2136,10 @@ async def test_stream_override(
         wav_file.seek(0)
 
         stream.async_override_result(wav_file.name)
+
+        # An override without conversion is available directly on disk.
+        assert stream.async_get_media_path() == Path(wav_file.name)
+
         result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
     # Verify the result
@@ -2115,7 +2168,6 @@ async def test_stream_override_with_conversion(
             tts.ATTR_PREFERRED_SAMPLE_CHANNELS: 2,
         },
     )
-    stream.async_set_message("beer")
 
     # Use a temp file here since ffmpeg will read it directly
     with tempfile.NamedTemporaryFile(mode="wb+", suffix=".wav") as wav_file:
@@ -2127,6 +2179,11 @@ async def test_stream_override_with_conversion(
 
         wav_file.seek(0)
         stream.async_override_result(wav_file.name)
+
+        # An override that needs conversion no longer matches the file on disk,
+        # so no path is exposed.
+        assert stream.async_get_media_path() is None
+
         result_data = b"".join([chunk async for chunk in stream.async_stream_result()])
 
     # Verify the result has the preferred format

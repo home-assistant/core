@@ -6,10 +6,10 @@ from typing import Any
 
 from aiotedee import (
     TedeeAuthException,
-    TedeeClient,
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
+    TedeeLocalClient,
 )
 import voluptuous as vol
 
@@ -46,7 +46,7 @@ class TedeeConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 host = user_input[CONF_HOST]
             local_access_token = user_input[CONF_LOCAL_ACCESS_TOKEN]
-            tedee_client = TedeeClient(
+            tedee_client = TedeeLocalClient(
                 local_token=local_access_token,
                 local_ip=host,
                 session=async_get_clientsession(self.hass),

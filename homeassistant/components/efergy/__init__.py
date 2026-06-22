@@ -1,7 +1,5 @@
 """The Efergy integration."""
 
-from __future__ import annotations
-
 from pyefergy import Efergy, exceptions
 
 from homeassistant.config_entries import ConfigEntry

@@ -5,7 +5,11 @@ from typing import Any
 
 from pysmarlaapi.federwiege.services.classes import Property
 
-from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.components.switch import (
+    SwitchDeviceClass,
+    SwitchEntity,
+    SwitchEntityDescription,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -26,12 +30,14 @@ SWITCHES: list[SmarlaSwitchEntityDescription] = [
         name=None,
         service="babywiege",
         property="swing_active",
+        device_class=SwitchDeviceClass.SWITCH,
     ),
     SmarlaSwitchEntityDescription(
         key="smart_mode",
         translation_key="smart_mode",
         service="babywiege",
         property="smart_mode",
+        device_class=SwitchDeviceClass.SWITCH,
     ),
 ]
 

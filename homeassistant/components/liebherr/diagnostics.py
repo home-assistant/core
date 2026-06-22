@@ -1,7 +1,5 @@
 """Diagnostics support for Liebherr."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 
@@ -29,6 +27,6 @@ async def async_get_config_entry_diagnostics(
                 },
                 "data": asdict(coordinator.data),
             }
-            for device_id, coordinator in entry.runtime_data.items()
+            for device_id, coordinator in entry.runtime_data.coordinators.items()
         },
     }

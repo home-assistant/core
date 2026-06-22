@@ -1,9 +1,8 @@
 """The IntelliFire integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
+import aiohttp
 from intellifire4py import UnifiedFireplace
 from intellifire4py.control import IntelliFireController
 from intellifire4py.model import IntelliFirePollData
@@ -11,8 +10,9 @@ from intellifire4py.read import IntelliFireDataProvider
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
 
@@ -52,6 +52,14 @@ class IntellifireDataUpdateCoordinator(DataUpdateCoordinator[IntelliFirePollData
         return self.fireplace.control_api
 
     async def _async_update_data(self) -> IntelliFirePollData:
+        try:
+            await self.fireplace.perform_poll()
+        except aiohttp.ClientResponseError as err:
+            if err.status == 403:
+                raise ConfigEntryAuthFailed("Authentication failed") from err
+            raise UpdateFailed(f"Error communicating with fireplace: {err}") from err
+        except (aiohttp.ClientError, TimeoutError) as err:
+            raise UpdateFailed(f"Error communicating with fireplace: {err}") from err
         return self.fireplace.data
 
     @property

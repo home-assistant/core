@@ -1,7 +1,5 @@
 """Support for retrieving status info from Google Wifi/OnHub routers."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
@@ -157,7 +155,7 @@ class GoogleWifiSensor(SensorEntity):
 class GoogleWifiAPI:
     """Get the latest data and update the states."""
 
-    def __init__(self, host, conditions):
+    def __init__(self, host, conditions) -> None:
         """Initialize the data object."""
         uri = "http://"
         resource = f"{uri}{host}{ENDPOINT}"
@@ -184,7 +182,7 @@ class GoogleWifiAPI:
             self.raw_data = response.json()
             self.data_format()
             self.available = True
-        except ValueError, requests.exceptions.ConnectionError:
+        except ValueError, requests.exceptions.RequestException:
             _LOGGER.warning("Unable to fetch data from Google Wifi")
             self.available = False
             self.raw_data = None

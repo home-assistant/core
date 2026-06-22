@@ -1,5 +1,19 @@
 {
   "entity": {
+    "binary_sensor": {
+      "is_lighting": {
+        "default": "mdi:lightbulb-outline",
+        "state": {
+          "on": "mdi:lightbulb-on"
+        }
+      },
+      "is_uvc_connected": {
+        "default": "mdi:lightbulb-off",
+        "state": {
+          "on": "mdi:lightbulb-outline"
+        }
+      }
+    },
     "number": {
       "day_speed": {
         "default": "mdi:weather-sunny"

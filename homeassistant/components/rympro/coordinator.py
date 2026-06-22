@@ -1,7 +1,5 @@
 """The Read Your Meter Pro integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -13,6 +11,8 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import DOMAIN
 
+type RymProConfigEntry = ConfigEntry[RymProDataUpdateCoordinator]
+
 SCAN_INTERVAL = 60 * 60
 
 _LOGGER = logging.getLogger(__name__)
@@ -21,10 +21,10 @@ _LOGGER = logging.getLogger(__name__)
 class RymProDataUpdateCoordinator(DataUpdateCoordinator[dict[int, dict]]):
     """Class to manage fetching RYM Pro data."""
 
-    config_entry: ConfigEntry
+    config_entry: RymProConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, rympro: RymPro
+        self, hass: HomeAssistant, config_entry: RymProConfigEntry, rympro: RymPro
     ) -> None:
         """Initialize global RymPro data updater."""
         self.rympro = rympro

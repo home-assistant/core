@@ -1,7 +1,5 @@
 """WiZ integration light platform."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pywizlight import PilotBuilder
@@ -22,9 +20,8 @@ from homeassistant.components.light import (
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WizConfigEntry
+from .coordinator import WizConfigEntry, WizData
 from .entity import WizToggleEntity
-from .models import WizData
 
 RGB_WHITE_CHANNELS_COLOR_MODE = {1: ColorMode.RGBW, 2: ColorMode.RGBWW}
 

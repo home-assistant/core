@@ -9,7 +9,6 @@ UNIQUE_ID = "abc-123"
 CONFIG_V1 = {CONF_ACCESS_TOKEN: "abc-123"}
 
 WAKE_UP_ONLINE = {"response": {"state": TeslemetryState.ONLINE}, "error": None}
-WAKE_UP_ASLEEP = {"response": {"state": TeslemetryState.ASLEEP}, "error": None}
 
 PRODUCTS = load_json_object_fixture("products.json", DOMAIN)
 PRODUCTS_MODERN = load_json_object_fixture("products.json", DOMAIN)
@@ -20,6 +19,10 @@ VEHICLE_DATA_ASLEEP["response"]["state"] = TeslemetryState.OFFLINE
 VEHICLE_DATA_ALT = load_json_object_fixture("vehicle_data_alt.json", DOMAIN)
 LIVE_STATUS = load_json_object_fixture("live_status.json", DOMAIN)
 SITE_INFO = load_json_object_fixture("site_info.json", DOMAIN)
+SITE_INFO_WEEK_CROSSING = load_json_object_fixture(
+    "site_info_week_crossing.json", DOMAIN
+)
+SITE_INFO_MULTI_SEASON = load_json_object_fixture("site_info_multi_season.json", DOMAIN)
 ENERGY_HISTORY = load_json_object_fixture("energy_history.json", DOMAIN)
 ENERGY_HISTORY_EMPTY = load_json_object_fixture("energy_history_empty.json", DOMAIN)
 
@@ -62,6 +65,12 @@ METADATA = {
             "name": "Home Assistant",
         }
     },
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
+        }
+    },
 }
 METADATA_LEGACY = {
     "uid": UNIQUE_ID,
@@ -88,6 +97,12 @@ METADATA_LEGACY = {
             "name": "Home Assistant",
         }
     },
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
+        }
+    },
 }
 METADATA_NOSCOPE = {
     "uid": UNIQUE_ID,
@@ -102,6 +117,12 @@ METADATA_NOSCOPE = {
             "discounted": True,
             "fleet_telemetry": "unknown",
             "name": "Home Assistant",
+        }
+    },
+    "energy_sites": {
+        "123456": {
+            "access": True,
+            "name": "Energy Site",
         }
     },
 }

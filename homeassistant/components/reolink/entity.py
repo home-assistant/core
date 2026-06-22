@@ -1,22 +1,18 @@
 """Reolink parent entity class."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
-from reolink_aio.api import DUAL_LENS_MODELS, Chime, Host
+from reolink_aio.api import DUAL_LENS_DUAL_MOTION_MODELS, DUAL_LENS_MODELS, Chime, Host
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import ReolinkData
 from .const import DOMAIN
+from .coordinator import ReolinkCoordinator
+from .util import ReolinkData
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -26,6 +22,9 @@ class ReolinkEntityDescription(EntityDescription):
     cmd_key: str | None = None
     cmd_id: int | list[int] | None = None
     always_available: bool = False
+    # Whether the entity measures a property of a single lens
+    # of a dual lens camera, instead of the camera as a whole
+    lens_entity: bool = False
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -49,10 +48,11 @@ class ReolinkChimeEntityDescription(ReolinkEntityDescription):
     supported: Callable[[Chime], bool] = lambda chime: True
 
 
-class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]]):
+class ReolinkHostCoordinatorEntity(CoordinatorEntity[ReolinkCoordinator]):
     """Parent class for entities that control the Reolink NVR itself, without a channel.
 
-    A camera connected directly to HomeAssistant without using a NVR is in the reolink API
+    A camera connected directly to HomeAssistant without using
+    a NVR is in the reolink API
     basically a NVR with a single channel that has the camera connected to that channel.
     """
 
@@ -62,7 +62,7 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
     def __init__(
         self,
         reolink_data: ReolinkData,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkHostCoordinatorEntity."""
         if coordinator is None:
@@ -98,6 +98,13 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
         """Return True if entity is available."""
         if self.entity_description.always_available:
             return True
+
+        if self._host.api.is_battery:
+            return (
+                self._host.api.baichuan.login_sucess
+                and not self._host.api.baichuan.privacy_mode()
+                and super().available
+            )
 
         return (
             self._host.api.session_active
@@ -155,20 +162,24 @@ class ReolinkHostCoordinatorEntity(CoordinatorEntity[DataUpdateCoordinator[None]
 
 
 class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
-    """Parent class for Reolink hardware camera entities connected to a channel of the NVR."""
+    """Parent class for Reolink camera entities connected to a NVR channel."""
 
     def __init__(
         self,
         reolink_data: ReolinkData,
         channel: int,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
-        """Initialize ReolinkChannelCoordinatorEntity for a hardware camera connected to a channel of the NVR."""
+        """Initialize ReolinkChannelCoordinatorEntity."""
         super().__init__(reolink_data, coordinator)
 
         self._channel = channel
         if self._host.api.is_nvr and self._host.api.supported(channel, "UID"):
-            self._attr_unique_id = f"{self._host.unique_id}_{self._host.api.camera_uid(channel)}_{self.entity_description.key}"
+            self._attr_unique_id = (
+                f"{self._host.unique_id}"
+                f"_{self._host.api.camera_uid(channel)}"
+                f"_{self.entity_description.key}"
+            )
         else:
             self._attr_unique_id = (
                 f"{self._host.unique_id}_{channel}_{self.entity_description.key}"
@@ -207,6 +218,23 @@ class ReolinkChannelCoordinatorEntity(ReolinkHostCoordinatorEntity):
                 sw_version=self._host.api.camera_sw_version(dev_ch),
                 serial_number=self._host.api.camera_uid(dev_ch),
                 configuration_url=conf_url,
+            )
+
+        if (
+            self.entity_description.lens_entity
+            and self._host.api.model in DUAL_LENS_DUAL_MOTION_MODELS
+        ):
+            # Dual lens cameras with separate sensors per lens
+            # use a sub-device per lens
+            parent_dev_id = self._dev_id
+            self._dev_id = f"{self._host.unique_id}_lens{channel}"
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, self._dev_id)},
+                via_device=(DOMAIN, parent_dev_id),
+                name=f"{self._host.api.camera_name(dev_ch)} lens {channel}",
+                model=self._host.api.camera_model(channel),
+                manufacturer=self._host.api.manufacturer,
+                configuration_url=self._conf_url,
             )
 
     @property
@@ -250,7 +278,7 @@ class ReolinkHostChimeCoordinatorEntity(ReolinkHostCoordinatorEntity):
         self,
         reolink_data: ReolinkData,
         chime: Chime,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkHostChimeCoordinatorEntity for a chime."""
         super().__init__(reolink_data, coordinator)
@@ -287,7 +315,7 @@ class ReolinkChimeCoordinatorEntity(ReolinkChannelCoordinatorEntity):
         self,
         reolink_data: ReolinkData,
         chime: Chime,
-        coordinator: DataUpdateCoordinator[None] | None = None,
+        coordinator: ReolinkCoordinator | None = None,
     ) -> None:
         """Initialize ReolinkChimeCoordinatorEntity for a chime."""
         assert chime.channel is not None

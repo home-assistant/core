@@ -1,7 +1,5 @@
 """Coordinator for the probe_plus integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 

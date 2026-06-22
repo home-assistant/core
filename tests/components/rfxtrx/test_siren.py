@@ -15,7 +15,7 @@ async def test_one_chime(hass: HomeAssistant, rfxtrx, timestep) -> None:
     entry_data = create_rfx_test_cfg(
         devices={"0a16000000000000000000": {"off_delay": 2.0}}
     )
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 
@@ -69,7 +69,7 @@ async def test_one_chime(hass: HomeAssistant, rfxtrx, timestep) -> None:
 async def test_one_security1(hass: HomeAssistant, rfxtrx, timestep) -> None:
     """Test with 1 entity."""
     entry_data = create_rfx_test_cfg(devices={"08200300a109000670": {"off_delay": 2.0}})
-    mock_entry = MockConfigEntry(domain="rfxtrx", unique_id=DOMAIN, data=entry_data)
+    mock_entry = MockConfigEntry(domain=DOMAIN, unique_id=DOMAIN, data=entry_data)
 
     mock_entry.add_to_hass(hass)
 

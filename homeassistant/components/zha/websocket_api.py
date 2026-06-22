@@ -46,10 +46,8 @@ from zha.application.helpers import (
     get_matched_clusters,
     qr_to_install_code,
 )
-from zha.zigbee.cluster_handlers.const import (
-    CLUSTER_HANDLER_IAS_ACE,
-    CLUSTER_HANDLER_IAS_WD,
-)
+from zha.application.platforms.alarm_control_panel import AlarmControlPanel
+from zha.application.platforms.siren import BaseSiren
 from zha.zigbee.device import Device
 from zha.zigbee.group import GroupMemberReference
 import zigpy.backups
@@ -65,7 +63,7 @@ import zigpy.zdo.types as zdo_types
 
 from homeassistant.components import websocket_api
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME
+from homeassistant.const import ATTR_COMMAND, ATTR_ID, ATTR_NAME, Platform
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -1296,115 +1294,13 @@ async def websocket_change_channel(
     connection.send_result(msg[ID])
 
 
-def _get_ias_wd_cluster_handler(zha_device: Device) -> Any | None:
-    """Get the IASWD cluster handler for a device."""
-    cluster_handlers = {
-        ch.name: ch
-        for endpoint in zha_device.endpoints.values()
-        for ch in endpoint.claimed_cluster_handlers.values()
-    }
-    return cluster_handlers.get(CLUSTER_HANDLER_IAS_WD)
-
-
-def _get_ias_ace_cluster_handler(zha_device: Device) -> Any | None:
-    """Get the IAS ACE cluster handler for a device."""
-    for endpoint in zha_device.endpoints.values():
-        if hasattr(endpoint, "client_cluster_handlers_by_name"):
-            if ias_ace_cluster_handler := endpoint.client_cluster_handlers_by_name.get(
-                CLUSTER_HANDLER_IAS_ACE
-            ):
-                return ias_ace_cluster_handler
-    return None
-
-
-def _register_warning_device_services(
-    hass: HomeAssistant, zha_gateway: Gateway
-) -> None:
-    """Register warning device services."""
-
-    async def warning_device_squawk(service: ServiceCall) -> None:
-        """Issue the squawk command for an IAS warning device."""
-        ieee: EUI64 = service.data[ATTR_IEEE]
-        mode: int = service.data[ATTR_WARNING_DEVICE_MODE]
-        strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
-        level: int = service.data[ATTR_LEVEL]
-
-        if (zha_device := zha_gateway.get_device(ieee)) is not None:
-            if cluster_handler := _get_ias_wd_cluster_handler(zha_device):
-                await cluster_handler.issue_squawk(mode, strobe, level)
-            else:
-                _LOGGER.error(
-                    "Squawking IASWD: %s: [%s] is missing the required IASWD cluster handler!",
-                    ATTR_IEEE,
-                    str(ieee),
-                )
-        else:
-            _LOGGER.error(
-                "Squawking IASWD: %s: [%s] could not be found!", ATTR_IEEE, str(ieee)
-            )
-        _LOGGER.debug(
-            "Squawking IASWD: %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
-            ATTR_IEEE,
-            str(ieee),
-            ATTR_WARNING_DEVICE_MODE,
-            mode,
-            ATTR_WARNING_DEVICE_STROBE,
-            strobe,
-            ATTR_LEVEL,
-            level,
-        )
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_WARNING_DEVICE_SQUAWK,
-        warning_device_squawk,
-        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_SQUAWK],
-    )
-
-    async def warning_device_warn(service: ServiceCall) -> None:
-        """Issue the warning command for an IAS warning device."""
-        ieee: EUI64 = service.data[ATTR_IEEE]
-        mode: int = service.data[ATTR_WARNING_DEVICE_MODE]
-        strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
-        level: int = service.data[ATTR_LEVEL]
-        duration: int = service.data[ATTR_WARNING_DEVICE_DURATION]
-        duty_mode: int = service.data[ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE]
-        intensity: int = service.data[ATTR_WARNING_DEVICE_STROBE_INTENSITY]
-
-        if (zha_device := zha_gateway.get_device(ieee)) is not None:
-            if cluster_handler := _get_ias_wd_cluster_handler(zha_device):
-                await cluster_handler.issue_start_warning(
-                    mode, strobe, level, duration, duty_mode, intensity
-                )
-            else:
-                _LOGGER.error(
-                    "Warning IASWD: %s: [%s] is missing the required IASWD cluster handler!",
-                    ATTR_IEEE,
-                    str(ieee),
-                )
-        else:
-            _LOGGER.error(
-                "Warning IASWD: %s: [%s] could not be found!", ATTR_IEEE, str(ieee)
-            )
-        _LOGGER.debug(
-            "Warning IASWD: %s: [%s] %s: [%s] %s: [%s] %s: [%s]",
-            ATTR_IEEE,
-            str(ieee),
-            ATTR_WARNING_DEVICE_MODE,
-            mode,
-            ATTR_WARNING_DEVICE_STROBE,
-            strobe,
-            ATTR_LEVEL,
-            level,
-        )
-
-    async_register_admin_service(
-        hass,
-        DOMAIN,
-        SERVICE_WARNING_DEVICE_WARN,
-        warning_device_warn,
-        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
+def _get_alarm_control_panel(zha_device: Device) -> AlarmControlPanel:
+    """Get the alarm control panel entity for a device."""
+    for entity in zha_device.platform_entities.values():
+        if isinstance(entity, AlarmControlPanel):
+            return entity
+    raise ServiceValidationError(
+        f"Device {zha_device.ieee!s} does not have an alarm control panel"
     )
 
 
@@ -1422,14 +1318,8 @@ def _register_alarm_services(hass: HomeAssistant, zha_gateway: Gateway) -> None:
         if zha_device is None:
             raise ServiceValidationError(f"Device with IEEE {ieee!s} not found")
 
-        ias_ace_cluster_handler = _get_ias_ace_cluster_handler(zha_device)
-        if ias_ace_cluster_handler is None:
-            raise ServiceValidationError(
-                f"Device {ieee!s} does not have an IAS ACE cluster handler"
-            )
-
-        # Start entry delay on the cluster handler
-        ias_ace_cluster_handler.start_entry_delay(duration)
+        alarm_entity = _get_alarm_control_panel(zha_device)
+        await alarm_entity.async_start_entry_delay(duration)
         _LOGGER.debug("Entry delay set on %s for %d seconds", str(ieee), duration)
 
     async_register_admin_service(
@@ -1457,34 +1347,16 @@ def _register_alarm_services(hass: HomeAssistant, zha_gateway: Gateway) -> None:
         if zha_device is None:
             raise ServiceValidationError(f"Device with IEEE {ieee!s} not found")
 
-        ias_ace_cluster_handler = _get_ias_ace_cluster_handler(zha_device)
-        if ias_ace_cluster_handler is None:
-            raise ServiceValidationError(
-                f"Device {ieee!s} does not have an IAS ACE cluster handler"
-            )
+        alarm_entity = _get_alarm_control_panel(zha_device)
+        await alarm_entity.async_start_exit_delay(duration, arm_mode=arm_mode)
 
-        # Map arm_mode to target panel status and notification type
-        arm_mode_map = {
-            "away": (
-                IasAce.PanelStatus.Armed_Away,
-                IasAce.ArmNotification.All_Zones_Armed,
-            ),
-            "home": (
-                IasAce.PanelStatus.Armed_Stay,
-                IasAce.ArmNotification.Only_Day_Home_Zones_Armed,
-            ),
-            "night": (
-                IasAce.PanelStatus.Armed_Night,
-                IasAce.ArmNotification.Only_Night_Sleep_Zones_Armed,
-            ),
+        # Notify keypad with arm response (ZCL armRsp after panelStatusChanged)
+        arm_notification_map = {
+            "away": IasAce.ArmNotification.All_Zones_Armed,
+            "home": IasAce.ArmNotification.Only_Day_Home_Zones_Armed,
+            "night": IasAce.ArmNotification.Only_Night_Sleep_Zones_Armed,
         }
-        target_panel_status, armed_notification = arm_mode_map[arm_mode]
-
-        # Start exit delay directly without mutating cluster handler state
-        ias_ace_cluster_handler.start_exit_delay(duration, target_panel_status)
-
-        # Notify keypad with arm response
-        await ias_ace_cluster_handler.arm_response(armed_notification)
+        await alarm_entity._cluster.arm_response(arm_notification_map[arm_mode])
 
         _LOGGER.debug(
             "Exit delay set on %s for %d seconds (mode: %s)",
@@ -1706,7 +1578,56 @@ def async_load_api(hass: HomeAssistant) -> None:
         schema=SERVICE_SCHEMAS[SERVICE_ISSUE_ZIGBEE_GROUP_COMMAND],
     )
 
-    _register_warning_device_services(hass, zha_gateway)
+    async def warning_device_squawk(service: ServiceCall) -> None:
+        """Issue the squawk command for an IAS warning device."""
+        ieee: EUI64 = service.data[ATTR_IEEE]
+        mode: int = service.data[ATTR_WARNING_DEVICE_MODE]
+        strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
+        level: int = service.data[ATTR_LEVEL]
+
+        device = zha_gateway.get_device(ieee)
+        siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+
+        await siren.async_squawk(mode=mode, strobe=strobe, squawk_level=level)
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_WARNING_DEVICE_SQUAWK,
+        warning_device_squawk,
+        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_SQUAWK],
+    )
+
+    async def warning_device_warn(service: ServiceCall) -> None:
+        """Issue the warning command for an IAS warning device."""
+        ieee: EUI64 = service.data[ATTR_IEEE]
+        mode: int = service.data[ATTR_WARNING_DEVICE_MODE]
+        strobe: int = service.data[ATTR_WARNING_DEVICE_STROBE]
+        level: int = service.data[ATTR_LEVEL]
+        duration: int = service.data[ATTR_WARNING_DEVICE_DURATION]
+        duty_mode: int = service.data[ATTR_WARNING_DEVICE_STROBE_DUTY_CYCLE]
+        intensity: int = service.data[ATTR_WARNING_DEVICE_STROBE_INTENSITY]
+
+        device = zha_gateway.get_device(ieee)
+        siren: BaseSiren = device.get_entity(Platform.SIREN, pick_first=True)
+
+        await siren.async_turn_on(
+            tone=mode,
+            volume_level=level,
+            duration=duration,
+            strobe=strobe,
+            strobe_duty_cycle=duty_mode,
+            strobe_intensity=intensity,
+        )
+
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SERVICE_WARNING_DEVICE_WARN,
+        warning_device_warn,
+        schema=SERVICE_SCHEMAS[SERVICE_WARNING_DEVICE_WARN],
+    )
+
     _register_alarm_services(hass, zha_gateway)
 
     websocket_api.async_register_command(hass, websocket_permit_devices)

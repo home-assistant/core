@@ -1,7 +1,5 @@
 """Middleware to add some basic security filtering to requests."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from functools import lru_cache
 import logging

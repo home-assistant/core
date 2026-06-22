@@ -88,7 +88,7 @@
   },
   "exceptions": {
     "communication_error": {
-      "message": "Communication error: {error}"
+      "message": "Communication error with sauna control unit"
     },
     "door_open": {
       "message": "Cannot start sauna session when sauna door is open"
@@ -130,7 +130,7 @@
       "message": "Failed to set temperature to {temperature}"
     },
     "start_session_failed": {
-      "message": "Failed to start sauna session: {error}"
+      "message": "Failed to start sauna session"
     }
   },
   "options": {

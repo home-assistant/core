@@ -1,7 +1,5 @@
 """Support for Flo Water Monitor binary sensors."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.binary_sensor import (
@@ -51,7 +49,7 @@ class FloPendingAlertsBinarySensor(FloEntity, BinarySensorEntity):
         super().__init__("pending_system_alerts", device)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the Flo device has pending alerts."""
         return self._device.has_alerts
 
@@ -78,6 +76,6 @@ class FloWaterDetectedBinarySensor(FloEntity, BinarySensorEntity):
         super().__init__("water_detected", device)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if the Flo device is detecting water."""
         return self._device.water_detected

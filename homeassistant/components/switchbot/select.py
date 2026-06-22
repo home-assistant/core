@@ -1,12 +1,10 @@
 """Select platform for SwitchBot."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
 import switchbot
-from switchbot.devices.device import SwitchbotOperationError
+from switchbot import SwitchbotOperationError
 
 from homeassistant.components.select import SelectEntity
 from homeassistant.const import EntityCategory
