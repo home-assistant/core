@@ -6,8 +6,7 @@ from boschshcpy.services_impl import DetectionTestService, WalkTestService
 from homeassistant.components.button import ButtonEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
-from homeassistant.helpers.entity import DeviceInfo
+from homeassistant.helpers.device_registry import DeviceEntry, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_SESSION, DATA_SHC, DOMAIN, LOGGER, OPT_SCENARIOS_AS_BUTTONS

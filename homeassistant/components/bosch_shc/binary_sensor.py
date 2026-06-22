@@ -360,7 +360,7 @@ class MotionDetectionSensor(SHCEntity, BinarySensorEntity):
         """Initialize the motion detection device."""
         self.hass = hass
         self._service = None
-        self._cached_device_id = None
+        self._cached_device_id: str | None = None
         super().__init__(device=device, entry_id=entry_id)
 
         for service in self._device.device_services:
@@ -449,7 +449,7 @@ class SmokeDetectorSensor(SHCEntity, BinarySensorEntity):
         """Initialize the smoke detector device."""
         self._hass = hass
         self._service = None
-        self._cached_device_id = None
+        self._cached_device_id: str | None = None
         super().__init__(device=device, entry_id=entry_id)
 
         for service in self._device.device_services:
@@ -592,7 +592,7 @@ class SmokeDetectionSystemSensor(SHCEntity, BinarySensorEntity):
         """Initialize the smoke detection system device."""
         self._hass = hass
         self._service = None
-        self._cached_device_id = None
+        self._cached_device_id: str | None = None
         super().__init__(device=device, entry_id=entry_id)
         self._attr_unique_id = f"{device.root_device_id}_{device.id}"
         self._attr_name = None

@@ -25,6 +25,7 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
+    SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -222,7 +223,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Allow the user to change the SHC host/IP without re-pairing."""
         entry = self._get_reconfigure_entry()
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             new_host = user_input[CONF_HOST]
             try:
@@ -257,7 +258,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Re-pair: regenerate the client certificate/key for this SHC entry."""
         entry = self._get_reconfigure_entry()
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
             zeroconf_instance = await zeroconf.async_get_instance(self.hass)
@@ -325,7 +326,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             host = user_input[CONF_HOST]
             try:
@@ -349,7 +350,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the credentials step."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             zeroconf_instance = await zeroconf.async_get_instance(self.hass)
             try:
@@ -440,7 +441,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle discovery confirm."""
-        errors = {}
+        errors: dict[str, str] = {}
         if user_input is not None:
             return await self.async_step_credentials()
 
@@ -448,12 +449,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             step_id="confirm_discovery",
             description_placeholders={
                 "model": "Bosch SHC",
-                "host": self.host,
+                "host": self.host or "",
             },
             errors=errors,
         )
 
-    async def _get_info(self, host):
+    async def _get_info(self, host: str) -> dict[str, Any]:
         """Get additional information."""
         zeroconf_instance = await zeroconf.async_get_instance(self.hass)
 
@@ -489,8 +490,8 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithReload):
             _presence_default = [_presence_default] if _presence_default else []
 
         # Build device/room option lists from the live session.
-        device_options = []
-        room_options = []
+        device_options: list[SelectOptionDict] = []
+        room_options: list[SelectOptionDict] = []
         try:
             data = self.hass.data.get(DOMAIN, {}).get(self.config_entry.entry_id)
             if data:
@@ -499,9 +500,10 @@ class OptionsFlowHandler(config_entries.OptionsFlowWithReload):
                 for dev in session.devices:
                     room_name = rooms.get(getattr(dev, "room_id", None), "")
                     label = f"{dev.name} ({room_name})" if room_name else dev.name
-                    device_options.append({"value": dev.id, "label": label})
+                    device_options.append(SelectOptionDict(value=dev.id, label=label))
                 room_options = [
-                    {"value": rid, "label": name} for rid, name in rooms.items()
+                    SelectOptionDict(value=rid, label=name)
+                    for rid, name in rooms.items()
                 ]
         except Exception:  # noqa: BLE001  # never break the options flow if session is unavailable
             LOGGER.debug("Could not build device/room filter options", exc_info=True)
