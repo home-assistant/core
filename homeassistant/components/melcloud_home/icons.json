@@ -5,10 +5,16 @@
         "default": "mdi:water-boiler"
       },
       "frost_protection": {
-        "default": "mdi:snowflake"
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
       },
       "overheat_protection": {
-        "default": "mdi:fire"
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
       },
       "standby": {
         "default": "mdi:power-sleep"
