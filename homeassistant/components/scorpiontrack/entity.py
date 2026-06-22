@@ -32,7 +32,7 @@ class ScorpionTrackEntity(CoordinatorEntity[ScorpionTrackCoordinator]):
         return self.coordinator.data
 
     def get_vehicle(self) -> ScorpionTrackVehicle:
-        """Return the matching vehicle, if present."""
+        """Return the matching vehicle."""
         return self.coordinator.vehicles_by_id[self._vehicle_id]
 
     @property
