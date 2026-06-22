@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from unittest.mock import Mock
 
-from uiprotect import ProtectApiClient
+from uiprotect import EventChange, ProtectApiClient, ProtectEvent
 from uiprotect.data import (
     Bootstrap,
     Camera,
@@ -46,6 +46,7 @@ class MockUFPFixture:
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     ws_state_subscription: Callable[[WebsocketState], None] | None = None
     devices_ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
+    events_subscription: Callable[[ProtectEvent, EventChange], None] | None = None
     devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
@@ -53,6 +54,12 @@ class MockUFPFixture:
 
         if self.ws_subscription is not None:
             self.ws_subscription(msg)
+
+    def events_msg(self, event: ProtectEvent, change: EventChange) -> None:
+        """Emit a public-API events websocket message for testing."""
+
+        if self.events_subscription is not None:
+            self.events_subscription(event, change)
 
 
 def reset_objects(bootstrap: Bootstrap):

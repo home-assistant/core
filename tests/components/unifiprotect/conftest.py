@@ -239,6 +239,17 @@ def mock_entry(
             ufp.devices_ws_subscription = ws_callback
             return Mock()
 
+        def subscribe_events(events_callback: Callable[..., None]) -> Any:
+            # Mirror uiprotect: subscribe_events() requires update_public() to
+            # have primed the public bootstrap first, otherwise it raises.
+            if not ufp_client.has_public_bootstrap:
+                raise RuntimeError(
+                    "subscribe_events() requires update_public() to have been"
+                    " called at least once"
+                )
+            ufp.events_subscription = events_callback
+            return Mock()
+
         def subscribe_devices_websocket_state(
             ws_state_subscription: Callable[[WebsocketState], None],
         ) -> Any:
@@ -248,6 +259,7 @@ def mock_entry(
         ufp_client.subscribe_websocket = subscribe
         ufp_client.subscribe_websocket_state = subscribe_websocket_state
         ufp_client.subscribe_devices_websocket = subscribe_devices_websocket
+        ufp_client.subscribe_events = subscribe_events
         ufp_client.subscribe_devices_websocket_state = subscribe_devices_websocket_state
 
         async def update_public() -> Any:
