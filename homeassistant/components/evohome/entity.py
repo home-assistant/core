@@ -21,20 +21,15 @@ from .coordinator import EvoDataUpdateCoordinator
 _LOGGER = logging.getLogger(__name__)
 
 
-def snake_to_pascal(s: str) -> str:
-    """Return a string converted (from snake_case) to PascalCase."""
-    return "".join(word.capitalize() for word in s.split("_"))
-
-
-def recurse_and_convert(val: Any) -> Any:
-    """Convert any datetime objects to ISO strings (for use in state attrs)."""
+def _enums_to_pascal_case(val: Any) -> Any:
+    """Recursively convert any string enums to PascalCase strings."""
     if isinstance(val, dict):
-        return {k: recurse_and_convert(v) for k, v in val.items()}
+        return {k: _enums_to_pascal_case(v) for k, v in val.items()}
     if isinstance(val, (list, tuple)):
-        return type(val)(recurse_and_convert(v) for v in val)
+        return type(val)(_enums_to_pascal_case(v) for v in val)
     if not isinstance(val, StrEnum):
         return val
-    return snake_to_pascal(val.value)
+    return "".join(word.capitalize() for word in val.value.split("_"))
 
 
 def is_valid_zone(zone: evo.Zone) -> bool:
@@ -88,7 +83,7 @@ class EvoEntity(CoordinatorEntity[EvoDataUpdateCoordinator]):
         for attr in self._evo_state_attr_names:
             self._device_state_attrs[attr] = getattr(self._evo_device, attr)
 
-        self._device_state_attrs = recurse_and_convert(self._device_state_attrs)
+        self._device_state_attrs = _enums_to_pascal_case(self._device_state_attrs)
 
         super()._handle_coordinator_update()
 
