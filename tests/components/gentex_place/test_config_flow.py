@@ -69,7 +69,7 @@ async def test_login_client_error(
     mock_setup_entry: MagicMock,
     aioclient_mock_fixture: None,
 ) -> None:
-    """Test that a botocore ClientError is re-raised by the config flow."""
+    """Test handling of botocore ClientError during login."""
     mock_login.side_effect = botocore.exceptions.ClientError(
         {"Error": {"Code": "NotAuthorizedException", "Message": "Bad creds"}},
         "InitiateAuth",
@@ -78,11 +78,15 @@ async def test_login_client_error(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    with pytest.raises(botocore.exceptions.ClientError):
-        await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input=TEST_CREDENTIALS,
-        )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=TEST_CREDENTIALS,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": "srp_auth_failed"}
 
 
 async def test_login_unknown_error(
