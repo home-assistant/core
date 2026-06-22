@@ -2,6 +2,7 @@
 
 from typing import Any
 
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.enums import OverkizCommand, Protocol
 from pyoverkiz.exceptions import BaseOverkizError
 from pyoverkiz.models import Action, Command, Device, StateDefinition
@@ -82,6 +83,12 @@ class OverkizExecutor:
         # Catch Overkiz exceptions to support `continue_on_error` functionality
         except BaseOverkizError as exception:
             raise HomeAssistantError(exception) from exception
+        except (
+            TimeoutError,
+            ClientConnectorError,
+            ServerDisconnectedError,
+        ) as exception:
+            raise HomeAssistantError("Failed to connect") from exception
 
         # ExecutionRegisteredEvent doesn't contain the
         # device_url, thus we need to register it here
@@ -115,6 +122,12 @@ class OverkizExecutor:
         # Catch Overkiz exceptions to support `continue_on_error` functionality
         except BaseOverkizError as exception:
             raise HomeAssistantError(exception) from exception
+        except (
+            TimeoutError,
+            ClientConnectorError,
+            ServerDisconnectedError,
+        ) as exception:
+            raise HomeAssistantError("Failed to connect") from exception
 
         self.coordinator.executions[exec_id] = {
             "device_url": self.device.device_url,

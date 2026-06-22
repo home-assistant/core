@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import patch
 
+from aiohttp import ClientConnectorError, ServerDisconnectedError
 from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import ExecutionState, OverkizCommandParam, OverkizState
 import pytest
@@ -35,7 +36,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import FixtureDevice, MockOverkizClient, SetupOverkizIntegration
@@ -523,6 +524,35 @@ async def test_cover_service_actions(
         command_name=command_name,
         parameters=parameters,
     )
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        TimeoutError("Connection timeout to host"),
+        ClientConnectorError(None, OSError()),
+        ServerDisconnectedError(),
+    ],
+    ids=["timeout", "client-connector", "server-disconnected"],
+)
+async def test_cover_command_connection_error_raises(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    mock_client: MockOverkizClient,
+    exception: Exception,
+) -> None:
+    """Test that connection failures while sending a command raise HomeAssistantError."""
+    await setup_overkiz_integration(fixture=SHUTTER.fixture)
+
+    mock_client.execute_action_group.side_effect = exception
+
+    with pytest.raises(HomeAssistantError, match="Failed to connect"):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_CLOSE_COVER,
+            {ATTR_ENTITY_ID: SHUTTER.entity_id},
+            blocking=True,
+        )
 
 
 @pytest.mark.parametrize(
