@@ -864,8 +864,7 @@
         "bosch_shc": {
           "integration_type": "hub",
           "config_flow": true,
-          "iot_class": "local_push",
-          "name": "Bosch SHC"
+          "iot_class": "local_push"
         },
         "home_connect": {
           "integration_type": "hub",
@@ -8565,6 +8564,7 @@
   "translated_name": [
     "alert",
     "aurora",
+    "bosch_shc",
     "cert_expiry",
     "counter",
     "cpuspeed",
