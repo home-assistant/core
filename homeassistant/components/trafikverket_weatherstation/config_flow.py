@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
@@ -38,6 +38,7 @@ class TVWeatherConfigFlow(ConfigFlow, domain=DOMAIN):
         weather_api = TrafikverketWeather(web_session, sensor_api)
         await weather_api.async_get_weather(station)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

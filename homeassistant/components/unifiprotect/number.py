@@ -4,15 +4,9 @@ from collections.abc import Sequence
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
-from uiprotect.data import (
-    Camera,
-    Chime,
-    Doorlock,
-    Light,
-    ModelType,
-    ProtectAdoptableDeviceModel,
-)
+from uiprotect.data import Camera, Chime, Light, ModelType, ProtectAdoptableDeviceModel
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
@@ -52,14 +46,6 @@ def _get_pir_duration(obj: Light) -> int:
 
 async def _set_pir_duration(obj: Light, value: float) -> None:
     await obj.set_duration(timedelta(seconds=value))
-
-
-def _get_auto_close(obj: Doorlock) -> int:
-    return int(obj.auto_close_time.total_seconds())
-
-
-async def _set_auto_close(obj: Doorlock, value: float) -> None:
-    await obj.set_auto_close_time(timedelta(seconds=value))
 
 
 def _get_chime_duration(obj: Camera) -> int:
@@ -213,21 +199,6 @@ SENSE_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ),
 )
 
-DOORLOCK_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
-    ProtectNumberEntityDescription[Doorlock](
-        key="auto_lock_time",
-        translation_key="auto_lock_timeout",
-        entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
-        ufp_min=0,
-        ufp_max=3600,
-        ufp_step=15,
-        ufp_value_fn=_get_auto_close,
-        ufp_set_method_fn=_set_auto_close,
-        ufp_perm=PermRequired.WRITE,
-    ),
-)
-
 CHIME_NUMBERS: tuple[ProtectNumberEntityDescription, ...] = (
     ProtectNumberEntityDescription[Chime](
         key="volume",
@@ -246,7 +217,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_NUMBERS,
     ModelType.LIGHT: LIGHT_NUMBERS,
     ModelType.SENSOR: SENSE_NUMBERS,
-    ModelType.DOORLOCK: DOORLOCK_NUMBERS,
     ModelType.CHIME: CHIME_NUMBERS,
 }
 
@@ -348,11 +318,15 @@ class ProtectNumbers(ProtectDeviceEntity, NumberEntity):
         self._attr_native_step = self.entity_description.ufp_step
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+        self._attr_native_value = self.entity_description.get_value(
+            self.device, self._ufp_public_obj
+        )
 
     @async_ufp_instance_command
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.ufp_set(self.device, value)
@@ -387,6 +361,7 @@ class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):
         del self._attr_name
 
     @callback
+    @override
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         """Update entity from protect device."""
         super()._async_update_device_from_protect(device)
@@ -400,12 +375,14 @@ class ChimeRingVolumeNumber(ProtectDeviceEntity, NumberEntity):
         return None
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         # Entity is unavailable if the camera is no longer paired with the chime
         return super().available and self._get_ring_volume() is not None
 
     @async_ufp_instance_command
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new ring volume value."""
         camera = self.data.api.bootstrap.cameras.get(self._camera_id)

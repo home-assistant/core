@@ -13,7 +13,7 @@ import queue
 import re
 import time
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, cast, override
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
@@ -1056,6 +1056,7 @@ class LogRelayHandler(logging.Handler):
             rf"(?:{re.escape(hass_path)}|{re.escape(config_dir)})/(.*)"
         )
 
+    @override
     def emit(self, record: LogRecord) -> None:
         """Relay log message via dispatcher."""
         entry = LogEntry(
@@ -1368,9 +1369,9 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
         dict[str, dict[str, Any]], ha_zha_data.yaml_config.get(CONF_DEVICE_CONFIG)
     )
     if overrides is not None:
-        for unique_id, override in overrides.items():
+        for unique_id, override_data in overrides.items():
             overrides_config[unique_id] = DeviceOverridesConfiguration(
-                type=override["type"],
+                type=override_data["type"],
             )
 
     return ZHAData(

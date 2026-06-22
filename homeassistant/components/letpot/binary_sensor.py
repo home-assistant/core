@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from letpot.models import DeviceFeature, LetPotDeviceStatus
 
@@ -127,6 +128,7 @@ class LetPotBinarySensorEntity[_DataT: LetPotDeviceStatus](
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the binary sensor is on."""
         return self.entity_description.is_on_fn(self.coordinator.data)

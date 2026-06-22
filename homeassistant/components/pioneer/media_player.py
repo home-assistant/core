@@ -1,7 +1,7 @@
 """Support for Pioneer Network Receivers."""
 
 import logging
-from typing import Final
+from typing import Final, override
 
 import telnetlib  # pylint: disable=deprecated-module
 import voluptuous as vol
@@ -167,11 +167,13 @@ class PioneerDevice(MediaPlayerEntity):
         return True
 
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def state(self) -> MediaPlayerState | None:
         """Return the state of the device."""
         if self._pwstate == "PWR2":
@@ -184,30 +186,36 @@ class PioneerDevice(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self._volume
 
     @property
+    @override
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self._muted
 
     @property
+    @override
     def source(self):
         """Return the current input source."""
         return self._selected_source
 
     @property
+    @override
     def source_list(self):
         """List of available input sources."""
         return list(self._source_name_to_number)
 
     @property
+    @override
     def media_title(self):
         """Title of current playing media."""
         return self._selected_source
 
+    @override
     def turn_off(self) -> None:
         """Turn off media player."""
         self.telnet_command("PF")
@@ -220,19 +228,23 @@ class PioneerDevice(MediaPlayerEntity):
         """Volume down media player."""
         self.telnet_command("VD")
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         # 60dB max
         self.telnet_command(f"{round(volume * MAX_VOLUME):03}VL")
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         self.telnet_command("MO" if mute else "MF")
 
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         self.telnet_command("PO")
 
+    @override
     def select_source(self, source: str) -> None:
         """Select input source."""
         self.telnet_command(f"{self._source_name_to_number.get(source)}FN")
