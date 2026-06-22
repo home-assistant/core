@@ -3,7 +3,7 @@
 from typing import Any
 
 from pycync.devices.device_types import DeviceType
-from pycync.devices.devices import CyncDevice
+from pycync import CyncDevice
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -53,11 +53,11 @@ class CyncSwitchEntity(CyncBaseEntity, SwitchEntity):
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the plug."""
-        await self._device._command_client.set_power_state(self._device, True)  # noqa: SLF001
+        await self._device.turn_on()
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the plug."""
-        await self._device._command_client.set_power_state(self._device, False)  # noqa: SLF001
+        await self._device.turn_off()
 
     @property
     def _device(self) -> CyncDevice:

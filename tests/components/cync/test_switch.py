@@ -1,6 +1,6 @@
 """Tests for the Cync integration switch platform."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -38,10 +38,10 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("service", "expected_is_on"),
+    ("service", "device_method"),
     [
-        ("turn_on", True),
-        ("turn_off", False),
+        ("turn_on", "turn_on"),
+        ("turn_off", "turn_off"),
     ],
     ids=["turn_on", "turn_off"],
 )
@@ -49,16 +49,15 @@ async def test_switch(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     service: str,
-    expected_is_on: bool,
+    device_method: str,
 ) -> None:
-    """Test that turning on/off the plug calls set_power_state with the correct value."""
+    """Test that turning on/off the plug calls the device on/off methods."""
 
     await setup_integration(hass, mock_config_entry)
 
     test_device = mock_config_entry.runtime_data.data.get(PLUG_DEVICE_ID)
-    mock_client = MagicMock()
-    mock_client.set_power_state = AsyncMock(name="set_power_state")
-    test_device._command_client = mock_client
+    test_device.turn_on = AsyncMock(name="turn_on")
+    test_device.turn_off = AsyncMock(name="turn_off")
 
     await hass.services.async_call(
         "switch",
@@ -67,4 +66,4 @@ async def test_switch(
         blocking=True,
     )
 
-    mock_client.set_power_state.assert_called_once_with(test_device, expected_is_on)
+    getattr(test_device, device_method).assert_called_once()
