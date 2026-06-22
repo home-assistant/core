@@ -98,6 +98,7 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
     POWER_SENSOR: SHCSensorEntityDescription(
         key=POWER_SENSOR,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPower.WATT,
         value_fn=lambda device: device.powerconsumption,
     ),
@@ -106,7 +107,11 @@ SENSOR_DESCRIPTIONS: dict[str, SHCSensorEntityDescription] = {
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_fn=lambda device: device.energyconsumption / 1000.0,
+        value_fn=lambda device: (
+            device.energyconsumption / 1000.0
+            if device.energyconsumption is not None
+            else None
+        ),
     ),
     VALVE_TAPPET_SENSOR: SHCSensorEntityDescription(
         key=VALVE_TAPPET_SENSOR,
