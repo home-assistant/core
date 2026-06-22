@@ -82,6 +82,9 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self.async_create_entry(
                     title=device.info.name,
                     data={CONF_HOST: host},
+                    options={
+                        CONF_KEEP_MAIN_LIGHT: len(device.state.segments) > 1,
+                    },
                 )
         data_schema = vol.Schema({vol.Required(CONF_HOST): str})
         if self.source == SOURCE_RECONFIGURE:
@@ -145,6 +148,10 @@ class WLEDFlowHandler(ConfigFlow, domain=DOMAIN):
                 title=self.discovered_device.info.name,
                 data={
                     CONF_HOST: self.discovered_host,
+                },
+                options={
+                    CONF_KEEP_MAIN_LIGHT: len(self.discovered_device.state.segments)
+                    > 1,
                 },
             )
 

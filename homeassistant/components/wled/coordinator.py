@@ -46,7 +46,6 @@ def normalize_mac_address(mac: str) -> str:
 class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
     """Class to manage fetching WLED data from single endpoint."""
 
-    keep_main_light: bool
     config_entry: WLEDConfigEntry
 
     def __init__(
@@ -56,9 +55,6 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
         entry: WLEDConfigEntry,
     ) -> None:
         """Initialize global WLED data updater."""
-        self.keep_main_light = entry.options.get(
-            CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT
-        )
         self.wled = WLED(entry.data[CONF_HOST], session=async_get_clientsession(hass))
         self.unsub: CALLBACK_TYPE | None = None
 
@@ -72,6 +68,13 @@ class WLEDDataUpdateCoordinator(DataUpdateCoordinator[WLEDDevice]):
             config_entry=entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
+        )
+
+    @property
+    def keep_main_light(self) -> bool:
+        """Return current keep_main_light option value."""
+        return bool(
+            self.config_entry.options.get(CONF_KEEP_MAIN_LIGHT, DEFAULT_KEEP_MAIN_LIGHT)
         )
 
     @property

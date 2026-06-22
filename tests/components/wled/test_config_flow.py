@@ -28,8 +28,15 @@ CONFIG = {CONF_HOST: "10.10.0.10"}
         "https://192.168.1.123:80/settings",
     ],
 )
+@pytest.mark.parametrize(
+    ("device_fixture", "expected_options"),
+    [
+        ("rgb_single_segment", {CONF_KEEP_MAIN_LIGHT: False}),
+        ("rgb", {CONF_KEEP_MAIN_LIGHT: True}),
+    ],
+)
 async def test_full_user_flow_implementation(
-    hass: HomeAssistant, host_input: str
+    hass: HomeAssistant, host_input: str, expected_options: dict
 ) -> None:
     """Test the full manual user flow from start to finish."""
     result = await hass.config_entries.flow.async_init(
@@ -48,6 +55,7 @@ async def test_full_user_flow_implementation(
     assert result.get("type") is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "192.168.1.123"
     assert result["result"].unique_id == "aabbccddeeff"
+    assert result["options"] == expected_options
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_wled")

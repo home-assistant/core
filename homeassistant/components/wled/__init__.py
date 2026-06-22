@@ -6,12 +6,12 @@ from typing import TYPE_CHECKING
 
 from homeassistant.config_entries import SOURCE_IGNORE
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import CONF_KEEP_MAIN_LIGHT, DOMAIN
 from .coordinator import (
     WLEDConfigEntry,
     WLEDDataUpdateCoordinator,
@@ -49,8 +49,23 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_setup_entry(hass: HomeAssistant, entry: WLEDConfigEntry) -> bool:
     """Set up WLED from a config entry."""
-    entry.runtime_data = WLEDDataUpdateCoordinator(hass, entry=entry)
-    await entry.runtime_data.async_config_entry_first_refresh()
+    coordinator = WLEDDataUpdateCoordinator(hass, entry=entry)
+    entry.runtime_data = coordinator
+    await coordinator.async_config_entry_first_refresh()
+
+    @callback
+    def _async_check_keep_main_light() -> None:
+        """Persist keep_main_light=True if multiple segments detected."""
+        if len(coordinator.data.state.segments) > 1 and not entry.options.get(
+            CONF_KEEP_MAIN_LIGHT
+        ):
+            hass.config_entries.async_update_entry(
+                entry,
+                options=entry.options | {CONF_KEEP_MAIN_LIGHT: True},
+            )
+
+    entry.async_on_unload(coordinator.async_add_listener(_async_check_keep_main_light))
+    _async_check_keep_main_light()
 
     # Set up all platforms for this device/entry.
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

@@ -180,6 +180,7 @@ async def test_main_change_state(
 async def test_dynamically_handle_segments(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    mock_config_entry: MockConfigEntry,
     mock_wled: MagicMock,
 ) -> None:
     """Test if a new/deleted segment is dynamically added/removed."""
@@ -203,19 +204,25 @@ async def test_dynamically_handle_segments(
     assert segment0.state == STATE_ON
     assert (segment1 := hass.states.get("light.wled_rgb_light_segment_1"))
     assert segment1.state == STATE_ON
+    # Option is updated to keep main light when multiple segments are detected
+    assert mock_config_entry.options.get(CONF_KEEP_MAIN_LIGHT) is True
 
-    # Test adding if segment shows up again, including the main entity
+    # Test: main light persists even when segments go back to 1
+    # Once >1 segment is detected, keep_main_light is locked in for stability
     mock_wled.update.return_value = return_value
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (main := hass.states.get("light.wled_rgb_light_main"))
-    assert main.state == STATE_UNAVAILABLE
+    assert main.state == STATE_ON  # Main light is locked in, stays available
     assert (segment0 := hass.states.get("light.wled_rgb_light"))
     assert segment0.state == STATE_ON
     assert (segment1 := hass.states.get("light.wled_rgb_light_segment_1"))
     assert segment1.state == STATE_UNAVAILABLE
+    # Option remains persisted to keep main light when multiple segments
+    # are detected, even if currently only 1 segment is present
+    assert mock_config_entry.options.get(CONF_KEEP_MAIN_LIGHT) is True
 
 
 @pytest.mark.parametrize("device_fixture", ["rgb_single_segment"])
