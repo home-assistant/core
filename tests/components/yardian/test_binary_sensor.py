@@ -80,10 +80,8 @@ async def test_standby_sensor_edge_cases(
     new_oper_info["iStandby"] = future_ts
     mock_yardian_client.fetch_oper_info.return_value = new_oper_info
 
-    # Fast-forward time and fire the event with the exact timestamp
-    now += SCAN_INTERVAL
-    freezer.move_to(now)
-    async_fire_time_changed(hass, now)
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_ON
