@@ -134,12 +134,12 @@ def register_actions(hass: HomeAssistant) -> None:
         entity_domain=MEDIA_PLAYER_DOMAIN,
         schema={
             vol.Required(ATTR_MEDIA_ID): vol.All(cv.ensure_list, [cv.string]),
-            vol.Optional(ATTR_USERNAME): cv.string,
             vol.Optional(ATTR_MEDIA_TYPE): vol.Coerce(MediaType),
             vol.Optional(ATTR_MEDIA_ENQUEUE): vol.Coerce(QueueOption),
             vol.Optional(ATTR_ARTIST): cv.string,
             vol.Optional(ATTR_ALBUM): cv.string,
             vol.Optional(ATTR_RADIO_MODE): vol.Coerce(bool),
+            vol.Optional(ATTR_USERNAME): cv.string,
         },
         func="_async_handle_play_media",
     )

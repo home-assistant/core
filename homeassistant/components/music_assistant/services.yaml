@@ -27,10 +27,6 @@ play_media:
             - podcast
             - track
             - radio
-    username:
-      example: "john"
-      selector:
-        text:
     artist:
       example: "Queen"
       selector:
@@ -52,6 +48,10 @@ play_media:
     radio_mode:
       selector:
         boolean:
+    username:
+      example: "john"
+      selector:
+        text:
 
 play_announcement:
   target:
