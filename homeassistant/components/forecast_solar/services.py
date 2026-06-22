@@ -78,8 +78,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
     async def async_get_forecast(call: ServiceCall) -> ServiceResponse:
         """Return the solar production forecast time series.
 
-        The response has two flat ``{ISO timestamp -> number}`` maps,
-        mirroring the today-attribute shape on the energy sensors:
+        The response has two flat ``{ISO timestamp -> number}`` maps:
 
         - ``watts``: estimated instantaneous power in W at the timestamp.
         - ``wh_period``: energy in Wh produced during the interval that

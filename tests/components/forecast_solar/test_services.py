@@ -39,8 +39,7 @@ async def test_get_forecast_raw(
         return_response=True,
     )
 
-    # Response shape mirrors the today-attributes on the energy sensor:
-    # two flat ``{ISO timestamp -> number}`` maps.
+    # Response is two flat ``{ISO timestamp -> number}`` maps.
     assert set(response.keys()) == {"watts", "wh_period"}
     assert isinstance(response["watts"], dict)
     assert isinstance(response["wh_period"], dict)
