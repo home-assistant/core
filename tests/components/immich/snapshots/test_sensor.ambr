@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.someone_disk_available-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -13,7 +14,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.someone_disk_available',
     'has_entity_name': True,
     'hidden_by': None,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk available',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -60,8 +62,9 @@
 # ---
 # name: test_sensors[sensor.someone_disk_size-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -72,7 +75,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.someone_disk_size',
     'has_entity_name': True,
     'hidden_by': None,
@@ -81,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk size',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -119,8 +123,9 @@
 # ---
 # name: test_sensors[sensor.someone_disk_usage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -131,7 +136,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.someone_disk_usage',
     'has_entity_name': True,
     'hidden_by': None,
@@ -140,6 +145,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk usage',
     'options': dict({
     }),
     'original_device_class': None,
@@ -171,8 +177,9 @@
 # ---
 # name: test_sensors[sensor.someone_disk_used-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -183,7 +190,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.someone_disk_used',
     'has_entity_name': True,
     'hidden_by': None,
@@ -192,6 +199,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -230,8 +238,9 @@
 # ---
 # name: test_sensors[sensor.someone_disk_used_by_photos-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -242,7 +251,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.someone_disk_used_by_photos',
     'has_entity_name': True,
     'hidden_by': None,
@@ -251,6 +260,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used by photos',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -289,8 +299,9 @@
 # ---
 # name: test_sensors[sensor.someone_disk_used_by_videos-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -301,7 +312,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.someone_disk_used_by_videos',
     'has_entity_name': True,
     'hidden_by': None,
@@ -310,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Disk used by videos',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -348,8 +360,9 @@
 # ---
 # name: test_sensors[sensor.someone_photos_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -360,7 +373,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.someone_photos_count',
     'has_entity_name': True,
     'hidden_by': None,
@@ -369,6 +382,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Photos count',
     'options': dict({
     }),
     'original_device_class': None,
@@ -400,8 +414,9 @@
 # ---
 # name: test_sensors[sensor.someone_videos_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -412,7 +427,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': None,
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
     'entity_id': 'sensor.someone_videos_count',
     'has_entity_name': True,
     'hidden_by': None,
@@ -421,6 +436,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Videos count',
     'options': dict({
     }),
     'original_device_class': None,

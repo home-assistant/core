@@ -36,10 +36,13 @@
         }),
         'network_key': '**REDACTED**',
         'nwk_addresses': dict({
+          '11:22:33:44:55:66:77:88': 4660,
         }),
         'nwk_manager_id': 0,
         'nwk_update_id': 0,
         'pan_id': 4660,
+        'route_table': dict({
+        }),
         'security_level': 0,
         'source': None,
         'stack_specific': dict({
@@ -68,6 +71,7 @@
           'seq': 0,
           'tx_counter': 0,
         }),
+        'tx_power': None,
       }),
       'node_info': dict({
         'ieee': '**REDACTED**',
@@ -96,7 +100,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'zha',
-      'minor_version': 1,
+      'minor_version': 2,
       'options': dict({
         'custom_configuration': dict({
           'zha_alarm_options': dict({
@@ -116,8 +120,8 @@
       'subentries': list([
       ]),
       'title': 'Mock Title',
-      'unique_id': None,
-      'version': 4,
+      'unique_id': '**REDACTED**',
+      'version': 5,
     }),
     'devices': list([
       dict({
@@ -181,6 +185,12 @@
                 'zcl_type': 'EUI64',
               }),
               dict({
+                'id': '0x0013',
+                'name': 'current_zone_sensitivity_level',
+                'unsupported': True,
+                'zcl_type': 'uint8',
+              }),
+              dict({
                 'id': '0x0012',
                 'name': 'num_zone_sensitivity_levels_supported',
                 'unsupported': True,
@@ -190,6 +200,8 @@
             'cluster_id': '0x0500',
             'endpoint_attribute': 'ias_zone',
           }),
+        ]),
+        'out_clusters': list([
           dict({
             'attributes': list([
             ]),
@@ -197,11 +209,11 @@
             'endpoint_attribute': 'ias_ace',
           }),
         ]),
-        'out_clusters': list([
-        ]),
         'profile_id': 260,
       }),
     }),
+    'exposes_features': list([
+    ]),
     'friendly_manufacturer': 'FakeManufacturer',
     'friendly_model': 'FakeModel',
     'ieee': '**REDACTED**',
@@ -231,33 +243,16 @@
     'power_source': 'Mains',
     'quirk_applied': False,
     'quirk_class': 'zigpy.device.Device',
-    'quirk_id': None,
     'routes': list([
     ]),
     'rssi': None,
-    'version': 1,
+    'version': 2,
     'zha_lib_entities': dict({
       'alarm_control_panel': list([
         dict({
           'info_object': dict({
             'available': True,
             'class_name': 'AlarmControlPanel',
-            'cluster_handlers': list([
-              dict({
-                'class_name': 'IasAceClusterHandler',
-                'cluster': dict({
-                  'id': 1281,
-                  'name': 'IAS Ancillary Control Equipment',
-                  'type': 'server',
-                }),
-                'endpoint_id': 1,
-                'generic_id': 'cluster_handler_0x0501',
-                'id': '1:0x0501',
-                'status': 'INITIALIZED',
-                'unique_id': '**REDACTED**',
-                'value_attribute': None,
-              }),
-            ]),
             'code_arm_required': False,
             'code_format': 'number',
             'device_class': None,
@@ -275,6 +270,7 @@
             'state_class': None,
             'supported_features': 15,
             'translation_key': 'alarm_control_panel',
+            'translation_placeholders': None,
             'unique_id': '**REDACTED**',
           }),
           'state': dict({
@@ -290,22 +286,6 @@
             'attribute_name': 'zone_status',
             'available': True,
             'class_name': 'IASZone',
-            'cluster_handlers': list([
-              dict({
-                'class_name': 'IASZoneClusterHandler',
-                'cluster': dict({
-                  'id': 1280,
-                  'name': 'IAS Zone',
-                  'type': 'server',
-                }),
-                'endpoint_id': 1,
-                'generic_id': 'cluster_handler_0x0500',
-                'id': '1:0x0500',
-                'status': 'INITIALIZED',
-                'unique_id': '**REDACTED**',
-                'value_attribute': None,
-              }),
-            ]),
             'device_class': None,
             'device_ieee': '**REDACTED**',
             'enabled': True,
@@ -320,6 +300,7 @@
             'primary': True,
             'state_class': None,
             'translation_key': 'ias_zone',
+            'translation_placeholders': None,
             'unique_id': '**REDACTED**',
           }),
           'state': dict({

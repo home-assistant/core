@@ -1,0 +1,51 @@
+# serializer version: 1
+# name: test_buttons[button][button.clou_duo_sync_clock-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'button',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'button.clou_duo_sync_clock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Sync clock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Sync clock',
+    'platform': 'fumis',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'sync_clock',
+    'unique_id': 'aa:bb:cc:dd:ee:ff_sync_clock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_buttons[button][button.clou_duo_sync_clock-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'Clou Duo Sync clock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'button.clou_duo_sync_clock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---

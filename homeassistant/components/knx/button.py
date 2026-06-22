@@ -1,6 +1,4 @@
-"""Support for KNX/IP buttons."""
-
-from __future__ import annotations
+"""Support for KNX button entities."""
 
 from xknx.devices import RawValue as XknxRawValue
 
@@ -11,9 +9,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import CONF_PAYLOAD_LENGTH, KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 
 
 async def async_setup_entry(
@@ -35,19 +33,18 @@ class KNXButton(KnxYamlEntity, ButtonEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX button."""
-        super().__init__(
-            knx_module=knx_module,
-            device=XknxRawValue(
-                xknx=knx_module.xknx,
-                name=config[CONF_NAME],
-                payload_length=config[CONF_PAYLOAD_LENGTH],
-                group_address=config[KNX_ADDRESS],
-            ),
+        self._device = XknxRawValue(
+            xknx=knx_module.xknx,
+            name=config[CONF_NAME],
+            payload_length=config[CONF_PAYLOAD_LENGTH],
+            group_address=config[KNX_ADDRESS],
         )
         self._payload = config[CONF_PAYLOAD]
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = (
-            f"{self._device.remote_value.group_address}_{self._payload}"
+        super().__init__(
+            knx_module=knx_module,
+            unique_id=f"{self._device.remote_value.group_address}_{self._payload}",
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
 
     async def async_press(self) -> None:

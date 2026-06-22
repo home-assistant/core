@@ -1,6 +1,5 @@
 """Webhook handlers for mobile_app."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -25,12 +24,6 @@ from homeassistant.components import (
 )
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.camera import CameraEntityFeature
-from homeassistant.components.device_tracker import (
-    ATTR_BATTERY,
-    ATTR_GPS,
-    ATTR_GPS_ACCURACY,
-    ATTR_LOCATION_NAME,
-)
 from homeassistant.components.frontend import MANIFEST_JSON
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
@@ -38,6 +31,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
     ATTR_SUPPORTED_FEATURES,
@@ -58,16 +53,12 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.util.decorator import Registry
 
 from .const import (
-    ATTR_ALTITUDE,
     ATTR_APP_DATA,
     ATTR_APP_VERSION,
     ATTR_CAMERA_ENTITY_ID,
-    ATTR_COURSE,
     ATTR_DEVICE_NAME,
     ATTR_EVENT_DATA,
     ATTR_EVENT_TYPE,
-    ATTR_MANUFACTURER,
-    ATTR_MODEL,
     ATTR_NO_LEGACY_ENCRYPTION,
     ATTR_OS_VERSION,
     ATTR_SENSOR_ATTRIBUTES,
@@ -79,15 +70,12 @@ from .const import (
     ATTR_SENSOR_STATE,
     ATTR_SENSOR_STATE_CLASS,
     ATTR_SENSOR_TYPE,
-    ATTR_SENSOR_TYPE_BINARY_SENSOR,
     ATTR_SENSOR_TYPE_SENSOR,
     ATTR_SENSOR_UNIQUE_ID,
     ATTR_SENSOR_UOM,
-    ATTR_SPEED,
     ATTR_SUPPORTS_ENCRYPTION,
     ATTR_TEMPLATE,
     ATTR_TEMPLATE_VARIABLES,
-    ATTR_VERTICAL_ACCURACY,
     ATTR_WEBHOOK_DATA,
     ATTR_WEBHOOK_ENCRYPTED,
     ATTR_WEBHOOK_ENCRYPTED_DATA,
@@ -95,19 +83,24 @@ from .const import (
     CONF_CLOUDHOOK_URL,
     CONF_REMOTE_UI_URL,
     CONF_SECRET,
+    CONF_USER_ID,
     DATA_CONFIG_ENTRIES,
     DATA_DELETED_IDS,
     DATA_DEVICES,
+    DATA_PENDING_UPDATES,
     DOMAIN,
     ERR_ENCRYPTION_ALREADY_ENABLED,
     ERR_ENCRYPTION_REQUIRED,
     ERR_INVALID_FORMAT,
     ERR_SENSOR_NOT_REGISTERED,
     SCHEMA_APP_DATA,
+    SENSOR_TYPES,
     SIGNAL_LOCATION_UPDATE,
     SIGNAL_SENSOR_UPDATE,
 )
+from .device_tracker import LOCATION_UPDATE_SCHEMA
 from .helpers import (
+    async_is_local_only_user,
     decrypt_payload,
     decrypt_payload_legacy,
     empty_okay_response,
@@ -124,8 +117,6 @@ DELAY_SAVE = 10
 WEBHOOK_COMMANDS: Registry[
     str, Callable[[HomeAssistant, ConfigEntry, Any], Coroutine[Any, Any, Response]]
 ] = Registry()
-
-SENSOR_TYPES = (ATTR_SENSOR_TYPE_BINARY_SENSOR, ATTR_SENSOR_TYPE_SENSOR)
 
 WEBHOOK_PAYLOAD_SCHEMA = vol.Any(
     vol.Schema(
@@ -405,23 +396,7 @@ async def webhook_render_template(
 
 
 @WEBHOOK_COMMANDS.register("update_location")
-@validate_schema(
-    vol.All(
-        cv.key_dependency(ATTR_GPS, ATTR_GPS_ACCURACY),
-        vol.Schema(
-            {
-                vol.Optional(ATTR_LOCATION_NAME): cv.string,
-                vol.Optional(ATTR_GPS): cv.gps,
-                vol.Optional(ATTR_GPS_ACCURACY): cv.positive_int,
-                vol.Optional(ATTR_BATTERY): cv.positive_int,
-                vol.Optional(ATTR_SPEED): cv.positive_int,
-                vol.Optional(ATTR_ALTITUDE): vol.Coerce(float),
-                vol.Optional(ATTR_COURSE): cv.positive_int,
-                vol.Optional(ATTR_VERTICAL_ACCURACY): cv.positive_int,
-            },
-        ),
-    )
-)
+@validate_schema(LOCATION_UPDATE_SCHEMA)
 async def webhook_update_location(
     hass: HomeAssistant, config_entry: ConfigEntry, data: dict[str, Any]
 ) -> Response:
@@ -601,14 +576,16 @@ async def webhook_register_sensor(
         if changes:
             entity_registry.async_update_entity(existing_sensor, **changes)
 
-        async_dispatcher_send(hass, f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}", data)
+        _async_update_sensor_entity(
+            hass, entity_type=entity_type, unique_store_key=unique_store_key, data=data
+        )
     else:
         data[CONF_UNIQUE_ID] = unique_store_key
         data[CONF_NAME] = (
             f"{config_entry.data[ATTR_DEVICE_NAME]} {data[ATTR_SENSOR_NAME]}"
         )
 
-        register_signal = f"{DOMAIN}_{data[ATTR_SENSOR_TYPE]}_register"
+        register_signal = f"{DOMAIN}_{entity_type}_register"
         async_dispatcher_send(hass, register_signal, data)
 
     return webhook_response(
@@ -685,10 +662,12 @@ async def webhook_update_sensor_states(
             continue
 
         sensor[CONF_WEBHOOK_ID] = config_entry.data[CONF_WEBHOOK_ID]
-        async_dispatcher_send(
+
+        _async_update_sensor_entity(
             hass,
-            f"{SIGNAL_SENSOR_UPDATE}-{unique_store_key}",
-            sensor,
+            entity_type=entity_type,
+            unique_store_key=unique_store_key,
+            data=sensor,
         )
 
         resp[unique_id] = {"success": True}
@@ -697,9 +676,25 @@ async def webhook_update_sensor_states(
         entry = entity_registry.async_get(entity_id)
 
         if entry and entry.disabled_by:
+            # Inform the app that the entity is disabled
             resp[unique_id]["is_disabled"] = True
 
     return webhook_response(resp, registration=config_entry.data)
+
+
+def _async_update_sensor_entity(
+    hass: HomeAssistant, entity_type: str, unique_store_key: str, data: dict[str, Any]
+) -> None:
+    """Update a sensor entity with new data."""
+    # Replace existing pending update with the latest sensor data.
+    hass.data[DOMAIN][DATA_PENDING_UPDATES][entity_type][unique_store_key] = data
+
+    # The signal might not be handled if the entity was
+    # just enabled, but the data is stored in pending updates
+    # and will be applied on entity initialization.
+    async_dispatcher_send(
+        hass, f"{SIGNAL_SENSOR_UPDATE}-{entity_type}-{unique_store_key}"
+    )
 
 
 @WEBHOOK_COMMANDS.register("get_zones")
@@ -738,10 +733,11 @@ async def webhook_get_config(
         "theme_color": MANIFEST_JSON["theme_color"],
     }
 
-    if CONF_CLOUDHOOK_URL in config_entry.data:
-        resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
-
-    if cloud.async_active_subscription(hass):
+    if cloud.async_active_subscription(hass) and not await async_is_local_only_user(
+        hass, config_entry.data[CONF_USER_ID]
+    ):
+        if CONF_CLOUDHOOK_URL in config_entry.data:
+            resp[CONF_CLOUDHOOK_URL] = config_entry.data[CONF_CLOUDHOOK_URL]
         with suppress(cloud.CloudNotAvailable):
             resp[CONF_REMOTE_UI_URL] = cloud.async_remote_ui_url(hass)
 

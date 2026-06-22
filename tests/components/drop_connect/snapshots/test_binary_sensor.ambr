@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[alert][binary_sensor.alert_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.POWER: 'power'>,
@@ -50,8 +52,9 @@
 # ---
 # name: test_sensors[alert][binary_sensor.alert_sensor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Sensor',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
@@ -99,8 +103,9 @@
 # ---
 # name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -118,6 +123,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -148,8 +154,9 @@
 # ---
 # name: test_sensors[hub][binary_sensor.hub_drop_1_c0ffee_notification_unread-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -167,6 +174,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Notification unread',
     'options': dict({
     }),
     'original_device_class': None,
@@ -196,8 +204,9 @@
 # ---
 # name: test_sensors[leak][binary_sensor.leak_detector_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -215,6 +224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -245,8 +255,9 @@
 # ---
 # name: test_sensors[protection_valve][binary_sensor.protection_valve_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -264,6 +275,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -294,8 +306,9 @@
 # ---
 # name: test_sensors[pump_controller][binary_sensor.pump_controller_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -313,6 +326,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -343,8 +357,9 @@
 # ---
 # name: test_sensors[pump_controller][binary_sensor.pump_controller_pump_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -362,6 +377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Pump status',
     'options': dict({
     }),
     'original_device_class': None,
@@ -391,8 +407,9 @@
 # ---
 # name: test_sensors[ro_filter][binary_sensor.ro_filter_leak_detected-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -410,6 +427,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Leak detected',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.MOISTURE: 'moisture'>,
@@ -440,8 +458,9 @@
 # ---
 # name: test_sensors[softener][binary_sensor.softener_reserve_capacity_in_use-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -459,6 +478,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reserve capacity in use',
     'options': dict({
     }),
     'original_device_class': None,

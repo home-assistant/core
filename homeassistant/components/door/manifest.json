@@ -1,0 +1,8 @@
+{
+  "domain": "door",
+  "name": "Door",
+  "codeowners": ["@home-assistant/core"],
+  "documentation": "https://www.home-assistant.io/integrations/door",
+  "integration_type": "system",
+  "quality_scale": "internal"
+}

@@ -1,7 +1,5 @@
 """Support for TP-Link thermostats."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -181,15 +179,14 @@ class TPLinkClimateEntity(CoordinatedTPLinkModuleEntity, ClimateEntity):
             HVACMode.HEAT if self._thermostat_module.state else HVACMode.OFF
         )
 
-        if (
-            self._thermostat_module.mode not in STATE_TO_ACTION
-            and self._attr_hvac_action is not HVACAction.OFF
-        ):
-            _LOGGER.warning(
-                "Unknown thermostat state, defaulting to OFF: %s",
-                self._thermostat_module.mode,
-            )
-            self._attr_hvac_action = HVACAction.OFF
+        if self._thermostat_module.mode not in STATE_TO_ACTION:
+            # Report a warning on the first non-default unknown mode
+            if self._attr_hvac_action is not HVACAction.OFF:
+                _LOGGER.warning(
+                    "Unknown thermostat state, defaulting to OFF: %s",
+                    self._thermostat_module.mode,
+                )
+                self._attr_hvac_action = HVACAction.OFF
             return True
 
         self._attr_hvac_action = STATE_TO_ACTION[self._thermostat_module.mode]

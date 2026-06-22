@@ -1,13 +1,9 @@
 """Ecovacs util functions."""
 
-from __future__ import annotations
-
 from enum import Enum
 import random
 import string
 from typing import TYPE_CHECKING
-
-from deebot_client.events.station import State
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import slugify
@@ -49,9 +45,6 @@ def get_supported_entities(
 @callback
 def get_name_key(enum: Enum) -> str:
     """Return the lower case name of the enum."""
-    if enum is State.EMPTYING:
-        # Will be fixed in the next major release of deebot-client
-        return "emptying_dustbin"
     return enum.name.lower()
 
 

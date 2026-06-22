@@ -1,6 +1,6 @@
 """Platform for siren integration."""
 
-from typing import Any
+from typing import Any, override
 
 from devolo_home_control_api.devices.zwave import Zwave
 from devolo_home_control_api.homecontrol import HomeControl
@@ -18,7 +18,7 @@ async def async_setup_entry(
     entry: DevoloHomeControlConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Get all binary sensor and multi level sensor devices and setup them via config entry."""
+    """Get all binary sensor and multi level sensor devices."""
 
     async_add_entities(
         DevoloSirenDeviceEntity(
@@ -60,19 +60,23 @@ class DevoloSirenDeviceEntity(DevoloMultiLevelSwitchDeviceEntity, SirenEntity):
         self._default_tone = device_instance.settings_property["tone"].tone
 
     @property
+    @override
     def is_on(self) -> bool:
         """Whether the device is on or off."""
         return self._value != 0
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device off."""
         tone = kwargs.get(ATTR_TONE) or self._default_tone
         self._multi_level_switch_property.set(tone)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._multi_level_switch_property.set(0)
 
+    @override
     def _generic_message(self, message: tuple) -> None:
         """Handle generic messages."""
         if message[0].startswith("mss"):

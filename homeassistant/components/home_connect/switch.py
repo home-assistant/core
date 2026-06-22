@@ -1,20 +1,22 @@
 """Provides a switch for Home Connect."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohomeconnect.model import OptionKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .common import setup_home_connect_entry
+from .common import setup_home_connect_entry, should_add_option_entity
 from .const import BSH_POWER_OFF, BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
-from .coordinator import HomeConnectApplianceData, HomeConnectConfigEntry
+from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity, HomeConnectOptionEntity
 from .utils import get_dict_from_home_connect_error
 
@@ -125,6 +127,10 @@ SWITCH_OPTIONS = (
         translation_key="fast_pre_heat",
     ),
     SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_COMMON_SILENT_MODE,
+        translation_key="silent_mode",
+    ),
+    SwitchEntityDescription(
         key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_1_ACTIVE,
         translation_key="i_dos1_active",
     ),
@@ -132,38 +138,65 @@ SWITCH_OPTIONS = (
         key=OptionKey.LAUNDRY_CARE_WASHER_I_DOS_2_ACTIVE,
         translation_key="i_dos2_active",
     ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_INTENSIVE_PLUS,
+        translation_key="intensive_plus",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_LESS_IRONING,
+        translation_key="less_ironing",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_MINI_LOAD,
+        translation_key="mini_load",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_PREWASH,
+        translation_key="prewash",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_RINSE_HOLD,
+        translation_key="rinse_hold",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_SOAK,
+        translation_key="soaking",
+    ),
+    SwitchEntityDescription(
+        key=OptionKey.LAUNDRY_CARE_WASHER_WATER_PLUS,
+        translation_key="water_plus",
+    ),
 )
 
 
 def _get_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
+    appliance_coordinator: HomeConnectApplianceCoordinator,
 ) -> list[HomeConnectEntity]:
     """Get a list of entities."""
     entities: list[HomeConnectEntity] = []
-    if SettingKey.BSH_COMMON_POWER_STATE in appliance.settings:
+    if SettingKey.BSH_COMMON_POWER_STATE in appliance_coordinator.data.settings:
         entities.append(
-            HomeConnectPowerSwitch(
-                entry.runtime_data, appliance, POWER_SWITCH_DESCRIPTION
-            )
+            HomeConnectPowerSwitch(appliance_coordinator, POWER_SWITCH_DESCRIPTION)
         )
     entities.extend(
-        HomeConnectSwitch(entry.runtime_data, appliance, description)
+        HomeConnectSwitch(appliance_coordinator, description)
         for description in SWITCHES
-        if description.key in appliance.settings
+        if description.key in appliance_coordinator.data.settings
     )
     return entities
 
 
 def _get_option_entities_for_appliance(
-    entry: HomeConnectConfigEntry,
-    appliance: HomeConnectApplianceData,
-) -> list[HomeConnectOptionEntity]:
+    appliance_coordinator: HomeConnectApplianceCoordinator,
+    entity_registry: er.EntityRegistry,
+) -> list[HomeConnectEntity]:
     """Get a list of currently available option entities."""
     return [
-        HomeConnectSwitchOptionEntity(entry.runtime_data, appliance, description)
+        HomeConnectSwitchOptionEntity(appliance_coordinator, description)
         for description in SWITCH_OPTIONS
-        if description.key in appliance.options
+        if should_add_option_entity(
+            description, appliance_coordinator.data, entity_registry, Platform.SWITCH
+        )
     ]
 
 
@@ -174,6 +207,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Home Connect switch."""
     setup_home_connect_entry(
+        hass,
         entry,
         _get_entities_for_appliance,
         async_add_entities,
@@ -184,6 +218,7 @@ async def async_setup_entry(
 class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
     """Generic switch class for Home Connect Binary Settings."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on setting."""
         try:
@@ -204,6 +239,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off setting."""
         try:
@@ -224,6 +260,7 @@ class HomeConnectSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
+    @override
     def update_native_value(self) -> None:
         """Update the switch's status."""
         self._attr_is_on = self.appliance.settings[SettingKey(self.bsh_key)].value
@@ -234,6 +271,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 
     power_off_state: str | None | UndefinedType = UNDEFINED
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
         try:
@@ -253,6 +291,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
         if self.power_off_state is UNDEFINED:
@@ -290,6 +329,7 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
                 },
             ) from err
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         power_state = self.appliance.settings[SettingKey.BSH_COMMON_POWER_STATE]
@@ -338,14 +378,17 @@ class HomeConnectPowerSwitch(HomeConnectEntity, SwitchEntity):
 class HomeConnectSwitchOptionEntity(HomeConnectOptionEntity, SwitchEntity):
     """Switch option class for Home Connect."""
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the option."""
         await self.async_set_option(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the option."""
         await self.async_set_option(False)
 
+    @override
     def update_native_value(self) -> None:
         """Set the value of the entity."""
         self._attr_is_on = cast(bool | None, self.option_value)

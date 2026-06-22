@@ -40,21 +40,11 @@ rules:
     comment: Devices do not support discovery.
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations:
-    status: todo
-    comment: Documentation does not describe known limitations like rate limiting
-  docs-supported-devices: todo
+  docs-known-limitations: done
+  docs-supported-devices: done
   docs-supported-functions: done
-  docs-troubleshooting:
-    status: todo
-    comment: |
-      There are good troubleshooting steps, however we should update the "cloud vs local"
-      and rate limiting documentation with more information.
-  docs-use-cases:
-    status: todo
-    comment: |
-      The docs describe controlling the vacuum, though does not describe more
-      interesting potential integrations with the homoe assistant ecosystem.
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices: todo
   entity-category: done
   entity-device-class: done
@@ -62,14 +52,12 @@ rules:
     status: exempt
     comment: There are no noisy entities.
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: todo
   reconfiguration-flow: todo
-  repair-issues:
-    status: todo
-    comment: The Cloud vs Local API warning should probably be a repair issue.
+  repair-issues: done
   stale-devices: done
   # Platinum
-  async-dependency: todo
+  async-dependency: done
   inject-websession: done
   strict-typing: done

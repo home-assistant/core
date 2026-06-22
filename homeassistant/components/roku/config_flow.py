@@ -1,7 +1,5 @@
 """Config flow for Roku."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 from urllib.parse import urlparse
@@ -13,7 +11,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -202,7 +200,7 @@ class RokuConfigFlow(ConfigFlow, domain=DOMAIN):
         return RokuOptionsFlowHandler()
 
 
-class RokuOptionsFlowHandler(OptionsFlow):
+class RokuOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Roku options."""
 
     async def async_step_init(

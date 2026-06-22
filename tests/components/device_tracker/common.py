@@ -9,7 +9,6 @@ from homeassistant.components.device_tracker import (
     ATTR_BATTERY,
     ATTR_DEV_ID,
     ATTR_GPS,
-    ATTR_GPS_ACCURACY,
     ATTR_HOST_NAME,
     ATTR_LOCATION_NAME,
     ATTR_MAC,
@@ -19,15 +18,14 @@ from homeassistant.components.device_tracker import (
     ScannerEntity,
     SourceType,
 )
+from homeassistant.const import ATTR_GPS_ACCURACY
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.typing import ConfigType, GPSType
-from homeassistant.loader import bind_hass
 
 from tests.common import MockPlatform, mock_platform
 
 
 @callback
-@bind_hass
 def async_see(
     hass: HomeAssistant,
     mac: str | None = None,

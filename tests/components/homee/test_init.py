@@ -18,10 +18,18 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    "side_eff",
+    ("side_eff", "config_entry_state", "active_flows"),
     [
-        HomeeConnectionFailedException("connection timed out"),
-        HomeeAuthFailedException("wrong username or password"),
+        (
+            HomeeConnectionFailedException("connection timed out"),
+            ConfigEntryState.SETUP_RETRY,
+            [],
+        ),
+        (
+            HomeeAuthFailedException("wrong username or password"),
+            ConfigEntryState.SETUP_ERROR,
+            ["reauth"],
+        ),
     ],
 )
 async def test_connection_errors(
@@ -29,6 +37,8 @@ async def test_connection_errors(
     mock_homee: MagicMock,
     mock_config_entry: MockConfigEntry,
     side_eff: Exception,
+    config_entry_state: ConfigEntryState,
+    active_flows: list[str],
 ) -> None:
     """Test if connection errors on startup are handled correctly."""
     mock_homee.get_access_token.side_effect = side_eff
@@ -36,7 +46,11 @@ async def test_connection_errors(
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is config_entry_state
+
+    assert [
+        flow["context"]["source"] for flow in hass.config_entries.flow.async_progress()
+    ] == active_flows
 
 
 async def test_connection_listener(
@@ -70,8 +84,8 @@ async def test_general_data(
         build_mock_node("cover_with_position_slats.json"),
         build_mock_node("homee.json"),
     ]
-    mock_homee.get_node_by_id = (
-        lambda node_id: mock_homee.nodes[0] if node_id == 3 else mock_homee.nodes[1]
+    mock_homee.get_node_by_id = lambda node_id: (
+        mock_homee.nodes[0] if node_id == 3 else mock_homee.nodes[1]
     )
     await setup_integration(hass, mock_config_entry)
 
@@ -93,7 +107,7 @@ async def test_software_version(
     mock_homee.nodes = [build_mock_node("cover_without_position.json")]
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-2")})
     assert device.sw_version == "1.45"
 
 
@@ -109,7 +123,7 @@ async def test_invalid_profile(
     mock_homee.nodes[0].profile = 77
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-2")})
     assert device.model is None
 
 
@@ -129,3 +143,69 @@ async def test_unload_entry(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+
+
+async def test_remove_stale_device_on_startup(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removal of stale device on startup."""
+    mock_homee.nodes = [
+        build_mock_node("homee.json"),
+        build_mock_node("light_single.json"),  # id 2
+        build_mock_node("add_device.json"),  # id 3
+    ]
+    mock_homee.get_node_by_id = lambda node_id: mock_homee.nodes[node_id - 1]
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is not None
+
+    mock_homee.nodes.pop()  # Remove node with id 3
+    # Reload integration
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Stale device should be removed
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is None
+
+
+async def test_remove_node_callback(
+    hass: HomeAssistant,
+    mock_homee: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removal of device when node is removed in homee."""
+    mock_homee.nodes = [
+        build_mock_node("homee.json"),
+        build_mock_node("light_single.json"),  # id 2
+        build_mock_node("add_device.json"),  # id 3
+    ]
+    mock_homee.get_node_by_id = lambda node_id: mock_homee.nodes[node_id - 1]
+    await setup_integration(hass, mock_config_entry)
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is not None
+
+    # Test device not removed when callback called with add=True
+    await mock_homee.add_nodes_listener.call_args_list[0][0][0](
+        mock_homee.nodes[2], add=True
+    )
+    await hass.async_block_till_done()
+
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is not None
+
+    # Simulate removal of node with id 3 in homee
+    await mock_homee.add_nodes_listener.call_args_list[0][0][0](
+        mock_homee.nodes[2], add=False
+    )
+    await hass.async_block_till_done()
+
+    # Device should be removed
+    device = device_registry.async_get_device(identifiers={(DOMAIN, f"{HOMEE_ID}-3")})
+    assert device is None

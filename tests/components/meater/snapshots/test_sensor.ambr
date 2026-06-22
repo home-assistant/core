@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[sensor.meater_probe_40a72384_ambient_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Ambient temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -57,8 +59,9 @@
 # ---
 # name: test_entities[sensor.meater_probe_40a72384_cook_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -88,6 +91,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cook state',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -129,8 +133,9 @@
 # ---
 # name: test_entities[sensor.meater_probe_40a72384_cooking-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -148,6 +153,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cooking',
     'options': dict({
     }),
     'original_device_class': None,
@@ -177,8 +183,9 @@
 # ---
 # name: test_entities[sensor.meater_probe_40a72384_internal_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -198,6 +205,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Internal temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -233,8 +241,9 @@
 # ---
 # name: test_entities[sensor.meater_probe_40a72384_peak_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -254,6 +263,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Peak temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -289,8 +299,9 @@
 # ---
 # name: test_entities[sensor.meater_probe_40a72384_target_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -310,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Target temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,
@@ -345,8 +357,9 @@
 # ---
 # name: test_entities[sensor.meater_probe_40a72384_time_elapsed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -364,6 +377,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time elapsed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -394,8 +408,9 @@
 # ---
 # name: test_entities[sensor.meater_probe_40a72384_time_remaining-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -413,6 +428,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Time remaining',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

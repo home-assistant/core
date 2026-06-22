@@ -1,7 +1,5 @@
 """Coordinator for the Philips TV integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
@@ -87,8 +85,10 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def _notify_wanted(self):
         """Return if the notify feature should be active.
 
-        We only run it when TV is considered fully on. When powerstate is in standby, the TV
-        will go in low power states and seemingly break the http server in odd ways.
+        We only run it when TV is considered fully on.
+        When powerstate is in standby, the TV will go in low
+        power states and seemingly break the http server in
+        odd ways.
         """
         return (
             self.api.on
@@ -101,7 +101,7 @@ class PhilipsTVDataUpdateCoordinator(DataUpdateCoordinator[None]):
         while self._notify_wanted:
             try:
                 res = await self.api.notifyChange(130)
-            except (ConnectionFailure, AutenticationFailure):
+            except ConnectionFailure, AutenticationFailure:
                 res = None
 
             if res:

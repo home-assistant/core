@@ -46,8 +46,9 @@
 # ---
 # name: test_waste_pickup_calendar.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -65,6 +66,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,7 +99,6 @@
         '12345',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Twente Milieu',
@@ -107,7 +108,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })

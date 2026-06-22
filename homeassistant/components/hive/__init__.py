@@ -1,7 +1,5 @@
 """Support for the Hive devices and services."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
@@ -15,8 +13,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import aiohttp_client
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers import aiohttp_client, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DOMAIN, PLATFORM_LOOKUP, PLATFORMS
@@ -47,6 +44,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> bool
     except HiveReauthRequired as err:
         raise ConfigEntryAuthFailed from err
 
+    hub_data = devices["parent"][0]
+    connections: set[tuple[str, str]] = set()
+    if mac := hub_data.get("macAddress"):
+        connections.add((dr.CONNECTION_NETWORK_MAC, mac))
+
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, hub_data["device_id"])},
+        connections=connections,
+        name=hub_data["hiveName"],
+        model=hub_data["deviceData"]["model"],
+        sw_version=hub_data["deviceData"]["version"],
+        manufacturer=hub_data["deviceData"]["manufacturer"],
+    )
+
     await hass.config_entries.async_forward_entry_setups(
         entry,
         [
@@ -74,7 +87,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> Non
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: dr.DeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True

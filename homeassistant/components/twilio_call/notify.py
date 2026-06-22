@@ -1,8 +1,7 @@
 """Twilio Call platform for notify component."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any
 import urllib
 
 from twilio.base.exceptions import TwilioRestException
@@ -50,7 +49,7 @@ class TwilioCallNotificationService(BaseNotificationService):
         self.client = twilio_client
         self.from_number = from_number
 
-    def send_message(self, message="", **kwargs):
+    def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Call to specified target users."""
         if not (targets := kwargs.get(ATTR_TARGET)):
             _LOGGER.warning("At least 1 target is required")
@@ -67,5 +66,6 @@ class TwilioCallNotificationService(BaseNotificationService):
                 self.client.calls.create(
                     to=target, url=twimlet_url, from_=self.from_number
                 )
+            # pylint: disable-next=home-assistant-action-swallowed-exception
             except TwilioRestException as exc:
                 _LOGGER.error(exc)

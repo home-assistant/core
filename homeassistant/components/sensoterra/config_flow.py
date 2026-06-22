@@ -1,7 +1,5 @@
 """Config flow for Sensoterra integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -48,7 +46,7 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
             api = CustomerApi(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             # We need a unique tag per HA instance
             uuid = self.hass.data["core.uuid"]
-            expiration = datetime.now() + timedelta(TOKEN_EXPIRATION_DAYS)
+            expiration = datetime.now() + timedelta(TOKEN_EXPIRATION_DAYS)  # pylint: disable=home-assistant-enforce-naive-now
 
             try:
                 token: str = await api.get_token(

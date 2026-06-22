@@ -4,8 +4,12 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from mcstatus import BedrockServer, JavaServer
-from mcstatus.responses import BedrockStatusResponse, JavaStatusResponse
+from mcstatus import BedrockServer, JavaServer, LegacyServer
+from mcstatus.responses import (
+    BedrockStatusResponse,
+    JavaStatusResponse,
+    LegacyStatusResponse,
+)
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -16,6 +20,7 @@ from .const import (
     TEST_BEDROCK_STATUS_RESPONSE,
     TEST_HOST,
     TEST_JAVA_STATUS_RESPONSE,
+    TEST_LEGACY_JAVA_STATUS_RESPONSE,
     TEST_PORT,
 )
 
@@ -78,14 +83,21 @@ BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT: list[str] = [
             TEST_BEDROCK_STATUS_RESPONSE,
             BEDROCK_SENSOR_ENTITIES,
         ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
+            JAVA_SENSOR_ENTITIES,
+        ),
     ],
 )
 async def test_sensor(
     hass: HomeAssistant,
     mock_config_entry: str,
-    server: JavaServer | BedrockServer,
+    server: JavaServer | BedrockServer | LegacyServer,
     lookup_function_name: str,
-    status_response: JavaStatusResponse | BedrockStatusResponse,
+    status_response: JavaStatusResponse | BedrockStatusResponse | LegacyStatusResponse,
     entity_ids: list[str],
     request: pytest.FixtureRequest,
     snapshot: SnapshotAssertion,
@@ -133,14 +145,21 @@ async def test_sensor(
             TEST_BEDROCK_STATUS_RESPONSE,
             BEDROCK_SENSOR_ENTITIES_DISABLED_BY_DEFAULT,
         ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
+            JAVA_SENSOR_ENTITIES_DISABLED_BY_DEFAULT,
+        ),
     ],
 )
 async def test_sensor_disabled_by_default(
     hass: HomeAssistant,
     mock_config_entry: str,
-    server: JavaServer | BedrockServer,
+    server: JavaServer | BedrockServer | LegacyServer,
     lookup_function_name: str,
-    status_response: JavaStatusResponse | BedrockStatusResponse,
+    status_response: JavaStatusResponse | BedrockStatusResponse | LegacyStatusResponse,
     entity_ids: list[str],
     request: pytest.FixtureRequest,
 ) -> None:
@@ -188,14 +207,21 @@ async def test_sensor_disabled_by_default(
             TEST_BEDROCK_STATUS_RESPONSE,
             BEDROCK_SENSOR_ENTITIES,
         ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
+            JAVA_SENSOR_ENTITIES,
+        ),
     ],
 )
 async def test_sensor_update(
     hass: HomeAssistant,
     mock_config_entry: str,
-    server: JavaServer | BedrockServer,
+    server: JavaServer | BedrockServer | LegacyServer,
     lookup_function_name: str,
-    status_response: JavaStatusResponse | BedrockStatusResponse,
+    status_response: JavaStatusResponse | BedrockStatusResponse | LegacyStatusResponse,
     entity_ids: list[str],
     request: pytest.FixtureRequest,
     snapshot: SnapshotAssertion,
@@ -248,14 +274,21 @@ async def test_sensor_update(
             TEST_BEDROCK_STATUS_RESPONSE,
             BEDROCK_SENSOR_ENTITIES,
         ),
+        (
+            "legacy_java_mock_config_entry",
+            LegacyServer,
+            "async_lookup",
+            TEST_LEGACY_JAVA_STATUS_RESPONSE,
+            JAVA_SENSOR_ENTITIES,
+        ),
     ],
 )
 async def test_sensor_update_failure(
     hass: HomeAssistant,
     mock_config_entry: str,
-    server: JavaServer | BedrockServer,
+    server: JavaServer | BedrockServer | LegacyServer,
     lookup_function_name: str,
-    status_response: JavaStatusResponse | BedrockStatusResponse,
+    status_response: JavaStatusResponse | BedrockStatusResponse | LegacyStatusResponse,
     entity_ids: list[str],
     request: pytest.FixtureRequest,
     freezer: FrozenDateTimeFactory,

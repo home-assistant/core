@@ -1,7 +1,5 @@
 """Support for MQTT room presence detection."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from functools import lru_cache
 import logging
@@ -173,7 +171,7 @@ class MQTTRoomSensor(SensorEntity):
         return self._name
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {ATTR_DISTANCE: self._distance}
 

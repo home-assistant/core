@@ -1,9 +1,7 @@
 """The File Upload integration."""
 
-from __future__ import annotations
-
 import asyncio
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import contextmanager
 from dataclasses import dataclass
 from pathlib import Path
@@ -35,7 +33,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
 @contextmanager
-def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Iterator[Path]:
+def process_uploaded_file(hass: HomeAssistant, file_id: str) -> Generator[Path]:
     """Get an uploaded file.
 
     File is removed at the end of the context.
@@ -76,7 +74,8 @@ class FileUploadData:
             """Create temporary directory."""
             temp_dir = Path(tempfile.gettempdir()) / TEMP_DIR_NAME
 
-            # If it exists, it's an old one and Home Assistant didn't shut down correctly.
+            # If it exists, it's an old one and Home Assistant
+            # didn't shut down correctly.
             if temp_dir.exists():
                 shutil.rmtree(temp_dir)
 

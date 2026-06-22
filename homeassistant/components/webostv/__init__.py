@@ -1,13 +1,12 @@
 """The LG webOS TV integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 
 from aiowebostv import WebOsClient, WebOsTvPairError
 
 from homeassistant.components import notify as hass_notify
 from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
     CONF_CLIENT_SECRET,
     CONF_HOST,
     CONF_NAME,
@@ -20,21 +19,16 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 
-from .const import (
-    ATTR_CONFIG_ENTRY_ID,
-    DATA_HASS_CONFIG,
-    DOMAIN,
-    PLATFORMS,
-    WEBOSTV_EXCEPTIONS,
-)
+from .const import DOMAIN, PLATFORMS, WEBOSTV_EXCEPTIONS
 from .helpers import WebOsTvConfigEntry, update_client_key
+from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the LG webOS TV platform."""
-    hass.data.setdefault(DOMAIN, {DATA_HASS_CONFIG: config})
+    async_setup_services(hass)
 
     return True
 
@@ -52,7 +46,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
         try:
             await client.connect()
         except WebOsTvPairError as err:
-            raise ConfigEntryAuthFailed(err) from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
+            ) from err
 
     # If pairing request accepted there will be no error
     # Update the stored key without triggering reauth
@@ -71,11 +68,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
                 CONF_NAME: entry.title,
                 ATTR_CONFIG_ENTRY_ID: entry.entry_id,
             },
-            hass.data[DOMAIN][DATA_HASS_CONFIG],
+            {},
         )
     )
-
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
 
     async def async_on_stop(_event: Event) -> None:
         """Unregister callbacks and disconnect."""
@@ -86,11 +81,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> b
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_on_stop)
     )
     return True
-
-
-async def async_update_options(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> None:
-    """Update options."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: WebOsTvConfigEntry) -> bool:

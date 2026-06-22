@@ -148,6 +148,19 @@ async def test_diagnostics(
                     "tilt": None,
                     "area": "1025",
                 },
+                "902": {
+                    "device_id": "902",
+                    "current_state": 0,
+                    "fan_speed": None,
+                    "zone": "901",
+                    "name": "Kitchen_Other Lights",
+                    "button_groups": None,
+                    "type": "WallDimmer",
+                    "model": None,
+                    "serial": 5442322,
+                    "tilt": None,
+                    "area": "1025",
+                },
                 "9": {
                     "device_id": "9",
                     "current_state": -1,
@@ -180,6 +193,7 @@ async def test_diagnostics(
             },
             "occupancy_groups": {},
             "scenes": {},
+            "smart_away_state": "",
         },
         "entry": {
             "data": {"ca_certs": "", "certfile": "", "host": "1.1.1.1", "keyfile": ""},

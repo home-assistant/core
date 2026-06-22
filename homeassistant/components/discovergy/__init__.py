@@ -1,7 +1,5 @@
 """The Discovergy integration."""
 
-from __future__ import annotations
-
 from pydiscovergy import Discovergy
 from pydiscovergy.authentication import BasicAuth
 import pydiscovergy.error as discovergyError
@@ -11,6 +9,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.httpx_client import create_async_httpx_client
 
+from .const import DOMAIN
 from .coordinator import DiscovergyConfigEntry, DiscovergyUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
@@ -26,14 +25,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: DiscovergyConfigEntry) -
     )
 
     try:
-        # try to get meters from api to check if credentials are still valid and for later use
+        # try to get meters from api to check if credentials
+        # are still valid and for later use;
         # if no exception is raised everything is fine to go
         meters = await client.meters()
     except discovergyError.InvalidLogin as err:
-        raise ConfigEntryAuthFailed("Invalid email or password") from err
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="invalid_auth",
+        ) from err
     except Exception as err:
         raise ConfigEntryNotReady(
-            "Unexpected error while while getting meters"
+            translation_domain=DOMAIN,
+            translation_key="cannot_connect_meters_setup",
         ) from err
 
     # Init coordinators for meters

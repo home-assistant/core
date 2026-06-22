@@ -1,10 +1,8 @@
 """Config flow for the Immich integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioimmich import Immich
 from aioimmich.const import CONNECT_ERRORS
@@ -71,6 +69,7 @@ async def check_user_info(
     """Test connection and fetch own user info."""
     session = async_get_clientsession(hass, verify_ssl)
     immich = Immich(session, api_key, host, port, ssl)
+    await immich.async_setup()
     return await immich.users.async_get_my_user()
 
 
@@ -82,6 +81,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
     _name: str
     _current_data: Mapping[str, Any]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -170,5 +170,66 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
             description_placeholders={"name": self._name},
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self,
+        user_input: Mapping[str, Any] | None = None,
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of immich."""
+        entry = self._get_reconfigure_entry()
+        current_data = entry.data
+
+        url = f"{'https' if current_data[CONF_SSL] else 'http'}://{current_data[CONF_HOST]}:{current_data[CONF_PORT]}"
+        verify_ssl = current_data[CONF_VERIFY_SSL]
+
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            url = user_input[CONF_URL]
+            verify_ssl = user_input[CONF_VERIFY_SSL]
+            try:
+                (host, port, ssl) = _parse_url(user_input[CONF_URL])
+            except InvalidUrl:
+                errors[CONF_URL] = "invalid_url"
+            else:
+                try:
+                    await check_user_info(
+                        self.hass,
+                        host,
+                        port,
+                        ssl,
+                        user_input[CONF_VERIFY_SSL],
+                        current_data[CONF_API_KEY],
+                    )
+                except ImmichUnauthorizedError:
+                    errors["base"] = "invalid_auth"
+                except CONNECT_ERRORS:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    return self.async_update_reload_and_abort(
+                        entry,
+                        data_updates={
+                            **current_data,
+                            CONF_HOST: host,
+                            CONF_PORT: port,
+                            CONF_SSL: ssl,
+                            CONF_VERIFY_SSL: user_input[CONF_VERIFY_SSL],
+                        },
+                    )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_URL, default=url): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                    vol.Required(CONF_VERIFY_SSL, default=verify_ssl): bool,
+                }
+            ),
             errors=errors,
         )

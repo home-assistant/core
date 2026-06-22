@@ -1,6 +1,4 @@
-"""Home Assistant component for accessing the Wallbox Portal API. The sensor component creates multiple sensors regarding wallbox performance."""
-
-from __future__ import annotations
+"""Home Assistant component for accessing the Wallbox Portal API sensors."""
 
 from dataclasses import dataclass
 from typing import cast
@@ -11,7 +9,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
@@ -43,9 +40,8 @@ from .const import (
     CHARGER_SERIAL_NUMBER_KEY,
     CHARGER_STATE_OF_CHARGE_KEY,
     CHARGER_STATUS_DESCRIPTION_KEY,
-    DOMAIN,
 )
-from .coordinator import WallboxCoordinator
+from .coordinator import WallboxConfigEntry, WallboxCoordinator
 from .entity import WallboxEntity
 
 
@@ -170,17 +166,21 @@ SENSOR_TYPES: dict[str, WallboxSensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WallboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox sensor entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = entry.runtime_data
 
     async_add_entities(
         WallboxSensor(coordinator, description)
         for ent in coordinator.data
         if (description := SENSOR_TYPES.get(ent))
     )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxSensor(WallboxEntity, SensorEntity):
@@ -196,11 +196,14 @@ class WallboxSensor(WallboxEntity, SensorEntity):
         """Initialize a Wallbox sensor."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = (
+            f"{description.key}"
+            f"-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        )
 
     @property
     def native_value(self) -> StateType:
-        """Return the state of the sensor. Round the value when it, and the precision property are not None."""
+        """Return the state of the sensor, rounded if applicable."""
         if (
             sensor_round := self.entity_description.precision
         ) is not None and self.coordinator.data[
@@ -214,7 +217,7 @@ class WallboxSensor(WallboxEntity, SensorEntity):
 
     @property
     def native_unit_of_measurement(self) -> str | None:
-        """Return the unit of measurement of the sensor. When monetary, get the value from the api."""
+        """Return the unit of measurement of the sensor."""
         if self.entity_description.key in (
             CHARGER_ENERGY_PRICE_KEY,
             CHARGER_DEPOT_PRICE_KEY,

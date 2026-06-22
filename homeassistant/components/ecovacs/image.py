@@ -1,6 +1,6 @@
 """Ecovacs image entities."""
 
-from typing import cast
+from typing import cast, override
 
 from deebot_client.capabilities import CapabilityMap
 from deebot_client.device import Device
@@ -57,6 +57,7 @@ class EcovacsMap(
         translation_key="map",
     )
 
+    @override
     def image(self) -> bytes | None:
         """Return bytes of image or None."""
         if svg := self._map.get_svg_map():
@@ -64,12 +65,15 @@ class EcovacsMap(
 
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up the event listeners now that hass is ready."""
         await super().async_added_to_hass()
 
         async def on_info(event: CachedMapInfoEvent) -> None:
-            self._attr_extra_state_attributes["map_name"] = event.name
+            for map_obj in event.maps:
+                if map_obj.using:
+                    self._attr_extra_state_attributes["map_name"] = map_obj.name
 
         async def on_changed(event: MapChangedEvent) -> None:
             self._attr_image_last_updated = event.when
@@ -78,6 +82,7 @@ class EcovacsMap(
         self._subscribe(self._capability.cached_info.event, on_info)
         self._subscribe(self._capability.changed.event, on_changed)
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 

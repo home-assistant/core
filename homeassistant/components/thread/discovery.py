@@ -1,7 +1,5 @@
 """The Thread integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 import logging
@@ -24,15 +22,21 @@ _LOGGER = logging.getLogger(__name__)
 
 KNOWN_BRANDS: dict[str | None, str] = {
     "Amazon": "amazon",
+    "amazon": "amazon",
+    "Apple": "apple",
     "Apple Inc.": "apple",
     "Aqara": "aqara_gateway",
     "eero": "eero",
+    "GL.iNET Inc.": "glinet",
     "Google Inc.": "google",
     "HomeAssistant": "homeassistant",
     "Home Assistant": "homeassistant",
+    "IKEA": "ikea",
     "Nanoleaf": "nanoleaf",
     "OpenThread": "openthread",
     "Samsung": "samsung",
+    "SmartThings": "smartthings",
+    "Yeelight": "yeelight",
 }
 THREAD_TYPE = "_meshcop._udp.local."
 CLASS_IN = 1

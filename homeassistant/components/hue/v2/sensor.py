@@ -1,21 +1,22 @@
 """Support for Hue sensors."""
 
-from __future__ import annotations
-
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
 from aiohue.v2.controllers.sensors import (
     DevicePowerController,
+    GroupedLightLevelController,
     LightLevelController,
     SensorsController,
     TemperatureController,
     ZigbeeConnectivityController,
 )
 from aiohue.v2.models.device_power import DevicePower
+from aiohue.v2.models.grouped_light_level import GroupedLightLevel
 from aiohue.v2.models.light_level import LightLevel
+from aiohue.v2.models.resource import ResourceTypes
 from aiohue.v2.models.temperature import Temperature
 from aiohue.v2.models.zigbee_connectivity import ZigbeeConnectivity
 
@@ -27,18 +28,52 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import LIGHT_LUX, PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from ..bridge import HueBridge, HueConfigEntry
+from ..const import DOMAIN
 from .entity import HueBaseEntity
 
-type SensorType = DevicePower | LightLevel | Temperature | ZigbeeConnectivity
+type SensorType = (
+    DevicePower | LightLevel | Temperature | ZigbeeConnectivity | GroupedLightLevel
+)
 type ControllerType = (
     DevicePowerController
     | LightLevelController
     | TemperatureController
     | ZigbeeConnectivityController
+    | GroupedLightLevelController
 )
+
+
+def _resource_valid(
+    resource: SensorType, controller: ControllerType, api: HueBridgeV2
+) -> bool:
+    """Return True if the resource is valid."""
+    if isinstance(resource, GroupedLightLevel):
+        # filter out GroupedLightLevel sensors that are not linked
+        # to a valid group/parent
+        if resource.owner.rtype not in (
+            ResourceTypes.ROOM,
+            ResourceTypes.ZONE,
+            ResourceTypes.SERVICE_GROUP,
+        ):
+            return False
+        # guard against GroupedLightLevel without parent
+        # (should not happen, but just in case)
+        parent_id = resource.owner.rid
+        parent = api.groups.get(parent_id) or api.config.get(parent_id)
+        if not parent:
+            return False
+        # filter out GroupedLightLevel sensors that have only one
+        # member, because Hue creates one default grouped
+        # LightLevel sensor per zone/room, which is not useful
+        # to expose in HA
+        if len(parent.children) <= 1:
+            return False
+    # default/other checks can go here (none for now)
+    return True
 
 
 async def async_setup_entry(
@@ -58,10 +93,16 @@ async def async_setup_entry(
         @callback
         def async_add_sensor(event_type: EventType, resource: SensorType) -> None:
             """Add Hue Sensor."""
+            if not _resource_valid(resource, controller, api):
+                return
             async_add_entities([make_sensor_entity(resource)])
 
         # add all current items in controller
-        async_add_entities(make_sensor_entity(sensor) for sensor in controller)
+        async_add_entities(
+            make_sensor_entity(sensor)
+            for sensor in controller
+            if _resource_valid(sensor, controller, api)
+        )
 
         # register listener for new sensors
         config_entry.async_on_unload(
@@ -75,9 +116,10 @@ async def async_setup_entry(
     register_items(ctrl_base.light_level, HueLightLevelSensor)
     register_items(ctrl_base.device_power, HueBatterySensor)
     register_items(ctrl_base.zigbee_connectivity, HueZigbeeConnectivitySensor)
+    register_items(api.sensors.grouped_light_level, HueGroupedLightLevelSensor)
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueSensorBase(HueBaseEntity, SensorEntity):
     """Representation of a Hue sensor."""
 
@@ -93,7 +135,7 @@ class HueSensorBase(HueBaseEntity, SensorEntity):
         self.controller = controller
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueTemperatureSensor(HueSensorBase):
     """Representation of a Hue Temperature sensor."""
 
@@ -106,12 +148,13 @@ class HueTemperatureSensor(HueSensorBase):
     )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the value reported by the sensor."""
         return round(self.resource.temperature.value, 1)
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueLightLevelSensor(HueSensorBase):
     """Representation of a Hue LightLevel (illuminance) sensor."""
 
@@ -124,8 +167,11 @@ class HueLightLevelSensor(HueSensorBase):
     )
 
     @property
-    def native_value(self) -> int:
+    @override
+    def native_value(self) -> int | None:
         """Return the value reported by the sensor."""
+        if self.resource.light.value is None:
+            return None
         # Light level in 10000 log10 (lux) +1 measured by sensor. Logarithm
         # scale used because the human eye adjusts to light levels and small
         # changes at low lux levels are more noticeable than at high lux
@@ -133,6 +179,7 @@ class HueLightLevelSensor(HueSensorBase):
         return int(10 ** ((self.resource.light.value - 1) / 10000))
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {
@@ -140,7 +187,32 @@ class HueLightLevelSensor(HueSensorBase):
         }
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
+class HueGroupedLightLevelSensor(HueLightLevelSensor):
+    """Representation of a LightLevel sensor from a Hue GroupedLightLevel resource."""
+
+    controller: GroupedLightLevelController
+    resource: GroupedLightLevel
+
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: GroupedLightLevelController,
+        resource: GroupedLightLevel,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(bridge, controller, resource)
+        # link the GroupedLightLevel sensor to the parent the sensor is associated with
+        # which can either be a special ServiceGroup or a Zone/Room
+        api = self.bridge.api
+        parent_id = resource.owner.rid
+        parent = api.groups.get(parent_id) or api.config.get(parent_id)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, parent.id)},
+        )
+
+
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueBatterySensor(HueSensorBase):
     """Representation of a Hue Battery sensor."""
 
@@ -154,11 +226,13 @@ class HueBatterySensor(HueSensorBase):
     )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the value reported by the sensor."""
         return self.resource.power_state.battery_level
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         if self.resource.power_state.battery_state is None:
@@ -166,7 +240,7 @@ class HueBatterySensor(HueSensorBase):
         return {"battery_state": self.resource.power_state.battery_state.value}
 
 
-# pylint: disable-next=hass-enforce-class-module
+# pylint: disable-next=home-assistant-enforce-class-module
 class HueZigbeeConnectivitySensor(HueSensorBase):
     """Representation of a Hue ZigbeeConnectivity sensor."""
 
@@ -186,11 +260,13 @@ class HueZigbeeConnectivitySensor(HueSensorBase):
     )
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the value reported by the sensor."""
         return self.resource.status.value
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {"mac_address": self.resource.mac_address}

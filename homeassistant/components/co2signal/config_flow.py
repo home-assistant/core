@@ -1,10 +1,8 @@
 """Config flow for Co2signal integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioelectricitymaps import (
     ElectricityMaps,
@@ -38,6 +36,10 @@ TYPE_SPECIFY_COUNTRY = "specify_country_code"
 
 _LOGGER = logging.getLogger(__name__)
 
+DESCRIPTION_PLACEHOLDER = {
+    "register_link": "https://electricitymaps.com/free-tier",
+}
+
 
 class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Co2signal."""
@@ -45,6 +47,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     _data: dict | None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,6 +73,7 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=data_schema,
+                description_placeholders=DESCRIPTION_PLACEHOLDER,
             )
 
         data = {CONF_API_KEY: user_input[CONF_API_KEY]}
@@ -179,4 +183,5 @@ class ElectricityMapsConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id=step_id,
             data_schema=data_schema,
             errors=errors,
+            description_placeholders=DESCRIPTION_PLACEHOLDER,
         )

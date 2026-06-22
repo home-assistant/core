@@ -1,7 +1,5 @@
 """The INKBIRD Bluetooth integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -11,7 +9,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_DEVICE_DATA, CONF_DEVICE_TYPE
 from .coordinator import INKBIRDActiveBluetoothProcessorCoordinator
 
-INKBIRDConfigEntry = ConfigEntry[INKBIRDActiveBluetoothProcessorCoordinator]
+type INKBIRDConfigEntry = ConfigEntry[INKBIRDActiveBluetoothProcessorCoordinator]
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 

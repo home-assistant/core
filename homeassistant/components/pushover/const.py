@@ -15,6 +15,7 @@ ATTR_SOUND: Final = "sound"
 ATTR_HTML: Final = "html"
 ATTR_CALLBACK_URL: Final = "callback_url"
 ATTR_EXPIRE: Final = "expire"
+ATTR_TTL: Final = "ttl"
 ATTR_TIMESTAMP: Final = "timestamp"
 
 CONF_USER_KEY: Final = "user_key"

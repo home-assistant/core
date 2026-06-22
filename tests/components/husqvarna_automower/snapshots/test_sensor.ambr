@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_sensor_snapshot[sensor.test_mower_1_battery-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -14,7 +15,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_battery',
+    'entity_id': 'sensor.garden_test_mower_1_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -36,7 +38,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_battery-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -45,17 +47,18 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_battery',
+    'entity_id': 'sensor.garden_test_mower_1_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '100',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_cutting_blade_usage_time-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_cutting_blade_usage_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -67,7 +70,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_cutting_blade_usage_time',
+    'entity_id': 'sensor.garden_test_mower_1_cutting_blade_usage_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -75,6 +78,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cutting blade usage time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -95,7 +99,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_cutting_blade_usage_time-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_cutting_blade_usage_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -104,17 +108,18 @@
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_cutting_blade_usage_time',
+    'entity_id': 'sensor.garden_test_mower_1_cutting_blade_usage_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.0341666666666667',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_downtime-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_downtime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -126,7 +131,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_downtime',
+    'entity_id': 'sensor.garden_test_mower_1_downtime',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -134,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Downtime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -154,7 +160,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_downtime-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_downtime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -163,17 +169,18 @@
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_downtime',
+    'entity_id': 'sensor.garden_test_mower_1_downtime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1.0',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_error-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -205,10 +212,10 @@
         'cutting_drive_motor_2_defect',
         'cutting_drive_motor_3_defect',
         'cutting_height_blocked',
+        'cutting_height_problem',
         'cutting_height_problem_curr',
         'cutting_height_problem_dir',
         'cutting_height_problem_drive',
-        'cutting_height_problem',
         'cutting_motor_problem',
         'cutting_stopped_slope_too_steep',
         'cutting_system_blocked',
@@ -219,6 +226,9 @@
         'docking_sensor_defect',
         'electronic_problem',
         'empty_battery',
+        'error',
+        'error_at_power_up',
+        'fatal_error',
         'folding_cutting_deck_sensor_defect',
         'folding_sensor_activated',
         'geofence_problem',
@@ -255,6 +265,7 @@
         'no_loop_signal',
         'no_power_in_charging_station',
         'no_response_from_charger',
+        'off',
         'outside_working_area',
         'poor_signal_quality',
         'reference_station_communication_problem',
@@ -268,6 +279,7 @@
         'slope_too_steep',
         'sms_could_not_be_sent',
         'stop_button_problem',
+        'stopped',
         'stuck_in_charging_station',
         'switch_cord_problem',
         'temporary_battery_problem',
@@ -283,6 +295,8 @@
         'unexpected_cutting_height_adj',
         'unexpected_error',
         'upside_down',
+        'wait_power_up',
+        'wait_updating',
         'weak_gps_signal',
         'wheel_drive_problem_left',
         'wheel_drive_problem_rear_left',
@@ -300,13 +314,6 @@
         'wrong_loop_signal',
         'wrong_pin_code',
         'zone_generator_problem',
-        'error_at_power_up',
-        'error',
-        'fatal_error',
-        'off',
-        'stopped',
-        'wait_power_up',
-        'wait_updating',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -316,7 +323,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_error',
+    'entity_id': 'sensor.garden_test_mower_1_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -324,6 +331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -338,7 +346,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_error-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -372,10 +380,10 @@
         'cutting_drive_motor_2_defect',
         'cutting_drive_motor_3_defect',
         'cutting_height_blocked',
+        'cutting_height_problem',
         'cutting_height_problem_curr',
         'cutting_height_problem_dir',
         'cutting_height_problem_drive',
-        'cutting_height_problem',
         'cutting_motor_problem',
         'cutting_stopped_slope_too_steep',
         'cutting_system_blocked',
@@ -386,6 +394,9 @@
         'docking_sensor_defect',
         'electronic_problem',
         'empty_battery',
+        'error',
+        'error_at_power_up',
+        'fatal_error',
         'folding_cutting_deck_sensor_defect',
         'folding_sensor_activated',
         'geofence_problem',
@@ -422,6 +433,7 @@
         'no_loop_signal',
         'no_power_in_charging_station',
         'no_response_from_charger',
+        'off',
         'outside_working_area',
         'poor_signal_quality',
         'reference_station_communication_problem',
@@ -435,6 +447,7 @@
         'slope_too_steep',
         'sms_could_not_be_sent',
         'stop_button_problem',
+        'stopped',
         'stuck_in_charging_station',
         'switch_cord_problem',
         'temporary_battery_problem',
@@ -450,6 +463,8 @@
         'unexpected_cutting_height_adj',
         'unexpected_error',
         'upside_down',
+        'wait_power_up',
+        'wait_updating',
         'weak_gps_signal',
         'wheel_drive_problem_left',
         'wheel_drive_problem_rear_left',
@@ -467,27 +482,21 @@
         'wrong_loop_signal',
         'wrong_pin_code',
         'zone_generator_problem',
-        'error_at_power_up',
-        'error',
-        'fatal_error',
-        'off',
-        'stopped',
-        'wait_power_up',
-        'wait_updating',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_error',
+    'entity_id': 'sensor.garden_test_mower_1_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'no_error',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_last_time_completed-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_front_lawn_last_time_completed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -497,7 +506,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_front_lawn_last_time_completed',
+    'entity_id': 'sensor.garden_test_mower_1_front_lawn_last_time_completed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -505,6 +514,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -519,24 +529,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_last_time_completed-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_front_lawn_last_time_completed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
       'friendly_name': 'Test Mower 1 Front lawn last time completed',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_front_lawn_last_time_completed',
+    'entity_id': 'sensor.garden_test_mower_1_front_lawn_last_time_completed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-12T05:54:29+00:00',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_progress-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_front_lawn_progress-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -548,7 +559,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_front_lawn_progress',
+    'entity_id': 'sensor.garden_test_mower_1_front_lawn_progress',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -556,6 +567,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Front lawn progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -570,7 +582,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_front_lawn_progress-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_front_lawn_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Front lawn progress',
@@ -578,17 +590,80 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_front_lawn_progress',
+    'entity_id': 'sensor.garden_test_mower_1_front_lawn_progress',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '40',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_mode-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_inactive_reason-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'options': list([
+        <InactiveReasons.NONE: 'none'>,
+        <InactiveReasons.PLANNING: 'planning'>,
+        <InactiveReasons.SEARCHING_FOR_SATELLITES: 'searching_for_satellites'>,
+      ]),
     }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garden_test_mower_1_inactive_reason',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Inactive reason',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
+    'original_icon': None,
+    'original_name': 'Inactive reason',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'inactive_reason',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_inactive_reason',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_inactive_reason-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'enum',
+      'friendly_name': 'Test Mower 1 Inactive reason',
+      'options': list([
+        <InactiveReasons.NONE: 'none'>,
+        <InactiveReasons.PLANNING: 'planning'>,
+        <InactiveReasons.SEARCHING_FOR_SATELLITES: 'searching_for_satellites'>,
+      ]),
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garden_test_mower_1_inactive_reason',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'none',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_mode-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -596,6 +671,7 @@
         <MowerModes.DEMO: 'demo'>,
         <MowerModes.SECONDARY_AREA: 'secondary_area'>,
         <MowerModes.HOME: 'home'>,
+        <MowerModes.POI: 'poi'>,
         <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
@@ -606,7 +682,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_mode',
+    'entity_id': 'sensor.garden_test_mower_1_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -614,6 +690,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -628,7 +705,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_mode-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -638,21 +715,23 @@
         <MowerModes.DEMO: 'demo'>,
         <MowerModes.SECONDARY_AREA: 'secondary_area'>,
         <MowerModes.HOME: 'home'>,
+        <MowerModes.POI: 'poi'>,
         <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_mode',
+    'entity_id': 'sensor.garden_test_mower_1_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'main_area',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_last_time_completed-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_my_lawn_last_time_completed-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -662,7 +741,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_my_lawn_last_time_completed',
+    'entity_id': 'sensor.garden_test_mower_1_my_lawn_last_time_completed',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -670,6 +749,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn last time completed',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -684,24 +764,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_last_time_completed-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_my_lawn_last_time_completed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
       'friendly_name': 'Test Mower 1 My lawn last time completed',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_my_lawn_last_time_completed',
+    'entity_id': 'sensor.garden_test_mower_1_my_lawn_last_time_completed',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2024-08-12T03:07:49+00:00',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_progress-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_my_lawn_progress-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -713,7 +794,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_my_lawn_progress',
+    'entity_id': 'sensor.garden_test_mower_1_my_lawn_progress',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -721,6 +802,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'My lawn progress',
     'options': dict({
     }),
     'original_device_class': None,
@@ -735,7 +817,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_my_lawn_progress-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_my_lawn_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 My lawn progress',
@@ -743,17 +825,18 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_my_lawn_progress',
+    'entity_id': 'sensor.garden_test_mower_1_my_lawn_progress',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '20',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_next_start-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_next_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -763,7 +846,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_next_start',
+    'entity_id': 'sensor.garden_test_mower_1_next_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -771,6 +854,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -785,24 +869,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_next_start-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_next_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
       'friendly_name': 'Test Mower 1 Next start',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_next_start',
+    'entity_id': 'sensor.garden_test_mower_1_next_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-06-05T17:00:00+00:00',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_number_of_charging_cycles-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_number_of_charging_cycles-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -814,7 +899,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_number_of_charging_cycles',
+    'entity_id': 'sensor.garden_test_mower_1_number_of_charging_cycles',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -822,6 +907,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of charging cycles',
     'options': dict({
     }),
     'original_device_class': None,
@@ -836,24 +922,25 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_number_of_charging_cycles-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_number_of_charging_cycles-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Number of charging cycles',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_number_of_charging_cycles',
+    'entity_id': 'sensor.garden_test_mower_1_number_of_charging_cycles',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1380',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_number_of_collisions-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_number_of_collisions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -865,7 +952,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_number_of_collisions',
+    'entity_id': 'sensor.garden_test_mower_1_number_of_collisions',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -873,6 +960,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Number of collisions',
     'options': dict({
     }),
     'original_device_class': None,
@@ -887,24 +975,83 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_number_of_collisions-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_number_of_collisions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Test Mower 1 Number of collisions',
       'state_class': <SensorStateClass.TOTAL: 'total'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_number_of_collisions',
+    'entity_id': 'sensor.garden_test_mower_1_number_of_collisions',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '11396',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_restricted_reason-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_remaining_charging_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garden_test_mower_1_remaining_charging_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
     }),
+    'name': None,
+    'object_id_base': 'Remaining charging time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Remaining charging time',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remaining_charging_time',
+    'unique_id': 'c7233734-b219-4287-a173-08e3643f89f0_remaining_charging_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_remaining_charging_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Test Mower 1 Remaining charging time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garden_test_mower_1_remaining_charging_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '5.15',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_restricted_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -918,6 +1065,18 @@
         <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
         <RestrictedReasons.SENSOR: 'sensor'>,
         <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
+        <ExternalReasons.AMAZON_ALEXA: 'amazon_alexa'>,
+        <ExternalReasons.DEVELOPER_PORTAL: 'developer_portal'>,
+        <ExternalReasons.GARDENA_SMART_SYSTEM: 'gardena_smart_system'>,
+        <ExternalReasons.GOOGLE_ASSISTANT: 'google_assistant'>,
+        <ExternalReasons.HOME_ASSISTANT: 'home_assistant'>,
+        <ExternalReasons.IFTTT: 'ifttt'>,
+        <ExternalReasons.IFTTT_APPLETS: 'ifttt_applets'>,
+        <ExternalReasons.IFTTT_CALENDAR_CONNECTION: 'ifttt_calendar_connection'>,
+        <ExternalReasons.SMART_ROUTINE: 'smart_routine'>,
+        <ExternalReasons.SMART_ROUTINE_FROST_GUARD: 'smart_routine_frost_guard'>,
+        <ExternalReasons.SMART_ROUTINE_RAIN_GUARD: 'smart_routine_rain_guard'>,
+        <ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION: 'smart_routine_wildlife_protection'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -927,7 +1086,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_restricted_reason',
+    'entity_id': 'sensor.garden_test_mower_1_restricted_reason',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -935,6 +1094,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -949,7 +1109,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_restricted_reason-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_restricted_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -965,20 +1125,33 @@
         <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
         <RestrictedReasons.SENSOR: 'sensor'>,
         <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
+        <ExternalReasons.AMAZON_ALEXA: 'amazon_alexa'>,
+        <ExternalReasons.DEVELOPER_PORTAL: 'developer_portal'>,
+        <ExternalReasons.GARDENA_SMART_SYSTEM: 'gardena_smart_system'>,
+        <ExternalReasons.GOOGLE_ASSISTANT: 'google_assistant'>,
+        <ExternalReasons.HOME_ASSISTANT: 'home_assistant'>,
+        <ExternalReasons.IFTTT: 'ifttt'>,
+        <ExternalReasons.IFTTT_APPLETS: 'ifttt_applets'>,
+        <ExternalReasons.IFTTT_CALENDAR_CONNECTION: 'ifttt_calendar_connection'>,
+        <ExternalReasons.SMART_ROUTINE: 'smart_routine'>,
+        <ExternalReasons.SMART_ROUTINE_FROST_GUARD: 'smart_routine_frost_guard'>,
+        <ExternalReasons.SMART_ROUTINE_RAIN_GUARD: 'smart_routine_rain_guard'>,
+        <ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION: 'smart_routine_wildlife_protection'>,
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_restricted_reason',
+    'entity_id': 'sensor.garden_test_mower_1_restricted_reason',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'week_schedule',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_charging_time-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_charging_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -990,7 +1163,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_total_charging_time',
+    'entity_id': 'sensor.garden_test_mower_1_total_charging_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -998,6 +1171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total charging time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1018,7 +1192,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_charging_time-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_charging_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -1027,17 +1201,18 @@
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_total_charging_time',
+    'entity_id': 'sensor.garden_test_mower_1_total_charging_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1204.0',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_cutting_time-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_cutting_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1049,7 +1224,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_total_cutting_time',
+    'entity_id': 'sensor.garden_test_mower_1_total_cutting_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1057,6 +1232,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total cutting time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1077,7 +1253,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_cutting_time-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_cutting_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -1086,17 +1262,18 @@
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_total_cutting_time',
+    'entity_id': 'sensor.garden_test_mower_1_total_cutting_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1165.0',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_drive_distance-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_drive_distance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1108,7 +1285,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_total_drive_distance',
+    'entity_id': 'sensor.garden_test_mower_1_total_drive_distance',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1116,6 +1293,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total drive distance',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1136,7 +1314,7 @@
     'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_drive_distance-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_drive_distance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'distance',
@@ -1145,17 +1323,18 @@
       'unit_of_measurement': <UnitOfLength.KILOMETERS: 'km'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_total_drive_distance',
+    'entity_id': 'sensor.garden_test_mower_1_total_drive_distance',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1780.272',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_running_time-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_running_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1167,7 +1346,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_total_running_time',
+    'entity_id': 'sensor.garden_test_mower_1_total_running_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1175,6 +1354,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total running time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1195,7 +1375,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_running_time-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_running_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -1204,17 +1384,18 @@
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_total_running_time',
+    'entity_id': 'sensor.garden_test_mower_1_total_running_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '1268.0',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_searching_time-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_searching_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1226,7 +1407,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_total_searching_time',
+    'entity_id': 'sensor.garden_test_mower_1_total_searching_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1234,6 +1415,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Total searching time',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -1254,7 +1436,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_total_searching_time-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_total_searching_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -1263,17 +1445,18 @@
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_total_searching_time',
+    'entity_id': 'sensor.garden_test_mower_1_total_searching_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '103.0',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_uptime-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_uptime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL: 'total'>,
@@ -1285,7 +1468,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_mower_1_uptime',
+    'entity_id': 'sensor.garden_test_mower_1_uptime',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1293,6 +1476,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Uptime',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -1313,7 +1497,7 @@
     'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_uptime-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'duration',
@@ -1322,17 +1506,18 @@
       'unit_of_measurement': <UnitOfTime.HOURS: 'h'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_uptime',
+    'entity_id': 'sensor.garden_test_mower_1_uptime',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2.0',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_work_area-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_work_area-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1349,7 +1534,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_1_work_area',
+    'entity_id': 'sensor.garden_test_mower_1_work_area',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1357,6 +1542,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Work area',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1371,7 +1557,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_1_work_area-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_1_work_area-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1389,17 +1575,18 @@
       }),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_1_work_area',
+    'entity_id': 'sensor.garden_test_mower_1_work_area',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'Front lawn',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_battery-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_battery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -1411,7 +1598,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_2_battery',
+    'entity_id': 'sensor.garden_test_mower_2_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1419,6 +1606,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -1433,7 +1621,7 @@
     'unit_of_measurement': '%',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_battery-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'battery',
@@ -1442,17 +1630,18 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_2_battery',
+    'entity_id': 'sensor.garden_test_mower_2_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '50',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_error-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_error-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1484,10 +1673,10 @@
         'cutting_drive_motor_2_defect',
         'cutting_drive_motor_3_defect',
         'cutting_height_blocked',
+        'cutting_height_problem',
         'cutting_height_problem_curr',
         'cutting_height_problem_dir',
         'cutting_height_problem_drive',
-        'cutting_height_problem',
         'cutting_motor_problem',
         'cutting_stopped_slope_too_steep',
         'cutting_system_blocked',
@@ -1498,6 +1687,9 @@
         'docking_sensor_defect',
         'electronic_problem',
         'empty_battery',
+        'error',
+        'error_at_power_up',
+        'fatal_error',
         'folding_cutting_deck_sensor_defect',
         'folding_sensor_activated',
         'geofence_problem',
@@ -1534,6 +1726,7 @@
         'no_loop_signal',
         'no_power_in_charging_station',
         'no_response_from_charger',
+        'off',
         'outside_working_area',
         'poor_signal_quality',
         'reference_station_communication_problem',
@@ -1547,6 +1740,7 @@
         'slope_too_steep',
         'sms_could_not_be_sent',
         'stop_button_problem',
+        'stopped',
         'stuck_in_charging_station',
         'switch_cord_problem',
         'temporary_battery_problem',
@@ -1562,6 +1756,8 @@
         'unexpected_cutting_height_adj',
         'unexpected_error',
         'upside_down',
+        'wait_power_up',
+        'wait_updating',
         'weak_gps_signal',
         'wheel_drive_problem_left',
         'wheel_drive_problem_rear_left',
@@ -1579,13 +1775,6 @@
         'wrong_loop_signal',
         'wrong_pin_code',
         'zone_generator_problem',
-        'error_at_power_up',
-        'error',
-        'fatal_error',
-        'off',
-        'stopped',
-        'wait_power_up',
-        'wait_updating',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1595,7 +1784,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_2_error',
+    'entity_id': 'sensor.garden_test_mower_2_error',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1603,6 +1792,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Error',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1617,7 +1807,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_error-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_error-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1651,10 +1841,10 @@
         'cutting_drive_motor_2_defect',
         'cutting_drive_motor_3_defect',
         'cutting_height_blocked',
+        'cutting_height_problem',
         'cutting_height_problem_curr',
         'cutting_height_problem_dir',
         'cutting_height_problem_drive',
-        'cutting_height_problem',
         'cutting_motor_problem',
         'cutting_stopped_slope_too_steep',
         'cutting_system_blocked',
@@ -1665,6 +1855,9 @@
         'docking_sensor_defect',
         'electronic_problem',
         'empty_battery',
+        'error',
+        'error_at_power_up',
+        'fatal_error',
         'folding_cutting_deck_sensor_defect',
         'folding_sensor_activated',
         'geofence_problem',
@@ -1701,6 +1894,7 @@
         'no_loop_signal',
         'no_power_in_charging_station',
         'no_response_from_charger',
+        'off',
         'outside_working_area',
         'poor_signal_quality',
         'reference_station_communication_problem',
@@ -1714,6 +1908,7 @@
         'slope_too_steep',
         'sms_could_not_be_sent',
         'stop_button_problem',
+        'stopped',
         'stuck_in_charging_station',
         'switch_cord_problem',
         'temporary_battery_problem',
@@ -1729,6 +1924,8 @@
         'unexpected_cutting_height_adj',
         'unexpected_error',
         'upside_down',
+        'wait_power_up',
+        'wait_updating',
         'weak_gps_signal',
         'wheel_drive_problem_left',
         'wheel_drive_problem_rear_left',
@@ -1746,27 +1943,21 @@
         'wrong_loop_signal',
         'wrong_pin_code',
         'zone_generator_problem',
-        'error_at_power_up',
-        'error',
-        'fatal_error',
-        'off',
-        'stopped',
-        'wait_power_up',
-        'wait_updating',
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_2_error',
+    'entity_id': 'sensor.garden_test_mower_2_error',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'no_error',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_mode-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1774,6 +1965,7 @@
         <MowerModes.DEMO: 'demo'>,
         <MowerModes.SECONDARY_AREA: 'secondary_area'>,
         <MowerModes.HOME: 'home'>,
+        <MowerModes.POI: 'poi'>,
         <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
@@ -1784,7 +1976,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_2_mode',
+    'entity_id': 'sensor.garden_test_mower_2_mode',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1792,6 +1984,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Mode',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1806,7 +1999,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_mode-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1816,21 +2009,23 @@
         <MowerModes.DEMO: 'demo'>,
         <MowerModes.SECONDARY_AREA: 'secondary_area'>,
         <MowerModes.HOME: 'home'>,
+        <MowerModes.POI: 'poi'>,
         <MowerModes.UNKNOWN: 'unknown'>,
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_2_mode',
+    'entity_id': 'sensor.garden_test_mower_2_mode',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'main_area',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_next_start-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_next_start-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1840,7 +2035,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_2_next_start',
+    'entity_id': 'sensor.garden_test_mower_2_next_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1848,6 +2043,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Next start',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -1862,24 +2058,83 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_next_start-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_next_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'timestamp',
       'friendly_name': 'Test Mower 2 Next start',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_2_next_start',
+    'entity_id': 'sensor.garden_test_mower_2_next_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '2023-06-05T17:00:00+00:00',
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_restricted_reason-entry]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_remaining_charging_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.garden_test_mower_2_remaining_charging_time',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
     }),
+    'name': None,
+    'object_id_base': 'Remaining charging time',
+    'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 0,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+      }),
+    }),
+    'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
+    'original_icon': None,
+    'original_name': 'Remaining charging time',
+    'platform': 'husqvarna_automower',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'remaining_charging_time',
+    'unique_id': '1234_remaining_charging_time',
+    'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+  })
+# ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_remaining_charging_time-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'duration',
+      'friendly_name': 'Test Mower 2 Remaining charging time',
+      'unit_of_measurement': <UnitOfTime.MINUTES: 'min'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.garden_test_mower_2_remaining_charging_time',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unavailable',
+  })
+# ---
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_restricted_reason-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -1893,6 +2148,18 @@
         <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
         <RestrictedReasons.SENSOR: 'sensor'>,
         <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
+        <ExternalReasons.AMAZON_ALEXA: 'amazon_alexa'>,
+        <ExternalReasons.DEVELOPER_PORTAL: 'developer_portal'>,
+        <ExternalReasons.GARDENA_SMART_SYSTEM: 'gardena_smart_system'>,
+        <ExternalReasons.GOOGLE_ASSISTANT: 'google_assistant'>,
+        <ExternalReasons.HOME_ASSISTANT: 'home_assistant'>,
+        <ExternalReasons.IFTTT: 'ifttt'>,
+        <ExternalReasons.IFTTT_APPLETS: 'ifttt_applets'>,
+        <ExternalReasons.IFTTT_CALENDAR_CONNECTION: 'ifttt_calendar_connection'>,
+        <ExternalReasons.SMART_ROUTINE: 'smart_routine'>,
+        <ExternalReasons.SMART_ROUTINE_FROST_GUARD: 'smart_routine_frost_guard'>,
+        <ExternalReasons.SMART_ROUTINE_RAIN_GUARD: 'smart_routine_rain_guard'>,
+        <ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION: 'smart_routine_wildlife_protection'>,
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1902,7 +2169,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_mower_2_restricted_reason',
+    'entity_id': 'sensor.garden_test_mower_2_restricted_reason',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1910,6 +2177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Restricted reason',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -1924,7 +2192,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_sensor_snapshot[sensor.test_mower_2_restricted_reason-state]
+# name: test_sensor_snapshot[sensor.garden_test_mower_2_restricted_reason-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'enum',
@@ -1940,10 +2208,22 @@
         <RestrictedReasons.PARK_OVERRIDE: 'park_override'>,
         <RestrictedReasons.SENSOR: 'sensor'>,
         <RestrictedReasons.WEEK_SCHEDULE: 'week_schedule'>,
+        <ExternalReasons.AMAZON_ALEXA: 'amazon_alexa'>,
+        <ExternalReasons.DEVELOPER_PORTAL: 'developer_portal'>,
+        <ExternalReasons.GARDENA_SMART_SYSTEM: 'gardena_smart_system'>,
+        <ExternalReasons.GOOGLE_ASSISTANT: 'google_assistant'>,
+        <ExternalReasons.HOME_ASSISTANT: 'home_assistant'>,
+        <ExternalReasons.IFTTT: 'ifttt'>,
+        <ExternalReasons.IFTTT_APPLETS: 'ifttt_applets'>,
+        <ExternalReasons.IFTTT_CALENDAR_CONNECTION: 'ifttt_calendar_connection'>,
+        <ExternalReasons.SMART_ROUTINE: 'smart_routine'>,
+        <ExternalReasons.SMART_ROUTINE_FROST_GUARD: 'smart_routine_frost_guard'>,
+        <ExternalReasons.SMART_ROUTINE_RAIN_GUARD: 'smart_routine_rain_guard'>,
+        <ExternalReasons.SMART_ROUTINE_WILDLIFE_PROTECTION: 'smart_routine_wildlife_protection'>,
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_mower_2_restricted_reason',
+    'entity_id': 'sensor.garden_test_mower_2_restricted_reason',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

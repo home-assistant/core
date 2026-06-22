@@ -3,6 +3,11 @@
 import contextlib
 from unittest.mock import AsyncMock, Mock, patch
 
+from hass_nabucasa.alexa_api import (
+    AlexaApiError,
+    AlexaApiNeedsRelinkError,
+    AlexaApiNoTokenError,
+)
 import pytest
 
 from homeassistant.components.alexa import errors
@@ -108,7 +113,10 @@ async def test_alexa_config_expose_entity_prefs(
     conf = alexa_config.CloudAlexaConfig(
         hass, ALEXA_SCHEMA({}), "mock-user-id", cloud_prefs, cloud_stub
     )
+    assert "alexa" not in hass.config.components
     await conf.async_initialize()
+    await hass.async_block_till_done()
+    assert "alexa" in hass.config.components
 
     # an entity which is not in the entity registry can be exposed
     expose_entity(hass, "light.kitchen", True)
@@ -127,11 +135,6 @@ async def test_alexa_config_expose_entity_prefs(
     assert conf.should_expose(entity_entry5.entity_id)
 
     expose_entity(hass, entity_entry5.entity_id, None)
-    assert not conf.should_expose(entity_entry5.entity_id)
-
-    assert "alexa" not in hass.config.components
-    await hass.async_block_till_done()
-    assert "alexa" in hass.config.components
     assert not conf.should_expose(entity_entry5.entity_id)
 
 
@@ -195,30 +198,40 @@ async def test_alexa_config_invalidate_token(
             servicehandlers_server="example",
             auth=Mock(async_check_token=AsyncMock()),
             websession=async_get_clientsession(hass),
+            alexa_api=Mock(
+                access_token=AsyncMock(
+                    return_value={
+                        "access_token": "mock-token",
+                        "event_endpoint": "http://example.com/alexa_endpoint",
+                        "expires_in": 30,
+                    }
+                )
+            ),
         ),
     )
 
     token = await conf.async_get_access_token()
     assert token == "mock-token"
-    assert len(aioclient_mock.mock_calls) == 1
+    assert len(conf._cloud.alexa_api.access_token.mock_calls) == 1
 
     token = await conf.async_get_access_token()
     assert token == "mock-token"
-    assert len(aioclient_mock.mock_calls) == 1
+    assert len(conf._cloud.alexa_api.access_token.mock_calls) == 1
     assert conf._token_valid is not None
     conf.async_invalidate_access_token()
     assert conf._token_valid is None
     token = await conf.async_get_access_token()
     assert token == "mock-token"
-    assert len(aioclient_mock.mock_calls) == 2
+    assert len(conf._cloud.alexa_api.access_token.mock_calls) == 2
 
 
 @pytest.mark.parametrize(
-    ("reject_reason", "expected_exception"),
+    ("lib_exception", "expected_exception"),
     [
-        ("RefreshTokenNotFound", errors.RequireRelink),
-        ("UnknownRegion", errors.RequireRelink),
-        ("OtherReason", errors.NoTokenAvailable),
+        (AlexaApiNeedsRelinkError("Needs relink"), errors.RequireRelink),
+        (AlexaApiNeedsRelinkError("UnknownRegion"), errors.RequireRelink),
+        (AlexaApiNoTokenError("OtherReason"), errors.NoTokenAvailable),
+        (AlexaApiError("OtherReason"), errors.NoTokenAvailable),
     ],
 )
 async def test_alexa_config_fail_refresh_token(
@@ -226,7 +239,7 @@ async def test_alexa_config_fail_refresh_token(
     cloud_prefs: CloudPreferences,
     aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
-    reject_reason: str,
+    lib_exception: Exception,
     expected_exception: type[Exception],
 ) -> None:
     """Test Alexa config failing to refresh token."""
@@ -259,6 +272,15 @@ async def test_alexa_config_fail_refresh_token(
             servicehandlers_server="example",
             auth=Mock(async_check_token=AsyncMock()),
             websession=async_get_clientsession(hass),
+            alexa_api=Mock(
+                access_token=AsyncMock(
+                    return_value={
+                        "access_token": "mock-token",
+                        "event_endpoint": "http://example.com/alexa_endpoint",
+                        "expires_in": 30,
+                    }
+                )
+            ),
         ),
     )
     await conf.async_initialize()
@@ -284,12 +306,7 @@ async def test_alexa_config_fail_refresh_token(
 
     # Invalidate the token and try to fetch another
     conf.async_invalidate_access_token()
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        "https://example/alexa/access_token",
-        json={"reason": reject_reason},
-        status=400,
-    )
+    conf._cloud.alexa_api.access_token.side_effect = lib_exception
 
     # Change states to trigger event listener
     hass.states.async_set(entity_entry.entity_id, "off")
@@ -310,15 +327,8 @@ async def test_alexa_config_fail_refresh_token(
 
     # Simulate we're again authorized and token update succeeds
     # State reporting should now be re-enabled for Alexa
-    aioclient_mock.clear_requests()
-    aioclient_mock.post(
-        "https://example/alexa/access_token",
-        json={
-            "access_token": "mock-token",
-            "event_endpoint": "http://example.com/alexa_endpoint",
-            "expires_in": 30,
-        },
-    )
+    conf._cloud.alexa_api.access_token.side_effect = None
+
     await conf.set_authorized(True)
     assert cloud_prefs.alexa_report_state is True
     assert conf.should_report_state is True

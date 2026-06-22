@@ -1,7 +1,5 @@
 """Module that groups code required to handle state restore for component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable
 from typing import Any
@@ -57,9 +55,9 @@ async def _async_reproduce_states(
         await call_service(SERVICE_SET_HVAC_MODE, [], {ATTR_HVAC_MODE: state.state})
 
     if (
-        (ATTR_TEMPERATURE in state.attributes)
-        or (ATTR_TARGET_TEMP_HIGH in state.attributes)
-        or (ATTR_TARGET_TEMP_LOW in state.attributes)
+        (state.attributes.get(ATTR_TEMPERATURE) is not None)
+        or (state.attributes.get(ATTR_TARGET_TEMP_HIGH) is not None)
+        or (state.attributes.get(ATTR_TARGET_TEMP_LOW) is not None)
     ):
         await call_service(
             SERVICE_SET_TEMPERATURE,

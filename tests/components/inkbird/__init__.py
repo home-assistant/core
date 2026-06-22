@@ -29,7 +29,6 @@ def _make_bluetooth_service_info(
             name=name,
             address=address,
             details={},
-            rssi=rssi,
         ),
         time=MONOTONIC_TIME(),
         advertisement=None,

@@ -1,7 +1,5 @@
 """Support for HomematicIP Cloud devices."""
 
-from __future__ import annotations
-
 import logging
 from pathlib import Path
 
@@ -124,7 +122,7 @@ SCHEMA_SET_HOME_COOLING_MODE = vol.Schema(
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the HomematicIP Cloud services."""
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_control(DOMAIN)
     async def async_call_hmipc_service(service: ServiceCall) -> None:
         """Call correct HomematicIP Cloud service."""
         service_name = service.service

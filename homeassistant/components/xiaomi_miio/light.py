@@ -1,7 +1,5 @@
 """Support for Xiaomi Philips Lights."""
 
-from __future__ import annotations
-
 import asyncio
 import datetime
 from datetime import timedelta
@@ -140,6 +138,7 @@ async def async_setup_entry(
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = config_entry.runtime_data.gateway
+        gateway_coordinators = config_entry.runtime_data.gateway_coordinators
         # Gateway light
         if gateway.model not in [
             GATEWAY_MODEL_AC_V1,
@@ -151,14 +150,11 @@ async def async_setup_entry(
             )
         # Gateway sub devices
         sub_devices = gateway.devices
-        for sub_device in sub_devices.values():
-            if sub_device.device_type == "LightBulb":
-                coordinator = config_entry.runtime_data.gateway_coordinators[
-                    sub_device.sid
-                ]
-                entities.append(
-                    XiaomiGatewayBulb(coordinator, sub_device, config_entry)
-                )
+        entities.extend(
+            XiaomiGatewayBulb(gateway_coordinators[sub_device.sid])
+            for sub_device in sub_devices.values()
+            if sub_device.device_type == "LightBulb"
+        )
 
     if config_entry.data[CONF_FLOW_TYPE] == CONF_DEVICE:
         if DATA_KEY not in hass.data:
@@ -247,6 +243,7 @@ async def async_setup_entry(
 
         for xiaomi_miio_service, method in SERVICE_TO_METHOD.items():
             schema = method.schema or XIAOMI_MIIO_SERVICE_SCHEMA
+            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
             hass.services.async_register(
                 DOMAIN, xiaomi_miio_service, async_service_handler, schema=schema
             )
@@ -479,7 +476,8 @@ class XiaomiPhilipsBulb(XiaomiPhilipsGenericLight):
 
         if ATTR_BRIGHTNESS in kwargs and ATTR_COLOR_TEMP_KELVIN in kwargs:
             _LOGGER.debug(
-                "Setting brightness and color temperature: %s %s%%, %s mireds, %s%% cct",
+                "Setting brightness and color temperature:"
+                " %s %s%%, %s mireds, %s%% cct",
                 brightness,
                 percent_brightness,
                 color_temp,
@@ -1041,12 +1039,12 @@ class XiaomiGatewayLight(LightEntity):
         )
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int(255 * self._brightness_pct / 100)
 
     @property
-    def hs_color(self):
+    def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
         return self._hs
 
@@ -1102,7 +1100,7 @@ class XiaomiGatewayBulb(XiaomiGatewayDevice, LightEntity):
     _sub_device: LightBulb
 
     @property
-    def brightness(self):
+    def brightness(self) -> int:
         """Return the brightness of the light."""
         return round((self._sub_device.status["brightness"] * 255) / 100)
 

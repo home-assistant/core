@@ -1,7 +1,5 @@
 """The repairs websocket API."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from typing import Any
 
@@ -137,9 +135,9 @@ class RepairsFlowIndexView(FlowManagerIndexView):
                 "Handler does not support user", HTTPStatus.BAD_REQUEST
             )
 
-        result = self._prepare_result_json(result)
-
-        return self.json(result)
+        return self.json(
+            self._prepare_result_json(result),
+        )
 
 
 class RepairsFlowResourceView(FlowManagerResourceView):

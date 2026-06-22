@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity[button.bubendorff_blind_preferred_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preferred position',
     'options': dict({
     }),
     'original_device_class': None,
@@ -50,8 +52,9 @@
 # ---
 # name: test_entity[button.entrance_blinds_preferred_position-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -69,6 +72,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Preferred position',
     'options': dict({
     }),
     'original_device_class': None,

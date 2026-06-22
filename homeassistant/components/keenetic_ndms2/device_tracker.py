@@ -1,8 +1,7 @@
 """Support for Keenetic routers as device tracker."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any
 
 from ndms2_client import Device
 
@@ -126,7 +125,7 @@ class KeeneticTracker(ScannerEntity):
         return self._router.available
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         if self.is_connected:
             return {

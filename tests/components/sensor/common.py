@@ -7,6 +7,7 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.components.sensor.const import DEVICE_CLASS_STATE_CLASSES
 from homeassistant.const import (
+    CONCENTRATION_GRAMS_PER_CUBIC_METER,
     CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     CONCENTRATION_PARTS_PER_MILLION,
     DEGREE,
@@ -44,12 +45,15 @@ from homeassistant.const import (
 from tests.common import MockEntity
 
 UNITS_OF_MEASUREMENT = {
+    SensorDeviceClass.ABSOLUTE_HUMIDITY: CONCENTRATION_GRAMS_PER_CUBIC_METER,
     SensorDeviceClass.APPARENT_POWER: UnitOfApparentPower.VOLT_AMPERE,
     SensorDeviceClass.AQI: None,
     SensorDeviceClass.AREA: UnitOfArea.SQUARE_METERS,
     SensorDeviceClass.ATMOSPHERIC_PRESSURE: UnitOfPressure.HPA,
     SensorDeviceClass.BATTERY: PERCENTAGE,
-    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER,
+    SensorDeviceClass.BLOOD_GLUCOSE_CONCENTRATION: (
+        UnitOfBloodGlucoseConcentration.MILLIGRAMS_PER_DECILITER
+    ),
     SensorDeviceClass.CO2: CONCENTRATION_PARTS_PER_MILLION,
     SensorDeviceClass.CO: CONCENTRATION_PARTS_PER_MILLION,
     SensorDeviceClass.CONDUCTIVITY: UnitOfConductivity.SIEMENS_PER_CM,
@@ -78,10 +82,13 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.PM10: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     SensorDeviceClass.PM1: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     SensorDeviceClass.PM25: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.PM4: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     SensorDeviceClass.POWER: UnitOfPower.KILO_WATT,
     SensorDeviceClass.POWER_FACTOR: PERCENTAGE,
     SensorDeviceClass.PRECIPITATION: UnitOfPrecipitationDepth.MILLIMETERS,
-    SensorDeviceClass.PRECIPITATION_INTENSITY: UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR,
+    SensorDeviceClass.PRECIPITATION_INTENSITY: (
+        UnitOfVolumetricFlux.MILLIMETERS_PER_HOUR
+    ),
     SensorDeviceClass.PRESSURE: UnitOfPressure.HPA,
     SensorDeviceClass.REACTIVE_ENERGY: UnitOfReactiveEnergy.VOLT_AMPERE_REACTIVE_HOUR,
     SensorDeviceClass.REACTIVE_POWER: UnitOfReactivePower.VOLT_AMPERE_REACTIVE,
@@ -90,8 +97,12 @@ UNITS_OF_MEASUREMENT = {
     SensorDeviceClass.SPEED: UnitOfSpeed.METERS_PER_SECOND,
     SensorDeviceClass.SULPHUR_DIOXIDE: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
     SensorDeviceClass.TEMPERATURE: UnitOfTemperature.CELSIUS,
+    SensorDeviceClass.TEMPERATURE_DELTA: UnitOfTemperature.CELSIUS,
     SensorDeviceClass.TIMESTAMP: None,
-    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+    SensorDeviceClass.UPTIME: None,
+    SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS: (
+        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER
+    ),
     SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: CONCENTRATION_PARTS_PER_MILLION,
     SensorDeviceClass.VOLTAGE: UnitOfElectricPotential.VOLT,
     SensorDeviceClass.VOLUME: UnitOfVolume.LITERS,

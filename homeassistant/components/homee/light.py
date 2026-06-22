@@ -1,6 +1,6 @@
 """The Homee light platform."""
 
-from typing import Any
+from typing import Any, override
 
 from pyHomee.const import AttributeType
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -24,6 +24,7 @@ from homeassistant.util.color import (
 from . import HomeeConfigEntry
 from .const import LIGHT_PROFILES
 from .entity import HomeeNodeEntity
+from .helpers import setup_homee_platform
 
 LIGHT_ATTRIBUTES = [
     AttributeType.COLOR,
@@ -36,7 +37,7 @@ PARALLEL_UPDATES = 0
 
 
 def is_light_node(node: HomeeNode) -> bool:
-    """Determine if a node is controllable as a homee light based on its profile and attributes."""
+    """Determine if a node is controllable as a homee light."""
     assert node.attribute_map is not None
     return node.profile in LIGHT_PROFILES and AttributeType.ON_OFF in node.attribute_map
 
@@ -85,19 +86,28 @@ def decimal_to_rgb_list(color: float) -> list[int]:
     ]
 
 
+async def add_light_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee light entities."""
+    async_add_entities(
+        HomeeLight(node, light, config_entry)
+        for node in nodes
+        for light in get_light_attribute_sets(node)
+        if is_light_node(node)
+    )
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Add the Homee platform for the light entity."""
+    """Add the homee platform for the light entity."""
 
-    async_add_entities(
-        HomeeLight(node, light, config_entry)
-        for node in config_entry.runtime_data.nodes
-        for light in get_light_attribute_sets(node)
-        if is_light_node(node)
-    )
+    await setup_homee_platform(add_light_entities, async_add_entities, config_entry)
 
 
 class HomeeLight(HomeeNodeEntity, LightEntity):
@@ -142,6 +152,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         )
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
         assert self._dimmer_attr is not None
@@ -151,6 +162,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         )
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float] | None:
         """Return the color of the light."""
         assert self._col_attr is not None
@@ -158,16 +170,19 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
         return color_RGB_to_hs(*rgb)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int:
         """Return the color temperature of the light."""
         assert self._temp_attr is not None
         return int(self._temp_attr.current_value)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return bool(self._on_off_attr.current_value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         if ATTR_BRIGHTNESS in kwargs and self._dimmer_attr is not None:
@@ -194,6 +209,7 @@ class HomeeLight(HomeeNodeEntity, LightEntity):
                     rgb_list_to_decimal(color_hs_to_RGB(*color)),
                 )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         await self.async_set_homee_value(self._on_off_attr, 0)

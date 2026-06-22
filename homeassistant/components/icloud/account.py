@@ -1,17 +1,16 @@
 """iCloud account."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import operator
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
     PyiCloudFailedLoginException,
     PyiCloudNoDevicesException,
     PyiCloudServiceNotActivatedException,
+    PyiCloudServiceUnavailable,
 )
 from pyicloud.services.findmyiphone import AppleDevice
 
@@ -56,6 +55,9 @@ from .const import (
     DOMAIN,
 )
 
+if TYPE_CHECKING:
+    from .media_source import PhotoCache
+
 _LOGGER = logging.getLogger(__name__)
 
 type IcloudConfigEntry = ConfigEntry[IcloudAccount]
@@ -93,7 +95,10 @@ class IcloudAccount:
         self._retried_fetch = False
         self._config_entry = config_entry
 
+        self._unsub_fetch: CALLBACK_TYPE | None = None
         self.listeners: list[CALLBACK_TYPE] = []
+
+        self.photo_cache: PhotoCache | None = None
 
     def setup(self) -> None:
         """Set up an iCloud account."""
@@ -107,7 +112,7 @@ class IcloudAccount:
 
             if self.api.requires_2fa:
                 # Trigger a new log in to ensure the user enters the 2FA code again.
-                raise PyiCloudFailedLoginException  # noqa: TRY301
+                raise PyiCloudFailedLoginException("2FA Required")  # noqa: TRY301
 
         except PyiCloudFailedLoginException:
             self.api = None
@@ -125,21 +130,26 @@ class IcloudAccount:
             return
 
         try:
-            api_devices = self.api.devices
             # Gets device owners infos
-            user_info = api_devices.response["userInfo"]
+            user_info = self.api.devices.user_info
         except (
             PyiCloudServiceNotActivatedException,
             PyiCloudNoDevicesException,
+            PyiCloudServiceUnavailable,
         ) as err:
             _LOGGER.error("No iCloud device found")
             raise ConfigEntryNotReady from err
 
-        self._owner_fullname = f"{user_info['firstName']} {user_info['lastName']}"
+        if user_info is None:
+            raise ConfigEntryNotReady("No user info found in iCloud devices response")
+
+        self._owner_fullname = (
+            f"{user_info.get('firstName')} {user_info.get('lastName')}"
+        )
 
         self._family_members_fullname = {}
         if user_info.get("membersInfo") is not None:
-            for prs_id, member in user_info["membersInfo"].items():
+            for prs_id, member in user_info.get("membersInfo").items():
                 self._family_members_fullname[prs_id] = (
                     f"{member['firstName']} {member['lastName']}"
                 )
@@ -289,9 +299,16 @@ class IcloudAccount:
             self._max_interval,
         )
 
+    def cancel_fetch(self) -> None:
+        """Cancel the scheduled fetch timer."""
+        if self._unsub_fetch is not None:
+            self._unsub_fetch()
+            self._unsub_fetch = None
+
     def _schedule_next_fetch(self) -> None:
+        self.cancel_fetch()
         if not self._config_entry.pref_disable_polling:
-            track_point_in_utc_time(
+            self._unsub_fetch = track_point_in_utc_time(
                 self.hass,
                 self.keep_alive,
                 utcnow() + timedelta(minutes=self._fetch_interval),

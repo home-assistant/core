@@ -1,7 +1,7 @@
 """Test the Cloud Google Config."""
 
 from http import HTTPStatus
-from unittest.mock import Mock, PropertyMock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 from freezegun import freeze_time
 import pytest
@@ -27,7 +27,7 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STARTED,
     EntityCategory,
 )
-from homeassistant.core import CoreState, HomeAssistant, State
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util.dt import utcnow
@@ -119,15 +119,13 @@ async def test_sync_entities(
 
     assert len(mock_conf.async_get_agent_users()) == 1
 
-    with patch(
-        "hass_nabucasa.cloud_api.async_google_actions_request_sync",
-        return_value=Mock(status=HTTPStatus.NOT_FOUND),
-    ) as mock_request_sync:
-        assert (
-            await mock_conf.async_sync_entities("mock-user-id") == HTTPStatus.NOT_FOUND
-        )
-        assert len(mock_conf.async_get_agent_users()) == 0
-        assert len(mock_request_sync.mock_calls) == 1
+    mock_conf._cloud.google_report_state.request_sync = AsyncMock(
+        return_value=Mock(status=HTTPStatus.NOT_FOUND)
+    )
+
+    assert await mock_conf.async_sync_entities("mock-user-id") == HTTPStatus.NOT_FOUND
+    assert len(mock_conf.async_get_agent_users()) == 0
+    assert len(mock_conf._cloud.google_report_state.request_sync.mock_calls) == 1
 
 
 async def test_google_update_expose_trigger_sync(
@@ -203,8 +201,12 @@ async def test_google_entity_registry_sync(
     config = CloudGoogleConfig(
         hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
     )
-    await config.async_initialize()
-    await config.async_connect_agent_user("mock-user-id")
+    with (
+        patch.object(config, "async_sync_entities_all"),
+        patch.object(config, "async_enable_report_state"),
+    ):
+        await config.async_initialize()
+        await config.async_connect_agent_user("mock-user-id")
 
     with (
         patch.object(config, "async_schedule_google_sync_all") as mock_sync,
@@ -370,6 +372,10 @@ async def test_sync_google_on_home_assistant_start(
 
         hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
         await hass.async_block_till_done()
+        assert len(mock_sync.mock_calls) == 0
+
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+        await hass.async_block_till_done()
         assert len(mock_sync.mock_calls) == 1
 
 
@@ -425,32 +431,24 @@ async def test_google_config_expose_entity_prefs(
     expose_new(hass, True)
     expose_entity(hass, entity_entry5.entity_id, False)
 
-    state = State("light.kitchen", "on")
-    state_config = State(entity_entry1.entity_id, "on")
-    state_diagnostic = State(entity_entry2.entity_id, "on")
-    state_hidden_integration = State(entity_entry3.entity_id, "on")
-    state_hidden_user = State(entity_entry4.entity_id, "on")
-    state_not_exposed = State(entity_entry5.entity_id, "on")
-    state_exposed_default = State(entity_entry6.entity_id, "on")
-
     # an entity which is not in the entity registry can be exposed
     expose_entity(hass, "light.kitchen", True)
-    assert mock_conf.should_expose(state)
+    assert mock_conf.should_expose("light.kitchen")
     # categorized and hidden entities should not be exposed
-    assert not mock_conf.should_expose(state_config)
-    assert not mock_conf.should_expose(state_diagnostic)
-    assert not mock_conf.should_expose(state_hidden_integration)
-    assert not mock_conf.should_expose(state_hidden_user)
+    assert not mock_conf.should_expose(entity_entry1.entity_id)
+    assert not mock_conf.should_expose(entity_entry2.entity_id)
+    assert not mock_conf.should_expose(entity_entry3.entity_id)
+    assert not mock_conf.should_expose(entity_entry4.entity_id)
     # this has been hidden
-    assert not mock_conf.should_expose(state_not_exposed)
+    assert not mock_conf.should_expose(entity_entry5.entity_id)
     # exposed by default
-    assert mock_conf.should_expose(state_exposed_default)
+    assert mock_conf.should_expose(entity_entry6.entity_id)
 
     expose_entity(hass, entity_entry5.entity_id, True)
-    assert mock_conf.should_expose(state_not_exposed)
+    assert mock_conf.should_expose(entity_entry5.entity_id)
 
     expose_entity(hass, entity_entry5.entity_id, None)
-    assert not mock_conf.should_expose(state_not_exposed)
+    assert not mock_conf.should_expose(entity_entry5.entity_id)
 
 
 @pytest.mark.usefixtures("mock_expired_cloud_login")

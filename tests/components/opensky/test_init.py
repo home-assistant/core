@@ -1,7 +1,5 @@
 """Test OpenSky component setup process."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from python_opensky import OpenSkyError

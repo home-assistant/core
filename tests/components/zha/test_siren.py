@@ -1,14 +1,13 @@
 """Test zha siren."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 from unittest.mock import ANY, call, patch
 
 import pytest
-from zha.application.const import (
-    WARNING_DEVICE_MODE_EMERGENCY_PANIC,
-    WARNING_DEVICE_SOUND_MEDIUM,
-)
+from zha.application.platforms.siren import SirenLevel, WarningMode
 from zigpy.const import SIG_EP_INPUT, SIG_EP_OUTPUT, SIG_EP_PROFILE, SIG_EP_TYPE
+from zigpy.device import Device
 from zigpy.profiles import zha
 import zigpy.zcl
 from zigpy.zcl.clusters import general, security
@@ -51,7 +50,11 @@ def siren_platform_only():
         yield
 
 
-async def test_siren(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
+async def test_siren(
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
+) -> None:
     """Test zha siren platform."""
 
     await setup_zha()
@@ -102,13 +105,12 @@ async def test_siren(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
                 False,
                 0,
                 ANY,
-                50,  # bitmask for default args
-                5,  # duration in seconds
-                0,
-                2,
                 manufacturer=None,
                 expect_reply=True,
-                tsn=None,
+                warning=50,  # bitmask for default args
+                warning_duration=5,
+                strobe_duty_cycle=0,
+                stobe_level=2,
             )
         ]
 
@@ -137,13 +139,12 @@ async def test_siren(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
                 False,
                 0,
                 ANY,
-                2,  # bitmask for default args
-                5,  # duration in seconds
-                0,
-                2,
                 manufacturer=None,
                 expect_reply=True,
-                tsn=None,
+                warning=2,  # bitmask for default args
+                warning_duration=5,
+                strobe_duty_cycle=0,
+                stobe_level=2,
             )
         ]
 
@@ -169,8 +170,8 @@ async def test_siren(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
             {
                 "entity_id": entity_id,
                 ATTR_DURATION: 10,
-                ATTR_TONE: WARNING_DEVICE_MODE_EMERGENCY_PANIC,
-                ATTR_VOLUME_LEVEL: WARNING_DEVICE_SOUND_MEDIUM,
+                ATTR_TONE: WarningMode.Emergency_Panic,
+                ATTR_VOLUME_LEVEL: SirenLevel.Medium_level_sound,
             },
             blocking=True,
         )
@@ -180,13 +181,12 @@ async def test_siren(hass: HomeAssistant, setup_zha, zigpy_device_mock) -> None:
                 False,
                 0,
                 ANY,
-                97,  # bitmask for passed args
-                10,  # duration in seconds
-                0,
-                2,
                 manufacturer=None,
                 expect_reply=True,
-                tsn=None,
+                warning=97,  # bitmask for passed args
+                warning_duration=10,
+                strobe_duty_cycle=0,
+                stobe_level=2,
             )
         ]
         # test that the state has changed to on

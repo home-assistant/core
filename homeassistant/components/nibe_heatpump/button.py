@@ -1,29 +1,26 @@
 """The Nibe Heat Pump sensors."""
 
-from __future__ import annotations
-
 from nibe.coil_groups import UNIT_COILGROUPS, UnitCoilGroup
 from nibe.exceptions import CoilNotFoundException
 
 from homeassistant.components.button import ButtonEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN, LOGGER
-from .coordinator import CoilCoordinator
+from .const import LOGGER
+from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NibeHeatpumpConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     def reset_buttons():
         if unit := UNIT_COILGROUPS.get(coordinator.series, {}).get("main"):
@@ -52,6 +49,7 @@ class NibeAlarmResetButton(CoordinatorEntity[CoilCoordinator], ButtonEntity):
 
     async def async_press(self) -> None:
         """Execute the command."""
+        await self.coordinator.async_write_coil(self._reset_coil, 0)
         await self.coordinator.async_write_coil(self._reset_coil, 1)
         await self.coordinator.async_read_coil(self._alarm_coil)
 

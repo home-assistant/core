@@ -1,7 +1,5 @@
 """The HTTP api to control the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Mapping
 from contextlib import suppress
@@ -26,18 +24,23 @@ from homeassistant.components.alexa import (
     entities as alexa_entities,
     errors as alexa_errors,
 )
+from homeassistant.components.frontend import DATA_THEMES
 from homeassistant.components.google_assistant import helpers as google_helpers
 from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.system_health import get_info as get_system_health_info
-from homeassistant.const import CLOUD_NEVER_EXPOSED_ENTITIES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.loader import (
+    async_get_custom_components,
+    async_get_loaded_integration,
+)
 from homeassistant.util.location import async_detect_location_info
+from homeassistant.util.package import async_get_installed_packages
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
 from .assist_pipeline import async_create_cloud_pipeline
@@ -71,7 +74,7 @@ _CLOUD_ERRORS: dict[
 ] = {
     TimeoutError: (
         HTTPStatus.BAD_GATEWAY,
-        "Unable to reach the Home Assistant cloud.",
+        "Unable to reach the Home Assistant Cloud.",
     ),
     aiohttp.ClientError: (
         HTTPStatus.INTERNAL_SERVER_ERROR,
@@ -95,6 +98,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_hook_delete)
     websocket_api.async_register_command(hass, websocket_remote_connect)
     websocket_api.async_register_command(hass, websocket_remote_disconnect)
+    websocket_api.async_register_command(hass, websocket_webrtc_ice_servers)
 
     websocket_api.async_register_command(hass, google_assistant_get)
     websocket_api.async_register_command(hass, google_assistant_list)
@@ -134,7 +138,8 @@ def async_setup(hass: HomeAssistant) -> None:
             ),
             MFAExpiredOrNotStarted: (
                 HTTPStatus.BAD_REQUEST,
-                "Multi-factor authentication expired, or not started. Please try again.",
+                "Multi-factor authentication expired,"
+                " or not started. Please try again.",
             ),
             AlreadyConnectedError: (
                 HTTPStatus.CONFLICT,
@@ -431,12 +436,96 @@ class DownloadSupportPackageView(HomeAssistantView):
     url = "/api/cloud/support_package"
     name = "api:cloud:support_package"
 
+    async def _get_integration_info(self, hass: HomeAssistant) -> dict[str, Any]:
+        """Collect information about active and custom integrations."""
+        # Get loaded components from hass.config.components
+        loaded_components = hass.config.components.copy()
+
+        # Get custom integrations
+        custom_domains = set()
+        with suppress(Exception):
+            custom_domains = set(await async_get_custom_components(hass))
+
+        # Separate built-in and custom integrations
+        builtin_integrations = []
+        custom_integrations = []
+
+        for domain in sorted(loaded_components):
+            try:
+                integration = async_get_loaded_integration(hass, domain)
+            except Exception:  # noqa: BLE001
+                # Broad exception catch for robustness in support package
+                # generation. If we can't get integration info,
+                # just add the domain
+                if domain in custom_domains:
+                    custom_integrations.append(
+                        {
+                            "domain": domain,
+                            "name": "Unknown",
+                            "version": "Unknown",
+                            "documentation": "Unknown",
+                        }
+                    )
+                else:
+                    builtin_integrations.append(
+                        {
+                            "domain": domain,
+                            "name": "Unknown",
+                        }
+                    )
+            else:
+                if domain in custom_domains:
+                    # This is a custom integration
+                    # include version and documentation link
+                    version = (
+                        str(integration.version) if integration.version else "Unknown"
+                    )
+                    if not (documentation := integration.documentation):
+                        documentation = "Unknown"
+
+                    custom_integrations.append(
+                        {
+                            "domain": domain,
+                            "name": integration.name,
+                            "version": version,
+                            "documentation": documentation,
+                        }
+                    )
+                else:
+                    # This is a built-in integration.
+                    # No version needed, as it is always the same as the
+                    # Home Assistant version
+                    builtin_integrations.append(
+                        {
+                            "domain": domain,
+                            "name": integration.name,
+                        }
+                    )
+
+        return {
+            "builtin_count": len(builtin_integrations),
+            "builtin_integrations": builtin_integrations,
+            "custom_count": len(custom_integrations),
+            "custom_integrations": custom_integrations,
+        }
+
+    @callback
+    def _get_themes_info(self, hass: HomeAssistant) -> dict[str, Any]:
+        """Collect information about user-installed custom themes."""
+        themes: dict[str, Any] = hass.data.get(DATA_THEMES, {})
+        return {
+            "count": len(themes),
+            "themes": sorted(themes),
+        }
+
     async def _generate_markdown(
         self,
         hass: HomeAssistant,
         hass_info: dict[str, Any],
         domains_info: dict[str, dict[str, str]],
     ) -> str:
+        cloud = hass.data[DATA_CLOUD]
+
         def get_domain_table_markdown(domain_info: dict[str, Any]) -> str:
             if len(domain_info) == 0:
                 return "No information available\n"
@@ -453,6 +542,62 @@ class DownloadSupportPackageView(HomeAssistantView):
         markdown = "## System Information\n\n"
         markdown += get_domain_table_markdown(hass_info)
 
+        # Add integration information
+        try:
+            integration_info = await self._get_integration_info(hass)
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            # If there's any error getting integration info, just note it
+            markdown += "## Active integrations\n\n"
+            markdown += "Unable to collect integration information\n\n"
+        else:
+            markdown += "## Active Integrations\n\n"
+            markdown += f"Built-in integrations: {integration_info['builtin_count']}\n"
+            markdown += f"Custom integrations: {integration_info['custom_count']}\n\n"
+
+            # Built-in integrations
+            if integration_info["builtin_integrations"]:
+                markdown += "<details><summary>Built-in integrations</summary>\n\n"
+                markdown += "Domain | Name\n"
+                markdown += "--- | ---\n"
+                for integration in integration_info["builtin_integrations"]:
+                    markdown += f"{integration['domain']} | {integration['name']}\n"
+                markdown += "\n</details>\n\n"
+
+            # Custom integrations
+            if integration_info["custom_integrations"]:
+                markdown += "<details><summary>Custom integrations</summary>\n\n"
+                markdown += "Domain | Name | Version | Documentation\n"
+                markdown += "--- | --- | --- | ---\n"
+                for integration in integration_info["custom_integrations"]:
+                    doc_url = integration.get("documentation") or "N/A"
+                    markdown += (
+                        f"{integration['domain']} | "
+                        f"{integration['name']} | "
+                        f"{integration['version']} | "
+                        f"{doc_url}\n"
+                    )
+                markdown += "\n</details>\n\n"
+
+        # Add custom themes information
+        try:
+            themes_info = self._get_themes_info(hass)
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Custom Themes\n\n"
+            markdown += "Unable to collect themes information\n\n"
+        else:
+            markdown += "## Custom Themes\n\n"
+            markdown += f"Custom themes: {themes_info['count']}\n\n"
+
+            if themes_info["themes"]:
+                markdown += "<details><summary>Custom themes</summary>\n\n"
+                markdown += "Name\n"
+                markdown += "---\n"
+                for theme in themes_info["themes"]:
+                    markdown += f"{theme}\n"
+                markdown += "\n</details>\n\n"
+
         for domain, domain_info in domains_info.items():
             domain_info_md = get_domain_table_markdown(domain_info)
             markdown += (
@@ -460,6 +605,34 @@ class DownloadSupportPackageView(HomeAssistantView):
                 f"{domain_info_md}"
                 "</details>\n\n"
             )
+
+        # Add stored latency response if available
+        if locations := cloud.remote.latency_by_location:
+            markdown += "## Latency by location\n\n"
+            markdown += "Location | Latency (ms)\n"
+            markdown += "--- | ---\n"
+            for location in sorted(locations):
+                markdown += f"{location} | {locations[location]['avg'] or 'N/A'}\n"
+            markdown += "\n"
+
+        # Add installed packages section
+        try:
+            installed_packages = await async_get_installed_packages()
+        except Exception:  # noqa: BLE001
+            # Broad exception catch for robustness in support package generation
+            markdown += "## Installed packages\n\n"
+            markdown += "Unable to collect installed packages information\n\n"
+        else:
+            if installed_packages:
+                markdown += "## Installed packages\n\n"
+                markdown += (
+                    "<details><summary>Installed packages</summary>\n\n"
+                    "Package | Version\n"
+                    "--- | ---\n"
+                )
+                for pkg in sorted(installed_packages, key=lambda p: p["name"].lower()):
+                    markdown += f"{pkg['name']} | {pkg['version']}\n"
+                markdown += "\n</details>\n\n"
 
         log_handler = hass.data[DATA_CLOUD_LOG_HANDLER]
         logs = "\n".join(await log_handler.get_logs(hass))
@@ -474,6 +647,7 @@ class DownloadSupportPackageView(HomeAssistantView):
 
         return markdown
 
+    @require_admin
     async def get(self, request: web.Request) -> web.Response:
         """Download support package file."""
 
@@ -568,6 +742,7 @@ def _require_cloud_login(
     return with_cloud_auth
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command({vol.Required("type"): "cloud/subscription"})
 @websocket_api.async_response
@@ -609,6 +784,7 @@ def validate_language_voice(value: tuple[str, str]) -> tuple[str, str]:
     return value
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -649,7 +825,7 @@ async def websocket_update_prefs(
                 msg["id"], "alexa_timeout", "Timeout validating Alexa access token."
             )
             return
-        except (alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink):
+        except alexa_errors.NoTokenAvailable, alexa_errors.RequireRelink:
             connection.send_error(
                 msg["id"],
                 "alexa_relink",
@@ -668,6 +844,7 @@ async def websocket_update_prefs(
     connection.send_message(websocket_api.result_message(msg["id"]))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -688,6 +865,7 @@ async def websocket_hook_create(
     connection.send_message(websocket_api.result_message(msg["id"], hook))
 
 
+@websocket_api.require_admin
 @_require_cloud_login
 @websocket_api.websocket_command(
     {
@@ -823,7 +1001,7 @@ async def google_assistant_get(
         return
 
     entity = google_helpers.GoogleEntity(hass, gconf, state)
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity.is_supported():
+    if not entity.is_supported():
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,
@@ -925,9 +1103,7 @@ async def alexa_get(
     """Get data for a single alexa entity."""
     entity_id: str = msg["entity_id"]
 
-    if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES or not entity_supported_by_alexa(
-        hass, entity_id
-    ):
+    if not entity_supported_by_alexa(hass, entity_id):
         connection.send_error(
             msg["id"],
             websocket_api.ERR_NOT_SUPPORTED,
@@ -998,6 +1174,7 @@ async def alexa_sync(
 
 
 @websocket_api.websocket_command({"type": "cloud/tts/info"})
+@callback
 def tts_info(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
@@ -1025,3 +1202,22 @@ def tts_info(
             )
 
     connection.send_result(msg["id"], {"languages": result})
+
+
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "cloud/webrtc/ice_servers",
+    }
+)
+@_require_cloud_login
+@callback
+def websocket_webrtc_ice_servers(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Handle get WebRTC ICE servers websocket command."""
+    connection.send_result(
+        msg["id"],
+        [server.to_dict() for server in hass.data[DATA_CLOUD].client.ice_servers],
+    )

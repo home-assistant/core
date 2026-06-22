@@ -1,11 +1,14 @@
 """Config flow for the jvc_projector integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
-from jvcprojector import JvcProjector, JvcProjectorAuthError, JvcProjectorConnectError
+from jvcprojector import (
+    JvcProjector,
+    JvcProjectorAuthError,
+    JvcProjectorTimeoutError,
+    command as cmd,
+)
 from jvcprojector.projector import DEFAULT_PORT
 import voluptuous as vol
 
@@ -40,7 +43,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
                 mac = await get_mac_address(host, port, password)
             except InvalidHost:
                 errors["base"] = "invalid_host"
-            except JvcProjectorConnectError:
+            except JvcProjectorTimeoutError:
                 errors["base"] = "cannot_connect"
             except JvcProjectorAuthError:
                 errors["base"] = "invalid_auth"
@@ -91,7 +94,7 @@ class JvcProjectorConfigFlow(ConfigFlow, domain=DOMAIN):
 
             try:
                 await get_mac_address(host, port, password)
-            except JvcProjectorConnectError:
+            except JvcProjectorTimeoutError:
                 errors["base"] = "cannot_connect"
             except JvcProjectorAuthError:
                 errors["base"] = "invalid_auth"
@@ -115,7 +118,7 @@ async def get_mac_address(host: str, port: int, password: str | None) -> str:
     """Get device mac address for config flow."""
     device = JvcProjector(host, port=port, password=password)
     try:
-        await device.connect(True)
+        await device.connect()
+        return await device.get(cmd.MacAddress)
     finally:
         await device.disconnect()
-    return device.mac

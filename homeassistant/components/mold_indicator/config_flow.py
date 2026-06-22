@@ -1,7 +1,5 @@
 """Config flow for Mold indicator."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any, cast
 
@@ -100,6 +98,10 @@ class MoldIndicatorConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
+
+    VERSION = 1
+    MINOR_VERSION = 2
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

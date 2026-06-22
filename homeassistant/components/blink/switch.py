@@ -1,8 +1,8 @@
 """Support for Blink Motion detection switches."""
 
-from __future__ import annotations
+from typing import Any, override
 
-from typing import Any
+from blinkpy.auth import UnauthorizedError
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -10,7 +10,7 @@ from homeassistant.components.switch import (
     SwitchEntityDescription,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -67,6 +67,7 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
             model=self._camera.camera_type,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         try:
@@ -77,9 +78,13 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_arm_motion",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         try:
@@ -90,10 +95,14 @@ class BlinkSwitch(CoordinatorEntity[BlinkUpdateCoordinator], SwitchEntity):
                 translation_domain=DOMAIN,
                 translation_key="failed_disarm_motion",
             ) from er
+        except UnauthorizedError as er:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise ConfigEntryAuthFailed("Blink authorization failed") from er
 
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if Camera Motion is enabled."""
         return self._camera.motion_enabled

@@ -4,6 +4,7 @@
   "codeowners": ["@eavanvalkenburg"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/brunt",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["brunt"],
   "requirements": ["brunt==1.2.0"]

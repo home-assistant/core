@@ -1,5 +1,7 @@
 """Support for AVM FRITZ!SmartHome templates."""
 
+from typing import override
+
 from pyfritzhome.devicetypes import FritzhomeTemplate
 
 from homeassistant.components.button import ButtonEntity
@@ -10,6 +12,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import FritzboxConfigEntry
 from .entity import FritzBoxEntity
+
+# Coordinator handles data updates, so we can allow unlimited parallel updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -38,21 +43,24 @@ class FritzBoxTemplate(FritzBoxEntity, ButtonEntity):
     """Interface between FritzhomeTemplate and hass."""
 
     @property
+    @override
     def data(self) -> FritzhomeTemplate:
         """Return the template data entity."""
         return self.coordinator.data.templates[self.ain]
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
         return DeviceInfo(
             name=self.data.name,
             identifiers={(DOMAIN, self.ain)},
             configuration_url=self.coordinator.configuration_url,
-            manufacturer="AVM",
+            manufacturer="FRITZ!",
             model="SmartHome Template",
         )
 
+    @override
     async def async_press(self) -> None:
         """Apply template and refresh."""
         await self.hass.async_add_executor_job(self.apply_template)

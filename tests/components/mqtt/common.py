@@ -17,6 +17,7 @@ from homeassistant import config as module_hass_config
 from homeassistant.components import mqtt
 from homeassistant.components.mqtt import debug_info
 from homeassistant.components.mqtt.const import (
+    DOMAIN,
     MQTT_CONNECTION_STATE,
     SUPPORTED_COMPONENTS,
 )
@@ -32,7 +33,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HassJobType, HomeAssistant
 from homeassistant.generated.mqtt import MQTT
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
@@ -66,6 +71,78 @@ DEFAULT_CONFIG_DEVICE_INFO_MAC = {
     "configuration_url": "http://example.com",
 }
 
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE = {
+    "4b06357ef8654e8d9c54cee5bb0e9391": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": "config",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "1234",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "trigger"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9391",
+    },
+}
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE = {
+    "4b06357ef8654e8d9c54cee5bb0e9392": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "REMOTE_CODE",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "arm_custom_bypass"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9392",
+    },
+}
+MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT = {
+    "4b06357ef8654e8d9c54cee5bb0e9393": {
+        "platform": "alarm_control_panel",
+        "name": "Alarm",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{action}}",
+        "value_template": "{{ value_json.value }}",
+        "code": "REMOTE_CODE_TEXT",
+        "code_arm_required": True,
+        "code_disarm_required": True,
+        "code_trigger_required": True,
+        "payload_arm_away": "ARM_AWAY",
+        "payload_arm_custom_bypass": "ARM_CUSTOM_BYPASS",
+        "payload_arm_home": "ARM_HOME",
+        "payload_arm_night": "ARM_NIGHT",
+        "payload_arm_vacation": "ARM_VACATION",
+        "payload_trigger": "TRIGGER",
+        "supported_features": ["arm_home", "arm_away", "arm_vacation"],
+        "retain": False,
+        "entity_picture": "https://example.com/4b06357ef8654e8d9c54cee5bb0e9393",
+    },
+}
 MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT = {
     "5b06357ef8654e8d9c54cee5bb0e939b": {
         "platform": "binary_sensor",
@@ -92,6 +169,119 @@ MOCK_SUBENTRY_BUTTON_COMPONENT = {
         "command_template": "{{ value }}",
         "retain": False,
         "entity_picture": "https://example.com/365d05e6607c4dfb8ae915cff71a954b",
+    },
+}
+MOCK_SUBENTRY_CLIMATE_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851386": {
+        "platform": "climate",
+        "name": "Cooler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851386",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "heat", "cool", "auto"],
+        # single target temperature
+        "temperature_command_topic": "temperature-command-topic",
+        "temperature_command_template": "{{ value }}",
+        "temperature_state_topic": "temperature-state-topic",
+        "temperature_state_template": "{{ value_json.temperature }}",
+        "min_temp": 8,
+        "max_temp": 28,
+        "precision": "0.1",
+        "temp_step": 1.0,
+        "initial": 19.0,
+        # power settings
+        "power_command_topic": "power-command-topic",
+        "power_command_template": "{{ value }}",
+        "payload_on": "ON",
+        "payload_off": "OFF",
+        # current action settings
+        "action_topic": "action-topic",
+        "action_template": "{{ value_json.current_action }}",
+        # target humidity
+        "target_humidity_command_topic": "target-humidity-command-topic",
+        "target_humidity_command_template": "{{ value }}",
+        "target_humidity_state_topic": "target-humidity-state-topic",
+        "target_humidity_state_template": "{{ value_json.target_humidity }}",
+        "min_humidity": 20,
+        "max_humidity": 80,
+        # current temperature
+        "current_temperature_topic": "current-temperature-topic",
+        "current_temperature_template": "{{ value_json.temperature }}",
+        # current humidity
+        "current_humidity_topic": "current-humidity-topic",
+        "current_humidity_template": "{{ value_json.humidity }}",
+        # preset mode
+        "preset_mode_command_topic": "preset-mode-command-topic",
+        "preset_mode_command_template": "{{ value }}",
+        "preset_mode_state_topic": "preset-mode-state-topic",
+        "preset_mode_value_template": "{{ value_json.preset_mode }}",
+        "preset_modes": ["auto", "eco"],
+        # fan mode
+        "fan_mode_command_topic": "fan-mode-command-topic",
+        "fan_mode_command_template": "{{ value }}",
+        "fan_mode_state_topic": "fan-mode-state-topic",
+        "fan_mode_state_template": "{{ value_json.fan_mode }}",
+        "fan_modes": ["off", "low", "medium", "high"],
+        # swing mode
+        "swing_mode_command_topic": "swing-mode-command-topic",
+        "swing_mode_command_template": "{{ value }}",
+        "swing_mode_state_topic": "swing-mode-state-topic",
+        "swing_mode_state_template": "{{ value_json.swing_mode }}",
+        "swing_modes": ["off", "on"],
+        # swing horizontal mode
+        "swing_horizontal_mode_command_topic": "swing-horizontal-mode-command-topic",
+        "swing_horizontal_mode_command_template": "{{ value }}",
+        "swing_horizontal_mode_state_topic": "swing-horizontal-mode-state-topic",
+        "swing_horizontal_mode_state_template": (
+            "{{ value_json.swing_horizontal_mode }}"
+        ),
+        "swing_horizontal_modes": ["off", "on"],
+    },
+}
+MOCK_SUBENTRY_CLIMATE_HIGH_LOW_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851387": {
+        "platform": "climate",
+        "name": "Cooler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851387",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "heat", "cool", "auto"],
+        # high/low target temperature
+        "temperature_low_command_topic": "temperature-low-command-topic",
+        "temperature_low_command_template": "{{ value }}",
+        "temperature_low_state_topic": "temperature-low-state-topic",
+        "temperature_low_state_template": "{{ value_json.temperature_low }}",
+        "temperature_high_command_topic": "temperature-high-command-topic",
+        "temperature_high_command_template": "{{ value }}",
+        "temperature_high_state_topic": "temperature-high-state-topic",
+        "temperature_high_state_template": "{{ value_json.temperature_high }}",
+        "min_temp": 8,
+        "max_temp": 28,
+        "precision": "0.1",
+        "temp_step": 1.0,
+        "initial": 19.0,
+    },
+}
+MOCK_SUBENTRY_CLIMATE_NO_TARGET_TEMP_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851388": {
+        "platform": "climate",
+        "name": "Cooler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851388",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "heat", "cool", "auto"],
     },
 }
 MOCK_SUBENTRY_COVER_COMPONENT = {
@@ -130,6 +320,33 @@ MOCK_SUBENTRY_COVER_COMPONENT = {
         "entity_picture": "https://example.com/b37acf667fa04c688ad7dfb27de2178b",
     },
 }
+MOCK_SUBENTRY_DATE_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47411": {
+        "platform": "date",
+        "name": "Delivery day",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47411",
+    },
+}
+MOCK_SUBENTRY_DATETIME_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47412": {
+        "platform": "datetime",
+        "name": "Maintenance service",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "timezone": "GMT",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47412",
+    },
+}
 MOCK_SUBENTRY_FAN_COMPONENT = {
     "717f924ae9ca4fe9864d845d75d23c9f": {
         "platform": "fan",
@@ -138,7 +355,7 @@ MOCK_SUBENTRY_FAN_COMPONENT = {
         "entity_category": None,
         "state_topic": "test-topic",
         "command_template": "{{ value }}",
-        "value_template": "{{ value_json.value }}",
+        "state_value_template": "{{ value_json.value }}",
         "percentage_command_topic": "test-topic/pct",
         "percentage_state_topic": "test-topic/pct",
         "percentage_command_template": "{{ value }}",
@@ -167,6 +384,72 @@ MOCK_SUBENTRY_FAN_COMPONENT = {
         "retain": False,
         "speed_range_max": 100,
         "speed_range_min": 1,
+    },
+}
+MOCK_SUBENTRY_IMAGE_COMPONENT_DATA = {
+    "24402bcbd5b64a54bc32695a5ef752bf": {
+        "platform": "image",
+        "name": "Merchandise",
+        "entity_category": None,
+        "image_topic": "test-topic",
+        "content_type": "image/jpeg",
+        "image_encoding": "b64",
+        "entity_picture": "https://example.com/24402bcbd5b64a54bc32695a5ef752bf",
+    },
+}
+MOCK_SUBENTRY_IMAGE_COMPONENT_URL = {
+    "326104eb58af48c9ab1f887cded499bb": {
+        "platform": "image",
+        "name": "Merchandise",
+        "entity_category": None,
+        "url_topic": "test-topic",
+        "url_template": "{{ value_json.value }}",
+        "entity_picture": "https://example.com/326104eb58af48c9ab1f887cded499bb",
+    },
+}
+MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
+    "8131babc5e8d4f44b82e0761d39091a2": {
+        "platform": "light",
+        "name": "Basic light",
+        "on_command_type": "last",
+        "optimistic": True,
+        "payload_off": "OFF",
+        "payload_on": "ON",
+        "command_topic": "test-topic",
+        "entity_category": None,
+        "schema": "basic",
+        "state_topic": "test-topic",
+        "color_temp_kelvin": True,
+        "state_value_template": "{{ value_json.value }}",
+        "brightness_scale": 255,
+        "max_kelvin": 6535,
+        "min_kelvin": 2000,
+        "white_scale": 255,
+        "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
+    },
+}
+MOCK_SUBENTRY_LOCK_COMPONENT = {
+    "3faf1318016c46c5aea26707eeb6f100": {
+        "platform": "lock",
+        "name": "Lock",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "code_format": "^\\d{4}$",
+        "payload_open": "OPEN",
+        "payload_lock": "LOCK",
+        "payload_unlock": "UNLOCK",
+        "payload_reset": "None",
+        "state_jammed": "JAMMED",
+        "state_locked": "LOCKED",
+        "state_locking": "LOCKING",
+        "state_unlocked": "UNLOCKED",
+        "state_unlocking": "UNLOCKING",
+        "retain": False,
+        "entity_category": None,
+        "entity_picture": "https://example.com/3faf1318016c46c5aea26707eeb6f100",
+        "optimistic": True,
     },
 }
 MOCK_SUBENTRY_NOTIFY_COMPONENT1 = {
@@ -200,7 +483,104 @@ MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME = {
         "retain": False,
     },
 }
-
+MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
+    "b10b531e15244425a74bb0abb1e9d2c6": {
+        "platform": "notify",
+        "name": "Test",
+        "command_topic": "bad#topic",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_CUSTOM_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "box",
+        "unit_of_measurement": "bla",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_DEVICE_CLASS_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "slider",
+        "device_class": "carbon_monoxide",
+        "unit_of_measurement": "ppm",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT = {
+    "f9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Speed",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "auto",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/f9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
+MOCK_SUBENTRY_NUMBER_COMPONENT_NONE_UNIT = {
+    "a9261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "number",
+        "name": "Purifier",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "min": 0.0,
+        "max": 10.0,
+        "step": 2.0,
+        "mode": "auto",
+        "device_class": "aqi",
+        "unit_of_measurement": "None",
+        "value_template": "{{ value_json.value }}",
+        "payload_reset": "None",
+        "retain": False,
+        "entity_picture": "https://example.com/a9261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
+MOCK_SUBENTRY_SELECT_COMPONENT = {
+    "fa261f6feed443e7b7d5f3fbe2a47414": {
+        "platform": "select",
+        "name": "Mode",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "options": ["beer", "milk"],
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/fa261f6feed443e7b7d5f3fbe2a47414",
+    },
+}
 MOCK_SUBENTRY_SENSOR_COMPONENT = {
     "e9261f6feed443e7b7d5f3fbe2a47412": {
         "platform": "sensor",
@@ -212,6 +592,20 @@ MOCK_SUBENTRY_SENSOR_COMPONENT = {
         "expire_after": 30,
         "value_template": "{{ value_json.value }}",
         "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
+    },
+}
+MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL = {
+    "b0f85790a95d4889924602effff06b6e": {
+        "platform": "sensor",
+        "name": "Air quality",
+        "device_class": "aqi",
+        "entity_category": None,
+        "state_class": "measurement",
+        "state_topic": "test-topic",
+        # `unit_of_measurement` is stored as a string;
+        # it will be filtered from the config when exported or when set up.
+        "unit_of_measurement": "None",
+        "entity_picture": "https://example.com/b0f85790a95d4889924602effff06b6e",
     },
 }
 MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS = {
@@ -235,6 +629,25 @@ MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET = {
         "entity_picture": "https://example.com/e9261f6feed443e7b7d5f3fbe2a47412",
     },
 }
+MOCK_SUBENTRY_SIREN_COMPONENT = {
+    "3faf1318023c46c5aea26707eeb6f12e": {
+        "platform": "siren",
+        "name": "Siren",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "command_off_template": "{{ value }}",
+        "state_value_template": "{{ value_json.value }}",
+        "payload_off": "OFF",
+        "payload_on": "ON",
+        "available_tones": ["Happy hour", "Cooling alarm"],
+        "support_volume_set": True,
+        "support_duration": True,
+        "entity_picture": "https://example.com/3faf1318023c46c5aea26707eeb6f12e",
+        "optimistic": True,
+    },
+}
 MOCK_SUBENTRY_SWITCH_COMPONENT = {
     "3faf1318016c46c5aea26707eeb6f12e": {
         "platform": "switch",
@@ -251,33 +664,109 @@ MOCK_SUBENTRY_SWITCH_COMPONENT = {
         "optimistic": True,
     },
 }
-
-MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT = {
-    "8131babc5e8d4f44b82e0761d39091a2": {
-        "platform": "light",
-        "name": "Basic light",
-        "on_command_type": "last",
-        "optimistic": True,
-        "payload_off": "OFF",
-        "payload_on": "ON",
-        "command_topic": "test-topic",
+MOCK_SUBENTRY_TEXT_COMPONENT = {
+    "09261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "text",
+        "name": "MOTD",
         "entity_category": None,
-        "schema": "basic",
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
         "state_topic": "test-topic",
-        "color_temp_kelvin": True,
-        "state_value_template": "{{ value_json.value }}",
-        "brightness_scale": 255,
-        "max_kelvin": 6535,
-        "min_kelvin": 2000,
-        "white_scale": 255,
-        "entity_picture": "https://example.com/8131babc5e8d4f44b82e0761d39091a2",
+        "min": 0.0,
+        "max": 10.0,
+        "mode": "password",
+        "pattern": "^[a-z_]*$",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/09261f6feed443e7b7d5f3fbe2a47413",
     },
 }
-MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA = {
-    "b10b531e15244425a74bb0abb1e9d2c6": {
-        "platform": "notify",
-        "name": "Test",
-        "command_topic": "bad#topic",
+MOCK_SUBENTRY_TIME_COMPONENT = {
+    "aa261f6feed443e7b7d5f3fbe2a47413": {
+        "platform": "time",
+        "name": "Happy hour",
+        "entity_category": None,
+        "command_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "state_topic": "test-topic",
+        "value_template": "{{ value_json.value }}",
+        "retain": False,
+        "entity_picture": "https://example.com/aa261f6feed443e7b7d5f3fbe2a47413",
+    },
+}
+MOCK_SUBENTRY_VALVE_COMPONENT_STATE = {
+    "09261f6feed443e7b7d5f32345a47413": {
+        "platform": "valve",
+        "name": "Ice cream",
+        "entity_category": None,
+        "device_class": None,
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "reports_position": False,
+        "payload_open": "OPEN",
+        "payload_close": "CLOSE",
+        "payload_stop": "STOP",
+        "state_open": "open",
+        "state_opening": "opening",
+        "state_closed": "closed",
+        "state_closing": "closing",
+        "entity_picture": "https://example.com/09261f6feed443e7b7d5f32345a47413",
+        "retain": True,
+        "optimistic": True,
+    },
+}
+MOCK_SUBENTRY_VALVE_COMPONENT_POSITION = {
+    "09261f6feed443e7b7d5f32345a47414": {
+        "platform": "valve",
+        "name": "Ice cream",
+        "entity_category": None,
+        "device_class": "water",
+        "command_topic": "test-topic",
+        "state_topic": "test-topic",
+        "command_template": "{{ value }}",
+        "value_template": "{{ value_json.value }}",
+        "reports_position": True,
+        "position_closed": 0,
+        "position_open": 100,
+        "payload_stop": "STOP",
+        "state_opening": "opening",
+        "state_closing": "closing",
+        "entity_picture": "https://example.com/09261f6feed443e7b7d5f32345a47414",
+        "retain": True,
+        "optimistic": False,
+    },
+}
+MOCK_SUBENTRY_WATER_HEATER_COMPONENT = {
+    "b085c09efba7ec76acd94e2e0f851123": {
+        "platform": "water_heater",
+        "name": "Boyler",
+        "entity_category": None,
+        "entity_picture": "https://example.com/b085c09efba7ec76acd94e2e0f851123",
+        "temperature_unit": "C",
+        "mode_command_topic": "mode-command-topic",
+        "mode_command_template": "{{ value }}",
+        "mode_state_topic": "mode-state-topic",
+        "mode_state_template": "{{ value_json.mode }}",
+        "modes": ["off", "gas", "electric"],
+        # target temperature
+        "temperature_command_topic": "temperature-command-topic",
+        "temperature_command_template": "{{ value }}",
+        "temperature_state_topic": "temperature-state-topic",
+        "temperature_state_template": "{{ value_json.temperature }}",
+        "min_temp": 43,
+        "max_temp": 60,
+        "precision": "0.1",
+        "initial": 43,
+        # power settings
+        "power_command_topic": "power-command-topic",
+        "power_command_template": "{{ value }}",
+        "payload_on": "ON",
+        "payload_off": "OFF",
+        # current temperature
+        "current_temperature_topic": "current-temperature-topic",
+        "current_temperature_template": "{{ value_json.temperature }}",
     },
 }
 
@@ -296,31 +785,91 @@ MOCK_SUBENTRY_DEVICE_DATA = {
     "hw_version": "2.1 rev a",
     "model": "Model XL",
     "model_id": "mn002",
+    "manufacturer": "Milk Masters",
     "configuration_url": "https://example.com",
 }
 
 MOCK_NOTIFY_SUBENTRY_DATA_MULTI = {
-    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "device": MOCK_SUBENTRY_DEVICE_DATA
+    | {
+        "mqtt_settings": {
+            "qos": 2.0,
+            "message_expiry_interval": {
+                "days": 0,
+                "hours": 0,
+                "minutes": 1,
+                "seconds": 30,
+            },
+        }
+    },
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1 | MOCK_SUBENTRY_NOTIFY_COMPONENT2,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 
-MOCK_BINARY_SENSOR_SUBENTRY_DATA_SINGLE = {
+MOCK_ALARM_CONTROL_PANEL_LOCAL_CODE_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_LOCAL_CODE,
+}
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_TEXT_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE_TEXT,
+}
+MOCK_ALARM_CONTROL_PANEL_REMOTE_CODE_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_ALARM_CONTROL_PANEL_COMPONENT_REMOTE_CODE,
+}
+MOCK_BINARY_SENSOR_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BINARY_SENSOR_COMPONENT,
 }
-MOCK_BUTTON_SUBENTRY_DATA_SINGLE = {
+MOCK_BUTTON_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
     "components": MOCK_SUBENTRY_BUTTON_COMPONENT,
 }
-MOCK_COVER_SUBENTRY_DATA_SINGLE = {
+MOCK_CLIMATE_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_CLIMATE_COMPONENT,
+}
+MOCK_CLIMATE_HIGH_LOW_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
+    "components": MOCK_SUBENTRY_CLIMATE_HIGH_LOW_COMPONENT,
+}
+MOCK_CLIMATE_NO_TARGET_TEMP_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_CLIMATE_NO_TARGET_TEMP_COMPONENT,
+}
+MOCK_COVER_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_COVER_COMPONENT,
 }
-MOCK_FAN_SUBENTRY_DATA_SINGLE = {
+MOCK_DATE_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_DATE_COMPONENT,
+}
+MOCK_DATETIME_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_DATETIME_COMPONENT,
+}
+MOCK_FAN_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_FAN_COMPONENT,
 }
-MOCK_NOTIFY_SUBENTRY_DATA_SINGLE = {
+MOCK_IMAGE_SUBENTRY_DATA_IMAGE_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_IMAGE_COMPONENT_DATA,
+}
+MOCK_IMAGE_SUBENTRY_DATA_IMAGE_URL = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_IMAGE_COMPONENT_URL,
+}
+MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT,
+}
+MOCK_LOCK_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_LOCK_COMPONENT,
+}
+MOCK_NOTIFY_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 1}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1,
 }
@@ -328,36 +877,94 @@ MOCK_NOTIFY_SUBENTRY_DATA_NO_NAME = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NOTIFY_COMPONENT_NO_NAME,
 }
-MOCK_LIGHT_BASIC_KELVIN_SUBENTRY_DATA_SINGLE = {
+MOCK_NUMBER_SUBENTRY_DATA_CUSTOM_UNIT = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
-    "components": MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT,
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_CUSTOM_UNIT,
 }
-MOCK_SENSOR_SUBENTRY_DATA_SINGLE = {
+MOCK_NUMBER_SUBENTRY_DATA_DEVICE_CLASS_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_DEVICE_CLASS_UNIT,
+}
+MOCK_NUMBER_SUBENTRY_DATA_NO_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NO_UNIT,
+}
+MOCK_NUMBER_SUBENTRY_DATA_NONE_UNIT = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_NUMBER_COMPONENT_NONE_UNIT,
+}
+MOCK_SELECT_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SELECT_COMPONENT,
+}
+MOCK_SENSOR_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT,
 }
-MOCK_SENSOR_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
+MOCK_SENSOR_SUBENTRY_DATA_STATE_CLASS = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_STATE_CLASS,
 }
-MOCK_SENSOR_SUBENTRY_DATA_SINGLE_LAST_RESET_TEMPLATE = {
+MOCK_SENSOR_SUBENTRY_DATA_UOM_NONE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL,
+}
+MOCK_SENSOR_SUBENTRY_DATA_LAST_RESET_TEMPLATE = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SENSOR_COMPONENT_LAST_RESET,
 }
-MOCK_SWITCH_SUBENTRY_DATA_SINGLE_STATE_CLASS = {
+MOCK_SIREN_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_SIREN_COMPONENT,
+}
+MOCK_SWITCH_SUBENTRY_DATA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_SWITCH_COMPONENT,
+}
+MOCK_TEXT_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_TEXT_COMPONENT,
+}
+MOCK_TIME_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_TIME_COMPONENT,
+}
+MOCK_VALVE_SUBENTRY_DATA_STATE = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_VALVE_COMPONENT_STATE,
+}
+MOCK_VALVE_SUBENTRY_DATA_POSITION = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 2}},
+    "components": MOCK_SUBENTRY_VALVE_COMPONENT_POSITION,
+}
+MOCK_WATER_HEATER_SUBENTRY_DATA = {
+    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
+    "components": MOCK_SUBENTRY_WATER_HEATER_COMPONENT,
 }
 MOCK_SUBENTRY_DATA_BAD_COMPONENT_SCHEMA = {
     "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
     "components": MOCK_SUBENTRY_NOTIFY_BAD_SCHEMA,
 }
 MOCK_SUBENTRY_DATA_SET_MIX = {
-    "device": MOCK_SUBENTRY_DEVICE_DATA | {"mqtt_settings": {"qos": 0}},
-    "components": MOCK_SUBENTRY_NOTIFY_COMPONENT1
+    "device": MOCK_SUBENTRY_DEVICE_DATA
+    | {
+        "mqtt_settings": {
+            "qos": 0,
+            "message_expiry_interval": {
+                "days": 0,
+                "hours": 0,
+                "minutes": 1,
+                "seconds": 30,
+            },
+        }
+    },
+    "components": MOCK_SUBENTRY_FAN_COMPONENT
+    | MOCK_SUBENTRY_NOTIFY_COMPONENT1
     | MOCK_SUBENTRY_NOTIFY_COMPONENT2
     | MOCK_SUBENTRY_LIGHT_BASIC_KELVIN_COMPONENT
-    | MOCK_SUBENTRY_SWITCH_COMPONENT,
+    | MOCK_SUBENTRY_SWITCH_COMPONENT
+    | MOCK_SUBENTRY_SENSOR_COMPONENT_UOM_NULL
+    | MOCK_SUBENTRY_SIREN_COMPONENT,
 } | MOCK_SUBENTRY_AVAILABILITY_DATA
 _SENTINEL = object()
 
@@ -398,12 +1005,10 @@ def help_custom_config(
     config: ConfigType = copy.deepcopy(mqtt_base_config)
     entity_instances: list[ConfigType] = []
     for instance in mqtt_entity_configs:
-        base: ConfigType = copy.deepcopy(
-            mqtt_base_config[mqtt.DOMAIN][mqtt_entity_domain]
-        )
+        base: ConfigType = copy.deepcopy(mqtt_base_config[DOMAIN][mqtt_entity_domain])
         base.update(instance)
         entity_instances.append(base)
-    config[mqtt.DOMAIN][mqtt_entity_domain] = entity_instances
+    config[DOMAIN][mqtt_entity_domain] = entity_instances
     return config
 
 
@@ -432,7 +1037,7 @@ async def help_test_availability_without_topic(
     config: ConfigType,
 ) -> None:
     """Test availability without defined availability topic."""
-    assert "availability_topic" not in config[mqtt.DOMAIN][domain]
+    assert "availability_topic" not in config[DOMAIN][domain]
     await mqtt_mock_entry()
     await hass.async_block_till_done()
 
@@ -455,7 +1060,7 @@ async def help_test_default_availability_payload(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
+    config[DOMAIN][domain]["availability_topic"] = "availability-topic"
 
     with patch("homeassistant.config.load_yaml_config_file", return_value=config):
         await mqtt_mock_entry()
@@ -502,7 +1107,7 @@ async def help_test_default_availability_list_payload(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["availability"] = [
+    config[DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
@@ -561,8 +1166,8 @@ async def help_test_default_availability_list_payload_all(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["availability_mode"] = "all"
-    config[mqtt.DOMAIN][domain]["availability"] = [
+    config[DOMAIN][domain]["availability_mode"] = "all"
+    config[DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
@@ -622,8 +1227,8 @@ async def help_test_default_availability_list_payload_any(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["availability_mode"] = "any"
-    config[mqtt.DOMAIN][domain]["availability"] = [
+    config[DOMAIN][domain]["availability_mode"] = "any"
+    config[DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic1"},
         {"topic": "availability-topic2"},
     ]
@@ -678,10 +1283,10 @@ async def help_test_default_availability_list_single(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["availability"] = [
+    config[DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic1"},
     ]
-    config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
+    config[DOMAIN][domain]["availability_topic"] = "availability-topic"
 
     with (
         patch("homeassistant.config.load_yaml_config_file", return_value=config),
@@ -710,9 +1315,9 @@ async def help_test_custom_availability_payload(
     """
     # Add availability settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic"
-    config[mqtt.DOMAIN][domain]["payload_available"] = "good"
-    config[mqtt.DOMAIN][domain]["payload_not_available"] = "nogood"
+    config[DOMAIN][domain]["availability_topic"] = "availability-topic"
+    config[DOMAIN][domain]["payload_available"] = "good"
+    config[DOMAIN][domain]["payload_not_available"] = "nogood"
     with patch("homeassistant.config.load_yaml_config_file", return_value=config):
         await mqtt_mock_entry()
 
@@ -756,17 +1361,17 @@ async def help_test_discovery_update_availability(
     await mqtt_mock_entry()
     # Add availability settings to config
     config1 = copy.deepcopy(config)
-    config1[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic1"
+    config1[DOMAIN][domain]["availability_topic"] = "availability-topic1"
     config2 = copy.deepcopy(config)
-    config2[mqtt.DOMAIN][domain]["availability"] = [
+    config2[DOMAIN][domain]["availability"] = [
         {"topic": "availability-topic2"},
         {"topic": "availability-topic3"},
     ]
     config3 = copy.deepcopy(config)
-    config3[mqtt.DOMAIN][domain]["availability_topic"] = "availability-topic4"
-    data1 = json.dumps(config1[mqtt.DOMAIN][domain])
-    data2 = json.dumps(config2[mqtt.DOMAIN][domain])
-    data3 = json.dumps(config3[mqtt.DOMAIN][domain])
+    config3[DOMAIN][domain]["availability_topic"] = "availability-topic4"
+    data1 = json.dumps(config1[DOMAIN][domain])
+    data2 = json.dumps(config2[DOMAIN][domain])
+    data3 = json.dumps(config3[DOMAIN][domain])
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
     await hass.async_block_till_done()
@@ -833,7 +1438,7 @@ async def help_test_setting_attribute_via_mqtt_json_message(
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
+    config[DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
     with patch("homeassistant.config.load_yaml_config_file", return_value=config):
         await mqtt_mock_entry()
 
@@ -859,8 +1464,8 @@ async def help_test_setting_blocked_attribute_via_mqtt_json_message(
 
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
-    data = json.dumps(config[mqtt.DOMAIN][domain])
+    config[DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
+    data = json.dumps(config[DOMAIN][domain])
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
     val = "abc123"
@@ -888,8 +1493,8 @@ async def help_test_setting_attribute_with_template(
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
-    config[mqtt.DOMAIN][domain]["json_attributes_template"] = (
+    config[DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
+    config[DOMAIN][domain]["json_attributes_template"] = (
         "{{ value_json['Timer1'] | tojson }}"
     )
     with patch("homeassistant.config.load_yaml_config_file", return_value=config):
@@ -918,7 +1523,7 @@ async def help_test_update_with_json_attrs_not_dict(
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
+    config[DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
     with patch("homeassistant.config.load_yaml_config_file", return_value=config):
         await mqtt_mock_entry()
 
@@ -942,7 +1547,7 @@ async def help_test_update_with_json_attrs_bad_json(
     """
     # Add JSON attributes settings to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
+    config[DOMAIN][domain]["json_attributes_topic"] = "attr-topic"
     with patch("homeassistant.config.load_yaml_config_file", return_value=config):
         await mqtt_mock_entry()
 
@@ -966,11 +1571,11 @@ async def help_test_discovery_update_attr(
     await mqtt_mock_entry()
     # Add JSON attributes settings to config
     config1 = copy.deepcopy(config)
-    config1[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic1"
+    config1[DOMAIN][domain]["json_attributes_topic"] = "attr-topic1"
     config2 = copy.deepcopy(config)
-    config2[mqtt.DOMAIN][domain]["json_attributes_topic"] = "attr-topic2"
-    data1 = json.dumps(config1[mqtt.DOMAIN][domain])
-    data2 = json.dumps(config2[mqtt.DOMAIN][domain])
+    config2[DOMAIN][domain]["json_attributes_topic"] = "attr-topic2"
+    data1 = json.dumps(config1[DOMAIN][domain])
+    data2 = json.dumps(config2[DOMAIN][domain])
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data1)
     await hass.async_block_till_done()
@@ -1167,7 +1772,8 @@ async def help_test_encoding_subscribable_topics(
         state = hass.states.get(entity_id)
 
         if init_payload_value:
-            # Sometimes a device needs to have an initialization pay load, e.g. to switch the device on.
+            # Sometimes a device needs to have an initialization
+            # pay load, e.g. to switch the device on.
             async_fire_mqtt_message(hass, init_payload_topic, init_payload_value)
             await hass.async_block_till_done()
 
@@ -1288,17 +1894,18 @@ async def help_test_entity_device_info_with_identifier(
     """
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
-    registry = dr.async_get(hass)
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(identifiers={("mqtt", "helloworld")})
+    device = device_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
     assert device.identifiers == {("mqtt", "helloworld")}
     assert device.manufacturer == "Whatever"
@@ -1307,7 +1914,7 @@ async def help_test_entity_device_info_with_identifier(
     assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
-    assert device.suggested_area == "default_area"
+    assert device.area_id == area_registry.async_get_area_by_name("default_area").id
     assert device.configuration_url == "http://example.com"
 
 
@@ -1323,17 +1930,18 @@ async def help_test_entity_device_info_with_connection(
     """
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_MAC)
     config["unique_id"] = "veryunique"
 
-    registry = dr.async_get(hass)
+    area_registry = ar.async_get(hass)
+    device_registry = dr.async_get(hass)
 
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
-    device = registry.async_get_device(
+    device = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, "02:5b:26:a8:dc:12")}
     )
     assert device is not None
@@ -1344,7 +1952,7 @@ async def help_test_entity_device_info_with_connection(
     assert device.model_id == "XYZ001"
     assert device.hw_version == "rev1"
     assert device.sw_version == "0.1-beta"
-    assert device.suggested_area == "default_area"
+    assert device.area_id == area_registry.async_get_area_by_name("default_area").id
     assert device.configuration_url == "http://example.com"
 
 
@@ -1357,7 +1965,7 @@ async def help_test_entity_device_info_remove(
     """Test device registry remove."""
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
@@ -1370,14 +1978,14 @@ async def help_test_entity_device_info_remove(
 
     device = dev_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is not None
-    assert ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
+    assert ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique")
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
     await hass.async_block_till_done()
 
     device = dev_registry.async_get_device(identifiers={("mqtt", "helloworld")})
     assert device is None
-    assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique")
+    assert not ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique")
 
 
 async def help_test_entity_device_info_update(
@@ -1392,7 +2000,7 @@ async def help_test_entity_device_info_update(
     """
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
@@ -1430,7 +2038,7 @@ async def help_test_entity_name(
     """
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
     expected_entity_name = "test"
@@ -1449,7 +2057,7 @@ async def help_test_entity_name(
     device = registry.async_get_device({("mqtt", "helloworld")})
     assert device is not None
 
-    entity_id = f"{domain}.beer_{expected_entity_name}"
+    entity_id = f"{domain}.default_area_beer_{expected_entity_name}"
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.name == f"Beer {expected_friendly_name}"
@@ -1465,12 +2073,12 @@ async def help_test_entity_id_update_subscriptions(
     """Test MQTT subscriptions are managed when entity_id is updated."""
     # Add unique_id to config
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["unique_id"] = "TOTALLY_UNIQUE"
+    config[DOMAIN][domain]["unique_id"] = "TOTALLY_UNIQUE"
 
     if topics is None:
         # Add default topics to config
-        config[mqtt.DOMAIN][domain]["availability_topic"] = "avty-topic"
-        config[mqtt.DOMAIN][domain]["state_topic"] = "test-topic"
+        config[DOMAIN][domain]["availability_topic"] = "avty-topic"
+        config[DOMAIN][domain]["state_topic"] = "test-topic"
         topics = ["avty-topic", "test-topic"]
     assert len(topics) > 0
     entity_registry = er.async_get(hass)
@@ -1521,15 +2129,15 @@ async def help_test_entity_id_update_discovery_update(
     # Add unique_id to config
     await mqtt_mock_entry()
     config = copy.deepcopy(config)
-    config[mqtt.DOMAIN][domain]["unique_id"] = "TOTALLY_UNIQUE"
+    config[DOMAIN][domain]["unique_id"] = "TOTALLY_UNIQUE"
 
     if topic is None:
         # Add default topic to config
-        config[mqtt.DOMAIN][domain]["availability_topic"] = "avty-topic"
+        config[DOMAIN][domain]["availability_topic"] = "avty-topic"
         topic = "avty-topic"
 
     entity_registry = er.async_get(hass)
-    data = json.dumps(config[mqtt.DOMAIN][domain])
+    data = json.dumps(config[DOMAIN][domain])
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
 
@@ -1546,8 +2154,8 @@ async def help_test_entity_id_update_discovery_update(
     )
     await hass.async_block_till_done()
 
-    config[mqtt.DOMAIN][domain]["availability_topic"] = f"{topic}_2"
-    data = json.dumps(config[mqtt.DOMAIN][domain])
+    config[DOMAIN][domain]["availability_topic"] = f"{topic}_2"
+    data = json.dumps(config[DOMAIN][domain])
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", data)
     await hass.async_block_till_done()
     assert len(hass.states.async_entity_ids(domain)) == 1
@@ -1569,7 +2177,7 @@ async def help_test_entity_debug_info(
     """
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
     config["platform"] = "mqtt"
@@ -1610,7 +2218,7 @@ async def help_test_entity_debug_info_max_messages(
     """
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
@@ -1673,7 +2281,7 @@ async def help_test_entity_debug_info_message(
     """
     # Add device settings to config
     await mqtt_mock_entry()
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
 
@@ -1734,7 +2342,7 @@ async def help_test_entity_debug_info_message(
         if service:
             # Trigger an outgoing MQTT message
             if service:
-                service_data = {ATTR_ENTITY_ID: f"{domain}.beer_test"}
+                service_data = {ATTR_ENTITY_ID: f"{domain}.default_area_beer_test"}
                 if service_parameters:
                     service_data.update(service_parameters)
 
@@ -1776,7 +2384,7 @@ async def help_test_entity_debug_info_remove(
     """
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
     config["platform"] = "mqtt"
@@ -1802,7 +2410,10 @@ async def help_test_entity_debug_info_remove(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.beer_test"
+    assert (
+        debug_info_data["entities"][0]["entity_id"]
+        == f"{domain}.default_area_beer_test"
+    )
     entity_id = debug_info_data["entities"][0]["entity_id"]
 
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla/config", "")
@@ -1826,7 +2437,7 @@ async def help_test_entity_debug_info_update_entity_id(
     """
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["unique_id"] = "veryunique"
     config["platform"] = "mqtt"
@@ -1847,7 +2458,10 @@ async def help_test_entity_debug_info_update_entity_id(
         == f"homeassistant/{domain}/bla/config"
     )
     assert debug_info_data["entities"][0]["discovery_data"]["payload"] == config
-    assert debug_info_data["entities"][0]["entity_id"] == f"{domain}.beer_test"
+    assert (
+        debug_info_data["entities"][0]["entity_id"]
+        == f"{domain}.default_area_beer_test"
+    )
     assert len(debug_info_data["entities"][0]["subscriptions"]) == 1
     assert {"topic": "test-topic", "messages": []} in debug_info_data["entities"][0][
         "subscriptions"
@@ -1855,7 +2469,7 @@ async def help_test_entity_debug_info_update_entity_id(
     assert len(debug_info_data["triggers"]) == 0
 
     entity_registry.async_update_entity(
-        f"{domain}.beer_test", new_entity_id=f"{domain}.milk"
+        f"{domain}.default_area_beer_test", new_entity_id=f"{domain}.milk"
     )
     await hass.async_block_till_done()
     await hass.async_block_till_done()
@@ -1873,7 +2487,9 @@ async def help_test_entity_debug_info_update_entity_id(
         "subscriptions"
     ]
     assert len(debug_info_data["triggers"]) == 0
-    assert f"{domain}.beer_test" not in hass.data["mqtt"].debug_info_entities
+    assert (
+        f"{domain}.default_area_beer_test" not in hass.data["mqtt"].debug_info_entities
+    )
 
 
 async def help_test_entity_disabled_by_default(
@@ -1885,7 +2501,7 @@ async def help_test_entity_disabled_by_default(
     """Test device registry remove."""
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
     config["enabled_by_default"] = False
     config["unique_id"] = "veryunique1"
@@ -1897,7 +2513,7 @@ async def help_test_entity_disabled_by_default(
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla1/config", data)
     await hass.async_block_till_done()
-    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
+    entity_id = ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique1")
     assert entity_id is not None and hass.states.get(entity_id) is None
     assert dev_registry.async_get_device(identifiers={("mqtt", "helloworld")})
 
@@ -1907,14 +2523,14 @@ async def help_test_entity_disabled_by_default(
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla2/config", data)
     await hass.async_block_till_done()
-    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique2")
+    entity_id = ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique2")
     assert entity_id is not None and hass.states.get(entity_id) is not None
 
     # Remove the enabled entity, both entities and the device should be removed
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/bla2/config", "")
     await hass.async_block_till_done()
-    assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique1")
-    assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, "veryunique2")
+    assert not ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique1")
+    assert not ent_registry.async_get_entity_id(domain, DOMAIN, "veryunique2")
     assert not dev_registry.async_get_device(identifiers={("mqtt", "helloworld")})
 
 
@@ -1927,7 +2543,7 @@ async def help_test_entity_category(
     """Test device registry remove."""
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
 
     ent_registry = er.async_get(hass)
@@ -1938,7 +2554,7 @@ async def help_test_entity_category(
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
-    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    entity_id = ent_registry.async_get_entity_id(domain, DOMAIN, unique_id)
     assert entity_id is not None and hass.states.get(entity_id)
     entry = ent_registry.async_get(entity_id)
     assert entry is not None and entry.entity_category is None
@@ -1950,7 +2566,7 @@ async def help_test_entity_category(
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
-    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    entity_id = ent_registry.async_get_entity_id(domain, DOMAIN, unique_id)
     assert entity_id is not None and hass.states.get(entity_id)
     entry = ent_registry.async_get(entity_id)
     assert entry is not None and entry.entity_category == EntityCategory.DIAGNOSTIC
@@ -1962,7 +2578,7 @@ async def help_test_entity_category(
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
-    assert not ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    assert not ent_registry.async_get_entity_id(domain, DOMAIN, unique_id)
 
 
 async def help_test_entity_icon_and_entity_picture(
@@ -1974,7 +2590,7 @@ async def help_test_entity_icon_and_entity_picture(
     """Test entity picture and icon."""
     await mqtt_mock_entry()
     # Add device settings to config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     config["device"] = copy.deepcopy(DEFAULT_CONFIG_DEVICE_INFO_ID)
 
     ent_registry = er.async_get(hass)
@@ -1985,7 +2601,7 @@ async def help_test_entity_icon_and_entity_picture(
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
-    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    entity_id = ent_registry.async_get_entity_id(domain, DOMAIN, unique_id)
     state = hass.states.get(entity_id)
     assert entity_id is not None and state
     assert state.attributes.get("icon") is None
@@ -1998,7 +2614,7 @@ async def help_test_entity_icon_and_entity_picture(
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
-    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    entity_id = ent_registry.async_get_entity_id(domain, DOMAIN, unique_id)
     state = hass.states.get(entity_id)
     assert entity_id is not None and state
     assert state.attributes.get("icon") is None
@@ -2012,7 +2628,7 @@ async def help_test_entity_icon_and_entity_picture(
     data = json.dumps(config)
     async_fire_mqtt_message(hass, f"homeassistant/{domain}/{unique_id}/config", data)
     await hass.async_block_till_done()
-    entity_id = ent_registry.async_get_entity_id(domain, mqtt.DOMAIN, unique_id)
+    entity_id = ent_registry.async_get_entity_id(domain, DOMAIN, unique_id)
     state = hass.states.get(entity_id)
     assert entity_id is not None and state
     assert state.attributes.get("icon") == "mdi:emoji-happy-outline"
@@ -2045,7 +2661,7 @@ async def help_test_publishing_with_custom_encoding(
     setup_config = []
     service_data = {}
     for test_id, test_data in test_config.items():
-        test_config_setup: dict[str, Any] = copy.copy(config[mqtt.DOMAIN][domain])
+        test_config_setup: dict[str, Any] = copy.copy(config[DOMAIN][domain])
         test_config_setup.update(
             {
                 topic: f"cmd/{test_id}",
@@ -2056,7 +2672,9 @@ async def help_test_publishing_with_custom_encoding(
             test_config_setup["encoding"] = test_data["encoding"]
         if template and test_data["cmd_tpl"]:
             test_config_setup[template] = (
-                f"{{{{ (('%.1f'|format({tpl_par}))[0] if is_number({tpl_par}) else {tpl_par}[0]) | ord | pack('b') }}}}"
+                f"{{{{ (('%.1f'|format({tpl_par}))[0]"
+                f" if is_number({tpl_par})"
+                f" else {tpl_par}[0]) | ord | pack('b') }}}}"
             )
         setup_config.append(test_config_setup)
 
@@ -2083,7 +2701,9 @@ async def help_test_publishing_with_custom_encoding(
     )
     await hass.async_block_till_done()
 
-    mqtt_mock.async_publish.assert_any_call("cmd/test1", str(payload), 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "cmd/test1", str(payload), 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # 2) test with utf-16 encoding
@@ -2094,7 +2714,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test2", str(payload).encode("utf-16"), 0, False
+        "cmd/test2",
+        str(payload).encode("utf-16"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -2106,8 +2730,8 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     assert (
-        f"Can't pass-through payload for publishing {payload} on cmd/test3 with no encoding set, need 'bytes'"
-        in caplog.text
+        f"Can't pass-through payload for publishing {payload} on"
+        " cmd/test3 with no encoding set, need 'bytes'" in caplog.text
     )
 
     # 4) test with invalid encoding set should fail
@@ -2118,8 +2742,8 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     assert (
-        f"Can't encode payload for publishing {payload} on cmd/test4 with encoding invalid"
-        in caplog.text
+        f"Can't encode payload for publishing {payload} on"
+        " cmd/test4 with encoding invalid" in caplog.text
     )
 
     # 5) test with command template and raw encoding if specified
@@ -2133,7 +2757,11 @@ async def help_test_publishing_with_custom_encoding(
         blocking=True,
     )
     mqtt_mock.async_publish.assert_any_call(
-        "cmd/test5", tpl_output or str(payload)[0].encode("utf-8"), 0, False
+        "cmd/test5",
+        tpl_output or str(payload)[0].encode("utf-8"),
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
 
@@ -2147,7 +2775,7 @@ async def help_test_reload_with_config(
     """Test reloading with supplied config."""
     new_yaml_config_file = tmp_path / "configuration.yaml"
 
-    def _write_yaml_config() -> None:
+    def _write_yaml_config() -> str:
         new_yaml_config = yaml.dump(config)
         new_yaml_config_file.write_text(new_yaml_config)
         assert new_yaml_config_file.read_text() == new_yaml_config
@@ -2173,7 +2801,7 @@ async def help_test_reloadable(
 ) -> None:
     """Test reloading an MQTT platform."""
     # Set up with empty config
-    config = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    config = copy.deepcopy(config[DOMAIN][domain])
     # Create and test an old config of 2 entities based on the config supplied
     old_config_1 = copy.deepcopy(config)
     old_config_1["name"] = "test_old_1"
@@ -2181,11 +2809,11 @@ async def help_test_reloadable(
     old_config_2["name"] = "test_old_2"
 
     old_config = {
-        mqtt.DOMAIN: {domain: [old_config_1, old_config_2]},
+        DOMAIN: {domain: [old_config_1, old_config_2]},
     }
     # Start the MQTT entry with the old config
     entry = MockConfigEntry(
-        domain=mqtt.DOMAIN,
+        domain=DOMAIN,
         data={mqtt.CONF_BROKER: "test-broker"},
         version=mqtt.CONFIG_ENTRY_VERSION,
         minor_version=mqtt.CONFIG_ENTRY_MINOR_VERSION,
@@ -2209,7 +2837,7 @@ async def help_test_reloadable(
     new_config_extra["name"] = "test_new_3"
 
     new_config = {
-        mqtt.DOMAIN: {domain: [new_config_1, new_config_2, new_config_extra]},
+        DOMAIN: {domain: [new_config_1, new_config_2, new_config_extra]},
     }
     with patch("homeassistant.config.load_yaml_config_file", return_value=new_config):
         # Reload the mqtt entry with the new config
@@ -2230,7 +2858,7 @@ async def help_test_reloadable(
 
 async def help_test_unload_config_entry(hass: HomeAssistant) -> None:
     """Test unloading the MQTT config entry."""
-    mqtt_config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     assert mqtt_config_entry.state is ConfigEntryState.LOADED
 
     assert await hass.config_entries.async_unload(mqtt_config_entry.entry_id)
@@ -2249,14 +2877,14 @@ async def help_test_unload_config_entry_with_platform(
     """Test unloading the MQTT config entry with a specific platform domain."""
     # prepare setup through configuration.yaml
     config_setup: dict[str, dict[str, Any]] = copy.deepcopy(config)
-    config_setup[mqtt.DOMAIN][domain]["name"] = "config_setup"
+    config_setup[DOMAIN][domain]["name"] = "config_setup"
     config_name = config_setup
 
     with patch("homeassistant.config.load_yaml_config_file", return_value=config_name):
         await mqtt_mock_entry()
 
     # prepare setup through discovery
-    discovery_setup = copy.deepcopy(config[mqtt.DOMAIN][domain])
+    discovery_setup = copy.deepcopy(config[DOMAIN][domain])
     discovery_setup["name"] = "discovery_setup"
     async_fire_mqtt_message(
         hass, f"homeassistant/{domain}/bla/config", json.dumps(discovery_setup)

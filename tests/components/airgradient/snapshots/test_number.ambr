@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[number.airgradient_display_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Display brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -59,8 +61,9 @@
 # ---
 # name: test_all_entities[number.airgradient_led_bar_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -83,6 +86,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'LED bar brightness',
     'options': dict({
     }),
     'original_device_class': None,

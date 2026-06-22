@@ -1,16 +1,15 @@
 """Validate requirements."""
 
-from __future__ import annotations
-
 from collections import deque
+from collections.abc import Collection
 from functools import cache
-from importlib.metadata import metadata
+from importlib.metadata import files, metadata
 import json
 import os
 import re
 import subprocess
 import sys
-from typing import Any
+from typing import Any, TypedDict
 
 from awesomeversion import AwesomeVersion, AwesomeVersionStrategy
 from tqdm import tqdm
@@ -27,29 +26,60 @@ PACKAGE_CHECK_VERSION_RANGE = {
     "aiohttp": "SemVer",
     "attrs": "CalVer",
     "awesomeversion": "CalVer",
+    "bleak": "SemVer",
     "grpcio": "SemVer",
     "httpx": "SemVer",
+    "lxml": "SemVer",
     "mashumaro": "SemVer",
     "numpy": "SemVer",
     "pandas": "SemVer",
     "pillow": "SemVer",
     "pydantic": "SemVer",
     "pyjwt": "SemVer",
+    "pymodbus": "Custom",
     "pytz": "CalVer",
     "requests": "SemVer",
-    "typing_extensions": "SemVer",
+    "serialx": "SemVer",
+    "typing-extensions": "SemVer",
     "urllib3": "SemVer",
     "yarl": "SemVer",
+    "zeroconf": "SemVer",
+}
+PACKAGE_CHECK_PREPARE_UPDATE: dict[str, int] = {
+    # In the form dict("dependencyX": n+1)
+    # - dependencyX should be the name of the referenced dependency
+    # - current major version +1
+    # Pandas will only fully support Python 3.14 in v3.
+    # Zeroconf will switch to v1 soon, without any breaking changes.
+    "pandas": 3,
+    "zeroconf": 1,
 }
 PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # In the form dict("domain": {"package": {"dependency1", "dependency2"}})
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
+    "altruist": {"altruistclient": {"zeroconf"}},
     "geocaching": {
         # scipy version closely linked to numpy
         # geocachingapi > reverse_geocode > scipy > numpy
         "scipy": {"numpy"}
+    },
+    "noaa_tides": {
+        # https://github.com/GClunies/noaa_coops/pull/69
+        "noaa-coops": {"pandas"}
+    },
+    "smarty": {
+        # Current has an upper bound on major >=3.11.0,<4.0.0
+        "pysmarty2": {"pymodbus"}
+    },
+    "stiebel_eltron": {
+        # Current has an upper bound on major >=3.10.0,<4.0.0
+        "pystiebeleltron": {"pymodbus"}
+    },
+    "telegram_bot": {"python-telegram-bot": {"httpx"}},
+    "xiaomi_miio": {
+        "python-miio": {"zeroconf"},
     },
 }
 
@@ -62,8 +92,15 @@ PIP_VERSION_RANGE_SEPARATOR = re.compile(r"^(==|>=|<=|~=|!=|<|>|===)?(.*)$")
 FORBIDDEN_PACKAGES = {
     # Not longer needed, as we could use the standard library
     "async-timeout": "be replaced by asyncio.timeout (Python 3.11+)",
+    # backoff is archived / unmaintained
+    # it imports asyncio.iscoroutinefunction scheduled for removal in 3.16
+    "backoff": "be replaced with python-backoff (it will break in Python 3.16)",
     # Only needed for tests
     "codecov": "not be a runtime dependency",
+    # Coloredlogs is unmaintained and contains a '.pth' file
+    "coloredlogs": "be replaced with colorlog",
+    # Only needed for docs
+    "mkdocs": "not be a runtime dependency",
     # Does blocking I/O and should be replaced by pyserial-asyncio-fast
     # See https://github.com/home-assistant/core/pull/116635
     "pyserial-asyncio": "be replaced by pyserial-asyncio-fast",
@@ -71,6 +108,8 @@ FORBIDDEN_PACKAGES = {
     "pytest": "not be a runtime dependency",
     # Only needed for build
     "setuptools": "not be a runtime dependency",
+    # Only needed for docs
+    "sphinx": "not be a runtime dependency",
     # Only needed for build
     "wheel": "not be a runtime dependency",
 }
@@ -81,35 +120,21 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - reasonX should be the name of the invalid dependency
     "adax": {"adax": {"async-timeout"}, "adax-local": {"async-timeout"}},
     "airthings": {"airthings-cloud": {"async-timeout"}},
-    "alexa_devices": {"marisa-trie": {"setuptools"}},
     "ampio": {"asmog": {"async-timeout"}},
     "apache_kafka": {"aiokafka": {"async-timeout"}},
-    "apple_tv": {"pyatv": {"async-timeout"}},
-    "azure_devops": {
-        # https://github.com/timmo001/aioazuredevops/issues/67
-        # aioazuredevops > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
+    "aseko_pool_live": {"gql": {"backoff"}},
     "blackbird": {
         # https://github.com/koolsb/pyblackbird/issues/12
         # pyblackbird > pyserial-asyncio
         "pyblackbird": {"pyserial-asyncio"}
     },
-    "cloud": {"hass-nabucasa": {"async-timeout"}, "snitun": {"async-timeout"}},
+    "coinbase": {"coinbase-advanced-py": {"backoff"}},
     "cmus": {
         # https://github.com/mtreinish/pycmus/issues/4
         # pycmus > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "concord232": {
-        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
-        # concord232 > stevedore > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
     "delijn": {"pydelijn": {"async-timeout"}},
-    "devialet": {"async-upnp-client": {"async-timeout"}},
-    "dlna_dmr": {"async-upnp-client": {"async-timeout"}},
-    "dlna_dms": {"async-upnp-client": {"async-timeout"}},
     "efergy": {
         # https://github.com/tkdrob/pyefergy/issues/46
         # pyefergy > codecov
@@ -117,12 +142,8 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "pyefergy": {"codecov", "types-pytz"}
     },
     "emulated_kasa": {"sense-energy": {"async-timeout"}},
+    "energyid": {"energyid-webhooks": {"backoff"}},
     "entur_public_transport": {"enturclient": {"async-timeout"}},
-    "epson": {
-        # https://github.com/pszafer/epson_projector/pull/22
-        # epson-projector > pyserial-asyncio
-        "epson-projector": {"pyserial-asyncio", "async-timeout"}
-    },
     "escea": {"pescea": {"async-timeout"}},
     "evil_genius_labs": {"pyevilgenius": {"async-timeout"}},
     "familyhub": {"python-family-hub-local": {"async-timeout"}},
@@ -135,68 +156,31 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "flux_led": {"flux-led": {"async-timeout"}},
     "foobot": {"foobot-async": {"async-timeout"}},
-    "github": {"aiogithubapi": {"async-timeout"}},
-    "guardian": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # aioguardian > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
+    "geocaching": {"geocachingapi": {"backoff"}},
+    "github": {"aiogithubapi": {"backoff"}},
+    "google_maps": {"locationsharinglib": {"coloredlogs"}},
     "harmony": {"aioharmony": {"async-timeout"}},
-    "heatmiser": {
-        # https://github.com/andylockran/heatmiserV3/issues/96
-        # heatmiserV3 > pyserial-asyncio
-        "heatmiserv3": {"pyserial-asyncio"}
-    },
     "here_travel_time": {
         "here-routing": {"async-timeout"},
         "here-transit": {"async-timeout"},
     },
-    "hive": {
-        # https://github.com/Pyhass/Pyhiveapi/pull/88
-        # pyhive-integration > unasync > setuptools
-        "unasync": {"setuptools"}
-    },
-    "homeassistant_hardware": {
-        # https://github.com/zigpy/zigpy/issues/1604
-        # universal-silabs-flasher > zigpy > pyserial-asyncio
-        "zigpy": {"pyserial-asyncio"},
-    },
-    "homekit": {"hap-python": {"async-timeout"}},
-    "homewizard": {"python-homewizard-energy": {"async-timeout"}},
+    "homeassistant_hardware": {"universal-silabs-flasher": {"coloredlogs"}},
+    "homewizard": {"python-homewizard-energy": {"async-timeout", "backoff"}},
+    "hydrawise": {"gql": {"backoff"}},
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
-    "influxdb": {
-        # https://github.com/influxdata/influxdb-client-python/issues/695
-        # influxdb-client > setuptools
-        "influxdb-client": {"setuptools"}
-    },
-    "insteon": {
-        # https://github.com/pyinsteon/pyinsteon/issues/430
-        # pyinsteon > pyserial-asyncio
-        "pyinsteon": {"pyserial-asyncio"}
-    },
-    "izone": {"python-izone": {"async-timeout"}},
-    "keba": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # keba-kecontact > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
+    "ipp": {"pyipp": {"backoff"}},
+    "iqvia": {"pyiqvia": {"backoff"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
+    "lametric": {"demetriek": {"backoff"}},
     "ld2410_ble": {"ld2410-ble": {"async-timeout"}},
     "led_ble": {"flux-led": {"async-timeout"}},
     "lektrico": {"lektricowifi": {"async-timeout"}},
     "lifx": {"aiolifx": {"async-timeout"}},
     "linkplay": {
         "python-linkplay": {"async-timeout"},
-        "async-upnp-client": {"async-timeout"},
     },
     "loqed": {"loqedapi": {"async-timeout"}},
-    "lyric": {
-        # https://github.com/timmo001/aiolyric/issues/115
-        # aiolyric > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
-    "matter": {"python-matter-server": {"async-timeout"}},
     "mediaroom": {"pymediaroom": {"async-timeout"}},
     "met": {"pymetno": {"async-timeout"}},
     "met_eireann": {"pymeteireann": {"async-timeout"}},
@@ -206,47 +190,19 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         "microbeespy": {"setuptools"}
     },
     "mill": {"millheater": {"async-timeout"}, "mill-local": {"async-timeout"}},
-    "minecraft_server": {
-        # https://github.com/jsbronder/asyncio-dgram/issues/20
-        # mcstatus > asyncio-dgram > setuptools
-        "asyncio-dgram": {"setuptools"}
-    },
     "mochad": {
         # https://github.com/mtreinish/pymochad/issues/8
         # pymochad > pbr > setuptools
         "pbr": {"setuptools"}
     },
-    "monoprice": {
-        # https://github.com/etsinko/pymonoprice/issues/9
-        # pymonoprice > pyserial-asyncio
-        "pymonoprice": {"pyserial-asyncio"}
-    },
-    "mystrom": {
-        # https://github.com/home-assistant-ecosystem/python-mystrom/issues/55
-        # python-mystrom > setuptools
-        "python-mystrom": {"setuptools"}
-    },
+    "modern_forms": {"aiomodernforms": {"backoff"}},
+    "monarch_money": {"gql": {"backoff"}},
     "nibe_heatpump": {"nibe": {"async-timeout"}},
     "norway_air": {"pymetno": {"async-timeout"}},
-    "nx584": {
-        # https://bugs.launchpad.net/python-stevedore/+bug/2111694
-        # pynx584 > stevedore > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
     "opengarage": {"open-garage": {"async-timeout"}},
-    "openhome": {"async-upnp-client": {"async-timeout"}},
-    "opensensemap": {"opensensemap-api": {"async-timeout"}},
-    "opnsense": {
-        # https://github.com/mtreinish/pyopnsense/issues/27
-        # pyopnsense > pbr > setuptools
-        "pbr": {"setuptools"}
-    },
-    "opower": {
-        # https://github.com/arrow-py/arrow/issues/1169 (fixed not yet released)
-        # opower > arrow > types-python-dateutil
-        "arrow": {"types-python-dateutil"}
-    },
-    "pvpc_hourly_pricing": {"aiopvpc": {"async-timeout"}},
+    "overkiz": {"pyoverkiz": {"backoff"}},
+    "prosegur": {"pyprosegur": {"backoff"}},
+    "radio_browser": {"radios": {"backoff"}},
     "remote_rpi_gpio": {
         # https://github.com/waveform80/colorzero/issues/9
         # gpiozero > colorzero > setuptools
@@ -254,20 +210,17 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "ring": {"ring-doorbell": {"async-timeout"}},
     "rmvtransport": {"pyrmvtransport": {"async-timeout"}},
-    "roborock": {"python-roborock": {"async-timeout"}},
-    "samsungtv": {"async-upnp-client": {"async-timeout"}},
+    "roku": {"rokuecp": {"backoff"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
+    "simplisafe": {"simplisafe-python": {"backoff"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
-    "songpal": {"async-upnp-client": {"async-timeout"}},
-    "squeezebox": {"pysqueezebox": {"async-timeout"}},
-    "ssdp": {"async-upnp-client": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
-    "system_bridge": {
-        # https://github.com/timmo001/system-bridge-connector/pull/78
-        # systembridgeconnector > incremental > setuptools
-        "incremental": {"setuptools"}
-    },
+    "tailwind": {"gotailwind": {"backoff"}},
+    "technove": {"python-technove": {"backoff"}},
+    "tesla_wall_connector": {"tesla-wall-connector": {"backoff"}},
+    "tibber": {"gql": {"backoff"}},
+    "toon": {"toonapi": {"backoff"}},
     "travisci": {
         # https://github.com/menegazzo/travispy seems to be unmaintained
         # and unused https://www.home-assistant.io/integrations/travisci
@@ -276,19 +229,117 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
         # travispy > pytest
         "travispy": {"pytest"},
     },
-    "unifiprotect": {"uiprotect": {"async-timeout"}},
-    "upnp": {"async-upnp-client": {"async-timeout"}},
+    "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
-    "yeelight": {"async-upnp-client": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
     "zha": {
         # https://github.com/waveform80/colorzero/issues/9
         # zha > zigpy-zigate > gpiozero > colorzero > setuptools
         "colorzero": {"setuptools"},
-        # https://github.com/zigpy/zigpy/issues/1604
-        # zha > zigpy > pyserial-asyncio
-        "zigpy": {"pyserial-asyncio"},
+        "zigpy-znp": {"coloredlogs"},
+    },
+}
+
+FORBIDDEN_FILE_NAMES: set[str] = {
+    "py.typed",  # should be placed inside a package
+}
+FORBIDDEN_PACKAGE_NAMES: set[str] = {
+    "doc",
+    "docs",
+    "test",
+    "tests",
+}
+FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
+    # In the form dict("domain": {"package": {"reason1", "reason2"}})
+    # - domain is the integration domain
+    # - package is the package (can be transitive) referencing the dependency
+    # - reasonX should be the name of the invalid dependency
+    # https://github.com/jaraco/jaraco.net
+    "abode": {"jaraco-abode": {"jaraco-net"}},
+    # https://github.com/Azure/azure-kusto-python/
+    "azure_data_explorer": {
+        # Legacy namespace packages, resolved with >=5.0.5
+        # azure_kusto_data-*-nspkg.pth
+        # azure_kusto_ingest-*-nspkg.pth
+        "homeassistant": {"azure-kusto-data", "azure-kusto-ingest"},
+        "azure-kusto-ingest": {"azure-kusto-data"},
+    },
+    # https://github.com/coinbase/coinbase-advanced-py
+    "cmus": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
+    "coinbase": {"homeassistant": {"coinbase-advanced-py"}},
+    # https://github.com/u9n/dlms-cosem
+    "dsmr": {"dsmr-parser": {"dlms-cosem"}},
+    # https://github.com/tkdrob/pyefergy
+    # pyefergy declares codecov as a runtime dependency, which pulls in
+    # coverage; coverage ships an 'a1_coverage.pth' file starting from
+    # 7.13.x. Upstream fix pending in
+    # https://github.com/tkdrob/pyefergy/pull/47
+    "efergy": {"codecov": {"coverage"}},
+    # https://github.com/ChrisMandich/PyFlume  # Fixed with >=0.7.1
+    "fitbit": {
+        # Setuptools - distutils-precedence.pth
+        "fitbit": {"setuptools"}
+    },
+    "flume": {"homeassistant": {"pyflume"}},
+    # https://github.com/fortinet-solutions-cse/fortiosapi
+    "fortios": {"homeassistant": {"fortiosapi"}},
+    # https://github.com/manzanotti/geniushub-client
+    "geniushub": {"homeassistant": {"geniushub-client"}},
+    # https://github.com/costastf/locationsharinglib
+    "google_maps": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "locationsharinglib": {"coloredlogs"},
+    },
+    # https://github.com/NabuCasa/universal-silabs-flasher
+    "homeassistant_hardware": {
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        "universal-silabs-flasher": {"coloredlogs"},
+    },
+    # https://github.com/basnijholt/aiokef
+    "kef": {"homeassistant": {"aiokef"}},
+    # https://github.com/hthiery/python-lacrosse
+    "lacrosse": {"homeassistant": {"pylacrosse"}},
+    # ???
+    "linode": {"homeassistant": {"linode-api"}},
+    # https://github.com/microBeesTech/pythonSDK/
+    "microbees": {
+        "homeassistant": {"microbeespy"},
+        "microbeespy": {"setuptools"},
+    },
+    "mochad": {
+        # Setuptools - distutils-precedence.pth
+        "pbr": {"setuptools"}
+    },
+    # https://github.com/ejpenney/pyobihai
+    "obihai": {"homeassistant": {"pyobihai"}},
+    # https://github.com/iamkubi/pydactyl
+    "pterodactyl": {"homeassistant": {"py-dactyl"}},
+    "remote_rpi_gpio": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"}
+    },
+    # https://github.com/sstallion/sensorpush-api
+    "sensorpush_cloud": {
+        "homeassistant": {"sensorpush-api"},
+        "sensorpush-ha": {"sensorpush-api"},
+    },
+    # https://github.com/smappee/pysmappee
+    "smappee": {"homeassistant": {"pysmappee"}},
+    # https://github.com/watergate-ai/watergate-local-api-python
+    "watergate": {"homeassistant": {"watergate-local-api"}},
+    # https://github.com/markusressel/xs1-api-client
+    "xs1": {"homeassistant": {"xs1-api-client"}},
+    # https://github.com/zigpy/zigpy-znp
+    "zha": {
+        # Setuptools - distutils-precedence.pth
+        "colorzero": {"setuptools"},
+        # Coloredlogs, unmaintained - coloredlogs.pth
+        # https://github.com/xolox/python-coloredlogs/blob/15.0.1/coloredlogs.pth
+        "zigpy-znp": {"coloredlogs"},
     },
 }
 
@@ -297,15 +348,21 @@ PYTHON_VERSION_CHECK_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     # - domain is the integration domain
     # - package is the package (can be transitive) referencing the dependency
     # - dependencyX should be the name of the referenced dependency
-    "bluetooth": {
-        # https://github.com/hbldh/bleak/pull/1718 (not yet released)
-        "homeassistant": {"bleak"}
-    },
     "python_script": {
         # Security audits are needed for each Python version
         "homeassistant": {"restrictedpython"}
     },
 }
+
+
+class _PackageFilesCheckResult(TypedDict):
+    """Data structure to store results of package files check."""
+
+    top_level: set[str]
+    file_names: set[str]
+
+
+_packages_checked_files_cache: dict[str, _PackageFilesCheckResult] = {}
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
@@ -459,6 +516,12 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
     return deptree
 
 
+@cache
+def metadata_cache(package: str) -> dict:
+    """Return package metadata, cached."""
+    return metadata(package)
+
+
 def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
     """Return all (recursively) requirements for an integration."""
     deptree = get_pipdeptree()
@@ -471,6 +534,12 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
         integration.domain, {}
     )
     needs_forbidden_package_exceptions = False
+
+    packages_checked_files: set[str] = set()
+    forbidden_package_files_exceptions = FORBIDDEN_PACKAGE_FILES_EXCEPTIONS.get(
+        integration.domain, {}
+    )
+    needs_forbidden_package_files_exception = False
 
     package_version_check_exceptions = PACKAGE_CHECK_VERSION_RANGE_EXCEPTIONS.get(
         integration.domain, {}
@@ -501,17 +570,9 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         # Check for restrictive version limits on Python
-        if (
-            (requires_python := metadata(package)["Requires-Python"])
-            and not all(
-                _is_dependency_version_range_valid(version_part, "SemVer")
-                for version_part in requires_python.split(",")
-            )
-            # "bleak" is a transient dependency of 53 integrations, and we don't
-            # want to add the whole list to PYTHON_VERSION_CHECK_EXCEPTIONS
-            # This extra check can be removed when bleak is updated
-            # https://github.com/hbldh/bleak/pull/1718
-            and (package in packages or package != "bleak")
+        if (requires_python := metadata_cache(package)["Requires-Python"]) and not all(
+            _is_dependency_version_range_valid(version_part, "SemVer")
+            for version_part in requires_python.split(",")
         ):
             needs_python_version_check_exception = True
             integration.add_warning_or_error(
@@ -520,6 +581,17 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
                 "Version restrictions for Python are too strict "
                 f"({requires_python}) in {package}",
             )
+
+        # Check package names
+        if package not in packages_checked_files:
+            packages_checked_files.add(package)
+            if not check_dependency_files(
+                integration,
+                "homeassistant",
+                package,
+                forbidden_package_files_exceptions.get("homeassistant", ()),
+            ):
+                needs_forbidden_package_files_exception = True
 
         # Use inner loop to check dependencies
         # so we have access to the dependency parent (=current package)
@@ -544,6 +616,17 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             ):
                 needs_package_version_check_exception = True
 
+            # Check package names
+            if pkg not in packages_checked_files:
+                packages_checked_files.add(pkg)
+                if not check_dependency_files(
+                    integration,
+                    package,
+                    pkg,
+                    forbidden_package_files_exceptions.get(package, ()),
+                ):
+                    needs_forbidden_package_files_exception = True
+
         to_check.extend(dependencies)
 
     if forbidden_package_exceptions and not needs_forbidden_package_exceptions:
@@ -564,6 +647,17 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             f"Integration {integration.domain} version restrictions for Python have "
             "been resolved, please remove from `PYTHON_VERSION_CHECK_EXCEPTIONS`",
         )
+    if (
+        forbidden_package_files_exceptions
+        and not needs_forbidden_package_files_exception
+    ):
+        integration.add_error(
+            "requirements",
+            f"Integration {integration.domain} runtime"
+            " files dependency exceptions have been"
+            " resolved, please remove from"
+            " `FORBIDDEN_PACKAGE_FILES_EXCEPTIONS`",
+        )
 
     return all_requirements
 
@@ -583,7 +677,7 @@ def check_dependency_version_range(
         version == "Any"
         or (convention := PACKAGE_CHECK_VERSION_RANGE.get(pkg)) is None
         or all(
-            _is_dependency_version_range_valid(version_part, convention)
+            _is_dependency_version_range_valid(version_part, convention, pkg)
             for version_part in version.split(";", 1)[0].split(",")
         )
     ):
@@ -597,14 +691,28 @@ def check_dependency_version_range(
     return False
 
 
-def _is_dependency_version_range_valid(version_part: str, convention: str) -> bool:
+def _is_dependency_version_range_valid(
+    version_part: str, convention: str, pkg: str | None = None
+) -> bool:
+    prepare_update = PACKAGE_CHECK_PREPARE_UPDATE.get(pkg) if pkg else None
     version_match = PIP_VERSION_RANGE_SEPARATOR.match(version_part.strip())
     operator = version_match.group(1)
     version = version_match.group(2)
+    awesome = AwesomeVersion(version)
 
     if operator in (">", ">=", "!="):
         # Lower version binding and version exclusion are fine
         return True
+
+    if prepare_update is not None:
+        if operator in ("==", "~="):
+            # Only current major version allowed which prevents updates to the next one
+            return False
+        # Allow upper constraints for major version + 1
+        if operator == "<" and awesome.section(0) < prepare_update + 1:
+            return False
+        if operator == "<=" and awesome.section(0) < prepare_update:
+            return False
 
     if convention == "SemVer":
         if operator == "==":
@@ -612,7 +720,6 @@ def _is_dependency_version_range_valid(version_part: str, convention: str) -> bo
             # e.g. ==1.* is allowed, but ==1.2.* is not
             return version.endswith(".*") and version.count(".") == 1
 
-        awesome = AwesomeVersion(version)
         if operator in ("<", "<="):
             # Upper version binding only allowed on major version
             # e.g. <=3 is allowed, but <=3.1 is not
@@ -623,6 +730,47 @@ def _is_dependency_version_range_valid(version_part: str, convention: str) -> bo
             # e.g. ~=1.2 is allowed, but ~=1.2.3 is not
             return awesome.section(2) == 0
 
+    return False
+
+
+def check_dependency_files(
+    integration: Integration,
+    package: str,
+    pkg: str,
+    package_exceptions: Collection[str],
+) -> bool:
+    """Check dependency files for forbidden files and forbidden package names."""
+    if (results := _packages_checked_files_cache.get(pkg)) is None:
+        top_level: set[str] = set()
+        file_names: set[str] = set()
+        for file in files(pkg) or ():
+            if not (top := file.parts[0].lower()).endswith((".dist-info", ".py")):
+                top_level.add(top)
+            if (name := str(file).lower()) in FORBIDDEN_FILE_NAMES or (
+                name.endswith((".pth", ".start")) and len(file.parts) == 1
+            ):
+                file_names.add(str(file))
+        results = _PackageFilesCheckResult(
+            top_level=FORBIDDEN_PACKAGE_NAMES & top_level,
+            file_names=file_names,
+        )
+        _packages_checked_files_cache[pkg] = results
+    if not (results["top_level"] or results["file_names"]):
+        return True
+
+    for dir_name in results["top_level"]:
+        integration.add_warning_or_error(
+            pkg in package_exceptions,
+            "requirements",
+            f"Package {pkg} has a forbidden top level"
+            f" directory '{dir_name}' in {package}",
+        )
+    for file_name in results["file_names"]:
+        integration.add_warning_or_error(
+            pkg in package_exceptions,
+            "requirements",
+            f"Package {pkg} has a forbidden file '{file_name}' in {package}",
+        )
     return False
 
 

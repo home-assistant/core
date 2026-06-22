@@ -1,0 +1,262 @@
+{
+  "payload": [
+    {
+      "EVACode": "8400058",
+      "UICCode": "8400058",
+      "UICCdCode": "118400058",
+      "cdCode": 58,
+      "code": "ASD",
+      "ingangsDatum": "2025-06-03",
+      "heeftFaciliteiten": true,
+      "heeftReisassistentie": true,
+      "heeftVertrektijden": true,
+      "land": "NL",
+      "lat": 52.3788871765137,
+      "lng": 4.90027761459351,
+      "radius": 525,
+      "naderenRadius": 1200,
+      "namen": {
+        "lang": "Amsterdam Centraal",
+        "middel": "Amsterdam C.",
+        "kort": "Amsterdm C"
+      },
+      "synoniemen": ["Amsterdam CS", "Amsterdam"],
+      "nearbyMeLocationId": {
+        "value": "ASD",
+        "type": "stationV2"
+      },
+      "sporen": [
+        {
+          "spoorNummer": "1"
+        },
+        {
+          "spoorNummer": "2"
+        },
+        {
+          "spoorNummer": "2a"
+        },
+        {
+          "spoorNummer": "2b"
+        },
+        {
+          "spoorNummer": "4"
+        },
+        {
+          "spoorNummer": "4a"
+        },
+        {
+          "spoorNummer": "4b"
+        },
+        {
+          "spoorNummer": "5"
+        },
+        {
+          "spoorNummer": "5a"
+        },
+        {
+          "spoorNummer": "5b"
+        },
+        {
+          "spoorNummer": "7"
+        },
+        {
+          "spoorNummer": "7a"
+        },
+        {
+          "spoorNummer": "7b"
+        },
+        {
+          "spoorNummer": "8"
+        },
+        {
+          "spoorNummer": "8a"
+        },
+        {
+          "spoorNummer": "8b"
+        },
+        {
+          "spoorNummer": "10"
+        },
+        {
+          "spoorNummer": "10a"
+        },
+        {
+          "spoorNummer": "10b"
+        },
+        {
+          "spoorNummer": "11"
+        },
+        {
+          "spoorNummer": "11a"
+        },
+        {
+          "spoorNummer": "11b"
+        },
+        {
+          "spoorNummer": "13"
+        },
+        {
+          "spoorNummer": "13a"
+        },
+        {
+          "spoorNummer": "13b"
+        },
+        {
+          "spoorNummer": "14"
+        },
+        {
+          "spoorNummer": "14a"
+        },
+        {
+          "spoorNummer": "14b"
+        },
+        {
+          "spoorNummer": "15"
+        },
+        {
+          "spoorNummer": "15a"
+        },
+        {
+          "spoorNummer": "15b"
+        }
+      ],
+      "stationType": "MEGA_STATION"
+    },
+    {
+      "EVACode": "8400319",
+      "UICCode": "8400319",
+      "UICCdCode": "118400319",
+      "cdCode": 319,
+      "code": "HT",
+      "ingangsDatum": "2025-06-03",
+      "heeftFaciliteiten": true,
+      "heeftReisassistentie": true,
+      "heeftVertrektijden": true,
+      "land": "NL",
+      "lat": 51.69048,
+      "lng": 5.29362,
+      "radius": 525,
+      "naderenRadius": 1200,
+      "namen": {
+        "lang": "'s-Hertogenbosch",
+        "middel": "'s-Hertogenbosch",
+        "kort": "Den Bosch"
+      },
+      "synoniemen": ["Den Bosch", "Hertogenbosch ('s)"],
+      "nearbyMeLocationId": {
+        "value": "HT",
+        "type": "stationV2"
+      },
+      "sporen": [
+        {
+          "spoorNummer": "1"
+        },
+        {
+          "spoorNummer": "3"
+        },
+        {
+          "spoorNummer": "3a"
+        },
+        {
+          "spoorNummer": "3b"
+        },
+        {
+          "spoorNummer": "4"
+        },
+        {
+          "spoorNummer": "4a"
+        },
+        {
+          "spoorNummer": "4b"
+        },
+        {
+          "spoorNummer": "6"
+        },
+        {
+          "spoorNummer": "6a"
+        },
+        {
+          "spoorNummer": "6b"
+        },
+        {
+          "spoorNummer": "7"
+        },
+        {
+          "spoorNummer": "7a"
+        },
+        {
+          "spoorNummer": "7b"
+        }
+      ],
+      "stationType": "KNOOPPUNT_INTERCITY_STATION"
+    },
+    {
+      "EVACode": "8400530",
+      "UICCode": "8400530",
+      "UICCdCode": "118400530",
+      "cdCode": 530,
+      "code": "RTD",
+      "ingangsDatum": "2017-02-01",
+      "heeftFaciliteiten": true,
+      "heeftReisassistentie": true,
+      "heeftVertrektijden": true,
+      "land": "NL",
+      "lat": 51.9249992370605,
+      "lng": 4.46888875961304,
+      "radius": 525,
+      "naderenRadius": 1000,
+      "namen": {
+        "lang": "Rotterdam Centraal",
+        "middel": "Rotterdam C.",
+        "kort": "Rotterdm C"
+      },
+      "synoniemen": ["Rotterdam CS", "Rotterdam"],
+      "nearbyMeLocationId": {
+        "value": "RTD",
+        "type": "stationV2"
+      },
+      "sporen": [
+        {
+          "spoorNummer": "2"
+        },
+        {
+          "spoorNummer": "3"
+        },
+        {
+          "spoorNummer": "4"
+        },
+        {
+          "spoorNummer": "6"
+        },
+        {
+          "spoorNummer": "7"
+        },
+        {
+          "spoorNummer": "8"
+        },
+        {
+          "spoorNummer": "9"
+        },
+        {
+          "spoorNummer": "11"
+        },
+        {
+          "spoorNummer": "12"
+        },
+        {
+          "spoorNummer": "13"
+        },
+        {
+          "spoorNummer": "14"
+        },
+        {
+          "spoorNummer": "15"
+        },
+        {
+          "spoorNummer": "16"
+        }
+      ],
+      "stationType": "MEGA_STATION"
+    }
+  ]
+}

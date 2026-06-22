@@ -40,14 +40,22 @@ TEST_HC_APP = "Dishwasher"
 
 EVENT_PROG_DELAYED_START = {
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.DelayedStart",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.DelayedStart"
+        ),
+    },
+    EventType.EVENT: {
+        EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 30,
+        EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 0,
     },
 }
 
 
 EVENT_PROG_RUN = {
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
     EventType.EVENT: {
         EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: 0,
@@ -61,7 +69,9 @@ EVENT_PROG_UPDATE_1 = {
         EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 80,
     },
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
 }
 
@@ -71,19 +81,36 @@ EVENT_PROG_UPDATE_2 = {
         EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 99,
     },
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Run",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
+    },
+}
+
+
+EVENT_PROG_UPDATE_3 = {
+    EventType.EVENT: {
+        EventKey.BSH_COMMON_OPTION_REMAINING_PROGRAM_TIME: None,
+        EventKey.BSH_COMMON_OPTION_PROGRAM_PROGRESS: 99,
+    },
+    EventType.STATUS: {
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Run"
+        ),
     },
 }
 
 EVENT_PROG_END = {
     EventType.STATUS: {
-        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: "BSH.Common.EnumType.OperationState.Ready",
+        EventKey.BSH_COMMON_STATUS_OPERATION_STATE: (
+            "BSH.Common.EnumType.OperationState.Ready"
+        ),
     },
 }
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.SENSOR]
 
@@ -98,7 +125,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -216,7 +243,7 @@ async def test_sensor_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if sensor entities availability are based on the appliance connection state."""
+    """Test sensor entities availability based on appliance connection."""
     entity_ids = [
         "sensor.dishwasher_operation_state",
         "sensor.dishwasher_salt_nearly_empty",
@@ -266,6 +293,7 @@ PROGRAM_SEQUENCE_EVENTS = (
     EVENT_PROG_RUN,
     EVENT_PROG_UPDATE_1,
     EVENT_PROG_UPDATE_2,
+    EVENT_PROG_UPDATE_3,
     EVENT_PROG_END,
 )
 
@@ -276,21 +304,24 @@ ENTITY_ID_STATES = {
         "run",
         "run",
         "run",
+        "run",
         "ready",
     ),
     "sensor.dishwasher_program_finish_time": (
-        "unavailable",
+        "2021-01-09T12:00:30+00:00",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:00+00:00",
         "2021-01-09T12:00:20+00:00",
-        "unavailable",
+        STATE_UNKNOWN,
+        STATE_UNAVAILABLE,
     ),
     "sensor.dishwasher_program_progress": (
-        "unavailable",
+        "0",
         "60",
         "80",
         "99",
-        "unavailable",
+        "99",
+        STATE_UNAVAILABLE,
     ),
 }
 
@@ -445,10 +476,10 @@ PROGRAM_SEQUENCE_EDGE_CASE = [
 
 # Expected state at each sequence.
 ENTITY_ID_EDGE_CASE_STATES = [
-    "unavailable",
+    "2021-01-09T12:00:30+00:00",
     "2021-01-09T12:00:01+00:00",
-    "unavailable",
-    "unavailable",
+    STATE_UNAVAILABLE,
+    STATE_UNAVAILABLE,
 ]
 
 
@@ -536,6 +567,14 @@ async def test_remaining_prog_time_edge_cases(
             "Dishwasher",
         ),
         (
+            "sensor.dishwasher_door",
+            EventKey.BSH_COMMON_STATUS_DOOR_STATE,
+            EventType.STATUS,
+            None,
+            STATE_UNKNOWN,
+            "Dishwasher",
+        ),
+        (
             "sensor.fridgefreezer_freezer_door_alarm",
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
             EventType.EVENT,
@@ -568,6 +607,14 @@ async def test_remaining_prog_time_edge_cases(
             "FridgeFreezer",
         ),
         (
+            "sensor.fridgefreezer_freezer_door_alarm",
+            EventKey.REFRIGERATION_FRIDGE_FREEZER_EVENT_DOOR_ALARM_FREEZER,
+            EventType.EVENT,
+            None,
+            STATE_UNKNOWN,
+            "FridgeFreezer",
+        ),
+        (
             "sensor.coffeemaker_bean_container_empty",
             EventType.EVENT,
             "EVENT_NOT_IN_STATUS_YET_SO_SET_TO_OFF",
@@ -597,6 +644,14 @@ async def test_remaining_prog_time_edge_cases(
             EventType.EVENT,
             BSH_EVENT_PRESENT_STATE_CONFIRMED,
             "confirmed",
+            "CoffeeMaker",
+        ),
+        (
+            "sensor.coffeemaker_bean_container_empty",
+            EventKey.CONSUMER_PRODUCTS_COFFEE_MAKER_EVENT_BEAN_CONTAINER_EMPTY,
+            EventType.EVENT,
+            None,
+            STATE_UNKNOWN,
             "CoffeeMaker",
         ),
     ],
@@ -610,7 +665,7 @@ async def test_sensors_states(
     entity_id: str,
     event_key: EventKey,
     event_type: EventType,
-    event_value_update: str,
+    event_value_update: str | None,
     appliance: HomeAppliance,
     expected: str,
 ) -> None:

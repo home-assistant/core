@@ -1,6 +1,6 @@
 """Test the Teslemetry sensor platform."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
@@ -9,7 +9,7 @@ from teslemetry_stream import Signal
 
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -26,14 +26,15 @@ async def test_sensors(
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the sensor entities with the legacy polling are correct."""
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
 
-    # Force the vehicle to use polling
-    with patch("tesla_fleet_api.teslemetry.Vehicle.pre2021", return_value=True):
-        entry = await setup_platform(hass, [Platform.SENSOR])
+    entry = await setup_platform(hass, [Platform.SENSOR])
 
     assert_entities(hass, entry.entry_id, entity_registry, snapshot)
 
@@ -49,8 +50,6 @@ async def test_sensors(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_streaming(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
@@ -79,29 +78,42 @@ async def test_sensors_streaming(
                 "cost": 20,
                 "name": "wake_up",
                 "balance": 1980,
+                "quota": {
+                    "used": 212,
+                    "fraction": 0.212,
+                    "reset_at": "2026-07-10T00:00:00.000Z",
+                },
             },
             "createdAt": "2024-10-04T10:45:17.537Z",
         }
     )
     await hass.async_block_till_done()
 
+    # Balance-only credit events should not clear quota usage.
+    mock_add_listener.send(
+        {
+            "credits": {"balance": 1980},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.teslemetry_command_quota_used").state == "21.2"
+
     # Reload the entry
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "sensor.test_charging",
-        "sensor.test_battery_level",
-        "sensor.test_charge_energy_added",
-        "sensor.test_charger_power",
-        "sensor.test_charge_cable",
-        "sensor.test_time_to_full_charge",
-        "sensor.test_time_to_arrival",
-        "sensor.teslemetry_credits",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-state")
+    # Assert the entities restored their values with concrete assertions
+    assert hass.states.get("sensor.test_charging").state == "charging"
+    assert hass.states.get("sensor.test_battery_level").state == "90"
+    assert hass.states.get("sensor.test_charge_energy_added").state == "10"
+    assert hass.states.get("sensor.test_charger_power").state == "2"
+    assert hass.states.get("sensor.test_charge_cable").state == "unknown"
+    assert hass.states.get("sensor.test_time_to_full_charge").state == "unknown"
+    assert hass.states.get("sensor.test_time_to_arrival").state == "unknown"
+    assert hass.states.get("sensor.teslemetry_command_credits").state == "1980"
+    assert (quota_state := hass.states.get("sensor.teslemetry_command_quota_used"))
+    assert quota_state.state == "21.2"
 
 
 async def test_energy_history_no_time_series(
@@ -117,7 +129,7 @@ async def test_energy_history_no_time_series(
 
     entity_id = "sensor.energy_site_battery_discharged"
     state = hass.states.get(entity_id)
-    assert state.state == "0.036"
+    assert state.state == STATE_UNKNOWN
 
     mock_energy_history.return_value = ENERGY_HISTORY_EMPTY
 

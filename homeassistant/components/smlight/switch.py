@@ -1,7 +1,5 @@
 """Support for SLZB-06 switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -51,7 +49,6 @@ SWITCHES: list[SmSwitchEntityDescription] = [
     SmSwitchEntityDescription(
         key="auto_zigbee_update",
         translation_key="auto_zigbee_update",
-        entity_category=EntityCategory.CONFIG,
         setting=Settings.ZB_AUTOUPDATE,
         entity_registry_enabled_default=False,
         state_fn=lambda x: x.auto_zigbee,
@@ -83,6 +80,7 @@ class SmSwitch(SmEntity, SwitchEntity):
     coordinator: SmDataUpdateCoordinator
     entity_description: SmSwitchEntityDescription
     _attr_device_class = SwitchDeviceClass.SWITCH
+    _attr_entity_category = EntityCategory.CONFIG
 
     def __init__(
         self,

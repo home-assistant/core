@@ -1,14 +1,14 @@
 {
   "entity": {
     "binary_sensor": {
-      "power_save": {
-        "default": "mdi:power-sleep"
-      },
       "extra_energy": {
         "default": "mdi:white-balance-sunny"
       },
       "heating": {
         "default": "mdi:water-boiler"
+      },
+      "power_save": {
+        "default": "mdi:power-sleep"
       }
     }
   },
@@ -21,6 +21,9 @@
     },
     "set_v40_min": {
       "service": "mdi:car-coolant-level"
+    },
+    "turn_away_mode_on": {
+      "service": "mdi:beach"
     },
     "turn_off": {
       "service": "mdi:water-boiler-off"

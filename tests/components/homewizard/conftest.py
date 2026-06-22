@@ -41,6 +41,16 @@ def mock_homewizardenergy(
             "homeassistant.components.homewizard.config_flow.HomeWizardEnergyV1",
             new=homewizard,
         ),
+        patch(
+            "homeassistant.components.homewizard.has_v2_api",
+            autospec=True,
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.homewizard.config_flow.has_v2_api",
+            autospec=True,
+            return_value=False,
+        ),
     ):
         client = homewizard.return_value
 

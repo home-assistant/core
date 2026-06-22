@@ -1,6 +1,6 @@
 """Tests for Shelly update platform."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock, Mock, patch
 
 from aioshelly.exceptions import DeviceConnectionError, InvalidAuthError, RpcCallError
 from freezegun.api import FrozenDateTimeFactory
@@ -29,6 +29,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -39,11 +40,19 @@ from . import (
     init_integration,
     inject_rpc_device_event,
     mock_rest_update,
+    patch_platforms,
     register_device,
     register_entity,
 )
 
 from tests.common import mock_restore_cache
+
+
+@pytest.fixture(autouse=True)
+def fixture_platforms():
+    """Limit platforms under test."""
+    with patch_platforms([Platform.UPDATE]):
+        yield
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -186,7 +195,8 @@ async def test_block_update_connection_error(
 
     with pytest.raises(
         HomeAssistantError,
-        match="Device communication error occurred while triggering OTA update for Test name",
+        match="Device communication error occurred while triggering"
+        " OTA update for Test name",
     ):
         await hass.services.async_call(
             UPDATE_DOMAIN,
@@ -411,7 +421,13 @@ async def test_rpc_sleeping_update(
         },
     )
     entity_id = f"{UPDATE_DOMAIN}.test_name_firmware"
-    await init_integration(hass, 2, sleep_period=1000)
+    with patch.object(
+        mock_rpc_device,
+        "initialize",
+        new_callable=AsyncMock,
+        side_effect=DeviceConnectionError,
+    ):
+        await init_integration(hass, 2, sleep_period=1000)
 
     # Entity should be created when device is online
     assert hass.states.get(entity_id) is None
@@ -676,7 +692,8 @@ async def test_rpc_beta_update(
     [
         (
             DeviceConnectionError,
-            "Device communication error occurred while triggering OTA update for Test name",
+            "Device communication error occurred while triggering"
+            " OTA update for Test name",
         ),
         (
             RpcCallError(-1, "error"),

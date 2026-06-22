@@ -22,6 +22,19 @@ def async_entity_id_to_device_id(
 
 
 @callback
+def async_entity_id_to_device(
+    hass: HomeAssistant,
+    entity_id_or_uuid: str,
+) -> dr.DeviceEntry | None:
+    """Resolve the device entry for the entity id or entity uuid."""
+
+    if (device_id := async_entity_id_to_device_id(hass, entity_id_or_uuid)) is None:
+        return None
+
+    return dr.async_get(hass).async_get(device_id)
+
+
+@callback
 def async_device_info_to_link_from_entity(
     hass: HomeAssistant,
     entity_id_or_uuid: str,
@@ -96,7 +109,8 @@ def async_remove_stale_devices_links_keep_current_device(
             continue
         ent_reg.async_update_entity(entity.entity_id, device_id=current_device_id)
 
-    # Removes all devices from the config entry that are not the same as the current device
+    # Removes all devices from the config entry that are not the same
+    # as the current device
     for device in dev_reg.devices.get_devices_for_config_entry_id(entry_id):
         if device.id == current_device_id:
             continue

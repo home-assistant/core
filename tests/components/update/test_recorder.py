@@ -1,7 +1,5 @@
 """The tests for update recorder."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from homeassistant.components.recorder import Recorder
@@ -40,8 +38,7 @@ async def test_exclude_attributes(
     assert state.attributes[ATTR_IN_PROGRESS] is True
     assert state.attributes[ATTR_UPDATE_PERCENTAGE] == 50
     assert (
-        state.attributes[ATTR_ENTITY_PICTURE]
-        == "https://brands.home-assistant.io/_/test/icon.png"
+        state.attributes[ATTR_ENTITY_PICTURE] == "/api/brands/integration/test/icon.png"
     )
     await async_setup_component(hass, DOMAIN, {})
 

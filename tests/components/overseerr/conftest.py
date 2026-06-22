@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
 import pytest
-from python_overseerr import MovieDetails, RequestCount, RequestResponse
+from python_overseerr import IssueCount, MovieDetails, RequestCount, RequestResponse
 from python_overseerr.models import TVDetails, WebhookNotificationConfig
 
 from homeassistant.components.overseerr import CONF_CLOUDHOOK_URL
@@ -49,6 +49,9 @@ def mock_overseerr_client() -> Generator[AsyncMock]:
         client.get_request_count.return_value = RequestCount.from_json(
             load_fixture("request_count.json", DOMAIN)
         )
+        client.get_issue_count.return_value = IssueCount.from_json(
+            load_fixture("issue_count.json", DOMAIN)
+        )
         client.get_webhook_notification_config.return_value = (
             WebhookNotificationConfig.from_json(
                 load_fixture("webhook_config.json", DOMAIN)
@@ -81,7 +84,8 @@ def mock_overseerr_client_cloudhook(
     mock_overseerr_client: AsyncMock,
 ) -> Generator[AsyncMock]:
     """Mock an Overseerr client."""
-    mock_overseerr_client.get_webhook_notification_config.return_value.options.webhook_url = "https://hooks.nabu.casa/ABCD"
+    webhook_config = mock_overseerr_client.get_webhook_notification_config
+    webhook_config.return_value.options.webhook_url = "https://hooks.nabu.casa/ABCD"
     return mock_overseerr_client
 
 

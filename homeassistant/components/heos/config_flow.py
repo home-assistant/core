@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
 from pyheos import (
@@ -24,6 +24,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
 from homeassistant.helpers import selector
 from homeassistant.helpers.service_info.ssdp import SsdpServiceInfo
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from .const import DOMAIN, ENTRY_TITLE
 from .coordinator import HeosConfigEntry
@@ -41,7 +42,10 @@ AUTH_SCHEMA = vol.Schema(
 
 
 async def _validate_host(host: str, errors: dict[str, str]) -> bool:
-    """Validate host is reachable, return True, otherwise populate errors and return False."""
+    """Validate host is reachable.
+
+    Return True, otherwise populate errors and return False.
+    """
     heos = Heos(HeosOptions(host, events=False, heart_beat=False))
     try:
         await heos.connect()
@@ -56,7 +60,10 @@ async def _validate_host(host: str, errors: dict[str, str]) -> bool:
 async def _validate_auth(
     user_input: dict[str, str], entry: HeosConfigEntry, errors: dict[str, str]
 ) -> bool:
-    """Validate authentication by signing in or out, otherwise populate errors if needed."""
+    """Validate authentication by signing in or out.
+
+    Populate errors if needed.
+    """
     can_validate = (
         hasattr(entry, "runtime_data")
         and entry.runtime_data.heos.connection_state is ConnectionState.CONNECTED
@@ -109,7 +116,7 @@ async def _validate_auth(
 
 def _get_current_hosts(entry: HeosConfigEntry) -> set[str]:
     """Get a set of current hosts from the entry."""
-    hosts = set(entry.data[CONF_HOST])
+    hosts = {entry.data[CONF_HOST]}
     if hasattr(entry, "runtime_data"):
         hosts.update(
             player.ip_address
@@ -130,10 +137,12 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: HeosConfigEntry) -> OptionsFlow:
         """Create the options flow."""
         return HeosOptionsFlowHandler()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -142,51 +151,17 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert discovery_info.ssdp_location
 
-        entry: HeosConfigEntry | None = await self.async_set_unique_id(DOMAIN)
         hostname = urlparse(discovery_info.ssdp_location).hostname
         assert hostname is not None
 
-        # Abort early when discovery is ignored or host is part of the current system
-        if entry and (
-            entry.source == SOURCE_IGNORE or hostname in _get_current_hosts(entry)
-        ):
-            return self.async_abort(reason="single_instance_allowed")
+        return await self._async_handle_discovered(hostname)
 
-        # Connect to discovered host and get system information
-        heos = Heos(HeosOptions(hostname, events=False, heart_beat=False))
-        try:
-            await heos.connect()
-            system_info = await heos.get_system_info()
-        except HeosError as error:
-            _LOGGER.debug(
-                "Failed to retrieve system information from discovered HEOS device %s",
-                hostname,
-                exc_info=error,
-            )
-            return self.async_abort(reason="cannot_connect")
-        finally:
-            await heos.disconnect()
-
-        # Select the preferred host, if available
-        if system_info.preferred_hosts:
-            hostname = system_info.preferred_hosts[0].ip_address
-
-        # Move to confirmation when not configured
-        if entry is None:
-            self._discovered_host = hostname
-            return await self.async_step_confirm_discovery()
-
-        # Only update if the configured host isn't part of the discovered hosts to ensure new players that come online don't trigger a reload
-        if entry.data[CONF_HOST] not in [host.ip_address for host in system_info.hosts]:
-            _LOGGER.debug(
-                "Updated host %s to discovered host %s", entry.data[CONF_HOST], hostname
-            )
-            return self.async_update_reload_and_abort(
-                entry,
-                data_updates={CONF_HOST: hostname},
-                reason="reconfigure_successful",
-            )
-        return self.async_abort(reason="single_instance_allowed")
+    @override
+    async def async_step_zeroconf(
+        self, discovery_info: ZeroconfServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle zeroconf discovery."""
+        return await self._async_handle_discovered(discovery_info.host)
 
     async def async_step_confirm_discovery(
         self, user_input: dict[str, Any] | None = None
@@ -201,6 +176,7 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="confirm_discovery")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -266,6 +242,52 @@ class HeosFlowHandler(ConfigFlow, domain=DOMAIN):
                 AUTH_SCHEMA, user_input or entry.options
             ),
         )
+
+    async def _async_handle_discovered(self, hostname: str) -> ConfigFlowResult:
+        entry: HeosConfigEntry | None = await self.async_set_unique_id(DOMAIN)
+        # Abort early when discovery is ignored or host is part of the current system
+        if entry and (
+            entry.source == SOURCE_IGNORE or hostname in _get_current_hosts(entry)
+        ):
+            return self.async_abort(reason="single_instance_allowed")
+
+        # Connect to discovered host and get system information
+        heos = Heos(HeosOptions(hostname, events=False, heart_beat=False))
+        try:
+            await heos.connect()
+            system_info = await heos.get_system_info()
+        except HeosError as error:
+            _LOGGER.debug(
+                "Failed to retrieve system information from discovered HEOS device %s",
+                hostname,
+                exc_info=error,
+            )
+            return self.async_abort(reason="cannot_connect")
+        finally:
+            await heos.disconnect()
+
+        # Select the preferred host, if available
+        if system_info.preferred_hosts and system_info.preferred_hosts[0].ip_address:
+            hostname = system_info.preferred_hosts[0].ip_address
+
+        # Move to confirmation when not configured
+        if entry is None:
+            self._discovered_host = hostname
+            return await self.async_step_confirm_discovery()
+
+        # Only update if the configured host isn't part of the
+        # discovered hosts to ensure new players that come online
+        # don't trigger a reload
+        if entry.data[CONF_HOST] not in [host.ip_address for host in system_info.hosts]:
+            _LOGGER.debug(
+                "Updated host %s to discovered host %s", entry.data[CONF_HOST], hostname
+            )
+            return self.async_update_reload_and_abort(
+                entry,
+                data_updates={CONF_HOST: hostname},
+                reason="reconfigure_successful",
+            )
+        return self.async_abort(reason="single_instance_allowed")
 
 
 class HeosOptionsFlowHandler(OptionsFlow):

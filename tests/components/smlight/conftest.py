@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmlight.exceptions import SmlightAuthError
 from pysmlight.sse import sseClient
-from pysmlight.web import CmdWrapper, Firmware, Info, Sensors
+from pysmlight.web import ActionWrapper, CmdWrapper, Firmware, Info, Sensors
 import pytest
 
 from homeassistant.components.smlight import PLATFORMS
@@ -115,11 +115,26 @@ def mock_smlight_client(request: pytest.FixtureRequest) -> Generator[MagicMock]:
         api.check_auth_needed.return_value = False
         api.authenticate.return_value = True
 
+        api.actions = AsyncMock(spec_set=ActionWrapper)
+        api.actions.ambilight = AsyncMock(return_value=True)
         api.cmds = AsyncMock(spec_set=CmdWrapper)
         api.set_toggle = AsyncMock()
         api.sse = MagicMock(spec_set=sseClient)
 
         yield api
+
+
+MOCK_ULTIMA = Info(
+    MAC="AA:BB:CC:DD:EE:FF",
+    model="SLZB-Ultima3",
+)
+
+
+@pytest.fixture
+def mock_ultima_client(mock_smlight_client: MagicMock) -> MagicMock:
+    """Configure api client to return an Ultima device."""
+    mock_smlight_client.get_info.side_effect = lambda *arg, **kwargs: MOCK_ULTIMA
+    return mock_smlight_client
 
 
 async def setup_integration(

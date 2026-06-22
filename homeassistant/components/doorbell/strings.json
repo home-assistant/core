@@ -1,0 +1,9 @@
+{
+  "title": "Doorbell",
+  "triggers": {
+    "rang": {
+      "description": "Triggers after one or more doorbells rang.",
+      "name": "Doorbell rang"
+    }
+  }
+}

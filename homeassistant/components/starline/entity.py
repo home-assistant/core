@@ -1,9 +1,5 @@
 """StarLine base entity."""
 
-from __future__ import annotations
-
-from collections.abc import Callable
-
 from homeassistant.helpers.entity import Entity
 
 from .account import StarlineAccount, StarlineDevice
@@ -22,9 +18,8 @@ class StarlineEntity(Entity):
         self._account = account
         self._device = device
         self._key = key
-        self._attr_unique_id = f"starline-{key}-{device.device_id}"
+        self._attr_unique_id = f"starline-{key}-{device.device_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = account.device_info(device)
-        self._unsubscribe_api: Callable | None = None
 
     @property
     def available(self) -> bool:
@@ -38,11 +33,4 @@ class StarlineEntity(Entity):
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()
-        self._unsubscribe_api = self._account.api.add_update_listener(self.update)
-
-    async def async_will_remove_from_hass(self) -> None:
-        """Call when entity is being removed from Home Assistant."""
-        await super().async_will_remove_from_hass()
-        if self._unsubscribe_api is not None:
-            self._unsubscribe_api()
-            self._unsubscribe_api = None
+        self.async_on_remove(self._account.api.add_update_listener(self.update))

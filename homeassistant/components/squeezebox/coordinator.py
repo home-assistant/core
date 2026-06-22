@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the Squeezebox integration."""
 
-from __future__ import annotations
-
 from asyncio import timeout
 from collections.abc import Callable
 from datetime import timedelta
@@ -30,7 +28,7 @@ from .const import (
 _LOGGER = logging.getLogger(__name__)
 
 
-class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
+class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """LMS Status custom coordinator."""
 
     config_entry: SqueezeboxConfigEntry
@@ -59,13 +57,13 @@ class LMSStatusDataUpdateCoordinator(DataUpdateCoordinator):
         else:
             _LOGGER.warning("Can't query server capabilities %s", self.lms.name)
 
-    async def _async_update_data(self) -> dict:
+    async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from LMS status call.
 
         Then we process only a subset to make then nice for HA
         """
         async with timeout(STATUS_API_TIMEOUT):
-            data: dict | None = await self.lms.async_prepared_status()
+            data: dict[str, Any] | None = await self.lms.async_prepared_status()
 
         if not data:
             raise UpdateFailed(
@@ -108,16 +106,19 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_update_data(self) -> dict[str, Any]:
         """Update the Player() object if available, or listen for rediscovery if not."""
         if self.available:
-            # Only update players available at last update, unavailable players are rediscovered instead
+            # Only update players available at last update,
+            # unavailable players are rediscovered instead
             await self.player.async_update()
 
-            if self.player.connected is False:
+            if not self.player.connected:
                 _LOGGER.info("Player %s is not available", self.name)
                 self.available = False
 
                 # start listening for restored players
                 self._remove_dispatcher = async_dispatcher_connect(
-                    self.hass, SIGNAL_PLAYER_REDISCOVERED, self.rediscovered
+                    self.hass,
+                    SIGNAL_PLAYER_REDISCOVERED + self.config_entry.entry_id,
+                    self.rediscovered,
                 )
 
         alarm_dict: dict[str, Alarm] = (
@@ -136,3 +137,10 @@ class SqueezeBoxPlayerUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.info("Player %s is available again", self.name)
             if self._remove_dispatcher:
                 self._remove_dispatcher()
+
+    @callback
+    def async_shutdown_dispatcher(self) -> None:
+        """Close down the dispatcher."""
+        if self._remove_dispatcher:
+            self._remove_dispatcher()
+            self._remove_dispatcher = None

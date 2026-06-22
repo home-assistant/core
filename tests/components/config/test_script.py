@@ -8,7 +8,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import config
-from homeassistant.components.config import script
+from homeassistant.components.config import DOMAIN, script
 from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -16,11 +16,6 @@ from homeassistant.setup import async_setup_component
 from homeassistant.util import yaml as yaml_util
 
 from tests.typing import ClientSessionGenerator
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.fixture(autouse=True)
@@ -37,7 +32,7 @@ async def test_get_script_config(
 ) -> None:
     """Test getting script config."""
     with patch.object(config, "SECTIONS", [script]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_client()
 
@@ -62,7 +57,7 @@ async def test_update_script_config(
 ) -> None:
     """Test updating script config."""
     with patch.object(config, "SECTIONS", [script]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
 
@@ -100,7 +95,7 @@ async def test_invalid_object_id(
 ) -> None:
     """Test creating a script with an invalid object_id."""
     with patch.object(config, "SECTIONS", [script]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
 
@@ -165,7 +160,7 @@ async def test_update_script_config_with_error(
 ) -> None:
     """Test updating script config with errors."""
     with patch.object(config, "SECTIONS", [script]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
 
@@ -215,7 +210,7 @@ async def test_update_script_config_with_blueprint_substitution_error(
 ) -> None:
     """Test updating script config with errors."""
     with patch.object(config, "SECTIONS", [script]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
 
@@ -250,7 +245,7 @@ async def test_update_remove_key_script_config(
 ) -> None:
     """Test updating script config while removing a key."""
     with patch.object(config, "SECTIONS", [script]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("script")) == []
 
@@ -297,7 +292,7 @@ async def test_delete_script(
 ) -> None:
     """Test deleting a script."""
     with patch.object(config, "SECTIONS", [script]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     assert sorted(hass.states.async_entity_ids("script")) == [
         "script.one",
@@ -336,7 +331,7 @@ async def test_api_calls_require_admin(
 ) -> None:
     """Test script APIs endpoints do not work as a normal user."""
     with patch.object(config, "SECTIONS", [script]):
-        await async_setup_component(hass, "config", {})
+        await async_setup_component(hass, DOMAIN, {})
 
     hass_config_store["scripts.yaml"] = {
         "moon": {"alias": "Moon"},

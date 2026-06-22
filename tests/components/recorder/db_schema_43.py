@@ -4,8 +4,6 @@ This file contains the model definitions for schema version 43.
 It is used to test the schema migration logic.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -186,7 +184,7 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
 
 
 class NativeLargeBinary(LargeBinary):
-    """A faster version of LargeBinary for engines that support python bytes natively."""
+    """A faster LargeBinary for engines supporting native bytes."""
 
     def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """No conversion needed for engines that support native bytes."""
@@ -519,7 +517,7 @@ class States(Base):
         context = event.context
         return States(
             state=state_value,
-            entity_id=event.data["entity_id"],
+            entity_id=None,
             attributes=None,
             context_id=None,
             context_id_bin=ulid_to_bytes_or_none(context.id),

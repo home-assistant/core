@@ -1,8 +1,7 @@
 """Support for QVR Pro streams."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any
 
 from pyqvrpro.client import QVRResponseError
 
@@ -88,7 +87,7 @@ class QVRProCamera(Camera):
         return self._brand
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Get the state attributes."""
         return {"qvr_guid": self.guid}
 
@@ -99,6 +98,7 @@ class QVRProCamera(Camera):
         try:
             return self._client.get_snapshot(self.guid)
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except QVRResponseError as ex:
             _LOGGER.error("Error getting image: %s", ex)
             self._client.connect()

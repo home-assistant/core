@@ -6,14 +6,21 @@ import asyncio
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, Mock, patch
 
+from knx_telegram_store import BufferedSqliteStore
 import pytest
 from xknx import XKNX
 from xknx.core import XknxConnectionState, XknxConnectionType
 from xknx.dpt import DPTArray, DPTBinary
 from xknx.io import DEFAULT_MCAST_GRP, DEFAULT_MCAST_PORT
-from xknx.telegram import Telegram, TelegramDirection
+from xknx.telegram import Telegram, TelegramDirection, tpci
 from xknx.telegram.address import GroupAddress, IndividualAddress
-from xknx.telegram.apci import APCI, GroupValueRead, GroupValueResponse, GroupValueWrite
+from xknx.telegram.apci import (
+    APCI,
+    GroupValueRead,
+    GroupValueResponse,
+    GroupValueWrite,
+    SecureAPDU,
+)
 
 from homeassistant.components.knx.const import (
     CONF_KNX_AUTOMATIC,
@@ -25,8 +32,12 @@ from homeassistant.components.knx.const import (
     CONF_KNX_MCAST_PORT,
     CONF_KNX_RATE_LIMIT,
     CONF_KNX_STATE_UPDATER,
+    CONF_KNX_TELEGRAM_DB_LOAD_HOURS,
+    CONF_KNX_TELEGRAM_DB_RETENTION_DAYS,
     DEFAULT_ROUTING_IA,
     DOMAIN,
+    KNX_TELEGRAM_DB_RETENTION_DEFAULT,
+    KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
 )
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.storage.config_store import (
@@ -76,23 +87,24 @@ class KNXTestKit:
         yaml_config: ConfigType | None = None,
         config_store_fixture: str | None = None,
         add_entry_to_hass: bool = True,
+        state_updater: bool = True,
     ) -> None:
         """Create the KNX integration."""
+        # Force an in-memory telegram store will be done via autouse fixture.
 
         async def patch_xknx_start():
             """Patch `xknx.start` for unittests."""
-            self.xknx.cemi_handler.send_telegram = AsyncMock(
-                side_effect=self._outgoing_telegrams.append
-            )
             # after XKNX.__init__() to not overwrite it by the config entry again
             # before StateUpdater starts to avoid slow down of tests
             self.xknx.rate_limit = 0
-            # set XknxConnectionState.CONNECTED to avoid `unavailable` entities at startup
+            # set XknxConnectionState.CONNECTED to avoid `unavailable`
+            # entities at startup
             # and start StateUpdater. This would be awaited on normal startup too.
             self.xknx.connection_manager.connection_state_changed(
                 state=XknxConnectionState.CONNECTED,
                 connection_type=XknxConnectionType.TUNNEL_TCP,
             )
+            await self.hass.async_block_till_done()
 
         def knx_ip_interface_mock():
             """Create a xknx knx ip interface mock."""
@@ -117,14 +129,29 @@ class KNXTestKit:
         if add_entry_to_hass:
             self.mock_config_entry.add_to_hass(self.hass)
 
+        # capture outgoing telegrams for assertion instead of sending to socket
+        # before l_data_confirmation would be awaited in xknx
+        patch(
+            "xknx.cemi.cemi_handler.CEMIHandler.send_telegram",
+            side_effect=self._outgoing_telegrams.append,
+        ).start()  # keep patched for the whole test run
+
         knx_config = {DOMAIN: yaml_config or {}}
         with patch(
             "xknx.xknx.knx_interface_factory",
             return_value=knx_ip_interface_mock(),
             side_effect=fish_xknx,
         ):
+            state_updater_patcher = patch(
+                "xknx.xknx.StateUpdater.register_remote_value"
+            )
+            if not state_updater:
+                state_updater_patcher.start()
+
             await async_setup_component(self.hass, DOMAIN, knx_config)
             await self.hass.async_block_till_done()
+            # remove patch after setup so state_updater can be tested
+            state_updater_patcher.stop()
 
     ########################
     # Telegram counter tests
@@ -301,6 +328,23 @@ class KNXTestKit:
             source=source,
         )
 
+    def receive_data_secure_issue(
+        self,
+        group_address: str,
+        source: str | None = None,
+    ) -> None:
+        """Inject incoming telegram with undecodable data secure payload."""
+        telegram = Telegram(
+            destination_address=GroupAddress(group_address),
+            direction=TelegramDirection.INCOMING,
+            source_address=IndividualAddress(source or self.INDIVIDUAL_ADDRESS),
+            tpci=tpci.TDataGroup(),
+            payload=SecureAPDU.from_knx(
+                bytes.fromhex("03f110002446cfef4ac085e7092ab062b44d")
+            ),
+        )
+        self.xknx.telegram_queue.received_data_secure_group_key_issue(telegram)
+
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
@@ -308,13 +352,18 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         title="KNX",
         domain=DOMAIN,
+        version=2,
         data={
             CONF_KNX_CONNECTION_TYPE: CONF_KNX_AUTOMATIC,
-            CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
-            CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
             CONF_KNX_MCAST_PORT: DEFAULT_MCAST_PORT,
             CONF_KNX_MCAST_GRP: DEFAULT_MCAST_GRP,
             CONF_KNX_INDIVIDUAL_ADDRESS: DEFAULT_ROUTING_IA,
+        },
+        options={
+            CONF_KNX_RATE_LIMIT: CONF_KNX_DEFAULT_RATE_LIMIT,
+            CONF_KNX_STATE_UPDATER: CONF_KNX_DEFAULT_STATE_UPDATER,
+            CONF_KNX_TELEGRAM_DB_RETENTION_DAYS: KNX_TELEGRAM_DB_RETENTION_DEFAULT,
+            CONF_KNX_TELEGRAM_DB_LOAD_HOURS: KNX_TELEGRAM_LOAD_HOURS_DEFAULT,
         },
     )
 
@@ -390,3 +439,15 @@ async def create_ui_entity(
         return entity
 
     return _create_ui_entity
+
+
+@pytest.fixture(autouse=True)
+def mock_knx_telegram_store():
+    """Mock knx-telegram-store to always use an in-memory database."""
+    original_init = BufferedSqliteStore.__init__
+
+    def mocked_init(self, db_path: str, *args: Any, **kwargs: Any) -> None:
+        original_init(self, ":memory:", *args, **kwargs)
+
+    with patch.object(BufferedSqliteStore, "__init__", mocked_init):
+        yield

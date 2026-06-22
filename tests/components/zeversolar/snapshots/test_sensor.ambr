@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.zeversolar_sensor_energy_today-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -22,6 +23,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy today',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -52,13 +54,14 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '123.4',
+    'state': '123',
   })
 # ---
 # name: test_sensors[sensor.zeversolar_sensor_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -69,7 +72,7 @@
     'device_id': <ANY>,
     'disabled_by': None,
     'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_category': None,
     'entity_id': 'sensor.zeversolar_sensor_power',
     'has_entity_name': True,
     'hidden_by': None,
@@ -78,6 +81,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -90,7 +94,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pac',
+    'translation_key': None,
     'unique_id': '123456778_pac',
     'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
   })

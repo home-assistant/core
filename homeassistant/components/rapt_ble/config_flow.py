@@ -1,12 +1,11 @@
 """Config flow for rapt_ble."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from rapt_ble import RAPTPillBluetoothDeviceData as DeviceData
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -72,7 +71,8 @@ class RAPTPillConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self._discovered_devices[address], data={}
             )
 
-        current_addresses = self._async_current_ids()
+        await bluetooth.async_request_active_scan(self.hass)
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:

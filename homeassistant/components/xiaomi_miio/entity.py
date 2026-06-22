@@ -7,7 +7,6 @@ import logging
 from typing import TYPE_CHECKING, Any
 
 from miio import Device as MiioDevice, DeviceException
-from miio.gateway.devices import SubDevice
 
 from homeassistant.const import ATTR_CONNECTIONS, CONF_MAC, CONF_MODEL
 from homeassistant.helpers import device_registry as dr
@@ -18,7 +17,8 @@ from homeassistant.helpers.update_coordinator import (
     DataUpdateCoordinator,
 )
 
-from .const import ATTR_AVAILABLE, DOMAIN
+from .const import DOMAIN
+from .coordinator import GatewayDeviceCoordinator
 from .typing import XiaomiMiioConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -139,11 +139,11 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
 
     @staticmethod
     def _parse_datetime_time(initial_time: datetime.time) -> str:
-        time = datetime.datetime.now().replace(
+        time = datetime.datetime.now().replace(  # pylint: disable=home-assistant-enforce-naive-now
             hour=initial_time.hour, minute=initial_time.minute, second=0, microsecond=0
         )
 
-        if time < datetime.datetime.now():
+        if time < datetime.datetime.now():  # pylint: disable=home-assistant-enforce-naive-now
             time += datetime.timedelta(days=1)
 
         return time.isoformat()
@@ -153,23 +153,18 @@ class XiaomiCoordinatedMiioEntity[_T: DataUpdateCoordinator[Any]](
         return time.isoformat()
 
 
-class XiaomiGatewayDevice(
-    CoordinatorEntity[DataUpdateCoordinator[dict[str, bool]]], Entity
-):
+class XiaomiGatewayDevice(CoordinatorEntity[GatewayDeviceCoordinator], Entity):
     """Representation of a base Xiaomi Gateway Device."""
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[dict[str, bool]],
-        sub_device: SubDevice,
-        entry: XiaomiMiioConfigEntry,
-    ) -> None:
+    def __init__(self, coordinator: GatewayDeviceCoordinator) -> None:
         """Initialize the Xiaomi Gateway Device."""
         super().__init__(coordinator)
-        self._sub_device = sub_device
-        self._entry = entry
-        self._attr_unique_id = sub_device.sid
-        self._attr_name = f"{sub_device.name} ({sub_device.sid})"
+        self._sub_device = coordinator.sub_device
+        self._entry = coordinator.config_entry
+        self._attr_unique_id = coordinator.sub_device.sid
+        self._attr_name = (
+            f"{coordinator.sub_device.name} ({coordinator.sub_device.sid})"
+        )
 
     @property
     def device_info(self) -> DeviceInfo:
@@ -182,14 +177,6 @@ class XiaomiGatewayDevice(
             manufacturer="Xiaomi",
             name=self._sub_device.name,
             model=self._sub_device.model,
-            sw_version=self._sub_device.firmware_version,
+            sw_version=str(self._sub_device.firmware_version),
             hw_version=self._sub_device.zigbee_model,
         )
-
-    @property
-    def available(self) -> bool:
-        """Return if entity is available."""
-        if self.coordinator.data is None:
-            return False
-
-        return self.coordinator.data[ATTR_AVAILABLE]

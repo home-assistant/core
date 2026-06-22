@@ -1,0 +1,63 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Pond",
+  "category": "ygsb",
+  "product_id": "l6ax0u6jwbz82atk",
+  "product_name": "\u6c34\u6cf5",
+  "online": true,
+  "sub": false,
+  "time_zone": "-04:00",
+  "active_time": "2025-06-07T22:22:44+00:00",
+  "create_time": "2025-06-07T22:22:44+00:00",
+  "update_time": "2025-06-07T22:22:44+00:00",
+  "function": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "water_flow": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 10
+      }
+    },
+    "pause": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "water_flow": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 10
+      }
+    },
+    "pause": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "switch": false,
+    "water_flow": 0,
+    "pause": true
+  },
+  "set_up": false,
+  "support_local": true
+}

@@ -1,9 +1,8 @@
 """Event platform for Bring integration."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from datetime import datetime
+from typing import override
 
 from bring_api import ActivityType, BringList
 
@@ -43,7 +42,7 @@ async def async_setup_entry(
             )
             lists_added |= new_lists
 
-    coordinator.activity.async_add_listener(add_entities)
+    coordinator.data.async_add_listener(add_entities)
     add_entities()
 
 
@@ -67,7 +66,8 @@ class BringEventEntity(BringBaseEntity, EventEntity):
 
     def _async_handle_event(self) -> None:
         """Handle the activity event."""
-        bring_list = self.coordinator.data[self._list_uuid]
+        if (bring_list := self.coordinator.data.get(self._list_uuid)) is None:
+            return
         last_event_triggered = self.state
         if bring_list.activity.timeline and (
             last_event_triggered is None
@@ -93,6 +93,7 @@ class BringEventEntity(BringBaseEntity, EventEntity):
             self.async_write_ha_state()
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend, if any."""
 
@@ -102,11 +103,13 @@ class BringEventEntity(BringBaseEntity, EventEntity):
             else super().entity_picture
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks with your device API/library."""
         await super().async_added_to_hass()
         self._async_handle_event()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._async_handle_event()
         return super()._handle_coordinator_update()

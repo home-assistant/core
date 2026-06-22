@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 """Generate updated constraint and requirements files."""
 
-from __future__ import annotations
-
 import difflib
 import importlib
 from operator import itemgetter
@@ -16,36 +14,22 @@ from typing import Any
 from homeassistant.util.yaml.loader import load_yaml
 from script.hassfest.model import Config, Integration
 
-# Requirements which can't be installed on all systems because they rely on additional
-# system packages. Requirements listed in EXCLUDED_REQUIREMENTS_ALL will be commented-out
-# in requirements_all.txt and requirements_test_all.txt.
+# Requirements which can't be installed on all systems because they
+# rely on additional system packages. Requirements listed in
+# EXCLUDED_REQUIREMENTS_ALL will be commented-out in
+# requirements_all.txt.
 EXCLUDED_REQUIREMENTS_ALL = {
     "atenpdu",  # depends on pysnmp which is not maintained at this time
-    "avea",  # depends on bluepy
     "avion",
-    "beacontools",
     "beewi-smartclim",  # depends on bluepy
     "bluepy",
-    "decora",
     "evdev",
-    "face-recognition",
-    "pybluez",
-    "pycocotools",
-    "pycups",
-    "python-gammu",
-    "python-lirc",
-    "pyuserinput",
-    "tensorflow",
-    "tf-models-official",
 }
 
 # Requirements excluded by EXCLUDED_REQUIREMENTS_ALL which should be included when
 # building integration wheels for all architectures.
 INCLUDED_REQUIREMENTS_WHEELS = {
     "evdev",
-    "pycups",
-    "python-gammu",
-    "pyuserinput",
 }
 
 
@@ -56,36 +40,12 @@ INCLUDED_REQUIREMENTS_WHEELS = {
 # will be included in requirements_all_{action}.txt
 
 OVERRIDDEN_REQUIREMENTS_ACTIONS = {
-    "pytest": {
-        "exclude": set(),
-        "include": {"python-gammu"},
-        "markers": {},
-    },
     "wheels_aarch64": {
         "exclude": set(),
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
     },
-    # Pandas has issues building on armhf, it is expected they
-    # will drop the platform in the near future (they consider it
-    # "flimsy" on 386). The following packages depend on pandas,
-    # so we comment them out.
-    "wheels_armhf": {
-        "exclude": {"env-canada", "noaa-coops", "pyezviz", "pykrakenapi"},
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
-    "wheels_armv7": {
-        "exclude": set(),
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
     "wheels_amd64": {
-        "exclude": set(),
-        "include": INCLUDED_REQUIREMENTS_WHEELS,
-        "markers": {},
-    },
-    "wheels_i386": {
         "exclude": set(),
         "include": INCLUDED_REQUIREMENTS_WHEELS,
         "markers": {},
@@ -113,9 +73,9 @@ httplib2>=0.19.0
 # gRPC is an implicit dependency that we want to make explicit so we manage
 # upgrades intentionally. It is a large package to build from source and we
 # want to ensure we have wheels built.
-grpcio==1.72.1
-grpcio-status==1.72.1
-grpcio-reflection==1.72.1
+grpcio==1.78.0
+grpcio-status==1.78.0
+grpcio-reflection==1.78.0
 
 # This is a old unmaintained library and is replaced with pycryptodome
 pycrypto==1000000000.0.0
@@ -131,11 +91,13 @@ enum34==1000000000.0.0
 typing==1000000000.0.0
 uuid==1000000000.0.0
 
-# httpx requires httpcore, and httpcore requires anyio and h11, but the version constraints on
-# these requirements are quite loose. As the entire stack has some outstanding issues, and
-# even newer versions seem to introduce new issues, it's useful for us to pin all these
+# httpx requires httpcore, and httpcore requires anyio and h11,
+# but the version constraints on these requirements are quite
+# loose. As the entire stack has some outstanding issues, and
+# even newer versions seem to introduce new issues, it's useful
+# for us to pin all these
 # requirements so we can directly link HA versions to these library versions.
-anyio==4.9.0
+anyio==4.13.0
 h11==0.16.0
 httpcore==1.0.9
 
@@ -144,21 +106,21 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.3.0
-pandas==2.3.0
+numpy==2.3.2
+pandas==2.3.3
 
 # Constrain multidict to avoid typing issues
 # https://github.com/home-assistant/core/pull/67046
 multidict>=6.0.2
 
-# Version 2.0 added typing, prevent accidental fallbacks
-backoff>=2.0
+# Brotli 1.2.0 fixes CVE and is required for aiohttp 3.13.3 compatibility
+Brotli>=1.2.0
 
 # ensure pydantic version does not float since it might have breaking changes
-pydantic==2.11.7
+pydantic==2.13.4
 
-# Required for Python 3.12.4 compatibility (#119223).
-mashumaro>=3.13.1
+# Required for Python 3.14.0 compatibility (#119223).
+mashumaro>=3.17.0
 
 # Breaks asyncio
 # https://github.com/pubnub/python/issues/130
@@ -170,18 +132,14 @@ iso4217!=1.10.20220401
 
 # protobuf must be in package constraints for the wheel
 # builder to build binary wheels
-protobuf==6.31.1
+protobuf==6.32.0
 
 # faust-cchardet: Ensure we have a version we can build wheels
 # 2.1.18 is the first version that works with our wheel builder
 faust-cchardet>=2.1.18
 
-# websockets 13.1 is the first version to fully support the new
-# asyncio implementation. The legacy implementation is now
-# deprecated as of websockets 14.0.
-# https://websockets.readthedocs.io/en/13.0.1/howto/upgrade.html#missing-features
-# https://websockets.readthedocs.io/en/stable/howto/upgrade.html
-websockets>=13.1
+# Prevent accidental fallbacks
+websockets>=15.0.1
 
 # pysnmplib is no longer maintained and does not work with newer
 # python
@@ -198,11 +156,15 @@ poetry==1000000000.0.0
 # We want to skip the binary wheels for the 'charset-normalizer' packages.
 # They are build with mypyc, but causes issues with our wheel builder.
 # In order to do so, we need to constrain the version.
-charset-normalizer==3.4.0
+charset-normalizer==3.4.3
 
 # dacite: Ensure we have a version that is able to handle type unions for
 # NAM, Brother, and GIOS.
 dacite>=1.7.0
+
+# decorator 5.3.0 dropped license metadata required by script/licenses.py.
+# Pin to 5.2.1 until license metadata is restored.
+decorator==5.2.1
 
 # chacha20poly1305-reuseable==0.12.x is incompatible with cryptography==43.0.x
 chacha20poly1305-reuseable>=0.13.0
@@ -239,10 +201,45 @@ aiofiles>=24.1.0
 # https://github.com/aio-libs/multidict/issues/1131
 multidict>=6.4.2
 
-# rpds-py > 0.25.0 requires cargo 1.84.0
-# Stable Alpine current only ships cargo 1.83.0
-# No wheels upstream available for armhf & armv7
-rpds-py==0.24.0
+# Constraint num2words to 0.5.14 as 0.5.15 and 0.5.16 were removed from PyPI
+num2words==0.5.14
+
+# pymodbus does not follow SemVer, and it keeps getting
+# downgraded or upgraded by custom components
+# This ensures all use the same version
+pymodbus==3.13.1
+
+# Pin pytest-rerunfailures to prevent accidental breaks
+pytest-rerunfailures==16.0.1
+
+# Fixes detected blocking call to load_default_certs https://github.com/home-assistant/core/issues/157475
+aiomqtt>=2.5.0
+
+# aiofile 3.10.0 crashes on import due to KeyError on package metadata
+# https://github.com/mosquito/aiofile/pull/106
+aiofile==3.9.0
+
+# auth0-python v5.0 is a major rewrite with breaking changes
+# used by sharkiq==1.5.0
+# https://github.com/auth0/auth0-python/releases/tag/5.0.0
+auth0-python<5.0
+
+# Setuptools >=82.0.0 doesn't contain pkg_resources anymore
+setuptools<82.0.0
+
+# backoff and python-backoff share the same package name
+# pin versions which are mostly compatible to each other
+backoff==2.2.1
+python-backoff<2.4.0
+
+# Pin dependencies with '.pth' files to exact versions, only update manually!
+# https://github.com/Azure/azure-kusto-python/ -> '.pth' files removed with >=5.0.5
+# https://github.com/xolox/python-coloredlogs -> unmaintained
+# https://github.com/pypa/setuptools
+azure-kusto-data==4.5.1
+azure-kusto-ingest==4.5.1
+coloredlogs==15.0.1
+setuptools==81.0.0
 """
 
 GENERATED_MESSAGE = (
@@ -263,19 +260,6 @@ IGNORE_PRE_COMMIT_HOOK_ID = (
 )
 
 PACKAGE_REGEX = re.compile(r"^(?:--.+\s)?([-_\.\w\d]+).*==.+$")
-
-
-def has_tests(module: str) -> bool:
-    """Test if a module has tests.
-
-    Module format: homeassistant.components.hue
-    Test if exists: tests/components/hue/__init__.py
-    """
-    path = (
-        Path(module.replace(".", "/").replace("homeassistant", "tests", 1))
-        / "__init__.py"
-    )
-    return path.exists()
 
 
 def explore_module(package: str, explore_children: bool) -> list[str]:
@@ -379,6 +363,24 @@ def gather_modules() -> dict[str, list[str]] | None:
     return reqs
 
 
+def gather_entity_platform_requirements() -> set[str]:
+    """Gather all of the requirements from manifests for entity platforms."""
+    config = _get_hassfest_config()
+    integrations = Integration.load_dir(config.core_integrations_path, config)
+    reqs = set()
+    for domain in sorted(integrations):
+        integration = integrations[domain]
+
+        if integration.disabled:
+            continue
+
+        if integration.integration_type != "entity":
+            continue
+
+        reqs.update(gather_recursive_requirements(integration.domain))
+    return reqs
+
+
 def gather_requirements_from_manifests(
     errors: list[str], reqs: dict[str, list[str]]
 ) -> None:
@@ -461,7 +463,12 @@ def requirements_output() -> str:
         "\n",
         "# Home Assistant Core\n",
     ]
-    output.append("\n".join(core_requirements()))
+
+    requirements = set()
+    requirements.update(core_requirements())
+    requirements.update(gather_entity_platform_requirements())
+
+    output.append("\n".join(sorted(requirements, key=lambda key: key.lower())))
     output.append("\n")
 
     return "".join(output)
@@ -487,31 +494,6 @@ def requirements_all_action_output(reqs: dict[str, list[str]], action: str) -> s
         "-r requirements.txt\n",
     ]
     output.append(generate_action_requirements_list(reqs, action))
-
-    return "".join(output)
-
-
-def requirements_test_all_output(reqs: dict[str, list[str]]) -> str:
-    """Generate output for test_requirements."""
-    output = [
-        "# Home Assistant tests, full dependency set\n",
-        GENERATED_MESSAGE,
-        "-r requirements_test.txt\n",
-    ]
-
-    filtered = {
-        requirement: modules
-        for requirement, modules in reqs.items()
-        if any(
-            # Always install requirements that are not part of integrations
-            not mdl.startswith("homeassistant.components.")
-            or
-            # Install tests for integrations that have tests
-            has_tests(mdl)
-            for mdl in modules
-        )
-    }
-    output.append(generate_requirements_list(filtered))
 
     return "".join(output)
 
@@ -589,7 +571,6 @@ def main(validate: bool, ci: bool) -> int:
         action: requirements_all_action_output(data, action)
         for action in OVERRIDDEN_REQUIREMENTS_ACTIONS
     }
-    reqs_test_all_file = requirements_test_all_output(data)
     # Always calling requirements_pre_commit_output is intentional to ensure
     # the code is called by the pre-commit hooks.
     reqs_pre_commit_file = requirements_pre_commit_output()
@@ -599,7 +580,6 @@ def main(validate: bool, ci: bool) -> int:
         ("requirements.txt", reqs_file),
         ("requirements_all.txt", reqs_all_file),
         ("requirements_test_pre_commit.txt", reqs_pre_commit_file),
-        ("requirements_test_all.txt", reqs_test_all_file),
         ("homeassistant/package_constraints.txt", constraints),
     ]
     if ci:

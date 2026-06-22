@@ -6,15 +6,10 @@ from asyncsleepiq import (
     SleepIQTimeoutException,
 )
 
-from homeassistant.components.sleepiq.const import (
-    DOMAIN,
-    IS_IN_BED,
-    PRESSURE,
-    SLEEP_NUMBER,
-)
+from homeassistant.components.sleepiq.const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
 from homeassistant.components.sleepiq.coordinator import UPDATE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_USERNAME
+from homeassistant.const import CONF_USERNAME, PRESSURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component

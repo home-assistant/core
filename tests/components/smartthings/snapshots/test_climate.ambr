@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[aux_ac][climate.aux_a_c_on_off-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': None,
@@ -27,6 +28,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -36,7 +38,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 393>,
-    'translation_key': None,
+    'translation_key': 'air_conditioner',
     'unique_id': 'bf53a150-f8a4-45d1-aac4-86252475d551_main',
     'unit_of_measurement': None,
   })
@@ -66,8 +68,9 @@
 # ---
 # name: test_all_entities[bosch_radiator_thermostat_ii][climate.radiator_thermostat_ii_m_wohnzimmer-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -92,6 +95,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -130,10 +134,132 @@
     'state': 'heat',
   })
 # ---
+# name: test_all_entities[da_ac_cac_01001][climate.ar_varanda-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_modes': list([
+        'none',
+        'wind_free',
+        'long_wind',
+        'boost',
+        'quiet',
+        'sleep',
+      ]),
+      'swing_modes': list([
+        'vertical',
+        'off',
+        'horizontal',
+        'both',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'climate',
+    'entity_category': None,
+    'entity_id': 'climate.ar_varanda',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'smartthings',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <ClimateEntityFeature: 441>,
+    'translation_key': 'air_conditioner',
+    'unique_id': '23c6d296-4656-20d8-f6eb-2ff13e041753_main',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[da_ac_cac_01001][climate.ar_varanda-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'current_temperature': 28,
+      'drlc_status_duration': 0,
+      'drlc_status_level': 0,
+      'drlc_status_override': False,
+      'drlc_status_start': '1970-01-01T00:00:00Z',
+      'fan_mode': 'high',
+      'fan_modes': list([
+        'auto',
+        'low',
+        'medium',
+        'high',
+      ]),
+      'friendly_name': 'Ar Varanda',
+      'hvac_modes': list([
+        <HVACMode.OFF: 'off'>,
+        <HVACMode.AUTO: 'auto'>,
+        <HVACMode.COOL: 'cool'>,
+        <HVACMode.DRY: 'dry'>,
+        <HVACMode.FAN_ONLY: 'fan_only'>,
+        <HVACMode.HEAT: 'heat'>,
+      ]),
+      'max_temp': 35,
+      'min_temp': 7,
+      'preset_mode': 'none',
+      'preset_modes': list([
+        'none',
+        'wind_free',
+        'long_wind',
+        'boost',
+        'quiet',
+        'sleep',
+      ]),
+      'supported_features': <ClimateEntityFeature: 441>,
+      'swing_mode': 'off',
+      'swing_modes': list([
+        'vertical',
+        'off',
+        'horizontal',
+        'both',
+      ]),
+      'temperature': 20,
+    }),
+    'context': <ANY>,
+    'entity_id': 'climate.ar_varanda',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
+  })
+# ---
 # name: test_all_entities[da_ac_ehs_01001][climate.heat_pump_indoor1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -160,6 +286,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -198,10 +325,11 @@
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000001][climate.ac_office_granit-entry]
+# name: test_all_entities[da_ac_rac_000001][climate.theater_ac_office_granit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -222,7 +350,8 @@
       'max_temp': 35,
       'min_temp': 7,
       'preset_modes': list([
-        'windFree',
+        'none',
+        'wind_free',
       ]),
       'swing_modes': None,
     }),
@@ -233,7 +362,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.ac_office_granit',
+    'entity_id': 'climate.theater_ac_office_granit',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -241,6 +370,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -250,12 +380,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 441>,
-    'translation_key': None,
+    'translation_key': 'air_conditioner',
     'unique_id': '96a5ef74-5832-a84b-f1f7-ca799957065d_main',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000001][climate.ac_office_granit-state]
+# name: test_all_entities[da_ac_rac_000001][climate.theater_ac_office_granit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 25,
@@ -282,9 +412,10 @@
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'preset_mode': 'windFree',
+      'preset_mode': 'wind_free',
       'preset_modes': list([
-        'windFree',
+        'none',
+        'wind_free',
       ]),
       'supported_features': <ClimateEntityFeature: 441>,
       'swing_mode': 'off',
@@ -292,17 +423,18 @@
       'temperature': 25,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.ac_office_granit',
+    'entity_id': 'climate.theater_ac_office_granit',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][climate.office_airfree-entry]
+# name: test_all_entities[da_ac_rac_000003][climate.clim_salon-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -318,11 +450,20 @@
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
       'min_temp': 7,
       'preset_modes': list([
-        'windFree',
+        'none',
+        'sleep',
+        'quiet',
+        'smart',
+        'boost',
+        'motion_indirect',
+        'motion_direct',
+        'wind_free',
+        'wind_free_sleep',
       ]),
       'swing_modes': list([
         'off',
@@ -338,7 +479,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.office_airfree',
+    'entity_id': 'climate.clim_salon',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -346,6 +487,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -355,18 +497,20 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 441>,
-    'translation_key': None,
-    'unique_id': 'c76d6f38-1b7f-13dd-37b5-db18d5272783_main',
+    'translation_key': 'air_conditioner',
+    'unique_id': '1e3f7ca2-e005-e1a4-f6d7-bc231e3f7977_main',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_000003][climate.office_airfree-state]
+# name: test_all_entities[da_ac_rac_000003][climate.clim_salon-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_temperature': 26,
+      'current_temperature': 20,
       'drlc_status_duration': 0,
+      'drlc_status_level': -1,
       'drlc_status_override': False,
-      'fan_mode': 'low',
+      'drlc_status_start': '1970-01-01T00:00:00Z',
+      'fan_mode': 'auto',
       'fan_modes': list([
         'auto',
         'low',
@@ -374,19 +518,28 @@
         'high',
         'turbo',
       ]),
-      'friendly_name': 'Office AirFree',
+      'friendly_name': 'Clim Salon',
       'hvac_modes': list([
         <HVACMode.OFF: 'off'>,
         <HVACMode.COOL: 'cool'>,
         <HVACMode.DRY: 'dry'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
         <HVACMode.AUTO: 'auto'>,
+        <HVACMode.HEAT: 'heat'>,
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'preset_mode': None,
+      'preset_mode': 'none',
       'preset_modes': list([
-        'windFree',
+        'none',
+        'sleep',
+        'quiet',
+        'smart',
+        'boost',
+        'motion_indirect',
+        'motion_direct',
+        'wind_free',
+        'wind_free_sleep',
       ]),
       'supported_features': <ClimateEntityFeature: 441>,
       'swing_mode': 'off',
@@ -396,20 +549,21 @@
         'vertical',
         'horizontal',
       ]),
-      'temperature': 24,
+      'temperature': 19,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.office_airfree',
+    'entity_id': 'climate.clim_salon',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'cool',
+    'state': 'heat',
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][climate.aire_dormitorio_principal-entry]
+# name: test_all_entities[da_ac_rac_01001][climate.theater_aire_dormitorio_principal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -430,7 +584,13 @@
       'max_temp': 35,
       'min_temp': 7,
       'preset_modes': list([
-        'windFree',
+        'none',
+        'sleep',
+        'quiet',
+        'smart',
+        'boost',
+        'wind_free',
+        'wind_free_sleep',
       ]),
       'swing_modes': list([
         'off',
@@ -446,7 +606,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.aire_dormitorio_principal',
+    'entity_id': 'climate.theater_aire_dormitorio_principal',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -454,6 +614,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -463,12 +624,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 441>,
-    'translation_key': None,
+    'translation_key': 'air_conditioner',
     'unique_id': '4ece486b-89db-f06a-d54d-748b676b4d8e_main',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_01001][climate.aire_dormitorio_principal-state]
+# name: test_all_entities[da_ac_rac_01001][climate.theater_aire_dormitorio_principal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 27,
@@ -495,9 +656,15 @@
       ]),
       'max_temp': 35,
       'min_temp': 7,
-      'preset_mode': None,
+      'preset_mode': 'none',
       'preset_modes': list([
-        'windFree',
+        'none',
+        'sleep',
+        'quiet',
+        'smart',
+        'boost',
+        'wind_free',
+        'wind_free_sleep',
       ]),
       'supported_features': <ClimateEntityFeature: 441>,
       'swing_mode': 'off',
@@ -510,17 +677,18 @@
       'temperature': 23,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.aire_dormitorio_principal',
+    'entity_id': 'climate.theater_aire_dormitorio_principal',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[da_ac_rac_100001][climate.corridor_a_c-entry]
+# name: test_all_entities[da_ac_rac_100001][climate.theater_corridor_a_c-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -547,7 +715,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.corridor_a_c',
+    'entity_id': 'climate.theater_corridor_a_c',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -555,6 +723,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -564,12 +733,12 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <ClimateEntityFeature: 393>,
-    'translation_key': None,
+    'translation_key': 'air_conditioner',
     'unique_id': 'F8042E25-0E53-0000-0000-000000000000_main',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[da_ac_rac_100001][climate.corridor_a_c-state]
+# name: test_all_entities[da_ac_rac_100001][climate.theater_corridor_a_c-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 27,
@@ -595,7 +764,7 @@
       'temperature': 18,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.corridor_a_c',
+    'entity_id': 'climate.theater_corridor_a_c',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -604,8 +773,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub][climate.eco_heating_system_indoor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -632,6 +802,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -672,8 +843,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000001_sub_1][climate.heat_pump_main_indoor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -700,6 +872,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -740,8 +913,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_indoor1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -768,6 +942,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -807,8 +982,9 @@
 # ---
 # name: test_all_entities[da_sac_ehs_000002_sub][climate.warmepumpe_indoor2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -835,6 +1011,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -874,8 +1051,9 @@
 # ---
 # name: test_all_entities[ecobee_thermostat][climate.main_floor-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -905,6 +1083,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -953,8 +1132,9 @@
 # ---
 # name: test_all_entities[ecobee_thermostat_offline][climate.downstairs-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': None,
@@ -978,6 +1158,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1018,8 +1199,9 @@
 # ---
 # name: test_all_entities[generic_ef00_v1][climate.thermostat_kuche-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -1042,6 +1224,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1080,8 +1263,9 @@
 # ---
 # name: test_all_entities[heatit_ztrm3_thermostat][climate.hall_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -1106,6 +1290,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1147,8 +1332,9 @@
 # ---
 # name: test_all_entities[sensi_thermostat][climate.thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -1181,6 +1367,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1230,10 +1417,11 @@
     'state': 'heat_cool',
   })
 # ---
-# name: test_all_entities[virtual_thermostat][climate.asd-entry]
+# name: test_all_entities[virtual_thermostat][climate.theater_virtual_thermostat-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'fan_modes': list([
@@ -1252,7 +1440,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.asd',
+    'entity_id': 'climate.theater_virtual_thermostat',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1260,6 +1448,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -1274,7 +1463,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[virtual_thermostat][climate.asd-state]
+# name: test_all_entities[virtual_thermostat][climate.theater_virtual_thermostat-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 4734.6,
@@ -1282,7 +1471,7 @@
       'fan_modes': list([
         'on',
       ]),
-      'friendly_name': 'asd',
+      'friendly_name': 'virtual thermostat',
       'hvac_action': <HVACAction.COOLING: 'cooling'>,
       'hvac_modes': list([
         <HVACMode.AUTO: 'auto'>,
@@ -1295,7 +1484,7 @@
       'temperature': None,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.asd',
+    'entity_id': 'climate.theater_virtual_thermostat',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

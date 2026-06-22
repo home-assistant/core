@@ -1,10 +1,9 @@
 """Diagnostics support for Alexa Devices integration."""
 
-from __future__ import annotations
-
+from dataclasses import asdict
 from typing import Any
 
-from aioamazondevices.api import AmazonDevice
+from aioamazondevices.structures import AmazonDevice
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_USERNAME
@@ -13,7 +12,18 @@ from homeassistant.helpers.device_registry import DeviceEntry
 
 from .coordinator import AmazonConfigEntry
 
-TO_REDACT = {CONF_PASSWORD, CONF_USERNAME, CONF_NAME, "title"}
+TO_REDACT = {
+    CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    "access_token",
+    "adp_token",
+    "device_private_key",
+    "refresh_token",
+    "store_authentication_cookie",
+    "title",
+    "website_cookies",
+}
 
 
 async def async_get_config_entry_diagnostics(
@@ -60,7 +70,5 @@ def build_device_data(device: AmazonDevice) -> dict[str, Any]:
         "online": device.online,
         "serial number": device.serial_number,
         "software version": device.software_version,
-        "do not disturb": device.do_not_disturb,
-        "response style": device.response_style,
-        "bluetooth state": device.bluetooth_state,
+        "sensors": {key: asdict(sensor) for key, sensor in device.sensors.items()},
     }

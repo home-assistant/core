@@ -1,7 +1,5 @@
 """Diagnostics support for Enphase Envoy."""
 
-from __future__ import annotations
-
 import copy
 from datetime import datetime
 from typing import TYPE_CHECKING, Any
@@ -11,7 +9,7 @@ from attr import asdict
 from pyenphase.envoy import Envoy
 from pyenphase.exceptions import EnvoyError
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import async_redact_data, entity_entry_as_dict
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -111,11 +109,12 @@ async def async_get_config_entry_diagnostics(
             if state := hass.states.get(entity.entity_id):
                 state_dict = dict(state.as_dict())
                 state_dict.pop("context", None)
-            entity_dict = asdict(entity)
-            entity_dict.pop("_cache", None)
+            entity_dict = entity_entry_as_dict(entity)
             entities.append({"entity": entity_dict, "state": state_dict})
         device_dict = asdict(device)
         device_dict.pop("_cache", None)
+        # This can be removed when suggested_area is removed from DeviceEntry
+        device_dict.pop("_suggested_area")
         device_entities.append({"device": device_dict, "entities": entities})
 
     # remove envoy serial
@@ -145,6 +144,8 @@ async def async_get_config_entry_diagnostics(
         "ctmeter_production_phases": envoy_data.ctmeter_production_phases,
         "ctmeter_consumption_phases": envoy_data.ctmeter_consumption_phases,
         "ctmeter_storage_phases": envoy_data.ctmeter_storage_phases,
+        "ctmeters": envoy_data.ctmeters,
+        "ctmeters_phases": envoy_data.ctmeters_phases,
         "dry_contact_status": envoy_data.dry_contact_status,
         "dry_contact_settings": envoy_data.dry_contact_settings,
         "inverters": envoy_data.inverters,
@@ -177,6 +178,7 @@ async def async_get_config_entry_diagnostics(
         "ct_consumption_meter": envoy.consumption_meter_type,
         "ct_production_meter": envoy.production_meter_type,
         "ct_storage_meter": envoy.storage_meter_type,
+        "ct_meters": list(envoy_data.ctmeters.keys()),
     }
 
     fixture_data: dict[str, Any] = {}

@@ -1,9 +1,7 @@
 """Config flow for igloohome integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from igloohome_api import Auth as IgloohomeAuth, AuthException
@@ -13,7 +11,7 @@ from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_CLIENT_ID, CONF_CLIENT_SECRET
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import DOMAIN
+from .const import API_ACCESS_URL, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -28,6 +26,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class IgloohomeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for igloohome."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -57,5 +56,8 @@ class IgloohomeConfigFlow(ConfigFlow, domain=DOMAIN):
                 )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={"api_access_url": API_ACCESS_URL},
         )

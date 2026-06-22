@@ -1,7 +1,5 @@
 """Helper methods to handle the time in Home Assistant."""
 
-from __future__ import annotations
-
 import bisect
 from contextlib import suppress
 import datetime as dt
@@ -12,8 +10,6 @@ import zoneinfo
 
 from aiozoneinfo import async_get_time_zone as _async_get_time_zone
 import ciso8601
-
-from homeassistant.helpers.deprecation import deprecated_function
 
 DATE_STR_FORMAT = "%Y-%m-%d"
 UTC = dt.UTC
@@ -131,6 +127,26 @@ def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
     return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
 
 
+def naive_now() -> dt.datetime:
+    """Get now as a naive datetime in system local time.
+
+    The returned datetime has no tzinfo.
+    Prefer the time zone aware `now` helper unless
+    a naive datetime is explicitly required.
+
+    A valid use case for a naive datetime is for example when
+    a 3rd party library requires a naive datetime in local time.
+    In that case, this helper can be used to get the current time
+    in the expected format.
+
+    Use time.time() when calculating a relative time.
+    For example, to calculate the time until a future event,
+    do `event_time - time.time()`
+    instead of `event_time - datetime.datetime.now().timestamp()`.
+    """
+    return dt.datetime.now()
+
+
 def as_utc(dattim: dt.datetime) -> dt.datetime:
     """Return a datetime as UTC time.
 
@@ -170,20 +186,6 @@ def as_local(dattim: dt.datetime) -> dt.datetime:
 # of UTC and the function call overhead.
 utc_from_timestamp = partial(dt.datetime.fromtimestamp, tz=UTC)
 """Return a UTC time from a timestamp."""
-
-
-@deprecated_function("datetime.timestamp", breaks_in_ha_version="2026.1")
-def utc_to_timestamp(utc_dt: dt.datetime) -> float:
-    """Fast conversion of a datetime in UTC to a timestamp."""
-    # Taken from
-    # https://github.com/python/cpython/blob/3.10/Lib/zoneinfo/_zoneinfo.py#L185
-    return (
-        (utc_dt.toordinal() - EPOCHORDINAL) * 86400
-        + utc_dt.hour * 3600
-        + utc_dt.minute * 60
-        + utc_dt.second
-        + (utc_dt.microsecond / 1000000)
-    )
 
 
 def start_of_local_day(dt_or_d: dt.date | dt.datetime | None = None) -> dt.datetime:

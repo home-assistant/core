@@ -1,12 +1,16 @@
 """Huawei LTE constants."""
 
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.util.hass_dict import HassKey
+
 DOMAIN = "huawei_lte"
 
-ATTR_CONFIG_ENTRY_ID = "config_entry_id"
+HUAWEI_LTE_CONFIG: HassKey[ConfigType] = HassKey(DOMAIN)
 
 CONF_MANUFACTURER = "manufacturer"
 CONF_TRACK_WIRED_CLIENTS = "track_wired_clients"
 CONF_UNAUTHENTICATED_MODE = "unauthenticated_mode"
+CONF_UPNP_UDN = "upnp_udn"
 
 DEFAULT_DEVICE_NAME = "LTE"
 DEFAULT_MANUFACTURER = "Huawei Technologies Co., Ltd."
@@ -17,7 +21,6 @@ DEFAULT_UNAUTHENTICATED_MODE = False
 UPDATE_SIGNAL = f"{DOMAIN}_update"
 
 CONNECTION_TIMEOUT = 10
-NOTIFY_SUPPRESS_TIMEOUT = 30
 
 SERVICE_RESUME_INTEGRATION = "resume_integration"
 SERVICE_SUSPEND_INTEGRATION = "suspend_integration"

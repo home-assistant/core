@@ -1,7 +1,5 @@
 """Module for SIA Alarm Control Panels."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import TYPE_CHECKING
@@ -47,7 +45,7 @@ ENTITY_DESCRIPTION_ALARM = SIAAlarmControlPanelEntityDescription(
         "CP": AlarmControlPanelState.ARMED_AWAY,
         "CQ": AlarmControlPanelState.ARMED_AWAY,
         "CS": AlarmControlPanelState.ARMED_AWAY,
-        "CF": AlarmControlPanelState.ARMED_CUSTOM_BYPASS,
+        "CF": AlarmControlPanelState.ARMED_AWAY,
         "NP": AlarmControlPanelState.DISARMED,
         "NO": AlarmControlPanelState.DISARMED,
         "OA": AlarmControlPanelState.DISARMED,

@@ -2,15 +2,15 @@
 # name: test_diagnostics
   dict({
     'raw': dict({
-      '2024-11-04': dict({
+      '2025-09-30': dict({
         'areaAverages': list([
           dict({
             'areaCode': 'SE3',
-            'price': 1006.88,
+            'price': 974.99,
           }),
           dict({
             'areaCode': 'SE4',
-            'price': 1190.46,
+            'price': 1135.54,
           }),
         ]),
         'areaStates': list([
@@ -26,53 +26,53 @@
           dict({
             'averagePricePerArea': dict({
               'SE3': dict({
-                'average': 408.69,
-                'max': 1426.17,
-                'min': 66.13,
+                'average': 594.26,
+                'max': 1909.0,
+                'min': 242.43,
               }),
               'SE4': dict({
-                'average': 530.61,
-                'max': 1695.95,
-                'min': 78.59,
+                'average': 713.53,
+                'max': 2247.98,
+                'min': 311.51,
               }),
             }),
             'blockName': 'Off-peak 1',
-            'deliveryEnd': '2024-11-04T07:00:00Z',
-            'deliveryStart': '2024-11-03T23:00:00Z',
+            'deliveryEnd': '2025-09-30T06:00:00Z',
+            'deliveryStart': '2025-09-29T22:00:00Z',
           }),
           dict({
             'averagePricePerArea': dict({
               'SE3': dict({
-                'average': 1455.48,
-                'max': 2812.53,
-                'min': 952.76,
+                'average': 1249.39,
+                'max': 2652.18,
+                'min': 821.53,
               }),
               'SE4': dict({
-                'average': 1692.2,
-                'max': 3313.53,
-                'min': 1085.73,
+                'average': 1439.73,
+                'max': 3083.2,
+                'min': 927.24,
               }),
             }),
             'blockName': 'Peak',
-            'deliveryEnd': '2024-11-04T19:00:00Z',
-            'deliveryStart': '2024-11-04T07:00:00Z',
+            'deliveryEnd': '2025-09-30T18:00:00Z',
+            'deliveryStart': '2025-09-30T06:00:00Z',
           }),
           dict({
             'averagePricePerArea': dict({
               'SE3': dict({
-                'average': 857.49,
-                'max': 1165.02,
-                'min': 465.38,
+                'average': 913.23,
+                'max': 1109.76,
+                'min': 697.17,
               }),
               'SE4': dict({
-                'average': 1004.95,
-                'max': 1398.35,
-                'min': 528.83,
+                'average': 1067.0,
+                'max': 1305.73,
+                'min': 812.37,
               }),
             }),
             'blockName': 'Off-peak 2',
-            'deliveryEnd': '2024-11-04T23:00:00Z',
-            'deliveryStart': '2024-11-04T19:00:00Z',
+            'deliveryEnd': '2025-09-30T22:00:00Z',
+            'deliveryStart': '2025-09-30T18:00:00Z',
           }),
         ]),
         'currency': 'SEK',
@@ -80,215 +80,215 @@
           'SE3',
           'SE4',
         ]),
-        'deliveryDateCET': '2024-11-04',
-        'exchangeRate': 11.64318,
+        'deliveryDateCET': '2025-09-30',
+        'exchangeRate': 11.03467,
         'market': 'DayAhead',
         'multiAreaEntries': list([
           dict({
-            'deliveryEnd': '2024-11-04T00:00:00Z',
-            'deliveryStart': '2024-11-03T23:00:00Z',
+            'deliveryEnd': '2025-09-29T23:00:00Z',
+            'deliveryStart': '2025-09-29T22:00:00Z',
             'entryPerArea': dict({
-              'SE3': 66.13,
-              'SE4': 78.59,
+              'SE3': 278.63,
+              'SE4': 354.65,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T01:00:00Z',
-            'deliveryStart': '2024-11-04T00:00:00Z',
+            'deliveryEnd': '2025-09-30T00:00:00Z',
+            'deliveryStart': '2025-09-29T23:00:00Z',
             'entryPerArea': dict({
-              'SE3': 72.54,
-              'SE4': 86.51,
+              'SE3': 261.85,
+              'SE4': 336.89,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T02:00:00Z',
-            'deliveryStart': '2024-11-04T01:00:00Z',
+            'deliveryEnd': '2025-09-30T01:00:00Z',
+            'deliveryStart': '2025-09-30T00:00:00Z',
             'entryPerArea': dict({
-              'SE3': 73.12,
-              'SE4': 84.88,
+              'SE3': 242.43,
+              'SE4': 313.16,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T03:00:00Z',
-            'deliveryStart': '2024-11-04T02:00:00Z',
+            'deliveryEnd': '2025-09-30T02:00:00Z',
+            'deliveryStart': '2025-09-30T01:00:00Z',
             'entryPerArea': dict({
-              'SE3': 171.97,
-              'SE4': 217.26,
+              'SE3': 322.65,
+              'SE4': 401.0,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T04:00:00Z',
-            'deliveryStart': '2024-11-04T03:00:00Z',
+            'deliveryEnd': '2025-09-30T03:00:00Z',
+            'deliveryStart': '2025-09-30T02:00:00Z',
             'entryPerArea': dict({
-              'SE3': 181.05,
-              'SE4': 227.74,
+              'SE3': 243.2,
+              'SE4': 311.51,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T05:00:00Z',
-            'deliveryStart': '2024-11-04T04:00:00Z',
+            'deliveryEnd': '2025-09-30T04:00:00Z',
+            'deliveryStart': '2025-09-30T03:00:00Z',
             'entryPerArea': dict({
-              'SE3': 360.71,
-              'SE4': 414.61,
+              'SE3': 596.53,
+              'SE4': 695.52,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T06:00:00Z',
-            'deliveryStart': '2024-11-04T05:00:00Z',
+            'deliveryEnd': '2025-09-30T05:00:00Z',
+            'deliveryStart': '2025-09-30T04:00:00Z',
             'entryPerArea': dict({
-              'SE3': 917.83,
-              'SE4': 1439.33,
+              'SE3': 899.77,
+              'SE4': 1047.52,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T07:00:00Z',
-            'deliveryStart': '2024-11-04T06:00:00Z',
+            'deliveryEnd': '2025-09-30T06:00:00Z',
+            'deliveryStart': '2025-09-30T05:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1426.17,
-              'SE4': 1695.95,
+              'SE3': 1909.0,
+              'SE4': 2247.98,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T08:00:00Z',
-            'deliveryStart': '2024-11-04T07:00:00Z',
+            'deliveryEnd': '2025-09-30T07:00:00Z',
+            'deliveryStart': '2025-09-30T06:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1350.96,
-              'SE4': 1605.13,
+              'SE3': 1432.52,
+              'SE4': 1681.24,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T09:00:00Z',
-            'deliveryStart': '2024-11-04T08:00:00Z',
+            'deliveryEnd': '2025-09-30T08:00:00Z',
+            'deliveryStart': '2025-09-30T07:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1195.06,
-              'SE4': 1393.46,
+              'SE3': 1127.52,
+              'SE4': 1304.96,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T10:00:00Z',
-            'deliveryStart': '2024-11-04T09:00:00Z',
+            'deliveryEnd': '2025-09-30T09:00:00Z',
+            'deliveryStart': '2025-09-30T08:00:00Z',
             'entryPerArea': dict({
-              'SE3': 992.35,
-              'SE4': 1126.71,
+              'SE3': 966.75,
+              'SE4': 1073.34,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T11:00:00Z',
-            'deliveryStart': '2024-11-04T10:00:00Z',
+            'deliveryEnd': '2025-09-30T10:00:00Z',
+            'deliveryStart': '2025-09-30T09:00:00Z',
             'entryPerArea': dict({
-              'SE3': 976.63,
-              'SE4': 1107.97,
+              'SE3': 882.55,
+              'SE4': 1003.93,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T12:00:00Z',
-            'deliveryStart': '2024-11-04T11:00:00Z',
+            'deliveryEnd': '2025-09-30T11:00:00Z',
+            'deliveryStart': '2025-09-30T10:00:00Z',
             'entryPerArea': dict({
-              'SE3': 952.76,
-              'SE4': 1085.73,
+              'SE3': 841.72,
+              'SE4': 947.44,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T13:00:00Z',
-            'deliveryStart': '2024-11-04T12:00:00Z',
+            'deliveryEnd': '2025-09-30T12:00:00Z',
+            'deliveryStart': '2025-09-30T11:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1029.37,
-              'SE4': 1177.71,
+              'SE3': 821.53,
+              'SE4': 927.24,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T14:00:00Z',
-            'deliveryStart': '2024-11-04T13:00:00Z',
+            'deliveryEnd': '2025-09-30T13:00:00Z',
+            'deliveryStart': '2025-09-30T12:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1043.35,
-              'SE4': 1194.59,
+              'SE3': 864.35,
+              'SE4': 970.5,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T15:00:00Z',
-            'deliveryStart': '2024-11-04T14:00:00Z',
+            'deliveryEnd': '2025-09-30T14:00:00Z',
+            'deliveryStart': '2025-09-30T13:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1359.57,
-              'SE4': 1561.12,
+              'SE3': 931.88,
+              'SE4': 1046.64,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T16:00:00Z',
-            'deliveryStart': '2024-11-04T15:00:00Z',
+            'deliveryEnd': '2025-09-30T15:00:00Z',
+            'deliveryStart': '2025-09-30T14:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1848.35,
-              'SE4': 2145.84,
+              'SE3': 1039.13,
+              'SE4': 1165.04,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T17:00:00Z',
-            'deliveryStart': '2024-11-04T16:00:00Z',
+            'deliveryEnd': '2025-09-30T16:00:00Z',
+            'deliveryStart': '2025-09-30T15:00:00Z',
             'entryPerArea': dict({
-              'SE3': 2812.53,
-              'SE4': 3313.53,
+              'SE3': 1296.57,
+              'SE4': 1520.91,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T18:00:00Z',
-            'deliveryStart': '2024-11-04T17:00:00Z',
+            'deliveryEnd': '2025-09-30T17:00:00Z',
+            'deliveryStart': '2025-09-30T16:00:00Z',
             'entryPerArea': dict({
-              'SE3': 2351.69,
-              'SE4': 2751.87,
+              'SE3': 2652.18,
+              'SE4': 3083.2,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T19:00:00Z',
-            'deliveryStart': '2024-11-04T18:00:00Z',
+            'deliveryEnd': '2025-09-30T18:00:00Z',
+            'deliveryStart': '2025-09-30T17:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1553.08,
-              'SE4': 1842.77,
+              'SE3': 2135.98,
+              'SE4': 2552.32,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T20:00:00Z',
-            'deliveryStart': '2024-11-04T19:00:00Z',
+            'deliveryEnd': '2025-09-30T19:00:00Z',
+            'deliveryStart': '2025-09-30T18:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1165.02,
-              'SE4': 1398.35,
+              'SE3': 1109.76,
+              'SE4': 1305.73,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T21:00:00Z',
-            'deliveryStart': '2024-11-04T20:00:00Z',
+            'deliveryEnd': '2025-09-30T20:00:00Z',
+            'deliveryStart': '2025-09-30T19:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1007.48,
-              'SE4': 1172.35,
+              'SE3': 973.81,
+              'SE4': 1130.83,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T22:00:00Z',
-            'deliveryStart': '2024-11-04T21:00:00Z',
+            'deliveryEnd': '2025-09-30T21:00:00Z',
+            'deliveryStart': '2025-09-30T20:00:00Z',
             'entryPerArea': dict({
-              'SE3': 792.09,
-              'SE4': 920.28,
+              'SE3': 872.18,
+              'SE4': 1019.05,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-04T23:00:00Z',
-            'deliveryStart': '2024-11-04T22:00:00Z',
+            'deliveryEnd': '2025-09-30T22:00:00Z',
+            'deliveryStart': '2025-09-30T21:00:00Z',
             'entryPerArea': dict({
-              'SE3': 465.38,
-              'SE4': 528.83,
+              'SE3': 697.17,
+              'SE4': 812.37,
             }),
           }),
         ]),
-        'updatedAt': '2024-11-04T08:09:11.1931991Z',
+        'updatedAt': '2025-09-29T11:17:12.3019385Z',
         'version': 3,
       }),
-      '2024-11-05': dict({
+      '2025-10-01': dict({
         'areaAverages': list([
           dict({
             'areaCode': 'SE3',
-            'price': 900.74,
+            'price': 1033.98,
           }),
           dict({
             'areaCode': 'SE4',
-            'price': 1166.12,
+            'price': 1180.78,
           }),
         ]),
         'areaStates': list([
@@ -304,53 +304,53 @@
           dict({
             'averagePricePerArea': dict({
               'SE3': dict({
-                'average': 422.87,
-                'max': 1406.14,
-                'min': 61.69,
+                'average': 745.93,
+                'max': 1809.96,
+                'min': 441.96,
               }),
               'SE4': dict({
-                'average': 497.97,
-                'max': 1648.25,
-                'min': 65.19,
+                'average': 860.99,
+                'max': 2029.34,
+                'min': 515.46,
               }),
             }),
             'blockName': 'Off-peak 1',
-            'deliveryEnd': '2024-11-05T07:00:00Z',
-            'deliveryStart': '2024-11-04T23:00:00Z',
+            'deliveryEnd': '2025-10-01T06:00:00Z',
+            'deliveryStart': '2025-09-30T22:00:00Z',
           }),
           dict({
             'averagePricePerArea': dict({
               'SE3': dict({
-                'average': 1315.97,
-                'max': 2512.65,
-                'min': 925.05,
+                'average': 1219.13,
+                'max': 3828.03,
+                'min': 607.74,
               }),
               'SE4': dict({
-                'average': 1735.59,
-                'max': 3533.03,
-                'min': 1081.72,
+                'average': 1381.22,
+                'max': 4442.74,
+                'min': 683.12,
               }),
             }),
             'blockName': 'Peak',
-            'deliveryEnd': '2024-11-05T19:00:00Z',
-            'deliveryStart': '2024-11-05T07:00:00Z',
+            'deliveryEnd': '2025-10-01T18:00:00Z',
+            'deliveryStart': '2025-10-01T06:00:00Z',
           }),
           dict({
             'averagePricePerArea': dict({
               'SE3': dict({
-                'average': 610.79,
-                'max': 835.53,
-                'min': 289.14,
+                'average': 1054.61,
+                'max': 1997.96,
+                'min': 785.68,
               }),
               'SE4': dict({
-                'average': 793.98,
-                'max': 1112.57,
-                'min': 349.21,
+                'average': 1219.07,
+                'max': 2312.16,
+                'min': 912.22,
               }),
             }),
             'blockName': 'Off-peak 2',
-            'deliveryEnd': '2024-11-05T23:00:00Z',
-            'deliveryStart': '2024-11-05T19:00:00Z',
+            'deliveryEnd': '2025-10-01T22:00:00Z',
+            'deliveryStart': '2025-10-01T18:00:00Z',
           }),
         ]),
         'currency': 'SEK',
@@ -358,215 +358,791 @@
           'SE3',
           'SE4',
         ]),
-        'deliveryDateCET': '2024-11-05',
-        'exchangeRate': 11.6402,
+        'deliveryDateCET': '2025-10-01',
+        'exchangeRate': 11.05186,
         'market': 'DayAhead',
         'multiAreaEntries': list([
           dict({
-            'deliveryEnd': '2024-11-05T00:00:00Z',
-            'deliveryStart': '2024-11-04T23:00:00Z',
+            'deliveryEnd': '2025-09-30T22:15:00Z',
+            'deliveryStart': '2025-09-30T22:00:00Z',
             'entryPerArea': dict({
-              'SE3': 250.73,
-              'SE4': 283.79,
+              'SE3': 556.68,
+              'SE4': 642.22,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T01:00:00Z',
-            'deliveryStart': '2024-11-05T00:00:00Z',
+            'deliveryEnd': '2025-09-30T22:30:00Z',
+            'deliveryStart': '2025-09-30T22:15:00Z',
             'entryPerArea': dict({
-              'SE3': 76.36,
-              'SE4': 81.36,
+              'SE3': 519.88,
+              'SE4': 600.12,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T02:00:00Z',
-            'deliveryStart': '2024-11-05T01:00:00Z',
+            'deliveryEnd': '2025-09-30T22:45:00Z',
+            'deliveryStart': '2025-09-30T22:30:00Z',
             'entryPerArea': dict({
-              'SE3': 73.92,
-              'SE4': 79.15,
+              'SE3': 508.28,
+              'SE4': 586.3,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T03:00:00Z',
-            'deliveryStart': '2024-11-05T02:00:00Z',
+            'deliveryEnd': '2025-09-30T23:00:00Z',
+            'deliveryStart': '2025-09-30T22:45:00Z',
             'entryPerArea': dict({
-              'SE3': 61.69,
-              'SE4': 65.19,
+              'SE3': 509.93,
+              'SE4': 589.62,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T04:00:00Z',
-            'deliveryStart': '2024-11-05T03:00:00Z',
+            'deliveryEnd': '2025-09-30T23:15:00Z',
+            'deliveryStart': '2025-09-30T23:00:00Z',
             'entryPerArea': dict({
-              'SE3': 64.6,
-              'SE4': 68.44,
+              'SE3': 501.64,
+              'SE4': 577.24,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T05:00:00Z',
-            'deliveryStart': '2024-11-05T04:00:00Z',
+            'deliveryEnd': '2025-09-30T23:30:00Z',
+            'deliveryStart': '2025-09-30T23:15:00Z',
             'entryPerArea': dict({
-              'SE3': 453.27,
-              'SE4': 516.71,
+              'SE3': 509.05,
+              'SE4': 585.42,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T06:00:00Z',
-            'deliveryStart': '2024-11-05T05:00:00Z',
+            'deliveryEnd': '2025-09-30T23:45:00Z',
+            'deliveryStart': '2025-09-30T23:30:00Z',
             'entryPerArea': dict({
-              'SE3': 996.28,
-              'SE4': 1240.85,
+              'SE3': 491.03,
+              'SE4': 567.18,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T07:00:00Z',
-            'deliveryStart': '2024-11-05T06:00:00Z',
+            'deliveryEnd': '2025-10-01T00:00:00Z',
+            'deliveryStart': '2025-09-30T23:45:00Z',
             'entryPerArea': dict({
-              'SE3': 1406.14,
-              'SE4': 1648.25,
+              'SE3': 442.07,
+              'SE4': 517.45,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T08:00:00Z',
-            'deliveryStart': '2024-11-05T07:00:00Z',
+            'deliveryEnd': '2025-10-01T00:15:00Z',
+            'deliveryStart': '2025-10-01T00:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1346.54,
-              'SE4': 1570.5,
+              'SE3': 504.08,
+              'SE4': 580.55,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T09:00:00Z',
-            'deliveryStart': '2024-11-05T08:00:00Z',
+            'deliveryEnd': '2025-10-01T00:30:00Z',
+            'deliveryStart': '2025-10-01T00:15:00Z',
             'entryPerArea': dict({
-              'SE3': 1150.28,
-              'SE4': 1345.37,
+              'SE3': 504.85,
+              'SE4': 581.55,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T10:00:00Z',
-            'deliveryStart': '2024-11-05T09:00:00Z',
+            'deliveryEnd': '2025-10-01T00:45:00Z',
+            'deliveryStart': '2025-10-01T00:30:00Z',
             'entryPerArea': dict({
-              'SE3': 1031.32,
-              'SE4': 1206.51,
+              'SE3': 504.3,
+              'SE4': 580.78,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T11:00:00Z',
-            'deliveryStart': '2024-11-05T10:00:00Z',
+            'deliveryEnd': '2025-10-01T01:00:00Z',
+            'deliveryStart': '2025-10-01T00:45:00Z',
             'entryPerArea': dict({
-              'SE3': 927.37,
-              'SE4': 1085.8,
+              'SE3': 506.29,
+              'SE4': 583.1,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T12:00:00Z',
-            'deliveryStart': '2024-11-05T11:00:00Z',
+            'deliveryEnd': '2025-10-01T01:15:00Z',
+            'deliveryStart': '2025-10-01T01:00:00Z',
             'entryPerArea': dict({
-              'SE3': 925.05,
-              'SE4': 1081.72,
+              'SE3': 442.07,
+              'SE4': 515.46,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T13:00:00Z',
-            'deliveryStart': '2024-11-05T12:00:00Z',
+            'deliveryEnd': '2025-10-01T01:30:00Z',
+            'deliveryStart': '2025-10-01T01:15:00Z',
             'entryPerArea': dict({
-              'SE3': 949.49,
-              'SE4': 1130.38,
+              'SE3': 441.96,
+              'SE4': 517.23,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T14:00:00Z',
-            'deliveryStart': '2024-11-05T13:00:00Z',
+            'deliveryEnd': '2025-10-01T01:45:00Z',
+            'deliveryStart': '2025-10-01T01:30:00Z',
             'entryPerArea': dict({
-              'SE3': 1042.03,
-              'SE4': 1256.91,
+              'SE3': 442.07,
+              'SE4': 516.23,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T15:00:00Z',
-            'deliveryStart': '2024-11-05T14:00:00Z',
+            'deliveryEnd': '2025-10-01T02:00:00Z',
+            'deliveryStart': '2025-10-01T01:45:00Z',
             'entryPerArea': dict({
-              'SE3': 1258.89,
-              'SE4': 1765.82,
+              'SE3': 442.07,
+              'SE4': 516.23,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T16:00:00Z',
-            'deliveryStart': '2024-11-05T15:00:00Z',
+            'deliveryEnd': '2025-10-01T02:15:00Z',
+            'deliveryStart': '2025-10-01T02:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1816.45,
-              'SE4': 2522.55,
+              'SE3': 441.96,
+              'SE4': 517.34,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T17:00:00Z',
-            'deliveryStart': '2024-11-05T16:00:00Z',
+            'deliveryEnd': '2025-10-01T02:30:00Z',
+            'deliveryStart': '2025-10-01T02:15:00Z',
             'entryPerArea': dict({
-              'SE3': 2512.65,
-              'SE4': 3533.03,
+              'SE3': 483.3,
+              'SE4': 559.11,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T18:00:00Z',
-            'deliveryStart': '2024-11-05T17:00:00Z',
+            'deliveryEnd': '2025-10-01T02:45:00Z',
+            'deliveryStart': '2025-10-01T02:30:00Z',
             'entryPerArea': dict({
-              'SE3': 1819.83,
-              'SE4': 2524.06,
+              'SE3': 484.29,
+              'SE4': 559.0,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T19:00:00Z',
-            'deliveryStart': '2024-11-05T18:00:00Z',
+            'deliveryEnd': '2025-10-01T03:00:00Z',
+            'deliveryStart': '2025-10-01T02:45:00Z',
             'entryPerArea': dict({
-              'SE3': 1011.77,
+              'SE3': 574.7,
+              'SE4': 659.35,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T03:15:00Z',
+            'deliveryStart': '2025-10-01T03:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 543.31,
+              'SE4': 631.95,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T03:30:00Z',
+            'deliveryStart': '2025-10-01T03:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 578.01,
+              'SE4': 671.18,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T03:45:00Z',
+            'deliveryStart': '2025-10-01T03:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 774.96,
+              'SE4': 893.1,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T04:00:00Z',
+            'deliveryStart': '2025-10-01T03:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 787.0,
+              'SE4': 909.79,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T04:15:00Z',
+            'deliveryStart': '2025-10-01T04:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 902.38,
+              'SE4': 1041.86,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T04:30:00Z',
+            'deliveryStart': '2025-10-01T04:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1079.32,
+              'SE4': 1254.17,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T04:45:00Z',
+            'deliveryStart': '2025-10-01T04:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1222.67,
+              'SE4': 1421.93,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T05:00:00Z',
+            'deliveryStart': '2025-10-01T04:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1394.63,
+              'SE4': 1623.08,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T05:15:00Z',
+            'deliveryStart': '2025-10-01T05:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1529.36,
+              'SE4': 1787.86,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T05:30:00Z',
+            'deliveryStart': '2025-10-01T05:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1724.53,
+              'SE4': 2015.75,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T05:45:00Z',
+            'deliveryStart': '2025-10-01T05:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1809.96,
+              'SE4': 2029.34,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T06:00:00Z',
+            'deliveryStart': '2025-10-01T05:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1713.04,
+              'SE4': 1920.15,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T06:15:00Z',
+            'deliveryStart': '2025-10-01T06:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1925.9,
+              'SE4': 2162.63,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T06:30:00Z',
+            'deliveryStart': '2025-10-01T06:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1440.06,
+              'SE4': 1614.01,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T06:45:00Z',
+            'deliveryStart': '2025-10-01T06:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1183.32,
+              'SE4': 1319.37,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T07:00:00Z',
+            'deliveryStart': '2025-10-01T06:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 962.95,
+              'SE4': 1068.71,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T07:15:00Z',
+            'deliveryStart': '2025-10-01T07:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1402.04,
+              'SE4': 1569.92,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T07:30:00Z',
+            'deliveryStart': '2025-10-01T07:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1060.65,
+              'SE4': 1178.46,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T07:45:00Z',
+            'deliveryStart': '2025-10-01T07:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 949.13,
+              'SE4': 1050.59,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T08:00:00Z',
+            'deliveryStart': '2025-10-01T07:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 841.82,
+              'SE4': 938.3,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T08:15:00Z',
+            'deliveryStart': '2025-10-01T08:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1037.44,
+              'SE4': 1141.44,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T08:30:00Z',
+            'deliveryStart': '2025-10-01T08:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 950.13,
+              'SE4': 1041.64,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T08:45:00Z',
+            'deliveryStart': '2025-10-01T08:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 826.13,
+              'SE4': 905.04,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T09:00:00Z',
+            'deliveryStart': '2025-10-01T08:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 684.55,
+              'SE4': 754.62,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T09:15:00Z',
+            'deliveryStart': '2025-10-01T09:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 861.6,
+              'SE4': 936.09,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T09:30:00Z',
+            'deliveryStart': '2025-10-01T09:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 722.79,
+              'SE4': 799.6,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T09:45:00Z',
+            'deliveryStart': '2025-10-01T09:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 640.57,
+              'SE4': 718.59,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T10:00:00Z',
+            'deliveryStart': '2025-10-01T09:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 607.74,
+              'SE4': 683.12,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T10:15:00Z',
+            'deliveryStart': '2025-10-01T10:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 674.05,
+              'SE4': 752.41,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T10:30:00Z',
+            'deliveryStart': '2025-10-01T10:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 638.58,
+              'SE4': 717.49,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T10:45:00Z',
+            'deliveryStart': '2025-10-01T10:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 638.47,
+              'SE4': 719.81,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T11:00:00Z',
+            'deliveryStart': '2025-10-01T10:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 634.82,
+              'SE4': 717.16,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T11:15:00Z',
+            'deliveryStart': '2025-10-01T11:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 637.36,
+              'SE4': 721.58,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T11:30:00Z',
+            'deliveryStart': '2025-10-01T11:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 660.68,
+              'SE4': 746.33,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T11:45:00Z',
+            'deliveryStart': '2025-10-01T11:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 679.14,
+              'SE4': 766.45,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T12:00:00Z',
+            'deliveryStart': '2025-10-01T11:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 694.61,
+              'SE4': 782.91,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T12:15:00Z',
+            'deliveryStart': '2025-10-01T12:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 622.33,
+              'SE4': 708.87,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T12:30:00Z',
+            'deliveryStart': '2025-10-01T12:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 685.44,
+              'SE4': 775.84,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T12:45:00Z',
+            'deliveryStart': '2025-10-01T12:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 732.85,
+              'SE4': 826.57,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T13:00:00Z',
+            'deliveryStart': '2025-10-01T12:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 801.92,
+              'SE4': 901.28,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T13:15:00Z',
+            'deliveryStart': '2025-10-01T13:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 629.4,
+              'SE4': 717.93,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T13:30:00Z',
+            'deliveryStart': '2025-10-01T13:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 729.53,
+              'SE4': 825.46,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T13:45:00Z',
+            'deliveryStart': '2025-10-01T13:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 884.81,
+              'SE4': 983.95,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T14:00:00Z',
+            'deliveryStart': '2025-10-01T13:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 984.94,
+              'SE4': 1089.71,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T14:15:00Z',
+            'deliveryStart': '2025-10-01T14:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 615.26,
+              'SE4': 703.12,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T14:30:00Z',
+            'deliveryStart': '2025-10-01T14:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 902.94,
+              'SE4': 1002.74,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T14:45:00Z',
+            'deliveryStart': '2025-10-01T14:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1043.85,
+              'SE4': 1158.35,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T15:00:00Z',
+            'deliveryStart': '2025-10-01T14:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1075.12,
+              'SE4': 1194.15,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T15:15:00Z',
+            'deliveryStart': '2025-10-01T15:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 980.52,
+              'SE4': 1089.38,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T15:30:00Z',
+            'deliveryStart': '2025-10-01T15:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1162.66,
+              'SE4': 1300.14,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T15:45:00Z',
+            'deliveryStart': '2025-10-01T15:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1453.87,
+              'SE4': 1628.6,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T16:00:00Z',
+            'deliveryStart': '2025-10-01T15:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1955.96,
+              'SE4': 2193.35,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T16:15:00Z',
+            'deliveryStart': '2025-10-01T16:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1423.48,
+              'SE4': 1623.74,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T16:30:00Z',
+            'deliveryStart': '2025-10-01T16:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1900.04,
+              'SE4': 2199.98,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T16:45:00Z',
+            'deliveryStart': '2025-10-01T16:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 2611.11,
+              'SE4': 3031.08,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T17:00:00Z',
+            'deliveryStart': '2025-10-01T16:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 3467.41,
+              'SE4': 4029.51,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T17:15:00Z',
+            'deliveryStart': '2025-10-01T17:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 3828.03,
+              'SE4': 4442.74,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T17:30:00Z',
+            'deliveryStart': '2025-10-01T17:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 3429.83,
+              'SE4': 3982.21,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T17:45:00Z',
+            'deliveryStart': '2025-10-01T17:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 2934.38,
+              'SE4': 3405.74,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T18:00:00Z',
+            'deliveryStart': '2025-10-01T17:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 2308.07,
+              'SE4': 2677.64,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T18:15:00Z',
+            'deliveryStart': '2025-10-01T18:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1997.96,
               'SE4': 0.0,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T20:00:00Z',
-            'deliveryStart': '2024-11-05T19:00:00Z',
+            'deliveryEnd': '2025-10-01T18:30:00Z',
+            'deliveryStart': '2025-10-01T18:15:00Z',
             'entryPerArea': dict({
-              'SE3': 835.53,
-              'SE4': 1112.57,
+              'SE3': 1424.03,
+              'SE4': 1646.17,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T21:00:00Z',
-            'deliveryStart': '2024-11-05T20:00:00Z',
+            'deliveryEnd': '2025-10-01T18:45:00Z',
+            'deliveryStart': '2025-10-01T18:30:00Z',
             'entryPerArea': dict({
-              'SE3': 796.19,
-              'SE4': 1051.69,
+              'SE3': 1216.81,
+              'SE4': 1388.11,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T22:00:00Z',
-            'deliveryStart': '2024-11-05T21:00:00Z',
+            'deliveryEnd': '2025-10-01T19:00:00Z',
+            'deliveryStart': '2025-10-01T18:45:00Z',
             'entryPerArea': dict({
-              'SE3': 522.3,
-              'SE4': 662.44,
+              'SE3': 1070.15,
+              'SE4': 1204.65,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-05T23:00:00Z',
-            'deliveryStart': '2024-11-05T22:00:00Z',
+            'deliveryEnd': '2025-10-01T19:15:00Z',
+            'deliveryStart': '2025-10-01T19:00:00Z',
             'entryPerArea': dict({
-              'SE3': 289.14,
-              'SE4': 349.21,
+              'SE3': 1218.14,
+              'SE4': 1405.02,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T19:30:00Z',
+            'deliveryStart': '2025-10-01T19:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1135.8,
+              'SE4': 1309.42,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T19:45:00Z',
+            'deliveryStart': '2025-10-01T19:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 959.96,
+              'SE4': 1115.69,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T20:00:00Z',
+            'deliveryStart': '2025-10-01T19:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 913.66,
+              'SE4': 1064.52,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T20:15:00Z',
+            'deliveryStart': '2025-10-01T20:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1001.63,
+              'SE4': 1161.22,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T20:30:00Z',
+            'deliveryStart': '2025-10-01T20:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 933.0,
+              'SE4': 1083.08,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T20:45:00Z',
+            'deliveryStart': '2025-10-01T20:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 874.53,
+              'SE4': 1017.66,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T21:00:00Z',
+            'deliveryStart': '2025-10-01T20:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 821.71,
+              'SE4': 955.32,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T21:15:00Z',
+            'deliveryStart': '2025-10-01T21:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 860.5,
+              'SE4': 997.32,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T21:30:00Z',
+            'deliveryStart': '2025-10-01T21:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 840.16,
+              'SE4': 977.87,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T21:45:00Z',
+            'deliveryStart': '2025-10-01T21:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 820.05,
+              'SE4': 954.66,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-01T22:00:00Z',
+            'deliveryStart': '2025-10-01T21:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 785.68,
+              'SE4': 912.22,
             }),
           }),
         ]),
-        'updatedAt': '2024-11-04T12:15:03.9456464Z',
+        'updatedAt': '2025-09-30T12:08:16.4448023Z',
         'version': 3,
       }),
-      '2024-11-06': dict({
+      '2025-10-02': dict({
         'areaAverages': list([
           dict({
             'areaCode': 'SE3',
-            'price': 900.65,
+            'price': 1129.65,
           }),
           dict({
             'areaCode': 'SE4',
-            'price': 1581.19,
+            'price': 1119.28,
           }),
         ]),
         'areaStates': list([
@@ -582,53 +1158,53 @@
           dict({
             'averagePricePerArea': dict({
               'SE3': dict({
-                'average': 422.51,
-                'max': 1820.5,
-                'min': 74.06,
+                'average': 961.76,
+                'max': 1831.25,
+                'min': 673.05,
               }),
               'SE4': dict({
-                'average': 706.61,
-                'max': 2449.96,
-                'min': 157.34,
+                'average': 1102.25,
+                'max': 2182.34,
+                'min': 758.78,
               }),
             }),
             'blockName': 'Off-peak 1',
-            'deliveryEnd': '2024-11-06T07:00:00Z',
-            'deliveryStart': '2024-11-05T23:00:00Z',
+            'deliveryEnd': '2025-10-02T06:00:00Z',
+            'deliveryStart': '2025-10-01T22:00:00Z',
           }),
           dict({
             'averagePricePerArea': dict({
               'SE3': dict({
-                'average': 1346.82,
-                'max': 2366.57,
-                'min': 903.31,
+                'average': 1191.34,
+                'max': 3288.35,
+                'min': 563.38,
               }),
               'SE4': dict({
-                'average': 2306.88,
-                'max': 5511.77,
-                'min': 1362.84,
+                'average': 1155.07,
+                'max': 2617.73,
+                'min': 635.76,
               }),
             }),
             'blockName': 'Peak',
-            'deliveryEnd': '2024-11-06T19:00:00Z',
-            'deliveryStart': '2024-11-06T07:00:00Z',
+            'deliveryEnd': '2025-10-02T18:00:00Z',
+            'deliveryStart': '2025-10-02T06:00:00Z',
           }),
           dict({
             'averagePricePerArea': dict({
               'SE3': dict({
-                'average': 518.43,
-                'max': 716.82,
-                'min': 250.64,
+                'average': 1280.38,
+                'max': 1935.08,
+                'min': 646.9,
               }),
               'SE4': dict({
-                'average': 1153.25,
-                'max': 1624.33,
-                'min': 539.42,
+                'average': 1045.99,
+                'max': 1532.57,
+                'min': 591.84,
               }),
             }),
             'blockName': 'Off-peak 2',
-            'deliveryEnd': '2024-11-06T23:00:00Z',
-            'deliveryStart': '2024-11-06T19:00:00Z',
+            'deliveryEnd': '2025-10-02T22:00:00Z',
+            'deliveryStart': '2025-10-02T18:00:00Z',
           }),
         ]),
         'currency': 'SEK',
@@ -636,204 +1212,780 @@
           'SE3',
           'SE4',
         ]),
-        'deliveryDateCET': '2024-11-06',
-        'exchangeRate': 11.66314,
+        'deliveryDateCET': '2025-10-02',
+        'exchangeRate': 11.03362,
         'market': 'DayAhead',
         'multiAreaEntries': list([
           dict({
-            'deliveryEnd': '2024-11-06T00:00:00Z',
-            'deliveryStart': '2024-11-05T23:00:00Z',
+            'deliveryEnd': '2025-10-01T22:15:00Z',
+            'deliveryStart': '2025-10-01T22:00:00Z',
             'entryPerArea': dict({
-              'SE3': 126.66,
-              'SE4': 275.6,
+              'SE3': 933.22,
+              'SE4': 1062.32,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T01:00:00Z',
-            'deliveryStart': '2024-11-06T00:00:00Z',
+            'deliveryEnd': '2025-10-01T22:30:00Z',
+            'deliveryStart': '2025-10-01T22:15:00Z',
             'entryPerArea': dict({
-              'SE3': 74.06,
-              'SE4': 157.34,
+              'SE3': 854.22,
+              'SE4': 971.95,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T02:00:00Z',
-            'deliveryStart': '2024-11-06T01:00:00Z',
+            'deliveryEnd': '2025-10-01T22:45:00Z',
+            'deliveryStart': '2025-10-01T22:30:00Z',
             'entryPerArea': dict({
-              'SE3': 78.38,
-              'SE4': 165.62,
+              'SE3': 809.54,
+              'SE4': 919.1,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T03:00:00Z',
-            'deliveryStart': '2024-11-06T02:00:00Z',
+            'deliveryEnd': '2025-10-01T23:00:00Z',
+            'deliveryStart': '2025-10-01T22:45:00Z',
             'entryPerArea': dict({
-              'SE3': 92.37,
-              'SE4': 196.17,
+              'SE3': 811.74,
+              'SE4': 922.63,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T04:00:00Z',
-            'deliveryStart': '2024-11-06T03:00:00Z',
+            'deliveryEnd': '2025-10-01T23:15:00Z',
+            'deliveryStart': '2025-10-01T23:00:00Z',
             'entryPerArea': dict({
-              'SE3': 99.14,
-              'SE4': 190.58,
+              'SE3': 835.13,
+              'SE4': 950.99,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T05:00:00Z',
-            'deliveryStart': '2024-11-06T04:00:00Z',
+            'deliveryEnd': '2025-10-01T23:30:00Z',
+            'deliveryStart': '2025-10-01T23:15:00Z',
             'entryPerArea': dict({
-              'SE3': 447.51,
-              'SE4': 932.93,
+              'SE3': 828.85,
+              'SE4': 942.82,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T06:00:00Z',
-            'deliveryStart': '2024-11-06T05:00:00Z',
+            'deliveryEnd': '2025-10-01T23:45:00Z',
+            'deliveryStart': '2025-10-01T23:30:00Z',
             'entryPerArea': dict({
-              'SE3': 641.47,
-              'SE4': 1284.69,
+              'SE3': 796.63,
+              'SE4': 903.54,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T07:00:00Z',
-            'deliveryStart': '2024-11-06T06:00:00Z',
+            'deliveryEnd': '2025-10-02T00:00:00Z',
+            'deliveryStart': '2025-10-01T23:45:00Z',
             'entryPerArea': dict({
-              'SE3': 1820.5,
-              'SE4': 2449.96,
+              'SE3': 706.7,
+              'SE4': 799.61,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T08:00:00Z',
-            'deliveryStart': '2024-11-06T07:00:00Z',
+            'deliveryEnd': '2025-10-02T00:15:00Z',
+            'deliveryStart': '2025-10-02T00:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1723.0,
-              'SE4': 2244.22,
+              'SE3': 695.23,
+              'SE4': 786.81,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T09:00:00Z',
-            'deliveryStart': '2024-11-06T08:00:00Z',
+            'deliveryEnd': '2025-10-02T00:30:00Z',
+            'deliveryStart': '2025-10-02T00:15:00Z',
             'entryPerArea': dict({
-              'SE3': 1298.57,
-              'SE4': 1643.45,
+              'SE3': 695.12,
+              'SE4': 783.83,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T10:00:00Z',
-            'deliveryStart': '2024-11-06T09:00:00Z',
+            'deliveryEnd': '2025-10-02T00:45:00Z',
+            'deliveryStart': '2025-10-02T00:30:00Z',
             'entryPerArea': dict({
-              'SE3': 1099.25,
-              'SE4': 1507.23,
+              'SE3': 684.86,
+              'SE4': 771.8,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T11:00:00Z',
-            'deliveryStart': '2024-11-06T10:00:00Z',
+            'deliveryEnd': '2025-10-02T01:00:00Z',
+            'deliveryStart': '2025-10-02T00:45:00Z',
             'entryPerArea': dict({
-              'SE3': 903.31,
-              'SE4': 1362.84,
+              'SE3': 673.05,
+              'SE4': 758.78,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T12:00:00Z',
-            'deliveryStart': '2024-11-06T11:00:00Z',
+            'deliveryEnd': '2025-10-02T01:15:00Z',
+            'deliveryStart': '2025-10-02T01:00:00Z',
             'entryPerArea': dict({
-              'SE3': 959.99,
-              'SE4': 1376.13,
+              'SE3': 695.01,
+              'SE4': 791.22,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T13:00:00Z',
-            'deliveryStart': '2024-11-06T12:00:00Z',
+            'deliveryEnd': '2025-10-02T01:30:00Z',
+            'deliveryStart': '2025-10-02T01:15:00Z',
             'entryPerArea': dict({
-              'SE3': 1186.61,
-              'SE4': 1449.96,
+              'SE3': 693.35,
+              'SE4': 789.12,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T14:00:00Z',
-            'deliveryStart': '2024-11-06T13:00:00Z',
+            'deliveryEnd': '2025-10-02T01:45:00Z',
+            'deliveryStart': '2025-10-02T01:30:00Z',
             'entryPerArea': dict({
-              'SE3': 1307.67,
-              'SE4': 1608.35,
+              'SE3': 702.4,
+              'SE4': 799.61,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T15:00:00Z',
-            'deliveryStart': '2024-11-06T14:00:00Z',
+            'deliveryEnd': '2025-10-02T02:00:00Z',
+            'deliveryStart': '2025-10-02T01:45:00Z',
             'entryPerArea': dict({
-              'SE3': 1385.46,
-              'SE4': 2110.8,
+              'SE3': 749.4,
+              'SE4': 853.45,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T16:00:00Z',
-            'deliveryStart': '2024-11-06T15:00:00Z',
+            'deliveryEnd': '2025-10-02T02:15:00Z',
+            'deliveryStart': '2025-10-02T02:00:00Z',
             'entryPerArea': dict({
-              'SE3': 1366.8,
-              'SE4': 3031.25,
+              'SE3': 796.85,
+              'SE4': 907.4,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T17:00:00Z',
-            'deliveryStart': '2024-11-06T16:00:00Z',
+            'deliveryEnd': '2025-10-02T02:30:00Z',
+            'deliveryStart': '2025-10-02T02:15:00Z',
             'entryPerArea': dict({
-              'SE3': 2366.57,
-              'SE4': 5511.77,
+              'SE3': 811.19,
+              'SE4': 924.07,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T18:00:00Z',
-            'deliveryStart': '2024-11-06T17:00:00Z',
+            'deliveryEnd': '2025-10-02T02:45:00Z',
+            'deliveryStart': '2025-10-02T02:30:00Z',
             'entryPerArea': dict({
-              'SE3': 1481.92,
-              'SE4': 3351.64,
+              'SE3': 803.8,
+              'SE4': 916.23,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T19:00:00Z',
-            'deliveryStart': '2024-11-06T18:00:00Z',
+            'deliveryEnd': '2025-10-02T03:00:00Z',
+            'deliveryStart': '2025-10-02T02:45:00Z',
             'entryPerArea': dict({
-              'SE3': 1082.69,
-              'SE4': 2484.95,
+              'SE3': 839.11,
+              'SE4': 953.3,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T20:00:00Z',
-            'deliveryStart': '2024-11-06T19:00:00Z',
+            'deliveryEnd': '2025-10-02T03:15:00Z',
+            'deliveryStart': '2025-10-02T03:00:00Z',
             'entryPerArea': dict({
-              'SE3': 716.82,
-              'SE4': 1624.33,
+              'SE3': 825.2,
+              'SE4': 943.15,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T21:00:00Z',
-            'deliveryStart': '2024-11-06T20:00:00Z',
+            'deliveryEnd': '2025-10-02T03:30:00Z',
+            'deliveryStart': '2025-10-02T03:15:00Z',
             'entryPerArea': dict({
-              'SE3': 583.16,
-              'SE4': 1306.27,
+              'SE3': 838.78,
+              'SE4': 958.93,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T22:00:00Z',
-            'deliveryStart': '2024-11-06T21:00:00Z',
+            'deliveryEnd': '2025-10-02T03:45:00Z',
+            'deliveryStart': '2025-10-02T03:30:00Z',
             'entryPerArea': dict({
-              'SE3': 523.09,
-              'SE4': 1142.99,
+              'SE3': 906.19,
+              'SE4': 1030.65,
             }),
           }),
           dict({
-            'deliveryEnd': '2024-11-06T23:00:00Z',
-            'deliveryStart': '2024-11-06T22:00:00Z',
+            'deliveryEnd': '2025-10-02T04:00:00Z',
+            'deliveryStart': '2025-10-02T03:45:00Z',
             'entryPerArea': dict({
-              'SE3': 250.64,
-              'SE4': 539.42,
+              'SE3': 1057.79,
+              'SE4': 1195.82,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T04:15:00Z',
+            'deliveryStart': '2025-10-02T04:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 912.15,
+              'SE4': 1040.8,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T04:30:00Z',
+            'deliveryStart': '2025-10-02T04:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1131.28,
+              'SE4': 1283.43,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T04:45:00Z',
+            'deliveryStart': '2025-10-02T04:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1294.68,
+              'SE4': 1468.91,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T05:00:00Z',
+            'deliveryStart': '2025-10-02T04:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1625.8,
+              'SE4': 1845.81,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T05:15:00Z',
+            'deliveryStart': '2025-10-02T05:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1649.31,
+              'SE4': 1946.77,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T05:30:00Z',
+            'deliveryStart': '2025-10-02T05:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1831.25,
+              'SE4': 2182.34,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T05:45:00Z',
+            'deliveryStart': '2025-10-02T05:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1743.31,
+              'SE4': 2063.4,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T06:00:00Z',
+            'deliveryStart': '2025-10-02T05:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1545.04,
+              'SE4': 1803.33,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T06:15:00Z',
+            'deliveryStart': '2025-10-02T06:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1783.47,
+              'SE4': 2080.72,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T06:30:00Z',
+            'deliveryStart': '2025-10-02T06:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1470.89,
+              'SE4': 1675.23,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T06:45:00Z',
+            'deliveryStart': '2025-10-02T06:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1191.08,
+              'SE4': 1288.06,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T07:00:00Z',
+            'deliveryStart': '2025-10-02T06:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1012.22,
+              'SE4': 1112.19,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T07:15:00Z',
+            'deliveryStart': '2025-10-02T07:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1278.69,
+              'SE4': 1375.67,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T07:30:00Z',
+            'deliveryStart': '2025-10-02T07:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1170.12,
+              'SE4': 1258.61,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T07:45:00Z',
+            'deliveryStart': '2025-10-02T07:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 937.09,
+              'SE4': 1021.93,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T08:00:00Z',
+            'deliveryStart': '2025-10-02T07:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 815.94,
+              'SE4': 900.67,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T08:15:00Z',
+            'deliveryStart': '2025-10-02T08:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1044.66,
+              'SE4': 1135.25,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T08:30:00Z',
+            'deliveryStart': '2025-10-02T08:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1020.61,
+              'SE4': 1112.74,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T08:45:00Z',
+            'deliveryStart': '2025-10-02T08:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 866.14,
+              'SE4': 953.53,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T09:00:00Z',
+            'deliveryStart': '2025-10-02T08:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 774.34,
+              'SE4': 860.18,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T09:15:00Z',
+            'deliveryStart': '2025-10-02T09:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 928.26,
+              'SE4': 1020.39,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T09:30:00Z',
+            'deliveryStart': '2025-10-02T09:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 834.47,
+              'SE4': 922.96,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T09:45:00Z',
+            'deliveryStart': '2025-10-02T09:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 712.33,
+              'SE4': 794.64,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T10:00:00Z',
+            'deliveryStart': '2025-10-02T09:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 646.46,
+              'SE4': 725.9,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T10:15:00Z',
+            'deliveryStart': '2025-10-02T10:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 692.91,
+              'SE4': 773.9,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T10:30:00Z',
+            'deliveryStart': '2025-10-02T10:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 627.59,
+              'SE4': 706.59,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T10:45:00Z',
+            'deliveryStart': '2025-10-02T10:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 630.02,
+              'SE4': 708.14,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T11:00:00Z',
+            'deliveryStart': '2025-10-02T10:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 625.94,
+              'SE4': 703.61,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T11:15:00Z',
+            'deliveryStart': '2025-10-02T11:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 563.38,
+              'SE4': 635.76,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T11:30:00Z',
+            'deliveryStart': '2025-10-02T11:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 588.42,
+              'SE4': 663.12,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T11:45:00Z',
+            'deliveryStart': '2025-10-02T11:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 597.03,
+              'SE4': 672.83,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T12:00:00Z',
+            'deliveryStart': '2025-10-02T11:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 608.61,
+              'SE4': 685.19,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T12:15:00Z',
+            'deliveryStart': '2025-10-02T12:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 599.24,
+              'SE4': 676.91,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T12:30:00Z',
+            'deliveryStart': '2025-10-02T12:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 649.77,
+              'SE4': 729.54,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T12:45:00Z',
+            'deliveryStart': '2025-10-02T12:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 728.22,
+              'SE4': 821.23,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T13:00:00Z',
+            'deliveryStart': '2025-10-02T12:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 803.91,
+              'SE4': 909.06,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T13:15:00Z',
+            'deliveryStart': '2025-10-02T13:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 594.38,
+              'SE4': 679.23,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T13:30:00Z',
+            'deliveryStart': '2025-10-02T13:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 738.48,
+              'SE4': 825.09,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T13:45:00Z',
+            'deliveryStart': '2025-10-02T13:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 873.53,
+              'SE4': 962.02,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T14:00:00Z',
+            'deliveryStart': '2025-10-02T13:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 994.57,
+              'SE4': 1083.5,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T14:15:00Z',
+            'deliveryStart': '2025-10-02T14:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 733.52,
+              'SE4': 813.18,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T14:30:00Z',
+            'deliveryStart': '2025-10-02T14:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 864.59,
+              'SE4': 944.04,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T14:45:00Z',
+            'deliveryStart': '2025-10-02T14:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1032.08,
+              'SE4': 1113.18,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T15:00:00Z',
+            'deliveryStart': '2025-10-02T14:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1153.01,
+              'SE4': 1241.61,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T15:15:00Z',
+            'deliveryStart': '2025-10-02T15:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1271.18,
+              'SE4': 1017.41,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T15:30:00Z',
+            'deliveryStart': '2025-10-02T15:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1375.23,
+              'SE4': 1093.1,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T15:45:00Z',
+            'deliveryStart': '2025-10-02T15:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1544.82,
+              'SE4': 1244.81,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T16:00:00Z',
+            'deliveryStart': '2025-10-02T15:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 2412.17,
+              'SE4': 1960.12,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T16:15:00Z',
+            'deliveryStart': '2025-10-02T16:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1677.66,
+              'SE4': 1334.3,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T16:30:00Z',
+            'deliveryStart': '2025-10-02T16:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 2010.55,
+              'SE4': 1606.61,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T16:45:00Z',
+            'deliveryStart': '2025-10-02T16:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 2524.38,
+              'SE4': 2013.53,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T17:00:00Z',
+            'deliveryStart': '2025-10-02T16:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 3288.35,
+              'SE4': 2617.73,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T17:15:00Z',
+            'deliveryStart': '2025-10-02T17:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 3065.69,
+              'SE4': 2472.19,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T17:30:00Z',
+            'deliveryStart': '2025-10-02T17:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 2824.72,
+              'SE4': 2276.46,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T17:45:00Z',
+            'deliveryStart': '2025-10-02T17:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 2279.66,
+              'SE4': 1835.44,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T18:00:00Z',
+            'deliveryStart': '2025-10-02T17:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1723.78,
+              'SE4': 1385.38,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T18:15:00Z',
+            'deliveryStart': '2025-10-02T18:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1935.08,
+              'SE4': 1532.57,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T18:30:00Z',
+            'deliveryStart': '2025-10-02T18:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1568.54,
+              'SE4': 1240.18,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T18:45:00Z',
+            'deliveryStart': '2025-10-02T18:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1430.51,
+              'SE4': 1115.61,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T19:00:00Z',
+            'deliveryStart': '2025-10-02T18:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1377.66,
+              'SE4': 1075.12,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T19:15:00Z',
+            'deliveryStart': '2025-10-02T19:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1408.44,
+              'SE4': 1108.66,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T19:30:00Z',
+            'deliveryStart': '2025-10-02T19:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1326.79,
+              'SE4': 1049.74,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T19:45:00Z',
+            'deliveryStart': '2025-10-02T19:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1210.94,
+              'SE4': 951.1,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T20:00:00Z',
+            'deliveryStart': '2025-10-02T19:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1293.58,
+              'SE4': 1026.79,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T20:15:00Z',
+            'deliveryStart': '2025-10-02T20:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1385.71,
+              'SE4': 1091.0,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T20:30:00Z',
+            'deliveryStart': '2025-10-02T20:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1341.47,
+              'SE4': 1104.13,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T20:45:00Z',
+            'deliveryStart': '2025-10-02T20:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 1284.98,
+              'SE4': 1024.36,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T21:00:00Z',
+            'deliveryStart': '2025-10-02T20:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 1071.47,
+              'SE4': 892.51,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T21:15:00Z',
+            'deliveryStart': '2025-10-02T21:00:00Z',
+            'entryPerArea': dict({
+              'SE3': 1218.0,
+              'SE4': 1123.99,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T21:30:00Z',
+            'deliveryStart': '2025-10-02T21:15:00Z',
+            'entryPerArea': dict({
+              'SE3': 1112.3,
+              'SE4': 1001.63,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T21:45:00Z',
+            'deliveryStart': '2025-10-02T21:30:00Z',
+            'entryPerArea': dict({
+              'SE3': 873.64,
+              'SE4': 806.67,
+            }),
+          }),
+          dict({
+            'deliveryEnd': '2025-10-02T22:00:00Z',
+            'deliveryStart': '2025-10-02T21:45:00Z',
+            'entryPerArea': dict({
+              'SE3': 646.9,
+              'SE4': 591.84,
             }),
           }),
         ]),
-        'updatedAt': '2024-11-05T12:12:51.9853434Z',
+        'updatedAt': '2025-10-01T11:25:06.1484362Z',
         'version': 3,
       }),
     }),

@@ -1,7 +1,5 @@
 """TOLO Sauna (non-binary, general) sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -13,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -23,8 +20,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import ToloSaunaUpdateCoordinator
+from .coordinator import ToloConfigEntry, ToloSaunaUpdateCoordinator
 from .entity import ToloSaunaCoordinatorEntity
 
 
@@ -62,8 +58,9 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.power_timer,
-        availability_checker=lambda settings, status: status.power_on
-        and settings.power_timer is not None,
+        availability_checker=lambda settings, status: (
+            status.power_on and settings.power_timer is not None
+        ),
     ),
     ToloSensorEntityDescription(
         key="salt_bath_timer_remaining",
@@ -71,8 +68,9 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.salt_bath_timer,
-        availability_checker=lambda settings, status: status.salt_bath_on
-        and settings.salt_bath_timer is not None,
+        availability_checker=lambda settings, status: (
+            status.salt_bath_on and settings.salt_bath_timer is not None
+        ),
     ),
     ToloSensorEntityDescription(
         key="fan_timer_remaining",
@@ -80,19 +78,20 @@ SENSORS = (
         entity_category=EntityCategory.DIAGNOSTIC,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         getter=lambda status: status.fan_timer,
-        availability_checker=lambda settings, status: status.fan_on
-        and settings.fan_timer is not None,
+        availability_checker=lambda settings, status: (
+            status.fan_on and settings.fan_timer is not None
+        ),
     ),
 )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: ToloConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up (non-binary, general) sensors for TOLO Sauna."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         ToloSensorEntity(coordinator, entry, description) for description in SENSORS
     )
@@ -106,7 +105,7 @@ class ToloSensorEntity(ToloSaunaCoordinatorEntity, SensorEntity):
     def __init__(
         self,
         coordinator: ToloSaunaUpdateCoordinator,
-        entry: ConfigEntry,
+        entry: ToloConfigEntry,
         entity_description: ToloSensorEntityDescription,
     ) -> None:
         """Initialize TOLO Number entity."""

@@ -2,12 +2,13 @@
 
 from unittest.mock import patch
 
-from aioairzone.common import OperationMode
+from aioairzone.common import OperationMode, QAdapt
 from aioairzone.const import (
     API_COLD_ANGLE,
     API_DATA,
     API_HEAT_ANGLE,
     API_MODE,
+    API_Q_ADAPT,
     API_SLEEP,
     API_SYSTEM_ID,
     API_ZONE_ID,
@@ -17,7 +18,7 @@ import pytest
 from homeassistant.components.select import ATTR_OPTIONS, DOMAIN as SELECT_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_OPTION, SERVICE_SELECT_OPTION
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .util import async_init_integration
 
@@ -27,6 +28,11 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
 
     await async_init_integration(hass)
 
+    # Systems
+    state = hass.states.get("select.system_1_q_adapt")
+    assert state.state == "standard"
+
+    # Zones
     state = hass.states.get("select.despacho_cold_angle")
     assert state.state == "90deg"
 
@@ -93,6 +99,71 @@ async def test_airzone_create_selects(hass: HomeAssistant) -> None:
 
     state = hass.states.get("select.salon_sleep")
     assert state.state == "off"
+
+
+async def test_airzone_select_sys_qadapt(hass: HomeAssistant) -> None:
+    """Test select system Q-Adapt."""
+
+    await async_init_integration(hass)
+
+    put_q_adapt = {
+        API_DATA: {
+            API_SYSTEM_ID: 1,
+            API_Q_ADAPT: QAdapt.SILENCE,
+        }
+    }
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.system_1_q_adapt",
+                ATTR_OPTION: "Invalid",
+            },
+            blocking=True,
+        )
+
+    with patch(
+        "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
+        return_value=put_q_adapt,
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.system_1_q_adapt",
+                ATTR_OPTION: "silence",
+            },
+            blocking=True,
+        )
+
+    state = hass.states.get("select.system_1_q_adapt")
+    assert state.state == "silence"
+
+    put_q_adapt = {
+        API_DATA: {
+            API_SYSTEM_ID: 2,
+            API_Q_ADAPT: QAdapt.SILENCE,
+        }
+    }
+
+    with (
+        patch(
+            "homeassistant.components.airzone.AirzoneLocalApi.put_hvac",
+            return_value=put_q_adapt,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.system_1_q_adapt",
+                ATTR_OPTION: "silence",
+            },
+            blocking=True,
+        )
 
 
 async def test_airzone_select_sleep(hass: HomeAssistant) -> None:

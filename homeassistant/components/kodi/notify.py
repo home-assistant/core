@@ -1,8 +1,7 @@
 """Kodi notification service."""
 
-from __future__ import annotations
-
 import logging
+from typing import Any
 
 import aiohttp
 import jsonrpc_async
@@ -93,7 +92,7 @@ class KodiNotificationService(BaseNotificationService):
 
         self._server = jsonrpc_async.Server(self._url, **kwargs)
 
-    async def async_send_message(self, message="", **kwargs):
+    async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to Kodi."""
         try:
             data = kwargs.get(ATTR_DATA) or {}
@@ -103,5 +102,6 @@ class KodiNotificationService(BaseNotificationService):
             title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
             await self._server.GUI.ShowNotification(title, message, icon, displaytime)
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except jsonrpc_async.TransportError:
             _LOGGER.warning("Unable to fetch Kodi data. Is Kodi online?")

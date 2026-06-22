@@ -1,7 +1,5 @@
 """Support for MQTT sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
@@ -10,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components import sensor
 from homeassistant.components.sensor import (
+    AMBIGUOUS_UNITS,
     CONF_STATE_CLASS,
     DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
@@ -26,6 +25,7 @@ from homeassistant.const import (
     CONF_DEVICE_CLASS,
     CONF_FORCE_UPDATE,
     CONF_NAME,
+    CONF_OPTIONS,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     STATE_UNAVAILABLE,
@@ -44,7 +44,6 @@ from .config import MQTT_RO_SCHEMA
 from .const import (
     CONF_EXPIRE_AFTER,
     CONF_LAST_RESET_VALUE_TEMPLATE,
-    CONF_OPTIONS,
     CONF_STATE_TOPIC,
     CONF_SUGGESTED_DISPLAY_PRECISION,
     PAYLOAD_NONE,
@@ -98,6 +97,12 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
             f"together with state class `{state_class}`"
         )
 
+    unit_of_measurement: str | None
+    if (
+        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
+    ) is not None and not unit_of_measurement.strip():
+        config.pop(CONF_UNIT_OF_MEASUREMENT)
+
     # Only allow `options` to be set for `enum` sensors
     # to limit the possible sensor values
     if (options := config.get(CONF_OPTIONS)) is not None:
@@ -127,9 +132,14 @@ def validate_sensor_state_and_device_class_config(config: ConfigType) -> ConfigT
             f"together with state class '{state_class}'"
         )
 
-    if (device_class := config.get(CONF_DEVICE_CLASS)) is None or (
-        unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)
-    ) is None:
+    if (unit_of_measurement := config.get(CONF_UNIT_OF_MEASUREMENT)) is None:
+        return config
+
+    unit_of_measurement = config[CONF_UNIT_OF_MEASUREMENT] = AMBIGUOUS_UNITS.get(
+        unit_of_measurement, unit_of_measurement
+    )
+
+    if (device_class := config.get(CONF_DEVICE_CLASS)) is None:
         return config
 
     if (

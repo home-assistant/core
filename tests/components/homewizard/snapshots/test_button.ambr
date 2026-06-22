@@ -15,8 +15,9 @@
 # ---
 # name: test_identify_button.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -34,6 +35,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Identify',
     'options': dict({
     }),
     'original_device_class': <ButtonDeviceClass.IDENTIFY: 'identify'>,
@@ -70,7 +72,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -79,8 +80,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.19',
     'via_device_id': None,
   })

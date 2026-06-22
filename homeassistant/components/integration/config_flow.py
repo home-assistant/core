@@ -1,9 +1,7 @@
 """Config flow for Integration - Riemann sum integral integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -147,9 +145,13 @@ OPTIONS_FLOW = {
 class ConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config or options flow for Integration."""
 
+    MINOR_VERSION = 2
+
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return cast(str, options["name"])

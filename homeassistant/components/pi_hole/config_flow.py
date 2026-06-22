@@ -1,7 +1,5 @@
 """Config flow to configure the Pi-hole integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -12,7 +10,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_API_KEY,
-    CONF_API_VERSION,
     CONF_HOST,
     CONF_LOCATION,
     CONF_NAME,
@@ -79,6 +76,8 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Required(
                         CONF_PORT, default=user_input.get(CONF_PORT, 80)
                     ): vol.Coerce(int),
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(
                         CONF_NAME, default=user_input.get(CONF_NAME, DEFAULT_NAME)
                     ): str,
@@ -145,7 +144,6 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
             try:
                 await pi_hole.authenticate()
                 _LOGGER.debug("Success authenticating with pihole API version: %s", 6)
-                self._config[CONF_API_VERSION] = 6
             except HoleError:
                 _LOGGER.debug("Failed authenticating with pihole API version: %s", 6)
                 return {CONF_API_KEY: "invalid_auth"}
@@ -168,14 +166,16 @@ class PiHoleFlowHandler(ConfigFlow, domain=DOMAIN):
                 return {"base": "cannot_connect"}
             else:
                 _LOGGER.debug(
-                    "Success connecting to, but necessarily authenticating with, pihole, API version is: %s",
+                    "Success connecting to, but necessarily"
+                    " authenticating with, pihole,"
+                    " API version is: %s",
                     5,
                 )
-                self._config[CONF_API_VERSION] = 5
             # the v5 API returns an empty list to unauthenticated requests.
             if not isinstance(pi_hole.data, dict):
                 _LOGGER.debug(
-                    "API version %s returned %s, '[]' is expected for unauthenticated requests",
+                    "API version %s returned %s, '[]' is expected"
+                    " for unauthenticated requests",
                     5,
                     pi_hole.data,
                 )

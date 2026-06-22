@@ -3,7 +3,7 @@
 from datetime import timedelta
 import logging
 
-from aiopvpc import BadApiTokenAuthError, EsiosApiData, PVPCData
+from esios_api import BadApiTokenAuthError, EsiosApiData, PVPCData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_TOKEN
@@ -17,23 +17,28 @@ from .const import ATTR_POWER, ATTR_POWER_P3, ATTR_TARIFF, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+type PVPCConfigEntry = ConfigEntry[ElecPricesDataUpdateCoordinator]
+
 
 class ElecPricesDataUpdateCoordinator(DataUpdateCoordinator[EsiosApiData]):
     """Class to manage fetching Electricity prices data from API."""
 
-    config_entry: ConfigEntry
+    config_entry: PVPCConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, entry: ConfigEntry, sensor_keys: set[str]
+        self, hass: HomeAssistant, entry: PVPCConfigEntry, sensor_keys: set[str]
     ) -> None:
         """Initialize."""
+        config = entry.data.copy()
+        config.update({attr: value for attr, value in entry.options.items() if value})
+
         self.api = PVPCData(
             session=async_get_clientsession(hass),
-            tariff=entry.data[ATTR_TARIFF],
+            tariff=config[ATTR_TARIFF],
             local_timezone=hass.config.time_zone,
-            power=entry.data[ATTR_POWER],
-            power_valley=entry.data[ATTR_POWER_P3],
-            api_token=entry.data.get(CONF_API_TOKEN),
+            power=config[ATTR_POWER],
+            power_valley=config[ATTR_POWER_P3],
+            api_token=config.get(CONF_API_TOKEN),
             sensor_keys=tuple(sensor_keys),
         )
         super().__init__(

@@ -9,7 +9,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': None,
+    'hw_version': '1.0',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -17,17 +17,15 @@
         'echo_test_serial_number',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
-    'manufacturer': 'Amazon',
-    'model': None,
+    'manufacturer': 'Test manufacturer',
+    'model': 'Test model',
     'model_id': 'echo',
     'name': 'Echo Test',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': 'echo_test_serial_number',
-    'suggested_area': None,
     'sw_version': 'echo_test_software_version',
     'via_device_id': None,
   })

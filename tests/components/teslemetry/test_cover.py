@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
+from tesla_fleet_api.exceptions import InvalidCommand
 from teslemetry_stream import Signal
 
 from homeassistant.components.cover import (
@@ -15,10 +16,11 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import assert_entities, setup_platform
-from .const import COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
+from .const import COMMAND_ERRORS, COMMAND_OK, METADATA_NOSCOPE, VEHICLE_DATA_ALT
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -55,7 +57,6 @@ async def test_cover_noscope(
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
     mock_metadata: AsyncMock,
-    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct without scopes."""
 
@@ -67,6 +68,7 @@ async def test_cover_noscope(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_cover_services(
     hass: HomeAssistant,
+    mock_legacy: AsyncMock,
 ) -> None:
     """Tests that the cover entities are correct."""
 
@@ -221,10 +223,51 @@ async def test_cover_services(
         assert state.state == CoverState.CLOSED
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_legacy")
+@pytest.mark.parametrize("response", COMMAND_ERRORS)
+async def test_cover_command_errors(hass: HomeAssistant, response: dict) -> None:
+    """Tests that vehicle command failures raise HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.COVER])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.window_control",
+            return_value=response,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            blocking=True,
+        )
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_legacy")
+async def test_cover_command_exception(hass: HomeAssistant) -> None:
+    """Tests that a command SDK exception raises HomeAssistantError."""
+
+    await setup_platform(hass, [Platform.COVER])
+
+    with (
+        patch(
+            "tesla_fleet_api.teslemetry.Vehicle.window_control",
+            side_effect=InvalidCommand,
+        ),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ["cover.test_windows"]},
+            blocking=True,
+        )
+
+
 async def test_cover_streaming(
     hass: HomeAssistant,
-    snapshot: SnapshotAssertion,
-    entity_registry: er.EntityRegistry,
     mock_vehicle_data: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
@@ -262,15 +305,12 @@ async def test_cover_streaming(
     await hass.config_entries.async_reload(entry.entry_id)
     await hass.async_block_till_done()
 
-    # Assert the entities restored their values
-    for entity_id in (
-        "cover.test_windows",
-        "cover.test_charge_port_door",
-        "cover.test_frunk",
-        "cover.test_trunk",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-closed")
+    # Assert the entities restored their values with concrete assertions
+    assert hass.states.get("cover.test_windows").state == CoverState.CLOSED
+    assert hass.states.get("cover.test_charge_port_door").state == CoverState.CLOSED
+    # Frunk and trunk don't get closed state from stream, they show unknown
+    assert hass.states.get("cover.test_frunk").state == "unknown"
+    assert hass.states.get("cover.test_trunk").state == "unknown"
 
     # Send some alternative data with everything open
     mock_add_listener.send(
@@ -298,15 +338,13 @@ async def test_cover_streaming(
     )
     await hass.async_block_till_done()
 
-    # Assert the entities get new values
-    for entity_id in (
-        "cover.test_windows",
-        "cover.test_charge_port_door",
-        "cover.test_frunk",
-        "cover.test_trunk",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-open")
+    # Assert the entities get new values with concrete assertions
+    assert hass.states.get("cover.test_windows").state == CoverState.OPEN
+    # Charge port door doesn't change with CHARGE_PORT_DOOR_OPEN: False
+    assert hass.states.get("cover.test_charge_port_door").state == CoverState.CLOSED
+    # Frunk and trunk still show unknown (DOOR_STATE doesn't contain trunk state info)
+    assert hass.states.get("cover.test_frunk").state == "unknown"
+    assert hass.states.get("cover.test_trunk").state == "unknown"
 
     # Send some alternative data with everything unknown
     mock_add_listener.send(
@@ -334,12 +372,9 @@ async def test_cover_streaming(
     )
     await hass.async_block_till_done()
 
-    # Assert the entities get UNKNOWN values
-    for entity_id in (
-        "cover.test_windows",
-        "cover.test_charge_port_door",
-        "cover.test_frunk",
-        "cover.test_trunk",
-    ):
-        state = hass.states.get(entity_id)
-        assert state.state == snapshot(name=f"{entity_id}-unknown")
+    # Assert the entities get values with concrete assertions
+    # Windows stay open when unknown because of previous state restoration
+    assert hass.states.get("cover.test_windows").state == CoverState.OPEN
+    assert hass.states.get("cover.test_charge_port_door").state == "unknown"
+    assert hass.states.get("cover.test_frunk").state == "unknown"
+    assert hass.states.get("cover.test_trunk").state == "unknown"

@@ -1,0 +1,51 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "WIFI Smoke alarm",
+  "category": "ywbj",
+  "product_id": "kscbebaf3s1eogvt",
+  "product_name": "WIFI Smoke alarm",
+  "online": true,
+  "sub": false,
+  "time_zone": "+02:00",
+  "active_time": "2023-08-16T13:20:39+00:00",
+  "create_time": "2023-08-16T13:20:39+00:00",
+  "update_time": "2023-08-16T13:20:39+00:00",
+  "function": {
+    "muffling": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status_range": {
+    "smoke_sensor_status": {
+      "type": "Enum",
+      "value": {
+        "range": ["alarm", "normal"]
+      }
+    },
+    "battery_percentage": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "muffling": {
+      "type": "Boolean",
+      "value": {}
+    }
+  },
+  "status": {
+    "smoke_sensor_status": "normal",
+    "battery_percentage": 90,
+    "muffling": false
+  },
+  "set_up": true,
+  "support_local": true
+}

@@ -1,16 +1,13 @@
 """Config flow to configure Axis devices."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from ipaddress import ip_address
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlsplit
 
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -52,7 +49,10 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import AxisHub, get_axis_api
 
-AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f"}
+if TYPE_CHECKING:
+    import axis
+
+AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f", "e8:27:25"}
 DEFAULT_PORT = 443
 DEFAULT_PROTOCOL = "https"
 PROTOCOL_CHOICES = ["https", "http"]
@@ -65,6 +65,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> AxisOptionsFlowHandler:
@@ -76,6 +77,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         self.config: dict[str, Any] = {}
         self.discovery_schema: VolDictType | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -96,7 +98,8 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             else:
-                serial = api.vapix.serial_number
+                if (serial := self._get_serial_number(api)) is None:
+                    return self.async_abort(reason="no_serial_number")
                 config = {
                     CONF_PROTOCOL: user_input[CONF_PROTOCOL],
                     CONF_HOST: user_input[CONF_HOST],
@@ -109,12 +112,12 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 if self.source == SOURCE_REAUTH:
                     self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         self._get_reauth_entry(), data_updates=config
                     )
                 if self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch()
-                    return self.async_update_reload_and_abort(
+                    return self.async_update_and_abort(
                         self._get_reconfigure_entry(), data_updates=config
                     )
                 self._abort_if_unique_id_configured()
@@ -141,25 +144,15 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _create_entry(self, serial: str) -> ConfigFlowResult:
         """Create entry for device.
 
-        Generate a name to be used as a prefix for device entities.
+        Use the discovered device name when available.
         """
-        model = self.config[CONF_MODEL]
-        same_model = [
-            entry.data[CONF_NAME]
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.source != SOURCE_IGNORE and entry.data[CONF_MODEL] == model
-        ]
-
-        name = model
-        for idx in range(len(same_model) + 1):
-            name = f"{model} {idx}"
-            if name not in same_model:
-                break
-
+        if (title_placeholders := self.context.get("title_placeholders")) is not None:
+            name = title_placeholders[CONF_NAME]
+        else:
+            name = f"{self.config[CONF_MODEL]} - {serial}"
         self.config[CONF_NAME] = name
 
-        title = f"{model} - {serial}"
-        return self.async_create_entry(title=title, data=self.config)
+        return self.async_create_entry(title=name, data=self.config)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -195,6 +188,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -208,6 +202,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -222,6 +217,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
             }
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -248,7 +244,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(discovery_info[CONF_MAC])
 
         self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[CONF_HOST]}
+            updates={CONF_HOST: discovery_info[CONF_HOST]}, reload_on_update=False
         )
 
         self.context.update(
@@ -270,6 +266,19 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         }
 
         return await self.async_step_user()
+
+    @staticmethod
+    def _get_serial_number(api: axis.AxisDevice) -> str | None:
+        """Retrieve the device serial number from the Axis API.
+
+        Tries basic_device_info first, then property_handler. Returns None if not found.
+        """
+        vapix = api.vapix
+        if vapix.basic_device_info.initialized:
+            return vapix.basic_device_info["0"].serial_number
+        if vapix.params.property_handler.initialized:
+            return vapix.params.property_handler["0"].system_serial_number
+        return None
 
 
 class AxisOptionsFlowHandler(OptionsFlow):

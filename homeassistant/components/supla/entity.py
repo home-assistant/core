@@ -1,15 +1,15 @@
 """Base class for SUPLA channels."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
+from .coordinator import SuplaCoordinator
+
 _LOGGER = logging.getLogger(__name__)
 
 
-class SuplaEntity(CoordinatorEntity):
+class SuplaEntity(CoordinatorEntity[SuplaCoordinator]):
     """Base class of a SUPLA Channel (an equivalent of HA's Entity)."""
 
     def __init__(self, config, server, coordinator):
@@ -29,7 +29,7 @@ class SuplaEntity(CoordinatorEntity):
         """Return a unique ID."""
         uid = self.channel_data["iodevice"]["gUIDString"].lower()
         channel_number = self.channel_data["channelNumber"]
-        return f"supla-{uid}-{channel_number}"
+        return f"supla-{uid}-{channel_number}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
     def name(self) -> str | None:

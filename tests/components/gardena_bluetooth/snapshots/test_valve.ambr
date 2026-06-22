@@ -2,7 +2,9 @@
 # name: test_setup
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'water',
       'friendly_name': 'Mock Title',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -16,7 +18,9 @@
 # name: test_setup.1
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'water',
       'friendly_name': 'Mock Title',
+      'is_closed': False,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,

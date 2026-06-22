@@ -1,10 +1,8 @@
 """Config flow for Android TV Remote integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from androidtvremote2 import (
     AndroidTVRemote,
@@ -19,7 +17,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_NAME
 from homeassistant.core import callback
@@ -37,9 +35,14 @@ from .helpers import AndroidTVRemoteConfigEntry, create_api, get_enable_ime
 
 _LOGGER = logging.getLogger(__name__)
 
-APPS_NEW_ID = "NewApp"
+APPS_NEW_ID = "add_new"
 CONF_APP_DELETE = "app_delete"
 CONF_APP_ID = "app_id"
+
+_EXAMPLE_APP_ID = "com.plexapp.android"
+_EXAMPLE_APP_PLAY_STORE_URL = (
+    f"https://play.google.com/store/apps/details?id={_EXAMPLE_APP_ID}"
+)
 
 STEP_PAIR_DATA_SCHEMA = vol.Schema(
     {
@@ -58,6 +61,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
     name: str
     mac: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -66,9 +70,14 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.host = user_input[CONF_HOST]
             api = create_api(self.hass, self.host, enable_ime=False)
+            await api.async_generate_cert_if_missing()
             try:
-                await api.async_generate_cert_if_missing()
                 self.name, self.mac = await api.async_get_name_and_mac()
+            except CannotConnect:
+                # Likely invalid IP address or device is network unreachable. Stay
+                # in the user step allowing the user to enter a different host.
+                errors["base"] = "cannot_connect"
+            else:
                 await self.async_set_unique_id(format_mac(self.mac))
                 if self.source == SOURCE_RECONFIGURE:
                     self._abort_if_unique_id_mismatch()
@@ -81,11 +90,10 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                         },
                     )
                 self._abort_if_unique_id_configured(updates={CONF_HOST: self.host})
-                return await self._async_start_pair()
-            except (CannotConnect, ConnectionClosed):
-                # Likely invalid IP address or device is network unreachable. Stay
-                # in the user step allowing the user to enter a different host.
-                errors["base"] = "cannot_connect"
+                try:
+                    return await self._async_start_pair()
+                except CannotConnect, ConnectionClosed:
+                    errors["base"] = "cannot_connect"
         else:
             user_input = {}
         default_host = user_input.get(CONF_HOST, vol.UNDEFINED)
@@ -100,7 +108,10 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_start_pair(self) -> ConfigFlowResult:
-        """Start pairing with the Android TV. Navigate to the pair flow to enter the PIN shown on screen."""
+        """Start pairing with the Android TV.
+
+        Navigate to the pair flow to enter the PIN shown on screen.
+        """
         self.api = create_api(self.hass, self.host, enable_ime=False)
         await self.api.async_generate_cert_if_missing()
         await self.api.async_start_pairing()
@@ -112,22 +123,9 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the pair step."""
         errors: dict[str, str] = {}
         if user_input is not None:
+            pin = user_input["pin"]
             try:
-                pin = user_input["pin"]
                 await self.api.async_finish_pairing(pin)
-                if self.source == SOURCE_REAUTH:
-                    await self.hass.config_entries.async_reload(
-                        self._get_reauth_entry().entry_id
-                    )
-                    return self.async_abort(reason="reauth_successful")
-                return self.async_create_entry(
-                    title=self.name,
-                    data={
-                        CONF_HOST: self.host,
-                        CONF_NAME: self.name,
-                        CONF_MAC: self.mac,
-                    },
-                )
             except InvalidAuth:
                 # Invalid PIN. Stay in the pair step allowing the user to enter
                 # a different PIN.
@@ -139,12 +137,27 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Attempt to pair again.
                 try:
                     return await self._async_start_pair()
-                except (CannotConnect, ConnectionClosed):
+                except CannotConnect, ConnectionClosed:
                     # Device doesn't respond to the specified host. Abort.
-                    # If we are in the user flow we could go back to the user step to allow
-                    # them to enter a new IP address but we cannot do that for the zeroconf
-                    # flow. Simpler to abort for both flows.
+                    # If we are in the user flow we could go back
+                    # to the user step to allow them to enter a
+                    # new IP address but we cannot do that for the
+                    # zeroconf flow. Simpler to abort for both.
                     return self.async_abort(reason="cannot_connect")
+            else:
+                if self.source == SOURCE_REAUTH:
+                    return self.async_update_reload_and_abort(
+                        self._get_reauth_entry(), reload_even_if_entry_is_unchanged=True
+                    )
+
+                return self.async_create_entry(
+                    title=self.name,
+                    data={
+                        CONF_HOST: self.host,
+                        CONF_NAME: self.name,
+                        CONF_MAC: self.mac,
+                    },
+                )
         return self.async_show_form(
             step_id="pair",
             data_schema=STEP_PAIR_DATA_SCHEMA,
@@ -152,6 +165,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -193,7 +207,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 return await self._async_start_pair()
-            except (CannotConnect, ConnectionClosed):
+            except CannotConnect, ConnectionClosed:
                 # Device became network unreachable after discovery.
                 # Abort and let discovery find it again later.
                 return self.async_abort(reason="cannot_connect")
@@ -219,7 +233,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 return await self._async_start_pair()
-            except (CannotConnect, ConnectionClosed):
+            except CannotConnect, ConnectionClosed:
                 # Device is network unreachable. Abort.
                 errors["base"] = "cannot_connect"
         return self.async_show_form(
@@ -236,6 +250,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: AndroidTVRemoteConfigEntry,
     ) -> AndroidTVRemoteOptionsFlowHandler:
@@ -243,7 +258,7 @@ class AndroidTVRemoteConfigFlow(ConfigFlow, domain=DOMAIN):
         return AndroidTVRemoteOptionsFlowHandler(config_entry)
 
 
-class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
+class AndroidTVRemoteOptionsFlowHandler(OptionsFlowWithReload):
     """Android TV Remote options flow."""
 
     def __init__(self, config_entry: AndroidTVRemoteConfigEntry) -> None:
@@ -254,7 +269,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
     @callback
     def _save_config(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Save the updated options."""
-        new_data = {k: v for k, v in data.items() if k not in [CONF_APPS]}
+        new_data = {k: v for k, v in data.items() if k != CONF_APPS}
         if self._apps:
             new_data[CONF_APPS] = self._apps
 
@@ -282,7 +297,9 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
                 {
                     vol.Optional(CONF_APPS): SelectSelector(
                         SelectSelectorConfig(
-                            options=apps, mode=SelectSelectorMode.DROPDOWN
+                            options=apps,
+                            mode=SelectSelectorMode.DROPDOWN,
+                            translation_key="apps",
                         )
                     ),
                     vol.Required(
@@ -348,5 +365,7 @@ class AndroidTVRemoteOptionsFlowHandler(OptionsFlow):
             data_schema=data_schema,
             description_placeholders={
                 "app_id": f"`{app_id}`" if app_id != APPS_NEW_ID else "",
+                "example_app_id": _EXAMPLE_APP_ID,
+                "example_app_play_store_url": _EXAMPLE_APP_PLAY_STORE_URL,
             },
         )

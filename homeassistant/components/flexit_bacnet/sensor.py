@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from flexit_bacnet import FlexitBACnet
 
@@ -37,6 +38,7 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
     FlexitSensorEntityDescription(
         key="outside_air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         translation_key="outside_air_temperature",
         value_fn=lambda data: data.outside_air_temperature,
@@ -44,6 +46,7 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
     FlexitSensorEntityDescription(
         key="supply_air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         translation_key="supply_air_temperature",
         value_fn=lambda data: data.supply_air_temperature,
@@ -51,6 +54,7 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
     FlexitSensorEntityDescription(
         key="exhaust_air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         translation_key="exhaust_air_temperature",
         value_fn=lambda data: data.exhaust_air_temperature,
@@ -58,6 +62,7 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
     FlexitSensorEntityDescription(
         key="extract_air_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         translation_key="extract_air_temperature",
         value_fn=lambda data: data.extract_air_temperature,
@@ -65,6 +70,7 @@ SENSOR_TYPES: tuple[FlexitSensorEntityDescription, ...] = (
     FlexitSensorEntityDescription(
         key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         translation_key="room_temperature",
         value_fn=lambda data: data.room_temperature,
@@ -184,6 +190,7 @@ class FlexitSensor(FlexitEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return value of sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

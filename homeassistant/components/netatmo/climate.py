@@ -1,6 +1,5 @@
 """Support for Netatmo Smart thermostats."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import logging
 from typing import Any, cast
@@ -20,7 +19,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_TEMPERATURE,
     PRECISION_HALVES,
@@ -38,6 +36,7 @@ from .const import (
     ATTR_HEATING_POWER_REQUEST,
     ATTR_SCHEDULE_NAME,
     ATTR_SELECTED_SCHEDULE,
+    ATTR_SELECTED_SCHEDULE_ID,
     ATTR_TARGET_TEMPERATURE,
     ATTR_TIME_PERIOD,
     DATA_SCHEDULES,
@@ -53,8 +52,9 @@ from .const import (
     SERVICE_SET_TEMPERATURE_WITH_END_DATETIME,
     SERVICE_SET_TEMPERATURE_WITH_TIME_PERIOD,
 )
-from .data_handler import HOME, SIGNAL_NAME, NetatmoRoom
+from .data_handler import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoRoom
 from .entity import NetatmoRoomEntity
+from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -119,7 +119,7 @@ NA_VALVE = DeviceType.NRV
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NetatmoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Netatmo energy platform."""
@@ -220,7 +220,9 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if self.device_type is NA_THERM:
             self._attr_hvac_modes.append(HVACMode.OFF)
 
-        self._attr_unique_id = f"{self.device.entity_id}-{self.device_type}"
+        self._attr_unique_id = (
+            f"{self.device.entity_id}-{device_type_to_str(self.device_type)}"
+        )
 
     async def async_added_to_hass(self) -> None:
         """Entity created."""
@@ -251,16 +253,22 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         if data["event_type"] == EVENT_TYPE_SCHEDULE:
             # handle schedule change
             if "schedule_id" in data:
+                selected_schedule = self.hass.data[DOMAIN][DATA_SCHEDULES][
+                    self.home.entity_id
+                ].get(data["schedule_id"])
                 self._selected_schedule = getattr(
-                    self.hass.data[DOMAIN][DATA_SCHEDULES][self.home.entity_id].get(
-                        data["schedule_id"]
-                    ),
+                    selected_schedule,
                     "name",
                     None,
                 )
                 self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
                     self._selected_schedule
                 )
+
+                self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
+                    selected_schedule, "entity_id", None
+                )
+
                 self.async_write_ha_state()
                 self.data_handler.async_force_update(self._signal_name)
             # ignore other schedule events
@@ -420,11 +428,13 @@ class NetatmoThermostat(NetatmoRoomEntity, ClimateEntity):
         self._attr_hvac_mode = HVAC_MAP_NETATMO[self._attr_preset_mode]
         self._away = self._attr_hvac_mode == HVAC_MAP_NETATMO[STATE_NETATMO_AWAY]
 
-        self._selected_schedule = getattr(
-            self.home.get_selected_schedule(), "name", None
-        )
+        selected_schedule = self.home.get_selected_schedule()
+        self._selected_schedule = getattr(selected_schedule, "name", None)
         self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE] = (
             self._selected_schedule
+        )
+        self._attr_extra_state_attributes[ATTR_SELECTED_SCHEDULE_ID] = getattr(
+            selected_schedule, "entity_id", None
         )
 
         if self.device_type == NA_VALVE:

@@ -9,13 +9,8 @@ import pytest
 from synology_dsm.api.photos import SynoPhotosAlbum, SynoPhotosItem
 from synology_dsm.exceptions import SynologyDSMException
 
-from homeassistant.components.media_player import MediaClass
-from homeassistant.components.media_source import (
-    BrowseError,
-    BrowseMedia,
-    MediaSourceItem,
-    Unresolvable,
-)
+from homeassistant.components.media_player import BrowseError, BrowseMedia, MediaClass
+from homeassistant.components.media_source import MediaSourceItem, Unresolvable
 from homeassistant.components.synology_dsm.const import DOMAIN
 from homeassistant.components.synology_dsm.media_source import (
     SynologyDsmMediaView,
@@ -33,7 +28,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.util.aiohttp import MockRequest
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import HOST, MACS, PASSWORD, PORT, USE_SSL, USERNAME
 
 from tests.common import MockConfigEntry
@@ -47,6 +42,7 @@ def dsm_with_photos() -> MagicMock:
     dsm.update = AsyncMock(return_value=True)
     dsm.information = mock_dsm_information()
     dsm.network.update = AsyncMock(return_value=True)
+    dsm.hardware = mock_dsm_hardware()
     dsm.surveillance_station.update = AsyncMock(return_value=True)
     dsm.upgrade.update = AsyncMock(return_value=True)
 
@@ -75,7 +71,7 @@ def dsm_with_photos() -> MagicMock:
 
 @pytest.mark.usefixtures("setup_media_source")
 async def test_get_media_source(hass: HomeAssistant) -> None:
-    """Test the async_get_media_source function and SynologyPhotosMediaSource constructor."""
+    """Test async_get_media_source and SynologyPhotosMediaSource."""
 
     source = await async_get_media_source(hass)
     assert isinstance(source, SynologyPhotosMediaSource)

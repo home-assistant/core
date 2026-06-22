@@ -1,7 +1,5 @@
 """Config flow for the SensorPush Cloud integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from sensorpush_ha import SensorPushCloudApi, SensorPushCloudAuthError
@@ -61,4 +59,7 @@ class SensorPushCloudConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
+            description_placeholders={
+                "dashboard_url": "https://dashboard.sensorpush.com/",
+            },
         )

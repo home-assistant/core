@@ -17,13 +17,18 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import PlaystationNetworkConfigEntry, PlaystationNetworkCoordinator
+from . import (
+    PlaystationNetworkConfigEntry,
+    PlaystationNetworkTrophyTitlesCoordinator,
+    PlaystationNetworkUserDataCoordinator,
+)
 from .const import DOMAIN, SUPPORTED_PLATFORMS
 
 _LOGGER = logging.getLogger(__name__)
 
 
 PLATFORM_MAP = {
+    PlatformType.PS_VITA: "PlayStation Vita",
     PlatformType.PS5: "PlayStation 5",
     PlatformType.PS4: "PlayStation 4",
     PlatformType.PS3: "PlayStation 3",
@@ -38,7 +43,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Media Player Entity Setup."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.user_data
+    trophy_titles = config_entry.runtime_data.trophy_titles
     devices_added: set[PlatformType] = set()
     device_reg = dr.async_get(hass)
     entities = []
@@ -50,10 +56,12 @@ async def async_setup_entry(
         if not SUPPORTED_PLATFORMS - devices_added:
             remove_listener()
 
-        new_platforms = set(coordinator.data.active_sessions.keys()) - devices_added
+        new_platforms = (
+            set(coordinator.data.active_sessions.keys()) & SUPPORTED_PLATFORMS
+        ) - devices_added
         if new_platforms:
             async_add_entities(
-                PsnMediaPlayerEntity(coordinator, platform_type)
+                PsnMediaPlayerEntity(coordinator, platform_type, trophy_titles)
                 for platform_type in new_platforms
             )
             devices_added |= new_platforms
@@ -64,7 +72,7 @@ async def async_setup_entry(
                 (DOMAIN, f"{coordinator.config_entry.unique_id}_{platform.value}")
             }
         ):
-            entities.append(PsnMediaPlayerEntity(coordinator, platform))
+            entities.append(PsnMediaPlayerEntity(coordinator, platform, trophy_titles))
             devices_added.add(platform)
     if entities:
         async_add_entities(entities)
@@ -74,7 +82,7 @@ async def async_setup_entry(
 
 
 class PsnMediaPlayerEntity(
-    CoordinatorEntity[PlaystationNetworkCoordinator], MediaPlayerEntity
+    CoordinatorEntity[PlaystationNetworkUserDataCoordinator], MediaPlayerEntity
 ):
     """Media player entity representing currently playing game."""
 
@@ -86,7 +94,10 @@ class PsnMediaPlayerEntity(
     _attr_name = None
 
     def __init__(
-        self, coordinator: PlaystationNetworkCoordinator, platform: PlatformType
+        self,
+        coordinator: PlaystationNetworkUserDataCoordinator,
+        platform: PlatformType,
+        trophy_titles: PlaystationNetworkTrophyTitlesCoordinator,
     ) -> None:
         """Initialize PSN MediaPlayer."""
         super().__init__(coordinator)
@@ -101,15 +112,19 @@ class PsnMediaPlayerEntity(
             model=PLATFORM_MAP[platform],
             via_device=(DOMAIN, coordinator.config_entry.unique_id),
         )
+        self.trophy_titles = trophy_titles
 
     @property
     def state(self) -> MediaPlayerState:
         """Media Player state getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
-        if session and session.status == "online":
-            if session.title_id is not None:
-                return MediaPlayerState.PLAYING
-            return MediaPlayerState.ON
+        if session:
+            if session.status == "online":
+                return (
+                    MediaPlayerState.PLAYING
+                    if session.title_id is not None
+                    else MediaPlayerState.ON
+                )
         return MediaPlayerState.OFF
 
     @property
@@ -129,3 +144,12 @@ class PsnMediaPlayerEntity(
         """Media image url getter."""
         session = self.coordinator.data.active_sessions.get(self.key)
         return session.media_image_url if session else None
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity about to be added to hass."""
+
+        await super().async_added_to_hass()
+        if self.key is PlatformType.PS_VITA:
+            self.async_on_remove(
+                self.trophy_titles.async_add_listener(self._handle_coordinator_update)
+            )

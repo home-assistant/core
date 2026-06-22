@@ -81,7 +81,7 @@ async def test_unique_id_migration_not_needed(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that the unique ID for a sleep switch is not executed if already in right format."""
+    """Test unique ID for sleep switch skipped if already correct."""
     entry = MockConfigEntry(domain=DOMAIN, data=VALID_CONFIG, entry_id=ENTRY_ID)
     entry.add_to_hass(hass)
 
@@ -96,7 +96,7 @@ async def test_unique_id_migration_not_needed(
     assert entity_before.unique_id == f"{ENTRY_ID}_sleep_switch"
 
     with (
-        # Mock a valid camera instance"
+        # Mock a valid camera instance
         patch("homeassistant.components.foscam.FoscamCamera") as mock_foscam_camera,
         patch(
             "homeassistant.components.foscam.async_migrate_entry",

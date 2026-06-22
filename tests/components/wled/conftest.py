@@ -22,6 +22,7 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.123"},
         unique_id="aabbccddeeff",
+        minor_version=2,
     )
 
 
@@ -59,6 +60,8 @@ def mock_wled_releases() -> Generator[MagicMock]:
         wled_releases = wled_releases_mock.return_value
         wled_releases.releases.return_value = Releases(
             beta="1.0.0b5",
+            nightly=None,
+            repo="wled/WLED",
             stable="0.99.0",
         )
 

@@ -1,6 +1,6 @@
 """Velbus services tests."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 import voluptuous as vol
@@ -16,14 +16,14 @@ from homeassistant.components.velbus.const import (
 )
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import init_integration
 
 from tests.common import MockConfigEntry
 
 
-async def test_global_survices_with_config_entry(
+async def test_global_services_with_config_entry(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
 ) -> None:
@@ -64,6 +64,26 @@ async def test_global_survices_with_config_entry(
             blocking=True,
         )
 
+    # Test scan with OSError
+    config_entry.runtime_data.controller.scan.side_effect = OSError("Boom")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SCAN,
+            {CONF_CONFIG_ENTRY: config_entry.entry_id},
+            blocking=True,
+        )
+
+    # Test sync_clock with OSError
+    config_entry.runtime_data.controller.sync_clock.side_effect = OSError("Boom")
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SYNC,
+            {CONF_CONFIG_ENTRY: config_entry.entry_id},
+            blocking=True,
+        )
+
 
 async def test_set_memo_text(
     hass: HomeAssistant,
@@ -87,9 +107,26 @@ async def test_set_memo_text(
         1
     ).set_memo_text.assert_called_once_with("Test")
 
+    # Test with OSError
+    controller.return_value.get_module.return_value.set_memo_text.side_effect = OSError(
+        "Boom"
+    )
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_MEMO_TEXT,
+            {
+                CONF_CONFIG_ENTRY: config_entry.entry_id,
+                CONF_MEMO_TEXT: "Test",
+                CONF_ADDRESS: 2,
+            },
+            blocking=True,
+        )
+    controller.return_value.get_module.return_value.set_memo_text.side_effect = None
+
     # Test with unfound module
     controller.return_value.get_module.return_value = None
-    with pytest.raises(ServiceValidationError, match="Module not found"):
+    with pytest.raises(ServiceValidationError, match="Module with address 2 not found"):
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_MEMO_TEXT,
@@ -124,3 +161,76 @@ async def test_clear_cache(
         blocking=True,
     )
     assert config_entry.runtime_data.controller.scan.call_count == 2
+
+    # Test with OSError
+    with (
+        patch("os.path.exists", return_value=True),
+        patch("os.unlink", side_effect=OSError("Boom")),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_CACHE,
+            {
+                CONF_CONFIG_ENTRY: config_entry.entry_id,
+                CONF_ADDRESS: 2,
+            },
+            blocking=True,
+        )
+
+    # Test with OSError on directory removal
+    with (
+        patch("os.path.isdir", return_value=True),
+        patch("shutil.rmtree", side_effect=OSError("Boom")),
+        pytest.raises(HomeAssistantError),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_CACHE,
+            {CONF_CONFIG_ENTRY: config_entry.entry_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    ("service_data", "patch_target", "patch_func"),
+    [
+        pytest.param(
+            {CONF_ADDRESS: 1},
+            ("os.path.exists", "os.unlink"),
+            (True, MagicMock()),
+            id="file_exists_unlink",
+        ),
+        pytest.param(
+            {},
+            ("os.path.isdir", "shutil.rmtree"),
+            (True, MagicMock()),
+            id="dir_exists_rmtree",
+        ),
+    ],
+)
+async def test_clear_cache_path_exists(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    service_data: dict,
+    patch_target: tuple[str, str],
+    patch_func: tuple,
+) -> None:
+    """Test clear_cache when the cache path actually exists."""
+    await init_integration(hass, config_entry)
+
+    exists_mock = MagicMock(return_value=patch_func[0])
+    op_mock = MagicMock()
+    with (
+        patch(patch_target[0], exists_mock),
+        patch(patch_target[1], op_mock),
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CLEAR_CACHE,
+            {CONF_CONFIG_ENTRY: config_entry.entry_id, **service_data},
+            blocking=True,
+        )
+        exists_mock.assert_called_once()
+        op_mock.assert_called_once()
+    config_entry.runtime_data.controller.scan.assert_called_once_with()

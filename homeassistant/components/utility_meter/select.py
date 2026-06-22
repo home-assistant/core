@@ -1,23 +1,22 @@
 """Support for tariff selection."""
 
-from __future__ import annotations
-
 import logging
 
-from homeassistant.components.select import SelectEntity
+from homeassistant.components.select import DOMAIN as SELECT_DOMAIN, SelectEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_UNIQUE_ID
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
+    async_create_platform_config_not_supported_issue,
 )
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import CONF_METER, CONF_SOURCE_SENSOR, CONF_TARIFFS, DATA_UTILITY
+from .const import CONF_METER, CONF_SOURCE_SENSOR, CONF_TARIFFS, DATA_UTILITY, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,7 +32,7 @@ async def async_setup_entry(
 
     unique_id = config_entry.entry_id
 
-    device_info = async_device_info_to_link_from_entity(
+    device = async_entity_id_to_device(
         hass,
         config_entry.options[CONF_SOURCE_SENSOR],
     )
@@ -42,7 +41,7 @@ async def async_setup_entry(
         name=name,
         tariffs=tariffs,
         unique_id=unique_id,
-        device_info=device_info,
+        device=device,
     )
     async_add_entities([tariff_select])
 
@@ -55,17 +54,20 @@ async def async_setup_platform(
 ) -> None:
     """Set up the utility meter select."""
     if discovery_info is None:
-        _LOGGER.error(
-            "This platform is not available to configure "
-            "from 'select:' in configuration.yaml"
+        async_create_platform_config_not_supported_issue(
+            hass,
+            DOMAIN,
+            SELECT_DOMAIN,
+            yaml_config_under_integration_supported=True,
+            learn_more_url="https://www.home-assistant.io/integrations/utility_meter/",
+            logger=_LOGGER,
         )
         return
 
     meter: str = discovery_info[CONF_METER]
-    conf_meter_unique_id: str | None = hass.data[DATA_UTILITY][meter].get(
-        CONF_UNIQUE_ID
-    )
-    conf_meter_name = hass.data[DATA_UTILITY][meter].get(CONF_NAME, meter)
+    meter_info = hass.data[DATA_UTILITY][meter]
+    conf_meter_unique_id = meter_info.get(CONF_UNIQUE_ID)
+    conf_meter_name = meter_info.get(CONF_NAME, meter)
 
     async_add_entities(
         [
@@ -91,14 +93,14 @@ class TariffSelect(SelectEntity, RestoreEntity):
         *,
         yaml_slug: str | None = None,
         unique_id: str | None = None,
-        device_info: DeviceInfo | None = None,
+        device: DeviceEntry | None = None,
     ) -> None:
         """Initialize a tariff selector."""
         self._attr_name = name
         if yaml_slug:  # Backwards compatibility with YAML configuration entries
             self.entity_id = f"select.{yaml_slug}"
         self._attr_unique_id = unique_id
-        self._attr_device_info = device_info
+        self.device_entry = device
         self._current_tariff: str | None = None
         self._tariffs = tariffs
         self._attr_should_poll = False

@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
+from homeassistant.components.vegehub import DOMAIN
 from homeassistant.const import (
     CONF_DEVICE,
     CONF_HOST,
@@ -28,7 +29,7 @@ HUB_DATA = {
     "first_boot": False,
     "page_updated": False,
     "error_message": 0,
-    "num_channels": 2,
+    "num_channels": 4,
     "num_actuators": 2,
     "version": "3.4.5",
     "agenda": 1,
@@ -41,7 +42,7 @@ HUB_DATA = {
 
 
 @pytest.fixture(autouse=True)
-def mock_vegehub() -> Generator[Any, Any, Any]:
+def mock_vegehub() -> Generator[Any]:
     """Mock the VegeHub library."""
     with patch(
         "homeassistant.components.vegehub.config_flow.VegeHub", autospec=True
@@ -57,7 +58,7 @@ def mock_vegehub() -> Generator[Any, Any, Any]:
         mock_instance.unique_id = TEST_UNIQUE_ID
         mock_instance.url = f"http://{TEST_IP}"
         mock_instance.info = load_fixture("vegehub/info_hub.json")
-        mock_instance.num_sensors = 2
+        mock_instance.num_sensors = 4
         mock_instance.num_actuators = 2
         mock_instance.sw_version = "3.4.5"
 
@@ -68,7 +69,7 @@ def mock_vegehub() -> Generator[Any, Any, Any]:
 async def fixture_mocked_config_entry(hass: HomeAssistant) -> MockConfigEntry:
     """Create a mock VegeHub config entry."""
     return MockConfigEntry(
-        domain="vegehub",
+        domain=DOMAIN,
         data={
             CONF_MAC: TEST_SIMPLE_MAC,
             CONF_IP_ADDRESS: TEST_IP,

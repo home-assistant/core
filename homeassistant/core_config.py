@@ -1,7 +1,5 @@
 """Module to help with parsing and generating configuration files."""
 
-from __future__ import annotations
-
 from collections import OrderedDict
 from collections.abc import Sequence
 from contextlib import suppress
@@ -249,8 +247,8 @@ def _validate_currency(data: Any) -> Any:
         raise
 
 
-def _validate_stun_or_turn_url(value: Any) -> str:
-    """Validate an URL."""
+def validate_stun_or_turn_url(value: Any) -> str:
+    """Validate a URL."""
     url_in = str(value)
     url = urlparse(url_in)
 
@@ -331,7 +329,7 @@ CORE_CONFIG_SCHEMA = vol.All(
                             vol.Schema(
                                 {
                                     vol.Required(CONF_URL): vol.All(
-                                        cv.ensure_list, [_validate_stun_or_turn_url]
+                                        cv.ensure_list, [validate_stun_or_turn_url]
                                     ),
                                     vol.Optional(CONF_USERNAME): cv.string,
                                     vol.Optional(CONF_CREDENTIAL): cv.string,
@@ -369,9 +367,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             [{"type": "totp", "id": "totp", "name": "Authenticator app"}],
         )
 
-        setattr(
-            hass, "auth", await auth.auth_manager_from_config(hass, auth_conf, mfa_conf)
-        )
+        hass.auth = await auth.auth_manager_from_config(hass, auth_conf, mfa_conf)
 
     await hass.config.async_load()
 
@@ -452,7 +448,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             set(config[LEGACY_CONF_WHITELIST_EXTERNAL_DIRS])
         )
 
-    # Init whitelist external URL list – make sure to add / to every URL that doesn't
+    # Init whitelist external URL list - make sure to add / to every URL that doesn't
     # already have it so that we can properly test "path ownership"
     if CONF_ALLOWLIST_EXTERNAL_URLS in config:
         hac.allowlist_external_urls.update(
@@ -526,7 +522,7 @@ class _ComponentSet(set[str]):
         self._top_level_components.remove(value)
         return super().remove(value)
 
-    def discard(self, value: str) -> None:
+    def discard(self, value: object) -> None:
         """Remove a component from the store."""
         raise NotImplementedError("_ComponentSet does not support discard, use remove")
 
@@ -570,12 +566,11 @@ class Config:
         self.skip_pip_packages: list[str] = []
 
         # Set of loaded top level components
-        # This set is updated by _ComponentSet
-        # and should not be modified directly
+        # This set is updated by _ComponentSet and should not be modified directly.
         self.top_level_components: set[str] = set()
 
-        # Set of all loaded components including platform
-        # based components
+        # Set of all loaded components including platform based components
+        # This set is updated by _ComponentSet and should not be modified directly.
         self.all_components: set[str] = set()
 
         # Set of loaded components
@@ -631,6 +626,16 @@ class Config:
         """
         return os.path.join(self.config_dir, *path)
 
+    def cache_path(self, *path: str) -> str:
+        """Generate path to the file within the cache directory.
+
+        The cache directory is used for temporary data that can be
+        regenerated and is not included in backups.
+
+        Async friendly.
+        """
+        return self.path(".cache", *path)
+
     def is_allowed_external_url(self, url: str) -> bool:
         """Check if an external URL is allowed."""
         parsed_url = f"{yarl.URL(url)!s}/"
@@ -656,7 +661,7 @@ class Config:
                 thepath = thepath.resolve()
             else:
                 thepath = thepath.parent.resolve()
-        except (FileNotFoundError, RuntimeError, PermissionError):
+        except FileNotFoundError, RuntimeError, PermissionError:
             return False
 
         for allowed_path in self.allowlist_external_dirs:

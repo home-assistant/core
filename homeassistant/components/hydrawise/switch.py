@@ -1,13 +1,11 @@
 """Support for Hydrawise cloud switches."""
 
-from __future__ import annotations
-
-from collections.abc import Callable, Coroutine
+from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
-from pydrawise import HydrawiseBase, Zone
+from pydrawise import Controller, HydrawiseBase, Zone
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -21,6 +19,8 @@ from homeassistant.util import dt as dt_util
 from .const import DEFAULT_WATERING_TIME
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -66,12 +66,21 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Hydrawise switch platform."""
     coordinators = config_entry.runtime_data
-    async_add_entities(
-        HydrawiseSwitch(coordinators.main, description, controller, zone_id=zone.id)
-        for controller in coordinators.main.data.controllers.values()
-        for zone in controller.zones
-        for description in SWITCH_TYPES
+
+    def _add_new_zones(zones: Iterable[tuple[Zone, Controller]]) -> None:
+        async_add_entities(
+            HydrawiseSwitch(coordinators.main, description, controller, zone_id=zone.id)
+            for zone, controller in zones
+            for description in SWITCH_TYPES
+        )
+
+    _add_new_zones(
+        [
+            (zone, coordinators.main.data.zone_id_to_controller[zone.id])
+            for zone in coordinators.main.data.zones.values()
+        ]
     )
+    coordinators.main.new_zones_callbacks.append(_add_new_zones)
 
 
 class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
@@ -80,18 +89,21 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     entity_description: HydrawiseSwitchEntityDescription
     zone: Zone
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.entity_description.turn_on_fn(self.coordinator.api, self.zone)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.entity_description.turn_off_fn(self.coordinator.api, self.zone)
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_is_on = self.entity_description.value_fn(self.zone)

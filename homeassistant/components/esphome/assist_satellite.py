@@ -1,15 +1,16 @@
 """Support for assist satellites in ESPHome."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterable
 from functools import partial
+import hashlib
 import io
 from itertools import chain
+import json
 import logging
+from pathlib import Path
 import socket
-from typing import Any, cast
+from typing import Any, cast, override
 import wave
 
 from aioesphomeapi import (
@@ -19,9 +20,12 @@ from aioesphomeapi import (
     VoiceAssistantAudioSettings,
     VoiceAssistantCommandFlag,
     VoiceAssistantEventType,
+    VoiceAssistantExternalWakeWord,
     VoiceAssistantFeature,
     VoiceAssistantTimerEventType,
 )
+import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.components import assist_satellite, tts
 from homeassistant.components.assist_pipeline import (
@@ -29,6 +33,7 @@ from homeassistant.components.assist_pipeline import (
     PipelineEventType,
     PipelineStage,
 )
+from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.intent import (
     TimerEventType,
     TimerInfo,
@@ -39,8 +44,11 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.network import get_url
+from homeassistant.helpers.singleton import singleton
+from homeassistant.util.hass_dict import HassKey
 
-from .const import DOMAIN
+from .const import DOMAIN, WAKE_WORDS_API_PATH, WAKE_WORDS_DIR_NAME
 from .entity import EsphomeAssistEntity, convert_api_error_ha_error
 from .entry_data import ESPHomeConfigEntry
 from .enum_mapper import EsphomeEnumMapper
@@ -59,31 +67,65 @@ _VOICE_ASSISTANT_EVENT_TYPES: EsphomeEnumMapper[
         VoiceAssistantEventType.VOICE_ASSISTANT_RUN_END: PipelineEventType.RUN_END,
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_START: PipelineEventType.STT_START,
         VoiceAssistantEventType.VOICE_ASSISTANT_STT_END: PipelineEventType.STT_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START: PipelineEventType.INTENT_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS: PipelineEventType.INTENT_PROGRESS,
-        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: PipelineEventType.INTENT_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: PipelineEventType.TTS_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: PipelineEventType.TTS_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_START: PipelineEventType.WAKE_WORD_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: PipelineEventType.WAKE_WORD_END,
-        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: PipelineEventType.STT_VAD_START,
-        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_END: PipelineEventType.STT_VAD_END,
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_START: (
+            PipelineEventType.INTENT_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_PROGRESS: (
+            PipelineEventType.INTENT_PROGRESS
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_INTENT_END: (
+            PipelineEventType.INTENT_END
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_START: (
+            PipelineEventType.TTS_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_TTS_END: (PipelineEventType.TTS_END),
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_START: (
+            PipelineEventType.WAKE_WORD_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_WAKE_WORD_END: (
+            PipelineEventType.WAKE_WORD_END
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_START: (
+            PipelineEventType.STT_VAD_START
+        ),
+        VoiceAssistantEventType.VOICE_ASSISTANT_STT_VAD_END: (
+            PipelineEventType.STT_VAD_END
+        ),
     }
 )
 
 _TIMER_EVENT_TYPES: EsphomeEnumMapper[VoiceAssistantTimerEventType, TimerEventType] = (
     EsphomeEnumMapper(
         {
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: TimerEventType.STARTED,
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: TimerEventType.UPDATED,
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: TimerEventType.CANCELLED,
-            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: TimerEventType.FINISHED,
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_STARTED: (
+                TimerEventType.STARTED
+            ),
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_UPDATED: (
+                TimerEventType.UPDATED
+            ),
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_CANCELLED: (
+                TimerEventType.CANCELLED
+            ),
+            VoiceAssistantTimerEventType.VOICE_ASSISTANT_TIMER_FINISHED: (
+                TimerEventType.FINISHED
+            ),
         }
     )
 )
 
 _ANNOUNCEMENT_TIMEOUT_SEC = 5 * 60  # 5 minutes
 _CONFIG_TIMEOUT_SEC = 5
+_WAKE_WORD_CONFIG_SCHEMA = vol.Schema(
+    {
+        vol.Required("type"): str,
+        vol.Required("wake_word"): str,
+    },
+    extra=vol.ALLOW_EXTRA,
+)
+_DATA_WAKE_WORDS: HassKey[dict[str, VoiceAssistantExternalWakeWord]] = HassKey(
+    "wake_word_cache"
+)
 
 
 async def async_setup_entry(
@@ -127,35 +169,53 @@ class EsphomeAssistSatellite(
             available_wake_words=[], active_wake_words=[], max_active_wake_words=1
         )
 
+        self._active_pipeline_index = 0
+        self._active_audio_channel = 0
+        self._has_multi_channel_audio = False
+
+    def _get_entity_id(self, suffix: str) -> str | None:
+        """Return the entity id for pipeline select, etc."""
+        if self._entry_data.device_info is None:
+            return None
+
+        ent_reg = er.async_get(self.hass)
+        return ent_reg.async_get_entity_id(
+            Platform.SELECT,
+            DOMAIN,
+            f"{self._entry_data.device_info.mac_address}-{suffix}",
+        )
+
     @property
+    @override
     def pipeline_entity_id(self) -> str | None:
         """Return the entity ID of the pipeline to use for the next conversation."""
-        assert self._entry_data.device_info is not None
-        ent_reg = er.async_get(self.hass)
-        return ent_reg.async_get_entity_id(
-            Platform.SELECT,
-            DOMAIN,
-            f"{self._entry_data.device_info.mac_address}-pipeline",
-        )
+        return self.get_pipeline_entity(self._active_pipeline_index)
+
+    def get_pipeline_entity(self, index: int) -> str | None:
+        """Return the entity ID of a pipeline by index."""
+        id_suffix = "" if index < 1 else f"_{index + 1}"
+        return self._get_entity_id(f"pipeline{id_suffix}")
+
+    def get_wake_word_entity(self, index: int) -> str | None:
+        """Return the entity ID of a wake word by index."""
+        id_suffix = "" if index < 1 else f"_{index + 1}"
+        return self._get_entity_id(f"wake_word{id_suffix}")
 
     @property
+    @override
     def vad_sensitivity_entity_id(self) -> str | None:
-        """Return the entity ID of the VAD sensitivity to use for the next conversation."""
-        assert self._entry_data.device_info is not None
-        ent_reg = er.async_get(self.hass)
-        return ent_reg.async_get_entity_id(
-            Platform.SELECT,
-            DOMAIN,
-            f"{self._entry_data.device_info.mac_address}-vad_sensitivity",
-        )
+        """Return the entity ID of the VAD sensitivity for the next conversation."""
+        return self._get_entity_id("vad_sensitivity")
 
     @callback
+    @override
     def async_get_configuration(
         self,
     ) -> assist_satellite.AssistSatelliteConfiguration:
         """Get the current satellite configuration."""
         return self._satellite_config
 
+    @override
     async def async_set_configuration(
         self, config: assist_satellite.AssistSatelliteConfiguration
     ) -> None:
@@ -170,9 +230,14 @@ class EsphomeAssistSatellite(
 
     async def _update_satellite_config(self) -> None:
         """Get the latest satellite configuration from the device."""
+        wake_words = await async_get_custom_wake_words(self.hass)
+        if wake_words:
+            _LOGGER.debug("Found custom wake words: %s", sorted(wake_words.keys()))
+
         try:
             config = await self.cli.get_voice_assistant_configuration(
-                _CONFIG_TIMEOUT_SEC
+                _CONFIG_TIMEOUT_SEC,
+                external_wake_words=list(wake_words.values()),
             )
         except TimeoutError:
             # Placeholder config will be used
@@ -194,6 +259,7 @@ class EsphomeAssistSatellite(
         # Inform listeners that config has been updated
         self._entry_data.async_assist_satellite_config_updated(self._satellite_config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -235,6 +301,7 @@ class EsphomeAssistSatellite(
                 )
             )
 
+        assert self._attr_supported_features is not None
         if feature_flags & VoiceAssistantFeature.ANNOUNCE:
             # Device supports announcements
             self._attr_supported_features |= (
@@ -255,13 +322,17 @@ class EsphomeAssistSatellite(
                 assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
             )
 
+        if feature_flags & VoiceAssistantFeature.MULTI_CHANNEL_AUDIO:
+            self._has_multi_channel_audio = True
+
         # Update wake word select when config is updated
         self.async_on_remove(
-            self._entry_data.async_register_assist_satellite_set_wake_word_callback(
-                self.async_set_wake_word
+            self._entry_data.async_register_assist_satellite_set_wake_words_callback(
+                self.async_set_wake_words
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -269,6 +340,7 @@ class EsphomeAssistSatellite(
         self._is_running = False
         self._stop_pipeline()
 
+    @override
     def on_pipeline_event(self, event: PipelineEvent) -> None:
         """Handle pipeline events."""
         try:
@@ -279,6 +351,18 @@ class EsphomeAssistSatellite(
 
         data_to_send: dict[str, Any] = {}
         if event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_START:
+            if (
+                self._has_multi_channel_audio
+                and event.data
+                and (audio_processing := event.data.get("audio_processing"))
+            ):
+                # Settings come from stt SpeechAudioProcessing
+                if (audio_processing.get("prefers_auto_gain_enabled") is False) and (
+                    audio_processing.get("prefers_noise_reduction_enabled") is False
+                ):
+                    # Use non-enhanced audio
+                    self._active_audio_channel = 1
+
             self._entry_data.async_set_assist_pipeline_state(True)
         elif event_type == VoiceAssistantEventType.VOICE_ASSISTANT_STT_END:
             assert event.data is not None
@@ -355,6 +439,7 @@ class EsphomeAssistSatellite(
         self.cli.send_voice_assistant_event(event_type, data_to_send)
 
     @convert_api_error_ha_error
+    @override
     async def async_announce(
         self, announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -365,6 +450,7 @@ class EsphomeAssistSatellite(
         await self._do_announce(announcement, run_pipeline_after=False)
 
     @convert_api_error_ha_error
+    @override
     async def async_start_conversation(
         self, start_announcement: assist_satellite.AssistSatelliteAnnouncement
     ) -> None:
@@ -482,8 +568,31 @@ class EsphomeAssistSatellite(
             # ANNOUNCEMENT format from media player
             self._update_tts_format()
 
-        # Run the pipeline
-        _LOGGER.debug("Running pipeline from %s to %s", start_stage, end_stage)
+        # Run the appropriate pipeline.
+        self._active_pipeline_index = 0
+
+        maybe_pipeline_index = 0
+        while ww_entity_id := self.get_wake_word_entity(maybe_pipeline_index):
+            if (
+                ww_state := self.hass.states.get(ww_entity_id)
+            ) and ww_state.state == wake_word_phrase:
+                # First match
+                self._active_pipeline_index = maybe_pipeline_index
+                break
+
+            # Try next wake word select
+            maybe_pipeline_index += 1
+
+        # Default to audio channel 0 (enhanced)
+        # May be changed when STT_START event arrives.
+        self._active_audio_channel = 0
+
+        _LOGGER.debug(
+            "Running pipeline %s from %s to %s",
+            self._active_pipeline_index + 1,
+            start_stage,
+            end_stage,
+        )
         self._pipeline_task = self.config_entry.async_create_background_task(
             self.hass,
             self.async_accept_pipeline_from_satellite(
@@ -500,9 +609,20 @@ class EsphomeAssistSatellite(
 
         return port
 
-    async def handle_audio(self, data: bytes) -> None:
+    async def handle_audio(self, data: bytes, data2: bytes | None = None) -> None:
         """Handle incoming audio chunk from API."""
-        self._audio_queue.put_nowait(data)
+        # Default to enhanced audio (channel 0)
+        active_data = data
+
+        if (
+            self._has_multi_channel_audio
+            and (data2 is not None)
+            and (self._active_audio_channel == 1)
+        ):
+            # Non-enhanced audio (channel 1)
+            active_data = data2
+
+        self._audio_queue.put_nowait(active_data)
 
     async def handle_pipeline_stop(self, abort: bool) -> None:
         """Handle request for pipeline to stop."""
@@ -514,6 +634,7 @@ class EsphomeAssistSatellite(
     def handle_pipeline_finished(self) -> None:
         """Handle when pipeline has finished running."""
         self._stop_udp_server()
+        self._active_pipeline_index = 0
         _LOGGER.debug("Pipeline finished")
 
     def handle_timer_event(
@@ -542,15 +663,15 @@ class EsphomeAssistSatellite(
         self.tts_response_finished()
 
     @callback
-    def async_set_wake_word(self, wake_word_id: str) -> None:
-        """Set active wake word and update config on satellite."""
-        self._satellite_config.active_wake_words = [wake_word_id]
+    def async_set_wake_words(self, wake_word_ids: list[str]) -> None:
+        """Set active wake words and update config on satellite."""
+        self._satellite_config.active_wake_words = wake_word_ids
         self.config_entry.async_create_background_task(
             self.hass,
             self.async_set_configuration(self._satellite_config),
             "esphome_voice_assistant_set_config",
         )
-        _LOGGER.debug("Setting active wake word: %s", wake_word_id)
+        _LOGGER.debug("Setting active wake word(s): %s", wake_word_ids)
 
     def _update_tts_format(self) -> None:
         """Update the TTS format from the first media player."""
@@ -652,7 +773,7 @@ class EsphomeAssistSatellite(
             yield chunk
 
     def _stop_pipeline(self) -> None:
-        """Request pipeline to be stopped by ending the audio stream and continue processing."""
+        """Request pipeline to be stopped by ending the audio stream."""
         self._audio_queue.put_nowait(None)
         _LOGGER.debug("Requested pipeline stop")
 
@@ -708,10 +829,12 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
         super().__init__(*args, **kwargs)
         self._audio_queue = audio_queue
 
+    @override
     def connection_made(self, transport: asyncio.BaseTransport) -> None:
         """Store transport for later use."""
         self.transport = cast(asyncio.DatagramTransport, transport)
 
+    @override
     def datagram_received(self, data: bytes, addr: tuple[str, int]) -> None:
         """Handle incoming UDP packet."""
         if self.remote_addr is None:
@@ -719,6 +842,7 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
 
         self._audio_queue.put_nowait(data)
 
+    @override
     def error_received(self, exc: Exception) -> None:
         """Handle when a send or receive operation raises an OSError.
 
@@ -747,3 +871,78 @@ class VoiceAssistantUDPServer(asyncio.DatagramProtocol):
             return
 
         self.transport.sendto(data, self.remote_addr)
+
+
+async def async_get_custom_wake_words(
+    hass: HomeAssistant,
+) -> dict[str, VoiceAssistantExternalWakeWord]:
+    """Get available custom wake words."""
+    return await hass.async_add_executor_job(_get_custom_wake_words, hass)
+
+
+@singleton(_DATA_WAKE_WORDS)
+def _get_custom_wake_words(
+    hass: HomeAssistant,
+) -> dict[str, VoiceAssistantExternalWakeWord]:
+    """Get available custom wake words (singleton)."""
+    wake_words_dir = Path(hass.config.path(WAKE_WORDS_DIR_NAME))
+    wake_words: dict[str, VoiceAssistantExternalWakeWord] = {}
+
+    # Look for config/model files
+    for config_path in wake_words_dir.glob("*.json"):
+        wake_word_id = config_path.stem
+        model_path = config_path.with_suffix(".tflite")
+        if not model_path.exists():
+            # Missing model file
+            continue
+
+        with open(config_path, encoding="utf-8") as config_file:
+            config_dict = json.load(config_file)
+            try:
+                config = _WAKE_WORD_CONFIG_SCHEMA(config_dict)
+            except vol.Invalid as err:
+                # Invalid config
+                _LOGGER.debug(
+                    "Invalid wake word config: path=%s, error=%s",
+                    config_path,
+                    humanize_error(config_dict, err),
+                )
+                continue
+
+            with open(model_path, "rb") as model_file:
+                model_hash = hashlib.sha256(model_file.read()).hexdigest()
+
+            model_size = model_path.stat().st_size
+            config_rel_path = config_path.relative_to(wake_words_dir)
+
+            # Only intended for the internal network
+            base_url = get_url(hass, prefer_external=False, allow_cloud=False)
+
+            wake_words[wake_word_id] = VoiceAssistantExternalWakeWord.from_dict(
+                {
+                    "id": wake_word_id,
+                    "wake_word": config["wake_word"],
+                    "trained_languages": config_dict.get("trained_languages", []),
+                    "model_type": config["type"],
+                    "model_size": model_size,
+                    "model_hash": model_hash,
+                    "url": f"{base_url}{WAKE_WORDS_API_PATH}/{config_rel_path}",
+                }
+            )
+
+    return wake_words
+
+
+async def async_setup(hass: HomeAssistant) -> None:
+    """Set up the satellite."""
+    wake_words_dir = Path(hass.config.path(WAKE_WORDS_DIR_NAME))
+
+    # Satellites will pull model files over HTTP
+    await hass.http.async_register_static_paths(
+        [
+            StaticPathConfig(
+                url_path=WAKE_WORDS_API_PATH,
+                path=str(wake_words_dir),
+            )
+        ]
+    )

@@ -1,7 +1,5 @@
 """Home Assistant extension for Syrupy."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import dataclasses
 from enum import IntFlag
@@ -173,6 +171,8 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
         if serialized["primary_config_entry"] is not None:
             serialized["primary_config_entry"] = ANY
         serialized.pop("_cache")
+        # This can be removed when suggested_area is removed from DeviceEntry
+        serialized.pop("_suggested_area")
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod
@@ -200,7 +200,10 @@ class HomeAssistantSnapshotSerializer(AmberDataSerializer):
             }
         )
         serialized.pop("categories")
+        serialized.pop("compat_aliases")
+        serialized.pop("original_name_unprefixed")
         serialized.pop("_cache")
+        serialized["aliases"] = er._serialize_aliases(serialized["aliases"])
         return cls._remove_created_and_modified_at(serialized)
 
     @classmethod
@@ -239,8 +242,10 @@ class _IntFlagWrapper:
         self._flag = flag
 
     def __repr__(self) -> str:
-        # 3.10: <ClimateEntityFeature.SWING_MODE|PRESET_MODE|FAN_MODE|TARGET_TEMPERATURE: 57>
-        # 3.11: <ClimateEntityFeature.TARGET_TEMPERATURE|FAN_MODE|PRESET_MODE|SWING_MODE: 57>
+        # 3.10:
+        # <ClimateEntityFeature.SWING_MODE|PRESET_MODE|FAN_MODE|TARGET_TEMPERATURE: 57>
+        # 3.11:
+        # <ClimateEntityFeature.TARGET_TEMPERATURE|FAN_MODE|PRESET_MODE|SWING_MODE: 57>
         # Syrupy: <ClimateEntityFeature: 57>
         return f"<{self._flag.__class__.__name__}: {self._flag.value}>"
 
@@ -361,7 +366,7 @@ def _merge_serialized_report(report: SnapshotReport, json_data: dict[str, Any]) 
     for key, selected_item in json_data["_selected_items"].items():
         if key in report.selected_items:
             status = ItemStatus(selected_item)
-            if status != ItemStatus.NOT_RUN:
+            if status is not ItemStatus.NOT_RUN:
                 report.selected_items[key] = status
         else:
             report.selected_items[key] = ItemStatus(selected_item)

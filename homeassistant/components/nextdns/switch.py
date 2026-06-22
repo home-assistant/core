@@ -1,7 +1,5 @@
 """Support for the NextDNS service."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -55,6 +53,12 @@ SWITCHES = (
         translation_key="anonymized_ecs",
         entity_category=EntityCategory.CONFIG,
         state=lambda data: data.anonymized_ecs,
+    ),
+    NextDnsSwitchEntityDescription(
+        key="bav",
+        translation_key="bypass_age_verification",
+        entity_category=EntityCategory.CONFIG,
+        state=lambda data: data.bav,
     ),
     NextDnsSwitchEntityDescription(
         key="logs",

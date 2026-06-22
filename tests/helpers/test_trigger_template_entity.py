@@ -4,7 +4,12 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
+    async_parse_date_datetime,
+)
 from homeassistant.const import (
+    CONF_DEVICE_CLASS,
     CONF_ICON,
     CONF_NAME,
     CONF_STATE,
@@ -20,6 +25,7 @@ from homeassistant.helpers.trigger_template_entity import (
     CONF_AVAILABILITY,
     CONF_PICTURE,
     ManualTriggerEntity,
+    ManualTriggerSensorEntity,
     ValueTemplate,
 )
 
@@ -44,7 +50,11 @@ _PICTURE_TEMPLATE = '/local/picture_o{{ "n" if value=="on" else "ff" }}'
             "{{ x - 4 }}",
             template._SENTINEL,
             template._SENTINEL,
-            "Error parsing value for test.entity: 'x' is undefined (value: 1, template: {{ x - 4 }})",
+            (
+                "Error parsing value for test.entity:"
+                " 'x' is undefined"
+                " (value: 1, template: {{ x - 4 }})"
+            ),
         ),
     ],
 )
@@ -87,7 +97,8 @@ async def test_template_entity_requires_hass_set(hass: HomeAssistant) -> None:
             '{% if value=="on" %} mdi:on {% else %} mdi:off {% endif %}', hass
         ),
         "picture": template.Template(
-            '{% if value=="on" %} /local/picture_on {% else %} /local/picture_off {% endif %}',
+            '{% if value=="on" %} /local/picture_on'
+            " {% else %} /local/picture_off {% endif %}",
             hass,
         ),
     }
@@ -243,8 +254,8 @@ async def test_attribute_order(
     assert entity.extra_state_attributes == {"beer": 1, "more_beer": 2}
 
     assert (
-        "Error rendering attributes.no_beer template for test.entity: UndefinedError: 'sad' is undefined"
-        in caplog.text
+        "Error rendering attributes.no_beer template for"
+        " test.entity: UndefinedError: 'sad' is undefined" in caplog.text
     )
 
 
@@ -261,7 +272,8 @@ async def test_trigger_template_complex(hass: HomeAssistant) -> None:
             '{% if value=="on" %} mdi:on {% else %} mdi:off {% endif %}', hass
         ),
         CONF_PICTURE: template.Template(
-            '{% if value=="on" %} /local/picture_on {% else %} /local/picture_off {% endif %}',
+            '{% if value=="on" %} /local/picture_on'
+            " {% else %} /local/picture_off {% endif %}",
             hass,
         ),
         CONF_AVAILABILITY: template.Template('{{ has_value("test.entity") }}', hass),
@@ -288,3 +300,44 @@ async def test_trigger_template_complex(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     assert entity.some_other_key == {"test_key": "test_data"}
+
+
+@pytest.mark.parametrize(
+    "device_class",
+    [SensorDeviceClass.TIMESTAMP, SensorDeviceClass.UPTIME],
+)
+async def test_manual_trigger_sensor_entity_with_date(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    device_class: SensorDeviceClass,
+) -> None:
+    """Test manual trigger template entity when availability template isn't used."""
+    config = {
+        CONF_NAME: template.Template("test_entity", hass),
+        CONF_STATE: template.Template("{{ as_datetime(value) }}", hass),
+        CONF_DEVICE_CLASS: device_class,
+    }
+
+    class TestEntity(ManualTriggerSensorEntity):
+        """Test entity class."""
+
+        extra_template_keys = (CONF_STATE,)
+
+        @property
+        def state(self) -> bool | None:
+            """Return extra attributes."""
+            return "2025-01-01T00:00:00+00:00"
+
+    entity = TestEntity(hass, config)
+    entity.entity_id = "test.entity"
+    variables = entity._template_variables_with_value("2025-01-01T00:00:00+00:00")
+    assert entity._render_availability_template(variables) is True
+    assert entity.available is True
+    entity._set_native_value_with_possible_timestamp(entity.state)
+    await hass.async_block_till_done()
+
+    assert entity.native_value == async_parse_date_datetime(
+        "2025-01-01T00:00:00+00:00", entity.entity_id, entity.device_class
+    )
+    assert entity.state == "2025-01-01T00:00:00+00:00"
+    assert entity.device_class == device_class

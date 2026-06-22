@@ -10,6 +10,24 @@ DOMAIN = "roborock"
 CONF_ENTRY_CODE = "code"
 CONF_BASE_URL = "base_url"
 CONF_USER_DATA = "user_data"
+CONF_SHOW_BACKGROUND = "show_background"
+CONF_SHOW_WALLS = "show_walls"
+CONF_SHOW_ROOMS = "show_rooms"
+CONF_ROBOROCK_SERVER_URL = "roborock_server_url"
+REGION_AUTO = "auto"
+REGION_CUSTOM = "custom"
+REGION_US = "us"
+REGION_EU = "eu"
+REGION_RU = "ru"
+REGION_CN = "cn"
+REGION_OPTIONS = [
+    REGION_AUTO,
+    REGION_US,
+    REGION_EU,
+    REGION_RU,
+    REGION_CN,
+    REGION_CUSTOM,
+]
 
 # Option Flow steps
 DRAWABLES = "drawables"
@@ -50,15 +68,14 @@ IMAGE_CACHE_INTERVAL = timedelta(seconds=30)
 
 MAP_SLEEP = 3
 
-GET_MAPS_SERVICE_NAME = "get_maps"
+
 MAP_SCALE = 4
 MAP_FILE_FORMAT = "PNG"
 MAP_FILENAME_SUFFIX = ".png"
-SET_VACUUM_GOTO_POSITION_SERVICE_NAME = "set_vacuum_goto_position"
-GET_VACUUM_CURRENT_POSITION_SERVICE_NAME = "get_vacuum_current_position"
 
 
 A01_UPDATE_INTERVAL = timedelta(minutes=1)
+Q10_UPDATE_INTERVAL = timedelta(minutes=1)
 V1_CLOUD_IN_CLEANING_INTERVAL = timedelta(seconds=30)
 V1_CLOUD_NOT_CLEANING_INTERVAL = timedelta(minutes=1)
 V1_LOCAL_IN_CLEANING_INTERVAL = timedelta(seconds=15)

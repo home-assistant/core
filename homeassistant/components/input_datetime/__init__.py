@@ -1,10 +1,8 @@
 """Support to select a date and/or a time."""
 
-from __future__ import annotations
-
 import datetime as py_datetime
 import logging
-from typing import Any, Self
+from typing import Any, Self, override
 
 import voluptuous as vol
 
@@ -100,7 +98,7 @@ def parse_initial_datetime(conf: dict[str, Any]) -> py_datetime.datetime:
         raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a date")
 
     if (time := dt_util.parse_time(initial)) is not None:
-        return py_datetime.datetime.combine(py_datetime.date.today(), time)
+        return py_datetime.datetime.combine(dt_util.now().date(), time)
     raise vol.Invalid(f"Initial value '{initial}' can't be parsed as a time")
 
 
@@ -158,8 +156,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def reload_service_handler(service_call: ServiceCall) -> None:
         """Reload yaml entities."""
         conf = await component.async_prepare_reload(skip_reset=True)
-        if conf is None:
-            conf = {DOMAIN: {}}
         await yaml_collection.async_load(
             [{CONF_ID: id_, **cfg} for id_, cfg in conf.get(DOMAIN, {}).items()]
         )
@@ -199,15 +195,18 @@ class DateTimeStorageCollection(collection.DictStorageCollection):
 
     CREATE_UPDATE_SCHEMA = vol.Schema(vol.All(STORAGE_FIELDS, has_date_or_time))
 
+    @override
     async def _process_create_data(self, data: dict) -> dict:
         """Validate the config is valid."""
         return self.CREATE_UPDATE_SCHEMA(data)
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict) -> str:
         """Suggest an ID based on the config."""
         return info[CONF_NAME]
 
+    @override
     async def _update_data(self, item: dict, update_data: dict) -> dict:
         """Return a new updated data object."""
         update_data = self.CREATE_UPDATE_SCHEMA(update_data)
@@ -243,6 +242,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
             )
 
     @classmethod
+    @override
     def from_storage(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from storage."""
         input_dt = cls(config)
@@ -250,6 +250,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return input_dt
 
     @classmethod
+    @override
     def from_yaml(cls, config: ConfigType) -> Self:
         """Return entity instance initialized from yaml."""
         input_dt = cls(config)
@@ -257,6 +258,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         input_dt.editable = False
         return input_dt
 
+    @override
     async def async_added_to_hass(self):
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -265,7 +267,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         if self.state is not None:
             return
 
-        default_value = py_datetime.datetime.today().strftime(f"{FMT_DATE} 00:00:00")
+        default_value = dt_util.now().strftime(f"{FMT_DATE} 00:00:00")
 
         # Priority 2: Old state
         if (old_state := await self.async_get_last_state()) is None:
@@ -288,15 +290,14 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         elif (time := dt_util.parse_time(old_state.state)) is None:
             current_datetime = dt_util.parse_datetime(default_value)
         else:
-            current_datetime = py_datetime.datetime.combine(
-                py_datetime.date.today(), time
-            )
+            current_datetime = py_datetime.datetime.combine(dt_util.now().date(), time)
 
         self._current_datetime = current_datetime.replace(
             tzinfo=dt_util.get_default_time_zone()
         )
 
     @property
+    @override
     def name(self):
         """Return the name of the select input."""
         return self._config.get(CONF_NAME)
@@ -312,11 +313,13 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._config[CONF_HAS_TIME]
 
     @property
-    def icon(self):
+    @override
+    def icon(self) -> str | None:
         """Return the icon to be used for this entity."""
         return self._config.get(CONF_ICON)
 
     @property
+    @override
     def state(self):
         """Return the state of the component."""
         if self._current_datetime is None:
@@ -331,6 +334,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return self._current_datetime.strftime(FMT_TIME)
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return the capability attributes."""
         return {
@@ -339,9 +343,10 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         }
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        attrs = {
+        attrs: dict[str, Any] = {
             ATTR_EDITABLE: self.editable,
         }
 
@@ -377,6 +382,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         return attrs
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return unique id of the entity."""
         return self._config[CONF_ID]
@@ -411,6 +417,7 @@ class InputDatetime(collection.CollectionEntity, RestoreEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_update_config(self, config: ConfigType) -> None:
         """Handle when the config is updated."""
         self._config = config

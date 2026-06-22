@@ -1,7 +1,5 @@
 """Config flow for Tomorrow.io integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -172,4 +170,7 @@ class TomorrowioConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=_get_config_schema(self.hass, self.source, user_input),
             errors=errors,
+            description_placeholders={
+                "signup_link": "[Tomorrow.io](https://app.tomorrow.io/signup)"
+            },
         )

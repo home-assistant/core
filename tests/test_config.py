@@ -22,7 +22,6 @@ from homeassistant.exceptions import ConfigValidationError, HomeAssistantError
 from homeassistant.helpers import check_config, config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import Integration, async_get_integration
-from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import SECRET_YAML
 from homeassistant.util.yaml.objects import NodeDictClass
 
@@ -393,7 +392,7 @@ async def test_ensure_config_exists_uses_existing_config(hass: HomeAssistant) ->
 
 
 async def test_ensure_existing_files_is_not_overwritten(hass: HomeAssistant) -> None:
-    """Test that calling async_create_default_config does not overwrite existing files."""
+    """Test async_create_default_config does not overwrite files."""
     await hass.async_add_executor_job(create_file, SECRET_PATH)
 
     await config_util.async_create_default_config(hass)
@@ -852,9 +851,6 @@ async def test_component_config_exceptions(
         },
     )
 
-    # Make sure the exception translation cache is loaded
-    await async_setup_component(hass, "homeassistant", {})
-
     test_integration = Mock(
         domain="test_domain",
         async_get_component=AsyncMock(),
@@ -1288,9 +1284,6 @@ async def test_component_config_error_processing(
     translation_key: str,
 ) -> None:
     """Test component config error processing."""
-
-    # Make sure the exception translation cache is loaded
-    await async_setup_component(hass, "homeassistant", {})
 
     test_integration = Mock(
         domain="test_domain",

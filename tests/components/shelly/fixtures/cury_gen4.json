@@ -1,0 +1,226 @@
+{
+  "config": {
+    "ble": {
+      "enable": false,
+      "rpc": {
+        "enable": false
+      }
+    },
+    "bthome": {},
+    "cloud": {
+      "enable": false,
+      "server": "iot.shelly.cloud:6012/jrpc"
+    },
+    "cury:0": {
+      "ambient": {
+        "brightness": 100,
+        "color": [0, 255, 0],
+        "enable": false,
+        "use_vial_color": true
+      },
+      "auto_heating_on": true,
+      "boost_time": 1800,
+      "id": 0,
+      "initial_state": {
+        "left": "restore_last",
+        "right": "restore_last"
+      },
+      "name": null,
+      "timer": {
+        "left": {
+          "auto_off": false,
+          "auto_off_delay": 60.0,
+          "auto_on": false,
+          "auto_on_delay": 60.0
+        },
+        "right": {
+          "auto_off": false,
+          "auto_off_delay": 60.0,
+          "auto_on": false,
+          "auto_on_delay": 60.0
+        }
+      },
+      "ui": {
+        "brightness": 10,
+        "mode": "level"
+      }
+    },
+    "mqtt": {
+      "client_id": "cury-aabbccddeeff",
+      "enable": false,
+      "enable_control": true,
+      "enable_rpc": true,
+      "rpc_ntf": true,
+      "server": "mqtt.test.server",
+      "ssl_ca": null,
+      "status_ntf": false,
+      "topic_prefix": "cury-aabbccddeeff",
+      "use_client_cert": false,
+      "user": null
+    },
+    "sys": {
+      "cfg_rev": 18,
+      "debug": {
+        "file_level": null,
+        "level": 2,
+        "mqtt": {
+          "enable": false
+        },
+        "udp": {
+          "addr": "35.205.173.252:8910"
+        },
+        "websocket": {
+          "enable": false
+        }
+      },
+      "device": {
+        "discoverable": true,
+        "eco_mode": false,
+        "enhanced_security": false,
+        "fw_id": "20251030-100725/ged96848",
+        "mac": "AABBCCDDEEFF",
+        "name": "Test Name",
+        "tls_check_cert_validity_time": true
+      },
+      "location": {
+        "lat": 12.3456,
+        "lon": 78.9012,
+        "tz": "Europe/Warsaw"
+      },
+      "rpc_udp": {
+        "dst_addr": null,
+        "listen_port": null
+      },
+      "sntp": {
+        "server": "sntp.test.server"
+      },
+      "ui_data": {}
+    },
+    "wifi": {
+      "ap": {
+        "enable": false,
+        "is_open": true,
+        "range_extender": {
+          "enable": false
+        },
+        "ssid": "Cury-AABBCCDDEEFF"
+      },
+      "roam": {
+        "interval": 60,
+        "rssi_thr": -80
+      },
+      "sta": {
+        "enable": true,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": false,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": "Wifi-Network-Name"
+      },
+      "sta1": {
+        "enable": false,
+        "gw": null,
+        "ip": null,
+        "ipv4mode": "dhcp",
+        "is_open": true,
+        "nameserver": null,
+        "netmask": null,
+        "ssid": null
+      }
+    },
+    "ws": {
+      "enable": false,
+      "server": null,
+      "ssl_ca": "ca.pem"
+    }
+  },
+  "shelly": {
+    "app": "Cury",
+    "auth_domain": null,
+    "auth_en": false,
+    "fw_id": "20251030-100725/ged96848",
+    "gen": 4,
+    "id": "cury-aabbccddeeff",
+    "mac": "AABBCCDDEEFF",
+    "model": "S4PB-00CU000002",
+    "name": "Test Name",
+    "slot": 0,
+    "ver": "1.8.99-dev144746"
+  },
+  "status": {
+    "ble": {},
+    "bthome": {
+      "errors": ["bluetooth_disabled"]
+    },
+    "cloud": {
+      "connected": false
+    },
+    "cury:0": {
+      "away_mode": false,
+      "id": 0,
+      "mode": "living_room",
+      "slots": {
+        "left": {
+          "boost": null,
+          "intensity": 70,
+          "on": false,
+          "timer": null,
+          "vial": {
+            "level": 100,
+            "name": "Shelly",
+            "serial": "123"
+          }
+        },
+        "right": {
+          "boost": null,
+          "intensity": 45,
+          "on": true,
+          "timer": null,
+          "vial": {
+            "level": 93,
+            "name": "Aqua Noire",
+            "serial": "456"
+          }
+        }
+      }
+    },
+    "mqtt": {
+      "connected": false
+    },
+    "sys": {
+      "available_updates": {},
+      "backup": {},
+      "btrelay_rev": 0,
+      "cfg_rev": 18,
+      "fs_free": 651264,
+      "fs_size": 1048576,
+      "kvs_rev": 0,
+      "last_sync_ts": 1762084564,
+      "mac": "AABBCCDDEEFF",
+      "ram_free": 183172,
+      "ram_min_free": 169272,
+      "ram_size": 340932,
+      "reset_reason": 3,
+      "restart_required": false,
+      "schedule_rev": 32,
+      "time": "13:00",
+      "unixtime": 1762084840,
+      "uptime": 12775,
+      "utc_offset": 3600,
+      "webhook_rev": 0
+    },
+    "wifi": {
+      "bssid": "22:33:44:55:66:77",
+      "rssi": -49,
+      "ssid": "Wifi-Network-Name",
+      "sta_ip": "192.168.2.149",
+      "sta_ip6": ["fe80::7e2c:aabb:ccdd:eeff"],
+      "status": "got ip"
+    },
+    "ws": {
+      "connected": false
+    }
+  }
+}

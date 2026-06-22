@@ -1,7 +1,5 @@
 """Combination of multiple media players for a universal controller."""
 
-from __future__ import annotations
-
 from copy import copy
 from typing import Any
 
@@ -78,6 +76,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    Platform,
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -107,7 +106,8 @@ STATES_ORDER = [
     STATE_UNAVAILABLE,
     MediaPlayerState.OFF,
     MediaPlayerState.IDLE,
-    MediaPlayerState.STANDBY,
+    # Not using MediaPlayerState.STANDBY to avoid deprecation warning
+    "standby",
     MediaPlayerState.ON,
     MediaPlayerState.PAUSED,
     MediaPlayerState.BUFFERING,
@@ -144,7 +144,7 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the universal media players."""
-    await async_setup_reload_service(hass, "universal", ["media_player"])
+    await async_setup_reload_service(hass, "universal", [Platform.MEDIA_PLAYER])
 
     player = UniversalMediaPlayer(hass, config)
     async_add_entities([player])
@@ -154,6 +154,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     """Representation of an universal media player."""
 
     _attr_should_poll = False
+    _attr_media_image_remotely_accessible = True
 
     def __init__(
         self,
@@ -308,7 +309,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
             master_state = self._entity_lkp(
                 self._attrs[CONF_STATE][0], self._attrs[CONF_STATE][1]
             )
-            return master_state if master_state else MediaPlayerState.OFF
+            return master_state or MediaPlayerState.OFF
 
         return None
 
@@ -332,14 +333,14 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         if active_child := self._child_state:
             return active_child.state
 
-        return master_state if master_state else MediaPlayerState.OFF
+        return master_state or MediaPlayerState.OFF
 
     @property
     def volume_level(self):
         """Volume level of entity specified in attributes or active child."""
         try:
             return float(self._override_or_child_attr(ATTR_MEDIA_VOLUME_LEVEL))
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             return None
 
     @property
@@ -365,7 +366,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
     @property
     def media_image_url(self):
         """Image url of current playing media."""
-        return self._child_attr(ATTR_ENTITY_PICTURE)
+        return self._override_or_child_attr(ATTR_ENTITY_PICTURE)
 
     @property
     def entity_picture(self):
@@ -533,7 +534,7 @@ class UniversalMediaPlayer(MediaPlayerEntity):
         return flags
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         active_child = self._child_state
         return {ATTR_ACTIVE_CHILD: active_child.entity_id} if active_child else {}

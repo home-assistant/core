@@ -1,16 +1,27 @@
 """Alexa Devices tests configuration."""
 
+import asyncio
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from copy import deepcopy
+from unittest.mock import AsyncMock, MagicMock, patch
 
-from aioamazondevices.api import AmazonDevice, AmazonDeviceSensor
-from aioamazondevices.const import DEVICE_TYPE_TO_MODEL
 import pytest
 
-from homeassistant.components.alexa_devices.const import CONF_LOGIN_DATA, DOMAIN
-from homeassistant.const import CONF_COUNTRY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.components.alexa_devices.const import (
+    CONF_LOGIN_DATA,
+    CONF_SITE,
+    DOMAIN,
+)
+from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import TEST_COUNTRY, TEST_PASSWORD, TEST_SERIAL_NUMBER, TEST_USERNAME
+from .const import (
+    TEST_DEVICE_1,
+    TEST_DEVICE_1_SN,
+    TEST_PASSWORD,
+    TEST_USER_ID,
+    TEST_USERNAME,
+    TEST_VOCAL_RECORD_INITIAL,
+)
 
 from tests.common import MockConfigEntry
 
@@ -39,35 +50,32 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         ),
     ):
         client = mock_client.return_value
-        client.login_mode_interactive.return_value = {
-            "customer_info": {"user_id": TEST_USERNAME},
+        client.login = AsyncMock()
+        client.login.login_mode_interactive.return_value = {
+            "customer_info": {"user_id": TEST_USER_ID},
+            CONF_SITE: "https://www.amazon.com",
         }
         client.get_devices_data.return_value = {
-            TEST_SERIAL_NUMBER: AmazonDevice(
-                account_name="Echo Test",
-                capabilities=["AUDIO_PLAYER", "MICROPHONE"],
-                device_family="mine",
-                device_type="echo",
-                device_owner_customer_id="amazon_ower_id",
-                device_cluster_members=[TEST_SERIAL_NUMBER],
-                online=True,
-                serial_number=TEST_SERIAL_NUMBER,
-                software_version="echo_test_software_version",
-                do_not_disturb=False,
-                response_style=None,
-                bluetooth_state=True,
-                entity_id="11111111-2222-3333-4444-555555555555",
-                appliance_id="G1234567890123456789012345678A",
-                sensors={
-                    "temperature": AmazonDeviceSensor(
-                        name="temperature", value="22.5", scale="CELSIUS"
-                    )
-                },
-            )
+            TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
-        client.get_model_details = lambda device: DEVICE_TYPE_TO_MODEL.get(
-            device.device_type
+        client.routines = ["Test Routine"]
+        client.sync_history_state = AsyncMock(
+            return_value={TEST_DEVICE_1_SN: TEST_VOCAL_RECORD_INITIAL}
         )
+        client.on_history_event = MagicMock()
+        client.on_volume_state_event = MagicMock()
+        client.on_media_state_event = MagicMock()
+        client.on_todo_event = MagicMock()
+
+        async def _start_http2_processing(*_args, **_kwargs) -> asyncio.Task[None]:
+            async def _completed_task() -> None:
+                return
+
+            return asyncio.create_task(_completed_task())
+
+        client.start_http2_processing = AsyncMock(side_effect=_start_http2_processing)
+        client.stop_http2_processing = AsyncMock()
+        client.send_sound_notification = AsyncMock()
         yield client
 
 
@@ -76,12 +84,16 @@ def mock_config_entry() -> MockConfigEntry:
     """Mock a config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
-        title="Amazon Test Account",
+        title=TEST_USERNAME,
         data={
-            CONF_COUNTRY: TEST_COUNTRY,
             CONF_USERNAME: TEST_USERNAME,
             CONF_PASSWORD: TEST_PASSWORD,
-            CONF_LOGIN_DATA: {"session": "test-session"},
+            CONF_LOGIN_DATA: {
+                "session": "test-session",
+                CONF_SITE: "https://www.amazon.com",
+            },
         },
-        unique_id=TEST_USERNAME,
+        unique_id=TEST_USER_ID,
+        version=1,
+        minor_version=3,
     )

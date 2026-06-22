@@ -1,9 +1,8 @@
 """Button support for Bravia TV."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.button import (
     ButtonDeviceClass,
@@ -53,8 +52,7 @@ async def async_setup_entry(
     assert unique_id is not None
 
     async_add_entities(
-        BraviaTVButton(coordinator, unique_id, config_entry.title, description)
-        for description in BUTTONS
+        BraviaTVButton(coordinator, unique_id, description) for description in BUTTONS
     )
 
 
@@ -67,14 +65,14 @@ class BraviaTVButton(BraviaTVEntity, ButtonEntity):
         self,
         coordinator: BraviaTVCoordinator,
         unique_id: str,
-        model: str,
         description: BraviaTVButtonDescription,
     ) -> None:
         """Initialize the button."""
-        super().__init__(coordinator, unique_id, model)
+        super().__init__(coordinator, unique_id)
         self._attr_unique_id = f"{unique_id}_{description.key}"
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Trigger the button action."""
         await self.entity_description.press_action(self.coordinator)

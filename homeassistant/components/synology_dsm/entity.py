@@ -1,11 +1,9 @@
 """Entities for Synology DSM."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -47,14 +45,16 @@ class SynologyDSMBaseEntity[_CoordinatorT: SynologyDSMUpdateCoordinator[Any]](
         self._api = api
         information = api.information
         network = api.network
-        assert information is not None
-        assert network is not None
+        if TYPE_CHECKING:
+            assert information is not None
+            assert network is not None
 
         self._attr_unique_id: str = (
             f"{information.serial}_{description.api_key}:{description.key}"
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, information.serial)},
+            connections={(CONNECTION_NETWORK_MAC, mac) for mac in network.macs},
             name=network.hostname,
             manufacturer="Synology",
             model=information.model,
@@ -94,14 +94,17 @@ class SynologyDSMDeviceEntity(
         information = api.information
         network = api.network
         external_usb = api.external_usb
-        assert information is not None
-        assert storage is not None
-        assert network is not None
+        if TYPE_CHECKING:
+            assert information is not None
+            assert storage is not None
+            assert network is not None
 
         if "volume" in description.key:
-            assert self._device_id is not None
+            if TYPE_CHECKING:
+                assert self._device_id is not None
             volume = storage.get_volume(self._device_id)
-            assert volume is not None
+            if TYPE_CHECKING:
+                assert volume is not None
             # Volume does not have a name
             self._device_name = volume["id"].replace("_", " ").capitalize()
             self._device_manufacturer = "Synology"
@@ -114,17 +117,20 @@ class SynologyDSMDeviceEntity(
                 .replace("shr", "SHR")
             )
         elif "disk" in description.key:
-            assert self._device_id is not None
+            if TYPE_CHECKING:
+                assert self._device_id is not None
             disk = storage.get_disk(self._device_id)
-            assert disk is not None
+            if TYPE_CHECKING:
+                assert disk is not None
             self._device_name = disk["name"]
             self._device_manufacturer = disk["vendor"]
             self._device_model = disk["model"].strip()
             self._device_firmware = disk["firm"]
             self._device_type = disk["diskType"]
         elif "device" in description.key:
-            assert self._device_id is not None
-            assert external_usb is not None
+            if TYPE_CHECKING:
+                assert self._device_id is not None
+                assert external_usb is not None
             for device in external_usb.get_devices.values():
                 if device.device_name == self._device_id:
                     self._device_name = device.device_name
@@ -133,8 +139,9 @@ class SynologyDSMDeviceEntity(
                     self._device_type = device.device_type
                     break
         elif "partition" in description.key:
-            assert self._device_id is not None
-            assert external_usb is not None
+            if TYPE_CHECKING:
+                assert self._device_id is not None
+                assert external_usb is not None
             for device in external_usb.get_devices.values():
                 for partition in device.device_partitions.values():
                     if partition.partition_title == self._device_id:

@@ -1,11 +1,11 @@
 {
   "entity": {
     "sensor": {
-      "purity": {
-        "default": "mdi:molecule-co2"
-      },
       "communication_quality": {
         "default": "mdi:wifi"
+      },
+      "purity": {
+        "default": "mdi:molecule-co2"
       },
       "valvetappet": {
         "default": "mdi:gauge"

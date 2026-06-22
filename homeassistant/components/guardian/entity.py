@@ -1,7 +1,5 @@
 """The Elexa Guardian integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -74,7 +72,7 @@ class ValveControllerEntity(GuardianEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.data[CONF_UID])},
             manufacturer="Elexa",
-            model=self._diagnostics_coordinator.data["firmware"],
+            sw_version=self._diagnostics_coordinator.data["firmware"],
             name=f"Guardian valve controller {entry.data[CONF_UID]}",
         )
         self._attr_unique_id = f"{entry.data[CONF_UID]}_{description.key}"

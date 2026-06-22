@@ -11,7 +11,7 @@ import pytest
 from homeassistant.components import tts
 from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_ID,
-    DOMAIN as DOMAIN_MP,
+    DOMAIN as MP_DOMAIN,
     SERVICE_PLAY_MEDIA,
 )
 from homeassistant.core import HomeAssistant
@@ -51,7 +51,7 @@ async def test_service_say(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test service call say."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     config = {tts.DOMAIN: {"platform": "marytts"}}
 
@@ -79,6 +79,7 @@ async def test_service_say(
             )
             == HTTPStatus.OK
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_speak.assert_called_once()
     mock_speak.assert_called_with("HomeAssistant", {})
@@ -90,7 +91,7 @@ async def test_service_say_with_effect(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test service call say with effects."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     config = {tts.DOMAIN: {"platform": "marytts", "effect": {"Volume": "amount:2.0;"}}}
 
@@ -118,6 +119,7 @@ async def test_service_say_with_effect(
             )
             == HTTPStatus.OK
         )
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     mock_speak.assert_called_once()
     mock_speak.assert_called_with("HomeAssistant", {"Volume": "amount:2.0;"})
@@ -129,7 +131,7 @@ async def test_service_say_http_error(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test service call say."""
-    calls = async_mock_service(hass, DOMAIN_MP, SERVICE_PLAY_MEDIA)
+    calls = async_mock_service(hass, MP_DOMAIN, SERVICE_PLAY_MEDIA)
 
     config = {tts.DOMAIN: {"platform": "marytts"}}
 

@@ -13,7 +13,7 @@ from urllib.parse import urljoin
 
 import voluptuous as vol
 from zabbix_utils import ItemValue, Sender, ZabbixAPI
-from zabbix_utils.exceptions import APIRequestError
+from zabbix_utils.exceptions import APIRequestError, ProcessingError
 
 from homeassistant.const import (
     CONF_HOST,
@@ -164,7 +164,7 @@ def setup(hass: HomeAssistant, config: ConfigType) -> bool:
             attribute_id = f"{entity_id}/{key}"
             try:
                 float_value = float(value)
-            except (ValueError, TypeError):
+            except ValueError, TypeError:
                 float_value = None
             if float_value is None or not math.isfinite(float_value):
                 # Don't store string attributes for now
@@ -282,6 +282,8 @@ class ZabbixThread(threading.Thread):
                     if not self.write_errors:
                         _LOGGER.error("Write error: %s", err)
                     self.write_errors += len(metrics)
+            except ProcessingError as prerr:
+                _LOGGER.error("Error writing to Zabbix: %s", prerr)
 
     def run(self) -> None:
         """Process incoming events."""

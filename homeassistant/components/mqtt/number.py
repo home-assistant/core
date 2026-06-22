@@ -1,7 +1,5 @@
 """Configure number in a device through MQTT topic."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 
@@ -16,6 +14,7 @@ from homeassistant.components.number import (
     NumberMode,
     RestoreNumber,
 )
+from homeassistant.components.sensor import AMBIGUOUS_UNITS
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
@@ -36,8 +35,12 @@ from .config import MQTT_RW_SCHEMA
 from .const import (
     CONF_COMMAND_TEMPLATE,
     CONF_COMMAND_TOPIC,
+    CONF_MAX,
+    CONF_MIN,
     CONF_PAYLOAD_RESET,
     CONF_STATE_TOPIC,
+    CONF_STEP,
+    DEFAULT_PAYLOAD_RESET,
 )
 from .entity import MqttEntity, async_setup_entity_entry_helper
 from .models import (
@@ -52,12 +55,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
-CONF_MIN = "min"
-CONF_MAX = "max"
-CONF_STEP = "step"
-
 DEFAULT_NAME = "MQTT Number"
-DEFAULT_PAYLOAD_RESET = "None"
 
 MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
     {
@@ -70,6 +68,12 @@ MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
 
 def validate_config(config: ConfigType) -> ConfigType:
     """Validate that the configuration is valid, throws if it isn't."""
+    if (
+        CONF_UNIT_OF_MEASUREMENT in config
+        and (unit_of_measurement := config[CONF_UNIT_OF_MEASUREMENT]) in AMBIGUOUS_UNITS
+    ):
+        config[CONF_UNIT_OF_MEASUREMENT] = AMBIGUOUS_UNITS[unit_of_measurement]
+
     if config[CONF_MIN] > config[CONF_MAX]:
         raise vol.Invalid(f"{CONF_MAX} must be >= {CONF_MIN}")
 

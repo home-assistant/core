@@ -1,7 +1,5 @@
 """Sensor component that handles additional Tomorrowio data for your location."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -197,7 +195,7 @@ SENSOR_TYPES = (
         attribute=TMRW_ATTR_PRECIPITATION_TYPE,
         value_map=PrecipitationType,
     ),
-    # Data comes in as ppb, convert to µg/m^3
+    # Data comes in as ppb, convert to μg/m^3
     # Molecular weight of Ozone is 48
     TomorrowioSensorEntityDescription(
         key="ozone",
@@ -221,7 +219,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.PM10,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Data comes in as ppb, convert to µg/m^3
+    # Data comes in as ppb, convert to μg/m^3
     # Molecular weight of Nitrogen Dioxide is 46.01
     TomorrowioSensorEntityDescription(
         key="nitrogen_dioxide",
@@ -240,7 +238,7 @@ SENSOR_TYPES = (
         device_class=SensorDeviceClass.CO,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    # Data comes in as ppb, convert to µg/m^3
+    # Data comes in as ppb, convert to μg/m^3
     # Molecular weight of Sulphur Dioxide is 64.07
     TomorrowioSensorEntityDescription(
         key="sulphur_dioxide",
@@ -331,6 +329,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
     entities = [
         TomorrowioSensorEntity(hass, config_entry, coordinator, 4, description)

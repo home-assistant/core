@@ -17,17 +17,19 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import ADDRESS, CART_DATA, LAST_ORDER_DATA, NEXT_DELIVERY_DATA, SLOT_DATA
 
+type PicnicConfigEntry = ConfigEntry[PicnicUpdateCoordinator]
+
 
 class PicnicUpdateCoordinator(DataUpdateCoordinator):
     """The coordinator to fetch data from the Picnic API at a set interval."""
 
-    config_entry: ConfigEntry
+    config_entry: PicnicConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         picnic_api_client: PicnicAPI,
-        config_entry: ConfigEntry,
+        config_entry: PicnicConfigEntry,
     ) -> None:
         """Initialize the coordinator with the given Picnic API client."""
         self.picnic_api_client = picnic_api_client
@@ -45,8 +47,6 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:
-            # Note: TimeoutError and aiohttp.ClientError are already
-            # handled by the data update coordinator.
             async with asyncio.timeout(10):
                 data = await self.hass.async_add_executor_job(self.fetch_data)
 
@@ -56,12 +56,19 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             raise UpdateFailed(f"API response was malformed: {error}") from error
         except PicnicAuthError as error:
             raise ConfigEntryAuthFailed from error
+        except TimeoutError as error:
+            raise UpdateFailed(
+                "Timeout while connecting to the Picnic API", retry_after=120
+            ) from error
 
         # Return the fetched data
         return data
 
     def fetch_data(self):
-        """Fetch the data from the Picnic API and return a flat dict with only needed sensor data."""
+        """Fetch data from the Picnic API.
+
+        Return a flat dict with only needed sensor data.
+        """
         # Fetch from the API and pre-process the data
         if not (cart := self.picnic_api_client.get_cart()):
             raise UpdateFailed("API response doesn't contain expected data.")
@@ -111,7 +118,8 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
 
         # Determine the last order and return an empty dict if there is none
         try:
-            # Filter on status CURRENT and select the last on the list which is the first one to be delivered
+            # Filter on status CURRENT and select the last
+            # on the list which is the first one to be delivered
             # Make a deepcopy because some references are local
             next_deliveries = list(
                 filter(lambda d: d["status"] == "CURRENT", deliveries)
@@ -120,8 +128,9 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                 copy.deepcopy(next_deliveries[-1]) if next_deliveries else {}
             )
             last_order = copy.deepcopy(deliveries[0]) if deliveries else {}
-        except (KeyError, TypeError):
-            # A KeyError or TypeError indicate that the response contains unexpected data
+        except KeyError, TypeError:
+            # A KeyError or TypeError indicate that the
+            # response contains unexpected data
             return {}, {}
 
         #  Get the next order's position details if there is an undelivered order
@@ -133,7 +142,8 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
                     next_delivery["delivery_id"]
                 )
 
-        # Determine the ETA, if available, the one from the delivery position API is more precise
+        # Determine the ETA, if available, the one from the
+        # delivery position API is more precise
         # but, it's only available shortly before the actual delivery.
         next_delivery["eta"] = delivery_position.get(
             "eta_window", next_delivery.get("eta2", {})

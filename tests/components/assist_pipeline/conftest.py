@@ -1,7 +1,5 @@
 """Test fixtures for voice assistant."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterable, Generator
 from pathlib import Path
 from typing import Any
@@ -9,7 +7,7 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from homeassistant.components import stt, tts, wake_word
+from homeassistant.components import conversation, stt, tts, wake_word
 from homeassistant.components.assist_pipeline import DOMAIN, select as assist_select
 from homeassistant.components.assist_pipeline.const import (
     BYTES_PER_CHUNK,
@@ -295,6 +293,11 @@ async def init_supporting_components(
     assert await async_setup_component(hass, tts.DOMAIN, {"tts": {"platform": "test"}})
     assert await async_setup_component(hass, stt.DOMAIN, {"stt": {"platform": "test"}})
     assert await async_setup_component(hass, "media_source", {})
+    assert await async_setup_component(hass, "conversation", {"conversation": {}})
+
+    # Disable fuzzy matching by default for tests
+    agent = conversation.async_get_agent(hass)
+    agent.fuzzy_matching = False
 
     config_entry = MockConfigEntry(domain="test")
     config_entry.add_to_hass(hass)
@@ -306,7 +309,7 @@ async def init_supporting_components(
 async def init_components(hass: HomeAssistant, init_supporting_components):
     """Initialize relevant components with empty configs."""
 
-    assert await async_setup_component(hass, "assist_pipeline", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
 
 @pytest.fixture

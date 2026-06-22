@@ -1,8 +1,5 @@
 """Websocket API for Z-Wave JS."""
 
-from __future__ import annotations
-
-import asyncio
 from collections.abc import Callable, Coroutine
 from contextlib import suppress
 import dataclasses
@@ -85,9 +82,7 @@ from .const import (
     ATTR_PARAMETERS,
     ATTR_WAIT_FOR_RESULT,
     CONF_DATA_COLLECTION_OPTED_IN,
-    CONF_INSTALLER_MODE,
     DOMAIN,
-    DRIVER_READY_TIMEOUT,
     EVENT_DEVICE_ADDED_TO_REGISTRY,
     LOGGER,
     USER_AGENT,
@@ -98,6 +93,7 @@ from .helpers import (
     async_get_node_from_device_id,
     async_get_provisioning_entry_from_device_id,
     async_get_version_info,
+    async_wait_for_driver_ready_event,
     get_device_id,
 )
 
@@ -477,7 +473,6 @@ def async_register_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_hard_reset_controller)
     websocket_api.async_register_command(hass, websocket_node_capabilities)
     websocket_api.async_register_command(hass, websocket_invoke_cc_api)
-    websocket_api.async_register_command(hass, websocket_get_integration_settings)
     websocket_api.async_register_command(hass, websocket_backup_nvm)
     websocket_api.async_register_command(hass, websocket_restore_nvm)
     hass.http.register_view(FirmwareUploadView(dr.async_get(hass)))
@@ -674,7 +669,8 @@ async def websocket_node_alerts(
                         "comments": [
                             {
                                 "level": "info",
-                                "text": "This device has been provisioned but is not yet included in the "
+                                "text": "This device has been provisioned"
+                                " but is not yet included in the "
                                 "network.",
                             }
                         ],
@@ -691,7 +687,9 @@ async def websocket_node_alerts(
         comments.append(
             {
                 "level": "warning",
-                "text": "This device is currently being interviewed and may not be fully operational.",
+                "text": "This device is currently being"
+                " interviewed and may not be fully"
+                " operational.",
             }
         )
     connection.send_result(
@@ -1102,13 +1100,7 @@ async def websocket_provision_smart_start_node(
         )
         return
 
-    provisioning_info = ProvisioningEntry(
-        dsk=qr_info.dsk,
-        security_classes=qr_info.security_classes,
-        requested_security_classes=qr_info.requested_security_classes,
-        protocol=msg.get(PROTOCOL),
-        additional_properties=qr_info.additional_properties,
-    )
+    additional_properties = qr_info.additional_properties or {}
 
     device = None
     # Create an empty device if device_name is provided
@@ -1144,12 +1136,17 @@ async def websocket_provision_smart_start_node(
         dev_reg.async_update_device(
             device.id, area_id=msg.get(AREA_ID), name_by_user=device_name
         )
+        additional_properties["device_id"] = device.id
 
-        if provisioning_info.additional_properties is None:
-            provisioning_info.additional_properties = {}
-        provisioning_info.additional_properties["device_id"] = device.id
-
-    await driver.controller.async_provision_smart_start_node(provisioning_info)
+    await driver.controller.async_provision_smart_start_node(
+        ProvisioningEntry(
+            dsk=qr_info.dsk,
+            security_classes=qr_info.security_classes,
+            requested_security_classes=qr_info.requested_security_classes,
+            protocol=msg.get(PROTOCOL),
+            additional_properties=additional_properties,
+        )
+    )
     if device:
         connection.send_result(msg[ID], device.id)
     else:
@@ -1756,16 +1753,21 @@ async def websocket_subscribe_rebuild_routes_progress(
         controller.on("rebuild routes done", partial(forward_event, "result")),
     ]
 
+    connection.send_result(msg[ID])
+
     if controller.rebuild_routes_progress:
-        connection.send_result(
-            msg[ID],
-            {
-                node.node_id: status
-                for node, status in controller.rebuild_routes_progress.items()
-            },
+        connection.send_message(
+            websocket_api.event_message(
+                msg[ID],
+                {
+                    "event": "rebuild routes progress",
+                    "rebuild_routes_status": {
+                        node.node_id: status
+                        for node, status in controller.rebuild_routes_progress.items()
+                    },
+                },
+            )
         )
-    else:
-        connection.send_result(msg[ID], None)
 
 
 @websocket_api.require_admin
@@ -2854,26 +2856,18 @@ async def websocket_hard_reset_controller(
             connection.send_result(msg[ID], device.id)
             async_cleanup()
 
-    @callback
-    def set_driver_ready(event: dict) -> None:
-        "Set the driver ready event."
-        wait_driver_ready.set()
-
-    wait_driver_ready = asyncio.Event()
-
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         async_dispatcher_connect(
             hass, EVENT_DEVICE_ADDED_TO_REGISTRY, _handle_device_added
         ),
-        driver.once("driver ready", set_driver_ready),
     ]
+
+    wait_for_driver_ready = async_wait_for_driver_ready_event(entry, driver)
 
     await driver.async_hard_reset()
 
     with suppress(TimeoutError):
-        async with asyncio.timeout(DRIVER_READY_TIMEOUT):
-            await wait_driver_ready.wait()
-
+        await wait_for_driver_ready()
     # When resetting the controller, the controller home id is also changed.
     # The controller state in the client is stale after resetting the controller,
     # so get the new home id with a new client using the helper function.
@@ -2886,14 +2880,14 @@ async def websocket_hard_reset_controller(
         # The stale unique id needs to be handled by a repair flow,
         # after the config entry has been reloaded.
         LOGGER.error(
-            "Failed to get server version, cannot update config entry"
+            "Failed to get server version, cannot update config entry "
             "unique id with new home id, after controller reset"
         )
     else:
         hass.config_entries.async_update_entry(
             entry, unique_id=str(version_info.home_id)
         )
-    await hass.config_entries.async_reload(entry.entry_id)
+    hass.config_entries.async_schedule_reload(entry.entry_id)
 
 
 @websocket_api.websocket_command(
@@ -2972,28 +2966,6 @@ async def websocket_invoke_cc_api(
             msg[ID],
             result,
         )
-
-
-@callback
-@websocket_api.require_admin
-@websocket_api.websocket_command(
-    {
-        vol.Required(TYPE): "zwave_js/get_integration_settings",
-    }
-)
-def websocket_get_integration_settings(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """Get Z-Wave JS integration wide configuration."""
-    connection.send_result(
-        msg[ID],
-        {
-            # list explicitly to avoid leaking other keys and to set default
-            CONF_INSTALLER_MODE: hass.data[DOMAIN].get(CONF_INSTALLER_MODE, False),
-        },
-    )
 
 
 @websocket_api.require_admin
@@ -3100,27 +3072,19 @@ async def websocket_restore_nvm(
             )
         )
 
-    @callback
-    def set_driver_ready(event: dict) -> None:
-        "Set the driver ready event."
-        wait_driver_ready.set()
-
-    wait_driver_ready = asyncio.Event()
-
     # Set up subscription for progress events
     connection.subscriptions[msg["id"]] = async_cleanup
     msg[DATA_UNSUBSCRIBE] = unsubs = [
         controller.on("nvm convert progress", forward_progress),
         controller.on("nvm restore progress", forward_progress),
-        driver.once("driver ready", set_driver_ready),
     ]
+
+    wait_for_driver_ready = async_wait_for_driver_ready_event(entry, driver)
 
     await controller.async_restore_nvm_base64(msg["data"], {"preserveRoutes": False})
 
     with suppress(TimeoutError):
-        async with asyncio.timeout(DRIVER_READY_TIMEOUT):
-            await wait_driver_ready.wait()
-
+        await wait_for_driver_ready()
     # When restoring the NVM to the controller, the controller home id is also changed.
     # The controller state in the client is stale after restoring the NVM,
     # so get the new home id with a new client using the helper function.
@@ -3133,14 +3097,13 @@ async def websocket_restore_nvm(
         # The stale unique id needs to be handled by a repair flow,
         # after the config entry has been reloaded.
         LOGGER.error(
-            "Failed to get server version, cannot update config entry"
+            "Failed to get server version, cannot update config entry "
             "unique id with new home id, after controller NVM restore"
         )
     else:
         hass.config_entries.async_update_entry(
             entry, unique_id=str(version_info.home_id)
         )
-
     await hass.config_entries.async_reload(entry.entry_id)
 
     connection.send_message(
@@ -3152,3 +3115,4 @@ async def websocket_restore_nvm(
         )
     )
     connection.send_result(msg[ID])
+    async_cleanup()

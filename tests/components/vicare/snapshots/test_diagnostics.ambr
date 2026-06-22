@@ -4711,14 +4711,32 @@
             'uri': 'https://api.viessmann-platform.io/iot/v1/equipment/installations/######/gateways/################/devices/0/features/heating.circuits.1.operating.modes',
           }),
         ]),
+        'device': dict({
+          'id': 'deviceId0',
+          'modelId': 'model0',
+          'roles': list([
+          ]),
+          'status': 'Online',
+          'type': None,
+        }),
+      }),
+      dict({
+        'data': list([
+        ]),
+        'device': dict({
+          'id': 'deviceId_unsupported',
+          'modelId': 'unsupported_model',
+          'roles': list([
+          ]),
+          'status': 'Online',
+          'type': None,
+        }),
       }),
     ]),
     'entry': dict({
       'data': dict({
-        'client_id': '**REDACTED**',
-        'heating_type': 'auto',
-        'password': '**REDACTED**',
-        'username': '**REDACTED**',
+        'auth_implementation': 'vicare',
+        'token': '**REDACTED**',
       }),
       'disabled_by': None,
       'discovery_keys': dict({
@@ -4735,7 +4753,7 @@
       ]),
       'title': 'Mock Title',
       'unique_id': 'ViCare',
-      'version': 1,
+      'version': 2,
     }),
   })
 # ---

@@ -6,9 +6,9 @@ from google_photos_library_api.exceptions import GooglePhotosApiError
 import pytest
 
 from homeassistant.components.google_photos.const import DOMAIN, UPLOAD_SCOPE
+from homeassistant.components.media_player import BrowseError
 from homeassistant.components.media_source import (
     URI_SCHEME,
-    BrowseError,
     async_browse_media,
     async_resolve_media,
 )
@@ -54,7 +54,7 @@ async def test_no_config_entries(
 async def test_no_read_scopes(
     hass: HomeAssistant,
 ) -> None:
-    """Test a media source with only write scopes configured so no media source exists."""
+    """Test media source with only write scopes has no media source."""
     browse = await async_browse_media(hass, f"{URI_SCHEME}{DOMAIN}")
     assert browse.domain == DOMAIN
     assert browse.identifier is None

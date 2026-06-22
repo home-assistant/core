@@ -1,7 +1,5 @@
 """A pool for sqlite connections."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import threading
@@ -12,6 +10,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.pool import (
     ConnectionPoolEntry,
     NullPool,
+    PoolProxiedConnection,
     SingletonThreadPool,
     StaticPool,
 )
@@ -118,6 +117,12 @@ class RecorderPool(SingletonThreadPool, NullPool):
             core_behavior=ReportBehavior.LOG,
         )
         return NullPool._create_connection(self)  # noqa: SLF001
+
+    def connect(self) -> PoolProxiedConnection:
+        """Return a connection from the pool."""
+        if threading.get_ident() in self.recorder_and_worker_thread_ids:
+            return super().connect()
+        return NullPool.connect(self)
 
 
 class MutexPool(StaticPool):

@@ -68,9 +68,10 @@ ask_question:
       required: true
       selector:
         entity:
-          domain: assist_satellite
-          supported_features:
-            - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
+          filter:
+            domain: assist_satellite
+            supported_features:
+              - assist_satellite.AssistSatelliteEntityFeature.START_CONVERSATION
     question:
       required: false
       example: "What kind of music would you like to play?"

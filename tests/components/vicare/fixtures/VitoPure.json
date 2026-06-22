@@ -4,358 +4,52 @@
       "apiVersion": 1,
       "commands": {},
       "deviceId": "0",
-      "feature": "ventilation",
+      "feature": "device.messages.info.raw",
       "gatewayId": "################",
       "isEnabled": true,
       "isReady": true,
       "properties": {
-        "active": {
-          "type": "boolean",
-          "value": true
+        "entries": {
+          "type": "array",
+          "value": []
         }
       },
-      "timestamp": "2024-12-17T07:50:28.062Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation"
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/device.messages.info.raw"
     },
     {
       "apiVersion": 1,
       "commands": {},
       "deviceId": "0",
-      "feature": "ventilation.levels.levelFour",
+      "feature": "device.messages.service.raw",
       "gatewayId": "################",
-      "isEnabled": false,
+      "isEnabled": true,
       "isReady": true,
-      "properties": {},
-      "timestamp": "2024-12-17T08:16:15.525Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.levels.levelFour"
+      "properties": {
+        "entries": {
+          "type": "array",
+          "value": []
+        }
+      },
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/device.messages.service.raw"
     },
     {
       "apiVersion": 1,
       "commands": {},
       "deviceId": "0",
-      "feature": "ventilation.levels.levelOne",
-      "gatewayId": "################",
-      "isEnabled": false,
-      "isReady": true,
-      "properties": {},
-      "timestamp": "2024-12-17T08:16:15.525Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.levels.levelOne"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {},
-      "deviceId": "0",
-      "feature": "ventilation.levels.levelThree",
-      "gatewayId": "################",
-      "isEnabled": false,
-      "isReady": true,
-      "properties": {},
-      "timestamp": "2024-12-17T08:16:15.525Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.levels.levelThree"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {},
-      "deviceId": "0",
-      "feature": "ventilation.levels.levelTwo",
-      "gatewayId": "################",
-      "isEnabled": false,
-      "isReady": true,
-      "properties": {},
-      "timestamp": "2024-12-17T08:16:15.525Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.levels.levelTwo"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {},
-      "deviceId": "0",
-      "feature": "ventilation.operating.modes.filterChange",
+      "feature": "device.messages.status.raw",
       "gatewayId": "################",
       "isEnabled": true,
       "isReady": true,
       "properties": {
-        "active": {
-          "type": "boolean",
-          "value": false
+        "entries": {
+          "type": "array",
+          "value": []
         }
       },
-      "timestamp": "2024-12-17T07:50:28.062Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.filterChange"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {
-        "setLevel": {
-          "isExecutable": true,
-          "name": "setLevel",
-          "params": {
-            "level": {
-              "constraints": {
-                "enum": ["levelOne", "levelTwo", "levelThree", "levelFour"]
-              },
-              "required": true,
-              "type": "string"
-            }
-          },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.permanent/commands/setLevel"
-        }
-      },
-      "deviceId": "0",
-      "feature": "ventilation.operating.modes.permanent",
-      "gatewayId": "################",
-      "isEnabled": true,
-      "isReady": true,
-      "properties": {
-        "active": {
-          "type": "boolean",
-          "value": false
-        }
-      },
-      "timestamp": "2024-12-17T13:24:03.411Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.permanent"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {},
-      "deviceId": "0",
-      "feature": "ventilation.operating.modes.sensorDriven",
-      "gatewayId": "################",
-      "isEnabled": true,
-      "isReady": true,
-      "properties": {
-        "active": {
-          "type": "boolean",
-          "value": true
-        }
-      },
-      "timestamp": "2024-12-17T08:16:15.525Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.sensorDriven"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {},
-      "deviceId": "0",
-      "feature": "ventilation.operating.modes.ventilation",
-      "gatewayId": "################",
-      "isEnabled": true,
-      "isReady": true,
-      "properties": {
-        "active": {
-          "type": "boolean",
-          "value": false
-        }
-      },
-      "timestamp": "2024-12-17T07:50:28.062Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.ventilation"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {},
-      "deviceId": "0",
-      "feature": "ventilation.operating.programs.active",
-      "gatewayId": "################",
-      "isEnabled": true,
-      "isReady": true,
-      "properties": {
-        "value": {
-          "type": "string",
-          "value": "levelTwo"
-        }
-      },
-      "timestamp": "2024-12-17T13:24:03.411Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.programs.active"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {
-        "activate": {
-          "isExecutable": true,
-          "name": "activate",
-          "params": {
-            "timeout": {
-              "constraints": {
-                "max": 1440,
-                "min": 1,
-                "stepping": 1
-              },
-              "required": false,
-              "type": "number"
-            }
-          },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour/commands/activate"
-        },
-        "deactivate": {
-          "isExecutable": true,
-          "name": "deactivate",
-          "params": {},
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour/commands/deactivate"
-        },
-        "setDefaultRuntime": {
-          "isExecutable": true,
-          "name": "setDefaultRuntime",
-          "params": {
-            "defaultRuntime": {
-              "constraints": {
-                "max": 1440,
-                "min": 1,
-                "stepping": 1
-              },
-              "required": true,
-              "type": "number"
-            }
-          },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour/commands/setDefaultRuntime"
-        },
-        "setTimeout": {
-          "isExecutable": true,
-          "name": "setTimeout",
-          "params": {
-            "timeout": {
-              "constraints": {
-                "max": 1440,
-                "min": 1,
-                "stepping": 1
-              },
-              "required": true,
-              "type": "number"
-            }
-          },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour/commands/setTimeout"
-        }
-      },
-      "deviceId": "0",
-      "feature": "ventilation.quickmodes.forcedLevelFour",
-      "gatewayId": "################",
-      "isEnabled": true,
-      "isReady": true,
-      "properties": {
-        "active": {
-          "type": "boolean",
-          "value": false
-        },
-        "defaultRuntime": {
-          "type": "number",
-          "unit": "minutes",
-          "value": 30
-        },
-        "isActiveWritable": {
-          "type": "boolean",
-          "value": true
-        }
-      },
-      "timestamp": "2024-12-17T13:24:04.515Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {
-        "activate": {
-          "isExecutable": true,
-          "name": "activate",
-          "params": {
-            "timeout": {
-              "constraints": {
-                "max": 1440,
-                "min": 1,
-                "stepping": 1
-              },
-              "required": false,
-              "type": "number"
-            }
-          },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent/commands/activate"
-        },
-        "deactivate": {
-          "isExecutable": true,
-          "name": "deactivate",
-          "params": {},
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent/commands/deactivate"
-        },
-        "setDefaultRuntime": {
-          "isExecutable": true,
-          "name": "setDefaultRuntime",
-          "params": {
-            "defaultRuntime": {
-              "constraints": {
-                "max": 1440,
-                "min": 1,
-                "stepping": 1
-              },
-              "required": true,
-              "type": "number"
-            }
-          },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent/commands/setDefaultRuntime"
-        },
-        "setTimeout": {
-          "isExecutable": true,
-          "name": "setTimeout",
-          "params": {
-            "timeout": {
-              "constraints": {
-                "max": 1440,
-                "min": 1,
-                "stepping": 1
-              },
-              "required": true,
-              "type": "number"
-            }
-          },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent/commands/setTimeout"
-        }
-      },
-      "deviceId": "0",
-      "feature": "ventilation.quickmodes.silent",
-      "gatewayId": "################",
-      "isEnabled": true,
-      "isReady": true,
-      "properties": {
-        "active": {
-          "type": "boolean",
-          "value": false
-        },
-        "defaultRuntime": {
-          "type": "number",
-          "unit": "minutes",
-          "value": 30
-        },
-        "isActiveWritable": {
-          "type": "boolean",
-          "value": true
-        }
-      },
-      "timestamp": "2024-12-17T13:24:04.515Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent"
-    },
-    {
-      "apiVersion": 1,
-      "commands": {
-        "activate": {
-          "isExecutable": true,
-          "name": "activate",
-          "params": {},
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.standby/commands/activate"
-        },
-        "deactivate": {
-          "isExecutable": true,
-          "name": "deactivate",
-          "params": {},
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.standby/commands/deactivate"
-        }
-      },
-      "deviceId": "0",
-      "feature": "ventilation.quickmodes.standby",
-      "gatewayId": "################",
-      "isEnabled": true,
-      "isReady": true,
-      "properties": {
-        "active": {
-          "type": "boolean",
-          "value": true
-        }
-      },
-      "timestamp": "2024-12-17T13:24:04.515Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.standby"
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/device.messages.status.raw"
     },
     {
       "apiVersion": 1,
@@ -376,25 +70,20 @@
           }
         }
       },
-      "timestamp": "2024-12-17T07:50:28.062Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/device.productIdentification"
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/device.productIdentification"
     },
     {
       "apiVersion": 1,
       "commands": {},
       "deviceId": "0",
-      "feature": "device.messages.errors.raw",
+      "feature": "device.setDefaultValues",
       "gatewayId": "################",
       "isEnabled": true,
       "isReady": true,
-      "properties": {
-        "entries": {
-          "type": "array",
-          "value": []
-        }
-      },
-      "timestamp": "2024-12-17T07:50:28.062Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/device.messages.errors.raw"
+      "properties": {},
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/device.setDefaultValues"
     },
     {
       "apiVersion": 1,
@@ -418,13 +107,13 @@
               "type": "string"
             }
           },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/device.time.daylightSaving/commands/activate"
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/device.time.daylightSaving/commands/activate"
         },
         "deactivate": {
           "isExecutable": true,
           "name": "deactivate",
           "params": {},
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/device.time.daylightSaving/commands/deactivate"
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/device.time.daylightSaving/commands/deactivate"
         }
       },
       "deviceId": "0",
@@ -438,8 +127,25 @@
           "value": false
         }
       },
-      "timestamp": "2024-12-17T07:50:28.062Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/device.time.daylightSaving"
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/device.time.daylightSaving"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "device.variant",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "Vitopure350"
+        }
+      },
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/device.variant"
     },
     {
       "apiVersion": 1,
@@ -455,12 +161,43 @@
           "value": "################"
         }
       },
-      "timestamp": "2024-12-17T07:50:28.062Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/heating.boiler.serial"
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/heating.boiler.serial"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {
+        "setTime": {
+          "isExecutable": true,
+          "name": "setTime",
+          "params": {
+            "value": {
+              "constraints": {
+                "regEx": "^[0-9]{4}-((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01])|(0[469]|11)-(0[1-9]|[12][0-9]|30)|(02)-(0[1-9]|[12][0-9]))T(0[0-9]|1[0-9]|2[0-3]):(0[0-9]|[1-5][0-9]):(0[0-9]|[1-5][0-9])$"
+              },
+              "required": true,
+              "type": "string"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/heating.device.time/commands/setTime"
+        }
+      },
+      "deviceId": "0",
+      "feature": "heating.device.time",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {},
+      "timestamp": "2025-11-05T07:52:28.632Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/heating.device.time"
     },
     {
       "apiVersion": 1,
       "commands": {},
+      "deprecated": {
+        "info": "replaced by device.variant",
+        "removalDate": "2025-03-15"
+      },
       "deviceId": "0",
       "feature": "heating.device.variant",
       "gatewayId": "################",
@@ -472,8 +209,215 @@
           "value": "Vitopure350"
         }
       },
-      "timestamp": "2024-12-17T07:50:28.062Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/heating.device.variant"
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/heating.device.variant"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "tcu.wifi",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "strength": {
+          "type": "number",
+          "unit": "",
+          "value": -41
+        }
+      },
+      "timestamp": "2025-11-05T07:55:06.737Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/tcu.wifi"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.control.filterChange",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.control.filterChange"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.fan.supply",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "current": {
+          "type": "number",
+          "unit": "rotationPerMinute",
+          "value": 555
+        },
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "target": {
+          "type": "number",
+          "unit": "rotationPerMinute",
+          "value": 585
+        }
+      },
+      "timestamp": "2025-11-05T07:54:56.887Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.fan.supply"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.fan.supply.runtime",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "number",
+          "unit": "hour",
+          "value": 819
+        }
+      },
+      "timestamp": "2025-11-05T07:20:49.877Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.fan.supply.runtime"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.features.co",
+      "gatewayId": "################",
+      "isEnabled": false,
+      "isReady": true,
+      "properties": {},
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.features.co"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.features.co2",
+      "gatewayId": "################",
+      "isEnabled": false,
+      "isReady": true,
+      "properties": {},
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.features.co2"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.features.dust",
+      "gatewayId": "################",
+      "isEnabled": false,
+      "isReady": true,
+      "properties": {},
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.features.dust"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.features.finedust",
+      "gatewayId": "################",
+      "isEnabled": false,
+      "isReady": true,
+      "properties": {},
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.features.finedust"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.features.organicComponent",
+      "gatewayId": "################",
+      "isEnabled": false,
+      "isReady": true,
+      "properties": {},
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.features.organicComponent"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.filter.pollution.blocked",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "percent",
+          "value": 5
+        }
+      },
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.filter.pollution.blocked"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.filter.runtime",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "operatingHours": {
+          "type": "number",
+          "unit": "hours",
+          "value": 5795
+        },
+        "overdueHours": {
+          "type": "number",
+          "unit": "hours",
+          "value": 0
+        },
+        "remainingHours": {
+          "type": "number",
+          "unit": "hours",
+          "value": 2965
+        }
+      },
+      "timestamp": "2025-11-05T07:37:23.452Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.filter.runtime"
     },
     {
       "apiVersion": 1,
@@ -490,13 +434,13 @@
               "type": "string"
             }
           },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.active/commands/setMode"
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.active/commands/setMode"
         },
         "setModeContinuousSensorOverride": {
           "isExecutable": false,
           "name": "setModeContinuousSensorOverride",
           "params": {},
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.active/commands/setModeContinuousSensorOverride"
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.active/commands/setModeContinuousSensorOverride"
         }
       },
       "deviceId": "0",
@@ -510,8 +454,108 @@
           "value": "sensorDriven"
         }
       },
-      "timestamp": "2024-12-17T08:16:15.525Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.active"
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.active"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.operating.modes.filterChange",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.filterChange"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {
+        "setLevel": {
+          "isExecutable": true,
+          "name": "setLevel",
+          "params": {
+            "level": {
+              "constraints": {
+                "enum": ["levelOne", "levelTwo", "levelThree", "levelFour"]
+              },
+              "required": true,
+              "type": "string"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.permanent/commands/setLevel"
+        }
+      },
+      "deviceId": "0",
+      "feature": "ventilation.operating.modes.permanent",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "timestamp": "2025-11-04T22:45:12.663Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.permanent"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.operating.modes.sensorDriven",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.sensorDriven"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.operating.modes.ventilation",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.modes.ventilation"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.operating.programs.active",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "value": {
+          "type": "string",
+          "value": "levelTwo"
+        }
+      },
+      "timestamp": "2025-11-04T22:45:12.663Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.programs.active"
     },
     {
       "apiVersion": 1,
@@ -532,20 +576,224 @@
         },
         "reason": {
           "type": "string",
-          "value": "standby"
+          "value": "sensorDriven"
         }
       },
-      "timestamp": "2024-12-17T13:24:04.515Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.state"
+      "timestamp": "2025-11-04T22:45:13.754Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.operating.state"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {
+        "activate": {
+          "isExecutable": true,
+          "name": "activate",
+          "params": {
+            "timeout": {
+              "constraints": {
+                "max": 1440,
+                "min": 1,
+                "stepping": 1
+              },
+              "required": false,
+              "type": "number"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour/commands/activate"
+        },
+        "deactivate": {
+          "isExecutable": true,
+          "name": "deactivate",
+          "params": {},
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour/commands/deactivate"
+        },
+        "setDefaultRuntime": {
+          "isExecutable": true,
+          "name": "setDefaultRuntime",
+          "params": {
+            "defaultRuntime": {
+              "constraints": {
+                "max": 1440,
+                "min": 1,
+                "stepping": 1
+              },
+              "required": true,
+              "type": "number"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour/commands/setDefaultRuntime"
+        },
+        "setTimeout": {
+          "isExecutable": true,
+          "name": "setTimeout",
+          "params": {
+            "timeout": {
+              "constraints": {
+                "max": 1440,
+                "min": 1,
+                "stepping": 1
+              },
+              "required": true,
+              "type": "number"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour/commands/setTimeout"
+        }
+      },
+      "deviceId": "0",
+      "feature": "ventilation.quickmodes.forcedLevelFour",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "defaultRuntime": {
+          "type": "number",
+          "unit": "minutes",
+          "value": 30
+        },
+        "isCommandExecutable": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2025-11-04T22:45:12.663Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.forcedLevelFour"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {
+        "activate": {
+          "isExecutable": true,
+          "name": "activate",
+          "params": {
+            "timeout": {
+              "constraints": {
+                "max": 1440,
+                "min": 1,
+                "stepping": 1
+              },
+              "required": false,
+              "type": "number"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent/commands/activate"
+        },
+        "deactivate": {
+          "isExecutable": true,
+          "name": "deactivate",
+          "params": {},
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent/commands/deactivate"
+        },
+        "setDefaultRuntime": {
+          "isExecutable": true,
+          "name": "setDefaultRuntime",
+          "params": {
+            "defaultRuntime": {
+              "constraints": {
+                "max": 1440,
+                "min": 1,
+                "stepping": 1
+              },
+              "required": true,
+              "type": "number"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent/commands/setDefaultRuntime"
+        },
+        "setTimeout": {
+          "isExecutable": true,
+          "name": "setTimeout",
+          "params": {
+            "timeout": {
+              "constraints": {
+                "max": 1440,
+                "min": 1,
+                "stepping": 1
+              },
+              "required": true,
+              "type": "number"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent/commands/setTimeout"
+        }
+      },
+      "deviceId": "0",
+      "feature": "ventilation.quickmodes.silent",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        },
+        "defaultRuntime": {
+          "type": "number",
+          "unit": "minutes",
+          "value": 30
+        },
+        "isCommandExecutable": {
+          "type": "boolean",
+          "value": true
+        }
+      },
+      "timestamp": "2025-11-04T22:45:12.663Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.silent"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {
+        "activate": {
+          "isExecutable": true,
+          "name": "activate",
+          "params": {},
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.standby/commands/activate"
+        },
+        "deactivate": {
+          "isExecutable": true,
+          "name": "deactivate",
+          "params": {},
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.standby/commands/deactivate"
+        },
+        "setActive": {
+          "isExecutable": true,
+          "name": "setActive",
+          "params": {
+            "active": {
+              "constraints": {},
+              "required": true,
+              "type": "boolean"
+            }
+          },
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.standby/commands/setActive"
+        }
+      },
+      "deviceId": "0",
+      "feature": "ventilation.quickmodes.standby",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "active": {
+          "type": "boolean",
+          "value": false
+        }
+      },
+      "timestamp": "2025-11-04T21:27:15.790Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.quickmodes.standby"
     },
     {
       "apiVersion": 1,
       "commands": {
         "resetSchedule": {
-          "isExecutable": false,
+          "isExecutable": true,
           "name": "resetSchedule",
           "params": {},
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.schedule/commands/resetSchedule"
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.schedule/commands/resetSchedule"
         },
         "setSchedule": {
           "isExecutable": true,
@@ -563,7 +811,7 @@
               "type": "Schedule"
             }
           },
-          "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.schedule/commands/setSchedule"
+          "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.schedule/commands/setSchedule"
         }
       },
       "deviceId": "0",
@@ -638,8 +886,188 @@
           }
         }
       },
-      "timestamp": "2024-12-17T07:50:28.062Z",
-      "uri": "https://api.viessmann.com/iot/v1/features/installations/#######/gateways/################/devices/0/features/ventilation.schedule"
+      "timestamp": "2025-11-03T11:07:19.646Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.schedule"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.sensors.airBorneDust.pm1",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "microgrammsPerCubicMeter",
+          "value": 0.1
+        }
+      },
+      "timestamp": "2025-11-05T07:37:37.153Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.sensors.airBorneDust.pm1"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.sensors.airBorneDust.pm10",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "microgrammsPerCubicMeter",
+          "value": 0.5
+        }
+      },
+      "timestamp": "2025-11-05T07:51:36.966Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.sensors.airBorneDust.pm10"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.sensors.airBorneDust.pm2d5",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "microgrammsPerCubicMeter",
+          "value": 0.3
+        }
+      },
+      "timestamp": "2025-11-05T07:46:52.511Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.sensors.airBorneDust.pm2d5"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.sensors.airBorneDust.pm4",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "microgrammsPerCubicMeter",
+          "value": 0.4
+        }
+      },
+      "timestamp": "2025-11-05T07:47:07.330Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.sensors.airBorneDust.pm4"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deprecated": {
+        "info": "replaced by ventilation.airQuality.abstract",
+        "removalDate": "2024-09-15"
+      },
+      "deviceId": "0",
+      "feature": "ventilation.sensors.airQuality",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "",
+          "value": 49
+        }
+      },
+      "timestamp": "2025-11-05T07:34:04.585Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.sensors.airQuality"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.sensors.humidity.supply",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "percent",
+          "value": 59
+        }
+      },
+      "timestamp": "2025-11-05T02:32:43.812Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.sensors.humidity.supply"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.sensors.temperature.supply",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "celsius",
+          "value": 20.8
+        }
+      },
+      "timestamp": "2025-11-05T07:32:48.488Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.sensors.temperature.supply"
+    },
+    {
+      "apiVersion": 1,
+      "commands": {},
+      "deviceId": "0",
+      "feature": "ventilation.sensors.volatileOrganicCompounds",
+      "gatewayId": "################",
+      "isEnabled": true,
+      "isReady": true,
+      "properties": {
+        "status": {
+          "type": "string",
+          "value": "connected"
+        },
+        "value": {
+          "type": "number",
+          "unit": "",
+          "value": 148
+        }
+      },
+      "timestamp": "2025-11-05T07:44:08.861Z",
+      "uri": "https://api.viessmann-climatesolutions.com/iot/v2/features/installations/#######/gateways/################/devices/0/features/ventilation.sensors.volatileOrganicCompounds"
     }
   ]
 }

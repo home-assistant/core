@@ -1,7 +1,5 @@
 """Support for APCUPSd via its Network Information Server (NIS)."""
 
-from __future__ import annotations
-
 from typing import Final
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
@@ -9,7 +7,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
 
-PLATFORMS: Final = (Platform.BINARY_SENSOR, Platform.SENSOR)
+PLATFORMS: Final = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
 async def async_setup_entry(

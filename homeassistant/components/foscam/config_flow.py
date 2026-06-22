@@ -1,6 +1,6 @@
 """Config flow for foscam integration."""
 
-from typing import Any
+from typing import Any, override
 
 from libpyfoscamcgi import FoscamCamera
 from libpyfoscamcgi.foscamcgi import (
@@ -26,7 +26,7 @@ from .const import CONF_RTSP_PORT, CONF_STREAM, DOMAIN, LOGGER
 STREAMS = ["Main", "Sub"]
 
 DEFAULT_PORT = 88
-DEFAULT_RTSP_PORT = 554
+DEFAULT_RTSP_PORT = 88
 
 
 DATA_SCHEMA = vol.Schema(
@@ -92,6 +92,7 @@ class FoscamConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=name, data=data)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

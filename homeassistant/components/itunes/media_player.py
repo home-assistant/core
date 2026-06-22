@@ -1,8 +1,6 @@
 """Support for interfacing to iTunes API."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -239,11 +237,13 @@ class ItunesDevice(MediaPlayerEntity):
         self.shuffled = _shuffle == "songs"
 
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return self._name
 
     @property
+    @override
     def state(self):
         """Return the state of the device."""
         if self.player_state == "offline" or self.player_state is None:
@@ -288,21 +288,25 @@ class ItunesDevice(MediaPlayerEntity):
             self._add_entities(new_devices)
 
     @property
+    @override
     def is_volume_muted(self):
         """Boolean if volume is currently muted."""
         return self.muted
 
     @property
+    @override
     def volume_level(self):
         """Volume level of the media player (0..1)."""
         return self.current_volume / 100.0
 
     @property
+    @override
     def media_content_id(self):
         """Content ID of current playing media."""
         return self.content_id
 
     @property
+    @override
     def media_image_url(self):
         """Image url of current playing media."""
         if (
@@ -322,65 +326,78 @@ class ItunesDevice(MediaPlayerEntity):
         )
 
     @property
+    @override
     def media_title(self):
         """Title of current playing media."""
         return self.current_title
 
     @property
+    @override
     def media_artist(self):
         """Artist of current playing media (Music track only)."""
         return self.current_artist
 
     @property
+    @override
     def media_album_name(self):
         """Album of current playing media (Music track only)."""
         return self.current_album
 
     @property
+    @override
     def media_playlist(self):
         """Title of the currently playing playlist."""
         return self.current_playlist
 
     @property
+    @override
     def shuffle(self):
         """Boolean if shuffle is enabled."""
         return self.shuffled
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         response = self.client.set_volume(int(volume * 100))
         self.update_state(response)
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute (true) or unmute (false) media player."""
         response = self.client.set_muted(mute)
         self.update_state(response)
 
+    @override
     def set_shuffle(self, shuffle: bool) -> None:
         """Shuffle (true) or no shuffle (false) media player."""
         response = self.client.set_shuffle(shuffle)
         self.update_state(response)
 
+    @override
     def media_play(self) -> None:
         """Send media_play command to media player."""
         response = self.client.play()
         self.update_state(response)
 
+    @override
     def media_pause(self) -> None:
         """Send media_pause command to media player."""
         response = self.client.pause()
         self.update_state(response)
 
+    @override
     def media_next_track(self) -> None:
         """Send media_next command to media player."""
         response = self.client.next()
         self.update_state(response)
 
+    @override
     def media_previous_track(self) -> None:
         """Send media_previous command media player."""
         response = self.client.previous()
         self.update_state(response)
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -389,6 +406,7 @@ class ItunesDevice(MediaPlayerEntity):
             response = self.client.play_playlist(media_id)
             self.update_state(response)
 
+    @override
     def turn_off(self) -> None:
         """Turn the media player off."""
         response = self.client.stop()
@@ -446,12 +464,14 @@ class AirPlayDevice(MediaPlayerEntity):
             self.supports_video = state_hash.get("supports_video", None)
 
     @property
+    @override
     def name(self):
         """Return the name of the device."""
         return self.device_name
 
     @property
-    def icon(self):
+    @override
+    def icon(self) -> str:
         """Return the icon to use in the frontend, if any."""
         if self.selected is True:
             return "mdi:volume-high"
@@ -459,6 +479,7 @@ class AirPlayDevice(MediaPlayerEntity):
         return "mdi:volume-off"
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self.selected is True:
@@ -470,16 +491,19 @@ class AirPlayDevice(MediaPlayerEntity):
         """Retrieve latest state."""
 
     @property
+    @override
     def volume_level(self):
         """Return the volume."""
         return float(self.volume) / 100.0
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         volume = int(volume * 100)
         response = self.client.set_volume_airplay_device(self._id, volume)
         self.update_state(response)
 
+    @override
     def turn_on(self) -> None:
         """Select AirPlay."""
         self.update_state({"selected": True})
@@ -487,6 +511,7 @@ class AirPlayDevice(MediaPlayerEntity):
         response = self.client.toggle_airplay_device(self._id, True)
         self.update_state(response)
 
+    @override
     def turn_off(self) -> None:
         """Deselect AirPlay."""
         self.update_state({"selected": False})

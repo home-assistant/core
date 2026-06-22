@@ -1,7 +1,5 @@
 """Class representing Sonos favorites."""
 
-from __future__ import annotations
-
 from collections.abc import Iterator
 import logging
 import re
@@ -72,7 +70,7 @@ class SonosFavorites(SonosHouseholdCoordinator):
         """Process the event payload in an async lock and update entities."""
         event_id = event.variables["favorites_update_id"]
         container_ids = event.variables["container_update_i_ds"]
-        if not (match := re.search(r"FV:2,(\d+)", container_ids)):
+        if not container_ids or not (match := re.search(r"FV:2,(\d+)", container_ids)):
             return
 
         container_id = int(match.group(1))

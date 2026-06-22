@@ -1,7 +1,5 @@
 """Services for Google Mail integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING
 
@@ -51,7 +49,7 @@ async def _extract_gmail_config_entries(
 ) -> list[GoogleMailConfigEntry]:
     return [
         entry
-        for entry_id in await async_extract_config_entry_ids(call.hass, call)
+        for entry_id in await async_extract_config_entry_ids(call)
         if (entry := call.hass.config_entries.async_get_entry(entry_id))
         and entry.domain == DOMAIN
     ]

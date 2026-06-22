@@ -1,7 +1,5 @@
 """Support for Tailscale binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -12,13 +10,14 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
+from .coordinator import TailscaleConfigEntry
 from .entity import TailscaleEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -41,16 +40,6 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
         translation_key="key_expiry_disabled",
         entity_category=EntityCategory.DIAGNOSTIC,
         is_on_fn=lambda device: device.key_expiry_disabled,
-    ),
-    TailscaleBinarySensorEntityDescription(
-        key="client_supports_hair_pinning",
-        translation_key="client_supports_hair_pinning",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda device: (
-            device.client_connectivity.client_supports.hair_pinning
-            if device.client_connectivity is not None
-            else None
-        ),
     ),
     TailscaleBinarySensorEntityDescription(
         key="client_supports_ipv6",
@@ -107,11 +96,11 @@ BINARY_SENSORS: tuple[TailscaleBinarySensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: TailscaleConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a Tailscale binary sensors based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
     async_add_entities(
         TailscaleBinarySensorEntity(
             coordinator=coordinator,

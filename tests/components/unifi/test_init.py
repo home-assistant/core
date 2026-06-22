@@ -39,7 +39,7 @@ async def test_setup_entry_fails_config_entry_not_ready(
     ):
         config_entry = await config_entry_factory()
 
-    assert config_entry.state == ConfigEntryState.SETUP_RETRY
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_setup_entry_fails_trigger_reauth_flow(
@@ -56,7 +56,7 @@ async def test_setup_entry_fails_trigger_reauth_flow(
         config_entry = await config_entry_factory()
         mock_flow_init.assert_called_once()
 
-    assert config_entry.state == ConfigEntryState.SETUP_ERROR
+    assert config_entry.state is ConfigEntryState.SETUP_ERROR
 
 
 @pytest.mark.parametrize(
@@ -178,13 +178,13 @@ async def test_remove_config_entry_device(
     assert await async_setup_component(hass, "config", {})
     ws_client = await hass_ws_client(hass)
 
-    # Try to remove an active client from UI: not allowed
+    # Try to remove an active client from UI: allowed
     device_entry = device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
     )
     response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
-    assert not response["success"]
-    assert device_registry.async_get_device(
+    assert response["success"]
+    assert not device_registry.async_get_device(
         connections={(dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"])}
     )
 

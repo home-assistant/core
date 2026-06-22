@@ -8,13 +8,12 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import WallConnectorData
-from .const import DOMAIN, WALLCONNECTOR_DATA_VITALS
+from .const import WALLCONNECTOR_DATA_VITALS
+from .coordinator import WallConnectorConfigEntry, WallConnectorData
 from .entity import WallConnectorEntity, WallConnectorLambdaValueGetterMixin
 
 _LOGGER = logging.getLogger(__name__)
@@ -47,11 +46,11 @@ WALL_CONNECTOR_SENSORS = [
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WallConnectorConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create the Wall Connector sensor devices."""
-    wall_connector_data = hass.data[DOMAIN][config_entry.entry_id]
+    wall_connector_data = config_entry.runtime_data
 
     all_entities = [
         WallConnectorBinarySensorEntity(wall_connector_data, description)
@@ -64,6 +63,8 @@ async def async_setup_entry(
 class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):
     """Wall Connector Sensor Entity."""
 
+    entity_description: WallConnectorBinarySensorDescription
+
     def __init__(
         self,
         wall_connectord_data: WallConnectorData,
@@ -74,7 +75,7 @@ class WallConnectorBinarySensorEntity(WallConnectorEntity, BinarySensorEntity):
         super().__init__(wall_connectord_data)
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return the state of the sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data)

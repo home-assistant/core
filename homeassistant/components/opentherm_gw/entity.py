@@ -31,7 +31,6 @@ class OpenThermEntity(Entity):
     """Represent an OpenTherm entity."""
 
     _attr_has_entity_name = True
-    _attr_should_poll = False
     entity_description: OpenThermEntityDescription
 
     def __init__(
@@ -42,7 +41,11 @@ class OpenThermEntity(Entity):
         """Initialize the entity."""
         self.entity_description = description
         self._gateway = gw_hub
-        self._attr_unique_id = f"{gw_hub.hub_id}-{description.device_description.device_identifier}-{description.key}"
+        self._attr_unique_id = (
+            f"{gw_hub.hub_id}"
+            f"-{description.device_description.device_identifier}"
+            f"-{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             identifiers={
                 (
@@ -60,6 +63,8 @@ class OpenThermEntity(Entity):
 
 class OpenThermStatusEntity(OpenThermEntity):
     """Represent an OpenTherm entity that receives status updates."""
+
+    _attr_should_poll = False
 
     async def async_added_to_hass(self) -> None:
         """Subscribe to updates from the component."""

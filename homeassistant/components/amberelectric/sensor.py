@@ -4,9 +4,7 @@
 # Current and forecast will create general, controlled load and feed in as required
 # At the moment renewables in the only grid sensor.
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from amberelectric.models.channel import ChannelType
 from amberelectric.models.current_interval import CurrentInterval
@@ -23,14 +21,10 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTRIBUTION
-from .coordinator import AmberConfigEntry, AmberUpdateCoordinator, normalize_descriptor
+from .coordinator import AmberConfigEntry, AmberUpdateCoordinator
+from .helpers import format_cents_to_dollars, normalize_descriptor
 
 UNIT = f"{CURRENCY_DOLLAR}/{UnitOfEnergy.KILO_WATT_HOUR}"
-
-
-def format_cents_to_dollars(cents: float) -> float:
-    """Return a formatted conversion from cents to dollars."""
-    return round(cents / 100, 2)
 
 
 def friendly_channel_type(channel_type: str) -> str:
@@ -68,6 +62,7 @@ class AmberPriceSensor(AmberSensor):
     """Amber Price Sensor."""
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the current price in $/kWh."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
@@ -77,6 +72,7 @@ class AmberPriceSensor(AmberSensor):
         return format_cents_to_dollars(interval.per_kwh)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional pieces of information about the price."""
         interval = self.coordinator.data[self.entity_description.key][self.channel_type]
@@ -110,6 +106,7 @@ class AmberForecastSensor(AmberSensor):
     """Amber Forecast Sensor."""
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the first forecast price in $/kWh."""
         intervals = self.coordinator.data[self.entity_description.key].get(
@@ -124,6 +121,7 @@ class AmberForecastSensor(AmberSensor):
         return format_cents_to_dollars(interval.per_kwh)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return additional pieces of information about the price."""
         intervals = self.coordinator.data[self.entity_description.key].get(
@@ -166,6 +164,7 @@ class AmberPriceDescriptorSensor(AmberSensor):
     """Amber Price Descriptor Sensor."""
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the current price descriptor."""
         return self.coordinator.data[self.entity_description.key][self.channel_type]  # type: ignore[no-any-return]
@@ -188,6 +187,7 @@ class AmberGridSensor(CoordinatorEntity[AmberUpdateCoordinator], SensorEntity):
         self._attr_unique_id = f"{coordinator.site_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value of the sensor."""
         return self.coordinator.data["grid"][self.entity_description.key]  # type: ignore[no-any-return]

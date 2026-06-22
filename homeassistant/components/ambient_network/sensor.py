@@ -1,8 +1,7 @@
 """Support for Ambient Weather Network sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -106,7 +105,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="daily_rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
     ),
     SensorEntityDescription(
@@ -150,7 +149,7 @@ SENSOR_DESCRIPTIONS = (
         key=TYPE_LIGHTNING_PER_DAY,
         translation_key="lightning_strikes_per_day",
         native_unit_of_measurement="strikes",
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -182,7 +181,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="monthly_rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
@@ -229,7 +228,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="weekly_rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
@@ -262,7 +261,7 @@ SENSOR_DESCRIPTIONS = (
         translation_key="yearly_rain",
         native_unit_of_measurement=UnitOfPrecipitationDepth.INCHES,
         device_class=SensorDeviceClass.PRECIPITATION,
-        state_class=SensorStateClass.TOTAL,
+        state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
         entity_registry_enabled_default=False,
     ),
@@ -301,6 +300,7 @@ class AmbientNetworkSensor(AmbientNetworkEntity, SensorEntity):
         """Initialize a sensor object."""
         super().__init__(coordinator, description, mac_address)
 
+    @override
     def _update_attrs(self) -> None:
         """Update sensor attributes."""
         value = self.coordinator.data.get(self.entity_description.key)

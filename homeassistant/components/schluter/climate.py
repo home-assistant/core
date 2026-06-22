@@ -1,7 +1,5 @@
 """Support for Schluter thermostats."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -62,6 +60,7 @@ async def async_setup_platform(
     coordinator = DataUpdateCoordinator(
         hass,
         _LOGGER,
+        config_entry=None,
         name="schluter",
         update_method=async_update_data,
         update_interval=SCAN_INTERVAL,
@@ -89,19 +88,15 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         self._serial_number = serial_number
         self._api = api
         self._session_id = session_id
+        self._attr_unique_id = serial_number
 
     @property
-    def unique_id(self):
-        """Return unique ID for this device."""
-        return self._serial_number
-
-    @property
-    def name(self):
+    def name(self) -> str:
         """Return the name of the thermostat."""
         return self.coordinator.data[self._serial_number].name
 
     @property
-    def current_temperature(self):
+    def current_temperature(self) -> float:
         """Return the current temperature."""
         return self.coordinator.data[self._serial_number].temperature
 
@@ -113,7 +108,7 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         return HVACAction.IDLE
 
     @property
-    def target_temperature(self):
+    def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.coordinator.data[self._serial_number].set_point_temp
 
@@ -140,5 +135,6 @@ class SchluterThermostat(CoordinatorEntity, ClimateEntity):
         try:
             if target_temp is not None:
                 self._api.set_temperature(self._session_id, serial_number, target_temp)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except RequestException as ex:
             _LOGGER.error("An error occurred while setting temperature: %s", ex)

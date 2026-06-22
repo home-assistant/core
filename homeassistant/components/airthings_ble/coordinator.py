@@ -1,22 +1,27 @@
 """The Airthings BLE integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from airthings_ble import AirthingsBluetoothDeviceData, AirthingsDevice
 from bleak.backends.device import BLEDevice
 from bleak_retry_connector import close_stale_connections_by_address
 
 from homeassistant.components import bluetooth
+from homeassistant.components.bluetooth import BluetoothReachabilityIntent
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+from .const import (
+    DEFAULT_SCAN_INTERVAL,
+    DEVICE_MODEL,
+    DEVICE_SPECIFIC_SCAN_INTERVAL,
+    DOMAIN,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -34,14 +39,21 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
         self.airthings = AirthingsBluetoothDeviceData(
             _LOGGER, hass.config.units is METRIC_SYSTEM
         )
+
+        device_model = entry.data.get(DEVICE_MODEL)
+        interval = DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+            device_model, DEFAULT_SCAN_INTERVAL
+        )
+
         super().__init__(
             hass,
             _LOGGER,
             config_entry=entry,
             name=DOMAIN,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=timedelta(seconds=interval),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         address = self.config_entry.unique_id
@@ -54,15 +66,43 @@ class AirthingsBLEDataUpdateCoordinator(DataUpdateCoordinator[AirthingsDevice]):
 
         if not ble_device:
             raise ConfigEntryNotReady(
-                f"Could not find Airthings device with address {address}"
+                translation_domain=DOMAIN,
+                translation_key="device_not_found",
+                translation_placeholders={
+                    "address": address,
+                    "reason": bluetooth.async_address_reachability_diagnostics(
+                        self.hass,
+                        address.upper(),
+                        BluetoothReachabilityIntent.CONNECTION,
+                    ),
+                },
             )
         self.ble_device = ble_device
 
+        if DEVICE_MODEL not in self.config_entry.data:
+            _LOGGER.debug("Fetching device info for migration")
+            try:
+                data = await self.airthings.update_device(self.ble_device)
+            except Exception as err:
+                raise UpdateFailed(
+                    f"Unable to fetch data for migration: {err}"
+                ) from err
+
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={**self.config_entry.data, DEVICE_MODEL: data.model.value},
+            )
+            self.update_interval = timedelta(
+                seconds=DEVICE_SPECIFIC_SCAN_INTERVAL.get(
+                    data.model.value, DEFAULT_SCAN_INTERVAL
+                )
+            )
+
+    @override
     async def _async_update_data(self) -> AirthingsDevice:
         """Get data from Airthings BLE."""
         try:
             data = await self.airthings.update_device(self.ble_device)
         except Exception as err:
             raise UpdateFailed(f"Unable to fetch data: {err}") from err
-
         return data

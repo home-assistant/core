@@ -10,10 +10,12 @@ See https://modelcontextprotocol.io/docs/concepts/architecture#implementation-ex
 from collections.abc import Callable, Sequence
 import json
 import logging
-from typing import Any
+from typing import Any, cast
 
 from mcp import types
 from mcp.server import Server
+from mcp.server.lowlevel.helper_types import ReadResourceContents
+from pydantic import AnyUrl
 import voluptuous as vol
 from voluptuous_openapi import convert
 
@@ -24,6 +26,16 @@ from homeassistant.helpers import llm
 from .const import STATELESS_LLM_API
 
 _LOGGER = logging.getLogger(__name__)
+
+SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
+SNAPSHOT_RESOURCE_URL = AnyUrl(SNAPSHOT_RESOURCE_URI)
+SNAPSHOT_RESOURCE_MIME_TYPE = "text/plain"
+LIVE_CONTEXT_TOOL_NAME = "GetLiveContext"
+
+
+def _has_live_context_tool(llm_api: llm.APIInstance) -> bool:
+    """Return if the selected API exposes the live context tool."""
+    return any(tool.name == LIVE_CONTEXT_TOOL_NAME for tool in llm_api.tools)
 
 
 def _format_tool(
@@ -59,7 +71,7 @@ async def create_server(
         # Backwards compatibility with old MCP Server config
         return await llm.async_get_api(hass, llm_api_id, llm_context)
 
-    @server.list_prompts()  # type: ignore[no-untyped-call, misc]
+    @server.list_prompts()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_list_prompts() -> list[types.Prompt]:
         llm_api = await get_api_instance()
         return [
@@ -69,7 +81,7 @@ async def create_server(
             )
         ]
 
-    @server.get_prompt()  # type: ignore[no-untyped-call, misc]
+    @server.get_prompt()  # type: ignore[no-untyped-call,untyped-decorator]
     async def handle_get_prompt(
         name: str, arguments: dict[str, str] | None
     ) -> types.GetPromptResult:
@@ -90,13 +102,54 @@ async def create_server(
             ],
         )
 
-    @server.list_tools()  # type: ignore[no-untyped-call, misc]
+    @server.list_resources()  # type: ignore[no-untyped-call,untyped-decorator]
+    async def handle_list_resources() -> list[types.Resource]:
+        llm_api = await get_api_instance()
+        if not _has_live_context_tool(llm_api):
+            return []
+
+        return [
+            types.Resource(
+                uri=SNAPSHOT_RESOURCE_URL,
+                name="assist_context_snapshot",
+                title="Assist context snapshot",
+                description=(
+                    "A snapshot of the current Assist context, matching the"
+                    " existing GetLiveContext tool output."
+                ),
+                mimeType=SNAPSHOT_RESOURCE_MIME_TYPE,
+            )
+        ]
+
+    @server.read_resource()  # type: ignore[no-untyped-call,untyped-decorator]
+    async def handle_read_resource(uri: AnyUrl) -> Sequence[ReadResourceContents]:
+        if str(uri) != SNAPSHOT_RESOURCE_URI:
+            raise ValueError(f"Unknown resource: {uri}")
+
+        llm_api = await get_api_instance()
+        if not _has_live_context_tool(llm_api):
+            raise ValueError(f"Unknown resource: {uri}")
+
+        tool_response = await llm_api.async_call_tool(
+            llm.ToolInput(tool_name=LIVE_CONTEXT_TOOL_NAME, tool_args={})
+        )
+        if not tool_response.get("success"):
+            raise HomeAssistantError(cast(str, tool_response["error"]))
+
+        return [
+            ReadResourceContents(
+                content=cast(str, tool_response["result"]),
+                mime_type=SNAPSHOT_RESOURCE_MIME_TYPE,
+            )
+        ]
+
+    @server.list_tools()  # type: ignore[no-untyped-call,untyped-decorator]
     async def list_tools() -> list[types.Tool]:
         """List available time tools."""
         llm_api = await get_api_instance()
         return [_format_tool(tool, llm_api.custom_serializer) for tool in llm_api.tools]
 
-    @server.call_tool()  # type: ignore[no-untyped-call, misc]
+    @server.call_tool()  # type: ignore[untyped-decorator]
     async def call_tool(name: str, arguments: dict) -> Sequence[types.TextContent]:
         """Handle calling tools."""
         llm_api = await get_api_instance()
@@ -110,7 +163,7 @@ async def create_server(
         return [
             types.TextContent(
                 type="text",
-                text=json.dumps(tool_response),
+                text=json.dumps(tool_response, ensure_ascii=False),
             )
         ]
 

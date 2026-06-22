@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import lock, mqtt
+from homeassistant.components import lock
 from homeassistant.components.lock import (
     SERVICE_LOCK,
     SERVICE_OPEN,
@@ -13,6 +13,7 @@ from homeassistant.components.lock import (
     LockEntityFeature,
     LockState,
 )
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.lock import MQTT_LOCK_ATTRIBUTES_BLOCKED
 from homeassistant.const import (
     ATTR_ASSUMED_STATE,
@@ -58,11 +59,11 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {lock.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {lock.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 CONFIG_WITH_STATES = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         lock.DOMAIN: {
             "name": "test",
             "state_topic": "state-topic",
@@ -75,6 +76,7 @@ CONFIG_WITH_STATES = {
             "state_opening": "opening",
             "state_unlocked": "unlocked",
             "state_unlocking": "unlocking",
+            "state_jammed": "jammed",
         }
     }
 }
@@ -89,6 +91,7 @@ CONFIG_WITH_STATES = {
         (CONFIG_WITH_STATES, "opening", LockState.OPENING),
         (CONFIG_WITH_STATES, "unlocked", LockState.UNLOCKED),
         (CONFIG_WITH_STATES, "unlocking", LockState.UNLOCKING),
+        (CONFIG_WITH_STATES, "jammed", LockState.JAMMED),
     ],
 )
 async def test_controlling_state_via_topic(
@@ -110,6 +113,12 @@ async def test_controlling_state_via_topic(
 
     state = hass.states.get("lock.test")
     assert state.state == lock_state
+
+    async_fire_mqtt_message(hass, "state-topic", "None")
+    await hass.async_block_till_done()
+
+    state = hass.states.get("lock.test")
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
@@ -316,7 +325,7 @@ async def test_controlling_non_default_state_via_topic_and_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lock.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -343,7 +352,9 @@ async def test_sending_mqtt_commands_and_optimistic(
         lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "LOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.LOCKED
@@ -353,7 +364,9 @@ async def test_sending_mqtt_commands_and_optimistic(
         lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "UNLOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.UNLOCKED
@@ -364,7 +377,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lock.DOMAIN: {
                     "name": "test",
                     "code_format": "^\\d{4}$",
@@ -398,7 +411,7 @@ async def test_sending_mqtt_commands_with_template(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", '{ "LOCK": "1234" }', 0, False
+        "command-topic", '{ "LOCK": "1234" }', 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
@@ -413,7 +426,7 @@ async def test_sending_mqtt_commands_with_template(
     )
 
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", '{ "UNLOCK": "1234" }', 0, False
+        "command-topic", '{ "UNLOCK": "1234" }', 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
@@ -425,7 +438,7 @@ async def test_sending_mqtt_commands_with_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lock.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -454,7 +467,9 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
         lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "LOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.LOCKED
@@ -464,7 +479,9 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
         lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "UNLOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.UNLOCKED
@@ -475,7 +492,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lock.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -504,7 +521,9 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
         lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "LOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.LOCKED
@@ -514,7 +533,9 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
         lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "UNLOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.UNLOCKED
@@ -524,7 +545,9 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
         lock.DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OPEN", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.OPEN
@@ -535,7 +558,7 @@ async def test_sending_mqtt_commands_support_open_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lock.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -566,7 +589,9 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
         lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "LOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.LOCKED
@@ -576,7 +601,9 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
         lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "UNLOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.UNLOCKED
@@ -586,7 +613,9 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
         lock.DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OPEN", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("lock.test")
     assert state.state == LockState.OPEN
@@ -597,7 +626,7 @@ async def test_sending_mqtt_commands_support_open_and_explicit_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lock.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -630,7 +659,9 @@ async def test_sending_mqtt_commands_pessimistic(
         lock.DOMAIN, SERVICE_LOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "LOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # receive state from lock
@@ -644,7 +675,9 @@ async def test_sending_mqtt_commands_pessimistic(
         lock.DOMAIN, SERVICE_UNLOCK, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "UNLOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "UNLOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # receive state from lock
@@ -658,7 +691,9 @@ async def test_sending_mqtt_commands_pessimistic(
         lock.DOMAIN, SERVICE_OPEN, {ATTR_ENTITY_ID: "lock.test"}, blocking=True
     )
 
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OPEN", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OPEN", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # receive state from lock
@@ -674,7 +709,9 @@ async def test_sending_mqtt_commands_pessimistic(
     )
 
     # Go to locking state
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "LOCK", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "LOCK", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
 
     # receive locking state from lock
@@ -799,7 +836,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 lock.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -1017,7 +1054,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         lock.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][lock.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][lock.DOMAIN],
         topic,
         value,
         attribute,
@@ -1111,6 +1148,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

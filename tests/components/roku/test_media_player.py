@@ -30,12 +30,11 @@ from homeassistant.components.media_player import (
 from homeassistant.components.roku.const import (
     ATTR_CONTENT_ID,
     ATTR_FORMAT,
-    ATTR_KEYWORD,
     ATTR_MEDIA_TYPE,
     DEFAULT_PLAY_MEDIA_APP_ID,
     DOMAIN,
-    SERVICE_SEARCH,
 )
+from homeassistant.components.roku.services import ATTR_KEYWORD, SERVICE_SEARCH
 from homeassistant.components.stream import FORMAT_CONTENT_TYPE, HLS_PROVIDER
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.const import (
@@ -60,7 +59,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.core_config import async_process_ha_core_config
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
@@ -68,7 +71,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 MAIN_ENTITY_ID = f"{MP_DOMAIN}.my_roku_3"
-TV_ENTITY_ID = f"{MP_DOMAIN}.58_onn_roku_tv"
+TV_ENTITY_ID = f"{MP_DOMAIN}.living_room_58_onn_roku_tv"
 
 
 async def test_setup(
@@ -100,7 +103,7 @@ async def test_setup(
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "7.5.0"
     assert device_entry.hw_version == "4200X"
-    assert device_entry.suggested_area is None
+    assert device_entry.area_id is None
 
 
 @pytest.mark.parametrize("mock_device", ["roku/roku3-idle.json"], indirect=True)
@@ -118,6 +121,7 @@ async def test_idle_setup(
 @pytest.mark.parametrize("mock_device", ["roku/rokutv-7820x.json"], indirect=True)
 async def test_tv_setup(
     hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     init_integration: MockConfigEntry,
@@ -146,7 +150,9 @@ async def test_tv_setup(
     assert device_entry.entry_type is None
     assert device_entry.sw_version == "9.2.0"
     assert device_entry.hw_version == "7820X"
-    assert device_entry.suggested_area == "Living room"
+    assert (
+        device_entry.area_id == area_registry.async_get_area_by_name("Living room").id
+    )
 
 
 @pytest.mark.parametrize(
@@ -654,7 +660,9 @@ async def test_services_play_media_local_source(
         {
             ATTR_ENTITY_ID: MAIN_ENTITY_ID,
             ATTR_MEDIA_CONTENT_TYPE: "video/mp4",
-            ATTR_MEDIA_CONTENT_ID: "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4",
+            ATTR_MEDIA_CONTENT_ID: (
+                "media-source://media_source/local/Epic Sax Guy 10 Hours.mp4"
+            ),
         },
         blocking=True,
     )
@@ -802,7 +810,8 @@ async def test_media_browse_internal(
     client = await hass_ws_client(hass)
 
     with patch(
-        "homeassistant.helpers.network._get_request_host", return_value="example.local"
+        "homeassistant.helpers.network._get_request_host_port",
+        return_value=("example.local", 8123),
     ):
         await client.send_json(
             {

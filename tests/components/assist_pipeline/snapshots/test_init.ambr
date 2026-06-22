@@ -17,6 +17,11 @@
     }),
     dict({
       'data': dict({
+        'audio_processing': dict({
+          'prefers_auto_gain_enabled': True,
+          'prefers_noise_reduction_enabled': True,
+          'requires_external_vad': True,
+        }),
         'engine': 'stt.mock_stt',
         'metadata': dict({
           'bit_rate': <AudioBitRates.BITRATE_16: 16>,
@@ -45,6 +50,7 @@
         'intent_input': 'test transcript',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -75,6 +81,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -117,6 +124,11 @@
     }),
     dict({
       'data': dict({
+        'audio_processing': dict({
+          'prefers_auto_gain_enabled': True,
+          'prefers_noise_reduction_enabled': True,
+          'requires_external_vad': True,
+        }),
         'engine': 'stt.mock_stt',
         'metadata': dict({
           'bit_rate': <AudioBitRates.BITRATE_16: 16>,
@@ -145,6 +157,7 @@
         'intent_input': 'test transcript',
         'language': 'en-US',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -175,6 +188,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'test',
         'language': 'en-US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -217,6 +231,11 @@
     }),
     dict({
       'data': dict({
+        'audio_processing': dict({
+          'prefers_auto_gain_enabled': True,
+          'prefers_noise_reduction_enabled': True,
+          'requires_external_vad': True,
+        }),
         'engine': 'test',
         'metadata': dict({
           'bit_rate': <AudioBitRates.BITRATE_16: 16>,
@@ -245,6 +264,7 @@
         'intent_input': 'test transcript',
         'language': 'en-US',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -275,6 +295,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'test',
         'language': 'en-US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -341,6 +362,11 @@
     }),
     dict({
       'data': dict({
+        'audio_processing': dict({
+          'prefers_auto_gain_enabled': True,
+          'prefers_noise_reduction_enabled': True,
+          'requires_external_vad': True,
+        }),
         'engine': 'stt.mock_stt',
         'metadata': dict({
           'bit_rate': <AudioBitRates.BITRATE_16: 16>,
@@ -369,6 +395,7 @@
         'intent_input': 'test transcript',
         'language': 'en',
         'prefer_local_intents': False,
+        'satellite_id': None,
       }),
       'type': <PipelineEventType.INTENT_START: 'intent-start'>,
     }),
@@ -399,6 +426,7 @@
     }),
     dict({
       'data': dict({
+        'acknowledge_override': False,
         'engine': 'tts.test',
         'language': 'en_US',
         'tts_input': "Sorry, I couldn't understand that",
@@ -441,6 +469,11 @@
     }),
     dict({
       'data': dict({
+        'audio_processing': dict({
+          'prefers_auto_gain_enabled': True,
+          'prefers_noise_reduction_enabled': True,
+          'requires_external_vad': True,
+        }),
         'engine': 'stt.mock_stt',
         'metadata': dict({
           'bit_rate': <AudioBitRates.BITRATE_16: 16>,

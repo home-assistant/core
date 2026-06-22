@@ -1,8 +1,7 @@
 """Configuration for HEOS tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterator
+from ipaddress import ip_address
 from unittest.mock import Mock, patch
 
 from pyheos import (
@@ -25,7 +24,6 @@ from pyheos import (
     const,
 )
 import pytest
-import pytest_asyncio
 
 from homeassistant.components.heos import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
@@ -39,6 +37,7 @@ from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_UDN,
     SsdpServiceInfo,
 )
+from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
 from . import MockHeos
 
@@ -79,7 +78,7 @@ def new_heos_mock_fixture(controller: MockHeos) -> Iterator[Mock]:
         yield new_mock
 
 
-@pytest_asyncio.fixture(name="controller", autouse=True)
+@pytest.fixture(name="controller", autouse=True)
 async def controller_fixture(
     players: dict[int, HeosPlayer],
     favorites: dict[int, MediaItem],
@@ -281,6 +280,36 @@ def discovery_data_fixture_bedroom() -> SsdpServiceInfo:
             ATTR_UPNP_SERIAL: None,
             ATTR_UPNP_UDN: "uuid:e61de70c-2250-1c22-0080-0005cdf512be",
         },
+    )
+
+
+@pytest.fixture(name="zeroconf_discovery_data")
+def zeroconf_discovery_data_fixture() -> ZeroconfServiceInfo:
+    """Return mock discovery data for testing."""
+    host = "127.0.0.1"
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        port=10101,
+        hostname=host,
+        type="mock_type",
+        name="MyDenon._heos-audio._tcp.local.",
+        properties={},
+    )
+
+
+@pytest.fixture(name="zeroconf_discovery_data_bedroom")
+def zeroconf_discovery_data_fixture_bedroom() -> ZeroconfServiceInfo:
+    """Return mock discovery data for testing."""
+    host = "127.0.0.2"
+    return ZeroconfServiceInfo(
+        ip_address=ip_address(host),
+        ip_addresses=[ip_address(host)],
+        port=10101,
+        hostname=host,
+        type="mock_type",
+        name="MyDenonBedroom._heos-audio._tcp.local.",
+        properties={},
     )
 
 

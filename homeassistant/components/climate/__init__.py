@@ -1,11 +1,9 @@
 """Provides functionality to interact with climate devices."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import functools as ft
 import logging
-from typing import Any, Literal, final
+from typing import Any, Literal, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -49,6 +47,7 @@ from .const import (  # noqa: F401
     ATTR_SWING_HORIZONTAL_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
+    ATTR_TARGET_HUMIDITY_STEP,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
@@ -234,6 +233,7 @@ CACHED_PROPERTIES_WITH_ATTR_ = {
     "max_temp",
     "min_humidity",
     "max_humidity",
+    "target_humidity_step",
 }
 
 
@@ -249,13 +249,14 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             ATTR_MAX_TEMP,
             ATTR_MIN_HUMIDITY,
             ATTR_MAX_HUMIDITY,
+            ATTR_TARGET_HUMIDITY_STEP,
             ATTR_TARGET_TEMP_STEP,
             ATTR_PRESET_MODES,
         }
     )
 
     entity_description: ClimateEntityDescription
-    _attr_current_humidity: int | None = None
+    _attr_current_humidity: float | None = None
     _attr_current_temperature: float | None = None
     _attr_fan_mode: str | None
     _attr_fan_modes: list[str] | None
@@ -275,6 +276,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     _attr_swing_horizontal_mode: str | None
     _attr_swing_horizontal_modes: list[str] | None
     _attr_target_humidity: float | None = None
+    _attr_target_humidity_step: int | None = None
     _attr_target_temperature_high: float | None
     _attr_target_temperature_low: float | None
     _attr_target_temperature_step: float | None = None
@@ -283,6 +285,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return the current state."""
         hvac_mode = self.hvac_mode
@@ -303,6 +306,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return PRECISION_WHOLE
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return the capability attributes."""
         supported_features = self.supported_features
@@ -323,6 +327,9 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             data[ATTR_MIN_HUMIDITY] = self.min_humidity
             data[ATTR_MAX_HUMIDITY] = self.max_humidity
 
+            if self.target_humidity_step is not None:
+                data[ATTR_TARGET_HUMIDITY_STEP] = self.target_humidity_step
+
         if ClimateEntityFeature.FAN_MODE in supported_features:
             data[ATTR_FAN_MODES] = self.fan_modes
 
@@ -339,6 +346,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         supported_features = self.supported_features
@@ -696,6 +704,7 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             await self.async_turn_off()
 
     @cached_property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features
@@ -727,6 +736,11 @@ class ClimateEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     def max_humidity(self) -> float:
         """Return the maximum humidity."""
         return self._attr_max_humidity
+
+    @cached_property
+    def target_humidity_step(self) -> int | None:
+        """Return the supported step of humidity."""
+        return self._attr_target_humidity_step
 
 
 async def async_service_humidity_set(

@@ -1,17 +1,16 @@
 """Config flow for DoorBird integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from doorbirdpy import DoorBird
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_IGNORE,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -19,8 +18,10 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.helpers.typing import VolDictType
 
@@ -52,6 +53,8 @@ def _schema_with_defaults(
         {
             vol.Required(CONF_HOST, default=host): str,
             **AUTH_VOL_DICT,
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Optional(CONF_NAME, default=name): str,
         }
     )
@@ -103,6 +106,44 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the DoorBird config flow."""
         self.discovery_schema: vol.Schema | None = None
 
+    async def _async_verify_existing_device_for_discovery(
+        self,
+        existing_entry: ConfigEntry,
+        host: str,
+        macaddress: str,
+    ) -> None:
+        """Verify discovered device matches existing entry before updating IP.
+
+        This method performs the following verification steps:
+        1. Ensures that the stored credentials work before updating the entry.
+        2. Verifies that the device at the discovered IP
+           address has the expected MAC address.
+        """
+        info, errors = await self._async_validate_or_error(
+            {
+                **existing_entry.data,
+                CONF_HOST: host,
+            }
+        )
+
+        if errors:
+            _LOGGER.debug(
+                "Cannot validate DoorBird at %s with existing credentials: %s",
+                host,
+                errors,
+            )
+            raise AbortFlow("cannot_connect")
+
+        # Verify the MAC address matches what was advertised
+        if format_mac(info["mac_addr"]) != format_mac(macaddress):
+            _LOGGER.debug(
+                "DoorBird at %s reports MAC %s but zeroconf advertised %s, ignoring",
+                host,
+                info["mac_addr"],
+                macaddress,
+            )
+            raise AbortFlow("wrong_device")
+
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
     ) -> ConfigFlowResult:
@@ -140,6 +181,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -157,6 +199,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
         data = self.discovery_schema or _schema_with_defaults()
         return self.async_show_form(step_id="user", data_schema=data, errors=errors)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -172,7 +215,25 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
         await self.async_set_unique_id(macaddress)
         host = discovery_info.host
-        self._abort_if_unique_id_configured(updates={CONF_HOST: host})
+
+        # Check if we have an existing entry for this MAC
+        existing_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, macaddress
+        )
+
+        if existing_entry:
+            if existing_entry.source == SOURCE_IGNORE:
+                return self.async_abort(reason="already_configured")
+
+            # Check if the host is actually changing
+            if existing_entry.data.get(CONF_HOST) != host:
+                await self._async_verify_existing_device_for_discovery(
+                    existing_entry, host, macaddress
+                )
+
+            # All checks passed or no change needed, abort
+            # if already configured with potential IP update
+            self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         self._async_abort_entries_match({CONF_HOST: host})
 
@@ -209,6 +270,7 @@ class DoorBirdConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OptionsFlowHandler:

@@ -1,9 +1,7 @@
 """Config flow for AirNow integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyairnow import WebServiceAPI
 from pyairnow.errors import AirNowError, EmptyResponseError, InvalidKeyError
@@ -13,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
@@ -24,6 +22,10 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
+
+
+# Documentation URL for API key generation
+_API_KEY_URL = "https://docs.airnowapi.org/account/request/"
 
 
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> bool:
@@ -61,6 +63,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -114,11 +117,13 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
                     ),
                 }
             ),
+            description_placeholders={"api_key_url": _API_KEY_URL},
             errors=errors,
         )
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> AirNowOptionsFlowHandler:
@@ -126,7 +131,7 @@ class AirNowConfigFlow(ConfigFlow, domain=DOMAIN):
         return AirNowOptionsFlowHandler()
 
 
-class AirNowOptionsFlowHandler(OptionsFlow):
+class AirNowOptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow for AirNow."""
 
     async def async_step_init(

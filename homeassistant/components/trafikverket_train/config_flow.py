@@ -1,7 +1,5 @@
 """Adds config flow for Trafikverket Train integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -20,7 +18,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_WEEKDAY, WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
@@ -329,7 +327,7 @@ class TVTrainConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class TVTrainOptionsFlowHandler(OptionsFlow):
+class TVTrainOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Trafikverket Train options."""
 
     async def async_step_init(

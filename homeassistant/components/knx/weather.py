@@ -1,6 +1,4 @@
-"""Support for KNX/IP weather station."""
-
-from __future__ import annotations
+"""Support for KNX weather entities."""
 
 from xknx import XKNX
 from xknx.devices import Weather as XknxWeather
@@ -19,9 +17,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import KNX_MODULE_KEY
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 from .schema import WeatherSchema
 
 
@@ -85,12 +83,13 @@ class KNXWeather(KnxYamlEntity, WeatherEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
+        self._device = _create_weather(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_weather(knx_module.xknx, config),
+            unique_id=str(self._device._temperature.group_address_state),  # noqa: SLF001
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
-        self._attr_unique_id = str(self._device._temperature.group_address_state)  # noqa: SLF001
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
     @property
     def native_temperature(self) -> float | None:

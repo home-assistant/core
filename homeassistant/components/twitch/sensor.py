@@ -1,7 +1,5 @@
 """Support for the Twitch stream status."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
@@ -22,6 +20,7 @@ ATTR_FOLLOW_SINCE = "following_since"
 ATTR_FOLLOWING = "followers"
 ATTR_VIEWERS = "viewers"
 ATTR_STARTED_AT = "started_at"
+ATTR_CHANNEL_PICTURE = "channel_picture"
 
 STATE_OFFLINE = "offline"
 STATE_STREAMING = "streaming"
@@ -82,6 +81,7 @@ class TwitchSensor(CoordinatorEntity[TwitchCoordinator], SensorEntity):
             ATTR_STARTED_AT: channel.started_at,
             ATTR_VIEWERS: channel.viewers,
             ATTR_SUBSCRIPTION: False,
+            ATTR_CHANNEL_PICTURE: channel.picture,
         }
         if channel.subscribed is not None:
             resp[ATTR_SUBSCRIPTION] = channel.subscribed

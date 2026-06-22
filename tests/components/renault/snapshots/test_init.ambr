@@ -18,7 +18,6 @@
           'VF1CAPTURFUELVIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',
@@ -28,7 +27,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -53,7 +51,6 @@
           'VF1CAPTURPHEVVIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',
@@ -63,7 +60,39 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_device_registry[megane_e_tech]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entries': <ANY>,
+      'config_entries_subentries': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'renault',
+          'VF1MEGANEETECHVIN',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'Renault',
+      'model': 'Megane e-tech',
+      'model_id': 'XCB1VE',
+      'name': 'REG-MEG-0',
+      'name_by_user': None,
+      'primary_config_entry': <ANY>,
+      'serial_number': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -88,7 +117,6 @@
           'VF1TWINGOIIIVIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',
@@ -98,7 +126,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -123,7 +150,6 @@
           'VF1ZOE40VIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',
@@ -133,7 +159,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),
@@ -158,7 +183,6 @@
           'VF1ZOE50VIN',
         ),
       }),
-      'is_new': False,
       'labels': set({
       }),
       'manufacturer': 'Renault',
@@ -168,7 +192,6 @@
       'name_by_user': None,
       'primary_config_entry': <ANY>,
       'serial_number': None,
-      'suggested_area': None,
       'sw_version': None,
       'via_device_id': None,
     }),

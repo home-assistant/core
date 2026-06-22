@@ -19,7 +19,10 @@ MEDIA_PLAYER_ENTITY = "media_player.my_android_tv"
 async def test_media_player_receives_push_updates(
     hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_api: MagicMock
 ) -> None:
-    """Test the Android TV Remote media player receives push updates and state is updated."""
+    """Test the Android TV Remote media player push updates.
+
+    Receives push updates and state is updated.
+    """
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry,
@@ -291,7 +294,7 @@ async def test_media_player_play_media(
     )
     mock_api.send_launch_app_command.assert_called_with("tv.twitch.android.app")
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="Channel must be numeric: abc"):
         await hass.services.async_call(
             "media_player",
             "play_media",
@@ -303,7 +306,7 @@ async def test_media_player_play_media(
             blocking=True,
         )
 
-    with pytest.raises(ValueError):
+    with pytest.raises(HomeAssistantError, match="Invalid media type: music"):
         await hass.services.async_call(
             "media_player",
             "play_media",

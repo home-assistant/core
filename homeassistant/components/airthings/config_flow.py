@@ -1,9 +1,7 @@
 """Config flow for Airthings integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import airthings
 import voluptuous as vol
@@ -23,12 +21,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+URL_API_INTEGRATION = {
+    "url": "https://dashboard.airthings.com/integrations/api-integration"
+}
+
 
 class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Airthings."""
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -37,14 +40,12 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="user",
                 data_schema=STEP_USER_DATA_SCHEMA,
-                description_placeholders={
-                    "url": (
-                        "https://dashboard.airthings.com/integrations/api-integration"
-                    ),
-                },
+                description_placeholders=URL_API_INTEGRATION,
             )
 
         errors = {}
+        await self.async_set_unique_id(user_input[CONF_ID])
+        self._abort_if_unique_id_configured()
 
         try:
             await airthings.get_token(
@@ -60,11 +61,11 @@ class AirthingsConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
-            await self.async_set_unique_id(user_input[CONF_ID])
-            self._abort_if_unique_id_configured()
-
             return self.async_create_entry(title="Airthings", data=user_input)
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=URL_API_INTEGRATION,
         )

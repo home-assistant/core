@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -64,6 +65,31 @@ SENSOR_DESCRIPTIONS = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=2,
         translation_placeholders={"sensor_name": "BME280"},
+    ),
+    AltruistSensorEntityDescription(
+        device_class=SensorDeviceClass.HUMIDITY,
+        key="BME680_humidity",
+        translation_key="humidity",
+        native_unit_of_measurement=PERCENTAGE,
+        suggested_display_precision=2,
+        translation_placeholders={"sensor_name": "BME680"},
+    ),
+    AltruistSensorEntityDescription(
+        device_class=SensorDeviceClass.PRESSURE,
+        key="BME680_pressure",
+        translation_key="pressure",
+        native_unit_of_measurement=UnitOfPressure.PA,
+        suggested_unit_of_measurement=UnitOfPressure.MMHG,
+        suggested_display_precision=0,
+        translation_placeholders={"sensor_name": "BME680"},
+    ),
+    AltruistSensorEntityDescription(
+        device_class=SensorDeviceClass.TEMPERATURE,
+        key="BME680_temperature",
+        translation_key="temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        suggested_display_precision=2,
+        translation_placeholders={"sensor_name": "BME680"},
     ),
     AltruistSensorEntityDescription(
         device_class=SensorDeviceClass.PRESSURE,
@@ -236,6 +262,7 @@ class AltruistSensor(CoordinatorEntity[AltruistDataUpdateCoordinator], SensorEnt
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -243,6 +270,7 @@ class AltruistSensor(CoordinatorEntity[AltruistDataUpdateCoordinator], SensorEnt
         )
 
     @property
+    @override
     def native_value(self) -> float | int:
         """Return the native value of the sensor."""
         string_value = self.coordinator.data[self.entity_description.key]

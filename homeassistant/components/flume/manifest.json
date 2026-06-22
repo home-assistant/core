@@ -9,6 +9,7 @@
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/flume",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["pyflume"],
   "requirements": ["PyFlume==0.6.5"]

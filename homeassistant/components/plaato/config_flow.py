@@ -1,7 +1,5 @@
 """Config flow for Plaato."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyplaato.plaato import PlaatoDeviceType
@@ -61,6 +59,8 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(
                         CONF_DEVICE_NAME,
                         default=self._init_info.get(CONF_DEVICE_NAME, None),
@@ -127,7 +127,7 @@ class PlaatoConfigFlow(ConfigFlow, domain=DOMAIN):
         device_name = self._init_info[CONF_DEVICE_NAME]
         device_type = self._init_info[CONF_DEVICE_TYPE]
 
-        unique_id = auth_token if auth_token else webhook_id
+        unique_id = auth_token or webhook_id
 
         await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
@@ -210,6 +210,8 @@ class PlaatoOptionsFlowHandler(OptionsFlow):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Polling interval is user-configurable, which is no longer allowed
+                    # pylint: disable-next=home-assistant-config-flow-polling-field
                     vol.Optional(
                         CONF_SCAN_INTERVAL,
                         default=self.config_entry.options.get(

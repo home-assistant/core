@@ -37,11 +37,15 @@ from homeassistant.util import dt as dt_util
 from tests.common import async_fire_time_changed, async_mock_service
 from tests.components.vacuum import common
 
-ENTITY_VACUUM_BASIC = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_BASIC}".lower()
-ENTITY_VACUUM_COMPLETE = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_COMPLETE}".lower()
-ENTITY_VACUUM_MINIMAL = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_MINIMAL}".lower()
-ENTITY_VACUUM_MOST = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_MOST}".lower()
-ENTITY_VACUUM_NONE = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_NONE}".lower()
+ENTITY_VACUUM_BASIC = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_BASIC}".replace(" ", "_").lower()
+ENTITY_VACUUM_COMPLETE = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_COMPLETE}".replace(
+    " ", "_"
+).lower()
+ENTITY_VACUUM_MINIMAL = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_MINIMAL}".replace(
+    " ", "_"
+).lower()
+ENTITY_VACUUM_MOST = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_MOST}".replace(" ", "_").lower()
+ENTITY_VACUUM_NONE = f"{VACUUM_DOMAIN}.{DEMO_VACUUM_NONE}".replace(" ", "_").lower()
 
 
 @pytest.fixture
@@ -66,7 +70,7 @@ async def setup_demo_vacuum(hass: HomeAssistant, vacuum_only: None):
 async def test_supported_features(hass: HomeAssistant) -> None:
     """Test vacuum supported features."""
     state = hass.states.get(ENTITY_VACUUM_COMPLETE)
-    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 16316
+    assert state.attributes.get(ATTR_SUPPORTED_FEATURES) == 32700
     assert state.attributes.get(ATTR_FAN_SPEED) == "medium"
     assert state.attributes.get(ATTR_FAN_SPEED_LIST) == FAN_SPEEDS
     assert state.state == VacuumActivity.DOCKED

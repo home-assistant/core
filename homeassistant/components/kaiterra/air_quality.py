@@ -1,6 +1,6 @@
 """Support for Kaiterra Air Quality Sensors."""
 
-from __future__ import annotations
+from typing import Any
 
 from homeassistant.components.air_quality import AirQualityEntity
 from homeassistant.const import CONF_DEVICE_ID, CONF_NAME
@@ -104,7 +104,7 @@ class KaiterraAirQuality(AirQualityEntity):
         return f"{self._device_id}_air_quality"
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {
             attr: value

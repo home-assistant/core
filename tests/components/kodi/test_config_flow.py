@@ -18,7 +18,6 @@ from .util import (
     TEST_DISCOVERY,
     TEST_DISCOVERY_WO_UUID,
     TEST_HOST,
-    TEST_IMPORT,
     TEST_WS_PORT,
     UUID,
     MockConnection,
@@ -666,99 +665,3 @@ async def test_discovery_without_unique_id(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "no_uuid"
-
-
-async def test_form_import(hass: HomeAssistant) -> None:
-    """Test we get the form with import source."""
-    with (
-        patch(
-            "homeassistant.components.kodi.config_flow.Kodi.ping",
-            return_value=True,
-        ),
-        patch(
-            "homeassistant.components.kodi.config_flow.get_kodi_connection",
-            return_value=MockConnection(),
-        ),
-        patch(
-            "homeassistant.components.kodi.async_setup_entry",
-            return_value=True,
-        ) as mock_setup_entry,
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=TEST_IMPORT,
-        )
-        await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == TEST_IMPORT["name"]
-    assert result["data"] == TEST_IMPORT
-
-    assert len(mock_setup_entry.mock_calls) == 1
-
-
-async def test_form_import_invalid_auth(hass: HomeAssistant) -> None:
-    """Test we handle invalid auth on import."""
-    with (
-        patch(
-            "homeassistant.components.kodi.config_flow.Kodi.ping",
-            side_effect=InvalidAuthError,
-        ),
-        patch(
-            "homeassistant.components.kodi.config_flow.get_kodi_connection",
-            return_value=MockConnection(),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=TEST_IMPORT,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "invalid_auth"
-
-
-async def test_form_import_cannot_connect(hass: HomeAssistant) -> None:
-    """Test we handle cannot connect on import."""
-    with (
-        patch(
-            "homeassistant.components.kodi.config_flow.Kodi.ping",
-            side_effect=CannotConnectError,
-        ),
-        patch(
-            "homeassistant.components.kodi.config_flow.get_kodi_connection",
-            return_value=MockConnection(),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=TEST_IMPORT,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "cannot_connect"
-
-
-async def test_form_import_exception(hass: HomeAssistant) -> None:
-    """Test we handle unknown exception on import."""
-    with (
-        patch(
-            "homeassistant.components.kodi.config_flow.Kodi.ping",
-            side_effect=Exception,
-        ),
-        patch(
-            "homeassistant.components.kodi.config_flow.get_kodi_connection",
-            return_value=MockConnection(),
-        ),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_IMPORT},
-            data=TEST_IMPORT,
-        )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "unknown"

@@ -7,11 +7,11 @@
     }
   },
   "services": {
-    "play_media": { "service": "mdi:play" },
-    "play_announcement": { "service": "mdi:bullhorn" },
-    "transfer_queue": { "service": "mdi:transfer" },
-    "search": { "service": "mdi:magnify" },
+    "get_library": { "service": "mdi:music-box-multiple" },
     "get_queue": { "service": "mdi:playlist-music" },
-    "get_library": { "service": "mdi:music-box-multiple" }
+    "play_announcement": { "service": "mdi:bullhorn" },
+    "play_media": { "service": "mdi:play" },
+    "search": { "service": "mdi:magnify" },
+    "transfer_queue": { "service": "mdi:transfer" }
   }
 }

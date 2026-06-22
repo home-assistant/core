@@ -1,7 +1,5 @@
 """Base entity for the Switch as X integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.homeassistant import exposed_entities
@@ -15,7 +13,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, EventStateChangedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
 from homeassistant.helpers.event import async_track_state_change_event
 
@@ -48,12 +45,8 @@ class BaseEntity(Entity):
         if wrapped_switch:
             name = wrapped_switch.original_name
 
-        self._device_id = device_id
         if device_id and (device := device_registry.async_get(device_id)):
-            self._attr_device_info = DeviceInfo(
-                connections=device.connections,
-                identifiers=device.identifiers,
-            )
+            self.device_entry = device
         self._attr_entity_category = entity_category
         self._attr_has_entity_name = has_entity_name
         self._attr_name = name

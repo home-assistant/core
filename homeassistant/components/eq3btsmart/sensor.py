@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from eq3btsmart.models import Status
 
@@ -10,8 +11,8 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
+    SensorStateClass,
 )
-from homeassistant.components.sensor.const import SensorStateClass
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -39,7 +40,7 @@ SENSOR_ENTITY_DESCRIPTIONS = [
     Eq3SensorEntityDescription(
         key=ENTITY_KEY_AWAY_UNTIL,
         translation_key=ENTITY_KEY_AWAY_UNTIL,
-        value_func=lambda status: (status.away_until if status.away_until else None),
+        value_func=lambda status: status.away_until or None,
         device_class=SensorDeviceClass.DATE,
     ),
 ]
@@ -72,6 +73,7 @@ class Eq3SensorEntity(Eq3Entity, SensorEntity):
         self.entity_description = entity_description
 
     @property
+    @override
     def native_value(self) -> int | datetime | None:
         """Return the value reported by the sensor."""
 

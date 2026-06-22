@@ -12,7 +12,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     UnitOfEnergy,
     UnitOfPower,
@@ -23,7 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import DOMAIN
+from . import OSOEnergyConfigEntry
 from .entity import OSOEnergyEntity
 
 
@@ -55,7 +54,7 @@ SENSOR_TYPES: dict[str, OSOEnergySensorEntityDescription] = {
         key="optimization_mode",
         translation_key="optimization_mode",
         device_class=SensorDeviceClass.ENUM,
-        options=["off", "oso", "gridcompany", "smartcompany", "advanced"],
+        options=["off", "oso", "gridcompany", "smartcompany", "advanced", "nettleie"],
         value_fn=lambda entity_data: entity_data.state.lower(),
     ),
     "power_load": OSOEnergySensorEntityDescription(
@@ -139,11 +138,11 @@ SENSOR_TYPES: dict[str, OSOEnergySensorEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OSOEnergyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OSO Energy sensor."""
-    osoenergy = hass.data[DOMAIN][entry.entry_id]
+    osoenergy = entry.runtime_data
     devices = osoenergy.session.device_list.get("sensor")
     entities = []
     if devices:

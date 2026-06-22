@@ -1,13 +1,12 @@
 """The Ituran integration."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from .coordinator import IturanConfigEntry, IturanDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.DEVICE_TRACKER,
     Platform.SENSOR,
 ]

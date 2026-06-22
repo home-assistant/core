@@ -1,7 +1,5 @@
 """Validate triggers."""
 
-from __future__ import annotations
-
 import contextlib
 import json
 import pathlib
@@ -26,20 +24,113 @@ def exists(value: Any) -> Any:
     return value
 
 
+def validate_field_schema(trigger_schema: dict[str, Any]) -> dict[str, Any]:
+    """Validate a field schema including context references."""
+
+    for field_name, field_schema in trigger_schema.get("fields", {}).items():
+        # Validate context if present
+        if "context" in field_schema:
+            if CONF_SELECTOR not in field_schema:
+                raise vol.Invalid(
+                    f"Context defined without a selector in '{field_name}'"
+                )
+
+            context = field_schema["context"]
+            if not isinstance(context, dict):
+                raise vol.Invalid(f"Context must be a dictionary in '{field_name}'")
+
+            # Determine which selector type is being used
+            selector_config = field_schema[CONF_SELECTOR]
+            selector_class = selector.selector(selector_config)
+
+            for context_key, field_ref in context.items():
+                # Check if context key is allowed for this selector type
+                allowed_keys = selector_class.allowed_context_keys
+                if context_key not in allowed_keys:
+                    allowed = (
+                        ", ".join(sorted(allowed_keys)) if allowed_keys else "none"
+                    )
+                    raise vol.Invalid(
+                        f"Invalid context key '{context_key}'"
+                        f" for selector type"
+                        f" '{selector_class.selector_type}'."
+                        f" Allowed keys: {allowed}"
+                    )
+
+                # Check if the referenced field exists in trigger schema or target
+                if not isinstance(field_ref, str):
+                    raise vol.Invalid(
+                        f"Context value for '{context_key}'"
+                        " must be a string field reference"
+                    )
+
+                # Check if field exists in trigger schema fields or target
+                trigger_fields = trigger_schema["fields"]
+                field_exists = field_ref in trigger_fields
+                if field_exists and "selector" in trigger_fields[field_ref]:
+                    # Check if the selector type is allowed for this context key
+                    field_selector_config = trigger_fields[field_ref][CONF_SELECTOR]
+                    field_selector_class = selector.selector(field_selector_config)
+                    if field_selector_class.selector_type not in allowed_keys.get(
+                        context_key, set()
+                    ):
+                        allowed_types = ", ".join(allowed_keys.get(context_key, set()))
+                        sel_type = field_selector_class.selector_type
+                        raise vol.Invalid(
+                            f"The context '{context_key}' for"
+                            f" '{field_name}' references"
+                            f" '{field_ref}', but"
+                            f" '{context_key}' does not allow"
+                            f" selectors of type '{sel_type}'."
+                            f" Allowed types: {allowed_types}"
+                        )
+                if not field_exists and "target" in trigger_schema:
+                    # Target is a special field that always exists when defined
+                    field_exists = field_ref == "target"
+                    if field_exists and "target" not in allowed_keys.get(
+                        context_key, set()
+                    ):
+                        allowed_types = ", ".join(allowed_keys.get(context_key, set()))
+                        raise vol.Invalid(
+                            f"The context '{context_key}' for"
+                            f" '{field_name}' references"
+                            f" 'target', but '{context_key}'"
+                            " does not allow 'target'."
+                            f" Allowed types: {allowed_types}"
+                        )
+
+                if not field_exists:
+                    raise vol.Invalid(
+                        f"Context reference '{field_ref}'"
+                        f" for key '{context_key}' does"
+                        " not exist in trigger schema"
+                        " fields or target"
+                    )
+
+    return trigger_schema
+
+
 FIELD_SCHEMA = vol.Schema(
     {
         vol.Optional("example"): exists,
         vol.Optional("default"): exists,
         vol.Optional("required"): bool,
         vol.Optional(CONF_SELECTOR): selector.validate_selector,
+        # key is context key, value is field name in schema
+        # Validated in validate_field_schema
+        vol.Optional("context"): {str: str},
     }
 )
 
 TRIGGER_SCHEMA = vol.Any(
-    vol.Schema(
-        {
-            vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
-        }
+    vol.All(
+        vol.Schema(
+            {
+                vol.Optional("target"): selector.TargetSelector.CONFIG_SCHEMA,
+                vol.Optional("fields"): vol.Schema({str: FIELD_SCHEMA}),
+            }
+        ),
+        validate_field_schema,
     ),
     None,
 )
@@ -47,7 +138,7 @@ TRIGGER_SCHEMA = vol.Any(
 TRIGGERS_SCHEMA = vol.Schema(
     {
         vol.Remove(vol.All(str, trigger.starts_with_dot)): object,
-        cv.slug: TRIGGER_SCHEMA,
+        cv.underscore_slug: TRIGGER_SCHEMA,
     }
 )
 
@@ -170,8 +261,8 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
                     f"Trigger {trigger_name} has no description {error_msg_suffix}",
                 )
 
-        # The same check is done for the description in each of the fields of the
-        # trigger schema.
+        # The same check is done for each of the fields of the trigger schema,
+        # except that we don't enforce that fields have a description.
         for field_name, field_schema in trigger_schema.get("fields", {}).items():
             if "fields" in field_schema:
                 # This is a section
@@ -188,20 +279,6 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
                         ),
                     )
 
-            if "description" not in field_schema and integration.core:
-                try:
-                    strings["triggers"][trigger_name]["fields"][field_name][
-                        "description"
-                    ]
-                except KeyError:
-                    integration.add_error(
-                        "triggers",
-                        (
-                            f"Trigger {trigger_name} has a field {field_name} with no "
-                            f"description {error_msg_suffix}"
-                        ),
-                    )
-
             if "selector" in field_schema:
                 with contextlib.suppress(KeyError):
                     translation_key = field_schema["selector"]["select"][
@@ -212,7 +289,14 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
                     except KeyError:
                         integration.add_error(
                             "triggers",
-                            f"Trigger {trigger_name} has a field {field_name} with a selector with a translation key {translation_key} that is not in the translations file",
+                            f"Trigger {trigger_name}"
+                            f" has a field"
+                            f" {field_name} with a"
+                            " selector with a"
+                            " translation key"
+                            f" {translation_key}"
+                            " that is not in the"
+                            " translations file",
                         )
 
         # The same check is done for the description in each of the sections of the
@@ -227,7 +311,10 @@ def validate_triggers(config: Config, integration: Integration) -> None:  # noqa
                 except KeyError:
                     integration.add_error(
                         "triggers",
-                        f"Trigger {trigger_name} has a section {section_name} with no name {error_msg_suffix}",
+                        f"Trigger {trigger_name}"
+                        f" has a section"
+                        f" {section_name} with no"
+                        f" name {error_msg_suffix}",
                     )
 
 

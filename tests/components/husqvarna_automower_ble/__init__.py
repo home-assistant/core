@@ -9,16 +9,33 @@ from homeassistant.helpers.service_info.bluetooth import BluetoothServiceInfo
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import inject_bluetooth_service_info
 
-AUTOMOWER_SERVICE_INFO = BluetoothServiceInfo(
+AUTOMOWER_SERVICE_INFO_SERIAL = BluetoothServiceInfo(
     name="305",
     address="00000000-0000-0000-0000-000000000003",
     rssi=-63,
     service_data={},
-    manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
-    service_uuids=[
-        "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-        "00001800-0000-1000-8000-00805f9b34fb",
-    ],
+    manufacturer_data={1062: bytes.fromhex("02050104060a23010504bfcfbb0d")},
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    source="local",
+)
+
+AUTOMOWER_SERVICE_INFO_MOWER = BluetoothServiceInfo(
+    name="305",
+    address="00000000-0000-0000-0000-000000000003",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={1062: bytes.fromhex("02050104060a2301")},
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    source="local",
+)
+
+AUTOMOWER_NOT_PAIRABLE_SERVICE_INFO = BluetoothServiceInfo(
+    name="305",
+    address="00000000-0000-0000-0000-000000000005",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={1062: bytes.fromhex("02050004060a2301")},
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
     source="local",
 )
 
@@ -27,11 +44,8 @@ AUTOMOWER_UNNAMED_SERVICE_INFO = BluetoothServiceInfo(
     address="00000000-0000-0000-0000-000000000004",
     rssi=-63,
     service_data={},
-    manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
-    service_uuids=[
-        "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-        "00001800-0000-1000-8000-00805f9b34fb",
-    ],
+    manufacturer_data={1062: bytes.fromhex("02050104060a23010504bfcfbb0d")},
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
     source="local",
 )
 
@@ -41,10 +55,7 @@ AUTOMOWER_MISSING_MANUFACTURER_DATA_SERVICE_INFO = BluetoothServiceInfo(
     rssi=-63,
     service_data={},
     manufacturer_data={},
-    service_uuids=[
-        "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-        "00001800-0000-1000-8000-00805f9b34fb",
-    ],
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
     source="local",
 )
 
@@ -54,9 +65,30 @@ AUTOMOWER_UNSUPPORTED_GROUP_SERVICE_INFO = BluetoothServiceInfo(
     rssi=-63,
     service_data={},
     manufacturer_data={1062: b"\x05\x04\xbf\xcf\xbb\r"},
-    service_uuids=[
-        "98bd0001-0b0e-421a-84e5-ddbf75dc6de4",
-    ],
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
+    source="local",
+)
+
+MISSING_SERVICE_SERVICE_INFO = BluetoothServiceInfo(
+    name="Blah",
+    address="00000000-0000-0000-0000-000000000001",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={},
+    service_uuids=[],
+    source="local",
+)
+
+
+WATER_TIMER_SERVICE_INFO = BluetoothServiceInfo(
+    name="Timer",
+    address="00000000-0000-0000-0000-000000000001",
+    rssi=-63,
+    service_data={},
+    manufacturer_data={
+        1062: b"\x02\x07d\x02\x05\x01\x02\x08\x00\x02\t\x01\x04\x06\x12\x00\x01"
+    },
+    service_uuids=["98bd0001-0b0e-421a-84e5-ddbf75dc6de4"],
     source="local",
 )
 
@@ -66,7 +98,7 @@ async def setup_entry(
 ) -> None:
     """Make sure the device is available."""
 
-    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, AUTOMOWER_SERVICE_INFO_SERIAL)
 
     with patch("homeassistant.components.husqvarna_automower_ble.PLATFORMS", platforms):
         mock_entry.add_to_hass(hass)

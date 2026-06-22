@@ -1,26 +1,24 @@
 """Helper functions for the ZHA integration."""
 
-from __future__ import annotations
-
 import asyncio
 import collections
-from collections.abc import Awaitable, Callable, Coroutine, Mapping
+from collections.abc import AsyncGenerator, Callable, Mapping
+from contextlib import asynccontextmanager
 import copy
 import dataclasses
 import enum
-import functools
 import itertools
 import logging
 import queue
 import re
 import time
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Concatenate, NamedTuple, cast
+from typing import TYPE_CHECKING, Any, NamedTuple, cast
 from zoneinfo import ZoneInfo
 
 import voluptuous as vol
+from zha.application import Platform as ZhaPlatform
 from zha.application.const import (
-    ATTR_CLUSTER_ID,
     ATTR_DEVICE_IEEE,
     ATTR_TYPE,
     ATTR_UNIQUE_ID,
@@ -30,11 +28,6 @@ from zha.application.const import (
     CONF_DEFAULT_CONSIDER_UNAVAILABLE_MAINS,
     UNKNOWN_MANUFACTURER,
     UNKNOWN_MODEL,
-    ZHA_CLUSTER_HANDLER_CFG_DONE,
-    ZHA_CLUSTER_HANDLER_MSG,
-    ZHA_CLUSTER_HANDLER_MSG_BIND,
-    ZHA_CLUSTER_HANDLER_MSG_CFG_RPT,
-    ZHA_CLUSTER_HANDLER_MSG_DATA,
     ZHA_EVENT,
     ZHA_GW_MSG,
     ZHA_GW_MSG_DEVICE_FULL_INIT,
@@ -73,8 +66,16 @@ from zha.application.platforms import GroupEntity, PlatformEntity
 from zha.event import EventBase
 from zha.exceptions import ZHAException
 from zha.mixins import LogMixin
-from zha.zigbee.cluster_handlers import ClusterBindEvent, ClusterConfigureReportingEvent
-from zha.zigbee.device import ClusterHandlerConfigurationComplete, Device, ZHAEvent
+from zha.zigbee.device import (
+    ClusterBindEvent,
+    ClusterConfigureReportingEvent,
+    Device,
+    DeviceConfiguredEvent,
+    DeviceEntityAddedEvent,
+    DeviceEntityRemovedEvent,
+    DeviceFirmwareInfoUpdatedEvent,
+    ZHAEvent,
+)
 from zha.zigbee.group import Group, GroupInfo, GroupMember
 from zigpy.config import (
     CONF_DATABASE,
@@ -85,6 +86,7 @@ from zigpy.config import (
 )
 import zigpy.exceptions
 from zigpy.profiles import PROFILES
+from zigpy.state import NetworkInfo
 import zigpy.types
 from zigpy.types import EUI64
 import zigpy.util
@@ -101,6 +103,7 @@ from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
+    ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_NAME,
     Platform,
@@ -119,26 +122,22 @@ from homeassistant.util.logging import HomeAssistantQueueHandler
 
 from .const import (
     ATTR_ACTIVE_COORDINATOR,
-    ATTR_ATTRIBUTES,
     ATTR_AVAILABLE,
-    ATTR_CLUSTER_NAME,
     ATTR_DEVICE_TYPE,
     ATTR_ENDPOINT_NAMES,
+    ATTR_EXPOSES_FEATURES,
     ATTR_IEEE,
     ATTR_LAST_SEEN,
     ATTR_LQI,
-    ATTR_MANUFACTURER,
     ATTR_MANUFACTURER_CODE,
     ATTR_NEIGHBORS,
     ATTR_NWK,
     ATTR_POWER_SOURCE,
     ATTR_QUIRK_APPLIED,
     ATTR_QUIRK_CLASS,
-    ATTR_QUIRK_ID,
     ATTR_ROUTES,
     ATTR_RSSI,
     ATTR_SIGNATURE,
-    ATTR_SUCCESS,
     CONF_ALARM_ARM_REQUIRES_CODE,
     CONF_ALARM_FAILED_TRIES,
     CONF_ALARM_MASTER_CODE,
@@ -162,6 +161,7 @@ from .const import (
     DEFAULT_DATABASE_NAME,
     DEVICE_PAIRING_STATUS,
     DOMAIN,
+    SIGNAL_DEVICE_RECONFIGURE_EVENT,
     ZHA_ALARM_OPTIONS,
     ZHA_OPTIONS,
 )
@@ -200,6 +200,7 @@ DEBUG_RELAY_LOGGERS = [DEBUG_COMP_ZHA, DEBUG_COMP_ZIGPY, DEBUG_LIB_ZHA]
 ZHA_GW_MSG_LOG_ENTRY = "log_entry"
 ZHA_GW_MSG_LOG_OUTPUT = "log_output"
 SIGNAL_REMOVE_ENTITIES = "zha_remove_entities"
+SIGNAL_REMOVE_ENTITY = "zha_remove_entity"
 GROUP_ENTITY_DOMAINS = [Platform.LIGHT, Platform.SWITCH, Platform.FAN]
 SIGNAL_ADD_ENTITIES = "zha_add_entities"
 ENTITIES = "entities"
@@ -335,7 +336,7 @@ class ZHADeviceProxy(EventBase):
             ATTR_NAME: self.device.name or ieee,
             ATTR_QUIRK_APPLIED: self.device.quirk_applied,
             ATTR_QUIRK_CLASS: self.device.quirk_class,
-            ATTR_QUIRK_ID: self.device.quirk_id,
+            ATTR_EXPOSES_FEATURES: self.device.exposes_features,
             ATTR_MANUFACTURER_CODE: self.device.manufacturer_code,
             ATTR_POWER_SOURCE: self.device.power_source,
             ATTR_LQI: self.device.lqi,
@@ -443,51 +444,88 @@ class ZHADeviceProxy(EventBase):
         )
 
     @callback
-    def handle_zha_channel_configure_reporting(
+    def handle_zha_cluster_bind(self, event: ClusterBindEvent) -> None:
+        """Forward a cluster bind result to the reconfigure websocket."""
+        async_dispatcher_send(
+            self.gateway_proxy.hass,
+            SIGNAL_DEVICE_RECONFIGURE_EVENT,
+            {
+                "type": "zha_channel_bind",
+                "zha_channel_msg_data": {
+                    "cluster_name": event.cluster_name,
+                    "cluster_id": event.cluster_id,
+                    "success": event.success,
+                },
+            },
+        )
+
+    @callback
+    def handle_zha_cluster_configure_reporting(
         self, event: ClusterConfigureReportingEvent
     ) -> None:
-        """Handle a ZHA cluster configure reporting event."""
+        """Forward a cluster reporting-configured result to the reconfigure websocket."""
         async_dispatcher_send(
             self.gateway_proxy.hass,
-            ZHA_CLUSTER_HANDLER_MSG,
+            SIGNAL_DEVICE_RECONFIGURE_EVENT,
             {
-                ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_CFG_RPT,
-                ZHA_CLUSTER_HANDLER_MSG_DATA: {
-                    ATTR_CLUSTER_NAME: event.cluster_name,
-                    ATTR_CLUSTER_ID: event.cluster_id,
-                    ATTR_ATTRIBUTES: event.attributes,
+                "type": "zha_channel_configure_reporting",
+                "zha_channel_msg_data": {
+                    "cluster_name": event.cluster_name,
+                    "cluster_id": event.cluster_id,
+                    "attributes": event.attributes,
                 },
             },
         )
 
     @callback
-    def handle_zha_channel_cfg_done(
-        self, event: ClusterHandlerConfigurationComplete
+    def handle_zha_device_configured(self, event: DeviceConfiguredEvent) -> None:
+        """Forward the device configuration-complete signal to the reconfigure websocket."""
+        async_dispatcher_send(
+            self.gateway_proxy.hass,
+            SIGNAL_DEVICE_RECONFIGURE_EVENT,
+            {"type": "zha_channel_cfg_done"},
+        )
+
+    @callback
+    def handle_zha_device_entity_added_event(
+        self, event: DeviceEntityAddedEvent
     ) -> None:
-        """Handle a ZHA cluster configure reporting event."""
-        async_dispatcher_send(
-            self.gateway_proxy.hass,
-            ZHA_CLUSTER_HANDLER_MSG,
-            {
-                ATTR_TYPE: ZHA_CLUSTER_HANDLER_CFG_DONE,
-            },
+        """Handle a new entity being added to a device at runtime."""
+        if event.platform is ZhaPlatform.VIRTUAL:
+            return
+
+        key = (event.platform, event.unique_id)
+        if (entity := self.device.platform_entities.get(key)) is None:
+            return
+        ha_zha_data = get_zha_data(self.gateway_proxy.hass)
+        ha_zha_data.platforms[Platform(event.platform)].append(
+            EntityData(entity=entity, device_proxy=self, group_proxy=None)
         )
+        async_dispatcher_send(self.gateway_proxy.hass, SIGNAL_ADD_ENTITIES)
 
     @callback
-    def handle_zha_channel_bind(self, event: ClusterBindEvent) -> None:
-        """Handle a ZHA cluster bind event."""
-        async_dispatcher_send(
-            self.gateway_proxy.hass,
-            ZHA_CLUSTER_HANDLER_MSG,
-            {
-                ATTR_TYPE: ZHA_CLUSTER_HANDLER_MSG_BIND,
-                ZHA_CLUSTER_HANDLER_MSG_DATA: {
-                    ATTR_CLUSTER_NAME: event.cluster_name,
-                    ATTR_CLUSTER_ID: event.cluster_id,
-                    ATTR_SUCCESS: event.success,
-                },
-            },
-        )
+    def handle_zha_device_entity_removed_event(
+        self, event: DeviceEntityRemovedEvent
+    ) -> None:
+        """Handle an entity being removed from a device at runtime."""
+        if event.platform is ZhaPlatform.VIRTUAL:
+            return
+
+        if not event.remove:
+            # Soft remove: signal the entity to unload; registry entry stays
+            async_dispatcher_send(
+                self.gateway_proxy.hass,
+                f"{SIGNAL_REMOVE_ENTITY}_{event.platform}_{event.unique_id}",
+            )
+            return
+
+        # Hard remove: delete from registry, also works without a live entity loaded
+        entity_registry = er.async_get(self.gateway_proxy.hass)
+        domain = Platform(event.platform)
+        if entity_id := entity_registry.async_get_entity_id(
+            domain, DOMAIN, event.unique_id
+        ):
+            entity_registry.async_remove(entity_id)
 
 
 class EntityReference(NamedTuple):
@@ -531,7 +569,6 @@ class ZHAGatewayProxy(EventBase):
 
         self._unsubs: list[Callable[[], None]] = []
         self._unsubs.append(self.gateway.on_all_events(self._handle_event_protocol))
-        self._reload_task: asyncio.Task | None = None
         config_entry.async_on_unload(
             self.hass.bus.async_listen(
                 er.EVENT_ENTITY_REGISTRY_UPDATED,
@@ -617,15 +654,7 @@ class ZHAGatewayProxy(EventBase):
         """Handle a connection lost event."""
 
         _LOGGER.debug("Connection to the radio was lost: %r", event)
-
-        # Ensure we do not queue up multiple resets
-        if self._reload_task is not None:
-            _LOGGER.debug("Ignoring reset, one is already running")
-            return
-
-        self._reload_task = self.hass.async_create_task(
-            self.hass.config_entries.async_reload(self.config_entry.entry_id),
-        )
+        self.hass.config_entries.async_schedule_reload(self.config_entry.entry_id)
 
     @callback
     def handle_device_joined(self, event: DeviceJoinedEvent) -> None:
@@ -686,12 +715,8 @@ class ZHAGatewayProxy(EventBase):
                     ATTR_NWK: str(event.device_info.nwk),
                     ATTR_IEEE: str(event.device_info.ieee),
                     DEVICE_PAIRING_STATUS: event.device_info.pairing_status.name,
-                    ATTR_MODEL: (
-                        event.device_info.model
-                        if event.device_info.model
-                        else UNKNOWN_MODEL
-                    ),
-                    ATTR_MANUFACTURER: manuf if manuf else UNKNOWN_MANUFACTURER,
+                    ATTR_MODEL: (event.device_info.model or UNKNOWN_MODEL),
+                    ATTR_MANUFACTURER: manuf or UNKNOWN_MANUFACTURER,
                     ATTR_SIGNATURE: event.device_info.signature,
                 },
             },
@@ -821,13 +846,12 @@ class ZHAGatewayProxy(EventBase):
 
     def remove_entity_reference(self, entity: ZHAEntity) -> None:
         """Remove entity reference for given entity_id if found."""
-        if entity.zha_device.ieee in self.ha_entity_refs:
-            entity_refs = self.ha_entity_refs.get(entity.zha_device.ieee)
-            self.ha_entity_refs[entity.zha_device.ieee] = [
-                e
-                for e in entity_refs  # type: ignore[union-attr]
-                if e.ha_entity_id != entity.entity_id
-            ]
+        ieee = entity.entity_data.device_proxy.device.ieee
+        if (entity_refs := self._ha_entity_refs.get(ieee)) is None:
+            return
+        self._ha_entity_refs[ieee] = [
+            e for e in entity_refs if e.ha_entity_id != entity.entity_id
+        ]
 
     def _async_get_or_create_device_proxy(self, zha_device: Device) -> ZHADeviceProxy:
         """Get or create a ZHA device."""
@@ -843,8 +867,23 @@ class ZHAGatewayProxy(EventBase):
                 name=zha_device.name,
                 manufacturer=zha_device.manufacturer,
                 model=zha_device.model,
+                sw_version=zha_device.firmware_version,
             )
             zha_device_proxy.device_id = device_registry_device.id
+
+            def update_sw_version(event: DeviceFirmwareInfoUpdatedEvent) -> None:
+                """Update software version in device registry."""
+                device_registry.async_update_device(
+                    device_registry_device.id,
+                    sw_version=event.new_firmware_version,
+                )
+
+            self._unsubs.append(
+                zha_device.on_event(
+                    DeviceFirmwareInfoUpdatedEvent.event_type, update_sw_version
+                )
+            )
+
         return zha_device_proxy
 
     def _async_get_or_create_group_proxy(self, group_info: GroupInfo) -> ZHAGroupProxy:
@@ -868,6 +907,9 @@ class ZHAGatewayProxy(EventBase):
 
         if isinstance(proxy_object, ZHADeviceProxy):
             for entity in proxy_object.device.platform_entities.values():
+                if entity.PLATFORM is ZhaPlatform.VIRTUAL:
+                    continue
+
                 ha_zha_data.platforms[Platform(entity.PLATFORM)].append(
                     EntityData(
                         entity=entity, device_proxy=proxy_object, group_proxy=None
@@ -875,6 +917,9 @@ class ZHAGatewayProxy(EventBase):
                 )
         else:
             for entity in proxy_object.group.group_entities.values():
+                if entity.PLATFORM is ZhaPlatform.VIRTUAL:
+                    continue
+
                 ha_zha_data.platforms[Platform(entity.PLATFORM)].append(
                     EntityData(
                         entity=entity,
@@ -886,8 +931,9 @@ class ZHAGatewayProxy(EventBase):
     def _cleanup_group_entity_registry_entries(
         self, zha_group_proxy: ZHAGroupProxy
     ) -> None:
-        """Remove entity registry entries for group entities when the groups are removed from HA."""
-        # first we collect the potential unique ids for entities that could be created from this group
+        """Remove entity registry entries for removed group entities."""
+        # first we collect the potential unique ids for
+        # entities that could be created from this group
         possible_entity_unique_ids = [
             f"{domain}_zha_group_0x{zha_group_proxy.group.group_id:04x}"
             for domain in GROUP_ENTITY_DOMAINS
@@ -1145,6 +1191,8 @@ def convert_to_zcl_values(
             continue
         value = fields[field.name]
         if issubclass(field.type, enum.Flag) and isinstance(value, list):
+            # Zigpy internal bitmap types are int subclasses as well
+            assert issubclass(field.type, int)
             new_value = 0
 
             for flag in value:
@@ -1204,9 +1252,12 @@ def async_add_entities(
     for entity_data in entities:
         try:
             entities_to_add.append(entity_class(entity_data))
-        # broad exception to prevent a single entity from preventing an entire platform from loading
-        # this can potentially be caused by a misbehaving device or a bad quirk. Not ideal but the
-        # alternative is adding try/catch to each entity class __init__ method with a specific exception
+        # broad exception to prevent a single entity from
+        # preventing an entire platform from loading.
+        # this can potentially be caused by a misbehaving
+        # device or a bad quirk. Not ideal but the
+        # alternative is adding try/catch to each entity
+        # class __init__ method with a specific exception
         except Exception:
             _LOGGER.exception(
                 "Error while adding entity from entity data: %s", entity_data
@@ -1216,19 +1267,6 @@ def async_add_entities(
         if not entity.enabled:
             entity.entity_data.entity.disable()
     entities.clear()
-
-
-def _clean_serial_port_path(path: str) -> str:
-    """Clean the serial port path, applying corrections where necessary."""
-
-    if path.startswith("socket://"):
-        path = path.strip()
-
-    # Removes extraneous brackets from IP addresses (they don't parse in CPython 3.11.4)
-    if re.match(r"^socket://\[\d+\.\d+\.\d+\.\d+\]:\d+$", path):
-        path = path.replace("[", "").replace("]", "")
-
-    return path
 
 
 CONF_ZHA_OPTIONS_SCHEMA = vol.Schema(
@@ -1268,18 +1306,6 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
     # ensure that we have the necessary HA configuration data
     assert ha_zha_data.config_entry is not None
     assert ha_zha_data.yaml_config is not None
-
-    # Remove brackets around IP addresses, this no longer works in CPython 3.11.4
-    # This will be removed in 2023.11.0
-    path = ha_zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH]
-    cleaned_path = _clean_serial_port_path(path)
-
-    if path != cleaned_path:
-        _LOGGER.debug("Cleaned serial port path %r -> %r", path, cleaned_path)
-        ha_zha_data.config_entry.data[CONF_DEVICE][CONF_DEVICE_PATH] = cleaned_path
-        hass.config_entries.async_update_entry(
-            ha_zha_data.config_entry, data=ha_zha_data.config_entry.data
-        )
 
     # deep copy the yaml config to avoid modifying the original and to safely
     # pass it to the ZHA library
@@ -1358,24 +1384,35 @@ def create_zha_config(hass: HomeAssistant, ha_zha_data: HAZHAData) -> ZHAData:
             device_overrides=overrides_config,
         ),
         local_timezone=ZoneInfo(hass.config.time_zone),
+        country_code=hass.config.country,
     )
 
 
-def convert_zha_error_to_ha_error[**_P, _EntityT: ZHAEntity](
-    func: Callable[Concatenate[_EntityT, _P], Awaitable[None]],
-) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
+@asynccontextmanager
+async def convert_zha_error_to_ha_error() -> AsyncGenerator[None]:
     """Decorate ZHA commands and re-raises ZHAException as HomeAssistantError."""
+    try:
+        yield
+    except TimeoutError as exc:
+        raise HomeAssistantError(
+            "Failed to send request: device did not respond"
+        ) from exc
+    except zigpy.exceptions.ZigbeeException as exc:
+        message = "Failed to send request"
 
-    @functools.wraps(func)
-    async def handler(self: _EntityT, *args: _P.args, **kwargs: _P.kwargs) -> None:
-        try:
-            return await func(self, *args, **kwargs)
-        except ZHAException as err:
-            raise HomeAssistantError(err) from err
+        if str(exc):
+            message = f"{message}: {exc}"
 
-    return handler
+        raise HomeAssistantError(message) from exc
+    except ZHAException as err:
+        raise HomeAssistantError(err) from err
 
 
 def exclude_none_values(obj: Mapping[str, Any]) -> dict[str, Any]:
     """Return a new dictionary excluding keys with None values."""
     return {k: v for k, v in obj.items() if v is not None}
+
+
+def get_config_entry_unique_id(network_info: NetworkInfo) -> str:
+    """Generate a unique id for a config entry based on the network info."""
+    return f"epid={network_info.extended_pan_id}".lower()

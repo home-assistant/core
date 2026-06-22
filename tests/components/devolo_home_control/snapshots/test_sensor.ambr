@@ -8,7 +8,7 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_battery',
+    'entity_id': 'sensor.test_test_battery',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -17,8 +17,9 @@
 # ---
 # name: test_battery_sensor.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -30,7 +31,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.test_battery',
+    'entity_id': 'sensor.test_test_battery',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -38,6 +39,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Battery',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -60,7 +62,7 @@
       'unit_of_measurement': '%',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_brightness',
+    'entity_id': 'sensor.test_test_brightness',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -69,8 +71,9 @@
 # ---
 # name: test_brightness_sensor.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -82,7 +85,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_brightness',
+    'entity_id': 'sensor.test_test_brightness',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -90,6 +93,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -113,7 +117,7 @@
       'unit_of_measurement': 'W',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_power',
+    'entity_id': 'sensor.test_test_power',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -122,8 +126,9 @@
 # ---
 # name: test_consumption_sensor.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -135,7 +140,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_power',
+    'entity_id': 'sensor.test_test_power',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -143,6 +148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 0,
@@ -169,7 +175,7 @@
       'unit_of_measurement': 'kWh',
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_energy',
+    'entity_id': 'sensor.test_test_energy',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -178,8 +184,9 @@
 # ---
 # name: test_consumption_sensor.3
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
@@ -191,7 +198,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_energy',
+    'entity_id': 'sensor.test_test_energy',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -199,6 +206,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Energy',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 2,
@@ -225,7 +233,7 @@
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.test_temperature',
+    'entity_id': 'sensor.test_test_temperature',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -234,8 +242,9 @@
 # ---
 # name: test_temperature_sensor.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
@@ -247,7 +256,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.test_temperature',
+    'entity_id': 'sensor.test_test_temperature',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -255,6 +264,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Temperature',
     'options': dict({
       'sensor': dict({
         'suggested_display_precision': 1,

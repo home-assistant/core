@@ -1,7 +1,5 @@
 """Provide persistent configuration for the backup integration."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from dataclasses import dataclass, field, replace
 import datetime as dt
@@ -127,7 +125,6 @@ class BackupConfigData:
             schedule=BackupSchedule(
                 days=days,
                 recurrence=ScheduleRecurrence(data["schedule"]["recurrence"]),
-                state=ScheduleState(data["schedule"].get("state", ScheduleState.NEVER)),
                 time=time,
             ),
         )
@@ -453,7 +450,6 @@ class StoredBackupSchedule(TypedDict):
 
     days: list[Day]
     recurrence: ScheduleRecurrence
-    state: ScheduleState
     time: str | None
 
 
@@ -462,7 +458,6 @@ class ScheduleParametersDict(TypedDict, total=False):
 
     days: list[Day]
     recurrence: ScheduleRecurrence
-    state: ScheduleState
     time: dt.time | None
 
 
@@ -486,32 +481,12 @@ class ScheduleRecurrence(StrEnum):
     CUSTOM_DAYS = "custom_days"
 
 
-class ScheduleState(StrEnum):
-    """Represent the schedule recurrence.
-
-    This is deprecated and can be remove in HA Core 2025.8.
-    """
-
-    NEVER = "never"
-    DAILY = "daily"
-    MONDAY = "mon"
-    TUESDAY = "tue"
-    WEDNESDAY = "wed"
-    THURSDAY = "thu"
-    FRIDAY = "fri"
-    SATURDAY = "sat"
-    SUNDAY = "sun"
-
-
 @dataclass(kw_only=True)
 class BackupSchedule:
     """Represent the backup schedule."""
 
     days: list[Day] = field(default_factory=list)
     recurrence: ScheduleRecurrence = ScheduleRecurrence.NEVER
-    # Although no longer used, state is kept for backwards compatibility.
-    # It can be removed in HA Core 2025.8.
-    state: ScheduleState = ScheduleState.NEVER
     time: dt.time | None = None
     cron_event: CronSim | None = field(init=False, default=None)
     next_automatic_backup: datetime | None = field(init=False, default=None)
@@ -610,7 +585,6 @@ class BackupSchedule:
         return StoredBackupSchedule(
             days=self.days,
             recurrence=self.recurrence,
-            state=self.state,
             time=self.time.isoformat() if self.time else None,
         )
 

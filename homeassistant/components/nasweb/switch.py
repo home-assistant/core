@@ -1,14 +1,13 @@
 """Platform for NASweb output."""
 
-from __future__ import annotations
-
 import logging
 import time
 from typing import Any
 
 from webio_api import Output as NASwebOutput
+from webio_api.const import STATE_ENTITY_UNAVAILABLE, STATE_OUTPUT_OFF, STATE_OUTPUT_ON
 
-from homeassistant.components.switch import DOMAIN as DOMAIN_SWITCH, SwitchEntity
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN, SwitchEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -24,6 +23,12 @@ from .const import DOMAIN, STATUS_UPDATE_MAX_TIME_INTERVAL
 from .coordinator import NASwebCoordinator
 
 OUTPUT_TRANSLATION_KEY = "switch_output"
+
+NASWEB_STATE_TO_HA_STATE = {
+    STATE_ENTITY_UNAVAILABLE: None,
+    STATE_OUTPUT_ON: True,
+    STATE_OUTPUT_OFF: False,
+}
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +69,7 @@ async def async_setup_entry(
         for index in removed:
             unique_id = f"{DOMAIN}.{config.unique_id}.relay_switch.{index}"
             if entity_id := entity_registry.async_get_entity_id(
-                DOMAIN_SWITCH, DOMAIN, unique_id
+                SWITCH_DOMAIN, DOMAIN, unique_id
             ):
                 entity_registry.async_remove(entity_id)
                 current_outputs.remove(index)
@@ -91,7 +96,7 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
         self._attr_translation_key = OUTPUT_TRANSLATION_KEY
         self._attr_translation_placeholders = {"index": f"{nasweb_output.index:2d}"}
         self._attr_unique_id = (
-            f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"
+            f"{DOMAIN}.{self._output.webio_serial}.relay_switch.{self._output.index}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._output.webio_serial)},
@@ -105,7 +110,7 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
     @callback
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
-        self._attr_is_on = self._output.state
+        self._attr_is_on = NASWEB_STATE_TO_HA_STATE[self._output.state]
         if (
             self.coordinator.last_update is None
             or time.time() - self._output.last_update >= STATUS_UPDATE_MAX_TIME_INTERVAL
@@ -121,7 +126,8 @@ class RelaySwitch(SwitchEntity, BaseCoordinatorEntity):
         """Update the entity.
 
         Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        Scheduling updates is not necessary, the coordinator
+        takes care of updates via push notifications.
         """
 
     async def async_turn_on(self, **kwargs: Any) -> None:

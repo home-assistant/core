@@ -24,6 +24,7 @@ async def init_integration(
             CONF_REGION: region,
             CONF_BRAND: brand,
         },
+        unique_id="nobody",
     )
 
     return await init_integration_with_entry(hass, entry)

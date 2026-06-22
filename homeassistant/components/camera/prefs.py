@@ -1,7 +1,5 @@
 """Preference management for camera component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import Final, cast
@@ -13,7 +11,7 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
-from .const import DOMAIN, PREF_ORIENTATION, PREF_PRELOAD_STREAM
+from .const import DATA_CAMERA_PREFS, DOMAIN, PREF_ORIENTATION, PREF_PRELOAD_STREAM
 
 STORAGE_KEY: Final = DOMAIN
 STORAGE_VERSION: Final = 1
@@ -106,3 +104,12 @@ class CameraPreferences:
         )
         self._dynamic_stream_settings_by_entity_id[entity_id] = settings
         return settings
+
+
+async def get_dynamic_camera_stream_settings(
+    hass: HomeAssistant, entity_id: str
+) -> DynamicStreamSettings:
+    """Get dynamic stream settings for a camera entity."""
+    if DATA_CAMERA_PREFS not in hass.data:
+        raise HomeAssistantError("Camera integration not set up")
+    return await hass.data[DATA_CAMERA_PREFS].get_dynamic_stream_settings(entity_id)

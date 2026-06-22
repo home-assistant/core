@@ -5,6 +5,7 @@ from functools import lru_cache
 import logging
 import os
 from pathlib import Path
+import socket
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -15,9 +16,9 @@ import pytest
 from homeassistant.components.profiler import (
     _LRU_CACHE_WRAPPER_OBJECT,
     _SQLALCHEMY_LRU_OBJECT,
-    CONF_ENABLED,
     CONF_SECONDS,
     SERVICE_DUMP_LOG_OBJECTS,
+    SERVICE_DUMP_SOCKETS,
     SERVICE_LOG_CURRENT_TASKS,
     SERVICE_LOG_EVENT_LOOP_SCHEDULED,
     SERVICE_LOG_THREAD_FRAMES,
@@ -31,7 +32,7 @@ from homeassistant.components.profiler import (
     SERVICE_STOP_LOG_OBJECTS,
 )
 from homeassistant.components.profiler.const import DOMAIN
-from homeassistant.const import CONF_SCAN_INTERVAL, CONF_TYPE
+from homeassistant.const import CONF_ENABLED, CONF_SCAN_INTERVAL, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util import dt as dt_util
@@ -269,6 +270,36 @@ async def test_log_scheduled(
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("socket_enabled")
+async def test_dump_sockets(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test dumping of sockets to the log."""
+    entry = MockConfigEntry(domain=DOMAIN)
+    entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    caplog.clear()
+
+    sock = None
+    try:
+        # Try to bind ephemeral UDP port on localhost for testing
+        sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        sock.bind(("127.0.0.1", 0))
+        port = sock.getsockname()[1]
+
+        assert hass.services.has_service(DOMAIN, SERVICE_DUMP_SOCKETS)
+        await hass.services.async_call(DOMAIN, SERVICE_DUMP_SOCKETS, blocking=True)
+    finally:
+        if sock:
+            sock.close()
+
+    assert "Sockets used by Home Assistant" in caplog.text
+    assert f"laddr=('127.0.0.1', {port})" in caplog.text
 
 
 async def test_lru_stats(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:

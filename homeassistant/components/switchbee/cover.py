@@ -1,7 +1,5 @@
 """Support for SwitchBee cover."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from switchbee.api.central_unit import SwitchBeeError, SwitchBeeTokenError
@@ -14,23 +12,21 @@ from homeassistant.components.cover import (
     CoverEntity,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import SwitchBeeCoordinator
+from .coordinator import SwitchBeeConfigEntry
 from .entity import SwitchBeeDeviceEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SwitchBeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up SwitchBee switch."""
-    coordinator: SwitchBeeCoordinator = hass.data[DOMAIN][entry.entry_id]
+    """Set up SwitchBee covers."""
+    coordinator = entry.runtime_data
     entities: list[CoverEntity] = []
 
     for device in coordinator.data.values():

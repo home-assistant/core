@@ -1,7 +1,5 @@
 """ZHA repairs for common environmental and device problems."""
 
-from __future__ import annotations
-
 import enum
 import logging
 
@@ -71,7 +69,19 @@ async def warn_on_wrong_silabs_firmware(hass: HomeAssistant, device: str) -> boo
     if device.startswith("socket://"):
         return False
 
-    app_type = await probe_silabs_firmware_type(device)
+    app_type = await probe_silabs_firmware_type(
+        device,
+        application_probe_methods=[
+            (ApplicationType.GECKO_BOOTLOADER, 115200),
+            (ApplicationType.EZSP, 115200),
+            (ApplicationType.EZSP, 460800),
+            (ApplicationType.SPINEL, 460800),
+            (ApplicationType.CPC, 460800),
+            (ApplicationType.CPC, 230400),
+            (ApplicationType.CPC, 115200),
+            (ApplicationType.ROUTER, 115200),
+        ],
+    )
 
     if app_type is None:
         # Failed to probe, we can't tell if the wrong firmware is installed

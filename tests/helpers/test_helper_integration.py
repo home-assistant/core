@@ -6,10 +6,13 @@ from unittest.mock import AsyncMock, Mock
 import pytest
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_entity_registry_updated_event
-from homeassistant.helpers.helper_integration import async_handle_source_entity_changes
+from homeassistant.helpers.helper_integration import (
+    async_handle_source_entity_changes,
+    async_remove_helper_config_entry_from_source_device,
+)
 
 from tests.common import (
     MockConfigEntry,
@@ -152,7 +155,7 @@ def mock_helper_integration(
     async_remove_entry: AsyncMock,
     async_unload_entry: AsyncMock,
     set_source_entity_id_or_uuid: Mock,
-    source_entity_removed: AsyncMock,
+    source_entity_removed: AsyncMock | None,
 ) -> None:
     """Mock the helper integration."""
 
@@ -184,6 +187,7 @@ def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[s
     """Track entity registry actions for an entity."""
     events = []
 
+    @callback
     def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
         """Add entity registry updated event to the list."""
         events.append(event.data["action"])
@@ -193,9 +197,90 @@ def track_entity_registry_actions(hass: HomeAssistant, entity_id: str) -> list[s
     return events
 
 
+def listen_entity_registry_events(
+    hass: HomeAssistant,
+) -> list[er.EventEntityRegistryUpdatedData]:
+    """Track entity registry actions for an entity."""
+    events: list[er.EventEntityRegistryUpdatedData] = []
+
+    @callback
+    def add_event(event: Event[er.EventEntityRegistryUpdatedData]) -> None:
+        """Add entity registry updated event to the list."""
+        events.append(event.data)
+
+    hass.bus.async_listen(er.EVENT_ENTITY_REGISTRY_UPDATED, add_event)
+
+    return events
+
+
+@pytest.mark.parametrize("source_entity_removed", [None])
 @pytest.mark.parametrize("use_entity_registry_id", [True, False])
 @pytest.mark.usefixtures("mock_helper_flow", "mock_helper_integration")
 async def test_async_handle_source_entity_changes_source_entity_removed(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    helper_config_entry: MockConfigEntry,
+    helper_entity_entry: er.RegistryEntry,
+    source_config_entry: ConfigEntry,
+    source_device: dr.DeviceEntry,
+    source_entity_entry: er.RegistryEntry,
+    async_remove_entry: AsyncMock,
+    async_unload_entry: AsyncMock,
+    set_source_entity_id_or_uuid: Mock,
+) -> None:
+    """Test the helper config entry is removed when the source entity is removed."""
+    # Add the helper config entry to the source device
+    device_registry.async_update_device(
+        source_device.id, add_config_entry_id=helper_config_entry.entry_id
+    )
+    # Add another config entry to the source device
+    other_config_entry = MockConfigEntry()
+    other_config_entry.add_to_hass(hass)
+    device_registry.async_update_device(
+        source_device.id, add_config_entry_id=other_config_entry.entry_id
+    )
+
+    assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Check preconditions
+    helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
+    assert helper_entity_entry.device_id == source_entity_entry.device_id
+    source_device = device_registry.async_get(source_device.id)
+    assert helper_config_entry.entry_id in source_device.config_entries
+
+    events = track_entity_registry_actions(hass, helper_entity_entry.entity_id)
+
+    # Remove the source entitys's config entry from the device, this removes the
+    # source entity
+    device_registry.async_update_device(
+        source_device.id, remove_config_entry_id=source_config_entry.entry_id
+    )
+    await hass.async_block_till_done()
+    await hass.async_block_till_done()
+
+    # Check that the helper entity is not linked to the source device anymore
+    helper_entity_entry = entity_registry.async_get(helper_entity_entry.entity_id)
+    assert helper_entity_entry.device_id is None
+    async_unload_entry.assert_not_called()
+    async_remove_entry.assert_not_called()
+    set_source_entity_id_or_uuid.assert_not_called()
+
+    # Check that the helper config entry is not removed from the device
+    source_device = device_registry.async_get(source_device.id)
+    assert helper_config_entry.entry_id in source_device.config_entries
+
+    # Check that the helper config entry is not removed
+    assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    assert events == ["update"]
+
+
+@pytest.mark.parametrize("use_entity_registry_id", [True, False])
+@pytest.mark.usefixtures("mock_helper_flow", "mock_helper_integration")
+async def test_async_handle_source_entity_changes_source_entity_removed_custom_handler(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
@@ -422,6 +507,88 @@ async def test_async_handle_source_entity_new_entity_id(
 
     # Check that the helper config entry is not removed
     assert helper_config_entry.entry_id in hass.config_entries.async_entry_ids()
+
+    # Check we got the expected events
+    assert events == []
+
+
+@pytest.mark.parametrize("use_entity_registry_id", [True, False])
+@pytest.mark.usefixtures("source_entity_entry")
+async def test_async_remove_helper_config_entry_from_source_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    helper_config_entry: MockConfigEntry,
+    helper_entity_entry: er.RegistryEntry,
+    source_device: dr.DeviceEntry,
+) -> None:
+    """Test removing the helper config entry from the source device."""
+    # Add the helper config entry to the source device
+    device_registry.async_update_device(
+        source_device.id, add_config_entry_id=helper_config_entry.entry_id
+    )
+
+    # Create a helper entity entry, not connected to the source device
+    extra_helper_entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        f"{helper_config_entry.entry_id}_2",
+        config_entry=helper_config_entry,
+        original_name="ABC",
+    )
+    assert extra_helper_entity_entry.entity_id != helper_entity_entry.entity_id
+
+    events = listen_entity_registry_events(hass)
+
+    async_remove_helper_config_entry_from_source_device(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id=source_device.id,
+    )
+
+    # Check we got the expected events
+    assert events == [
+        {
+            "action": "update",
+            "changes": {"device_id": source_device.id},
+            "entity_id": helper_entity_entry.entity_id,
+        },
+        {
+            "action": "update",
+            "changes": {"device_id": None},
+            "entity_id": helper_entity_entry.entity_id,
+        },
+    ]
+
+
+@pytest.mark.parametrize("use_entity_registry_id", [True, False])
+@pytest.mark.usefixtures("source_entity_entry")
+async def test_async_remove_helper_config_entry_from_source_device_helper_not_in_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    helper_config_entry: MockConfigEntry,
+    helper_entity_entry: er.RegistryEntry,
+    source_device: dr.DeviceEntry,
+) -> None:
+    """Test removing the helper config entry from the source device."""
+    # Create a helper entity entry, not connected to the source device
+    extra_helper_entity_entry = entity_registry.async_get_or_create(
+        "sensor",
+        HELPER_DOMAIN,
+        f"{helper_config_entry.entry_id}_2",
+        config_entry=helper_config_entry,
+        original_name="ABC",
+    )
+    assert extra_helper_entity_entry.entity_id != helper_entity_entry.entity_id
+
+    events = listen_entity_registry_events(hass)
+
+    async_remove_helper_config_entry_from_source_device(
+        hass,
+        helper_config_entry_id=helper_config_entry.entry_id,
+        source_device_id=source_device.id,
+    )
 
     # Check we got the expected events
     assert events == []

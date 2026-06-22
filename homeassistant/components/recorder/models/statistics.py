@@ -1,7 +1,5 @@
 """Models for statistics in the Recorder."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from enum import IntEnum
 from typing import Literal, NotRequired, TypedDict
@@ -70,6 +68,8 @@ class StatisticMetaData(TypedDict):
     name: str | None
     source: str
     statistic_id: str
+    unit_class: str | None
+    """Specifies the unit conversion class to use, if applicable."""
     unit_of_measurement: str | None
 
 
@@ -78,6 +78,7 @@ class CalendarStatisticPeriod(TypedDict, total=False):
 
     period: Literal["hour", "day", "week", "month", "year"]
     offset: int
+    first_weekday: Literal["mon", "tue", "wed", "thu", "fri", "sat", "sun"]
 
 
 class FixedStatisticPeriod(TypedDict, total=False):

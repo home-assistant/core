@@ -1,7 +1,5 @@
 """Config flow for TRIGGERcmd integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -10,10 +8,12 @@ from triggercmd import TRIGGERcmdConnectionError, client
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import httpx_client
 
-from .const import CONF_TOKEN, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,8 +32,9 @@ async def validate_input(hass: HomeAssistant, data: dict) -> str:
     if not token_data["id"]:
         raise InvalidToken
 
+    hass_client = httpx_client.get_async_client(hass)
     try:
-        await client.async_connection_test(data[CONF_TOKEN])
+        await client.async_connection_test(data[CONF_TOKEN], hass_client)
     except Exception as e:
         raise TRIGGERcmdConnectionError from e
     else:

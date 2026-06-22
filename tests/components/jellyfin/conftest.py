@@ -1,7 +1,5 @@
 """Fixtures for Jellyfin integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 
@@ -81,6 +79,7 @@ def mock_api() -> MagicMock:
     jf_api.get_item.side_effect = api_get_item_side_effect
     jf_api.get_media_folders.return_value = load_json_fixture("get-media-folders.json")
     jf_api.user_items.side_effect = api_user_items_side_effect
+    jf_api.search_media_items.return_value = load_json_fixture("user-items.json")
 
     return jf_api
 
@@ -157,6 +156,10 @@ def api_video_url_side_effect(*args, **kwargs):
 
 def api_get_item_side_effect(*args):
     """Handle variable responses for get_item method."""
+    if args[0] == "SERIES-UUID":
+        return load_json_fixture("series.json")
+    if args[0] == "SEASON-UUID":
+        return load_json_fixture("season.json")
     return load_json_fixture("get-item-collection.json")
 
 
@@ -165,6 +168,8 @@ def api_user_items_side_effect(*args, **kwargs):
     params = kwargs.get("params", {}) if kwargs else {}
 
     if "parentId" in params:
-        return load_json_fixture("user-items-parent-id.json")
+        if params["parentId"] == "SERIES-UUID":
+            return load_json_fixture("seasons.json")
+        return load_json_fixture("episodes.json")
 
     return load_json_fixture("user-items.json")

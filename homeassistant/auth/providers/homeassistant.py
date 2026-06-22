@@ -1,7 +1,5 @@
 """Home Assistant auth provider."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 from collections.abc import Mapping
@@ -122,9 +120,10 @@ class Data:
             if self.normalize_username(username, force_normalize=True) != username:
                 logging.getLogger(__name__).warning(
                     (
-                        "Home Assistant auth provider is running in legacy mode "
-                        "because we detected usernames that are normalized (lowercase and without spaces)."
-                        " Please change the username: '%s'."
+                        "Home Assistant auth provider is running in"
+                        " legacy mode because we detected usernames"
+                        " that are normalized (lowercase and without"
+                        " spaces). Please change the username: '%s'."
                     ),
                     username,
                 )
@@ -141,7 +140,9 @@ class Data:
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="homeassistant_provider_not_normalized_usernames",
                 translation_placeholders={
-                    "usernames": f'- "{'"\n- "'.join(sorted(not_normalized_usernames))}"'
+                    "usernames": (
+                        f'- "{'"\n- "'.join(sorted(not_normalized_usernames))}"'
+                    )
                 },
                 learn_more_url="homeassistant://config/users",
             )
@@ -179,12 +180,18 @@ class Data:
         user_hash = base64.b64decode(found["password"])
 
         # bcrypt.checkpw is timing-safe
-        if not bcrypt.checkpw(password.encode(), user_hash):
+        # With bcrypt 5.0 passing a password longer than 72 bytes raises a ValueError.
+        # Previously the password was silently truncated.
+        # https://github.com/pyca/bcrypt/pull/1000
+        if not bcrypt.checkpw(password.encode()[:72], user_hash):
             raise InvalidAuth
 
     def hash_password(self, password: str, for_storage: bool = False) -> bytes:
         """Encode a password."""
-        hashed: bytes = bcrypt.hashpw(password.encode(), bcrypt.gensalt(rounds=12))
+        # With bcrypt 5.0 passing a password longer than 72 bytes raises a ValueError.
+        # Previously the password was silently truncated.
+        # https://github.com/pyca/bcrypt/pull/1000
+        hashed: bytes = bcrypt.hashpw(password.encode()[:72], bcrypt.gensalt(rounds=12))
 
         if for_storage:
             hashed = base64.b64encode(hashed)

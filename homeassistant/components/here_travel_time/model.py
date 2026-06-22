@@ -1,12 +1,10 @@
 """Model Classes for here_travel_time."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import datetime
 from typing import TypedDict
 
-from here_routing import RoutingMode
+from here_routing import RoutingMode, TrafficMode
 
 
 class HERETravelTimeData(TypedDict):
@@ -32,3 +30,4 @@ class HERETravelTimeAPIParams:
     route_mode: RoutingMode
     arrival: datetime | None
     departure: datetime | None
+    traffic_mode: TrafficMode

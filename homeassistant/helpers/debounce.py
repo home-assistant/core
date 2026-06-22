@@ -1,10 +1,10 @@
 """Debounce helper."""
 
-from __future__ import annotations
-
 import asyncio
-from collections.abc import Callable
+from collections.abc import AsyncGenerator, Callable
+from contextlib import asynccontextmanager
 from logging import Logger
+from typing import Any
 
 from homeassistant.core import HassJob, HomeAssistant, callback
 
@@ -36,6 +36,7 @@ class Debouncer[_R_co]:
         self._timer_task: asyncio.TimerHandle | None = None
         self._execute_at_end_of_timer: bool = False
         self._execute_lock = asyncio.Lock()
+        self._execute_lock_owner: asyncio.Task[Any] | None = None
         self._background = background
         self._job: HassJob[[], _R_co] | None = (
             None
@@ -45,6 +46,22 @@ class Debouncer[_R_co]:
             )
         )
         self._shutdown_requested = False
+
+    @asynccontextmanager
+    async def async_lock(self) -> AsyncGenerator[None]:
+        """Return an async context manager to lock the debouncer."""
+        if self._execute_lock_owner is asyncio.current_task():
+            raise RuntimeError("Debouncer lock is not re-entrant")
+
+        if self._execute_lock.locked():
+            self.logger.debug("Debouncer lock is already acquired, waiting")
+
+        async with self._execute_lock:
+            self._execute_lock_owner = asyncio.current_task()
+            try:
+                yield
+            finally:
+                self._execute_lock_owner = None
 
     @property
     def function(self) -> Callable[[], _R_co] | None:
@@ -85,11 +102,8 @@ class Debouncer[_R_co]:
 
             return False
 
-        # Locked means a call is in progress. Any call is good, so abort.
-        if self._execute_lock.locked():
-            return False
-
-        if not self.immediate:
+        # If not immediate or in progress, we schedule a call for later.
+        if not self.immediate or self._execute_lock.locked():
             self._execute_at_end_of_timer = True
             self._schedule_timer()
             return False
@@ -101,7 +115,7 @@ class Debouncer[_R_co]:
         if not self._async_schedule_or_call_now():
             return
 
-        async with self._execute_lock:
+        async with self.async_lock():
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
                 return
@@ -125,7 +139,7 @@ class Debouncer[_R_co]:
         if self._execute_lock.locked():
             return
 
-        async with self._execute_lock:
+        async with self.async_lock():
             # Abort if timer got set while we're waiting for the lock.
             if self._timer_task:
                 return
@@ -167,7 +181,10 @@ class Debouncer[_R_co]:
         if not self._execute_at_end_of_timer:
             return
         self._execute_at_end_of_timer = False
-        name = f"debouncer {self._job} finish cooldown={self.cooldown}, immediate={self.immediate}"
+        name = (
+            f"debouncer {self._job} finish"
+            f" cooldown={self.cooldown}, immediate={self.immediate}"
+        )
         if not self._background:
             self.hass.async_create_task(
                 self._handle_timer_finish(), name, eager_start=True
@@ -179,8 +196,9 @@ class Debouncer[_R_co]:
 
     @callback
     def _schedule_timer(self) -> None:
-        """Schedule a timer."""
-        if not self._shutdown_requested:
-            self._timer_task = self.hass.loop.call_later(
-                self.cooldown, self._on_debounce
-            )
+        """Schedule a timer, cancelling any previously-scheduled handle."""
+        if self._shutdown_requested:
+            return
+        if self._timer_task is not None:
+            self._timer_task.cancel()
+        self._timer_task = self.hass.loop.call_later(self.cooldown, self._on_debounce)

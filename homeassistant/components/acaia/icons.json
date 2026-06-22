@@ -4,20 +4,20 @@
       "timer_running": {
         "default": "mdi:timer",
         "state": {
-          "on": "mdi:timer-play",
-          "off": "mdi:timer-off"
+          "off": "mdi:timer-off",
+          "on": "mdi:timer-play"
         }
       }
     },
     "button": {
-      "tare": {
-        "default": "mdi:scale-balance"
-      },
       "reset_timer": {
         "default": "mdi:timer-refresh"
       },
       "start_stop": {
         "default": "mdi:timer-play"
+      },
+      "tare": {
+        "default": "mdi:scale-balance"
       }
     }
   }

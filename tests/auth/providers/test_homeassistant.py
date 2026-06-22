@@ -133,6 +133,24 @@ async def test_changing_password(data: hass_auth.Data) -> None:
     data.validate_login("test-UsEr", "new-pass")
 
 
+async def test_password_truncated(data: hass_auth.Data) -> None:
+    """Test long passwords are truncated before they are send to bcrypt for hashing.
+
+    With bcrypt 5.0 passing a password longer than 72 bytes raises a ValueError.
+    Previously the password was silently truncated.
+    https://github.com/pyca/bcrypt/pull/1000
+    """
+    pwd_truncated = "hWwjDpFiYtDTaaMbXdjzeuKAPI3G4Di2mC92" * 4  # 72 chars
+    long_pwd = pwd_truncated * 2  # 144 chars
+    data.add_auth("test-user", long_pwd)
+    data.validate_login("test-user", long_pwd)
+
+    # As pwd are truncated, login will technically work with only the first 72 bytes.
+    data.validate_login("test-user", pwd_truncated)
+    with pytest.raises(hass_auth.InvalidAuth):
+        data.validate_login("test-user", pwd_truncated[:71])
+
+
 async def test_login_flow_validates(data: hass_auth.Data, hass: HomeAssistant) -> None:
     """Test login flow."""
     data.add_auth("test-user", "test-pass")
@@ -143,24 +161,24 @@ async def test_login_flow_validates(data: hass_auth.Data, hass: HomeAssistant) -
     )
     flow = await provider.async_login_flow({})
     result = await flow.async_step_init()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
 
     result = await flow.async_step_init(
         {"username": "incorrect-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await flow.async_step_init(
         {"username": "TEST-user ", "password": "incorrect-pass"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await flow.async_step_init(
         {"username": "test-USER", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["username"] == "test-USER"
 
 
@@ -242,24 +260,24 @@ async def test_legacy_login_flow_validates(
     )
     flow = await provider.async_login_flow({})
     result = await flow.async_step_init()
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
 
     result = await flow.async_step_init(
         {"username": "incorrect-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await flow.async_step_init(
         {"username": "test-user", "password": "incorrect-pass"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.FORM
+    assert result["type"] is data_entry_flow.FlowResultType.FORM
     assert result["errors"]["base"] == "invalid_auth"
 
     result = await flow.async_step_init(
         {"username": "test-user", "password": "test-pass"}
     )
-    assert result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY
     assert result["data"]["username"] == "test-user"
 
 

@@ -1,7 +1,5 @@
 """Support for a Genius Hub system."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -124,7 +122,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
 def setup_service_functions(hass: HomeAssistant, broker):
     """Set up the service functions."""
 
-    @verify_domain_control(hass, DOMAIN)
+    @verify_domain_control(DOMAIN)
     async def set_zone_mode(call: ServiceCall) -> None:
         """Set the system mode."""
         entity_id = call.data[ATTR_ENTITY_ID]
@@ -146,9 +144,11 @@ def setup_service_functions(hass: HomeAssistant, broker):
 
         async_dispatcher_send(hass, DOMAIN, payload)
 
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SVC_SET_ZONE_MODE, set_zone_mode, schema=SET_ZONE_MODE_SCHEMA
     )
+    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
     hass.services.async_register(
         DOMAIN, SVC_SET_ZONE_OVERRIDE, set_zone_mode, schema=SET_ZONE_OVERRIDE_SCHEMA
     )

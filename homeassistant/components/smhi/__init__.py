@@ -9,9 +9,13 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .coordinator import SMHIConfigEntry, SMHIDataUpdateCoordinator
+from .coordinator import (
+    SMHIConfigEntry,
+    SMHIDataUpdateCoordinator,
+    SMHIFireDataUpdateCoordinator,
+)
 
-PLATFORMS = [Platform.WEATHER]
+PLATFORMS = [Platform.SENSOR, Platform.WEATHER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool:
@@ -19,12 +23,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool
 
     # Setting unique id where missing
     if entry.unique_id is None:
-        unique_id = f"{entry.data[CONF_LOCATION][CONF_LATITUDE]}-{entry.data[CONF_LOCATION][CONF_LONGITUDE]}"
+        unique_id = (
+            f"{entry.data[CONF_LOCATION][CONF_LATITUDE]}"
+            f"-{entry.data[CONF_LOCATION][CONF_LONGITUDE]}"
+        )
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     coordinator = SMHIDataUpdateCoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
-    entry.runtime_data = coordinator
+    fire_coordinator = SMHIFireDataUpdateCoordinator(hass, entry)
+    await fire_coordinator.async_config_entry_first_refresh()
+    entry.runtime_data = (coordinator, fire_coordinator)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
@@ -37,10 +46,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> boo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: SMHIConfigEntry) -> bool:
     """Migrate old entry."""
-
-    if entry.version > 3:
-        # Downgrade from future version
-        return False
 
     if entry.version == 1:
         new_data = {

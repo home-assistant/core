@@ -1,7 +1,5 @@
 """Config flow for Tankerkoenig."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -15,10 +13,9 @@ from aiotankerkoenig import (
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -40,6 +37,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import CONF_STATIONS, DEFAULT_RADIUS, DOMAIN
+from .coordinator import TankerkoenigConfigEntry
 
 
 async def async_get_nearby_stations(
@@ -71,7 +69,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TankerkoenigConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -169,6 +167,8 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
+                    # Name field is no longer allowed in config flow schemas
+                    # pylint: disable-next=home-assistant-config-flow-name-field
                     vol.Required(
                         CONF_NAME, default=user_input.get(CONF_NAME, "")
                     ): cv.string,
@@ -229,7 +229,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         )
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Handle an options flow."""
 
     def __init__(self) -> None:

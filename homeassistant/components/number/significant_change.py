@@ -1,7 +1,5 @@
 """Helper to test significant Number state changes."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import (
@@ -47,7 +45,10 @@ def async_check_significant_change(
     percentage_change: float | None = None
 
     # special for temperature
-    if device_class == NumberDeviceClass.TEMPERATURE:
+    if device_class in (
+        NumberDeviceClass.TEMPERATURE,
+        NumberDeviceClass.TEMPERATURE_DELTA,
+    ):
         if new_attrs.get(ATTR_UNIT_OF_MEASUREMENT) == UnitOfTemperature.FAHRENHEIT:
             absolute_change = 1.0
         else:

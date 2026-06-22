@@ -3,7 +3,6 @@
 from collections.abc import Generator
 from unittest.mock import patch
 
-from freezegun.api import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -25,8 +24,8 @@ def event_only() -> Generator[None]:
         yield
 
 
+@pytest.mark.freeze_time("2025-01-01T03:30:00.000Z")
 @pytest.mark.usefixtures("mock_bring_client")
-@freeze_time("2025-01-01T03:30:00.000Z")
 async def test_setup(
     hass: HomeAssistant,
     bring_config_entry: MockConfigEntry,

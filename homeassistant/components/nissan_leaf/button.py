@@ -1,7 +1,5 @@
 """Button to start charging the Nissan Leaf."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.button import ButtonEntity

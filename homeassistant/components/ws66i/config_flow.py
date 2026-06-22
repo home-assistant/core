@@ -1,7 +1,5 @@
 """Config flow for WS66i 6-Zone Amplifier integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -12,7 +10,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_IP_ADDRESS
 from homeassistant.core import HomeAssistant, callback
@@ -142,7 +140,7 @@ def _key_for_source(
     )
 
 
-class Ws66iOptionsFlowHandler(OptionsFlow):
+class Ws66iOptionsFlowHandler(OptionsFlowWithReload):
     """Handle a WS66i options flow."""
 
     async def async_step_init(

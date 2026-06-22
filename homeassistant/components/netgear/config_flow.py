@@ -1,7 +1,5 @@
 """Config flow to configure the Netgear integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 from urllib.parse import urlparse
@@ -13,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -65,7 +63,7 @@ def _ordered_shared_schema(schema_input):
     }
 
 
-class OptionsFlowHandler(OptionsFlow):
+class OptionsFlowHandler(OptionsFlowWithReload):
     """Options for the component."""
 
     async def async_step_init(

@@ -1,0 +1,146 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Rainwater Tank Level",
+  "category": "ywcgq",
+  "product_id": "h8lvyoahr6s6aybf",
+  "product_name": "Tank A Level",
+  "online": true,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2025-05-31T09:55:19+00:00",
+  "create_time": "2025-05-31T09:55:19+00:00",
+  "update_time": "2025-05-31T09:55:19+00:00",
+  "function": {
+    "max_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "mini_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "upper_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "installation_height": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 100,
+        "max": 3000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "liquid_depth_max": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 100,
+        "max": 2700,
+        "scale": 3,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "liquid_state": {
+      "type": "Enum",
+      "value": {
+        "range": ["normal", "lower_alarm", "upper_alarm"]
+      }
+    },
+    "liquid_depth": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 0,
+        "max": 10000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "max_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "mini_set": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    },
+    "upper_switch": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "installation_height": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 100,
+        "max": 3000,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "liquid_depth_max": {
+      "type": "Integer",
+      "value": {
+        "unit": "m",
+        "min": 100,
+        "max": 2700,
+        "scale": 3,
+        "step": 1
+      }
+    },
+    "liquid_level_percent": {
+      "type": "Integer",
+      "value": {
+        "unit": "%",
+        "min": 0,
+        "max": 100,
+        "scale": 0,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "liquid_state": "normal",
+    "liquid_depth": 455,
+    "max_set": 90,
+    "mini_set": 10,
+    "upper_switch": false,
+    "installation_height": 1350,
+    "liquid_depth_max": 100,
+    "liquid_level_percent": 36
+  },
+  "set_up": false,
+  "support_local": true
+}

@@ -8,7 +8,7 @@ import pytest
 from webrtc_models import RTCIceCandidate, RTCIceCandidateInit, RTCIceServer
 
 from homeassistant.components.camera import (
-    DATA_ICE_SERVERS,
+    DOMAIN,
     Camera,
     CameraWebRTCProvider,
     StreamType,
@@ -17,10 +17,10 @@ from homeassistant.components.camera import (
     WebRTCError,
     WebRTCMessage,
     WebRTCSendMessage,
-    async_register_ice_servers,
     async_register_webrtc_provider,
     get_camera_from_entity_id,
 )
+from homeassistant.components.web_rtc import async_register_ice_servers
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.core_config import async_process_ha_core_config
@@ -102,94 +102,11 @@ async def test_async_register_webrtc_provider_camera_not_loaded(
 
 
 @pytest.mark.usefixtures("mock_test_webrtc_cameras")
-async def test_async_register_ice_server(
-    hass: HomeAssistant,
-) -> None:
-    """Test registering an ICE server."""
-    # Clear any existing ICE servers
-    hass.data[DATA_ICE_SERVERS].clear()
-
-    called = 0
-
-    @callback
-    def get_ice_servers() -> list[RTCIceServer]:
-        nonlocal called
-        called += 1
-        return [
-            RTCIceServer(urls="stun:example.com"),
-            RTCIceServer(urls="turn:example.com"),
-        ]
-
-    unregister = async_register_ice_servers(hass, get_ice_servers)
-    assert not called
-
-    camera = get_camera_from_entity_id(hass, "camera.async")
-    config = camera.async_get_webrtc_client_configuration()
-
-    assert config.configuration.ice_servers == [
-        RTCIceServer(urls="stun:example.com"),
-        RTCIceServer(urls="turn:example.com"),
-    ]
-    assert called == 1
-
-    # register another ICE server
-    called_2 = 0
-
-    @callback
-    def get_ice_servers_2() -> list[RTCIceServer]:
-        nonlocal called_2
-        called_2 += 1
-        return [
-            RTCIceServer(
-                urls=["stun:example2.com", "turn:example2.com"],
-                username="user",
-                credential="pass",
-            )
-        ]
-
-    unregister_2 = async_register_ice_servers(hass, get_ice_servers_2)
-
-    config = camera.async_get_webrtc_client_configuration()
-    assert config.configuration.ice_servers == [
-        RTCIceServer(urls="stun:example.com"),
-        RTCIceServer(urls="turn:example.com"),
-        RTCIceServer(
-            urls=["stun:example2.com", "turn:example2.com"],
-            username="user",
-            credential="pass",
-        ),
-    ]
-    assert called == 2
-    assert called_2 == 1
-
-    # unregister the first ICE server
-
-    unregister()
-
-    config = camera.async_get_webrtc_client_configuration()
-    assert config.configuration.ice_servers == [
-        RTCIceServer(
-            urls=["stun:example2.com", "turn:example2.com"],
-            username="user",
-            credential="pass",
-        ),
-    ]
-    assert called == 2
-    assert called_2 == 2
-
-    # unregister the second ICE server
-    unregister_2()
-
-    config = camera.async_get_webrtc_client_configuration()
-    assert config.configuration.ice_servers == []
-
-
-@pytest.mark.usefixtures("mock_test_webrtc_cameras")
 async def test_ws_get_client_config(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get WebRTC client config."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -205,8 +122,8 @@ async def test_ws_get_client_config(
             "iceServers": [
                 {
                     "urls": [
-                        "stun:stun.home-assistant.io:80",
                         "stun:stun.home-assistant.io:3478",
+                        "stun:stun.home-assistant.io:80",
                     ]
                 },
             ],
@@ -238,8 +155,8 @@ async def test_ws_get_client_config(
             "iceServers": [
                 {
                     "urls": [
-                        "stun:stun.home-assistant.io:80",
                         "stun:stun.home-assistant.io:3478",
+                        "stun:stun.home-assistant.io:80",
                     ]
                 },
                 {
@@ -262,7 +179,7 @@ async def test_ws_get_client_config_custom_config(
         {"webrtc": {"ice_servers": [{"url": "stun:custom_stun_server:3478"}]}},
     )
 
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -283,7 +200,7 @@ async def test_ws_get_client_config_no_rtc_camera(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get WebRTC client config."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
@@ -296,7 +213,10 @@ async def test_ws_get_client_config_no_rtc_camera(
     assert not msg["success"]
     assert msg["error"] == {
         "code": "webrtc_get_client_config_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
+        "message": (
+            "Camera does not support WebRTC,"
+            " frontend_stream_types={<StreamType.HLS: 'hls'>}"
+        ),
     }
 
 
@@ -360,7 +280,7 @@ async def test_websocket_webrtc_offer_webrtc_provider_deprecated(
     hass_ws_client: WebSocketGenerator,
     register_test_provider: SomeTestProvider,
 ) -> None:
-    """Test initiating a WebRTC stream with a webrtc provider with the deprecated class."""
+    """Test initiating a WebRTC stream with a deprecated provider."""
     await _test_websocket_webrtc_offer_webrtc_provider(
         hass,
         hass_ws_client,
@@ -470,7 +390,7 @@ async def test_websocket_webrtc_offer_invalid_entity(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test WebRTC with a camera entity that does not exist."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {
@@ -527,7 +447,10 @@ async def test_websocket_webrtc_offer_invalid_stream_type(
     assert not response["success"]
     assert response["error"] == {
         "code": "webrtc_offer_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
+        "message": (
+            "Camera does not support WebRTC,"
+            " frontend_stream_types={<StreamType.HLS: 'hls'>}"
+        ),
     }
 
 
@@ -592,15 +515,19 @@ async def test_ws_webrtc_candidate(
         (
             {"sdpMLineIndex": 0},
             (
-                'Field "candidate" of type str is missing in RTCIceCandidateInit instance'
-                " for dictionary value @ data['candidate']. Got {'sdpMLineIndex': 0}"
+                'Field "candidate" of type str is missing in'
+                " RTCIceCandidateInit instance for dictionary"
+                " value @ data['candidate']."
+                " Got {'sdpMLineIndex': 0}"
             ),
         ),
         (
             {"candidate": "candidate", "sdpMLineIndex": -1},
             (
-                "sdpMLineIndex must be greater than or equal to 0 for dictionary value @ "
-                "data['candidate']. Got {'candidate': 'candidate', 'sdpMLineIndex': -1}"
+                "sdpMLineIndex must be greater than or equal"
+                " to 0 for dictionary value @"
+                " data['candidate']. Got {'candidate':"
+                " 'candidate', 'sdpMLineIndex': -1}"
             ),
         ),
     ],
@@ -693,7 +620,7 @@ async def test_ws_webrtc_candidate_invalid_entity(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test ws WebRTC candidate command with a camera entity that does not exist."""
-    await async_setup_component(hass, "camera", {})
+    await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
     await client.send_json_auto_id(
         {
@@ -753,7 +680,10 @@ async def test_ws_webrtc_candidate_invalid_stream_type(
     assert not response["success"]
     assert response["error"] == {
         "code": "webrtc_candidate_failed",
-        "message": "Camera does not support WebRTC, frontend_stream_types={<StreamType.HLS: 'hls'>}",
+        "message": (
+            "Camera does not support WebRTC,"
+            " frontend_stream_types={<StreamType.HLS: 'hls'>}"
+        ),
     }
 
 

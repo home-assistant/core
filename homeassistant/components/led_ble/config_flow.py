@@ -1,7 +1,5 @@
 """Config flow for LEDBLE integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -85,7 +83,7 @@ class LedBleConfigFlow(ConfigFlow, domain=DOMAIN):
         if discovery := self._discovery_info:
             self._discovered_devices[discovery.address] = discovery
         else:
-            current_addresses = self._async_current_ids()
+            current_addresses = self._async_current_ids(include_ignore=False)
             for discovery in async_discovered_service_info(self.hass):
                 if (
                     discovery.address in current_addresses

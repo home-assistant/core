@@ -1,6 +1,5 @@
 """Wrapper for media_source around async_upnp_client's DmsDevice ."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -234,10 +233,10 @@ class DmsDeviceSource:
         try:
             bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_BOOTID]
             bootid: int | None = int(bootid_str, 10)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             bootid = None
 
-        if change == ssdp.SsdpChange.UPDATE:
+        if change is ssdp.SsdpChange.UPDATE:
             # This is an announcement that bootid is about to change
             if self._bootid is not None and self._bootid == bootid:
                 # Store the new value (because our old value matches) so that we
@@ -245,7 +244,7 @@ class DmsDeviceSource:
                 try:
                     next_bootid_str = info.ssdp_headers[ssdp.ATTR_SSDP_NEXTBOOTID]
                     self._bootid = int(next_bootid_str, 10)
-                except (KeyError, ValueError):
+                except KeyError, ValueError:
                     pass
             # Nothing left to do until ssdp:alive comes through
             return
@@ -259,7 +258,7 @@ class DmsDeviceSource:
                 await self.device_disconnect()
         self._bootid = bootid
 
-        if change == ssdp.SsdpChange.BYEBYE:
+        if change is ssdp.SsdpChange.BYEBYE:
             # Device is going away
             if self._device:
                 # Disconnect from gone device
@@ -268,7 +267,7 @@ class DmsDeviceSource:
             self._ssdp_connect_failed = False
 
         if (
-            change == ssdp.SsdpChange.ALIVE
+            change is ssdp.SsdpChange.ALIVE
             and not self._device
             and not self._ssdp_connect_failed
         ):
@@ -567,7 +566,7 @@ class DmsDeviceSource:
         # can_play is False).
         try:
             child_count = int(item.child_count)
-        except (AttributeError, TypeError, ValueError):
+        except AttributeError, TypeError, ValueError:
             child_count = 0
         can_expand = (
             bool(children) or child_count > 0 or isinstance(item, didl_lite.Container)

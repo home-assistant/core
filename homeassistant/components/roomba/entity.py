@@ -1,7 +1,5 @@
 """Base class for iRobot devices."""
 
-from __future__ import annotations
-
 from homeassistant.const import ATTR_CONNECTIONS
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -31,7 +29,11 @@ class IRobotEntity(Entity):
             model=self.vacuum_state.get("sku"),
             name=str(self.vacuum_state.get("name")),
             sw_version=self.vacuum_state.get("softwareVer"),
-            hw_version=self.vacuum_state.get("hardwareRev"),
+            hw_version=(
+                str(hw_rev)
+                if (hw_rev := self.vacuum_state.get("hardwareRev")) is not None
+                else None
+            ),
         )
 
         if mac_address := self.vacuum_state.get("hwPartsRev", {}).get(
@@ -52,11 +54,6 @@ class IRobotEntity(Entity):
         return self.robot_unique_id
 
     @property
-    def battery_level(self):
-        """Return the battery level of the vacuum cleaner."""
-        return self.vacuum_state.get("batPct")
-
-    @property
     def run_stats(self):
         """Return the run stats."""
         return self.vacuum_state.get("bbrun", {})
@@ -70,6 +67,16 @@ class IRobotEntity(Entity):
     def battery_stats(self):
         """Return the battery stats."""
         return self.vacuum_state.get("bbchg3", {})
+
+    @property
+    def tank_level(self) -> int | None:
+        """Return the tank level."""
+        return self.vacuum_state.get("tankLvl")
+
+    @property
+    def dock_tank_level(self) -> int | None:
+        """Return the dock tank level."""
+        return self.vacuum_state.get("dock", {}).get("tankLvl")
 
     @property
     def last_mission(self):

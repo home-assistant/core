@@ -23,11 +23,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
@@ -260,6 +255,7 @@ async def test_get_action_capabilities_set_pos(
             {
                 "name": "position",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,
@@ -310,6 +306,7 @@ async def test_get_action_capabilities_set_tilt_pos(
             {
                 "name": "position",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,
@@ -393,9 +390,9 @@ async def test_action(
     )
     await hass.async_block_till_done()
 
-    open_calls = async_mock_service(hass, "cover", "open_cover")
-    close_calls = async_mock_service(hass, "cover", "close_cover")
-    stop_calls = async_mock_service(hass, "cover", "stop_cover")
+    open_calls = async_mock_service(hass, DOMAIN, "open_cover")
+    close_calls = async_mock_service(hass, DOMAIN, "close_cover")
+    stop_calls = async_mock_service(hass, DOMAIN, "stop_cover")
 
     hass.bus.async_fire("test_event_open")
     await hass.async_block_till_done()
@@ -462,7 +459,7 @@ async def test_action_legacy(
     )
     await hass.async_block_till_done()
 
-    open_calls = async_mock_service(hass, "cover", "open_cover")
+    open_calls = async_mock_service(hass, DOMAIN, "open_cover")
 
     hass.bus.async_fire("test_event_open")
     await hass.async_block_till_done()
@@ -518,8 +515,8 @@ async def test_action_tilt(
     )
     await hass.async_block_till_done()
 
-    open_calls = async_mock_service(hass, "cover", "open_cover_tilt")
-    close_calls = async_mock_service(hass, "cover", "close_cover_tilt")
+    open_calls = async_mock_service(hass, DOMAIN, "open_cover_tilt")
+    close_calls = async_mock_service(hass, DOMAIN, "close_cover_tilt")
 
     hass.bus.async_fire("test_event_open")
     await hass.async_block_till_done()
@@ -597,8 +594,8 @@ async def test_action_set_position(
     )
     await hass.async_block_till_done()
 
-    cover_pos_calls = async_mock_service(hass, "cover", "set_cover_position")
-    tilt_pos_calls = async_mock_service(hass, "cover", "set_cover_tilt_position")
+    cover_pos_calls = async_mock_service(hass, DOMAIN, "set_cover_position")
+    tilt_pos_calls = async_mock_service(hass, DOMAIN, "set_cover_tilt_position")
 
     hass.bus.async_fire("test_event_set_pos")
     await hass.async_block_till_done()

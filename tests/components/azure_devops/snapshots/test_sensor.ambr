@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.testproject_ci_latest_build-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build',
     'options': dict({
     }),
     'original_device_class': None,
@@ -61,8 +63,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_finish_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -80,6 +83,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build finish time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -110,8 +114,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_id-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -129,6 +134,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build ID',
     'options': dict({
     }),
     'original_device_class': None,
@@ -158,8 +164,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_queue_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -177,6 +184,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build queue time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -207,8 +215,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_reason-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -226,6 +235,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build reason',
     'options': dict({
     }),
     'original_device_class': None,
@@ -255,8 +265,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_result-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -274,6 +285,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build result',
     'options': dict({
     }),
     'original_device_class': None,
@@ -303,8 +315,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_source_branch-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -322,6 +335,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build source branch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -351,8 +365,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_source_version-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -370,6 +385,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build source version',
     'options': dict({
     }),
     'original_device_class': None,
@@ -399,8 +415,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_start_time-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -418,6 +435,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build start time',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -448,8 +466,9 @@
 # ---
 # name: test_sensors[sensor.testproject_ci_latest_build_url-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -467,6 +486,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'CI latest build URL',
     'options': dict({
     }),
     'original_device_class': None,

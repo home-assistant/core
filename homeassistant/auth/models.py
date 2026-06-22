@@ -1,7 +1,5 @@
 """Auth models."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address, IPv6Address
 import secrets
@@ -33,7 +31,10 @@ class AuthFlowContext(FlowContext, total=False):
     redirect_uri: str
 
 
-AuthFlowResult = FlowResult[AuthFlowContext, tuple[str, str]]
+class AuthFlowResult(FlowResult[AuthFlowContext, tuple[str, str]], total=False):
+    """Typed result dict for auth flow."""
+
+    result: Credentials  # Only present if type is CREATE_ENTRY
 
 
 @attr.s(slots=True)

@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from glances_api import Glances, exceptions
 
@@ -29,7 +29,6 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self, hass: HomeAssistant, entry: GlancesConfigEntry, api: Glances
     ) -> None:
         """Initialize the Glances data."""
-        self.hass = hass
         self.host: str = entry.data[CONF_HOST]
         self.api = api
         super().__init__(
@@ -40,6 +39,7 @@ class GlancesDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=DEFAULT_SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Get the latest data from the Glances REST API."""
         try:

@@ -1,0 +1,17 @@
+{
+  "data": [
+    {
+      "id": 42793,
+      "name": "Test TRMNL",
+      "friendly_id": "1RJXS4",
+      "mac_address": "B0:A6:04:AA:BB:CC",
+      "battery_voltage": 3.87,
+      "rssi": -64,
+      "sleep_mode_enabled": false,
+      "sleep_start_time": 1320,
+      "sleep_end_time": 480,
+      "percent_charged": 72.5,
+      "wifi_strength": 50
+    }
+  ]
+}

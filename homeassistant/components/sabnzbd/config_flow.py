@@ -1,7 +1,5 @@
 """Adds config flow for SabNzbd."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -90,4 +88,8 @@ class SABnzbdConfigFlow(ConfigFlow, domain=DOMAIN):
                 else user_input,
             ),
             errors=errors,
+            description_placeholders={
+                "sabnzbd_full_url_local": "http://localhost:8080",
+                "sabnzbd_full_url_addon": "http://a02368d7-sabnzbd:8080",
+            },
         )

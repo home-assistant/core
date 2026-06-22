@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor_setup[binary_sensor.madvr_envy_hdr_flag-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'HDR flag',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +51,9 @@
 # ---
 # name: test_binary_sensor_setup[binary_sensor.madvr_envy_outgoing_hdr_flag-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +71,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Outgoing HDR flag',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_binary_sensor_setup[binary_sensor.madvr_envy_power_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Power state',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,8 +151,9 @@
 # ---
 # name: test_binary_sensor_setup[binary_sensor.madvr_envy_signal_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +171,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Signal state',
     'options': dict({
     }),
     'original_device_class': None,

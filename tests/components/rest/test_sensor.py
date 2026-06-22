@@ -1,6 +1,7 @@
 """The tests for the REST sensor platform."""
 
 from http import HTTPStatus
+import logging
 import ssl
 from unittest.mock import patch
 
@@ -19,6 +20,14 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_DEVICE_CLASS,
+    CONF_FORCE_UPDATE,
+    CONF_METHOD,
+    CONF_NAME,
+    CONF_PARAMS,
+    CONF_RESOURCE,
+    CONF_UNIT_OF_MEASUREMENT,
+    CONF_VALUE_TEMPLATE,
     CONTENT_TYPE_JSON,
     SERVICE_RELOAD,
     STATE_UNAVAILABLE,
@@ -135,14 +144,49 @@ async def test_setup_minimum(
     assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
 
 
-async def test_setup_encoding(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+@pytest.mark.parametrize(
+    ("content_text", "content_encoding", "headers", "expected_state"),
+    [
+        # Test setup with non-utf8 encoding
+        pytest.param(
+            "tack själv",
+            "iso-8859-1",
+            None,
+            "tack själv",
+            id="simple_iso88591",
+        ),
+        # Test that configured encoding is used when no charset in Content-Type
+        pytest.param(
+            "Björk Guðmundsdóttir",
+            "iso-8859-1",
+            {"Content-Type": "text/plain"},  # No charset!
+            "Björk Guðmundsdóttir",
+            id="fallback_when_no_charset",
+        ),
+        # Test that charset in Content-Type overrides configured encoding
+        pytest.param(
+            "Björk Guðmundsdóttir",
+            "utf-8",
+            {"Content-Type": "text/plain; charset=utf-8"},
+            "Björk Guðmundsdóttir",
+            id="charset_overrides_config",
+        ),
+    ],
+)
+async def test_setup_with_encoding_config(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    content_text: str,
+    content_encoding: str,
+    headers: dict[str, str] | None,
+    expected_state: str,
 ) -> None:
-    """Test setup with non-utf8 encoding."""
+    """Test setup with encoding configuration in sensor config."""
     aioclient_mock.get(
         "http://localhost",
         status=HTTPStatus.OK,
-        content="tack själv".encode(encoding="iso-8859-1"),
+        content=content_text.encode(content_encoding),
+        headers=headers,
     )
     assert await async_setup_component(
         hass,
@@ -159,7 +203,36 @@ async def test_setup_encoding(
     )
     await hass.async_block_till_done()
     assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
-    assert hass.states.get("sensor.mysensor").state == "tack själv"
+    assert hass.states.get("sensor.mysensor").state == expected_state
+
+
+async def test_setup_with_charset_from_header(
+    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+) -> None:
+    """Test setup with encoding auto-detected from Content-Type header."""
+    # Test with ISO-8859-1 charset in Content-Type header
+    aioclient_mock.get(
+        "http://localhost",
+        status=HTTPStatus.OK,
+        content="Björk Guðmundsdóttir".encode("iso-8859-1"),
+        headers={"Content-Type": "text/plain; charset=iso-8859-1"},
+    )
+    assert await async_setup_component(
+        hass,
+        SENSOR_DOMAIN,
+        {
+            SENSOR_DOMAIN: {
+                "name": "mysensor",
+                # No encoding config - should use charset from header.
+                "platform": DOMAIN,
+                "resource": "http://localhost",
+                "method": "GET",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    assert hass.states.get("sensor.mysensor").state == "Björk Guðmundsdóttir"
 
 
 @pytest.mark.parametrize(
@@ -728,7 +801,7 @@ async def test_update_with_json_attrs_bad_JSON(
 async def test_update_with_json_attrs_with_json_attrs_path(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
 ) -> None:
-    """Test attributes get extracted from a JSON result with a template for the attributes."""
+    """Test attributes extracted from JSON with a path template."""
 
     aioclient_mock.get(
         "http://localhost",
@@ -775,7 +848,7 @@ async def test_update_with_xml_convert_json_attrs_with_json_attrs_path(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test attributes get extracted from a JSON result that was converted from XML with a template for the attributes."""
+    """Test attributes extracted from XML-to-JSON with a path."""
 
     aioclient_mock.get(
         "http://localhost",
@@ -820,7 +893,19 @@ async def test_update_with_xml_convert_json_attrs_with_jsonattr_template(
         "http://localhost",
         status=HTTPStatus.OK,
         headers={"content-type": "text/xml"},
-        text='<?xml version="1.0" encoding="utf-8"?><response><scan>0</scan><ver>12556</ver><count>48</count><ssid>alexander</ssid><bss><valid>0</valid><name>0</name><privacy>0</privacy><wlan>123</wlan><strength>0</strength></bss><led0>0</led0><led1>0</led1><led2>0</led2><led3>0</led3><led4>0</led4><led5>0</led5><led6>0</led6><led7>0</led7><btn0>up</btn0><btn1>up</btn1><btn2>up</btn2><btn3>up</btn3><pot0>0</pot0><usr0>0</usr0><temp0>0x0XF0x0XF</temp0><time0> 0</time0></response>',
+        text=(
+            '<?xml version="1.0" encoding="utf-8"?><response>'
+            "<scan>0</scan><ver>12556</ver><count>48</count>"
+            "<ssid>alexander</ssid><bss><valid>0</valid><name>0"
+            "</name><privacy>0</privacy><wlan>123</wlan>"
+            "<strength>0</strength></bss><led0>0</led0>"
+            "<led1>0</led1><led2>0</led2><led3>0</led3>"
+            "<led4>0</led4><led5>0</led5><led6>0</led6>"
+            "<led7>0</led7><btn0>up</btn0><btn1>up</btn1>"
+            "<btn2>up</btn2><btn3>up</btn3><pot0>0</pot0>"
+            "<usr0>0</usr0><temp0>0x0XF0x0XF</temp0>"
+            "<time0> 0</time0></response>"
+        ),
     )
     assert await async_setup_component(
         hass,
@@ -856,7 +941,7 @@ async def test_update_with_application_xml_convert_json_attrs_with_jsonattr_temp
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test attributes get extracted from a JSON result that was converted from XML with application/xml mime type."""
+    """Test attributes extracted from XML with application/xml type."""
 
     aioclient_mock.get(
         "http://localhost",
@@ -978,6 +1063,124 @@ async def test_update_with_failed_get(
     assert "Empty reply" in caplog.text
 
 
+async def test_query_param_dict_value(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test dict values in query params are handled for backward compatibility."""
+    # Mock response
+    aioclient_mock.post(
+        "https://www.envertecportal.com/ApiInverters/QueryTerminalReal",
+        status=HTTPStatus.OK,
+        json={"Data": {"QueryResults": [{"POWER": 1500}]}},
+    )
+
+    # This test checks that when template_complex processes a string that looks like
+    # a dict/list, it converts it to an actual dict/list, which then needs to be
+    # handled by our backward compatibility code
+    with caplog.at_level(logging.DEBUG, logger="homeassistant.components.rest.data"):
+        assert await async_setup_component(
+            hass,
+            DOMAIN,
+            {
+                DOMAIN: [
+                    {
+                        CONF_RESOURCE: (
+                            "https://www.envertecportal.com/ApiInverters/"
+                            "QueryTerminalReal"
+                        ),
+                        CONF_METHOD: "POST",
+                        CONF_PARAMS: {
+                            "page": "1",
+                            "perPage": "20",
+                            "orderBy": "SN",
+                            # When processed by template.render_complex, certain
+                            # strings might be converted to dicts/lists if they
+                            # look like JSON
+                            "whereCondition": (
+                                "{{ {'STATIONID': 'A6327A17797C1234'} }}"
+                            ),  # Template that evaluates to dict
+                        },
+                        "sensor": [
+                            {
+                                CONF_NAME: "Solar MPPT1 Power",
+                                CONF_VALUE_TEMPLATE: (
+                                    "{{ value_json.Data.QueryResults[0].POWER }}"
+                                ),
+                                CONF_DEVICE_CLASS: "power",
+                                CONF_UNIT_OF_MEASUREMENT: "W",
+                                CONF_FORCE_UPDATE: True,
+                                "state_class": "measurement",
+                            }
+                        ],
+                    }
+                ]
+            },
+        )
+        await hass.async_block_till_done()
+
+    # The sensor should be created successfully with backward compatibility
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    state = hass.states.get("sensor.solar_mppt1_power")
+    assert state is not None
+    assert state.state == "1500"
+
+    # Check that a debug message was logged about the parameter conversion
+    assert "REST query parameter 'whereCondition' has type" in caplog.text
+    assert "converting to string" in caplog.text
+
+
+async def test_query_param_json_string_preserved(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test JSON strings in query params are preserved."""
+    # Mock response
+    aioclient_mock.get(
+        "https://api.example.com/data",
+        status=HTTPStatus.OK,
+        json={"value": 42},
+    )
+
+    # Config with JSON string (quoted) - should remain a string
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    CONF_RESOURCE: "https://api.example.com/data",
+                    CONF_METHOD: "GET",
+                    CONF_PARAMS: {
+                        "filter": '{"type": "sensor", "id": 123}',  # JSON string
+                        "normal": "value",
+                    },
+                    "sensor": [
+                        {
+                            CONF_NAME: "Test Sensor",
+                            CONF_VALUE_TEMPLATE: "{{ value_json.value }}",
+                        }
+                    ],
+                }
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    # Check the sensor was created
+    assert len(hass.states.async_all(SENSOR_DOMAIN)) == 1
+    state = hass.states.get("sensor.test_sensor")
+    assert state is not None
+    assert state.state == "42"
+
+    # Verify the request was made with the JSON string intact
+    assert len(aioclient_mock.mock_calls) == 1
+    _method, url, _data, _headers = aioclient_mock.mock_calls[0]
+    assert url.query["filter"] == '{"type": "sensor", "id": 123}'
+    assert url.query["normal"] == "value"
+
+
 async def test_reload(hass: HomeAssistant, aioclient_mock: AiohttpClientMocker) -> None:
     """Verify we can reload reset sensors."""
 
@@ -1086,7 +1289,11 @@ async def test_availability_in_config(
                             "unique_id": "somethingunique",
                             "availability": "{{ value_json.available }}",
                             "value_template": "{{ value_json.state }}",
-                            "name": "{{ value_json.name if value_json is defined else 'rest_sensor' }}",
+                            "name": (
+                                "{{ value_json.name if"
+                                " value_json is defined"
+                                " else 'rest_sensor' }}"
+                            ),
                             "icon": "{{ value_json.icon }}",
                             "picture": "{{ value_json.picture }}",
                         }
@@ -1126,7 +1333,7 @@ async def test_availability_in_config(
 
     state = hass.states.get("sensor.rest_sensor")
     assert state.state == STATE_UNAVAILABLE
-    assert "friendly_name" not in state.attributes
+    assert state.attributes["friendly_name"] == "rest_sensor"
     assert "icon" not in state.attributes
     assert "entity_picture" not in state.attributes
 
@@ -1154,7 +1361,11 @@ async def test_json_response_with_availability_syntax_error(
                         {
                             "unique_id": "complex_json",
                             "name": "complex_json",
-                            "value_template": '{% set v = value_json.heartbeatList["1"][-1] %}{{ v.ping }}',
+                            "value_template": (
+                                "{% set v = value_json"
+                                '.heartbeatList["1"][-1]'
+                                " %}{{ v.ping }}"
+                            ),
                             "availability": "{{ what_the_heck == 2 }}",
                         }
                     ],
@@ -1170,8 +1381,9 @@ async def test_json_response_with_availability_syntax_error(
     assert state.state == "21.4"
 
     assert (
-        "Error rendering availability template for sensor.complex_json: UndefinedError: 'what_the_heck' is undefined"
-        in caplog.text
+        "Error rendering availability template for"
+        " sensor.complex_json: UndefinedError:"
+        " 'what_the_heck' is undefined" in caplog.text
     )
 
 
@@ -1196,8 +1408,17 @@ async def test_json_response_with_availability(
                         {
                             "unique_id": "complex_json",
                             "name": "complex_json",
-                            "value_template": '{% set v = value_json.heartbeatList["1"][-1] %}{{ v.ping }}',
-                            "availability": '{% set v = value_json.heartbeatList["1"][-1] %}{{ v.status == 1 and is_number(v.ping) }}',
+                            "value_template": (
+                                "{% set v = value_json"
+                                '.heartbeatList["1"][-1]'
+                                " %}{{ v.ping }}"
+                            ),
+                            "availability": (
+                                "{% set v = value_json"
+                                '.heartbeatList["1"][-1]'
+                                " %}{{ v.status == 1 and"
+                                " is_number(v.ping) }}"
+                            ),
                             "unit_of_measurement": "ms",
                             "state_class": "measurement",
                         }

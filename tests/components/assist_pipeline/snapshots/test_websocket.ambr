@@ -18,6 +18,11 @@
 # ---
 # name: test_audio_pipeline.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -44,6 +49,7 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline.4
@@ -72,6 +78,7 @@
 # ---
 # name: test_audio_pipeline.5
   dict({
+    'acknowledge_override': False,
     'engine': 'tts.test',
     'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
@@ -110,6 +117,11 @@
 # ---
 # name: test_audio_pipeline_debug.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -136,6 +148,7 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline_debug.4
@@ -164,6 +177,7 @@
 # ---
 # name: test_audio_pipeline_debug.5
   dict({
+    'acknowledge_override': False,
     'engine': 'tts.test',
     'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
@@ -214,6 +228,11 @@
 # ---
 # name: test_audio_pipeline_with_enhancements.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -240,6 +259,7 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline_with_enhancements.4
@@ -268,6 +288,7 @@
 # ---
 # name: test_audio_pipeline_with_enhancements.5
   dict({
+    'acknowledge_override': False,
     'engine': 'tts.test',
     'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
@@ -328,6 +349,11 @@
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.3
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -354,6 +380,7 @@
     'intent_input': 'test transcript',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.6
@@ -382,6 +409,7 @@
 # ---
 # name: test_audio_pipeline_with_wake_word_no_timeout.7
   dict({
+    'acknowledge_override': False,
     'engine': 'tts.test',
     'language': 'en_US',
     'tts_input': "Sorry, I couldn't understand that",
@@ -453,6 +481,11 @@
 # ---
 # name: test_device_capture.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -480,6 +513,11 @@
 # ---
 # name: test_device_capture_override.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -529,6 +567,11 @@
 # ---
 # name: test_device_capture_queue_full.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -575,6 +618,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_intent_failed.2
@@ -599,6 +643,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_intent_timeout.2
@@ -635,6 +680,7 @@
     'intent_input': 'never mind',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_pipeline_empty_tts_output.2
@@ -649,8 +695,6 @@
           'failed': list([
           ]),
           'success': list([
-          ]),
-          'targets': list([
           ]),
         }),
         'language': 'en',
@@ -752,6 +796,11 @@
 # ---
 # name: test_stt_stream_failed.1
   dict({
+    'audio_processing': dict({
+      'prefers_auto_gain_enabled': True,
+      'prefers_noise_reduction_enabled': True,
+      'requires_external_vad': True,
+    }),
     'engine': 'stt.mock_stt',
     'metadata': dict({
       'bit_rate': 16,
@@ -785,6 +834,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg0].2
@@ -833,6 +883,7 @@
     'intent_input': 'Are the lights on?',
     'language': 'en',
     'prefer_local_intents': False,
+    'satellite_id': None,
   })
 # ---
 # name: test_text_only_pipeline[extra_msg1].2

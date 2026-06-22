@@ -22,11 +22,6 @@ from tests.common import async_fire_mqtt_message, async_get_device_automations
 from tests.typing import MqttMockHAClientGenerator, WebSocketGenerator
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     ("discovery_topic", "data"),
     [
@@ -496,8 +491,8 @@ async def test_non_unique_triggers(
     # and therefore it was not set up.
     assert device_entry.name == "beer"
     assert (
-        "Config for device trigger bla2 conflicts with existing device trigger, cannot set up trigger"
-        in caplog.text
+        "Config for device trigger bla2 conflicts with existing"
+        " device trigger, cannot set up trigger" in caplog.text
     )
 
     assert await async_setup_component(
@@ -1369,7 +1364,11 @@ async def test_cleanup_trigger(
 
     # Verify retained discovery topic has been cleared
     mqtt_mock.async_publish.assert_called_once_with(
-        "homeassistant/device_automation/bla/config", None, 0, True
+        "homeassistant/device_automation/bla/config",
+        None,
+        0,
+        True,
+        message_expiry_interval=None,
     )
 
 

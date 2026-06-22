@@ -1,7 +1,5 @@
 """Support for Notion."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 
 from aionotion.bridge.models import Bridge
@@ -45,9 +43,9 @@ class NotionEntity(CoordinatorEntity[NotionDataUpdateCoordinator]):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor.hardware_id)},
             manufacturer="Silicon Labs",
-            model=str(sensor.hardware_revision),
             name=str(sensor.name).capitalize(),
             sw_version=sensor.firmware_version,
+            hw_version=str(sensor.hardware_revision),
         )
 
         if bridge := self._async_get_bridge(bridge_id):

@@ -1,7 +1,5 @@
 """Config flow for Ukraine Alarm."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING, Any
 
@@ -21,7 +19,7 @@ _LOGGER = logging.getLogger(__name__)
 class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Ukraine Alarm."""
 
-    VERSION = 1
+    VERSION = 2
 
     def __init__(self) -> None:
         """Initialize a new UkraineAlarmConfigFlow."""
@@ -95,7 +93,8 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             source = self.states
 
         if user_input is not None:
-            # Only offer to browse subchildren if picked region wasn't the previously picked one
+            # Only offer to browse subchildren if picked
+            # region wasn't the previously picked one
             if (
                 not self.selected_region
                 or user_input[CONF_REGION] != self.selected_region["regionId"]
@@ -112,7 +111,7 @@ class UkraineAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self._async_finish_flow()
 
         regions = {}
-        if self.selected_region:
+        if self.selected_region and step_id != "district":
             regions[self.selected_region["regionId"]] = self.selected_region[
                 "regionName"
             ]

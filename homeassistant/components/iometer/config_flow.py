@@ -1,8 +1,13 @@
 """Config flow for the IOmeter integration."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
-from iometer import IOmeterClient, IOmeterConnectionError
+from iometer import (
+    IOmeterClient,
+    IOmeterConnectionError,
+    IOmeterNoReadingsError,
+    IOmeterNoStatusError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -23,6 +28,7 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         self._host: str
         self._meter_number: str
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -34,6 +40,11 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
         client = IOmeterClient(host=host, session=session)
         try:
             status = await client.get_current_status()
+            _ = await client.get_current_reading()
+        except IOmeterNoStatusError:
+            return self.async_abort(reason="no_status")
+        except IOmeterNoReadingsError:
+            return self.async_abort(reason="no_readings")
         except IOmeterConnectionError:
             return self.async_abort(reason="cannot_connect")
 
@@ -58,6 +69,7 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"meter_number": self._meter_number},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,6 +82,11 @@ class IOMeterConfigFlow(ConfigFlow, domain=DOMAIN):
             client = IOmeterClient(host=self._host, session=session)
             try:
                 status = await client.get_current_status()
+                _ = await client.get_current_reading()
+            except IOmeterNoStatusError:
+                errors["base"] = "no_status"
+            except IOmeterNoReadingsError:
+                errors["base"] = "no_readings"
             except IOmeterConnectionError:
                 errors["base"] = "cannot_connect"
             else:

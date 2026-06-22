@@ -1,14 +1,11 @@
 """Config flow for Met Office integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
 
-import datapoint
 from datapoint.exceptions import APIException
-import datapoint.Manager
+from datapoint.Manager import Manager
 from requests import HTTPError
 import voluptuous as vol
 
@@ -31,7 +28,7 @@ async def validate_input(
     Data has the keys from DATA_SCHEMA with values provided by the user.
     """
     errors = {}
-    connection = datapoint.Manager.Manager(api_key=api_key)
+    connection = Manager(api_key=api_key)
 
     try:
         forecast = await hass.async_add_executor_job(

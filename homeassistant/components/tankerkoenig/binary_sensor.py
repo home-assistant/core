@@ -1,7 +1,5 @@
 """Tankerkoenig binary sensor integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aiotankerkoenig import PriceInfo, Station, Status
@@ -16,6 +14,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import TankerkoenigConfigEntry, TankerkoenigDataUpdateCoordinator
 from .entity import TankerkoenigCoordinatorEntity
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
 

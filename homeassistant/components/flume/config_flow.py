@@ -1,11 +1,9 @@
 """Config flow for flume integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 from pyflume import FlumeAuth, FlumeDeviceList
 from requests.exceptions import RequestException
@@ -93,6 +91,7 @@ class FlumeConfigFlow(ConfigFlow, domain=DOMAIN):
         """Init flume config flow."""
         self._reauth_unique_id: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -111,7 +110,12 @@ class FlumeConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors[CONF_PASSWORD] = "invalid_auth"
 
         return self.async_show_form(
-            step_id="user", data_schema=DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=DATA_SCHEMA,
+            errors=errors,
+            description_placeholders={
+                "api_url": "https://portal.flumetech.com/settings#token"
+            },
         )
 
     async def async_step_reauth(

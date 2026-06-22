@@ -16,6 +16,12 @@ MQTT = {
     "fully_kiosk": [
         "fully/deviceInfo/+",
     ],
+    "greencell": [
+        "/greencell/broadcast/device",
+    ],
+    "inels": [
+        "inels/status/#",
+    ],
     "pglab": [
         "pglab/discovery/#",
     ],

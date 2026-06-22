@@ -1,8 +1,259 @@
 # serializer version: 1
+# name: test_switch_entities[55uoqe][switch.dbmini_border_spin:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.dbmini_border_spin',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Border spin',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Border spin',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'border_spin',
+    'unique_id': 'E1234567890000000002_border_spin',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[55uoqe][switch.dbmini_border_spin:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'DBMini Border spin',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dbmini_border_spin',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[55uoqe][switch.dbmini_carpet_auto_boost_suction:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.dbmini_carpet_auto_boost_suction',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Carpet auto-boost suction',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Carpet auto-boost suction',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'carpet_auto_fan_boost',
+    'unique_id': 'E1234567890000000002_carpet_auto_fan_boost',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[55uoqe][switch.dbmini_carpet_auto_boost_suction:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'DBMini Carpet auto-boost suction',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dbmini_carpet_auto_boost_suction',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[55uoqe][switch.dbmini_child_lock:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.dbmini_child_lock',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Child lock',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Child lock',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'child_lock',
+    'unique_id': 'E1234567890000000002_child_lock',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[55uoqe][switch.dbmini_child_lock:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'DBMini Child lock',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dbmini_child_lock',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[55uoqe][switch.dbmini_continuous_cleaning:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.dbmini_continuous_cleaning',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Continuous cleaning',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Continuous cleaning',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'continuous_cleaning',
+    'unique_id': 'E1234567890000000002_continuous_cleaning',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[55uoqe][switch.dbmini_continuous_cleaning:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'DBMini Continuous cleaning',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dbmini_continuous_cleaning',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
+# name: test_switch_entities[55uoqe][switch.dbmini_true_detect:entity-registry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'switch',
+    'entity_category': <EntityCategory.CONFIG: 'config'>,
+    'entity_id': 'switch.dbmini_true_detect',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'True detect',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'True detect',
+    'platform': 'ecovacs',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'true_detect',
+    'unique_id': 'E1234567890000000002_true_detect',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_switch_entities[55uoqe][switch.dbmini_true_detect:state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'friendly_name': 'DBMini True detect',
+    }),
+    'context': <ANY>,
+    'entity_id': 'switch.dbmini_true_detect',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'on',
+  })
+# ---
 # name: test_switch_entities[5xu9h3][switch.goat_g1_advanced_mode:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +271,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Advanced mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -49,8 +301,9 @@
 # ---
 # name: test_switch_entities[5xu9h3][switch.goat_g1_border_switch:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,6 +321,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Border switch',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +351,9 @@
 # ---
 # name: test_switch_entities[5xu9h3][switch.goat_g1_child_lock:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +371,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Child lock',
     'options': dict({
     }),
     'original_device_class': None,
@@ -145,8 +401,9 @@
 # ---
 # name: test_switch_entities[5xu9h3][switch.goat_g1_cross_map_border_warning:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +421,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Cross map border warning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,8 +451,9 @@
 # ---
 # name: test_switch_entities[5xu9h3][switch.goat_g1_move_up_warning:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +471,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Move up warning',
     'options': dict({
     }),
     'original_device_class': None,
@@ -241,8 +501,9 @@
 # ---
 # name: test_switch_entities[5xu9h3][switch.goat_g1_safe_protect:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +521,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Safe protect',
     'options': dict({
     }),
     'original_device_class': None,
@@ -289,8 +551,9 @@
 # ---
 # name: test_switch_entities[5xu9h3][switch.goat_g1_true_detect:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'True detect',
     'options': dict({
     }),
     'original_device_class': None,
@@ -337,8 +601,9 @@
 # ---
 # name: test_switch_entities[yna5x1][switch.ozmo_950_advanced_mode:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -356,6 +621,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Advanced mode',
     'options': dict({
     }),
     'original_device_class': None,
@@ -385,8 +651,9 @@
 # ---
 # name: test_switch_entities[yna5x1][switch.ozmo_950_carpet_auto_boost_suction:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -404,6 +671,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Carpet auto-boost suction',
     'options': dict({
     }),
     'original_device_class': None,
@@ -433,8 +701,9 @@
 # ---
 # name: test_switch_entities[yna5x1][switch.ozmo_950_continuous_cleaning:entity-registry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -452,6 +721,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Continuous cleaning',
     'options': dict({
     }),
     'original_device_class': None,

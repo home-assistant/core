@@ -1,9 +1,8 @@
 """Tests for Search integration."""
 
-import pytest
 from pytest_unordered import unordered
 
-from homeassistant.components.search import ItemType, Searcher
+from homeassistant.components.search import DOMAIN, ItemType, Searcher
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -19,11 +18,6 @@ from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 async def test_search(
     hass: HomeAssistant,
     area_registry: ar.AreaRegistry,
@@ -34,7 +28,7 @@ async def test_search(
     hass_ws_client: WebSocketGenerator,
 ) -> None:
     """Test search."""
-    assert await async_setup_component(hass, "search", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     # Labels
     label_energy = label_registry.async_create("Energy")

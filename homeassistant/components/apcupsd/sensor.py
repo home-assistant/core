@@ -1,8 +1,9 @@
 """Support for APCUPSd sensors."""
 
-from __future__ import annotations
-
 import logging
+from typing import Final, override
+
+import dateutil
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -23,14 +24,28 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import LAST_S_TEST
 from .coordinator import APCUPSdConfigEntry, APCUPSdCoordinator
+from .entity import APCUPSdEntity
 
 PARALLEL_UPDATES = 0
 
 _LOGGER = logging.getLogger(__name__)
+
+# List of useless sensors to ignore, since they are either provided in device
+# information, or not useful at all
+IGNORED_SENSORS: Final = {
+    "apc",
+    "end apc",
+    "date",
+    "apcmodel",
+    "model",
+    "firmware",
+    "version",
+    "upsname",
+    "serialno",
+}
 
 SENSORS: dict[str, SensorEntityDescription] = {
     "alarmdel": SensorEntityDescription(
@@ -44,18 +59,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-    ),
-    "apc": SensorEntityDescription(
-        key="apc",
-        translation_key="apc_status",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "apcmodel": SensorEntityDescription(
-        key="apcmodel",
-        translation_key="apc_model",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "badbatts": SensorEntityDescription(
         key="badbatts",
@@ -96,12 +99,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
         state_class=SensorStateClass.TOTAL_INCREASING,
         device_class=SensorDeviceClass.DURATION,
     ),
-    "date": SensorEntityDescription(
-        key="date",
-        translation_key="date",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     "dipsw": SensorEntityDescription(
         key="dipsw",
         translation_key="dip_switch_settings",
@@ -128,21 +125,9 @@ SENSORS: dict[str, SensorEntityDescription] = {
         translation_key="wake_delay",
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "end apc": SensorEntityDescription(
-        key="end apc",
-        translation_key="date_and_time",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     "extbatts": SensorEntityDescription(
         key="extbatts",
         translation_key="external_batteries",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "firmware": SensorEntityDescription(
-        key="firmware",
-        translation_key="firmware_version",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "hitrans": SensorEntityDescription(
@@ -175,6 +160,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     LAST_S_TEST: SensorEntityDescription(
         key=LAST_S_TEST,
         translation_key="last_self_test",
+        device_class=SensorDeviceClass.TIMESTAMP,
     ),
     "lastxfer": SensorEntityDescription(
         key="lastxfer",
@@ -228,6 +214,7 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "masterupd": SensorEntityDescription(
         key="masterupd",
         translation_key="master_update",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "maxlinev": SensorEntityDescription(
@@ -256,12 +243,6 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "mintimel": SensorEntityDescription(
         key="mintimel",
         translation_key="min_time",
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "model": SensorEntityDescription(
-        key="model",
-        translation_key="model",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "nombattv": SensorEntityDescription(
@@ -352,15 +333,10 @@ SENSORS: dict[str, SensorEntityDescription] = {
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "serialno": SensorEntityDescription(
-        key="serialno",
-        translation_key="serial_number",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
     "starttime": SensorEntityDescription(
         key="starttime",
         translation_key="startup_time",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "statflag": SensorEntityDescription(
@@ -395,32 +371,24 @@ SENSORS: dict[str, SensorEntityDescription] = {
     "upsmode": SensorEntityDescription(
         key="upsmode",
         translation_key="ups_mode",
-    ),
-    "upsname": SensorEntityDescription(
-        key="upsname",
-        translation_key="ups_name",
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    "version": SensorEntityDescription(
-        key="version",
-        translation_key="version",
-        entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "xoffbat": SensorEntityDescription(
         key="xoffbat",
         translation_key="transfer_from_battery",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "xoffbatt": SensorEntityDescription(
         key="xoffbatt",
         translation_key="transfer_from_battery",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     "xonbatt": SensorEntityDescription(
         key="xonbatt",
         translation_key="transfer_to_battery",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 }
@@ -462,11 +430,18 @@ async def async_setup_entry(
 
     entities = []
 
-    # "laststest" is a special sensor that only appears when the APC UPS daemon has done a
-    # periodical (or manual) self test since last daemon restart. It might not be available
-    # when we set up the integration, and we do not know if it would ever be available. Here we
-    # add it anyway and mark it as unknown initially.
-    for resource in available_resources | {LAST_S_TEST}:
+    # "laststest" is a special sensor that only appears when
+    # the APC UPS daemon has done a periodical (or manual) self
+    # test since last daemon restart. It might not be available
+    # when we set up the integration, and we do not know if it
+    # would ever be available. Here we add it anyway and mark it
+    # as unknown initially.
+    #
+    # We also sort the resources to ensure the order of entities
+    # created is deterministic
+    for resource in sorted(available_resources | {LAST_S_TEST}):
+        if resource in IGNORED_SENSORS:
+            continue
         if resource not in SENSORS:
             _LOGGER.warning("Invalid resource from APCUPSd: %s", resource.upper())
             continue
@@ -490,10 +465,8 @@ def infer_unit(value: str) -> tuple[str, str | None]:
     return value, None
 
 
-class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
+class APCUPSdSensor(APCUPSdEntity, SensorEntity):
     """Representation of a sensor entity for APCUPSd status values."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self,
@@ -501,16 +474,13 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
         description: SensorEntityDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator=coordinator, context=description.key.upper())
-
-        self.entity_description = description
-        self._attr_unique_id = f"{coordinator.unique_device_id}_{description.key}"
-        self._attr_device_info = coordinator.device_info
+        super().__init__(coordinator, description)
 
         # Initial update of attributes.
         self._update_attrs()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attrs()
@@ -519,14 +489,34 @@ class APCUPSdSensor(CoordinatorEntity[APCUPSdCoordinator], SensorEntity):
     def _update_attrs(self) -> None:
         """Update sensor attributes based on coordinator data."""
         key = self.entity_description.key.upper()
-        # For most sensors the key will always be available for each refresh. However, some sensors
-        # (e.g., "laststest") will only appear after certain event occurs (e.g., a self test is
-        # performed) and may disappear again after certain event. So we mark the state as "unknown"
+        # For most sensors the key will always be available for
+        # each refresh. However, some sensors (e.g., "laststest")
+        # will only appear after certain event occurs (e.g., a
+        # self test is performed) and may disappear again after
+        # certain event. So we mark the state as "unknown"
         # when it becomes unknown after such events.
         if key not in self.coordinator.data:
             self._attr_native_value = None
             return
 
-        self._attr_native_value, inferred_unit = infer_unit(self.coordinator.data[key])
+        data = self.coordinator.data[key]
+
+        if self.entity_description.device_class == SensorDeviceClass.TIMESTAMP:
+            # The date could be "N/A" for certain fields
+            # (e.g., XOFFBATT), indicating there is no value yet.
+            if data == "N/A":
+                self._attr_native_value = None
+                return
+
+            try:
+                self._attr_native_value = dateutil.parser.parse(data)
+            except dateutil.parser.ParserError, OverflowError:
+                # If parsing fails we should mark it as unknown,
+                # with a log for further debugging.
+                _LOGGER.warning('Failed to parse date for %s: "%s"', key, data)
+                self._attr_native_value = None
+            return
+
+        self._attr_native_value, inferred_unit = infer_unit(data)
         if not self.native_unit_of_measurement:
             self._attr_native_unit_of_measurement = inferred_unit

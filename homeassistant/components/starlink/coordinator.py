@@ -1,7 +1,5 @@
 """Contains the shared Coordinator for Starlink systems."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import timedelta
@@ -66,27 +64,21 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
             config_entry=config_entry,
             name=config_entry.title,
             update_interval=timedelta(seconds=5),
+            always_update=False,
         )
 
     def _get_starlink_data(self) -> StarlinkData:
         """Retrieve Starlink data."""
         context = self.channel_context
-        status = status_data(context)
         location = location_data(context)
         sleep = get_sleep_config(context)
         status, obstruction, alert = status_data(context)
         index, _, _, _, _, usage, consumption, *_ = history_stats(
-            parse_samples=-1, start=self.history_stats_start, context=context
+            parse_samples=-1 if self.history_stats_start is not None else 1,
+            start=self.history_stats_start,
+            context=context,
         )
         self.history_stats_start = index["end_counter"]
-        if self.data:
-            if index["samples"] > 0:
-                usage["download_usage"] += self.data.usage["download_usage"]
-                usage["upload_usage"] += self.data.usage["upload_usage"]
-                consumption["total_energy"] += self.data.consumption["total_energy"]
-            else:
-                usage = self.data.usage
-                consumption = self.data.consumption
         return StarlinkData(
             location, sleep, status, obstruction, alert, usage, consumption
         )
@@ -94,10 +86,9 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
     async def _async_update_data(self) -> StarlinkData:
         async with asyncio.timeout(4):
             try:
-                result = await self.hass.async_add_executor_job(self._get_starlink_data)
+                return await self.hass.async_add_executor_job(self._get_starlink_data)
             except GrpcError as exc:
                 raise UpdateFailed from exc
-            return result
 
     async def async_stow_starlink(self, stow: bool) -> None:
         """Set whether Starlink system tied to this coordinator should be stowed."""
@@ -149,7 +140,8 @@ class StarlinkUpdateCoordinator(DataUpdateCoordinator[StarlinkData]):
         """Set Starlink system sleep schedule end time."""
         duration = end - self.data.sleep[0]
         if duration < 0:
-            # If the duration pushed us into the next day, add one days worth to correct that.
+            # If the duration pushed us into the next day,
+            # add one days worth to correct that.
             duration += 1440
         async with asyncio.timeout(4):
             try:

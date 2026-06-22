@@ -3,8 +3,6 @@
 To update, run python3 -m script.amazon_polly
 """
 
-from __future__ import annotations
-
 from typing import Final
 
 SUPPORTED_ENGINES: Final[set[str]] = {
@@ -23,9 +21,12 @@ SUPPORTED_REGIONS: Final[set[str]] = {
     "ap-south-1",
     "ap-southeast-1",
     "ap-southeast-2",
+    "ap-southeast-5",
     "ca-central-1",
     "eu-central-1",
+    "eu-central-2",
     "eu-north-1",
+    "eu-south-2",
     "eu-west-1",
     "eu-west-2",
     "eu-west-3",
@@ -40,6 +41,7 @@ SUPPORTED_REGIONS: Final[set[str]] = {
 SUPPORTED_VOICES: Final[set[str]] = {
     "Aditi",
     "Adriano",
+    "Alba",
     "Amy",
     "Andres",
     "Aria",
@@ -80,6 +82,9 @@ SUPPORTED_VOICES: Final[set[str]] = {
     "Ivy",
     "Jacek",
     "Jan",
+    "Jasmine",
+    "Jihye",
+    "Jitka",
     "Joanna",
     "Joey",
     "Justin",
@@ -111,14 +116,17 @@ SUPPORTED_VOICES: Final[set[str]] = {
     "Nicole",
     "Ola",
     "Olivia",
+    "Patrick",
     "Pedro",
     "Penelope",
+    "Raul",
     "Raveena",
     "Remi",
     "Ricardo",
     "Ruben",
     "Russell",
     "Ruth",
+    "Sabrina",
     "Salli",
     "Seoyeon",
     "Sergio",

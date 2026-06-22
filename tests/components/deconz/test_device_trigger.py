@@ -8,7 +8,7 @@ from pytest_unordered import unordered
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.binary_sensor.device_trigger import (
     CONF_BAT_LOW,
     CONF_NOT_BAT_LOW,
@@ -37,11 +37,6 @@ from homeassistant.setup import async_setup_component
 from .conftest import WebsocketDataType
 
 from tests.common import MockConfigEntry, async_get_device_automations
-
-
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
 
 
 @pytest.mark.parametrize(

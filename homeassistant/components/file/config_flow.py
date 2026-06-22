@@ -1,9 +1,7 @@
 """Config flow for file integration."""
 
-from __future__ import annotations
-
 from copy import deepcopy
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -11,7 +9,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_FILE_PATH,
@@ -73,6 +71,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> FileOptionsFlowHandler:
@@ -85,6 +84,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             self.hass.config.is_allowed_path, file_path
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -131,7 +131,7 @@ class FileConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._async_handle_step(Platform.SENSOR.value, user_input)
 
 
-class FileOptionsFlowHandler(OptionsFlow):
+class FileOptionsFlowHandler(OptionsFlowWithReload):
     """Handle File options."""
 
     async def async_step_init(

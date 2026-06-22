@@ -1,27 +1,27 @@
 """Switcher integration Light platform."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 
 from aioswitcher.device import DeviceCategory, DeviceState, SwitcherLight
 
 from homeassistant.components.light import ColorMode, LightEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SwitcherConfigEntry
 from .const import SIGNAL_DEVICE_ADD
 from .coordinator import SwitcherDataUpdateCoordinator
 from .entity import SwitcherEntity
+
+PARALLEL_UPDATES = 1
 
 API_SET_LIGHT = "set_light"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: SwitcherConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Switcher light from a config entry."""
@@ -78,7 +78,7 @@ class SwitcherBaseLightEntity(SwitcherEntity, LightEntity):
             return
 
         data = cast(SwitcherLight, self.coordinator.data)
-        self._attr_is_on = bool(data.light[self._light_id] == DeviceState.ON)
+        self._attr_is_on = bool(data.light[self._light_id] is DeviceState.ON)
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""

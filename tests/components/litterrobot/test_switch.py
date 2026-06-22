@@ -2,16 +2,17 @@
 
 from unittest.mock import MagicMock
 
-from pylitterbot import Robot
+from pylitterbot import FeederRobot, Robot
 import pytest
 
 from homeassistant.components.switch import (
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as SWITCH_DOMAIN,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from .conftest import setup_integration
@@ -24,7 +25,7 @@ async def test_switch(
     hass: HomeAssistant, mock_account: MagicMock, entity_registry: er.EntityRegistry
 ) -> None:
     """Tests the switch entity was set up."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, SWITCH_DOMAIN)
 
     state = hass.states.get(NIGHT_LIGHT_MODE_ENTITY_ID)
     assert state
@@ -50,7 +51,7 @@ async def test_on_off_commands(
     updated_field: str,
 ) -> None:
     """Test sending commands to the switch."""
-    await setup_integration(hass, mock_account, PLATFORM_DOMAIN)
+    await setup_integration(hass, mock_account, SWITCH_DOMAIN)
     robot: Robot = mock_account.robots[0]
 
     state = hass.states.get(entity_id)
@@ -60,9 +61,48 @@ async def test_on_off_commands(
 
     services = ((SERVICE_TURN_ON, STATE_ON, "1"), (SERVICE_TURN_OFF, STATE_OFF, "0"))
     for count, (service, new_state, new_value) in enumerate(services):
-        await hass.services.async_call(PLATFORM_DOMAIN, service, data, blocking=True)
+        await hass.services.async_call(SWITCH_DOMAIN, service, data, blocking=True)
         robot._update_data({updated_field: new_value}, partial=True)
 
         assert getattr(robot, robot_command).call_count == count + 1
         assert (state := hass.states.get(entity_id))
         assert state.state == new_state
+
+
+async def test_feeder_robot_switch(
+    hass: HomeAssistant, mock_account_with_feederrobot: MagicMock
+) -> None:
+    """Tests Feeder-Robot switches."""
+    await setup_integration(hass, mock_account_with_feederrobot, SWITCH_DOMAIN)
+    robot: FeederRobot = mock_account_with_feederrobot.robots[0]
+
+    gravity_mode_switch = "switch.test_gravity_mode"
+
+    switch = hass.states.get(gravity_mode_switch)
+    assert switch.state == STATE_OFF
+
+    data = {ATTR_ENTITY_ID: gravity_mode_switch}
+
+    services = ((SERVICE_TURN_ON, STATE_ON, True), (SERVICE_TURN_OFF, STATE_OFF, False))
+    for count, (service, new_state, new_value) in enumerate(services):
+        await hass.services.async_call(SWITCH_DOMAIN, service, data, blocking=True)
+        robot._update_data({"state": {"info": {"gravity": new_value}}}, partial=True)
+
+        assert robot.set_gravity_mode.call_count == count + 1
+        assert (state := hass.states.get(gravity_mode_switch))
+        assert state.state == new_state
+
+
+async def test_switch_command_exception(
+    hass: HomeAssistant, mock_account_with_side_effects: MagicMock
+) -> None:
+    """Test that LitterRobotException is wrapped in HomeAssistantError."""
+    await setup_integration(hass, mock_account_with_side_effects, SWITCH_DOMAIN)
+
+    with pytest.raises(HomeAssistantError, match="Invalid command: oops"):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: NIGHT_LIGHT_MODE_ENTITY_ID},
+            blocking=True,
+        )

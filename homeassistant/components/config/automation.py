@@ -1,12 +1,12 @@
 """Provide configuration end points for Automations."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 import uuid
 
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
-from homeassistant.components.automation.config import async_validate_config_item
+from homeassistant.components.automation.config import (  # pylint: disable=home-assistant-component-root-import
+    async_validate_config_item,
+)
 from homeassistant.config import AUTOMATION_CONFIG_PATH
 from homeassistant.const import CONF_ID, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
@@ -55,6 +55,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 class EditAutomationConfigView(EditIdBasedConfigView):
     """Edit automation config."""
 
+    @override
     def _write_value(
         self,
         hass: HomeAssistant,

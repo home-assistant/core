@@ -4,7 +4,12 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unique_id_mismatch": "The identifier does not match the previous identifier",
-      "unsupported_version": "Your version of System Bridge is not supported. Please upgrade to the latest version.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "unsupported_version": "Your version of System Bridge is not supported. Please upgrade to the latest version."
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "flow_title": "{name}",
@@ -23,11 +28,6 @@
         },
         "description": "Please enter your connection details."
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
     }
   },
   "entity": {
@@ -45,8 +45,17 @@
       }
     },
     "sensor": {
+      "amount_memory_used": {
+        "name": "Amount of memory used"
+      },
+      "battery_time_remaining": {
+        "name": "Battery time remaining"
+      },
       "boot_time": {
         "name": "Boot time"
+      },
+      "cpu_power_core": {
+        "name": "CPU core {cpu_id} power"
       },
       "cpu_power_package": {
         "name": "CPU package power"
@@ -60,8 +69,50 @@
       "cpu_voltage": {
         "name": "CPU voltage"
       },
+      "display_refresh_rate": {
+        "name": "Display {display_id} refresh rate"
+      },
+      "display_resolution_x": {
+        "name": "Display {display_id} resolution x"
+      },
+      "display_resolution_y": {
+        "name": "Display {display_id} resolution y"
+      },
+      "displays_connected": {
+        "name": "Displays connected"
+      },
+      "gpu_core_clock_speed": {
+        "name": "{gpu_name} clock speed"
+      },
+      "gpu_fan_speed": {
+        "name": "{gpu_name} fan speed"
+      },
+      "gpu_memory_clock_speed": {
+        "name": "{gpu_name} memory clock speed"
+      },
+      "gpu_memory_free": {
+        "name": "{gpu_name} memory free"
+      },
+      "gpu_memory_used": {
+        "name": "{gpu_name} memory used"
+      },
+      "gpu_memory_used_percentage": {
+        "name": "{gpu_name} memory used %"
+      },
+      "gpu_power_usage": {
+        "name": "{gpu_name} power usage"
+      },
+      "gpu_temperature": {
+        "name": "{gpu_name} temperature"
+      },
+      "gpu_usage_percentage": {
+        "name": "{gpu_name} usage %"
+      },
       "kernel": {
         "name": "Kernel"
+      },
+      "load": {
+        "name": "Load"
       },
       "memory_free": {
         "name": "Memory free"
@@ -69,29 +120,29 @@
       "memory_used": {
         "name": "Memory used"
       },
-      "amount_memory_used": {
-        "name": "Amount of memory used"
+      "memory_used_percentage": {
+        "name": "Memory used %"
       },
       "os": {
         "name": "Operating system"
       },
+      "power_usage": {
+        "name": "Power usage"
+      },
       "processes": {
         "name": "Processes"
       },
-      "load": {
-        "name": "Load"
+      "processes_load_cpu": {
+        "name": "Load CPU {cpu_id}"
+      },
+      "space_used": {
+        "name": "{partition} space used"
       },
       "version": {
         "name": "Version"
       },
       "version_latest": {
         "name": "Latest version"
-      },
-      "battery_time_remaining": {
-        "name": "Battery time remaining"
-      },
-      "displays_connected": {
-        "name": "Displays connected"
       }
     }
   },
@@ -111,6 +162,9 @@
     "process_not_found": {
       "message": "Could not find process with ID {id}."
     },
+    "send_message_failed": {
+      "message": "Failed to send message to {title} ({host}) due to a connection error"
+    },
     "timeout": {
       "message": "A timeout occurred for {title} ({host})"
     },
@@ -120,108 +174,184 @@
   },
   "issues": {
     "unsupported_version": {
-      "title": "System Bridge upgrade required",
-      "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version."
+      "description": "Your version of System Bridge for host {host} is not supported.\n\nPlease upgrade to the latest version.",
+      "title": "System Bridge upgrade required"
     }
   },
-  "services": {
-    "open_path": {
-      "name": "Open path",
-      "description": "Opens a file on the server using the default application.",
-      "fields": {
-        "bridge": {
-          "name": "Bridge",
-          "description": "The server to talk to."
-        },
-        "path": {
-          "name": "[%key:common::config_flow::data::path%]",
-          "description": "Path to open."
-        }
-      }
-    },
-    "get_process_by_id": {
-      "name": "Get process by ID",
-      "description": "Gets a process by the ID.",
-      "fields": {
-        "bridge": {
-          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
-          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
-        },
-        "id": {
-          "name": "ID",
-          "description": "ID of the process to get."
-        }
-      }
-    },
-    "get_processes_by_name": {
-      "name": "Get processes by name",
-      "description": "Gets a list of processes by the name.",
-      "fields": {
-        "bridge": {
-          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
-          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
-        },
-        "name": {
-          "name": "Name",
-          "description": "Name of the process to get."
-        }
-      }
-    },
-    "open_url": {
-      "name": "Open URL",
-      "description": "Opens a URL on the server using the default application.",
-      "fields": {
-        "bridge": {
-          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
-          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]"
-        },
-        "url": {
-          "name": "[%key:common::config_flow::data::url%]",
-          "description": "URL to open."
-        }
-      }
-    },
-    "send_keypress": {
-      "name": "Send keyboard keypress",
-      "description": "Sends a keyboard keypress.",
-      "fields": {
-        "bridge": {
-          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
-          "description": "The server to send the command to."
-        },
-        "key": {
-          "name": "Key",
-          "description": "Key to press. List available here: http://robotjs.io/docs/syntax#keys."
-        }
-      }
-    },
-    "send_text": {
-      "name": "Send keyboard text",
-      "description": "Sends text for the server to type.",
-      "fields": {
-        "bridge": {
-          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
-          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
-        },
-        "text": {
-          "name": "Text",
-          "description": "Text to type."
-        }
+  "selector": {
+    "key": {
+      "options": {
+        "alt": "Alt",
+        "audio_forward": "Fast-Forward track",
+        "audio_mute": "Mute",
+        "audio_next": "Next track",
+        "audio_pause": "Pause media",
+        "audio_play": "Play media",
+        "audio_prev": "Previous track",
+        "audio_random": "Random track",
+        "audio_repeat": "Repeat track",
+        "audio_rewind": "Rewind track",
+        "audio_stop": "Stop media",
+        "audio_vol_down": "Volume down",
+        "audio_vol_up": "Volume up",
+        "backspace": "Backspace",
+        "command": "Command",
+        "control": "Control",
+        "delete": "Delete",
+        "down": "[%key:common::entity::button::down::name%]",
+        "end": "End",
+        "enter": "Enter",
+        "escape": "Escape",
+        "f1": "F1",
+        "f10": "F10",
+        "f11": "F11",
+        "f12": "F12",
+        "f2": "F2",
+        "f3": "F3",
+        "f4": "F4",
+        "f5": "F5",
+        "f6": "F6",
+        "f7": "F7",
+        "f8": "F8",
+        "f9": "F9",
+        "home": "[%key:common::entity::button::home::name%]",
+        "insert": "Insert",
+        "left": "[%key:common::entity::button::left::name%]",
+        "lights_kbd_down": "Keyboard backlight brightness down",
+        "lights_kbd_toggle": "Toggle keyboard backlight",
+        "lights_kbd_up": "Keyboard backlight brightness up",
+        "lights_mon_down": "Display brightness down",
+        "lights_mon_up": "Display brightness up",
+        "numpad_0": "NumPad 0",
+        "numpad_1": "NumPad 1",
+        "numpad_2": "NumPad 2",
+        "numpad_3": "NumPad 3",
+        "numpad_4": "NumPad 4",
+        "numpad_5": "NumPad 5",
+        "numpad_6": "NumPad 6",
+        "numpad_7": "NumPad 7",
+        "numpad_8": "NumPad 8",
+        "numpad_9": "NumPad 9",
+        "pagedown": "Page down",
+        "pageup": "Page up",
+        "printscreen": "Print screen",
+        "right": "[%key:common::entity::button::right::name%]",
+        "right_shift": "Shift right",
+        "shift": "Shift",
+        "space": "Space",
+        "tab": "Tab",
+        "up": "[%key:common::entity::button::up::name%]"
       }
     },
     "power_command": {
-      "name": "Power command",
+      "options": {
+        "hibernate": "Hibernate",
+        "lock": "Lock",
+        "logout": "Logout",
+        "restart": "[%key:common::action::restart%]",
+        "shutdown": "Shutdown",
+        "sleep": "Sleep"
+      }
+    }
+  },
+  "services": {
+    "get_process_by_id": {
+      "description": "Gets a process by the ID.",
+      "fields": {
+        "bridge": {
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]"
+        },
+        "id": {
+          "description": "ID of the process to get.",
+          "name": "ID"
+        }
+      },
+      "name": "Get process by ID"
+    },
+    "get_processes_by_name": {
+      "description": "Gets a list of processes by the name.",
+      "fields": {
+        "bridge": {
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]"
+        },
+        "name": {
+          "description": "Name of the process to get.",
+          "name": "Name"
+        }
+      },
+      "name": "Get processes by name"
+    },
+    "open_path": {
+      "description": "Opens a file on the server using the default application.",
+      "fields": {
+        "bridge": {
+          "description": "The server to talk to.",
+          "name": "Bridge"
+        },
+        "path": {
+          "description": "Path to open.",
+          "name": "[%key:common::config_flow::data::path%]"
+        }
+      },
+      "name": "Open path"
+    },
+    "open_url": {
+      "description": "Opens a URL on the server using the default application.",
+      "fields": {
+        "bridge": {
+          "description": "[%key:component::system_bridge::services::open_path::fields::bridge::description%]",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]"
+        },
+        "url": {
+          "description": "URL to open.",
+          "name": "[%key:common::config_flow::data::url%]"
+        }
+      },
+      "name": "Open URL"
+    },
+    "power_command": {
       "description": "Sends a power command to the system.",
       "fields": {
         "bridge": {
-          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]",
-          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]"
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]"
         },
         "command": {
-          "name": "Command",
-          "description": "Command to call."
+          "description": "Command to call.",
+          "name": "Command"
         }
-      }
+      },
+      "name": "Power command"
+    },
+    "send_keypress": {
+      "description": "Sends a keyboard keypress.",
+      "fields": {
+        "bridge": {
+          "description": "The server to send the command to.",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]"
+        },
+        "key": {
+          "description": "Key to press. List available here: {syntax_keys_documentation_url}.",
+          "name": "Key"
+        }
+      },
+      "name": "Send keyboard keypress"
+    },
+    "send_text": {
+      "description": "Sends text for the server to type.",
+      "fields": {
+        "bridge": {
+          "description": "[%key:component::system_bridge::services::send_keypress::fields::bridge::description%]",
+          "name": "[%key:component::system_bridge::services::open_path::fields::bridge::name%]"
+        },
+        "text": {
+          "description": "Text to type.",
+          "name": "Text"
+        }
+      },
+      "name": "Send keyboard text"
     }
   }
 }

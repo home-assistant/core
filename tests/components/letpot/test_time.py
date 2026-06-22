@@ -38,6 +38,7 @@ async def test_set_time(
     mock_config_entry: MockConfigEntry,
     mock_client: MagicMock,
     mock_device_client: MagicMock,
+    device_type: str,
 ) -> None:
     """Test setting the time entity."""
     await setup_integration(hass, mock_config_entry)
@@ -50,7 +51,9 @@ async def test_set_time(
         target={"entity_id": "time.garden_light_on"},
     )
 
-    mock_device_client.set_light_schedule.assert_awaited_once_with(time(7, 0), None)
+    mock_device_client.set_light_schedule.assert_awaited_once_with(
+        f"{device_type}ABCD", time(7, 0), None
+    )
 
 
 @pytest.mark.parametrize(
@@ -58,11 +61,13 @@ async def test_set_time(
     [
         (
             LetPotConnectionException("Connection failed"),
-            "An error occurred while communicating with the LetPot device: Connection failed",
+            "An error occurred while communicating with the LetPot"
+            " device: Connection failed",
         ),
         (
             LetPotException("Random thing failed"),
-            "An unknown error occurred while communicating with the LetPot device: Random thing failed",
+            "An unknown error occurred while communicating with"
+            " the LetPot device: Random thing failed",
         ),
     ],
 )

@@ -1,7 +1,5 @@
 """Test Home Assistant language util methods."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.const import MATCH_ALL
@@ -192,6 +190,9 @@ def test_sr_latn() -> None:
         "sr-RS",
     ]
 
+    # Prefer exact match with code
+    assert language.matches("sr", ["sr-Latn", "sr"]) == ["sr", "sr-Latn"]
+
 
 def test_no_nb_same() -> None:
     """Test that the no/nb are interchangeable."""
@@ -206,7 +207,7 @@ def test_no_nb_same() -> None:
 
 
 def test_no_nb_prefer_exact() -> None:
-    """Test that the exact language is preferred even if an interchangeable language is available."""
+    """Test exact language preferred over interchangeable language."""
     assert language.matches(
         "no",
         ["en-US", "en-GB", "nb", "no"],
@@ -242,7 +243,7 @@ def test_he_iw_same() -> None:
 
 
 def test_he_iw_prefer_exact() -> None:
-    """Test that the exact language is preferred even if an interchangeable language is available."""
+    """Test exact language preferred over interchangeable language."""
     assert language.matches(
         "he",
         ["en-US", "en-GB", "iw", "he"],

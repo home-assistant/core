@@ -1,12 +1,10 @@
 """Adds support for generic hygrostat units."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.humidifier import (
     ATTR_HUMIDITY,
@@ -22,6 +20,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    CONF_DEVICE_CLASS,
     CONF_NAME,
     CONF_UNIQUE_ID,
     EVENT_HOMEASSISTANT_START,
@@ -42,7 +41,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.helpers import condition, config_validation as cv
-from homeassistant.helpers.device import async_device_info_to_link_from_entity
+from homeassistant.helpers.device import async_entity_id_to_device
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -58,7 +57,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from . import (
     CONF_AWAY_FIXED,
     CONF_AWAY_HUMIDITY,
-    CONF_DEVICE_CLASS,
     CONF_DRY_TOLERANCE,
     CONF_HUMIDIFIER,
     CONF_INITIAL_STATE,
@@ -145,22 +143,22 @@ async def _async_setup_config(
         [
             GenericHygrostat(
                 hass,
-                name,
-                switch_entity_id,
-                sensor_entity_id,
-                min_humidity,
-                max_humidity,
-                target_humidity,
-                device_class,
-                min_cycle_duration,
-                dry_tolerance,
-                wet_tolerance,
-                keep_alive,
-                initial_state,
-                away_humidity,
-                away_fixed,
-                sensor_stale_duration,
-                unique_id,
+                name=name,
+                switch_entity_id=switch_entity_id,
+                sensor_entity_id=sensor_entity_id,
+                min_humidity=min_humidity,
+                max_humidity=max_humidity,
+                target_humidity=target_humidity,
+                device_class=device_class,
+                min_cycle_duration=min_cycle_duration,
+                dry_tolerance=dry_tolerance,
+                wet_tolerance=wet_tolerance,
+                keep_alive=keep_alive,
+                initial_state=initial_state,
+                away_humidity=away_humidity,
+                away_fixed=away_fixed,
+                sensor_stale_duration=sensor_stale_duration,
+                unique_id=unique_id,
             )
         ]
     )
@@ -174,6 +172,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
     def __init__(
         self,
         hass: HomeAssistant,
+        *,
         name: str,
         switch_entity_id: str,
         sensor_entity_id: str,
@@ -195,7 +194,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._name = name
         self._switch_entity_id = switch_entity_id
         self._sensor_entity_id = sensor_entity_id
-        self._attr_device_info = async_device_info_to_link_from_entity(
+        self.device_entry = async_entity_id_to_device(
             hass,
             switch_entity_id,
         )
@@ -222,6 +221,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self._attr_action = HumidifierAction.IDLE
         self._attr_unique_id = unique_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added."""
         await super().async_added_to_hass()
@@ -291,6 +291,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
 
         await _async_startup(None)  # init the sensor
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._remove_stale_tracking:
@@ -298,11 +299,13 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return await super().async_will_remove_from_hass()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._active
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         if self._saved_target_humidity:
@@ -310,26 +313,31 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return None
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the hygrostat."""
         return self._name
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the hygrostat is on."""
         return self._state
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the measured humidity."""
         return self._cur_humidity
 
     @property
+    @override
     def target_humidity(self) -> float | None:
         """Return the humidity we try to reach."""
         return self._target_humidity
 
     @property
+    @override
     def mode(self) -> str | None:
         """Return the current mode."""
         if self._away_humidity is None:
@@ -339,6 +347,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return MODE_NORMAL
 
     @property
+    @override
     def available_modes(self) -> list[str] | None:
         """Return a list of available modes."""
         if self._away_humidity:
@@ -346,10 +355,12 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return None
 
     @property
+    @override
     def device_class(self) -> HumidifierDeviceClass:
         """Return the device class of the humidifier."""
         return self._device_class
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn hygrostat on."""
         if not self._active:
@@ -358,6 +369,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         await self._async_operate(force=True)
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn hygrostat off."""
         if not self._active:
@@ -367,6 +379,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             await self._async_device_turn_off()
         self.async_write_ha_state()
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new target humidity."""
         if humidity is None:
@@ -382,6 +395,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def min_humidity(self) -> float:
         """Return the minimum humidity."""
         if self._min_humidity:
@@ -391,6 +405,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
         return super().min_humidity
 
     @property
+    @override
     def max_humidity(self) -> float:
         """Return the maximum humidity."""
         if self._max_humidity:
@@ -564,6 +579,7 @@ class GenericHygrostat(HumidifierEntity, RestoreEntity):
             HOMEASSISTANT_DOMAIN, SERVICE_TURN_OFF, data
         )
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set new mode.
 

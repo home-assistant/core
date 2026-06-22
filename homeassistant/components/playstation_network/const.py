@@ -6,11 +6,13 @@ from psnawp_api.models.trophies import PlatformType
 
 DOMAIN = "playstation_network"
 CONF_NPSSO: Final = "npsso"
+CONF_ACCOUNT_ID: Final = "account_id"
 
 SUPPORTED_PLATFORMS = {
-    PlatformType.PS5,
-    PlatformType.PS4,
+    PlatformType.PS_VITA,
     PlatformType.PS3,
+    PlatformType.PS4,
+    PlatformType.PS5,
     PlatformType.PSPC,
 }
 

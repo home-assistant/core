@@ -54,8 +54,15 @@ async def test_async_step_user_no_devices_found(hass: HomeAssistant) -> None:
     assert result["reason"] == "no_devices_found"
 
 
-async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
-    """Test setup from service info cache with devices found."""
+async def test_async_step_user_replaces_ignored(hass: HomeAssistant) -> None:
+    """Test setup from service info cache replaces an ignored entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=RAPT_MAC,
+        data={},
+        source=config_entries.SOURCE_IGNORE,
+    )
+    entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.rapt_ble.config_flow.async_discovered_service_info",
         return_value=[COMPLETE_SERVICE_INFO],
@@ -66,6 +73,37 @@ async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    with patch(
+        "homeassistant.components.rapt_ble.async_setup_entry", return_value=True
+    ):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={"address": RAPT_MAC},
+        )
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "RAPT Pill 0666"
+    assert result2["data"] == {}
+    assert result2["result"].unique_id == RAPT_MAC
+
+
+async def test_async_step_user_with_found_devices(hass: HomeAssistant) -> None:
+    """Test setup from service info cache with devices found."""
+    with (
+        patch(
+            "homeassistant.components.rapt_ble.config_flow.async_discovered_service_info",
+            return_value=[COMPLETE_SERVICE_INFO],
+        ),
+        patch(
+            "homeassistant.components.rapt_ble.config_flow.bluetooth.async_request_active_scan"
+        ) as mock_request_active_scan,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    mock_request_active_scan.assert_awaited_once_with(hass)
     with patch(
         "homeassistant.components.rapt_ble.async_setup_entry", return_value=True
     ):

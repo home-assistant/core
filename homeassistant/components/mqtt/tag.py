@@ -1,7 +1,5 @@
 """Provides tag scanning for MQTT."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import functools
 import logging
@@ -53,7 +51,9 @@ DISCOVERY_SCHEMA = MQTT_BASE_SCHEMA.extend(
 )
 
 
-async def async_setup_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> None:
+async def async_setup_mqtt_tag_entry(
+    hass: HomeAssistant, config_entry: ConfigEntry
+) -> None:
     """Set up MQTT tag scanner dynamically through MQTT discovery."""
 
     setup = functools.partial(_async_setup_tag, hass, config_entry=config_entry)

@@ -1,7 +1,5 @@
 """Diagnostics support for Nut."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import attr
@@ -11,8 +9,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import NutConfigEntry
 from .const import DOMAIN
+from .coordinator import NutConfigEntry
 
 TO_REDACT = {CONF_PASSWORD, CONF_USERNAME}
 

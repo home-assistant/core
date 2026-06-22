@@ -1,12 +1,10 @@
 """Support for esphome entities."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 import functools
 import logging
 import math
-from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast
+from typing import TYPE_CHECKING, Any, Concatenate, Generic, TypeVar, cast, override
 
 from aioesphomeapi import (
     APIConnectionError,
@@ -33,7 +31,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
-from .entry_data import ESPHomeConfigEntry, RuntimeEntryData, build_device_unique_id
+from .entry_data import (
+    DeviceEntityKey,
+    ESPHomeConfigEntry,
+    RuntimeEntryData,
+    build_device_unique_id,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
@@ -50,7 +53,7 @@ def async_static_info_updated(
     platform: entity_platform.EntityPlatform,
     async_add_entities: AddEntitiesCallback,
     info_type: type[_InfoT],
-    entity_type: type[_EntityT],
+    entity_type: Callable[[RuntimeEntryData, EntityInfo, type[_StateT]], _EntityT],
     state_type: type[_StateT],
     infos: list[EntityInfo],
 ) -> None:
@@ -59,18 +62,33 @@ def async_static_info_updated(
     device_info = entry_data.device_info
     if TYPE_CHECKING:
         assert device_info is not None
-    new_infos: dict[int, EntityInfo] = {}
+    new_infos: dict[DeviceEntityKey, EntityInfo] = {}
     add_entities: list[_EntityT] = []
 
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
+    # Track info by (info.device_id, info.key) to properly handle entities
+    # moving between devices and support sub-devices with overlapping keys
     for info in infos:
-        new_infos[info.key] = info
+        info_key = (info.device_id, info.key)
+        new_infos[info_key] = info
+
+        # Try to find existing entity - first with current device_id
+        old_info = current_infos.pop(info_key, None)
+
+        # If not found, search for entity with same key but different device_id
+        # This handles the case where entity moved between devices
+        if not old_info:
+            for existing_device_id, existing_key in list(current_infos):
+                if existing_key == info.key:
+                    # Found entity with same key but different device_id
+                    old_info = current_infos.pop((existing_device_id, existing_key))
+                    break
 
         # Create new entity if it doesn't exist
-        if not (old_info := current_infos.pop(info.key, None)):
-            entity = entity_type(entry_data, platform.domain, info, state_type)
+        if not old_info:
+            entity = entity_type(entry_data, info, state_type)
             add_entities.append(entity)
             continue
 
@@ -79,6 +97,7 @@ def async_static_info_updated(
             continue
 
         # Entity has switched devices, need to migrate unique_id
+        # and handle state subscriptions
         old_unique_id = build_device_unique_id(device_info.mac_address, old_info)
         entity_id = ent_reg.async_get_entity_id(platform.domain, DOMAIN, old_unique_id)
 
@@ -92,7 +111,7 @@ def async_static_info_updated(
                 old_info.device_id,
                 info.device_id,
             )
-            entity = entity_type(entry_data, platform.domain, info, state_type)
+            entity = entity_type(entry_data, info, state_type)
             add_entities.append(entity)
             continue
 
@@ -103,7 +122,7 @@ def async_static_info_updated(
         if old_unique_id != new_unique_id:
             updates["new_unique_id"] = new_unique_id
 
-        # Update device assignment
+        # Update device assignment in registry
         if info.device_id:
             # Entity now belongs to a sub device
             new_device = dev_reg.async_get_device(
@@ -118,9 +137,33 @@ def async_static_info_updated(
         if new_device:
             updates["device_id"] = new_device.id
 
-        # Apply all updates at once
+        # Apply all registry updates at once
         if updates:
             ent_reg.async_update_entity(entity_id, **updates)
+
+        # IMPORTANT: The entity's device assignment in Home
+        # Assistant is only read when the entity is first added.
+        # Updating the registry alone won't move the entity to
+        # the new device in the UI. Additionally, the entity's
+        # state subscription is tied to the old device_id,
+        # so it won't receive state updates for the new device_id.
+        #
+        # We must remove the old entity and re-add it to ensure:
+        # 1. The entity appears under the correct device in the UI
+        # 2. The entity's state subscription is updated to use the new device_id
+        _LOGGER.debug(
+            "Entity %s moving from device_id %s to %s",
+            info.key,
+            old_info.device_id,
+            info.device_id,
+        )
+
+        # Signal the existing entity to remove itself
+        # The entity is registered with the old device_id, so we signal with that
+        entry_data.async_signal_entity_removal(info_type, old_info.device_id, info.key)
+
+        # Create new entity with the new device_id
+        add_entities.append(entity_type(entry_data, info, state_type))
 
     # Anything still in current_infos is now gone
     if current_infos:
@@ -145,13 +188,19 @@ async def platform_async_setup_entry(
     async_add_entities: AddEntitiesCallback,
     *,
     info_type: type[_InfoT],
-    entity_type: type[_EntityT],
+    entity_type: Callable[[RuntimeEntryData, EntityInfo, type[_StateT]], _EntityT],
     state_type: type[_StateT],
+    info_filter: Callable[[_InfoT], bool] | None = None,
 ) -> None:
     """Set up an esphome platform.
 
     This method is in charge of receiving, distributing and storing
     info and state updates.
+
+    `entity_type` is any callable that builds an entity from
+    `(entry_data, info, state_type)`. A regular entity class satisfies this,
+    and platforms with multiple entity classes can pass a factory function
+    that picks the class per static info.
     """
     entry_data = entry.runtime_data
     entry_data.info[info_type] = {}
@@ -166,10 +215,22 @@ async def platform_async_setup_entry(
         entity_type,
         state_type,
     )
+
+    if info_filter is not None:
+
+        def on_filtered_update(infos: list[EntityInfo]) -> None:
+            on_static_info_update(
+                [info for info in infos if info_filter(cast(_InfoT, info))]
+            )
+
+        info_callback = on_filtered_update
+    else:
+        info_callback = on_static_info_update
+
     entry_data.cleanup_callbacks.append(
         entry_data.async_register_static_info_callback(
             info_type,
-            on_static_info_update,
+            info_callback,
         )
     )
 
@@ -276,7 +337,7 @@ class EsphomeBaseEntity(Entity):
     device_entry: dr.DeviceEntry
 
 
-class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
+class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
     """Define an esphome entity."""
 
     _static_info: _InfoT
@@ -287,7 +348,6 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
     def __init__(
         self,
         entry_data: RuntimeEntryData,
-        domain: str,
         entity_info: EntityInfo,
         state_type: type[_StateT],
     ) -> None:
@@ -301,8 +361,8 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         self._state_type = state_type
         self._on_static_info_update(entity_info)
 
-        device_name = device_info.name
-        # Determine the device connection based on whether this entity belongs to a sub device
+        # Determine the device connection based on whether this
+        # entity belongs to a sub device
         if entity_info.device_id:
             # Entity belongs to a sub device
             self._attr_device_info = DeviceInfo(
@@ -310,27 +370,13 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
                     (DOMAIN, f"{device_info.mac_address}_{entity_info.device_id}")
                 }
             )
-            # Use the pre-computed device_id_to_name mapping for O(1) lookup
-            device_name = entry_data.device_id_to_name.get(
-                entity_info.device_id, device_info.name
-            )
         else:
             # Entity belongs to the main device
             self._attr_device_info = DeviceInfo(
                 connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
             )
 
-        if entity_info.name:
-            self.entity_id = f"{domain}.{device_name}_{entity_info.name}"
-        else:
-            # https://github.com/home-assistant/core/issues/132532
-            # If name is not set, ESPHome will use the sanitized friendly name
-            # as the name, however we want to use the original object_id
-            # as the entity_id before it is sanitized since the sanitizer
-            # is not utf-8 aware. In this case, its always going to be
-            # an empty string so we drop the object_id.
-            self.entity_id = f"{domain}.{device_name}"
-
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         entry_data = self._entry_data
@@ -341,7 +387,10 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         )
         self.async_on_remove(
             entry_data.async_subscribe_state_update(
-                self._state_type, self._key, self._on_state_update
+                self._static_info.device_id,
+                self._state_type,
+                self._key,
+                self._on_state_update,
             )
         )
         self.async_on_remove(
@@ -349,7 +398,28 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
                 self._static_info, self._on_static_info_update
             )
         )
+        # Register to be notified when this entity should remove itself
+        # This happens when the entity moves to a different device
+        self.async_on_remove(
+            entry_data.async_register_entity_removal_callback(
+                type(self._static_info),
+                self._static_info.device_id,
+                self._key,
+                self._on_removal_signal,
+            )
+        )
         self._update_state_from_entry_data()
+
+    @callback
+    def _on_removal_signal(self) -> None:
+        """Handle signal to remove this entity."""
+        _LOGGER.debug(
+            "Entity %s received removal signal due to device_id change",
+            self.entity_id,
+        )
+        # Schedule the entity to be removed
+        # This must be done as a task since we're in a callback
+        self.hass.async_create_task(self.async_remove())
 
     @callback
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
@@ -372,7 +442,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):
         # the friendly_name will be "{friendly_name} " with a trailing
         # space. ESPHome uses protobuf under the hood, and an empty field
         # gets a default value of "".
-        self._attr_name = static_info.name if static_info.name else None
+        self._attr_name = static_info.name or None
         if entity_category := static_info.entity_category:
             self._attr_entity_category = ENTITY_CATEGORIES.from_esphome(entity_category)
         else:
@@ -444,6 +514,7 @@ class EsphomeAssistEntity(EsphomeBaseEntity):
             connections={(dr.CONNECTION_NETWORK_MAC, device_info.mac_address)}
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         await super().async_added_to_hass()

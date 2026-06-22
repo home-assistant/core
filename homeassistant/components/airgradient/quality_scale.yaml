@@ -14,9 +14,9 @@ rules:
     status: exempt
     comment: |
       This integration does not provide additional actions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
   entity-event-setup:
     status: exempt
     comment: |
@@ -34,7 +34,7 @@ rules:
   docs-configuration-parameters:
     status: exempt
     comment: No options to configure
-  docs-installation-parameters: todo
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -43,23 +43,19 @@ rules:
     status: exempt
     comment: |
       This integration does not require authentication.
-  test-coverage: todo
+  test-coverage: done
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info:
-    status: todo
-    comment: DHCP is still possible
-  discovery:
-    status: todo
-    comment: DHCP is still possible
-  docs-data-update: todo
-  docs-examples: todo
-  docs-known-limitations: todo
-  docs-supported-devices: todo
-  docs-supported-functions: todo
-  docs-troubleshooting: todo
-  docs-use-cases: todo
+  discovery-update-info: done
+  discovery: done
+  docs-data-update: done
+  docs-examples: done
+  docs-known-limitations: done
+  docs-supported-devices: done
+  docs-supported-functions: done
+  docs-troubleshooting: done
+  docs-use-cases: done
   dynamic-devices:
     status: exempt
     comment: |

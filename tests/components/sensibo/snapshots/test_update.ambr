@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_update[load_platforms0][update.bedroom_firmware-entry]
+# name: test_update[load_platforms0][update.bedroom_bedroom_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'update.bedroom_firmware',
+    'entity_id': 'update.bedroom_bedroom_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -34,13 +36,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update[load_platforms0][update.bedroom_firmware-state]
+# name: test_update[load_platforms0][update.bedroom_bedroom_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/sensibo/icon.png',
+      'entity_picture': '/api/brands/integration/sensibo/icon.png',
       'friendly_name': 'Bedroom Firmware',
       'in_progress': False,
       'installed_version': 'PUR00111',
@@ -53,17 +55,18 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.bedroom_firmware',
+    'entity_id': 'update.bedroom_bedroom_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_update[load_platforms0][update.hallway_firmware-entry]
+# name: test_update[load_platforms0][update.hallway_hallway_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -73,7 +76,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'update.hallway_firmware',
+    'entity_id': 'update.hallway_hallway_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -81,6 +84,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -95,13 +99,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update[load_platforms0][update.hallway_firmware-state]
+# name: test_update[load_platforms0][update.hallway_hallway_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/sensibo/icon.png',
+      'entity_picture': '/api/brands/integration/sensibo/icon.png',
       'friendly_name': 'Hallway Firmware',
       'in_progress': False,
       'installed_version': 'SKY30046',
@@ -114,17 +118,18 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.hallway_firmware',
+    'entity_id': 'update.hallway_hallway_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
   })
 # ---
-# name: test_update[load_platforms0][update.kitchen_firmware-entry]
+# name: test_update[load_platforms0][update.kitchen_kitchen_firmware-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -134,7 +139,7 @@
     'disabled_by': None,
     'domain': 'update',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'update.kitchen_firmware',
+    'entity_id': 'update.kitchen_kitchen_firmware',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -142,6 +147,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Firmware',
     'options': dict({
     }),
     'original_device_class': <UpdateDeviceClass.FIRMWARE: 'firmware'>,
@@ -156,13 +162,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_update[load_platforms0][update.kitchen_firmware-state]
+# name: test_update[load_platforms0][update.kitchen_kitchen_firmware-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'auto_update': False,
       'device_class': 'firmware',
       'display_precision': 0,
-      'entity_picture': 'https://brands.home-assistant.io/_/sensibo/icon.png',
+      'entity_picture': '/api/brands/integration/sensibo/icon.png',
       'friendly_name': 'Kitchen Firmware',
       'in_progress': False,
       'installed_version': 'PUR00111',
@@ -175,7 +181,7 @@
       'update_percentage': None,
     }),
     'context': <ANY>,
-    'entity_id': 'update.kitchen_firmware',
+    'entity_id': 'update.kitchen_kitchen_firmware',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

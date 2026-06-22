@@ -17,6 +17,7 @@ from homeassistant.helpers.deprecation import (
     check_if_deprecated_constant,
     deprecated_class,
     deprecated_function,
+    deprecated_hass_argument,
     deprecated_substitute,
     dir_with_deprecated_constants,
     get_deprecated,
@@ -120,6 +121,10 @@ class MockDeprecatedClass:
     """Mock class for deprecated testing."""
 
 
+class MockDeprecatedSubClass(MockDeprecatedClass):
+    """Mock subclass for deprecated testing."""
+
+
 @patch("logging.getLogger")
 def test_deprecated_class(mock_get_logger) -> None:
     """Test deprecated class."""
@@ -129,6 +134,9 @@ def test_deprecated_class(mock_get_logger) -> None:
     MockDeprecatedClass()
     assert mock_logger.warning.called
     assert len(mock_logger.warning.mock_calls) == 1
+
+    MockDeprecatedSubClass()
+    assert len(mock_logger.warning.mock_calls) == 2
 
 
 @pytest.mark.parametrize(
@@ -327,7 +335,8 @@ def _get_value(
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            ". It will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            ". It will be removed in HA Core 2099.1."
+            " Use TestDeprecatedConstantEnum.TEST instead",
             "constant",
         ),
         (
@@ -406,7 +415,8 @@ def test_check_if_deprecated_constant(
     assert (
         module_name,
         logging.WARNING,
-        f"The deprecated {description} TEST_CONSTANT was used from hue{extra_msg}{extra_extra_msg}",
+        f"The deprecated {description} TEST_CONSTANT"
+        f" was used from hue{extra_msg}{extra_extra_msg}",
     ) in caplog.record_tuples
 
 
@@ -430,7 +440,8 @@ def test_check_if_deprecated_constant(
         ),
         (
             DeprecatedConstantEnum(TestDeprecatedConstantEnum.TEST, "2099.1"),
-            " which will be removed in HA Core 2099.1. Use TestDeprecatedConstantEnum.TEST instead",
+            " which will be removed in HA Core 2099.1."
+            " Use TestDeprecatedConstantEnum.TEST instead",
             "constant",
         ),
         (
@@ -638,3 +649,77 @@ def test_enum_with_deprecated_members_integration_not_found(
         TestEnum.DOGS  # noqa: B018
 
     assert len(caplog.record_tuples) == 0
+
+
+@pytest.mark.parametrize(
+    ("positional_arguments", "keyword_arguments"),
+    [
+        # without kwargs
+        ([], {}),
+        (["first_arg"], {}),
+        (["first_arg", "second_arg"], {}),
+        # with single kwargs
+        ([], {"first_kwarg": "first_value"}),
+        (["first_arg"], {"first_kwarg": "first_value"}),
+        (["first_arg", "second_arg"], {"first_kwarg": "first_value"}),
+        # with double kwargs
+        ([], {"first_kwarg": "first_value", "second_kwarg": "second_value"}),
+        (["first_arg"], {"first_kwarg": "first_value", "second_kwarg": "second_value"}),
+        (
+            ["first_arg", "second_arg"],
+            {"first_kwarg": "first_value", "second_kwarg": "second_value"},
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("breaks_in_ha_version", "extra_msg"),
+    [
+        (None, ""),
+        ("2099.1", " It will be removed in HA Core 2099.1."),
+    ],
+)
+def test_deprecated_hass_argument(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    positional_arguments: list[str],
+    keyword_arguments: dict[str, str],
+    breaks_in_ha_version: str | None,
+    extra_msg: str,
+) -> None:
+    """Test deprecated_hass_argument decorator."""
+
+    calls = []
+
+    @deprecated_hass_argument(breaks_in_ha_version=breaks_in_ha_version)
+    def mock_deprecated_function(*args: str, **kwargs: str) -> None:
+        calls.append((args, kwargs))
+
+    mock_deprecated_function(*positional_arguments, **keyword_arguments)
+    assert (
+        "The deprecated argument hass was passed to mock_deprecated_function."
+        f"{extra_msg}"
+        " Use mock_deprecated_function without hass argument instead"
+    ) not in caplog.text
+    assert len(calls) == 1
+
+    mock_deprecated_function(hass, *positional_arguments, **keyword_arguments)
+    assert (
+        "The deprecated argument hass was passed to mock_deprecated_function."
+        f"{extra_msg}"
+        " Use mock_deprecated_function without hass argument instead"
+    ) in caplog.text
+    assert len(calls) == 2
+
+    caplog.clear()
+    mock_deprecated_function(*positional_arguments, hass=hass, **keyword_arguments)
+    assert (
+        "The deprecated argument hass was passed to mock_deprecated_function."
+        f"{extra_msg}"
+        " Use mock_deprecated_function without hass argument instead"
+    ) in caplog.text
+    assert len(calls) == 3
+
+    # Ensure that the two calls are the same, as the second call should have been
+    # modified to remove the hass argument.
+    assert calls[0] == calls[1]
+    assert calls[0] == calls[2]

@@ -182,4 +182,4 @@ async def test_trigger_invalid_entity_id(
         },
     )
 
-    assert f"Entity {invalid_entity} is not a valid {DOMAIN} entity" in caplog.text
+    assert f"Entity {invalid_entity} is not a valid webOS TV entity" in caplog.text

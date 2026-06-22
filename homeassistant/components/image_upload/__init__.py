@@ -1,13 +1,11 @@
 """The Image Upload integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import pathlib
 import secrets
 import shutil
-from typing import Any
+from typing import Any, override
 
 from aiohttp import hdrs, web
 from aiohttp.web_request import FileField
@@ -24,7 +22,7 @@ from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType, VolDictType
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN
+from .const import DOMAIN, FOLDER_IMAGE
 
 _LOGGER = logging.getLogger(__name__)
 STORAGE_KEY = "image"
@@ -45,7 +43,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Image integration."""
-    image_dir = pathlib.Path(hass.config.path("image"))
+    image_dir = pathlib.Path(hass.config.path(FOLDER_IMAGE))
     hass.data[DOMAIN] = storage_collection = ImageStorageCollection(hass, image_dir)
     await storage_collection.async_load()
     ImageUploadStorageCollectionWebsocket(
@@ -75,6 +73,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
         self.async_add_listener(self._change_listener)
         self.image_dir = image_dir
 
+    @override
     async def _process_create_data(self, data: dict[str, Any]) -> dict[str, Any]:
         """Validate the config is valid."""
         data = self.CREATE_SCHEMA(dict(data))
@@ -127,10 +126,12 @@ class ImageStorageCollection(collection.DictStorageCollection):
         return media_file.stat().st_size
 
     @callback
+    @override
     def _get_suggested_id(self, info: dict[str, Any]) -> str:
         """Suggest an ID based on the config."""
         return str(info[CONF_ID])
 
+    @override
     async def _update_data(
         self,
         item: dict[str, Any],
@@ -155,6 +156,7 @@ class ImageStorageCollection(collection.DictStorageCollection):
 class ImageUploadStorageCollectionWebsocket(collection.DictStorageCollectionWebsocket):
     """Class to expose storage collection management over websocket."""
 
+    @override
     async def ws_create_item(
         self, hass: HomeAssistant, connection: websocket_api.ActiveConnection, msg: dict
     ) -> None:
@@ -250,7 +252,10 @@ def _generate_thumbnail_if_file_does_not_exist(
     if not target_file.is_file():
         image = ImageOps.exif_transpose(Image.open(original_path))
         image.thumbnail(target_size)
-        image.save(target_path, format=content_type.partition("/")[-1])
+        save_format = content_type.partition("/")[-1]
+        if save_format == "jpeg" and image.mode not in ("RGB", "L", "CMYK"):
+            image = image.convert("RGB")
+        image.save(target_path, format=save_format)
 
 
 def _validate_size_from_filename(filename: str) -> tuple[int, int]:

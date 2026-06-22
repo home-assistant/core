@@ -83,6 +83,10 @@ async def fake_post_request(hass: HomeAssistant, *args: Any, **kwargs: Any):
     else:
         payload = json.loads(await async_load_fixture(hass, f"{endpoint}.json", DOMAIN))
 
+    # Apply test-specific modifications to the payload
+    if "msg_callback" in kwargs:
+        kwargs["msg_callback"](payload)
+
     return AiohttpClientMockResponse(
         method="POST",
         url=kwargs["endpoint"],
@@ -119,7 +123,7 @@ def selected_platforms(platforms: list[Platform]) -> Iterator[None]:
     with (
         patch("homeassistant.components.netatmo.data_handler.PLATFORMS", platforms),
         patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.async_get_config_entry_implementation",
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
             "homeassistant.components.netatmo.webhook_generate_url",

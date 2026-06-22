@@ -1,7 +1,5 @@
 """NextDns coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
@@ -29,7 +27,12 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 if TYPE_CHECKING:
     from . import NextDnsConfigEntry
 
-from .const import DOMAIN
+from .const import (
+    DOMAIN,
+    UPDATE_INTERVAL_ANALYTICS,
+    UPDATE_INTERVAL_CONNECTION,
+    UPDATE_INTERVAL_SETTINGS,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,6 +43,7 @@ class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
     """Class to manage fetching NextDNS data API."""
 
     config_entry: NextDnsConfigEntry
+    _update_interval: timedelta
 
     def __init__(
         self,
@@ -47,7 +51,6 @@ class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
         config_entry: NextDnsConfigEntry,
         nextdns: NextDns,
         profile_id: str,
-        update_interval: timedelta,
     ) -> None:
         """Initialize."""
         self.nextdns = nextdns
@@ -58,7 +61,7 @@ class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=update_interval,
+            update_interval=self._update_interval,
         )
 
     async def _async_update_data(self) -> CoordinatorDataT:
@@ -93,6 +96,8 @@ class NextDnsUpdateCoordinator[CoordinatorDataT: NextDnsData](
 class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):
     """Class to manage fetching NextDNS analytics status data from API."""
 
+    _update_interval = UPDATE_INTERVAL_ANALYTICS
+
     async def _async_update_data_internal(self) -> AnalyticsStatus:
         """Update data via library."""
         return await self.nextdns.get_analytics_status(self.profile_id)
@@ -100,6 +105,8 @@ class NextDnsStatusUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsStatus]):
 
 class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsDnssec]):
     """Class to manage fetching NextDNS analytics Dnssec data from API."""
+
+    _update_interval = UPDATE_INTERVAL_ANALYTICS
 
     async def _async_update_data_internal(self) -> AnalyticsDnssec:
         """Update data via library."""
@@ -109,6 +116,8 @@ class NextDnsDnssecUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsDnssec]):
 class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsEncryption]):
     """Class to manage fetching NextDNS analytics encryption data from API."""
 
+    _update_interval = UPDATE_INTERVAL_ANALYTICS
+
     async def _async_update_data_internal(self) -> AnalyticsEncryption:
         """Update data via library."""
         return await self.nextdns.get_analytics_encryption(self.profile_id)
@@ -116,6 +125,8 @@ class NextDnsEncryptionUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsEncry
 
 class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsIpVersions]):
     """Class to manage fetching NextDNS analytics IP versions data from API."""
+
+    _update_interval = UPDATE_INTERVAL_ANALYTICS
 
     async def _async_update_data_internal(self) -> AnalyticsIpVersions:
         """Update data via library."""
@@ -125,6 +136,8 @@ class NextDnsIpVersionsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsIpVer
 class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtocols]):
     """Class to manage fetching NextDNS analytics protocols data from API."""
 
+    _update_interval = UPDATE_INTERVAL_ANALYTICS
+
     async def _async_update_data_internal(self) -> AnalyticsProtocols:
         """Update data via library."""
         return await self.nextdns.get_analytics_protocols(self.profile_id)
@@ -133,6 +146,8 @@ class NextDnsProtocolsUpdateCoordinator(NextDnsUpdateCoordinator[AnalyticsProtoc
 class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):
     """Class to manage fetching NextDNS connection data from API."""
 
+    _update_interval = UPDATE_INTERVAL_SETTINGS
+
     async def _async_update_data_internal(self) -> Settings:
         """Update data via library."""
         return await self.nextdns.get_settings(self.profile_id)
@@ -140,6 +155,8 @@ class NextDnsSettingsUpdateCoordinator(NextDnsUpdateCoordinator[Settings]):
 
 class NextDnsConnectionUpdateCoordinator(NextDnsUpdateCoordinator[ConnectionStatus]):
     """Class to manage fetching NextDNS connection data from API."""
+
+    _update_interval = UPDATE_INTERVAL_CONNECTION
 
     async def _async_update_data_internal(self) -> ConnectionStatus:
         """Update data via library."""

@@ -42,7 +42,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaperlessConfigEntry) ->
     try:
         await status_coordinator.async_config_entry_first_refresh()
     except ConfigEntryNotReady as err:
-        # Catch the error so the integration doesn't fail just because status coordinator fails.
+        # Catch the error so the integration doesn't fail
+        # just because status coordinator fails.
         LOGGER.warning("Could not initialize status coordinator: %s", err)
 
     entry.runtime_data = PaperlessData(
@@ -96,7 +97,7 @@ async def _get_paperless_api(
             translation_key="forbidden",
         ) from err
     except InitializationError as err:
-        raise ConfigEntryError(
+        raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from err

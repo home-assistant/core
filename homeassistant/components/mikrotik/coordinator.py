@@ -1,7 +1,5 @@
 """The Mikrotik router class."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 import ssl
@@ -11,7 +9,13 @@ import librouteros
 from librouteros.login import plain as login_plain, token as login_token
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
+from homeassistant.const import (
+    ATTR_MODEL,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -19,7 +23,6 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 from .const import (
     ARP,
     ATTR_FIRMWARE,
-    ATTR_MODEL,
     ATTR_SERIAL_NUMBER,
     CAPSMAN,
     CONF_ARP_PING,
@@ -83,12 +86,12 @@ class MikrotikData:
     @property
     def arp_enabled(self) -> bool:
         """Return arp_ping option setting."""
-        return self.config_entry.options.get(CONF_ARP_PING, False)
+        return self.config_entry.options.get(CONF_ARP_PING, False)  # type: ignore[no-any-return]
 
     @property
     def force_dhcp(self) -> bool:
         """Return force_dhcp option setting."""
-        return self.config_entry.options.get(CONF_FORCE_DHCP, False)
+        return self.config_entry.options.get(CONF_FORCE_DHCP, False)  # type: ignore[no-any-return]
 
     def get_info(self, param: str) -> str:
         """Return device model name."""

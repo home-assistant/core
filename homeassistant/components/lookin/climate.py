@@ -1,7 +1,5 @@
 """The lookin integration climate platform."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, Final, cast
 
@@ -91,7 +89,7 @@ async def async_setup_entry(
 class ConditionerEntity(LookinCoordinatorEntity, ClimateEntity):
     """An aircon or heat pump."""
 
-    _attr_current_humidity: float | None = None  # type: ignore[assignment]
+    _attr_current_humidity: float | None = None
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE

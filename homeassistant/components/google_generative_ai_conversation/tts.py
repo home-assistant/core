@@ -1,9 +1,7 @@
 """Text to speech support for Google Generative AI."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from google.genai import types
 from google.genai.errors import APIError, ClientError
@@ -20,7 +18,13 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_CHAT_MODEL, LOGGER, RECOMMENDED_TTS_MODEL
+from .const import (
+    CONF_CHAT_MODEL,
+    CONF_TEMPERATURE,
+    LOGGER,
+    RECOMMENDED_TEMPERATURE,
+    RECOMMENDED_TTS_MODEL,
+)
 from .entity import GoogleGenerativeAILLMBaseEntity
 from .helpers import convert_to_wav
 
@@ -48,30 +52,89 @@ class GoogleGenerativeAITextToSpeechEntity(
 
     _attr_supported_options = [ATTR_VOICE]
     # See https://ai.google.dev/gemini-api/docs/speech-generation#languages
+    # Note the documentation might not be up to date, e.g. el-GR is not listed
+    # there but is supported.
     _attr_supported_languages = [
+        "af-ZA",
+        "am-ET",
         "ar-EG",
+        "az-AZ",
+        "be-BY",
+        "bg-BG",
         "bn-BD",
+        "ca-ES",
+        "ceb-PH",
+        "cmn-CN",
+        "cs-CZ",
+        "da-DK",
         "de-DE",
+        "el-GR",
         "en-IN",
         "en-US",
+        "es-ES",
         "es-US",
+        "et-EE",
+        "eu-ES",
+        "fa-IR",
+        "fi-FI",
+        "fil-PH",
         "fr-FR",
+        "gl-ES",
+        "gu-IN",
+        "he-IL",
         "hi-IN",
+        "hr-HR",
+        "ht-HT",
+        "hu-HU",
+        "hy-AM",
         "id-ID",
+        "is-IS",
         "it-IT",
         "ja-JP",
+        "jv-ID",
+        "ka-GE",
+        "kn-IN",
         "ko-KR",
+        "kok-IN",
+        "la-VA",
+        "lb-LU",
+        "lo-LA",
+        "lt-LT",
+        "lv-LV",
+        "mai-IN",
+        "mg-MG",
+        "mk-MK",
+        "ml-IN",
+        "mn-MN",
         "mr-IN",
+        "ms-MY",
+        "my-MM",
+        "nb-NO",
+        "ne-NP",
         "nl-NL",
+        "nn-NO",
+        "or-IN",
+        "pa-IN",
         "pl-PL",
+        "ps-AF",
         "pt-BR",
+        "pt-PT",
         "ro-RO",
         "ru-RU",
+        "sd-PK",
+        "si-LK",
+        "sk-SK",
+        "sl-SI",
+        "sq-AL",
+        "sr-RS",
+        "sv-SE",
+        "sw-KE",
         "ta-IN",
         "te-IN",
         "th-TH",
         "tr-TR",
         "uk-UA",
+        "ur-PK",
         "vi-VN",
     ]
     # Unused, but required by base class.
@@ -119,22 +182,28 @@ class GoogleGenerativeAITextToSpeechEntity(
         super().__init__(config_entry, subentry, RECOMMENDED_TTS_MODEL)
 
     @callback
+    @override
     def async_get_supported_voices(self, language: str) -> list[Voice]:
         """Return a list of supported voices for a language."""
         return self._supported_voices
 
     @cached_property
+    @override
     def default_options(self) -> Mapping[str, Any]:
         """Return a mapping with the default options."""
         return {
             ATTR_VOICE: self._supported_voices[0].voice_id,
         }
 
+    @override
     async def async_get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:
         """Load tts audio file from the engine."""
-        config = self.create_generate_content_config()
+        config = types.GenerateContentConfig()
+        config.temperature = self.subentry.data.get(
+            CONF_TEMPERATURE, RECOMMENDED_TEMPERATURE
+        )
         config.response_modalities = ["AUDIO"]
         config.speech_config = types.SpeechConfig(
             voice_config=types.VoiceConfig(
@@ -143,15 +212,41 @@ class GoogleGenerativeAITextToSpeechEntity(
                 )
             )
         )
+
+        def _extract_audio_parts(
+            response: types.GenerateContentResponse,
+        ) -> tuple[bytes, str]:
+            if (
+                not response.candidates
+                or not response.candidates[0].content
+                or not response.candidates[0].content.parts
+                or not response.candidates[0].content.parts[0].inline_data
+            ):
+                raise ValueError("No content returned from TTS generation")
+
+            data = response.candidates[0].content.parts[0].inline_data.data
+            mime_type = response.candidates[0].content.parts[0].inline_data.mime_type
+
+            if not isinstance(data, bytes):
+                raise TypeError(
+                    f"Expected bytes for audio data, got {type(data).__name__}"
+                )
+            if not isinstance(mime_type, str):
+                raise TypeError(
+                    f"Expected str for mime_type, got {type(mime_type).__name__}"
+                )
+
+            return data, mime_type
+
         try:
             response = await self._genai_client.aio.models.generate_content(
                 model=self.subentry.data.get(CONF_CHAT_MODEL, RECOMMENDED_TTS_MODEL),
                 contents=message,
                 config=config,
             )
-            data = response.candidates[0].content.parts[0].inline_data.data
-            mime_type = response.candidates[0].content.parts[0].inline_data.mime_type
-        except (APIError, ClientError, ValueError) as exc:
+
+            data, mime_type = _extract_audio_parts(response)
+        except (APIError, ClientError, ValueError, TypeError) as exc:
             LOGGER.error("Error during TTS: %s", exc, exc_info=True)
             raise HomeAssistantError(exc) from exc
         return "wav", convert_to_wav(data, mime_type)

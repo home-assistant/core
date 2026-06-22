@@ -1,29 +1,33 @@
 """Support for YouTube."""
 
-from __future__ import annotations
-
 from aiohttp.client_exceptions import ClientError, ClientResponseError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
 
 from .api import AsyncConfigEntryAuth
-from .const import AUTH, COORDINATOR, DOMAIN
-from .coordinator import YouTubeDataUpdateCoordinator
+from .const import DOMAIN
+from .coordinator import YouTubeConfigEntry, YouTubeDataUpdateCoordinator
 
 PLATFORMS = [Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> bool:
     """Set up YouTube from a config entry."""
-    implementation = await async_get_config_entry_implementation(hass, entry)
+    try:
+        implementation = await async_get_config_entry_implementation(hass, entry)
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = OAuth2Session(hass, entry, implementation)
     auth = AsyncConfigEntryAuth(hass, session)
     try:
@@ -42,25 +46,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await delete_devices(hass, entry, coordinator)
 
-    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = {
-        COORDINATOR: coordinator,
-        AUTH: auth,
-    }
+    entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: YouTubeConfigEntry) -> bool:
     """Unload a config entry."""
-
-    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        hass.data[DOMAIN].pop(entry.entry_id)
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def delete_devices(
-    hass: HomeAssistant, entry: ConfigEntry, coordinator: YouTubeDataUpdateCoordinator
+    hass: HomeAssistant,
+    entry: YouTubeConfigEntry,
+    coordinator: YouTubeDataUpdateCoordinator,
 ) -> None:
     """Delete all devices created by integration."""
     channel_ids = list(coordinator.data)

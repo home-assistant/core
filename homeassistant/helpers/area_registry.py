@@ -1,7 +1,5 @@
 """Provide a way to connect devices to one physical location."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Iterable
 import dataclasses
@@ -15,7 +13,7 @@ from homeassistant.util.dt import utc_from_timestamp, utcnow
 from homeassistant.util.event_type import EventType
 from homeassistant.util.hass_dict import HassKey
 
-from . import device_registry as dr, entity_registry as er
+from . import device_registry as dr
 from .json import json_bytes, json_fragment
 from .normalized_name_base_registry import (
     NormalizedNameBaseRegistryEntry,
@@ -40,7 +38,7 @@ EVENT_AREA_REGISTRY_UPDATED: EventType[EventAreaRegistryUpdatedData] = EventType
 )
 STORAGE_KEY = "core.area_registry"
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 8
+STORAGE_VERSION_MINOR = 9
 
 
 class _AreaStoreData(TypedDict):
@@ -68,8 +66,8 @@ class AreasRegistryStoreData(TypedDict):
 class EventAreaRegistryUpdatedData(TypedDict):
     """EventAreaRegistryUpdated data."""
 
-    action: Literal["create", "remove", "update"]
-    area_id: str
+    action: Literal["create", "remove", "update", "reorder"]
+    area_id: str | None
 
 
 @dataclass(frozen=True, kw_only=True, slots=True)
@@ -157,6 +155,13 @@ class AreaRegistryStore(Store[AreasRegistryStoreData]):
                     area["humidity_entity_id"] = None
                     area["temperature_entity_id"] = None
 
+            if old_minor_version < 9:
+                # Version 1.9 sorts the areas by name
+                old_data["areas"] = sorted(
+                    old_data["areas"],
+                    key=lambda area: area["name"].casefold(),
+                )
+
         if old_major_version > 1:
             raise NotImplementedError
         return old_data  # type: ignore[return-value]
@@ -179,8 +184,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
             self._floors_index[entry.floor_id][key] = True
         for label in entry.labels:
             self._labels_index[label][key] = True
-        for alias in entry.aliases:
-            normalized_alias = normalize_name(alias)
+        for normalized_alias in {normalize_name(alias) for alias in entry.aliases}:
             self._aliases_index[normalized_alias][key] = True
 
     def _unindex_entry(
@@ -190,8 +194,7 @@ class AreaRegistryItems(NormalizedNameBaseRegistryItems[AreaEntry]):
         super()._unindex_entry(key, replacement_entry)
         entry = self.data[key]
         if aliases := entry.aliases:
-            for alias in aliases:
-                normalized_alias = normalize_name(alias)
+            for normalized_alias in {normalize_name(alias) for alias in aliases}:
                 self._unindex_entry_value(key, normalized_alias, self._aliases_index)
         if labels := entry.labels:
             for label in labels:
@@ -320,6 +323,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
     @callback
     def async_delete(self, area_id: str) -> None:
         """Delete area."""
+        from . import entity_registry as er  # noqa: PLC0415  # Circular dependency
+
         self.hass.verify_event_loop_thread("area_registry.async_delete")
         device_registry = dr.async_get(self.hass)
         entity_registry = er.async_get(self.hass)
@@ -422,7 +427,27 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         self.async_schedule_save()
         return new
 
-    async def async_load(self) -> None:
+    @callback
+    def async_reorder(self, area_ids: list[str]) -> None:
+        """Reorder areas."""
+        self.hass.verify_event_loop_thread("area_registry.async_reorder")
+
+        if set(area_ids) != set(self.areas.data.keys()):
+            raise ValueError(
+                "The area_ids list must contain all existing area IDs exactly once"
+            )
+
+        reordered_data = {area_id: self.areas.data[area_id] for area_id in area_ids}
+        self.areas.data.clear()
+        self.areas.data.update(reordered_data)
+
+        self.async_schedule_save()
+        self.hass.bus.async_fire_internal(
+            EVENT_AREA_REGISTRY_UPDATED,
+            EventAreaRegistryUpdatedData(action="reorder", area_id=None),
+        )
+
+    async def _async_load(self) -> None:
         """Load the area registry."""
         self._async_setup_cleanup()
 
@@ -491,6 +516,8 @@ class AreaRegistry(BaseRegistry[AreasRegistryStoreData]):
         @callback
         def _handle_floor_registry_update(event: fr.EventFloorRegistryUpdated) -> None:
             """Update areas that are associated with a floor that has been removed."""
+            if TYPE_CHECKING:
+                assert event.data["action"] == "remove"
             floor_id = event.data["floor_id"]
             for area in self.areas.get_areas_for_floor(floor_id):
                 self.async_update(area.id, floor_id=None)
@@ -522,10 +549,10 @@ def async_get(hass: HomeAssistant) -> AreaRegistry:
     return AreaRegistry(hass)
 
 
-async def async_load(hass: HomeAssistant) -> None:
+async def async_load(hass: HomeAssistant, *, load_empty: bool = False) -> None:
     """Load area registry."""
     assert DATA_REGISTRY not in hass.data
-    await async_get(hass).async_load()
+    await async_get(hass).async_load(load_empty=load_empty)
 
 
 @callback

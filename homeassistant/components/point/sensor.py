@@ -1,7 +1,5 @@
 """Support for Minut Point sensors."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.components.sensor import (
@@ -14,8 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import PointConfigEntry
-from .coordinator import PointDataUpdateCoordinator
+from .coordinator import PointConfigEntry, PointDataUpdateCoordinator
 from .entity import MinutPointEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -80,7 +77,7 @@ class MinutPointSensor(MinutPointEntity, SensorEntity):
         """Initialize the sensor."""
         self.entity_description = description
         super().__init__(coordinator, device_id)
-        self._attr_unique_id = f"point.{device_id}-{description.key}"
+        self._attr_unique_id = f"point.{device_id}-{description.key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
 
     @property
     def native_value(self) -> StateType:

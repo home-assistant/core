@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, PropertyMock, patch
 
 from aiohttp import ClientConnectionError
 from freezegun.api import FrozenDateTimeFactory
+from pydaikin.exceptions import DaikinException
 import pytest
 
 from homeassistant.components.daikin import update_unique_id
@@ -91,9 +92,7 @@ async def test_duplicate_removal(
         assert device_registry.async_get_device({}, {(KEY_MAC, HOST)}).name is None
 
         assert entity_registry.async_get("climate.daikin_127_0_0_1").unique_id == HOST
-        assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(
-            HOST
-        )
+        assert entity_registry.async_get("switch.zone_1").unique_id.startswith(HOST)
 
         assert entity_registry.async_get("climate.daikinap00000").unique_id == MAC
         assert entity_registry.async_get(
@@ -111,7 +110,7 @@ async def test_duplicate_removal(
     assert entity_registry.async_get("switch.daikinap00000_zone_1") is None
 
     assert entity_registry.async_get("climate.daikin_127_0_0_1").unique_id == MAC
-    assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(MAC)
+    assert entity_registry.async_get("switch.zone_1").unique_id.startswith(MAC)
 
 
 async def test_unique_id_migrate(
@@ -143,7 +142,7 @@ async def test_unique_id_migrate(
     assert entity.unique_id == HOST
     assert update_unique_id(entity, MAC) is not None
 
-    assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(HOST)
+    assert entity_registry.async_get("switch.zone_1").unique_id.startswith(HOST)
 
     type(mock_daikin).mac = PropertyMock(return_value=MAC)
     type(mock_daikin).values = PropertyMock(return_value=DATA)
@@ -164,7 +163,7 @@ async def test_unique_id_migrate(
     assert entity.unique_id == MAC
     assert update_unique_id(entity, MAC) is None
 
-    assert entity_registry.async_get("switch.none_zone_1").unique_id.startswith(MAC)
+    assert entity_registry.async_get("switch.zone_1").unique_id.startswith(MAC)
 
 
 async def test_client_update_connection_error(
@@ -187,7 +186,7 @@ async def test_client_update_connection_error(
 
     type(mock_daikin).update_status.side_effect = ClientConnectionError
 
-    freezer.tick(timedelta(seconds=60))
+    freezer.tick(timedelta(seconds=120))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -222,6 +221,28 @@ async def test_timeout_error(hass: HomeAssistant, mock_daikin) -> None:
     config_entry.add_to_hass(hass)
 
     mock_daikin.side_effect = TimeoutError
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_daikin_exception_retries(hass: HomeAssistant, mock_daikin) -> None:
+    """Test that a DaikinException during setup triggers SETUP_RETRY.
+
+    A DaikinException (e.g. "Empty values." from DaikinAirBase.init when the
+    device HTTP endpoint returns an empty response) is a transient condition —
+    the device is not yet ready, not a permanent configuration problem — so the
+    entry must land in SETUP_RETRY rather than SETUP_ERROR.
+    """
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MAC,
+        data={CONF_HOST: HOST, KEY_MAC: MAC},
+    )
+    config_entry.add_to_hass(hass)
+
+    mock_daikin.side_effect = DaikinException("Empty values.")
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 

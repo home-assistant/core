@@ -1,7 +1,5 @@
 """Support for Tado sensors for each zone."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
@@ -16,7 +14,6 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from . import TadoConfigEntry
 from .const import (
     TYPE_AIR_CONDITIONING,
     TYPE_BATTERY,
@@ -24,7 +21,7 @@ from .const import (
     TYPE_HOT_WATER,
     TYPE_POWER,
 )
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
 from .entity import TadoDeviceEntity, TadoZoneEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -121,7 +118,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado sensor platform."""
 
-    tado = entry.runtime_data.coordinator
+    tado = entry.runtime_data
     devices = tado.devices
     zones = tado.zones
     entities: list[BinarySensorEntity] = []

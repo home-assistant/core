@@ -1,20 +1,17 @@
 """Support for getting statistical data from a Pi-hole system."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
 from hole import Hole
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.const import CONF_API_VERSION, CONF_NAME, PERCENTAGE
+from homeassistant.const import CONF_NAME, PERCENTAGE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
-from . import PiHoleConfigEntry
+from .coordinator import PiHoleConfigEntry, PiHoleUpdateCoordinator
 from .entity import PiHoleEntity
 
 SENSOR_TYPES: tuple[SensorEntityDescription, ...] = (
@@ -133,7 +130,7 @@ async def async_setup_entry(
             description,
         )
         for description in (
-            SENSOR_TYPES if entry.data[CONF_API_VERSION] == 5 else SENSOR_TYPES_V6
+            SENSOR_TYPES if hole_data.api_version == 5 else SENSOR_TYPES_V6
         )
     ]
     async_add_entities(sensors, True)
@@ -148,7 +145,7 @@ class PiHoleSensor(PiHoleEntity, SensorEntity):
     def __init__(
         self,
         api: Hole,
-        coordinator: DataUpdateCoordinator[None],
+        coordinator: PiHoleUpdateCoordinator,
         name: str,
         server_unique_id: str,
         description: SensorEntityDescription,

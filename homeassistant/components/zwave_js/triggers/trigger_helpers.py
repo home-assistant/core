@@ -1,12 +1,12 @@
 """Helpers for Z-Wave JS custom triggers."""
 
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID, ATTR_DEVICE_ID, ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 
-from ..const import ATTR_CONFIG_ENTRY_ID, DOMAIN
+from ..const import DOMAIN
 
 
 @callback
@@ -21,7 +21,7 @@ def async_bypass_dynamic_config_validation(
     trigger_devices = config.get(ATTR_DEVICE_ID, [])
     trigger_entities = config.get(ATTR_ENTITY_ID, [])
     for entry in hass.config_entries.async_entries(DOMAIN):
-        if entry.state != ConfigEntryState.LOADED and (
+        if entry.state is not ConfigEntryState.LOADED and (
             entry.entry_id == config.get(ATTR_CONFIG_ENTRY_ID)
             or any(
                 device.id in trigger_devices

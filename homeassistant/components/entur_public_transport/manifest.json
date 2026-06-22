@@ -1,8 +1,9 @@
 {
   "domain": "entur_public_transport",
   "name": "Entur",
-  "codeowners": ["@hfurubotten"],
+  "codeowners": ["@hfurubotten", "@SanderBlom"],
   "documentation": "https://www.home-assistant.io/integrations/entur_public_transport",
+  "integration_type": "service",
   "iot_class": "cloud_polling",
   "loggers": ["enturclient"],
   "quality_scale": "legacy",

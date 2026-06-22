@@ -1,17 +1,17 @@
 """Sensors for the weatherflow integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
+from typing import Any
 
 from pyweatherflowudp.const import EVENT_RAPID_WIND
 from pyweatherflowudp.device import (
     EVENT_OBSERVATION,
     EVENT_STATUS_UPDATE,
     WeatherFlowDevice,
+    WeatherFlowSensorDevice,
 )
 
 from homeassistant.components.sensor import (
@@ -20,7 +20,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     DEGREE,
     LIGHT_LUX,
@@ -44,6 +43,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.unit_system import METRIC_SYSTEM
 
+from . import WeatherFlowConfigEntry
 from .const import DOMAIN, LOGGER, format_dispatch_call
 
 
@@ -58,7 +58,7 @@ def precipitation_raw_conversion_fn(raw_data: Enum):
 class WeatherFlowSensorEntityDescription(SensorEntityDescription):
     """Describes WeatherFlow sensor entity."""
 
-    raw_data_conv_fn: Callable[[WeatherFlowDevice], datetime | StateType]
+    raw_data_conv_fn: Callable[[Any], datetime | StateType]
 
     event_subscriptions: list[str] = field(default_factory=lambda: [EVENT_OBSERVATION])
     imperial_suggested_unit: str | None = None
@@ -119,6 +119,14 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
         translation_key="battery_voltage",
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         device_class=SensorDeviceClass.VOLTAGE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        state_class=SensorStateClass.MEASUREMENT,
+        raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
+    ),
+    WeatherFlowSensorEntityDescription(
+        key="battery_percent",
+        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         raw_data_conv_fn=lambda raw_data: raw_data.magnitude,
@@ -285,13 +293,13 @@ SENSORS: tuple[WeatherFlowSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: WeatherFlowConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up WeatherFlow sensors using config entry."""
 
     @callback
-    def async_add_sensor(device: WeatherFlowDevice) -> None:
+    def async_add_sensor(device: WeatherFlowSensorDevice) -> None:
         """Add WeatherFlow sensor."""
         LOGGER.debug("Adding sensors for %s", device)
 
@@ -325,7 +333,7 @@ class WeatherFlowSensorEntity(SensorEntity):
 
     def __init__(
         self,
-        device: WeatherFlowDevice,
+        device: WeatherFlowSensorDevice,
         description: WeatherFlowSensorEntityDescription,
         is_metric: bool = True,
     ) -> None:
@@ -343,7 +351,9 @@ class WeatherFlowSensorEntity(SensorEntity):
 
         self._attr_unique_id = f"{device.serial_number}_{description.key}"
 
-        # In the case of the USA - we may want to have a suggested US unit which differs from the internal suggested units
+        # In the case of the USA - we may want to have a
+        # suggested US unit which differs from the internal
+        # suggested units
         if description.imperial_suggested_unit is not None and not is_metric:
             self._attr_suggested_unit_of_measurement = (
                 description.imperial_suggested_unit

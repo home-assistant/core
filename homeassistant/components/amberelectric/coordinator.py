@@ -1,23 +1,21 @@
 """Amber Electric Coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 import amberelectric
 from amberelectric.models.actual_interval import ActualInterval
 from amberelectric.models.channel import ChannelType
 from amberelectric.models.current_interval import CurrentInterval
 from amberelectric.models.forecast_interval import ForecastInterval
-from amberelectric.models.price_descriptor import PriceDescriptor
 from amberelectric.rest import ApiException
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import LOGGER
+from .const import LOGGER, REQUEST_TIMEOUT
+from .helpers import normalize_descriptor
 
 type AmberConfigEntry = ConfigEntry[AmberUpdateCoordinator]
 
@@ -49,29 +47,8 @@ def is_feed_in(interval: ActualInterval | CurrentInterval | ForecastInterval) ->
     return interval.channel_type == ChannelType.FEEDIN
 
 
-def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
-    """Return the snake case versions of descriptor names. Returns None if the name is not recognized."""
-    if descriptor is None:
-        return None
-    if descriptor.value == "spike":
-        return "spike"
-    if descriptor.value == "high":
-        return "high"
-    if descriptor.value == "neutral":
-        return "neutral"
-    if descriptor.value == "low":
-        return "low"
-    if descriptor.value == "veryLow":
-        return "very_low"
-    if descriptor.value == "extremelyLow":
-        return "extremely_low"
-    if descriptor.value == "negative":
-        return "negative"
-    return None
-
-
 class AmberUpdateCoordinator(DataUpdateCoordinator):
-    """AmberUpdateCoordinator - In charge of downloading the data for a site, which all the sensors read."""
+    """Coordinator in charge of downloading site data for all sensors."""
 
     config_entry: AmberConfigEntry
 
@@ -103,7 +80,11 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
             "grid": {},
         }
         try:
-            data = self._api.get_current_prices(self.site_id, next=48)
+            data = self._api.get_current_prices(
+                self.site_id,
+                next=288,
+                _request_timeout=REQUEST_TIMEOUT,
+            )
             intervals = [interval.actual_instance for interval in data]
         except ApiException as api_exception:
             raise UpdateFailed("Missing price data, skipping update") from api_exception
@@ -151,6 +132,7 @@ class AmberUpdateCoordinator(DataUpdateCoordinator):
         LOGGER.debug("Fetched new Amber data: %s", intervals)
         return result
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Async update wrapper."""
         return await self.hass.async_add_executor_job(self.update_price_data)

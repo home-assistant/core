@@ -1,7 +1,5 @@
 """Support for Modbus covers."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.cover import CoverEntity, CoverEntityFeature, CoverState
@@ -23,7 +21,7 @@ from .const import (
     CONF_STATUS_REGISTER,
     CONF_STATUS_REGISTER_TYPE,
 )
-from .entity import BasePlatform
+from .entity import ModbusBaseEntity
 from .modbus import ModbusHub
 
 PARALLEL_UPDATES = 1
@@ -42,7 +40,7 @@ async def async_setup_platform(
     async_add_entities(ModbusCover(hass, hub, config) for config in covers)
 
 
-class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
+class ModbusCover(ModbusBaseEntity, CoverEntity, RestoreEntity):
     """Representation of a Modbus cover."""
 
     _attr_supported_features = CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE
@@ -64,8 +62,9 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
 
         self._attr_is_closed = False
 
-        # If we read cover status from coil, and not from optional status register,
-        # we interpret boolean value False as closed cover, and value True as open cover.
+        # If we read cover status from coil, and not from
+        # optional status register, we interpret boolean value
+        # False as closed cover, and value True as open cover.
         # Intermediate states are not supported in such a setup.
         if self._input_type == CALL_TYPE_COIL:
             self._write_type = CALL_TYPE_WRITE_COIL
@@ -108,25 +107,29 @@ class ModbusCover(BasePlatform, CoverEntity, RestoreEntity):
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open cover."""
         result = await self._hub.async_pb_call(
-            self._slave, self._write_address, self._state_open, self._write_type
+            self._device_address,
+            self._write_address,
+            self._state_open,
+            self._write_type,
         )
         self._attr_available = result is not None
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close cover."""
         result = await self._hub.async_pb_call(
-            self._slave, self._write_address, self._state_closed, self._write_type
+            self._device_address,
+            self._write_address,
+            self._state_closed,
+            self._write_type,
         )
         self._attr_available = result is not None
-        await self._async_update_write_state()
+        await self.async_local_update(cancel_pending_update=True)
 
     async def _async_update(self) -> None:
         """Update the state of the cover."""
-        # remark "now" is a dummy parameter to avoid problems with
-        # async_track_time_interval
         result = await self._hub.async_pb_call(
-            self._slave, self._address, 1, self._input_type
+            self._device_address, self._address, 1, self._input_type
         )
         if result is None:
             self._attr_available = False

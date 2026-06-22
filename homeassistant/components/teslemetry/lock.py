@@ -1,7 +1,5 @@
 """Lock platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from itertools import chain
 from typing import Any
 
@@ -42,7 +40,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
-                if vehicle.api.pre2021 or vehicle.firmware < "2024.26"
+                if vehicle.poll or vehicle.firmware < "2024.26"
                 else TeslemetryStreamingVehicleLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
@@ -52,7 +50,7 @@ async def async_setup_entry(
                 TeslemetryVehiclePollingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
-                if vehicle.api.pre2021 or vehicle.firmware < "2024.26"
+                if vehicle.poll or vehicle.firmware < "2024.26"
                 else TeslemetryStreamingCableLockEntity(
                     vehicle, Scope.VEHICLE_CMDS in entry.runtime_data.scopes
                 )
@@ -143,7 +141,6 @@ class TeslemetryCableLockEntity(TeslemetryRootEntity, LockEntity):
     async def async_lock(self, **kwargs: Any) -> None:
         """Charge cable Lock cannot be manually locked."""
         raise ServiceValidationError(
-            "Insert cable to lock",
             translation_domain=DOMAIN,
             translation_key="no_cable",
         )
@@ -178,6 +175,7 @@ class TeslemetryVehiclePollingCableLockEntity(
         """Update entity attributes."""
         if self._value is None:
             self._attr_is_locked = None
+            return
         self._attr_is_locked = self._value == ENGAGED
 
 

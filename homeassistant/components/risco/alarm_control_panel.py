@@ -1,7 +1,5 @@
 """Support for Risco alarms."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
 from typing import Any
@@ -15,19 +13,16 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelState,
     CodeFormat,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import LocalData, is_local
 from .const import (
     CONF_CODE_ARM_REQUIRED,
     CONF_CODE_DISARM_REQUIRED,
     CONF_HA_STATES_TO_RISCO,
     CONF_RISCO_STATES_TO_HA,
-    DATA_COORDINATOR,
     DEFAULT_OPTIONS,
     DOMAIN,
     RISCO_ARM,
@@ -36,12 +31,15 @@ from .const import (
 )
 from .coordinator import RiscoDataUpdateCoordinator
 from .entity import RiscoCloudEntity
+from .models import RiscoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
 STATES_TO_SUPPORTED_FEATURES = {
     AlarmControlPanelState.ARMED_AWAY: AlarmControlPanelEntityFeature.ARM_AWAY,
-    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+        AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    ),
     AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
     AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
 }
@@ -49,13 +47,13 @@ STATES_TO_SUPPORTED_FEATURES = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RiscoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Risco alarm control panel."""
     options = {**DEFAULT_OPTIONS, **config_entry.options}
-    if is_local(config_entry):
-        local_data: LocalData = hass.data[DOMAIN][config_entry.entry_id]
+    risco_data = config_entry.runtime_data
+    if local_data := risco_data.local_data:
         async_add_entities(
             RiscoLocalAlarm(
                 local_data.system.id,
@@ -67,10 +65,8 @@ async def async_setup_entry(
             )
             for partition_id, partition in local_data.system.partitions.items()
         )
-    else:
-        coordinator: RiscoDataUpdateCoordinator = hass.data[DOMAIN][
-            config_entry.entry_id
-        ][DATA_COORDINATOR]
+    elif cloud_data := risco_data.cloud_data:
+        coordinator = cloud_data.coordinator
         async_add_entities(
             RiscoCloudAlarm(
                 coordinator, partition_id, config_entry.data[CONF_PIN], options
@@ -82,7 +78,6 @@ async def async_setup_entry(
 class RiscoAlarm(AlarmControlPanelEntity):
     """Representation of a Risco cloud partition."""
 
-    _attr_code_format = CodeFormat.NUMBER
     _attr_has_entity_name = True
     _attr_name = None
 
@@ -100,8 +95,13 @@ class RiscoAlarm(AlarmControlPanelEntity):
         self._partition_id = partition_id
         self._partition = partition
         self._code = code
-        self._attr_code_arm_required = options[CONF_CODE_ARM_REQUIRED]
-        self._code_disarm_required = options[CONF_CODE_DISARM_REQUIRED]
+        arm_required = options[CONF_CODE_ARM_REQUIRED]
+        disarm_required = options[CONF_CODE_DISARM_REQUIRED]
+        self._attr_code_arm_required = arm_required
+        self._code_disarm_required = disarm_required
+        self._attr_code_format = (
+            CodeFormat.NUMBER if arm_required or disarm_required else None
+        )
         self._risco_to_ha = options[CONF_RISCO_STATES_TO_HA]
         self._ha_to_risco = options[CONF_HA_STATES_TO_RISCO]
         for state in self._ha_to_risco:

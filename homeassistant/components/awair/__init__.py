@@ -1,7 +1,5 @@
 """The awair component."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -26,15 +24,17 @@ async def async_setup_entry(
 
     if CONF_HOST in config_entry.data:
         coordinator = AwairLocalDataUpdateCoordinator(hass, config_entry, session)
-        config_entry.async_on_unload(
-            config_entry.add_update_listener(_async_update_listener)
-        )
     else:
         coordinator = AwairCloudDataUpdateCoordinator(hass, config_entry, session)
 
     await coordinator.async_config_entry_first_refresh()
 
     config_entry.runtime_data = coordinator
+
+    if CONF_HOST in config_entry.data:
+        config_entry.async_on_unload(
+            config_entry.add_update_listener(_async_update_listener)
+        )
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 

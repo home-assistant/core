@@ -1,7 +1,5 @@
 """Support for Lidarr."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import dataclasses
 from typing import Any, Generic
@@ -49,7 +47,7 @@ def get_modified_description(
 
 
 @dataclasses.dataclass(frozen=True)
-class LidarrSensorEntityDescriptionMixIn(Generic[T]):
+class LidarrSensorEntityDescriptionMixIn(Generic[T]):  # noqa: UP046
     """Mixin for required keys."""
 
     value_fn: Callable[[T, str], str | int]
@@ -57,7 +55,9 @@ class LidarrSensorEntityDescriptionMixIn(Generic[T]):
 
 @dataclasses.dataclass(frozen=True)
 class LidarrSensorEntityDescription(
-    SensorEntityDescription, LidarrSensorEntityDescriptionMixIn[T], Generic[T]
+    SensorEntityDescription,
+    LidarrSensorEntityDescriptionMixIn[T],
+    Generic[T],  # noqa: UP046
 ):
     """Class to describe a Lidarr sensor."""
 
@@ -97,7 +97,8 @@ SENSOR_TYPES: dict[str, LidarrSensorEntityDescription[Any]] = {
         state_class=SensorStateClass.TOTAL,
         entity_registry_enabled_default=False,
         attributes_fn=lambda data: {
-            album.title: album.artist.artistName for album in data.records
+            album.title: album.artist.artistName  # type: ignore[misc]
+            for album in data.records
         },
     ),
     "albums": LidarrSensorEntityDescription[int](

@@ -8,22 +8,20 @@ from homeassistant.components.todo import (
     TodoListEntity,
     TodoListEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NoMatchingShoppingListItem, ShoppingData
-from .const import DOMAIN
+from .common import NoMatchingShoppingListItem, ShoppingData, ShoppingListConfigEntry
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: ShoppingListConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the shopping_list todo platform."""
-    shopping_data = hass.data[DOMAIN]
+    shopping_data = config_entry.runtime_data
     entity = ShoppingTodoListEntity(shopping_data, unique_id=config_entry.entry_id)
     async_add_entities([entity], True)
 
@@ -53,7 +51,7 @@ class ShoppingTodoListEntity(TodoListEntity):
         )
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list."""
+        """Update an item in the To-do list."""
         data = {
             "name": item.summary,
             "complete": item.status == TodoItemStatus.COMPLETED,
@@ -66,7 +64,7 @@ class ShoppingTodoListEntity(TodoListEntity):
             ) from err
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
-        """Add an item to the To-do list."""
+        """Delete items from the To-do list."""
         await self._data.async_remove_items(set(uids))
 
     async def async_move_todo_item(

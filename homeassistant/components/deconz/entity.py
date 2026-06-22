@@ -1,6 +1,6 @@
 """Base class for deCONZ devices."""
 
-from __future__ import annotations
+from typing import override
 
 from pydeconz.models.deconz_device import DeconzDevice as PydeconzDevice
 from pydeconz.models.group import Group as PydeconzGroup
@@ -97,6 +97,7 @@ class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
         if self._update_keys is not None:
             self._update_keys |= {"reachable"}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to device events."""
         self._device.register_callback(self.async_update_callback)
@@ -109,6 +110,7 @@ class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
             )
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Disconnect device object when removed."""
         self._device.remove_callback(self.async_update_callback)
@@ -134,6 +136,7 @@ class DeconzDevice[_DeviceT: _DeviceType](DeconzBase[_DeviceT], Entity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if device is available."""
         if isinstance(self._device, PydeconzScene):
@@ -154,7 +157,7 @@ class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
         """Set up a scene."""
         super().__init__(device, hub)
 
-        self.group = self.hub.api.groups[device.group_id]
+        self.deconz_group = self.hub.api.groups[device.group_id]
 
         self._attr_name = device.name
         self._group_identifier = self.get_parent_identifier()
@@ -165,20 +168,22 @@ class DeconzSceneMixin(DeconzDevice[PydeconzScene]):
 
     def get_parent_identifier(self) -> str:
         """Describe a unique identifier for group this scene belongs to."""
-        return f"{self.hub.bridgeid}-{self.group.deconz_id}"
+        return f"{self.hub.bridgeid}-{self.deconz_group.deconz_id}"
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique identifier for this scene."""
         return self.get_device_identifier()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return a device description for device registry."""
         return DeviceInfo(
             identifiers={(DOMAIN, self._group_identifier)},
-            manufacturer="Dresden Elektronik",
+            manufacturer="dresden elektronik",
             model="deCONZ group",
-            name=self.group.name,
+            name=self.deconz_group.name,
             via_device=(DOMAIN, self.hub.api.config.bridge_id),
         )

@@ -1,7 +1,5 @@
 """Allows to configure a switch using RPi GPIO."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from gpiozero import LED
@@ -47,7 +45,7 @@ def setup_platform(
     for port, name in ports.items():
         try:
             led = setup_output(address, port, invert_logic)
-        except (ValueError, IndexError, KeyError, OSError):
+        except ValueError, IndexError, KeyError, OSError:
             return
         new_switch = RemoteRPiGPIOSwitch(name, led)
         devices.append(new_switch)

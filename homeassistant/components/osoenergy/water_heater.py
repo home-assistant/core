@@ -15,17 +15,17 @@ from homeassistant.components.water_heater import (
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import SERVICE_TURN_OFF, SERVICE_TURN_ON, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceResponse, SupportsResponse
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 from homeassistant.util.json import JsonValueType
 
-from .const import DOMAIN
+from . import OSOEnergyConfigEntry
 from .entity import OSOEnergyEntity
 
+ATTR_DURATION_DAYS = "duration_days"
 ATTR_UNTIL_TEMP_LIMIT = "until_temp_limit"
 ATTR_V40MIN = "v40_min"
 CURRENT_OPERATION_MAP: dict[str, Any] = {
@@ -44,17 +44,16 @@ CURRENT_OPERATION_MAP: dict[str, Any] = {
 SERVICE_GET_PROFILE = "get_profile"
 SERVICE_SET_PROFILE = "set_profile"
 SERVICE_SET_V40MIN = "set_v40_min"
-SERVICE_TURN_OFF = "turn_off"
-SERVICE_TURN_ON = "turn_on"
+SERVICE_TURN_AWAY_MODE_ON = "turn_away_mode_on"
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OSOEnergyConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up OSO Energy heater based on a config entry."""
-    osoenergy = hass.data[DOMAIN][entry.entry_id]
+    osoenergy = entry.runtime_data
     devices = osoenergy.session.device_list.get("water_heater")
     if not devices:
         return
@@ -67,6 +66,16 @@ async def async_setup_entry(
         {},
         OSOEnergyWaterHeater.async_get_profile.__name__,
         supports_response=SupportsResponse.ONLY,
+    )
+
+    platform.async_register_entity_service(
+        SERVICE_TURN_AWAY_MODE_ON,
+        {
+            vol.Required(ATTR_DURATION_DAYS): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=365)
+            ),
+        },
+        OSOEnergyWaterHeater.async_oso_turn_away_mode_on.__name__,
     )
 
     service_set_profile_schema = cv.make_entity_service_schema(
@@ -140,11 +149,13 @@ def _get_local_hour(utc_hour: int) -> dt.datetime:
 def _convert_profile_to_local(values: list[float]) -> list[JsonValueType]:
     """Convert UTC profile to local.
 
-    Receives a device temperature schedule - 24 values for the day where the index represents the hour of the day in UTC.
+    Receives a device temperature schedule - 24 values for the day
+    where the index represents the hour of the day in UTC.
     Converts the schedule to local time.
 
     Args:
-        values: list of floats representing the 24 hour temperature schedule for the device
+        values: list of floats representing the 24 hour temperature
+                schedule for the device
     Returns:
         The device temperature schedule in local time.
 
@@ -164,7 +175,9 @@ class OSOEnergyWaterHeater(
 
     _attr_name = None
     _attr_supported_features = (
-        WaterHeaterEntityFeature.TARGET_TEMPERATURE | WaterHeaterEntityFeature.ON_OFF
+        WaterHeaterEntityFeature.TARGET_TEMPERATURE
+        | WaterHeaterEntityFeature.AWAY_MODE
+        | WaterHeaterEntityFeature.ON_OFF
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -204,6 +217,11 @@ class OSOEnergyWaterHeater(
         return self.entity_data.current_temperature
 
     @property
+    def is_away_mode_on(self) -> bool:
+        """Return if the heater is in away mode."""
+        return self.entity_data.isInPowerSave
+
+    @property
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self.entity_data.target_temperature
@@ -227,6 +245,14 @@ class OSOEnergyWaterHeater(
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return self.entity_data.max_temperature
+
+    async def async_turn_away_mode_on(self) -> None:
+        """Turn on away mode."""
+        await self.osoenergy.hotwater.enable_holiday_mode(self.entity_data)
+
+    async def async_turn_away_mode_off(self) -> None:
+        """Turn off away mode."""
+        await self.osoenergy.hotwater.disable_holiday_mode(self.entity_data)
 
     async def async_turn_on(self, **kwargs) -> None:
         """Turn on hotwater."""
@@ -264,6 +290,12 @@ class OSOEnergyWaterHeater(
     async def async_set_v40_min(self, v40_min) -> None:
         """Handle the service call."""
         await self.osoenergy.hotwater.set_v40_min(self.entity_data, v40_min)
+
+    async def async_oso_turn_away_mode_on(self, duration_days: int) -> None:
+        """Enable away mode with duration."""
+        await self.osoenergy.hotwater.enable_holiday_mode(
+            self.entity_data, duration_days
+        )
 
     async def async_oso_turn_off(self, until_temp_limit) -> None:
         """Handle the service call."""

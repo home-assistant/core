@@ -59,7 +59,7 @@ async def test_restore_state(
 async def test_tts_entity_subclass_properties(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test for errors when subclasses of the TextToSpeechEntity are missing required properties."""
+    """Test errors when TextToSpeechEntity subclasses miss required properties."""
 
     class TestClass1(tts.TextToSpeechEntity):
         _attr_default_language = DEFAULT_LANG
@@ -88,7 +88,9 @@ async def test_tts_entity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass3())
 
     assert (
-        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        "TTS entities must either set the"
+        " '_attr_supported_languages' attribute or override"
+        " the 'supported_languages' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -103,7 +105,9 @@ async def test_tts_entity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass4())
 
     assert (
-        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+        "TTS entities must either set the"
+        " '_attr_default_language' attribute or override"
+        " the 'default_language' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -120,7 +124,9 @@ async def test_tts_entity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass5())
 
     assert (
-        "TTS entities must either set the '_attr_supported_languages' attribute or override the 'supported_languages' property"
+        "TTS entities must either set the"
+        " '_attr_supported_languages' attribute or override"
+        " the 'supported_languages' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -137,7 +143,9 @@ async def test_tts_entity_subclass_properties(
     await mock_config_entry_setup(hass, TestClass6())
 
     assert (
-        "TTS entities must either set the '_attr_default_language' attribute or override the 'default_language' property"
+        "TTS entities must either set the"
+        " '_attr_default_language' attribute or override"
+        " the 'default_language' property"
         in [
             str(record.exc_info[1])
             for record in caplog.records
@@ -175,3 +183,31 @@ def test_streaming_supported() -> None:
 
     sync_non_streaming_entity = SyncNonStreamingEntity()
     assert sync_non_streaming_entity.async_supports_streaming_input() is False
+
+
+async def test_internal_get_tts_audio_writes_state(
+    hass: HomeAssistant,
+    mock_tts_entity: MockTTSEntity,
+) -> None:
+    """Test that only async_internal_get_tts_audio updates and writes the state."""
+
+    entity_id = f"{tts.DOMAIN}.{TEST_DOMAIN}"
+
+    config_entry = await mock_config_entry_setup(hass, mock_tts_entity)
+    assert config_entry.state is ConfigEntryState.LOADED
+    state1 = hass.states.get(entity_id)
+    assert state1 is not None
+
+    # State should *not* change with external method
+    await mock_tts_entity.async_get_tts_audio("test message", hass.config.language, {})
+    state2 = hass.states.get(entity_id)
+    assert state2 is not None
+    assert state1.state == state2.state
+
+    # State *should* change with internal method
+    await mock_tts_entity.async_internal_get_tts_audio(
+        "test message", hass.config.language, {}
+    )
+    state3 = hass.states.get(entity_id)
+    assert state3 is not None
+    assert state1.state != state3.state

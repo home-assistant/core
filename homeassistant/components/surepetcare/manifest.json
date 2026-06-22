@@ -4,6 +4,7 @@
   "codeowners": ["@benleb", "@danielhiversen"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/surepetcare",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["rich", "surepy"],
   "requirements": ["surepy==0.9.0"]

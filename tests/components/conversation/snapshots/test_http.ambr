@@ -11,6 +11,7 @@
           'bn',
           'ca',
           'cs',
+          'cy',
           'da',
           'de',
           'de-CH',
@@ -27,6 +28,7 @@
           'hi',
           'hr',
           'hu',
+          'hy',
           'id',
           'is',
           'it',
@@ -43,9 +45,10 @@
           'nb',
           'ne',
           'nl',
+          'pa',
           'pl',
           'pt',
-          'pt-br',
+          'pt-BR',
           'ro',
           'ru',
           'sk',
@@ -60,9 +63,9 @@
           'uk',
           'ur',
           'vi',
-          'zh-cn',
-          'zh-hk',
-          'zh-tw',
+          'zh-CN',
+          'zh-HK',
+          'zh-TW',
         ]),
       }),
       dict({
@@ -282,8 +285,6 @@
             'type': 'entity',
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -312,39 +313,6 @@
             'name': 'kitchen',
             'type': 'entity',
           }),
-        ]),
-        'targets': list([
-        ]),
-      }),
-      'language': 'en',
-      'response_type': 'action_done',
-      'speech': dict({
-        'plain': dict({
-          'extra_data': None,
-          'speech': 'Turned on the light',
-        }),
-      }),
-    }),
-  })
-# ---
-# name: test_http_processing_intent[homeassistant]
-  dict({
-    'continue_conversation': False,
-    'conversation_id': <ANY>,
-    'response': dict({
-      'card': dict({
-      }),
-      'data': dict({
-        'failed': list([
-        ]),
-        'success': list([
-          dict({
-            'id': 'light.kitchen',
-            'name': 'kitchen',
-            'type': 'entity',
-          }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -503,7 +471,6 @@
         'slots': dict({
           'name': 'my cool light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -528,7 +495,6 @@
         'slots': dict({
           'name': 'my cool light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -559,7 +525,6 @@
           'area': 'kitchen',
           'domain': 'light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': True,
@@ -596,7 +561,6 @@
           'domain': 'lights',
           'state': 'on',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.kitchen': dict({
             'matched': False,
@@ -670,7 +634,6 @@
           'brightness': '100',
           'name': 'test light',
         }),
-        'source': 'builtin',
         'targets': dict({
           'light.demo_1234': dict({
             'matched': True,
@@ -701,7 +664,6 @@
         'slots': dict({
           'name': 'test light',
         }),
-        'source': 'builtin',
         'targets': dict({
         }),
         'unmatched_slots': dict({

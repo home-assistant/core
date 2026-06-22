@@ -1,7 +1,5 @@
 """The Niko home control integration."""
 
-from __future__ import annotations
-
 from nhc.controller import NHCController
 
 from homeassistant.config_entries import ConfigEntry
@@ -12,7 +10,12 @@ from homeassistant.helpers import entity_registry as er
 
 from .const import _LOGGER
 
-PLATFORMS: list[Platform] = [Platform.COVER, Platform.LIGHT]
+PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.LIGHT,
+    Platform.SCENE,
+]
 
 type NikoHomeControlConfigEntry = ConfigEntry[NHCController]
 

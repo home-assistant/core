@@ -19,7 +19,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
-from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.util.dt import utcnow
 
 from . import init_integration, mock_device, mock_location, mock_reading
@@ -51,21 +50,21 @@ async def test_sensors_pro(
         await init_integration(hass)
 
     sensors = {
-        "home_dining_room_temperature": (
+        "dining_room_home_dining_room_temperature": (
             "20_temperature",
             "21.12",
             UnitOfTemperature.CELSIUS,
             SensorDeviceClass.TEMPERATURE,
             None,
         ),
-        "home_dining_room_humidity": (
+        "dining_room_home_dining_room_humidity": (
             "20_humidity",
             "50.46",
             PERCENTAGE,
             SensorDeviceClass.HUMIDITY,
             None,
         ),
-        "home_dining_room_air_quality": (
+        "dining_room_home_dining_room_air_quality": (
             "20_air_quality",
             "0.59",
             None,
@@ -112,7 +111,7 @@ async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
     with patch("homeassistant.components.canary.PLATFORMS", ["sensor"]):
         await init_integration(hass)
 
-    entity_id = "sensor.home_dining_room_air_quality"
+    entity_id = "sensor.dining_room_home_dining_room_air_quality"
     state1 = hass.states.get(entity_id)
     assert state1
     assert state1.state == "0.59"
@@ -126,8 +125,7 @@ async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
 
     future = utcnow() + timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await async_update_entity(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state2 = hass.states.get(entity_id)
     assert state2
@@ -142,8 +140,7 @@ async def test_sensors_attributes_pro(hass: HomeAssistant, canary) -> None:
 
     future += timedelta(seconds=30)
     async_fire_time_changed(hass, future)
-    await async_update_entity(hass, entity_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     state3 = hass.states.get(entity_id)
     assert state3
@@ -174,14 +171,14 @@ async def test_sensors_flex(
         await init_integration(hass)
 
     sensors = {
-        "home_dining_room_battery": (
+        "dining_room_home_dining_room_battery": (
             "20_battery",
             "70.46",
             PERCENTAGE,
             SensorDeviceClass.BATTERY,
             None,
         ),
-        "home_dining_room_wifi": (
+        "dining_room_home_dining_room_wifi": (
             "20_wifi",
             "-57.0",
             SIGNAL_STRENGTH_DECIBELS_MILLIWATT,

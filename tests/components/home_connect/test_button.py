@@ -1,12 +1,14 @@
 """Tests for home_connect button entities."""
 
 from collections.abc import Awaitable, Callable
-from typing import Any
+from typing import Any, cast
 from unittest.mock import AsyncMock, MagicMock
 
 from aiohomeconnect.model import (
     ArrayOfCommands,
     CommandKey,
+    Event,
+    EventKey,
     EventMessage,
     HomeAppliance,
 )
@@ -27,7 +29,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def platforms() -> list[str]:
+def platforms() -> list[Platform]:
     """Fixture to specify platforms to test."""
     return [Platform.BUTTON]
 
@@ -42,7 +44,7 @@ async def test_paired_depaired_devices_flow(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test that removed devices are correctly removed from and added to hass on API events."""
+    """Test device removal and re-addition on API events."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -176,7 +178,7 @@ async def test_button_entity_availability(
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     entity_ids = [
         "button.washer_pause_program",
         "button.washer_stop_program",
@@ -242,7 +244,7 @@ async def test_button_functionality(
     expected_kwargs: dict[str, Any],
     appliance: HomeAppliance,
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
@@ -265,7 +267,7 @@ async def test_command_button_exception(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     entity_id = "button.washer_pause_program"
 
     client_with_exception.get_available_commands = AsyncMock(
@@ -300,7 +302,7 @@ async def test_stop_program_button_exception(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
 ) -> None:
-    """Test if button entities availability are based on the appliance connection state."""
+    """Test button entities availability based on appliance connection."""
     entity_id = "button.washer_stop_program"
 
     assert await integration_setup(client_with_exception)
@@ -317,3 +319,62 @@ async def test_stop_program_button_exception(
             {ATTR_ENTITY_ID: entity_id},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_enable_resume_command_on_pause(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """Test if all commands enabled option works as expected."""
+    entity_id = "button.washer_resume_program"
+
+    original_get_available_commands = client.get_available_commands
+
+    async def get_available_commands_side_effect(ha_id: str) -> ArrayOfCommands:
+        array_of_commands = cast(
+            ArrayOfCommands, await original_get_available_commands(ha_id)
+        )
+        if ha_id == appliance.ha_id:
+            for command in array_of_commands.commands:
+                if command.key == CommandKey.BSH_COMMON_RESUME_PROGRAM:
+                    # Simulate that the resume command is not available initially
+                    array_of_commands.commands.remove(command)
+                    break
+        return array_of_commands
+
+    client.get_available_commands = AsyncMock(
+        side_effect=get_available_commands_side_effect
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    assert not hass.states.get(entity_id)
+
+    await client.add_events(
+        [
+            EventMessage(
+                appliance.ha_id,
+                EventType.STATUS,
+                data=ArrayOfEvents(
+                    [
+                        Event(
+                            key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE,
+                            raw_key=EventKey.BSH_COMMON_STATUS_OPERATION_STATE.value,
+                            timestamp=0,
+                            level="",
+                            handling="",
+                            value="BSH.Common.EnumType.OperationState.Pause",
+                        )
+                    ]
+                ),
+            )
+        ]
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id)

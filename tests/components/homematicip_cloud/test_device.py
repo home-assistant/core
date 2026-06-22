@@ -22,7 +22,7 @@ async def test_hmip_load_all_supported_devices(
         test_devices=None, test_groups=None
     )
 
-    assert len(mock_hap.hmip_device_by_entity_id) == 325
+    assert len(mock_hap.hmip_device_by_entity_id) == 385
 
 
 async def test_hmip_remove_device(
@@ -195,9 +195,14 @@ async def test_hap_reconnected(
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_UNAVAILABLE
 
-    mock_hap._accesspoint_connected = False
-    await async_manipulate_test_data(hass, mock_hap.home, "connected", True)
-    await hass.async_block_till_done()
+    with patch(
+        "homeassistant.components.homematicip_cloud.hap.AsyncHome.websocket_is_connected",
+        return_value=True,
+    ):
+        await async_manipulate_test_data(hass, mock_hap.home, "connected", True)
+        await mock_hap.ws_connected_handler()
+        await hass.async_block_till_done()
+
     ha_state = hass.states.get(entity_id)
     assert ha_state.state == STATE_ON
 
@@ -207,8 +212,8 @@ async def test_hap_with_name(
 ) -> None:
     """Test hap with name."""
     home_name = "TestName"
-    entity_id = f"light.{home_name.lower()}_treppe_ch"
-    entity_name = f"{home_name} Treppe CH"
+    entity_id = "light.testname_treppe_ch"
+    entity_name = "TestName Treppe CH"
     device_model = "HmIP-BSL"
 
     hmip_config_entry.add_to_hass(hass)
@@ -275,7 +280,7 @@ async def test_hmip_multi_area_device(
         test_devices=["Wired Eingangsmodul – 32-fach"]
     )
 
-    ha_state, hmip_device = get_and_check_entity_basics(
+    ha_state, _hmip_device = get_and_check_entity_basics(
         hass, mock_hap, entity_id, entity_name, device_model
     )
     assert ha_state

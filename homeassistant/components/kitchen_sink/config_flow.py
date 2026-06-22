@@ -1,13 +1,16 @@
 """Config flow to configure the Kitchen Sink component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
 
 from homeassistant import data_entry_flow
+from homeassistant.components.infrared import (
+    DOMAIN as INFRARED_DOMAIN,
+    async_get_emitters,
+    async_get_receivers,
+)
 from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
@@ -18,8 +21,9 @@ from homeassistant.config_entries import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
-from . import DOMAIN
+from .const import CONF_INFRARED_ENTITY_ID, CONF_INFRARED_RECEIVER_ENTITY_ID, DOMAIN
 
 CONF_BOOLEAN = "bool"
 CONF_INT = "int"
@@ -44,7 +48,10 @@ class KitchenSinkConfigFlow(ConfigFlow, domain=DOMAIN):
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
         """Return subentries supported by this handler."""
-        return {"entity": SubentryFlowHandler}
+        return {
+            "entity": SubentryFlowHandler,
+            "infrared_fan": InfraredFanSubentryFlowHandler,
+        }
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Set the config entry up from yaml."""
@@ -99,7 +106,7 @@ class OptionsFlowHandler(OptionsFlow):
                 ),
             }
         )
-        self.add_suggested_values_to_schema(
+        data_schema = self.add_suggested_values_to_schema(
             data_schema,
             {"section_1": {"int": self.config_entry.options.get(CONF_INT, 10)}},
         )
@@ -162,3 +169,46 @@ class SubentryFlowHandler(ConfigSubentryFlow):
                 }
             ),
         )
+
+
+class InfraredFanSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle infrared fan subentry flow."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """User flow to add an infrared fan."""
+
+        if user_input is not None:
+            title = user_input.pop("name")
+            return self.async_create_entry(data=user_input, title=title)
+
+        emitter_entities = async_get_emitters(self.hass)
+        receiver_entities = async_get_receivers(self.hass)
+
+        if not emitter_entities and not receiver_entities:
+            return self.async_abort(reason="no_infrared_entities")
+
+        schema_dict: dict[vol.Marker, Any] = {
+            vol.Required("name"): str,
+        }
+
+        if emitter_entities:
+            schema_dict[vol.Optional(CONF_INFRARED_ENTITY_ID)] = EntitySelector(
+                EntitySelectorConfig(
+                    domain=INFRARED_DOMAIN,
+                    include_entities=emitter_entities,
+                )
+            )
+
+        if receiver_entities:
+            schema_dict[vol.Optional(CONF_INFRARED_RECEIVER_ENTITY_ID)] = (
+                EntitySelector(
+                    EntitySelectorConfig(
+                        domain=INFRARED_DOMAIN,
+                        include_entities=receiver_entities,
+                    )
+                )
+            )
+
+        return self.async_show_form(step_id="user", data_schema=vol.Schema(schema_dict))

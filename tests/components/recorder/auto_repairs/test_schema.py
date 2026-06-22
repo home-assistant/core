@@ -30,9 +30,9 @@ async def mock_recorder_before_hass(
 
 @pytest.mark.parametrize("enable_schema_validation", [True])
 @pytest.mark.parametrize("db_engine", ["mysql", "postgresql"])
+@pytest.mark.usefixtures("recorder_mock")
 async def test_validate_db_schema(
     hass: HomeAssistant,
-    recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
     db_engine: str,
     recorder_dialect_name: None,
@@ -69,7 +69,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
     recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test validating DB schema with MySQL when the schema is broken and repairing it."""
+    """Test validating DB schema with MySQL when broken."""
     await async_wait_recording_done(hass)
     session_maker = recorder_mock.get_session
 
@@ -103,10 +103,16 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema(
 
 @pytest.mark.skip_on_db_engine(["postgresql", "sqlite"])
 @pytest.mark.usefixtures("skip_by_db_engine")
+@pytest.mark.parametrize(
+    ("charset", "collation"),
+    [("utf8mb3", "utf8_general_ci"), ("utf8mb4", "utf8mb4_unicode_ci")],
+)
 async def test_validate_db_schema_fix_incorrect_collation(
     hass: HomeAssistant,
     recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
+    charset: str,
+    collation: str,
 ) -> None:
     """Test validating DB schema with MySQL when the collation is incorrect."""
     await async_wait_recording_done(hass)
@@ -116,7 +122,7 @@ async def test_validate_db_schema_fix_incorrect_collation(
         with session_scope(session=session_maker()) as session:
             session.execute(
                 text(
-                    "ALTER TABLE states CHARACTER SET utf8mb3 COLLATE utf8_general_ci, "
+                    f"ALTER TABLE states CHARACTER SET {charset} COLLATE {collation}, "
                     "LOCK=EXCLUSIVE;"
                 )
             )
@@ -125,7 +131,7 @@ async def test_validate_db_schema_fix_incorrect_collation(
     schema_errors = await recorder_mock.async_add_executor_job(
         validate_table_schema_has_correct_collation, recorder_mock, States
     )
-    assert schema_errors == {"states.utf8mb4_unicode_ci"}
+    assert schema_errors == {"states.utf8mb4_bin"}
 
     # Now repair the schema
     await recorder_mock.async_add_executor_job(
@@ -146,7 +152,7 @@ async def test_validate_db_schema_precision_correct_collation(
     recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test validating DB schema when the schema is correct with the correct collation."""
+    """Test validating DB schema with correct collation."""
     await async_wait_recording_done(hass)
     schema_errors = await recorder_mock.async_add_executor_job(
         validate_table_schema_has_correct_collation,
@@ -163,7 +169,7 @@ async def test_validate_db_schema_fix_utf8_issue_with_broken_schema_unrepairable
     recorder_mock: Recorder,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test validating DB schema with MySQL when the schema is broken and cannot be repaired."""
+    """Test validating DB schema with MySQL when unrepairable."""
     await async_wait_recording_done(hass)
     session_maker = recorder_mock.get_session
 

@@ -1,7 +1,5 @@
 """WiZ integration entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from typing import Any
 
@@ -11,15 +9,12 @@ from homeassistant.const import ATTR_HW_VERSION, ATTR_MODEL
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import Entity, ToggleEntity
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .models import WizData
+from .coordinator import WizCoordinator, WizData
 
 
-class WizEntity(CoordinatorEntity[DataUpdateCoordinator[float | None]], Entity):
+class WizEntity(CoordinatorEntity[WizCoordinator], Entity):
     """Representation of WiZ entity."""
 
     _attr_has_entity_name = True

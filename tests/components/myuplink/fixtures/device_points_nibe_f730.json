@@ -1108,5 +1108,22 @@
     "enumValues": [],
     "scaleValue": "0.1",
     "zoneId": null
+  },
+  {
+    "category": "Garbage",
+    "parameterId": "65535",
+    "parameterName": "Text not found: id[], fw[noem-e8], lang[en-GB]",
+    "parameterUnit": "",
+    "writable": false,
+    "timestamp": "2025-07-23T08:33:38+00:00",
+    "value": 0.0,
+    "strVal": "0",
+    "smartHomeCategories": [],
+    "minValue": null,
+    "maxValue": null,
+    "stepValue": 1.0,
+    "enumValues": [],
+    "scaleValue": "1",
+    "zoneId": null
   }
 ]

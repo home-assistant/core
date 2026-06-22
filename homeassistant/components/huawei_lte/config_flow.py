@@ -1,10 +1,8 @@
 """Config flow for the Huawei LTE platform."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlparse
 
 from huawei_lte_api.Client import Client
@@ -21,12 +19,7 @@ from requests.exceptions import SSLError, Timeout
 from url_normalize import url_normalize
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_MAC,
     CONF_NAME,
@@ -47,10 +40,12 @@ from homeassistant.helpers.service_info.ssdp import (
     SsdpServiceInfo,
 )
 
+from . import HuaweiLteConfigEntry
 from .const import (
     CONF_MANUFACTURER,
     CONF_TRACK_WIRED_CLIENTS,
     CONF_UNAUTHENTICATED_MODE,
+    CONF_UPNP_UDN,
     CONNECTION_TIMEOUT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_NOTIFY_SERVICE_NAME,
@@ -69,12 +64,14 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 3
 
     manufacturer: str | None = None
+    upnp_udn: str | None = None
     url: str | None = None
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: HuaweiLteConfigEntry,
     ) -> HuaweiLteOptionsFlow:
         """Get options flow."""
         return HuaweiLteOptionsFlow()
@@ -110,6 +107,9 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+            description_placeholders={
+                "sample_ip": "http://192.168.X.1",
+            },
         )
 
     async def _async_show_reauth_form(
@@ -130,6 +130,9 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors or {},
+            description_placeholders={
+                "sample_ip": "http://192.168.X.1",
+            },
         )
 
     async def _connect(
@@ -192,6 +195,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
         except Exception:
             _LOGGER.exception("Disconnect error")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -244,12 +248,14 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
         info, wlan_settings = await self.hass.async_add_executor_job(
             get_device_info, conn
         )
+        # pylint: disable-next=home-assistant-sequential-executor-jobs
         await self.hass.async_add_executor_job(self._disconnect, conn)
 
         user_input.update(
             {
                 CONF_MAC: get_device_macs(info, wlan_settings),
                 CONF_MANUFACTURER: self.manufacturer,
+                CONF_UPNP_UDN: self.upnp_udn,
             }
         )
 
@@ -269,6 +275,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=title, data=user_input)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -284,11 +291,12 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             # url_normalize only returns None if passed None, and we don't do that
             assert url is not None
 
-        unique_id = discovery_info.upnp.get(
-            ATTR_UPNP_SERIAL, discovery_info.upnp[ATTR_UPNP_UDN]
-        )
+        upnp_udn = discovery_info.upnp.get(ATTR_UPNP_UDN)
+        unique_id = discovery_info.upnp.get(ATTR_UPNP_SERIAL, upnp_udn)
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_URL: url})
+        self._abort_if_unique_id_configured(
+            updates={CONF_UPNP_UDN: upnp_udn, CONF_URL: url}
+        )
 
         def _is_supported_device() -> bool:
             """See if we are looking at a possibly supported device.
@@ -319,6 +327,7 @@ class HuaweiLteConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
         self.manufacturer = discovery_info.upnp.get(ATTR_UPNP_MANUFACTURER)
+        self.upnp_udn = upnp_udn
         self.url = url
         return await self._async_show_user_form()
 
@@ -362,7 +371,8 @@ class HuaweiLteOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Handle options flow."""
 
-        # Recipients are persisted as a list, but handled as comma separated string in UI
+        # Recipients are persisted as a list, but handled as comma
+        # separated string in UI
 
         if user_input is not None:
             # Preserve existing options, for example *_from_yaml markers
@@ -375,6 +385,8 @@ class HuaweiLteOptionsFlow(OptionsFlow):
 
         data_schema = vol.Schema(
             {
+                # Name field is no longer allowed in config flow schemas
+                # pylint: disable-next=home-assistant-config-flow-name-field
                 vol.Optional(
                     CONF_NAME,
                     default=self.config_entry.options.get(
@@ -401,4 +413,10 @@ class HuaweiLteOptionsFlow(OptionsFlow):
                 ): bool,
             }
         )
-        return self.async_show_form(step_id="init", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="init",
+            data_schema=data_schema,
+            description_placeholders={
+                "sample_ip": "http://192.168.X.1",
+            },
+        )

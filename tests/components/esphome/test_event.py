@@ -20,7 +20,6 @@ async def test_generic_event_entity(
             object_id="myevent",
             key=1,
             name="my event",
-            unique_id="my_event",
             event_types=["type1", "type2"],
             device_class=EventDeviceClass.BUTTON,
         )

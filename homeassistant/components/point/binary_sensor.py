@@ -1,7 +1,5 @@
 """Support for Minut Point binary sensors."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -15,9 +13,8 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PointConfigEntry
 from .const import SIGNAL_WEBHOOK
-from .coordinator import PointDataUpdateCoordinator
+from .coordinator import PointConfigEntry, PointDataUpdateCoordinator
 from .entity import MinutPointEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +76,7 @@ class MinutPointBinarySensor(MinutPointEntity, BinarySensorEntity):
         super().__init__(coordinator, device_id)
         self._device_name = key
         self._events = EVENTS[key]
-        self._attr_unique_id = f"point.{device_id}-{key}"
+        self._attr_unique_id = f"point.{device_id}-{key}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_icon = DEVICES[key].get("icon")
 
     async def async_added_to_hass(self) -> None:

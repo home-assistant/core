@@ -2,14 +2,14 @@
 
 from typing import cast
 
-from aiosenz import AbstractSENZAuth
 from httpx import AsyncClient
+from pysenz import AbstractSENZAuth
 
 from homeassistant.helpers import config_entry_oauth2_flow
 
 
 class SENZConfigEntryAuth(AbstractSENZAuth):
-    """Provide nVent RAYCHEM SENZ authentication tied to an OAuth2 based config entry."""
+    """Provide nVent RAYCHEM SENZ authentication tied to an OAuth2 config entry."""
 
     def __init__(
         self,

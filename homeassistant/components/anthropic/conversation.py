@@ -1,17 +1,18 @@
 """Conversation support for Anthropic."""
 
-from typing import Literal
+from typing import Literal, override
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
-from homeassistant.const import CONF_LLM_HASS_API, MATCH_ALL
+from homeassistant.const import CONF_LLM_HASS_API, CONF_PROMPT, MATCH_ALL
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import intent
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import AnthropicConfigEntry
-from .const import CONF_PROMPT, DOMAIN
+from .const import DOMAIN
 from .entity import AnthropicBaseLLMEntity
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -38,6 +39,7 @@ class AnthropicConversationEntity(
     """Anthropic conversation agent."""
 
     _attr_supports_streaming = True
+    _attr_translation_key = "conversation"
 
     def __init__(self, entry: AnthropicConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the agent."""
@@ -48,10 +50,12 @@ class AnthropicConversationEntity(
             )
 
     @property
+    @override
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
 
+    @override
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,
@@ -72,13 +76,4 @@ class AnthropicConversationEntity(
 
         await self._async_handle_chat_log(chat_log)
 
-        response_content = chat_log.content[-1]
-        if not isinstance(response_content, conversation.AssistantContent):
-            raise TypeError("Last message must be an assistant message")
-        intent_response = intent.IntentResponse(language=user_input.language)
-        intent_response.async_set_speech(response_content.content or "")
-        return conversation.ConversationResult(
-            response=intent_response,
-            conversation_id=chat_log.conversation_id,
-            continue_conversation=chat_log.continue_conversation,
-        )
+        return conversation.async_get_result_from_chat_log(user_input, chat_log)

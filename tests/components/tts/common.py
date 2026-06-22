@@ -1,7 +1,5 @@
 """Provide common tests tools for tts."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from http import HTTPStatus
 from pathlib import Path
@@ -124,6 +122,11 @@ async def retrieve_media(
     await hass.async_block_till_done()
     client = await hass_client()
     req = await client.get(url)
+
+    # The HTTP response returns once the audio is streamed, but the
+    # background task that loads the cache (and writes it to disk) may
+    # still be in flight. Wait for it to avoid lingering tasks.
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     return req.status
 
@@ -285,6 +288,7 @@ class MockResultStream(ResultStream):
             supports_streaming_input=True,
             language="en",
             options={},
+            hass=hass,
             _manager=hass.data[DATA_TTS_MANAGER],
         )
         hass.data[DATA_TTS_MANAGER].token_to_stream[self.token] = self

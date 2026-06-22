@@ -1,61 +1,61 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "not_supported_device": "This WiLight is currently not supported",
+      "not_wilight_device": "This Device is not WiLight"
+    },
     "flow_title": "{name}",
     "step": {
       "confirm": {
         "description": "The following components are supported: {components}"
       }
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "not_supported_device": "This WiLight is currently not supported",
-      "not_wilight_device": "This Device is not WiLight"
     }
   },
   "entity": {
     "switch": {
-      "watering": {
-        "name": "Watering"
-      },
       "pause": {
         "name": "Pause"
+      },
+      "watering": {
+        "name": "Watering"
       }
     }
   },
   "services": {
-    "set_watering_time": {
-      "name": "Set watering time",
-      "description": "Sets time for watering.",
-      "fields": {
-        "watering_time": {
-          "name": "Duration",
-          "description": "Duration for this irrigation to be turned on."
-        }
-      }
-    },
     "set_pause_time": {
-      "name": "Set pause time",
       "description": "Sets time to pause.",
       "fields": {
         "pause_time": {
-          "name": "Duration",
-          "description": "Duration for this irrigation to be paused."
+          "description": "Duration for this irrigation to be paused.",
+          "name": "Duration"
         }
-      }
+      },
+      "name": "Set pause time"
     },
     "set_trigger": {
-      "name": "Set trigger",
       "description": "Sets the trigger to use.",
       "fields": {
-        "trigger_index": {
-          "name": "Trigger index",
-          "description": "Index of Trigger from 1 to 4."
-        },
         "trigger": {
-          "name": "Trigger rules",
-          "description": "Configuration of trigger."
+          "description": "Configuration of trigger.",
+          "name": "Trigger rules"
+        },
+        "trigger_index": {
+          "description": "Index of Trigger from 1 to 4.",
+          "name": "Trigger index"
         }
-      }
+      },
+      "name": "Set trigger"
+    },
+    "set_watering_time": {
+      "description": "Sets time for watering.",
+      "fields": {
+        "watering_time": {
+          "description": "Duration for this irrigation to be turned on.",
+          "name": "Duration"
+        }
+      },
+      "name": "Set watering time"
     }
   }
 }

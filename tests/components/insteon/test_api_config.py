@@ -68,7 +68,7 @@ async def test_get_modem_schema_hub(
 ) -> None:
     """Test getting the Insteon PLM modem configuration schema."""
 
-    ws_client, devices, _, _ = await async_mock_setup(
+    ws_client, _devices, _, _ = await async_mock_setup(
         hass,
         hass_ws_client,
         config_data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
@@ -207,7 +207,7 @@ async def test_update_modem_config_bad(
 async def test_update_modem_config_bad_reconnect(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test updating the Insteon modem configuration with bad connection information so reconnect to old."""
+    """Test bad connection info on modem update reconnects to old."""
 
     ws_client, mock_devices, _, _ = await async_mock_setup(
         hass,

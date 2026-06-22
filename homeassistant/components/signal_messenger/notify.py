@@ -1,7 +1,5 @@
 """Signal Messenger for notify component."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -11,6 +9,7 @@ import voluptuous as vol
 
 from homeassistant.components.notify import (
     ATTR_DATA,
+    ATTR_TARGET,
     PLATFORM_SCHEMA as NOTIFY_PLATFORM_SCHEMA,
     BaseNotificationService,
 )
@@ -98,9 +97,11 @@ class SignalNotificationService(BaseNotificationService):
         self._signal_cli_rest_api = signal_cli_rest_api
 
     def send_message(self, message: str = "", **kwargs: Any) -> None:
-        """Send a message to a one or more recipients. Additionally a file can be attached."""
+        """Send a message to one or more recipients."""
 
         _LOGGER.debug("Sending signal message")
+
+        recipients: list[str] = kwargs.get(ATTR_TARGET) or self._recp_nrs
 
         data = kwargs.get(ATTR_DATA)
 
@@ -117,7 +118,7 @@ class SignalNotificationService(BaseNotificationService):
         try:
             self._signal_cli_rest_api.send_message(
                 message,
-                self._recp_nrs,
+                recipients,
                 filenames,
                 attachments_as_bytes,
                 text_mode="normal" if data is None else data.get(ATTR_TEXTMODE),

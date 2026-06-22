@@ -125,7 +125,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_tv.setTransport.assert_called_with(True)
+    mock_tv.setTransport.assert_called_with(True, ANY)
     mock_tv.pairRequest.assert_called()
 
     result = await hass.config_entries.flow.async_configure(
@@ -158,9 +158,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_pair_request_failed(
-    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
-) -> None:
+async def test_pair_request_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
     mock_tv.pairRequest.side_effect = PairingFailure({})
@@ -185,9 +183,7 @@ async def test_pair_request_failed(
     }
 
 
-async def test_pair_grant_failed(
-    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
-) -> None:
+async def test_pair_grant_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
 
@@ -204,7 +200,7 @@ async def test_pair_grant_failed(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_tv.setTransport.assert_called_with(True)
+    mock_tv.setTransport.assert_called_with(True, ANY)
     mock_tv.pairRequest.assert_called()
 
     # Test with invalid pin
@@ -266,6 +262,7 @@ async def test_zeroconf_discovery(
     """Test we can setup from zeroconf discovery."""
 
     mock_tv_pairable.secured_transport = secured_transport
+    mock_tv_pairable.api_version_detected = 6
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
@@ -291,7 +288,7 @@ async def test_zeroconf_discovery(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
 
-    mock_tv_pairable.setTransport.assert_called_with(secured_transport)
+    mock_tv_pairable.setTransport.assert_called_with(secured_transport, 6)
     mock_tv_pairable.pairRequest.assert_called()
 
 

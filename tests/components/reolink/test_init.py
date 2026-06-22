@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
+from datetime import timedelta
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
@@ -13,16 +14,17 @@ from reolink_aio.exceptions import (
     ReolinkError,
 )
 
-from homeassistant.components.reolink import (
-    DEVICE_UPDATE_INTERVAL,
-    FIRMWARE_UPDATE_INTERVAL,
-    NUM_CRED_ERRORS,
-)
+from homeassistant.components.reolink import FIRMWARE_UPDATE_INTERVAL
 from homeassistant.components.reolink.const import (
     BATTERY_ALL_WAKE_UPDATE_INTERVAL,
     BATTERY_PASSIVE_WAKE_UPDATE_INTERVAL,
     CONF_BC_PORT,
+    CONF_FIRMWARE_CHECK_TIME,
     DOMAIN,
+)
+from homeassistant.components.reolink.coordinator import (
+    DEVICE_UPDATE_INTERVAL_MIN,
+    NUM_CRED_ERRORS,
 )
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -45,18 +47,25 @@ from homeassistant.helpers import (
 )
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from .conftest import (
+    CONF_BC_CONNECT,
+    CONF_BC_ONLY,
     CONF_SUPPORTS_PRIVACY_MODE,
+    CONF_UID,
     CONF_USE_HTTPS,
     DEFAULT_PROTOCOL,
+    TEST_BC_CON,
     TEST_BC_PORT,
     TEST_CAM_MODEL,
+    TEST_CAM_NAME,
     TEST_HOST,
     TEST_HOST_MODEL,
     TEST_MAC,
     TEST_MAC_CAM,
     TEST_NVR_NAME,
+    TEST_PASSWORD,
     TEST_PORT,
     TEST_PRIVACY,
     TEST_UID,
@@ -128,7 +137,7 @@ async def test_failures_parametrized(
     )
     await hass.async_block_till_done()
 
-    assert config_entry.state == expected
+    assert config_entry.state is expected
 
 
 async def test_firmware_error_twice(
@@ -145,10 +154,14 @@ async def test_firmware_error_twice(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
+    freezer.tick(FIRMWARE_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     entity_id = f"{Platform.UPDATE}.{TEST_NVR_NAME}_firmware"
     assert hass.states.get(entity_id).state == STATE_OFF
 
-    freezer.tick(FIRMWARE_UPDATE_INTERVAL)
+    freezer.tick(2 * FIRMWARE_UPDATE_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -173,31 +186,11 @@ async def test_credential_error_three(
     issue_id = f"config_entry_reauth_{DOMAIN}_{config_entry.entry_id}"
     for _ in range(NUM_CRED_ERRORS):
         assert (HOMEASSISTANT_DOMAIN, issue_id) not in issue_registry.issues
-        freezer.tick(DEVICE_UPDATE_INTERVAL)
+        freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
     assert (HOMEASSISTANT_DOMAIN, issue_id) in issue_registry.issues
-
-
-async def test_entry_reloading(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    reolink_host: MagicMock,
-) -> None:
-    """Test the entry is reloaded correctly when settings change."""
-    reolink_host.is_nvr = False
-    assert await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert reolink_host.logout.call_count == 0
-    assert config_entry.title == "test_reolink_name"
-
-    hass.config_entries.async_update_entry(config_entry, title="New Name")
-    await hass.async_block_till_done()
-
-    assert reolink_host.logout.call_count == 1
-    assert config_entry.title == "New Name"
 
 
 @pytest.mark.parametrize(
@@ -358,16 +351,7 @@ async def test_removing_chime(
     ),
     [
         (
-            TEST_MAC,
             f"{TEST_MAC}_firmware",
-            f"{TEST_MAC}",
-            f"{TEST_MAC}",
-            Platform.UPDATE,
-            False,
-            False,
-        ),
-        (
-            TEST_MAC,
             f"{TEST_UID}_firmware",
             f"{TEST_MAC}",
             f"{TEST_UID}",
@@ -549,15 +533,22 @@ async def test_migrate_with_already_existing_device(
     assert device_registry.async_get_device(identifiers={(DOMAIN, new_dev_id)})
 
 
+@pytest.mark.parametrize(
+    "original_id",
+    [
+        f"{TEST_MAC}_{TEST_UID_CAM}_record_audio",
+        f"{TEST_UID}_0_record_audio",
+    ],
+)
 async def test_migrate_with_already_existing_entity(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     reolink_host: MagicMock,
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
+    original_id: str,
 ) -> None:
     """Test entity ids that need to be migrated while the new ids already exist."""
-    original_id = f"{TEST_UID}_0_record_audio"
     new_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
     dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
     domain = Platform.SWITCH
@@ -664,7 +655,7 @@ async def test_cleanup_combined_with_NVR(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test cleanup of the device registry if IPC camera device was combined with the NVR device."""
+    """Test cleanup when IPC camera was combined with NVR device."""
     reolink_host.channels = [0]
     reolink_host.baichuan.mac_address.return_value = None
     entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
@@ -722,7 +713,7 @@ async def test_cleanup_hub_and_direct_connection(
     entity_registry: er.EntityRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test cleanup of the device registry if IPC camera device was connected directly and through the hub/NVR."""
+    """Test cleanup when IPC was connected directly and via NVR."""
     reolink_host.channels = [0]
     entity_id = f"{TEST_UID}_{TEST_UID_CAM}_record_audio"
     dev_id = f"{TEST_UID}_{TEST_UID_CAM}"
@@ -945,7 +936,7 @@ async def test_new_device_discovered(
     assert reolink_host.logout.call_count == 0
     reolink_host.new_devices = True
 
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -972,7 +963,7 @@ async def test_baichuan_port_changed(
     reolink_host: MagicMock,
     config_entry: MockConfigEntry,
 ) -> None:
-    """Test config_entry baichuan port update when it has changed during initial login."""
+    """Test baichuan port update when changed during initial login."""
     assert config_entry.data[CONF_BC_PORT] == TEST_BC_PORT
     reolink_host.baichuan.port = 8901
 
@@ -980,6 +971,54 @@ async def test_baichuan_port_changed(
     await hass.async_block_till_done()
 
     assert config_entry.data[CONF_BC_PORT] == 8901
+
+
+async def test_uid_changed(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+) -> None:
+    """Test the addition of the UID to the config entry when not initially present."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_CONNECT: TEST_BC_CON,
+            CONF_BC_ONLY: False,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert CONF_UID not in config_entry.data
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_UID] == TEST_UID
+
+
+async def test_uid_changed_error(
+    hass: HomeAssistant,
+    reolink_host: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test a change of the UID is not accepted and results in an error during init."""
+    assert config_entry.data[CONF_UID] == TEST_UID
+    reolink_host.uid = "SOME2OTHER89UID4"
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_UID] == TEST_UID
 
 
 async def test_privacy_mode_on(
@@ -996,7 +1035,7 @@ async def test_privacy_mode_on(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert config_entry.state == ConfigEntryState.LOADED
+    assert config_entry.state is ConfigEntryState.LOADED
 
 
 async def test_LoginPrivacyModeError(
@@ -1016,7 +1055,7 @@ async def test_LoginPrivacyModeError(
     reolink_host.baichuan.check_subscribe_events.reset_mock()
     assert reolink_host.baichuan.check_subscribe_events.call_count == 0
 
-    freezer.tick(DEVICE_UPDATE_INTERVAL)
+    freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -1054,7 +1093,7 @@ async def test_privacy_mode_change_callback(
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_record_audio"
+    entity_id = f"{Platform.SWITCH}.{TEST_CAM_NAME}_record_audio"
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
     # simulate a TCP push callback signaling a privacy mode change
@@ -1126,7 +1165,7 @@ async def test_camera_wake_callback(
         await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.LOADED
 
-    entity_id = f"{Platform.SWITCH}.{TEST_NVR_NAME}_record_audio"
+    entity_id = f"{Platform.SWITCH}.{TEST_CAM_NAME}_record_audio"
     assert hass.states.get(entity_id).state == STATE_ON
 
     reolink_host.sleeping.return_value = False
@@ -1156,6 +1195,53 @@ async def test_camera_wake_callback(
     # check that a coordinator update was scheduled.
     assert reolink_host.get_states.call_count >= 1
     assert hass.states.get(entity_id).state == STATE_OFF
+
+
+@pytest.mark.parametrize(("seconds", "call_count"), [(10, 1), (3600, 0)])
+async def test_firmware_update_delay(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    reolink_host: MagicMock,
+    seconds: int,
+    call_count: int,
+) -> None:
+    """Test delay of firmware update check."""
+    now = dt_util.utcnow()
+    check_delay = (
+        now
+        + timedelta(seconds=seconds)
+        - now.replace(hour=0, minute=0, second=0, microsecond=0)
+    ).total_seconds()
+
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=format_mac(TEST_MAC),
+        data={
+            CONF_HOST: TEST_HOST,
+            CONF_USERNAME: TEST_USERNAME,
+            CONF_PASSWORD: TEST_PASSWORD,
+            CONF_PORT: TEST_PORT,
+            CONF_USE_HTTPS: TEST_USE_HTTPS,
+            CONF_SUPPORTS_PRIVACY_MODE: TEST_PRIVACY,
+            CONF_BC_PORT: TEST_BC_PORT,
+            CONF_BC_ONLY: False,
+            CONF_FIRMWARE_CHECK_TIME: check_delay,
+        },
+        options={
+            CONF_PROTOCOL: DEFAULT_PROTOCOL,
+        },
+        title=TEST_NVR_NAME,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    freezer.tick(60)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert reolink_host.check_new_firmware.call_count == call_count
 
 
 async def test_baichaun_only(

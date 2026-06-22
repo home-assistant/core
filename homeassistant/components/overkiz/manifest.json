@@ -3,6 +3,7 @@
   "name": "Overkiz",
   "codeowners": ["@imicknl"],
   "config_flow": true,
+  "dependencies": ["application_credentials"],
   "dhcp": [
     {
       "hostname": "gateway*",
@@ -12,16 +13,16 @@
   "documentation": "https://www.home-assistant.io/integrations/overkiz",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["boto3", "botocore", "pyhumps", "pyoverkiz", "s3transfer"],
-  "requirements": ["pyoverkiz==1.17.2"],
+  "loggers": ["boto3", "botocore", "pyoverkiz", "s3transfer"],
+  "requirements": ["pyoverkiz[nexity]==2.0.2"],
   "zeroconf": [
     {
-      "type": "_kizbox._tcp.local.",
-      "name": "gateway*"
+      "name": "gateway*",
+      "type": "_kizbox._tcp.local."
     },
     {
-      "type": "_kizboxdev._tcp.local.",
-      "name": "gateway*"
+      "name": "gateway*",
+      "type": "_kizboxdev._tcp.local."
     }
   ]
 }

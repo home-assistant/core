@@ -1,7 +1,5 @@
 """Provide methods to bootstrap a Home Assistant instance."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 import contextlib
@@ -19,7 +17,8 @@ from time import monotonic
 from typing import TYPE_CHECKING, Any
 
 # Import cryptography early since import openssl is not thread-safe
-# _frozen_importlib._DeadlockError: deadlock detected by _ModuleLock('cryptography.hazmat.backends.openssl.backend')
+# _frozen_importlib._DeadlockError: deadlock detected by
+# _ModuleLock('cryptography.hazmat.backends.openssl.backend')
 import cryptography.hazmat.backends.openssl.backend  # noqa: F401
 import voluptuous as vol
 import yarl
@@ -67,12 +66,10 @@ from .const import (
     BASE_PLATFORMS,
     FORMAT_DATETIME,
     KEY_DATA_LOGGING as DATA_LOGGING,
-    REQUIRED_NEXT_PYTHON_HA_RELEASE,
-    REQUIRED_NEXT_PYTHON_VER,
     SIGNAL_BOOTSTRAP_INTEGRATIONS,
 )
 from .core_config import async_process_ha_core_config
-from .exceptions import HomeAssistantError
+from .exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from .helpers import (
     area_registry,
     category_registry,
@@ -169,13 +166,19 @@ FRONTEND_INTEGRATIONS = {
     # visible in frontend
     "frontend",
 }
-# Stage 0 is divided into substages. Each substage has a name, a set of integrations and a timeout.
-# The substage containing recorder should have no timeout, as it could cancel a database migration.
-# Recorder freezes "recorder" timeout during a migration, but it does not freeze other timeouts.
-# If we add timeouts to the frontend substages, we should make sure they don't apply in recovery mode.
+# Stage 0 is divided into substages. Each substage has a name,
+# a set of integrations and a timeout.
+# The substage containing recorder should have no timeout, as it
+# could cancel a database migration.
+# Recorder freezes "recorder" timeout during a migration, but it
+# does not freeze other timeouts.
+# If we add timeouts to the frontend substages, we should make sure
+# they don't apply in recovery mode.
 STAGE_0_INTEGRATIONS = (
     # Load logging and http deps as soon as possible
     ("logging, http deps", LOGGING_AND_HTTP_DEPS_INTEGRATIONS, None),
+    # Setup labs for preview features
+    ("labs", {"labs"}, STAGE_0_SUBSTAGE_TIMEOUT),
     # Setup frontend
     ("frontend", FRONTEND_INTEGRATIONS, None),
     # Setup recorder
@@ -210,8 +213,10 @@ DEFAULT_INTEGRATIONS = {
     "analytics",  # Needed for onboarding
     "application_credentials",
     "backup",
+    "brands",
     "frontend",
     "hardware",
+    "labs",
     "logger",
     "network",
     "system_health",
@@ -234,9 +239,31 @@ DEFAULT_INTEGRATIONS = {
     "input_text",
     "schedule",
     "timer",
+    #
+    # Base platforms:
+    # Note: Calendar and todo are not included to prevent them from registering
+    # their frontend panels when there are no calendar or todo integrations.
+    *(BASE_PLATFORMS - {"calendar", "todo"}),
+    #
+    # Integrations providing triggers and conditions for base platforms:
+    "air_quality",
+    "battery",
+    "door",
+    "garage_door",
+    "gate",
+    "humidity",
+    "illuminance",
+    "moisture",
+    "motion",
+    "occupancy",
+    "power",
+    "temperature",
+    "window",
 }
 DEFAULT_INTEGRATIONS_RECOVERY_MODE = {
     # These integrations are set up if recovery mode is activated.
+    "backup",
+    "cloud",
     "frontend",
 }
 DEFAULT_INTEGRATIONS_SUPERVISOR = {
@@ -332,6 +359,9 @@ async def async_setup_hass(
             if not is_virtual_env():
                 await async_mount_local_lib_path(runtime_config.config_dir)
 
+            if hass.config.safe_mode:
+                _LOGGER.info("Starting in safe mode")
+
             basic_setup_success = (
                 await async_from_config_dict(config_dict, hass) is not None
             )
@@ -384,8 +414,6 @@ async def async_setup_hass(
             {"recovery_mode": {}, "http": http_conf},
             hass,
         )
-    elif hass.config.safe_mode:
-        _LOGGER.info("Starting in safe mode")
 
     if runtime_config.open_ui:
         hass.add_job(open_hass_ui, hass)
@@ -430,32 +458,57 @@ def _init_blocking_io_modules_in_executor() -> None:
     is_docker_env()
 
 
-async def async_load_base_functionality(hass: core.HomeAssistant) -> None:
-    """Load the registries and modules that will do blocking I/O."""
+async def async_load_base_functionality(hass: core.HomeAssistant) -> bool:
+    """Load the registries and modules that will do blocking I/O.
+
+    Return whether loading succeeded.
+    """
     if DATA_REGISTRIES_LOADED in hass.data:
-        return
+        return True
+
     hass.data[DATA_REGISTRIES_LOADED] = None
     entity.async_setup(hass)
     frame.async_setup(hass)
     template.async_setup(hass)
     translation.async_setup(hass)
-    await asyncio.gather(
-        create_eager_task(get_internal_store_manager(hass).async_initialize()),
-        create_eager_task(area_registry.async_load(hass)),
-        create_eager_task(category_registry.async_load(hass)),
-        create_eager_task(device_registry.async_load(hass)),
-        create_eager_task(entity_registry.async_load(hass)),
-        create_eager_task(floor_registry.async_load(hass)),
-        create_eager_task(issue_registry.async_load(hass)),
-        create_eager_task(label_registry.async_load(hass)),
-        hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
-        create_eager_task(template.async_load_custom_templates(hass)),
-        create_eager_task(restore_state.async_load(hass)),
-        create_eager_task(hass.config_entries.async_initialize()),
-        create_eager_task(async_get_system_info(hass)),
-        create_eager_task(condition.async_setup(hass)),
-        create_eager_task(trigger.async_setup(hass)),
-    )
+
+    recovery = hass.config.recovery_mode
+    device_registry.async_setup(hass)
+    try:
+        await asyncio.gather(
+            create_eager_task(get_internal_store_manager(hass).async_initialize()),
+            create_eager_task(area_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(category_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(device_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(entity_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(floor_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(issue_registry.async_load(hass, load_empty=recovery)),
+            create_eager_task(label_registry.async_load(hass, load_empty=recovery)),
+            hass.async_add_executor_job(_init_blocking_io_modules_in_executor),
+            create_eager_task(template.async_load_custom_templates(hass)),
+            create_eager_task(restore_state.async_load(hass, load_empty=recovery)),
+            create_eager_task(hass.config_entries.async_initialize()),
+            create_eager_task(async_get_system_info(hass)),
+            create_eager_task(condition.async_setup(hass)),
+            create_eager_task(trigger.async_setup(hass)),
+        )
+    except UnsupportedStorageVersionError as err:
+        # If we're already in recovery mode, we don't want to handle the exception
+        # and activate recovery mode again, as that would lead to an infinite loop.
+        if recovery:
+            raise
+
+        _LOGGER.error(
+            "Storage file %s was created by a newer version of Home Assistant"
+            " (storage version %s > %s); activating recovery mode; on-disk data"
+            " is preserved; upgrade Home Assistant or restore from a backup",
+            err.storage_key,
+            err.found_version,
+            err.max_supported_version,
+        )
+        return False
+
+    return True
 
 
 async def async_from_config_dict(
@@ -472,7 +525,9 @@ async def async_from_config_dict(
     # Prime custom component cache early so we know if registry entries are tied
     # to a custom integration
     await loader.async_get_custom_components(hass)
-    await async_load_base_functionality(hass)
+
+    if not await async_load_base_functionality(hass):
+        return None
 
     # Set up core.
     _LOGGER.debug("Setting up %s", CORE_INTEGRATIONS)
@@ -512,38 +567,6 @@ async def async_from_config_dict(
 
     stop = monotonic()
     _LOGGER.info("Home Assistant initialized in %.2fs", stop - start)
-
-    if (
-        REQUIRED_NEXT_PYTHON_HA_RELEASE
-        and sys.version_info[:3] < REQUIRED_NEXT_PYTHON_VER
-    ):
-        current_python_version = ".".join(str(x) for x in sys.version_info[:3])
-        required_python_version = ".".join(str(x) for x in REQUIRED_NEXT_PYTHON_VER[:2])
-        _LOGGER.warning(
-            (
-                "Support for the running Python version %s is deprecated and "
-                "will be removed in Home Assistant %s; "
-                "Please upgrade Python to %s"
-            ),
-            current_python_version,
-            REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            required_python_version,
-        )
-        issue_registry.async_create_issue(
-            hass,
-            core.DOMAIN,
-            f"python_version_{required_python_version}",
-            is_fixable=False,
-            severity=issue_registry.IssueSeverity.WARNING,
-            breaks_in_ha_version=REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            translation_key="python_version",
-            translation_placeholders={
-                "current_python_version": current_python_version,
-                "required_python_version": required_python_version,
-                "breaks_in_ha_version": REQUIRED_NEXT_PYTHON_HA_RELEASE,
-            },
-        )
-
     return hass
 
 
@@ -615,34 +638,37 @@ async def async_enable_logging(
         ),
     )
 
-    # Log errors to a file if we have write access to file or config dir
+    logger = logging.getLogger()
+    logger.setLevel(logging.INFO if verbose else logging.WARNING)
+
     if log_file is None:
-        err_log_path = hass.config.path(ERROR_LOG_FILENAME)
+        default_log_path = hass.config.path(ERROR_LOG_FILENAME)
+        if "SUPERVISOR" in os.environ and "HA_DUPLICATE_LOG_FILE" not in os.environ:
+            # Rename the default log file if it exists, since previous versions created
+            # it even on Supervisor
+            def rename_old_file() -> None:
+                """Rename old log file in executor."""
+                if os.path.isfile(default_log_path):
+                    with contextlib.suppress(OSError):
+                        os.rename(default_log_path, f"{default_log_path}.old")
+
+            await hass.async_add_executor_job(rename_old_file)
+            err_log_path = None
+        else:
+            err_log_path = default_log_path
     else:
         err_log_path = os.path.abspath(log_file)
 
-    err_path_exists = os.path.isfile(err_log_path)
-    err_dir = os.path.dirname(err_log_path)
-
-    # Check if we can write to the error log if it exists or that
-    # we can create files in the containing directory if not.
-    if (err_path_exists and os.access(err_log_path, os.W_OK)) or (
-        not err_path_exists and os.access(err_dir, os.W_OK)
-    ):
+    if err_log_path:
         err_handler = await hass.async_add_executor_job(
             _create_log_file, err_log_path, log_rotate_days
         )
 
         err_handler.setFormatter(logging.Formatter(fmt, datefmt=FORMAT_DATETIME))
-
-        logger = logging.getLogger()
         logger.addHandler(err_handler)
-        logger.setLevel(logging.INFO if verbose else logging.WARNING)
 
         # Save the log file location for access by other components.
         hass.data[DATA_LOGGING] = err_log_path
-    else:
-        _LOGGER.error("Unable to set up error log %s (access denied)", err_log_path)
 
     async_activate_log_queue_handler(hass)
 
@@ -694,10 +720,10 @@ async def async_mount_local_lib_path(config_dir: str) -> str:
 
 def _get_domains(hass: core.HomeAssistant, config: dict[str, Any]) -> set[str]:
     """Get domains of components to set up."""
-    # Filter out the repeating and common config section [homeassistant]
-    domains = {
-        domain for key in config if (domain := cv.domain_key(key)) != core.DOMAIN
-    }
+    # The common config section [homeassistant] could be filtered here,
+    # but that is not necessary, since it corresponds to the core integration,
+    # that is always unconditionally loaded.
+    domains = {cv.domain_key(key) for key in config}
 
     # Add config entry and default domains
     if not hass.config.recovery_mode:
@@ -725,34 +751,28 @@ async def _async_resolve_domains_and_preload(
       together with all their dependencies.
     """
     domains_to_setup = _get_domains(hass, config)
-    platform_integrations = conf_util.extract_platform_integrations(
-        config, BASE_PLATFORMS
-    )
-    # Ensure base platforms that have platform integrations are added to `domains`,
-    # so they can be setup first instead of discovering them later when a config
-    # entry setup task notices that it's needed and there is already a long line
-    # to use the import executor.
+
+    # Also process all base platforms since we do not require the manifest
+    # to list them as dependencies.
+    # We want to later avoid lock contention when multiple integrations try to load
+    # their manifests at once.
     #
+    # Additionally process integrations that are defined under base platforms
+    # to speed things up.
     # For example if we have
     # sensor:
     #   - platform: template
     #
-    # `template` has to be loaded to validate the config for sensor
-    # so we want to start loading `sensor` as soon as we know
-    # it will be needed. The more platforms under `sensor:`, the longer
+    # `template` has to be loaded to validate the config for sensor.
+    # The more platforms under `sensor:`, the longer
     # it will take to finish setup for `sensor` because each of these
     # platforms has to be imported before we can validate the config.
     #
     # Thankfully we are migrating away from the platform pattern
     # so this will be less of a problem in the future.
-    domains_to_setup.update(platform_integrations)
-
-    # Additionally process base platforms since we do not require the manifest
-    # to list them as dependencies.
-    # We want to later avoid lock contention when multiple integrations try to load
-    # their manifests at once.
-    # Also process integrations that are defined under base platforms
-    # to speed things up.
+    platform_integrations = conf_util.extract_platform_integrations(
+        config, BASE_PLATFORMS
+    )
     additional_domains_to_process = {
         *BASE_PLATFORMS,
         *chain.from_iterable(platform_integrations.values()),
@@ -870,9 +890,9 @@ async def _async_set_up_integrations(
     domains = set(integrations) & all_domains
 
     _LOGGER.info(
-        "Domains to be set up: %s | %s",
-        domains,
-        all_domains - domains,
+        "Domains to be set up: %s\nDependencies: %s",
+        domains or "{}",
+        (all_domains - domains) or "{}",
     )
 
     async_set_domains_to_be_loaded(hass, all_domains)
@@ -913,12 +933,13 @@ async def _async_set_up_integrations(
         stage_all_domains = stage_domains | stage_dep_domains
 
         _LOGGER.info(
-            "Setting up stage %s: %s | %s\nDependencies: %s | %s",
+            "Setting up stage %s: %s; already set up: %s\n"
+            "Dependencies: %s; already set up: %s",
             name,
             stage_domains,
-            stage_domains_unfiltered - stage_domains,
-            stage_dep_domains,
-            stage_dep_domains_unfiltered - stage_dep_domains,
+            (stage_domains_unfiltered - stage_domains) or "{}",
+            stage_dep_domains or "{}",
+            (stage_dep_domains_unfiltered - stage_dep_domains) or "{}",
         )
 
         if timeout is None:
@@ -1001,7 +1022,7 @@ class _WatchPendingSetups:
             # We log every LOG_SLOW_STARTUP_INTERVAL until all integrations are done
             # once we take over LOG_SLOW_STARTUP_INTERVAL (60s) to start up
             _LOGGER.warning(
-                "Waiting on integrations to complete setup: %s",
+                "Waiting for integrations to complete setup: %s",
                 self._setup_started,
             )
 

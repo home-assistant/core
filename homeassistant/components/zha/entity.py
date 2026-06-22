@@ -1,7 +1,5 @@
 """Entity for Zigbee Home Automation."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from functools import partial
@@ -11,16 +9,28 @@ from typing import Any
 from propcache.api import cached_property
 from zha.mixins import LogMixin
 
-from homeassistant.const import ATTR_MANUFACTURER, ATTR_MODEL, ATTR_NAME, EntityCategory
+from homeassistant.const import (
+    ATTR_MANUFACTURER,
+    ATTR_MODEL,
+    ATTR_NAME,
+    ATTR_VIA_DEVICE,
+    EntityCategory,
+)
 from homeassistant.core import State, callback
 from homeassistant.helpers.device_registry import CONNECTION_ZIGBEE, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.group import IntegrationSpecificGroup
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
 
 from .const import DOMAIN
-from .helpers import SIGNAL_REMOVE_ENTITIES, EntityData, convert_zha_error_to_ha_error
+from .helpers import (
+    SIGNAL_REMOVE_ENTITIES,
+    SIGNAL_REMOVE_ENTITY,
+    EntityData,
+    convert_zha_error_to_ha_error,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -45,6 +55,18 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         meta = self.entity_data.entity.info_object
         self._attr_unique_id = meta.unique_id
 
+        if self.entity_data.is_group_entity:
+            group_proxy = self.entity_data.group_proxy
+            assert group_proxy is not None
+            platform = self.entity_data.entity.PLATFORM
+            unique_ids = [
+                entity.info_object.unique_id
+                for member in group_proxy.group.members
+                for entity in member.associated_entities
+                if platform == entity.PLATFORM
+            ]
+            self.group = IntegrationSpecificGroup(self, unique_ids)
+
         if meta.entity_category is not None:
             self._attr_entity_category = EntityCategory(meta.entity_category)
 
@@ -55,22 +77,42 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         if meta.translation_key is not None:
             self._attr_translation_key = meta.translation_key
 
+        if meta.translation_placeholders is not None:
+            self._attr_translation_placeholders = meta.translation_placeholders
+
     @cached_property
     def name(self) -> str | UndefinedType | None:
-        """Return the name of the entity."""
+        """Return the name of the entity.
+
+        Built-in quirks have translations in HA, so those are used.
+        Custom quirks with new translation keys won't have translations.
+        For them, the fallback name should be used instead.
+        If a device class is set but no translation key,
+        the device class name is used.
+        """
         meta = self.entity_data.entity.info_object
         if meta.primary:
             self._attr_name = None
             return super().name
 
-        original_name = super().name
+        # If we do not have a fallback_name, use default behavior
+        if meta.fallback_name is None:
+            return super().name
 
-        if original_name not in (UNDEFINED, None) or meta.fallback_name is None:
-            return original_name
+        # If we do not have a translation key, only use fallback_name
+        # if device class is also missing
+        if meta.translation_key is None:
+            if super().name in (UNDEFINED, None):
+                self._attr_name = meta.fallback_name
+            return super().name
 
-        # This is to allow local development and to register niche devices, since
-        # their translation_key will probably never be added to `zha/strings.json`.
-        self._attr_name = meta.fallback_name
+        # If we do have a translation key, only use fallback_name
+        # if translation is missing (custom quirks)
+        if not (
+            (translation_key := self._name_translation_key) is not None
+            and translation_key in self.platform_data.platform_translations
+        ):
+            self._attr_name = meta.fallback_name
         return super().name
 
     @property
@@ -85,14 +127,19 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         ieee = zha_device_info["ieee"]
         zha_gateway = self.entity_data.device_proxy.gateway_proxy.gateway
 
-        return DeviceInfo(
+        device_info = DeviceInfo(
             connections={(CONNECTION_ZIGBEE, ieee)},
             identifiers={(DOMAIN, ieee)},
             manufacturer=zha_device_info[ATTR_MANUFACTURER],
             model=zha_device_info[ATTR_MODEL],
             name=zha_device_info[ATTR_NAME],
-            via_device=(DOMAIN, str(zha_gateway.state.node_info.ieee)),
         )
+        if ieee != str(zha_gateway.state.node_info.ieee):
+            device_info[ATTR_VIA_DEVICE] = (
+                DOMAIN,
+                str(zha_gateway.state.node_info.ieee),
+            )
+        return device_info
 
     @callback
     def _handle_entity_events(self, event: Any) -> None:
@@ -117,6 +164,16 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
                 self.hass,
                 remove_signal,
                 partial(self.async_remove, force_remove=True),
+            )
+        )
+        self._unsubs.append(
+            async_dispatcher_connect(
+                self.hass,
+                (
+                    f"{SIGNAL_REMOVE_ENTITY}_"
+                    f"{self.entity_data.entity.PLATFORM}_{self.unique_id}"
+                ),
+                self.async_remove,
             )
         )
         self.entity_data.device_proxy.gateway_proxy.register_entity_reference(
@@ -145,10 +202,11 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
         for unsub in self._unsubs[:]:
             unsub()
             self._unsubs.remove(unsub)
+        self.entity_data.device_proxy.gateway_proxy.remove_entity_reference(self)
         await super().async_will_remove_from_hass()
         self.remove_future.set_result(True)
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_update(self) -> None:
         """Update the entity."""
         await self.entity_data.entity.async_update()
@@ -156,6 +214,10 @@ class ZHAEntity(LogMixin, RestoreEntity, Entity):
 
     def log(self, level: int, msg: str, *args, **kwargs):
         """Log a message."""
+        if not _LOGGER.isEnabledFor(level):
+            # Avoid building the prefixed message and args tuple for disabled
+            # levels; this runs for every entity event via _handle_entity_events.
+            return
         msg = f"%s: {msg}"
         args = (self.entity_id, *args)
         _LOGGER.log(level, msg, *args, **kwargs)

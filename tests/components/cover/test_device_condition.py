@@ -22,11 +22,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     ("set_state", "features_reg", "features_state", "expected_condition_types"),
     [
@@ -254,6 +249,7 @@ async def test_get_condition_capabilities_set_pos(
             {
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,
@@ -262,6 +258,7 @@ async def test_get_condition_capabilities_set_pos(
             {
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 100,
                 "valueMax": 100,
@@ -311,6 +308,7 @@ async def test_get_condition_capabilities_set_tilt_pos(
             {
                 "name": "above",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 0,
                 "valueMax": 100,
@@ -319,6 +317,7 @@ async def test_get_condition_capabilities_set_tilt_pos(
             {
                 "name": "below",
                 "optional": True,
+                "required": False,
                 "type": "integer",
                 "default": 100,
                 "valueMax": 100,
@@ -696,6 +695,8 @@ async def test_if_position(
     assert service_calls[6].data["some"] == "is_pos_not_gt_45 - event - test_event1"
 
     for record in caplog.records:
+        if record.name == "asyncio" and record.getMessage().startswith("Executing "):
+            continue
         assert record.levelname in ("DEBUG", "INFO")
 
 
@@ -858,4 +859,6 @@ async def test_if_tilt_position(
     assert service_calls[6].data["some"] == "is_pos_not_gt_45 - event - test_event1"
 
     for record in caplog.records:
+        if record.name == "asyncio" and record.getMessage().startswith("Executing "):
+            continue
         assert record.levelname in ("DEBUG", "INFO")

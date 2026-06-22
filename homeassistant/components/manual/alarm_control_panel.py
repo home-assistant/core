@@ -1,7 +1,5 @@
 """Support for manual alarms."""
 
-from __future__ import annotations
-
 import datetime
 from typing import Any
 
@@ -84,7 +82,9 @@ SUPPORTED_ARMING_STATE_TO_FEATURE = {
     AlarmControlPanelState.ARMED_HOME: AlarmControlPanelEntityFeature.ARM_HOME,
     AlarmControlPanelState.ARMED_NIGHT: AlarmControlPanelEntityFeature.ARM_NIGHT,
     AlarmControlPanelState.ARMED_VACATION: AlarmControlPanelEntityFeature.ARM_VACATION,
-    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS,
+    AlarmControlPanelState.ARMED_CUSTOM_BYPASS: (
+        AlarmControlPanelEntityFeature.ARM_CUSTOM_BYPASS
+    ),
 }
 
 ATTR_PREVIOUS_STATE = "previous_state"
@@ -408,8 +408,21 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         if not alarm_code or code == alarm_code:
             return
 
+        current_context = (
+            self._context if hasattr(self, "_context") and self._context else None
+        )
+        user_id_from_context = current_context.user_id if current_context else None
+
+        self.hass.bus.async_fire(
+            "manual_alarm_bad_code_attempt",
+            {
+                "entity_id": self.entity_id,
+                "user_id": user_id_from_context,
+                "target_state": state,
+            },
+        )
+
         raise ServiceValidationError(
-            "Invalid alarm code provided",
             translation_domain=DOMAIN,
             translation_key="invalid_code",
         )
@@ -441,12 +454,15 @@ class ManualAlarm(AlarmControlPanelEntity, RestoreEntity):
         await super().async_added_to_hass()
         if state := await self.async_get_last_state():
             self._state_ts = state.last_updated
-            if next_state := state.attributes.get(ATTR_NEXT_STATE):
-                # If in arming or pending state we record the transition,
-                # not the current state
-                self._state = AlarmControlPanelState(next_state)
-            else:
-                self._state = AlarmControlPanelState(state.state)
+            try:
+                if next_state := state.attributes.get(ATTR_NEXT_STATE):
+                    # If in arming or pending state we record the transition,
+                    # not the current state
+                    self._state = AlarmControlPanelState(next_state)
+                else:
+                    self._state = AlarmControlPanelState(state.state)
+            except ValueError:
+                return
 
             if prev_state := state.attributes.get(ATTR_PREVIOUS_STATE):
                 self._previous_state = prev_state

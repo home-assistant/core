@@ -185,7 +185,6 @@ CONFIG_ENTRY_WITH_API_KEY = {
     CONF_API_KEY: API_KEY,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
-    CONF_API_VERSION: API_VERSION,
 }
 
 CONFIG_ENTRY_WITHOUT_API_KEY = {
@@ -194,7 +193,6 @@ CONFIG_ENTRY_WITHOUT_API_KEY = {
     CONF_NAME: NAME,
     CONF_SSL: SSL,
     CONF_VERIFY_SSL: VERIFY_SSL,
-    CONF_API_VERSION: API_VERSION,
 }
 SWITCH_ENTITY_ID = "switch.pi_hole"
 
@@ -223,14 +221,18 @@ def _create_mocked_hole(
             if wrong_host:
                 raise HoleConnectionError("Cannot authenticate with Pi-hole: err")
             password = getattr(mocked_hole, "password", None)
+
             if (
                 raise_exception
                 or incorrect_app_password
+                or api_version == 5
                 or (api_version == 6 and password not in ["newkey", "apikey"])
             ):
-                if api_version == 6:
+                if api_version == 6 and (
+                    incorrect_app_password or password not in ["newkey", "apikey"]
+                ):
                     raise HoleError("Authentication failed: Invalid password")
-                raise HoleConnectionError
+                raise HoleConnectionError("Connection error")
 
         async def get_data_side_effect(*_args, **_kwargs):
             """Return data based on the mocked Hole instance state."""
@@ -255,7 +257,8 @@ def _create_mocked_hole(
         mocked_hole.get_data = AsyncMock(side_effect=get_data_side_effect)
 
         if ftl_error:
-            # two unauthenticated instances are created in `determine_api_version` before aync_try_connect is called
+            # two unauthenticated instances are created in
+            # `determine_api_version` before aync_try_connect is called
             if len(instances) > 1:
                 mocked_hole.get_data = AsyncMock(side_effect=ftl_side_effect)
         mocked_hole.get_versions = AsyncMock(return_value=None)

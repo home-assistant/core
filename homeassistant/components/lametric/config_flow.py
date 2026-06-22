@@ -1,7 +1,5 @@
 """Config flow to configure the LaMetric integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from ipaddress import ip_address
 import logging
@@ -47,6 +45,8 @@ from homeassistant.helpers.service_info.ssdp import (
 from homeassistant.util.network import is_link_local
 
 from .const import DOMAIN, LOGGER
+
+DEVICES_URL = "https://developer.lametric.com/user/devices"
 
 
 class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
@@ -164,6 +164,9 @@ class LaMetricFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
         return self.async_show_form(
             step_id="manual_entry",
             data_schema=vol.Schema(schema),
+            description_placeholders={
+                "devices_url": DEVICES_URL,
+            },
             errors=errors,
         )
 

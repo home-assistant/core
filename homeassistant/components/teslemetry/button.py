@@ -1,7 +1,5 @@
 """Button platform for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any
@@ -14,7 +12,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TeslemetryConfigEntry
-from .entity import TeslemetryVehiclePollingEntity
+from .entity import TeslemetryVehicleStreamEntity
 from .helpers import handle_command, handle_vehicle_command
 from .models import TeslemetryVehicleData
 
@@ -74,7 +72,7 @@ async def async_setup_entry(
     )
 
 
-class TeslemetryButtonEntity(TeslemetryVehiclePollingEntity, ButtonEntity):
+class TeslemetryButtonEntity(TeslemetryVehicleStreamEntity, ButtonEntity):
     """Base class for Teslemetry buttons."""
 
     api: Vehicle

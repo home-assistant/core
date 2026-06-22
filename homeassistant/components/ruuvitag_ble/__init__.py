@@ -1,7 +1,5 @@
 """The ruuvitag_ble integration."""
 
-from __future__ import annotations
-
 import logging
 
 from ruuvitag_ble import RuuvitagBluetoothDeviceData
@@ -22,7 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up Ruuvitag BLE device from a config entry."""
+    """Set up Ruuvi BLE device from a config entry."""
     address = entry.unique_id
     assert address is not None
     data = RuuvitagBluetoothDeviceData()

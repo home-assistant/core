@@ -1,7 +1,5 @@
 """Component to allow numeric input for platforms."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 import dataclasses
@@ -31,14 +29,15 @@ from homeassistant.loader import async_suggest_report_issue
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
+    AMBIGUOUS_UNITS,
     ATTR_MAX,
     ATTR_MIN,
     ATTR_STEP,
-    ATTR_STEP_VALIDATION,
     ATTR_VALUE,
     DEFAULT_MAX_VALUE,
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
+    DEVICE_CLASS_UNITS,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN,
     SERVICE_SET_VALUE,
@@ -182,7 +181,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """Representation of a Number entity."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_STEP_VALIDATION, ATTR_MODE}
+        {ATTR_MIN, ATTR_MAX, ATTR_STEP, ATTR_MODE}
     )
 
     entity_description: NumberEntityDescription
@@ -367,6 +366,19 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             return self.entity_description.native_unit_of_measurement
         return None
 
+    @final
+    @property
+    def __native_unit_of_measurement_compat(self) -> str | None:
+        """Handle wrong character coding in unit provided by integrations.
+
+        NumberEntity should read the number's native unit through this property instead
+        of through native_unit_of_measurement.
+        """
+        native_unit_of_measurement = self.native_unit_of_measurement
+        return AMBIGUOUS_UNITS.get(
+            native_unit_of_measurement, native_unit_of_measurement
+        )
+
     @property
     @final
     def unit_of_measurement(self) -> str | None:
@@ -374,7 +386,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if self._number_option_unit_of_measurement:
             return self._number_option_unit_of_measurement
 
-        native_unit_of_measurement = self.native_unit_of_measurement
+        native_unit_of_measurement = self.__native_unit_of_measurement_compat
         # device_class is checked after native_unit_of_measurement since most
         # of the time we can avoid the device_class check
         if (
@@ -386,13 +398,18 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
         if (translation_key := self._unit_of_measurement_translation_key) and (
             unit_of_measurement
-            := self.platform.default_language_platform_translations.get(translation_key)
+            := self.platform_data.default_language_platform_translations.get(
+                translation_key
+            )
         ):
             if native_unit_of_measurement is not None:
                 raise ValueError(
-                    f"Number entity {type(self)} from integration '{self.platform.platform_name}' "
-                    f"has a translation key for unit_of_measurement '{unit_of_measurement}', "
-                    f"but also has a native_unit_of_measurement '{native_unit_of_measurement}'"
+                    f"Number entity {type(self)} from integration"
+                    f" '{self.platform.platform_name}' has a"
+                    " translation key for unit_of_measurement"
+                    f" '{unit_of_measurement}', but also has a"
+                    " native_unit_of_measurement"
+                    f" '{native_unit_of_measurement}'"
                 )
             return unit_of_measurement
 
@@ -441,7 +458,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if device_class not in UNIT_CONVERTERS:
             return value
 
-        native_unit_of_measurement = self.native_unit_of_measurement
+        native_unit_of_measurement = self.__native_unit_of_measurement_compat
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
             if TYPE_CHECKING:
@@ -470,7 +487,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         if value is None or (device_class := self.device_class) not in UNIT_CONVERTERS:
             return value
 
-        native_unit_of_measurement = self.native_unit_of_measurement
+        native_unit_of_measurement = self.__native_unit_of_measurement_compat
         unit_of_measurement = self.unit_of_measurement
         if native_unit_of_measurement != unit_of_measurement:
             if TYPE_CHECKING:
@@ -493,7 +510,7 @@ class NumberEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             (number_options := self.registry_entry.options.get(DOMAIN))
             and (custom_unit := number_options.get(CONF_UNIT_OF_MEASUREMENT))
             and (device_class := self.device_class) in UNIT_CONVERTERS
-            and self.native_unit_of_measurement
+            and self.__native_unit_of_measurement_compat
             in UNIT_CONVERTERS[device_class].VALID_UNITS
             and custom_unit in UNIT_CONVERTERS[device_class].VALID_UNITS
         ):

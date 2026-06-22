@@ -1,10 +1,9 @@
 """Http views to control the config manager."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from http import HTTPStatus
-from typing import Any, NoReturn
+import logging
+from typing import Any, NoReturn, override
 
 from aiohttp import web
 import aiohttp.web_exceptions
@@ -23,7 +22,12 @@ from homeassistant.helpers.data_entry_flow import (
     FlowManagerResourceView,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.json import json_fragment
+from homeassistant.helpers.json import (
+    JSON_DUMP,
+    find_paths_unserializable_data,
+    json_bytes,
+    json_fragment,
+)
 from homeassistant.loader import (
     Integration,
     IntegrationNotFound,
@@ -31,6 +35,9 @@ from homeassistant.loader import (
     async_get_integrations,
     async_get_loaded_integration,
 )
+from homeassistant.util.json import format_unserializable_data
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -62,6 +69,7 @@ def async_setup(hass: HomeAssistant) -> bool:
     websocket_api.async_register_command(hass, config_entries_flow_subscribe)
     websocket_api.async_register_command(hass, ignore_config_flow)
 
+    websocket_api.async_register_command(hass, config_subentry_update)
     websocket_api.async_register_command(hass, config_subentry_delete)
     websocket_api.async_register_command(hass, config_subentry_list)
 
@@ -137,19 +145,16 @@ class ConfigManagerEntryResourceReloadView(HomeAssistantView):
 
 def _prepare_config_flow_result_json(
     result: data_entry_flow.FlowResult,
-    prepare_result_json: Callable[
-        [data_entry_flow.FlowResult], data_entry_flow.FlowResult
-    ],
-) -> data_entry_flow.FlowResult:
+    prepare_result_json: Callable[[data_entry_flow.FlowResult], dict[str, Any]],
+) -> dict[str, Any]:
     """Convert result to JSON."""
-    if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
         return prepare_result_json(result)
 
-    data = result.copy()
-    entry: config_entries.ConfigEntry = data["result"]
+    data = {key: val for key, val in result.items() if key not in ("data", "context")}
+    entry: config_entries.ConfigEntry = result["result"]  # type: ignore[typeddict-item]
+    # We overwrite the ConfigEntry object with its json representation.
     data["result"] = entry.as_json_fragment
-    data.pop("data")
-    data.pop("context")
     return data
 
 
@@ -170,16 +175,17 @@ class ConfigManagerFlowIndexView(
         vol.Schema(
             {
                 vol.Required("handler"): vol.Any(str, list),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
                 vol.Optional("entry_id"): cv.string,
             },
             extra=vol.ALLOW_EXTRA,
         )
     )
+    @override
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Initialize a POST request for a config entry flow."""
         return await self._post_impl(request, data)
 
+    @override
     async def _post_impl(
         self, request: web.Request, data: dict[str, Any]
     ) -> web.Response:
@@ -192,6 +198,7 @@ class ConfigManagerFlowIndexView(
                 status=HTTPStatus.BAD_REQUEST,
             )
 
+    @override
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         context = super().get_context(data)
@@ -201,10 +208,11 @@ class ConfigManagerFlowIndexView(
             context["entry_id"] = entry_id
         return context
 
+    @override
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
-    ) -> data_entry_flow.FlowResult:
-        """Convert result to JSON."""
+    ) -> dict[str, Any]:
+        """Convert result to JSON serializable dict."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
@@ -217,19 +225,22 @@ class ConfigManagerFlowResourceView(
     name = "api:config:config_entries:flow:resource"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission="add")
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
 
+    @override
     def _prepare_result_json(
         self, result: data_entry_flow.FlowResult
-    ) -> data_entry_flow.FlowResult:
-        """Convert result to JSON."""
+    ) -> dict[str, Any]:
+        """Convert result to JSON serializable dict."""
         return _prepare_config_flow_result_json(result, super()._prepare_result_json)
 
 
@@ -257,6 +268,7 @@ class OptionManagerFlowIndexView(
     name = "api:config:config_entries:option:flow"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request) -> web.Response:
         """Handle a POST request.
 
@@ -274,11 +286,13 @@ class OptionManagerFlowResourceView(
     name = "api:config:config_entries:options:flow:resource"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
@@ -297,11 +311,11 @@ class SubentryManagerFlowIndexView(
         vol.Schema(
             {
                 vol.Required("handler"): vol.All(vol.Coerce(tuple), (str, str)),
-                vol.Optional("show_advanced_options", default=False): cv.boolean,
             },
             extra=vol.ALLOW_EXTRA,
         )
     )
+    @override
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request.
 
@@ -309,6 +323,7 @@ class SubentryManagerFlowIndexView(
         """
         return await super()._post_impl(request, data)
 
+    @override
     def get_context(self, data: dict[str, Any]) -> dict[str, Any]:
         """Return context."""
         context = super().get_context(data)
@@ -328,11 +343,13 @@ class SubentryManagerFlowResourceView(
     name = "api:config:config_entries:subentries:flow:resource"
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(perm_category=CAT_CONFIG_ENTRIES, permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)
@@ -404,18 +421,40 @@ def config_entries_flow_subscribe(
     connection.subscriptions[msg["id"]] = hass.config_entries.flow.async_subscribe_flow(
         async_on_flow_init_remove
     )
-    connection.send_message(
-        websocket_api.event_message(
-            msg["id"],
-            [
-                {"type": None, "flow_id": flw["flow_id"], "flow": flw}
-                for flw in hass.config_entries.flow.async_progress()
-                if flw["context"]["source"]
-                not in (
-                    config_entries.SOURCE_RECONFIGURE,
-                    config_entries.SOURCE_USER,
+    try:
+        serialized_flows = [
+            json_bytes({"type": None, "flow_id": flw["flow_id"], "flow": flw})
+            for flw in hass.config_entries.flow.async_progress()
+            if flw["context"]["source"]
+            not in (
+                config_entries.SOURCE_RECONFIGURE,
+                config_entries.SOURCE_USER,
+            )
+        ]
+    except ValueError, TypeError:
+        # If we can't serialize, we'll filter out unserializable flows
+        serialized_flows = []
+        for flw in hass.config_entries.flow.async_progress():
+            if flw["context"]["source"] in (
+                config_entries.SOURCE_RECONFIGURE,
+                config_entries.SOURCE_USER,
+            ):
+                continue
+            try:
+                serialized_flows.append(
+                    json_bytes({"type": None, "flow_id": flw["flow_id"], "flow": flw})
                 )
-            ],
+            except ValueError, TypeError:
+                _LOGGER.error(
+                    "Unable to serialize to JSON. Bad data found at %s",
+                    format_unserializable_data(
+                        find_paths_unserializable_data(flw, dump=JSON_DUMP)
+                    ),
+                )
+                continue
+    connection.send_message(
+        websocket_api.messages.construct_event_message(
+            msg["id"], b"".join((b"[", b",".join(serialized_flows), b"]"))
         )
     )
     connection.send_result(msg["id"])
@@ -732,6 +771,47 @@ async def config_subentry_list(
         for subentry in entry.subentries.values()
     ]
     connection.send_result(msg["id"], result)
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {
+        "type": "config_entries/subentries/update",
+        "entry_id": str,
+        "subentry_id": str,
+        vol.Optional("title"): str,
+    }
+)
+@websocket_api.async_response
+async def config_subentry_update(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Update a subentry of a config entry."""
+    entry = get_entry(hass, connection, msg["entry_id"], msg["id"])
+    if entry is None:
+        connection.send_error(
+            msg["entry_id"], websocket_api.const.ERR_NOT_FOUND, "Config entry not found"
+        )
+        return
+
+    subentry = entry.subentries.get(msg["subentry_id"])
+    if subentry is None:
+        connection.send_error(
+            msg["id"], websocket_api.const.ERR_NOT_FOUND, "Config subentry not found"
+        )
+        return
+
+    changes = dict(msg)
+    changes.pop("id")
+    changes.pop("type")
+    changes.pop("entry_id")
+    changes.pop("subentry_id")
+
+    hass.config_entries.async_update_subentry(entry, subentry, **changes)
+
+    connection.send_result(msg["id"])
 
 
 @websocket_api.require_admin

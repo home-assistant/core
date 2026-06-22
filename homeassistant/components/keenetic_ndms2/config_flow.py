@@ -1,7 +1,5 @@
 """Config flow for Keenetic NDMS2."""
 
-from __future__ import annotations
-
 from typing import Any, cast
 from urllib.parse import urlparse
 
@@ -12,7 +10,7 @@ from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_HOST,
@@ -153,7 +151,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self.async_step_user()
 
 
-class KeeneticOptionsFlowHandler(OptionsFlow):
+class KeeneticOptionsFlowHandler(OptionsFlowWithReload):
     """Handle options."""
 
     config_entry: KeeneticConfigEntry
@@ -198,6 +196,8 @@ class KeeneticOptionsFlowHandler(OptionsFlow):
 
         options = vol.Schema(
             {
+                # Polling interval is user-configurable, which is no longer allowed
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(

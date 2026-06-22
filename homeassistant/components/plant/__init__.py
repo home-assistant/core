@@ -8,6 +8,7 @@ from collections import deque
 from contextlib import suppress
 from datetime import datetime, timedelta
 import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -345,7 +346,7 @@ class Plant(Entity):
         return self._state
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the attributes of the entity.
 
         Provide the individual measurements from the
@@ -384,7 +385,7 @@ class DailyHistory:
 
     def add_measurement(self, value, timestamp=None):
         """Add a new measurement for a certain day."""
-        day = (timestamp or datetime.now()).date()
+        day = (timestamp or datetime.now()).date()  # pylint: disable=home-assistant-enforce-naive-now
         if not isinstance(value, (int, float)):
             return
         if self._days is None:

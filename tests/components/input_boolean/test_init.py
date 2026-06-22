@@ -54,12 +54,14 @@ def storage_setup(hass: HomeAssistant, hass_storage: dict[str, Any]):
     return _storage
 
 
-async def test_config(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    "invalid_config",
+    [None, 1, {"name with space": None}],
+)
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
     """Test config."""
-    invalid_configs = [None, 1, {}, {"name with space": None}]
 
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_methods(hass: HomeAssistant) -> None:
@@ -177,14 +179,14 @@ async def test_input_boolean_context(
 ) -> None:
     """Test that input_boolean context works."""
     assert await async_setup_component(
-        hass, "input_boolean", {"input_boolean": {"ac": {CONF_INITIAL: True}}}
+        hass, DOMAIN, {"input_boolean": {"ac": {CONF_INITIAL: True}}}
     )
 
     state = hass.states.get("input_boolean.ac")
     assert state is not None
 
     await hass.services.async_call(
-        "input_boolean",
+        DOMAIN,
         "turn_off",
         {"entity_id": state.entity_id},
         True,

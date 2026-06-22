@@ -1,7 +1,5 @@
 """The Nibe Heat Pump coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import defaultdict
 from collections.abc import Callable, Iterable
@@ -10,16 +8,25 @@ from typing import Any
 
 from nibe.coil import Coil, CoilData
 from nibe.connection import Connection
-from nibe.exceptions import CoilNotFoundException, ReadException
+from nibe.exceptions import (
+    CoilNotFoundException,
+    ReadException,
+    WriteDeniedException,
+    WriteException,
+    WriteTimeoutException,
+)
 from nibe.heatpump import HeatPump, Series
 from propcache.api import cached_property
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, LOGGER
+
+type NibeHeatpumpConfigEntry = ConfigEntry[CoilCoordinator]
 
 
 class ContextCoordinator[_DataTypeT, _ContextTypeT](DataUpdateCoordinator[_DataTypeT]):
@@ -66,12 +73,12 @@ class ContextCoordinator[_DataTypeT, _ContextTypeT](DataUpdateCoordinator[_DataT
 class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
     """Update coordinator for nibe heat pumps."""
 
-    config_entry: ConfigEntry
+    config_entry: NibeHeatpumpConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: NibeHeatpumpConfigEntry,
         heatpump: HeatPump,
         connection: Connection,
     ) -> None:
@@ -134,7 +141,35 @@ class CoilCoordinator(ContextCoordinator[dict[int, CoilData], int]):
     async def async_write_coil(self, coil: Coil, value: float | str) -> None:
         """Write coil and update state."""
         data = CoilData(coil, value)
-        await self.connection.write_coil(data)
+        try:
+            await self.connection.write_coil(data)
+        except WriteDeniedException:
+            LOGGER.debug(
+                "Denied write on address %d with value %s."
+                " This is likely already the value"
+                " the pump has internally",
+                coil.address,
+                value,
+            )
+        except WriteTimeoutException as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_timeout",
+                translation_placeholders={
+                    "address": str(coil.address),
+                },
+            ) from e
+        except WriteException as e:
+            LOGGER.debug("Failed to write", exc_info=True)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="write_failed",
+                translation_placeholders={
+                    "address": str(coil.address),
+                    "value": str(value),
+                    "error": str(e),
+                },
+            ) from e
 
         self.data[coil.address] = data
 

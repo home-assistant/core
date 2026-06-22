@@ -1,6 +1,4 @@
-"""Support for Google Assistant SDK."""
-
-from __future__ import annotations
+"""Services for the Google Assistant SDK integration."""
 
 import dataclasses
 

@@ -1,7 +1,5 @@
 """Config flow for Netgear LTE integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from aiohttp.cookiejar import CookieJar
@@ -14,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
-from .const import DEFAULT_HOST, DOMAIN, LOGGER, MANUFACTURER
+from .const import DEFAULT_HOST, DOMAIN, MANUFACTURER
 
 
 class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -72,9 +70,6 @@ class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await modem.information()
         except Error as ex:
             raise InputValidationError("cannot_connect") from ex
-        except Exception as ex:
-            LOGGER.exception("Unexpected exception")
-            raise InputValidationError("unknown") from ex
         await modem.logout()
         return info
 

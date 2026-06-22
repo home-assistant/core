@@ -1,11 +1,19 @@
 """KNX Websocket Tests."""
 
+from __future__ import annotations
+
 from typing import Any
 from unittest.mock import patch
 
+from knx_telegram_store import KnxTelegramStoreException
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.knx.const import KNX_ADDRESS, KNX_MODULE_KEY
+from homeassistant.components.knx.const import (
+    KNX_ADDRESS,
+    KNX_MODULE_KEY,
+    SUPPORTED_PLATFORMS_UI,
+)
 from homeassistant.components.knx.project import STORAGE_KEY as KNX_PROJECT_STORAGE_KEY
 from homeassistant.components.knx.schema import SwitchSchema
 from homeassistant.const import CONF_NAME
@@ -16,42 +24,47 @@ from .conftest import KNXTestKit
 from tests.typing import WebSocketGenerator
 
 
-async def test_knx_info_command(
+async def test_knx_get_base_data_command(
     hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
 ) -> None:
-    """Test knx/info command."""
+    """Test knx/get_base_data command."""
     await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "knx/info"})
+    await client.send_json_auto_id({"type": "knx/get_base_data"})
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["version"] is not None
-    assert res["result"]["connected"]
-    assert res["result"]["current_address"] == "0.0.0"
-    assert res["result"]["project"] is None
+    assert res["result"]["connection_info"]["version"] is not None
+    assert res["result"]["connection_info"]["connected"]
+    assert res["result"]["connection_info"]["current_address"] == "0.0.0"
+    assert res["result"]["project_info"] is None
+    assert not SUPPORTED_PLATFORMS_UI.difference(res["result"]["supported_platforms"])
 
 
 @pytest.mark.usefixtures("load_knxproj")
-async def test_knx_info_command_with_project(
+async def test_knx_get_base_data_command_with_project(
     hass: HomeAssistant,
     knx: KNXTestKit,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test knx/info command with loaded project."""
+    """Test knx/get_base_data command with loaded project."""
     await knx.setup_integration()
     client = await hass_ws_client(hass)
-    await client.send_json_auto_id({"type": "knx/info"})
+    await client.send_json_auto_id({"type": "knx/get_base_data"})
 
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["version"] is not None
-    assert res["result"]["connected"]
-    assert res["result"]["current_address"] == "0.0.0"
-    assert res["result"]["project"] is not None
-    assert res["result"]["project"]["name"] == "Fixture"
-    assert res["result"]["project"]["last_modified"] == "2023-04-30T09:04:04.4043671Z"
-    assert res["result"]["project"]["tool_version"] == "5.7.1428.39779"
+
+    connection_info = res["result"]["connection_info"]
+    assert connection_info["version"] is not None
+    assert connection_info["connected"]
+    assert connection_info["current_address"] == "0.0.0"
+
+    project_info = res["result"]["project_info"]
+    assert project_info is not None
+    assert project_info["name"] == "Fixture"
+    assert project_info["last_modified"] == "2023-04-30T09:04:04.4043671Z"
+    assert project_info["tool_version"] == "5.7.1428.39779"
 
 
 async def test_knx_project_file_process(
@@ -160,8 +173,24 @@ async def test_knx_get_project(
     await client.send_json_auto_id({"type": "knx/get_knx_project"})
     res = await client.receive_json()
     assert res["success"], res
-    assert res["result"]["project_loaded"] is True
-    assert res["result"]["knxproject"] == project_data
+    assert res["result"] == project_data
+
+
+async def test_knx_get_project_no_project(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    project_data: dict[str, Any],
+) -> None:
+    """Test retrieval of kxnproject from store."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    assert not hass.data[KNX_MODULE_KEY].project.loaded
+
+    await client.send_json_auto_id({"type": "knx/get_knx_project"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"] is None
 
 
 async def test_knx_group_monitor_info_command(
@@ -177,6 +206,105 @@ async def test_knx_group_monitor_info_command(
     assert res["success"], res
     assert res["result"]["project_loaded"] is False
     assert res["result"]["recent_telegrams"] == []
+
+
+async def test_knx_query_telegrams_command(
+    hass: HomeAssistant, knx: KNXTestKit, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test knx/query_telegrams command."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    # get some telegrams to populate the store
+    await knx.receive_write("1/1/1", True)
+    await knx.receive_write("2/2/2", (1, 2, 3))
+    await knx.receive_write("3/3/3", 0x34)
+    # wait for async store task; the websocket handler flushes buffered
+    # telegrams before querying, so no explicit flush is needed here
+    await hass.async_block_till_done()
+
+    # Query all
+    await client.send_json_auto_id({"type": "knx/query_telegrams"})
+    res = await client.receive_json()
+    assert res["success"], res
+    assert len(res["result"]["telegrams"]) == 3
+    assert res["result"]["total_count"] == 3
+    assert res["result"]["limit_reached"] is False
+
+    # Query with filter
+    await client.send_json_auto_id(
+        {
+            "type": "knx/query_telegrams",
+            "destinations": ["1/1/1", "3/3/3"],
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert len(res["result"]["telegrams"]) == 2
+    assert res["result"]["total_count"] == 2
+
+    # Query with limit
+    await client.send_json_auto_id(
+        {
+            "type": "knx/query_telegrams",
+            "limit": 1,
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert len(res["result"]["telegrams"]) == 1
+    assert res["result"]["total_count"] == 3
+    assert res["result"]["limit_reached"] is True
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["knx/group_monitor_info", "knx/query_telegrams"],
+)
+async def test_telegram_store_not_initialized(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    command: str,
+) -> None:
+    """Test telegram commands when the storage backend failed to initialize."""
+    # Force initialization to fail so the store stays uninitialized (None)
+    with patch(
+        "knx_telegram_store.BufferedSqliteStore.initialize",
+        side_effect=KnxTelegramStoreException("init failed"),
+    ):
+        await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    assert hass.data[KNX_MODULE_KEY].telegrams.store is None
+
+    await client.send_json_auto_id({"type": command})
+    res = await client.receive_json()
+    assert not res["success"]
+    assert "not initialized" in res["error"]["message"]
+
+
+@pytest.mark.parametrize(
+    "command",
+    ["knx/group_monitor_info", "knx/query_telegrams"],
+)
+async def test_telegram_store_query_database_error(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    command: str,
+) -> None:
+    """Test telegram commands when the store query raises a database error."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+
+    store = hass.data[KNX_MODULE_KEY].telegrams.store
+    assert store is not None
+    with patch.object(store, "query", side_effect=KnxTelegramStoreException("boom")):
+        await client.send_json_auto_id({"type": command})
+        res = await client.receive_json()
+    assert not res["success"]
+    assert "Database error" in res["error"]["message"]
 
 
 async def test_knx_group_telegrams_command(
@@ -231,6 +359,10 @@ async def test_knx_subscribe_telegrams_command_recent_telegrams(
     )
     await knx.assert_write("1/2/4", 1)
 
+    # wait for async store task; group_monitor_info flushes buffered telegrams
+    # before querying, so no explicit flush is needed here
+    await hass.async_block_till_done()
+
     # connect websocket after telegrams have been sent
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "knx/group_monitor_info"})
@@ -240,21 +372,21 @@ async def test_knx_subscribe_telegrams_command_recent_telegrams(
 
     recent_tgs = res["result"]["recent_telegrams"]
     assert len(recent_tgs) == 2
-    # telegrams are sorted from oldest to newest
-    assert recent_tgs[0]["destination"] == "1/3/4"
+    # telegrams are sorted from newest to oldest
+    assert recent_tgs[0]["destination"] == "1/2/4"
     assert recent_tgs[0]["payload"] == 1
     assert recent_tgs[0]["telegramtype"] == "GroupValueWrite"
-    assert recent_tgs[0]["source"] == "1.2.3"
-    assert recent_tgs[0]["direction"] == "Incoming"
+    assert (
+        recent_tgs[0]["source"] == "0.0.0"
+    )  # needs to be the IA currently connected to
+    assert recent_tgs[0]["direction"] == "Outgoing"
     assert isinstance(recent_tgs[0]["timestamp"], str)
 
-    assert recent_tgs[1]["destination"] == "1/2/4"
+    assert recent_tgs[1]["destination"] == "1/3/4"
     assert recent_tgs[1]["payload"] == 1
     assert recent_tgs[1]["telegramtype"] == "GroupValueWrite"
-    assert (
-        recent_tgs[1]["source"] == "0.0.0"
-    )  # needs to be the IA currently connected to
-    assert recent_tgs[1]["direction"] == "Outgoing"
+    assert recent_tgs[1]["source"] == "1.2.3"
+    assert recent_tgs[1]["direction"] == "Incoming"
     assert isinstance(recent_tgs[1]["timestamp"], str)
 
 
@@ -285,6 +417,8 @@ async def test_knx_subscribe_telegrams_command_no_project(
         "switch", "turn_on", {"entity_id": "switch.test"}, blocking=True
     )
     await knx.assert_write("1/2/4", 1)
+    # receive undecodable data secure telegram
+    knx.receive_data_secure_issue("1/2/5")
 
     # receive events
     res = await client.receive_json()
@@ -327,6 +461,14 @@ async def test_knx_subscribe_telegrams_command_no_project(
         res["event"]["source"] == "0.0.0"
     )  # needs to be the IA currently connected to
     assert res["event"]["direction"] == "Outgoing"
+    assert res["event"]["timestamp"] is not None
+
+    res = await client.receive_json()
+    assert res["event"]["destination"] == "1/2/5"
+    assert res["event"]["payload"] is None
+    assert res["event"]["telegramtype"] == "SecureAPDU"
+    assert res["event"]["source"] == "1.2.3"
+    assert res["event"]["direction"] == "Incoming"
     assert res["event"]["timestamp"] is not None
 
 
@@ -390,10 +532,63 @@ async def test_knx_subscribe_telegrams_command_project(
     assert res["event"]["timestamp"] is not None
 
 
+@pytest.mark.parametrize("platform", sorted({*SUPPORTED_PLATFORMS_UI, "tts"}))
+async def test_knx_get_schema(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+    platform: str,
+) -> None:
+    """Test knx/get_schema command returning proper schema data."""
+    await knx.setup_integration()
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_schema", "platform": platform})
+    res = await client.receive_json()
+    assert res == snapshot
+
+
+async def test_knx_get_expose_groups(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test knx/get_expose_groups command returning proper expose groups data."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_expose.json",
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id({"type": "knx/get_expose_groups"})
+    res = await client.receive_json()
+    assert res == snapshot
+
+
+async def test_knx_get_expose_config(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test knx/get_expose_config command returning proper expose config data."""
+    await knx.setup_integration(
+        config_store_fixture="config_store_expose.json",
+    )
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {
+            "type": "knx/get_expose_config",
+            "entity_id": "cover.test",
+        }
+    )
+    res = await client.receive_json()
+    assert res == snapshot
+
+
 @pytest.mark.parametrize(
     "endpoint",
     [
-        "knx/info",  # sync ws-command
+        "knx/get_base_data",  # sync ws-command
         "knx/get_knx_project",  # async ws-command
     ],
 )

@@ -1,11 +1,11 @@
 """Switch platform for Habitica integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
+
+from habiticalib import Habitica
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -15,11 +15,7 @@ from homeassistant.components.switch import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import (
-    HabiticaConfigEntry,
-    HabiticaData,
-    HabiticaDataUpdateCoordinator,
-)
+from .coordinator import HabiticaConfigEntry, HabiticaData
 from .entity import HabiticaBase
 
 PARALLEL_UPDATES = 1
@@ -29,8 +25,8 @@ PARALLEL_UPDATES = 1
 class HabiticaSwitchEntityDescription(SwitchEntityDescription):
     """Describes Habitica switch entity."""
 
-    turn_on_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
-    turn_off_fn: Callable[[HabiticaDataUpdateCoordinator], Any]
+    turn_on_fn: Callable[[Habitica], Any]
+    turn_off_fn: Callable[[Habitica], Any]
     is_on_fn: Callable[[HabiticaData], bool | None]
 
 
@@ -45,8 +41,8 @@ SWTICH_DESCRIPTIONS: tuple[HabiticaSwitchEntityDescription, ...] = (
         key=HabiticaSwitchEntity.SLEEP,
         translation_key=HabiticaSwitchEntity.SLEEP,
         device_class=SwitchDeviceClass.SWITCH,
-        turn_on_fn=lambda coordinator: coordinator.habitica.toggle_sleep(),
-        turn_off_fn=lambda coordinator: coordinator.habitica.toggle_sleep(),
+        turn_on_fn=lambda habitica: habitica.toggle_sleep(),
+        turn_off_fn=lambda habitica: habitica.toggle_sleep(),
         is_on_fn=lambda data: data.user.preferences.sleep,
     ),
 )
@@ -72,17 +68,20 @@ class HabiticaSwitch(HabiticaBase, SwitchEntity):
     entity_description: HabiticaSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.entity_description.is_on_fn(
             self.coordinator.data,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
 
         await self.coordinator.execute(self.entity_description.turn_on_fn)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
 

@@ -1,10 +1,8 @@
 """Config flow to configure Renault component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 from renault_api.const import AVAILABLE_LOCALES
@@ -16,21 +14,20 @@ from homeassistant.config_entries import (
     ConfigFlow,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 
-from .const import CONF_KAMEREON_ACCOUNT_ID, CONF_LOCALE, DOMAIN
+from .const import DOMAIN, RenaultConfigurationKeys
 from .renault_hub import RenaultHub
 
 _LOGGER = logging.getLogger(__name__)
 
 USER_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_LOCALE): vol.In(AVAILABLE_LOCALES.keys()),
-        vol.Required(CONF_USERNAME): str,
-        vol.Required(CONF_PASSWORD): str,
+        vol.Required(RenaultConfigurationKeys.LOCALE): vol.In(AVAILABLE_LOCALES.keys()),
+        vol.Required(RenaultConfigurationKeys.USERNAME): str,
+        vol.Required(RenaultConfigurationKeys.PASSWORD): str,
     }
 )
-REAUTH_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): str})
+REAUTH_SCHEMA = vol.Schema({vol.Required(RenaultConfigurationKeys.PASSWORD): str})
 
 
 class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
@@ -52,21 +49,27 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         suggested_values: Mapping[str, Any] | None = None
         if user_input:
-            locale = user_input[CONF_LOCALE]
+            locale = user_input[RenaultConfigurationKeys.LOCALE]
             self.renault_config.update(user_input)
             self.renault_config.update(AVAILABLE_LOCALES[locale])
             self.renault_hub = RenaultHub(self.hass, locale)
             try:
                 login_success = await self.renault_hub.attempt_login(
-                    user_input[CONF_USERNAME], user_input[CONF_PASSWORD]
+                    user_input[RenaultConfigurationKeys.USERNAME],
+                    user_input[RenaultConfigurationKeys.PASSWORD],
                 )
-            except (aiohttp.ClientConnectionError, GigyaException):
+            except aiohttp.ClientConnectionError, GigyaException:
                 errors["base"] = "cannot_connect"
             except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 if login_success:
+                    if TYPE_CHECKING:
+                        assert self.renault_hub.login_token
+                    self.renault_config[RenaultConfigurationKeys.LOGIN_TOKEN] = (
+                        self.renault_hub.login_token
+                    )
                     return await self.async_step_kamereon()
                 errors["base"] = "invalid_credentials"
             suggested_values = user_input
@@ -86,7 +89,9 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Select Kamereon account."""
         if user_input:
-            await self.async_set_unique_id(user_input[CONF_KAMEREON_ACCOUNT_ID])
+            await self.async_set_unique_id(
+                user_input[RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID]
+            )
             if self.source == SOURCE_RECONFIGURE:
                 self._abort_if_unique_id_mismatch()
                 self.renault_config.update(user_input)
@@ -99,7 +104,8 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
 
             self.renault_config.update(user_input)
             return self.async_create_entry(
-                title=user_input[CONF_KAMEREON_ACCOUNT_ID], data=self.renault_config
+                title=user_input[RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID],
+                data=self.renault_config,
             )
 
         accounts = await self.renault_hub.get_account_ids()
@@ -107,13 +113,17 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="kamereon_no_account")
         if len(accounts) == 1:
             return await self.async_step_kamereon(
-                user_input={CONF_KAMEREON_ACCOUNT_ID: accounts[0]}
+                user_input={RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID: accounts[0]}
             )
 
         return self.async_show_form(
             step_id="kamereon",
             data_schema=vol.Schema(
-                {vol.Required(CONF_KAMEREON_ACCOUNT_ID): vol.In(accounts)}
+                {
+                    vol.Required(RenaultConfigurationKeys.KAMEREON_ACCOUNT_ID): vol.In(
+                        accounts
+                    )
+                }
             ),
         )
 
@@ -131,13 +141,23 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         if user_input:
             # Check credentials
-            self.renault_hub = RenaultHub(self.hass, reauth_entry.data[CONF_LOCALE])
+            self.renault_hub = RenaultHub(
+                self.hass, reauth_entry.data[RenaultConfigurationKeys.LOCALE]
+            )
             if await self.renault_hub.attempt_login(
-                reauth_entry.data[CONF_USERNAME], user_input[CONF_PASSWORD]
+                reauth_entry.data[RenaultConfigurationKeys.USERNAME],
+                user_input[RenaultConfigurationKeys.PASSWORD],
             ):
+                if TYPE_CHECKING:
+                    assert self.renault_hub.login_token
                 return self.async_update_reload_and_abort(
                     reauth_entry,
-                    data_updates={CONF_PASSWORD: user_input[CONF_PASSWORD]},
+                    data_updates={
+                        RenaultConfigurationKeys.PASSWORD: user_input[
+                            RenaultConfigurationKeys.PASSWORD
+                        ],
+                        RenaultConfigurationKeys.LOGIN_TOKEN: self.renault_hub.login_token,
+                    },
                 )
             errors = {"base": "invalid_credentials"}
 
@@ -145,7 +165,11 @@ class RenaultFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="reauth_confirm",
             data_schema=REAUTH_SCHEMA,
             errors=errors,
-            description_placeholders={CONF_USERNAME: reauth_entry.data[CONF_USERNAME]},
+            description_placeholders={
+                RenaultConfigurationKeys.USERNAME: reauth_entry.data[
+                    RenaultConfigurationKeys.USERNAME
+                ]
+            },
         )
 
     async def async_step_reconfigure(

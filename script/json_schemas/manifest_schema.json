@@ -356,6 +356,32 @@
         },
         "uniqueItems": true
       },
+      "preview_features": {
+        "description": "Preview features that can be enabled/disabled by users via the Labs UI.\nhttps://developers.home-assistant.io/docs/creating_integration_manifest/#preview-features",
+        "type": "object",
+        "minProperties": 1,
+        "additionalProperties": {
+          "type": "object",
+          "properties": {
+            "feedback_url": {
+              "description": "URL where users can provide feedback about the feature.",
+              "type": "string",
+              "format": "uri"
+            },
+            "learn_more_url": {
+              "description": "URL where users can learn more about the feature.",
+              "type": "string",
+              "format": "uri"
+            },
+            "report_issue_url": {
+              "description": "URL where users can report issues with the feature.",
+              "type": "string",
+              "format": "uri"
+            }
+          },
+          "additionalProperties": false
+        }
+      },
       "disabled": {
         "description": "The reason for the integration being disabled.",
         "type": "string"

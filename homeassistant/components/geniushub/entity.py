@@ -1,7 +1,7 @@
 """Base entity for Geniushub."""
 
 from datetime import datetime, timedelta
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -31,6 +31,7 @@ class GeniusEntity(Entity):
         """Initialize the entity."""
         self._unique_id: str | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up a listener when this entity is added to HA."""
         self.async_on_remove(async_dispatcher_connect(self.hass, DOMAIN, self._refresh))
@@ -40,6 +41,7 @@ class GeniusEntity(Entity):
         self.async_schedule_update_ha_state(force_refresh=True)
 
     @property
+    @override
     def unique_id(self) -> str | None:
         """Return a unique ID."""
         return self._unique_id
@@ -58,6 +60,7 @@ class GeniusDevice(GeniusEntity):
         self._state_attr = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         attrs = {}
@@ -77,10 +80,10 @@ class GeniusDevice(GeniusEntity):
 
     async def async_update(self) -> None:
         """Update an entity's state data."""
-        if "_state" in self._device.data:  # only via v3 API
-            self._last_comms = dt_util.utc_from_timestamp(
-                self._device.data["_state"]["lastComms"]
-            )
+        if (state := self._device.data.get("_state")) and (
+            last_comms := state.get("lastComms")
+        ) is not None:  # only via v3 API
+            self._last_comms = dt_util.utc_from_timestamp(last_comms)
 
 
 class GeniusZone(GeniusEntity):
@@ -93,6 +96,7 @@ class GeniusZone(GeniusEntity):
         self._zone = zone
         self._unique_id = f"{broker.hub_uid}_zone_{zone.id}"
 
+    @override
     async def _refresh(self, payload: dict | None = None) -> None:
         """Process any signals."""
         if payload is None:
@@ -119,11 +123,13 @@ class GeniusZone(GeniusEntity):
         await self._zone.set_mode(mode)
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the climate device."""
         return self._zone.name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         status = {k: v for k, v in self._zone.data.items() if k in GH_ZONE_ATTRS}

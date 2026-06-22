@@ -5,7 +5,7 @@
       'friendly_name': 'Test',
     }),
     'context': <ANY>,
-    'entity_id': 'switch.test',
+    'entity_id': 'switch.test_test',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -14,8 +14,9 @@
 # ---
 # name: test_switch.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -25,7 +26,7 @@
     'disabled_by': None,
     'domain': 'switch',
     'entity_category': None,
-    'entity_id': 'switch.test',
+    'entity_id': 'switch.test_test',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -33,6 +34,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,

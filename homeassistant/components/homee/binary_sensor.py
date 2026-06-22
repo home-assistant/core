@@ -1,7 +1,9 @@
 """The Homee binary sensor platform."""
 
+from typing import override
+
 from pyHomee.const import AttributeType
-from pyHomee.model import HomeeAttribute
+from pyHomee.model import HomeeAttribute, HomeeNode
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -14,6 +16,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import HomeeConfigEntry
 from .entity import HomeeEntity
+from .helpers import setup_homee_platform
 
 PARALLEL_UPDATES = 0
 
@@ -152,20 +155,31 @@ BINARY_SENSOR_DESCRIPTIONS: dict[AttributeType, BinarySensorEntityDescription] =
 }
 
 
-async def async_setup_entry(
-    hass: HomeAssistant,
+async def add_binary_sensor_entities(
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
 ) -> None:
-    """Add the Homee platform for the binary sensor component."""
-
-    async_add_devices(
+    """Add homee binary sensor entities."""
+    async_add_entities(
         HomeeBinarySensor(
             attribute, config_entry, BINARY_SENSOR_DESCRIPTIONS[attribute.type]
         )
-        for node in config_entry.runtime_data.nodes
+        for node in nodes
         for attribute in node.attributes
         if attribute.type in BINARY_SENSOR_DESCRIPTIONS and not attribute.editable
+    )
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Add the homee platform for the binary sensor component."""
+
+    await setup_homee_platform(
+        add_binary_sensor_entities, async_add_entities, config_entry
     )
 
 
@@ -185,6 +199,7 @@ class HomeeBinarySensor(HomeeEntity, BinarySensorEntity):
         self._attr_translation_key = description.key
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return bool(self._attribute.current_value)

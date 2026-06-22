@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -30,7 +31,7 @@ from .entity import IOmeterEntity
 class IOmeterEntityDescription(SensorEntityDescription):
     """Describes IOmeter sensor entity."""
 
-    value_fn: Callable[[IOmeterData], str | int | float]
+    value_fn: Callable[[IOmeterData], str | int | float | None]
 
 
 SENSOR_TYPES: list[IOmeterEntityDescription] = [
@@ -73,7 +74,11 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda data: data.status.device.core.battery_level,
+        value_fn=lambda data: (
+            round(data.status.device.core.battery_level)
+            if data.status.device.core.battery_level is not None
+            else None
+        ),
     ),
     IOmeterEntityDescription(
         key="pin_status",
@@ -81,6 +86,22 @@ SENSOR_TYPES: list[IOmeterEntityDescription] = [
         device_class=SensorDeviceClass.ENUM,
         options=["entered", "pending", "missing", "unknown"],
         value_fn=lambda data: data.status.device.core.pin_status or STATE_UNKNOWN,
+    ),
+    IOmeterEntityDescription(
+        key="consumption_tariff_t1",
+        translation_key="consumption_tariff_t1",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.reading.get_consumption_tariff_T1(),
+    ),
+    IOmeterEntityDescription(
+        key="consumption_tariff_t2",
+        translation_key="consumption_tariff_t2",
+        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL,
+        value_fn=lambda data: data.reading.get_consumption_tariff_T2(),
     ),
     IOmeterEntityDescription(
         key="total_consumption",
@@ -141,6 +162,7 @@ class IOmeterSensor(IOmeterEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.identifier}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.data)

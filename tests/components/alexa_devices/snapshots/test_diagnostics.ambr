@@ -2,19 +2,34 @@
 # name: test_device_diagnostics
   dict({
     'account name': 'Echo Test',
-    'bluetooth state': True,
     'capabilities': list([
       'AUDIO_PLAYER',
       'MICROPHONE',
     ]),
-    'device cluster members': list([
-      'echo_test_serial_number',
-    ]),
+    'device cluster members': dict({
+      'echo_test_serial_number': 'echo_test_device_id',
+    }),
     'device family': 'mine',
     'device type': 'echo',
-    'do not disturb': False,
     'online': True,
-    'response style': None,
+    'sensors': dict({
+      'dnd': dict({
+        'error': False,
+        'error_msg': None,
+        'error_type': None,
+        'name': 'dnd',
+        'scale': None,
+        'value': False,
+      }),
+      'temperature': dict({
+        'error': False,
+        'error_msg': None,
+        'error_type': None,
+        'name': 'temperature',
+        'scale': 'CELSIUS',
+        'value': '22.5',
+      }),
+    }),
     'serial number': 'echo_test_serial_number',
     'software version': 'echo_test_software_version',
   })
@@ -25,19 +40,34 @@
       'devices': list([
         dict({
           'account name': 'Echo Test',
-          'bluetooth state': True,
           'capabilities': list([
             'AUDIO_PLAYER',
             'MICROPHONE',
           ]),
-          'device cluster members': list([
-            'echo_test_serial_number',
-          ]),
+          'device cluster members': dict({
+            'echo_test_serial_number': 'echo_test_device_id',
+          }),
           'device family': 'mine',
           'device type': 'echo',
-          'do not disturb': False,
           'online': True,
-          'response style': None,
+          'sensors': dict({
+            'dnd': dict({
+              'error': False,
+              'error_msg': None,
+              'error_type': None,
+              'name': 'dnd',
+              'scale': None,
+              'value': False,
+            }),
+            'temperature': dict({
+              'error': False,
+              'error_msg': None,
+              'error_type': None,
+              'name': 'temperature',
+              'scale': 'CELSIUS',
+              'value': '22.5',
+            }),
+          }),
           'serial number': 'echo_test_serial_number',
           'software version': 'echo_test_software_version',
         }),
@@ -47,9 +77,9 @@
     }),
     'entry': dict({
       'data': dict({
-        'country': 'IT',
         'login_data': dict({
           'session': 'test-session',
+          'site': 'https://www.amazon.com',
         }),
         'password': '**REDACTED**',
         'username': '**REDACTED**',
@@ -58,7 +88,7 @@
       'discovery_keys': dict({
       }),
       'domain': 'alexa_devices',
-      'minor_version': 1,
+      'minor_version': 3,
       'options': dict({
       }),
       'pref_disable_new_entities': False,
@@ -67,7 +97,7 @@
       'subentries': list([
       ]),
       'title': '**REDACTED**',
-      'unique_id': 'fake_email@gmail.com',
+      'unique_id': 'amzn1.account.fake_user_id',
       'version': 1,
     }),
   })

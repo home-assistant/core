@@ -71,12 +71,14 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
             "options": ["Execute if off present"],
             "name": "options_mask",
             "optional": True,
+            "required": False,
         },
         {
             "type": "multi_select",
             "options": ["Execute if off"],
             "name": "options_override",
             "optional": True,
+            "required": False,
         },
     ]
     vol_schema = voluptuous_serialize.convert(
@@ -106,11 +108,11 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
     assert isinstance(converted_data["action"], lighting.Color.ColorLoopAction)
     assert (
         converted_data["action"]
-        == lighting.Color.ColorLoopAction.Activate_from_current_hue
+        is lighting.Color.ColorLoopAction.Activate_from_current_hue
     )
 
     assert isinstance(converted_data["direction"], lighting.Color.ColorLoopDirection)
-    assert converted_data["direction"] == lighting.Color.ColorLoopDirection.Increment
+    assert converted_data["direction"] is lighting.Color.ColorLoopDirection.Increment
 
     assert isinstance(converted_data["time"], uint16_t)
     assert converted_data["time"] == 20
@@ -139,11 +141,11 @@ async def test_zcl_schema_conversions(hass: HomeAssistant) -> None:
     assert isinstance(converted_data["action"], lighting.Color.ColorLoopAction)
     assert (
         converted_data["action"]
-        == lighting.Color.ColorLoopAction.Activate_from_current_hue
+        is lighting.Color.ColorLoopAction.Activate_from_current_hue
     )
 
     assert isinstance(converted_data["direction"], lighting.Color.ColorLoopDirection)
-    assert converted_data["direction"] == lighting.Color.ColorLoopDirection.Increment
+    assert converted_data["direction"] is lighting.Color.ColorLoopDirection.Increment
 
     assert isinstance(converted_data["time"], uint16_t)
     assert converted_data["time"] == 20

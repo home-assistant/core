@@ -1,7 +1,5 @@
 """Support for TPLink number entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 from typing import Final, cast
@@ -10,6 +8,7 @@ from kasa import Device, Feature
 
 from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
@@ -56,6 +55,7 @@ NUMBER_DESCRIPTIONS: Final = (
     TPLinkNumberEntityDescription(
         key="temperature_offset",
         mode=NumberMode.BOX,
+        device_class=NumberDeviceClass.TEMPERATURE_DELTA,
     ),
     TPLinkNumberEntityDescription(
         key="pan_step",

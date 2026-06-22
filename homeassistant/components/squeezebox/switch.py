@@ -22,6 +22,8 @@ from .entity import SqueezeboxEntity
 
 _LOGGER = logging.getLogger(__name__)
 
+PARALLEL_UPDATES = 0
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -79,17 +81,21 @@ async def async_setup_entry(
         coordinator.async_add_listener(_async_listener)
 
         # If coordinator already has alarm data from the initial refresh,
-        # call the listener immediately to process existing alarms and create alarm entities.
+        # call the listener immediately to process existing
+        # alarms and create alarm entities.
         if coordinator.data["alarms"]:
             _LOGGER.debug(
-                "Coordinator has alarm data, calling _async_listener immediately for player %s",
+                "Coordinator has alarm data, calling"
+                " _async_listener immediately for player %s",
                 coordinator.player,
             )
             _async_listener()
         async_add_entities([SqueezeBoxAlarmsEnabledEntity(coordinator)])
 
     entry.async_on_unload(
-        async_dispatcher_connect(hass, SIGNAL_PLAYER_DISCOVERED, _player_discovered)
+        async_dispatcher_connect(
+            hass, SIGNAL_PLAYER_DISCOVERED + entry.entry_id, _player_discovered
+        )
     )
 
 

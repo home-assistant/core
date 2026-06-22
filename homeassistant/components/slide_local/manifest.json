@@ -7,11 +7,11 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "quality_scale": "gold",
-  "requirements": ["goslide-api==0.7.0"],
+  "requirements": ["goslide-api==0.7.4"],
   "zeroconf": [
     {
-      "type": "_http._tcp.local.",
-      "name": "slide*"
+      "name": "slide*",
+      "type": "_http._tcp.local."
     }
   ]
 }

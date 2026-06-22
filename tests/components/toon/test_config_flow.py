@@ -213,7 +213,7 @@ async def test_agreement_already_set_up(
 ) -> None:
     """Test showing display form again if display already exists."""
     await setup_component(hass)
-    MockConfigEntry(domain=DOMAIN, unique_id=123).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id="123").add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
@@ -312,7 +312,7 @@ async def test_import_migration(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test if importing step with migration works."""
-    old_entry = MockConfigEntry(domain=DOMAIN, unique_id=123, version=1)
+    old_entry = MockConfigEntry(domain=DOMAIN, unique_id="123", version=1)
     old_entry.add_to_hass(hass)
 
     await setup_component(hass)

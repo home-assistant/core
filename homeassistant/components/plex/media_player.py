@@ -1,7 +1,5 @@
 """Support to interface with the Plex API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import wraps
 import logging
@@ -500,7 +498,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             ) from exc
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the scene state attributes."""
         attributes = {}
         for attr in (

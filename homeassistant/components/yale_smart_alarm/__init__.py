@@ -1,7 +1,5 @@
 """The yale_smart_alarm component."""
 
-from __future__ import annotations
-
 from homeassistant.components.lock import CONF_DEFAULT_CODE, DOMAIN as LOCK_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CODE, CONF_NAME
@@ -22,14 +20,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool
     entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(update_listener))
 
     return True
-
-
-async def update_listener(hass: HomeAssistant, entry: YaleConfigEntry) -> None:
-    """Handle options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
@@ -39,7 +31,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> boo
 
 async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bool:
     """Migrate old entry."""
-    LOGGER.debug("Migrating from version %s", entry.version)
+    LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
     if entry.version == 1:
         new_options = entry.options.copy()
@@ -63,6 +55,19 @@ async def async_migrate_entry(hass: HomeAssistant, entry: YaleConfigEntry) -> bo
         del new_data[CONF_NAME]
         hass.config_entries.async_update_entry(entry, data=new_data, minor_version=2)
 
-    LOGGER.debug("Migration to version %s successful", entry.version)
+    if entry.version == 2 and entry.minor_version == 2:
+        entity_reg = er.async_get(hass)
+        entries = er.async_entries_for_config_entry(entity_reg, entry.entry_id)
+        for entity in entries:
+            if entity.unique_id == "yale_smart_alarm-panic":
+                entity_reg.async_update_entity(
+                    entity.entity_id,
+                    new_unique_id=f"{entry.entry_id}-panic",
+                )
+        hass.config_entries.async_update_entry(entry, minor_version=3)
+
+    LOGGER.debug(
+        "Migration to version %s.%s successful", entry.version, entry.minor_version
+    )
 
     return True

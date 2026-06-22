@@ -1,7 +1,5 @@
 """Test helpers for UniFi Protect."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from datetime import timedelta
@@ -11,19 +9,28 @@ from uiprotect import ProtectApiClient
 from uiprotect.data import (
     Bootstrap,
     Camera,
+    DeviceState,
     Event,
     EventType,
     ModelType,
     ProtectAdoptableDeviceModel,
+    ProtectModelWithId,
+    PublicBootstrap,
+    Sensor,
     WSSubscriptionMessage,
 )
 from uiprotect.data.bootstrap import ProtectDeviceRef
+from uiprotect.data.public_devices import (
+    PublicSensor,
+    PublicWirelessBatteryStatus,
+    PublicWirelessConnectionState,
+)
 from uiprotect.test_util.anonymize import random_hex
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, split_entity_id
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import entity_registry as er, translation
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.util import dt as dt_util
 
@@ -38,6 +45,8 @@ class MockUFPFixture:
     api: ProtectApiClient
     ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
     ws_state_subscription: Callable[[WebsocketState], None] | None = None
+    devices_ws_subscription: Callable[[WSSubscriptionMessage], None] | None = None
+    devices_ws_state_subscription: Callable[[WebsocketState], None] | None = None
 
     def ws_msg(self, msg: WSSubscriptionMessage) -> None:
         """Emit WS message for testing."""
@@ -54,7 +63,6 @@ def reset_objects(bootstrap: Bootstrap):
     bootstrap.sensors = {}
     bootstrap.viewers = {}
     bootstrap.events = {}
-    bootstrap.doorlocks = {}
     bootstrap.chimes = {}
 
 
@@ -100,17 +108,43 @@ def normalize_name(name: str) -> str:
     return name.lower().replace(":", "").replace(" ", "_").replace("-", "_")
 
 
-def ids_from_device_description(
+async def async_get_translated_entity_name(
+    hass: HomeAssistant, platform: Platform, translation_key: str
+) -> str:
+    """Get the translated entity name for a given platform and translation key."""
+    platform_name = "unifiprotect"
+
+    # Get the translations for the UniFi Protect integration
+    translations = await translation.async_get_translations(
+        hass, "en", "entity", {platform_name}
+    )
+
+    # Build the translation key in the format that Home Assistant uses
+    # component.{integration}.entity.{platform}.{translation_key}.name
+    full_translation_key = (
+        f"component.{platform_name}.entity.{platform.value}.{translation_key}.name"
+    )
+
+    # Get the translated name, fall back to the translation key if not found
+    return translations.get(full_translation_key, translation_key)
+
+
+async def ids_from_device_description(
+    hass: HomeAssistant,
     platform: Platform,
     device: ProtectAdoptableDeviceModel,
     description: EntityDescription,
 ) -> tuple[str, str]:
-    """Return expected unique_id and entity_id for a give platform/device/description combination."""
+    """Return expected unique_id and entity_id using HA translation logic."""
 
     entity_name = normalize_name(device.display_name)
 
     if getattr(description, "translation_key", None):
-        description_entity_name = normalize_name(description.translation_key)
+        # Get the actual translated name from Home Assistant
+        translated_name = await async_get_translated_entity_name(
+            hass, platform, description.translation_key
+        )
+        description_entity_name = normalize_name(translated_name)
     elif getattr(description, "device_class", None):
         description_entity_name = normalize_name(description.device_class)
     else:
@@ -151,7 +185,7 @@ def add_device(
         return
 
     device._api = bootstrap.api
-    if isinstance(device, Camera):
+    if isinstance(device, Camera) and device.model is ModelType.CAMERA:
         for channel in device.channels:
             channel._api = bootstrap.api
 
@@ -177,6 +211,72 @@ async def init_entry(
 
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
+
+
+def make_public_sensor(
+    sensor: Sensor,
+    *,
+    percentage: int | None = None,
+    is_low: bool | None = None,
+    state: DeviceState | None = None,
+) -> Mock:
+    """Build a public-API sensor mirroring a private sensor's battery state.
+
+    Real ``wireless_connection_state`` models back the migrated value path so a
+    wrong ``ufp_public_value`` path fails the test; identifiers come from the
+    (synthetic) private sensor fixture, never from real capture data.
+    """
+    public = Mock(spec=PublicSensor)
+    public.id = sensor.id
+    public.mac = sensor.mac
+    public.model = ModelType.SENSOR
+    public.state = DeviceState[sensor.state.name] if state is None else state
+    public.wireless_connection_state = PublicWirelessConnectionState(
+        battery_status=PublicWirelessBatteryStatus(
+            percentage=(
+                sensor.battery_status.percentage if percentage is None else percentage
+            ),
+            is_low=sensor.battery_status.is_low if is_low is None else is_low,
+        )
+    )
+    return public
+
+
+def setup_public_sensor(ufp: MockUFPFixture) -> None:
+    """Expose private sensors over the public API via a real ``PublicBootstrap``.
+
+    Lookups go through the real ``PublicBootstrap.get``; the mirror resolves
+    against the private bootstrap at call time, so it is robust to ``init_entry``
+    regenerating device ids.
+    """
+    public_bootstrap = PublicBootstrap()
+    pb = Mock(spec=PublicBootstrap)
+    pb.sensors = public_bootstrap.sensors
+    pb.relays = {}
+    pb.sirens = {}
+    pb.arm_mode = None
+    pb.arm_profiles = {}
+
+    def _get(model: ModelType, obj_id: str) -> ProtectModelWithId | None:
+        if (
+            model is ModelType.SENSOR
+            and (private := ufp.api.bootstrap.sensors.get(obj_id)) is not None
+        ):
+            public_bootstrap.sensors[obj_id] = make_public_sensor(private)
+        return public_bootstrap.get(model, obj_id)
+
+    pb.get = _get
+    ufp.api.has_public_bootstrap = True
+    ufp.api.public_bootstrap = pb
+
+
+def public_device_ws_message(public_obj: Mock) -> Mock:
+    """Build a public devices WS message carrying a public object."""
+    msg = Mock()
+    msg.changed_data = {}
+    msg.old_obj = None
+    msg.new_obj = public_obj
+    return msg
 
 
 async def remove_entities(
@@ -218,6 +318,8 @@ async def adopt_devices(
 
         devices = getattr(ufp.api.bootstrap, f"{ufp_device.model.value}s")
         devices[ufp_device.id] = ufp_device
+        # Add to id_lookup so get_device_from_id works
+        add_device_ref(ufp.api.bootstrap, ufp_device)
 
         mock_msg = Mock()
         mock_msg.changed_data = {}

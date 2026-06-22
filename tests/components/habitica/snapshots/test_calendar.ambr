@@ -929,8 +929,9 @@
 # ---
 # name: test_calendar_platform[calendar.test_user_dailies-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -948,6 +949,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Dailies',
     'options': dict({
     }),
     'original_device_class': None,
@@ -984,8 +986,9 @@
 # ---
 # name: test_calendar_platform[calendar.test_user_daily_reminders-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1003,6 +1006,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Daily reminders',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1038,8 +1042,9 @@
 # ---
 # name: test_calendar_platform[calendar.test_user_to_do_reminders-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1057,6 +1062,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'To-do reminders',
     'options': dict({
     }),
     'original_device_class': None,
@@ -1092,8 +1098,9 @@
 # ---
 # name: test_calendar_platform[calendar.test_user_to_do_s-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1111,6 +1118,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': "To-Do's",
     'options': dict({
     }),
     'original_device_class': None,

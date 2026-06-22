@@ -1,7 +1,5 @@
 """Support for MQTT valve devices."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
 from typing import Any
@@ -42,6 +40,7 @@ from .const import (
     CONF_PAYLOAD_STOP,
     CONF_POSITION_CLOSED,
     CONF_POSITION_OPEN,
+    CONF_REPORTS_POSITION,
     CONF_RETAIN,
     CONF_STATE_CLOSED,
     CONF_STATE_CLOSING,
@@ -64,8 +63,6 @@ from .util import valid_publish_topic, valid_subscribe_topic
 _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
-
-CONF_REPORTS_POSITION = "reports_position"
 
 DEFAULT_NAME = "MQTT Valve"
 
@@ -112,8 +109,12 @@ _PLATFORM_SCHEMA_BASE = MQTT_BASE_SCHEMA.extend(
         vol.Optional(CONF_PAYLOAD_CLOSE): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_OPEN): vol.Any(cv.string, None),
         vol.Optional(CONF_PAYLOAD_STOP): vol.Any(cv.string, None),
-        vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): int,
-        vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): int,
+        vol.Optional(CONF_POSITION_CLOSED, default=DEFAULT_POSITION_CLOSED): vol.Coerce(
+            int
+        ),
+        vol.Optional(CONF_POSITION_OPEN, default=DEFAULT_POSITION_OPEN): vol.Coerce(
+            int
+        ),
         vol.Optional(CONF_REPORTS_POSITION, default=False): cv.boolean,
         vol.Optional(CONF_RETAIN, default=DEFAULT_RETAIN): cv.boolean,
         vol.Optional(CONF_STATE_CLOSED): cv.string,
@@ -270,7 +271,7 @@ class MqttValve(MqttEntity, ValveEntity):
                     self._range, float(position_payload)
                 )
             except ValueError:
-                _LOGGER.warning(
+                _LOGGER.debug(
                     "Ignoring non numeric payload '%s' received on topic '%s'",
                     position_payload,
                     msg.topic,
@@ -278,9 +279,9 @@ class MqttValve(MqttEntity, ValveEntity):
             else:
                 percentage_payload = min(max(percentage_payload, 0), 100)
                 self._attr_current_valve_position = percentage_payload
-                # Reset closing and opening if the valve is fully opened or fully closed
-                if state is None and percentage_payload in (0, 100):
-                    state = RESET_CLOSING_OPENING
+                # Reset opening/closing when a position update is received
+                # without an explicit opening/closing transitional state.
+                state = state or RESET_CLOSING_OPENING
                 position_set = True
         if state_payload and state is None and not position_set:
             _LOGGER.warning(
@@ -289,8 +290,6 @@ class MqttValve(MqttEntity, ValveEntity):
                 msg.topic,
                 state_payload,
             )
-            return
-        if state is None:
             return
         self._update_state(state)
 

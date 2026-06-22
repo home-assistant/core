@@ -1,7 +1,5 @@
 """Support for Taps Affs."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 
@@ -61,7 +59,7 @@ class TapsAffSensor(BinarySensorEntity):
         return f"{self._name}"
 
     @property
-    def is_on(self):
+    def is_on(self) -> bool:
         """Return true if taps aff."""
         return self.data.is_taps_aff
 

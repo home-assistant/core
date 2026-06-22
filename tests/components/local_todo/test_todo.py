@@ -1,9 +1,11 @@
 """Tests for todo platform of local_todo."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable, Coroutine
+from datetime import datetime
 import textwrap
 from typing import Any
 
+from freezegun import freeze_time
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -19,16 +21,18 @@ from homeassistant.components.todo import (
 )
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from .conftest import TEST_ENTITY
 
 from tests.typing import WebSocketGenerator
 
+type WsGetItemsType = Callable[[], Coroutine[Any, Any, list[dict[str, str]]]]
+type WsMoveItemType = Callable[[str, str | None], Coroutine[Any, Any, dict[str, Any]]]
+
 
 @pytest.fixture
-async def ws_get_items(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[], Awaitable[dict[str, str]]]:
+async def ws_get_items(hass_ws_client: WebSocketGenerator) -> WsGetItemsType:
     """Fixture to fetch items from the todo websocket."""
 
     async def get() -> list[dict[str, str]]:
@@ -48,12 +52,10 @@ async def ws_get_items(
 
 
 @pytest.fixture
-async def ws_move_item(
-    hass_ws_client: WebSocketGenerator,
-) -> Callable[[str, str | None], Awaitable[None]]:
+async def ws_move_item(hass_ws_client: WebSocketGenerator) -> WsMoveItemType:
     """Fixture to move an item in the todo list."""
 
-    async def move(uid: str, previous_uid: str | None) -> None:
+    async def move(uid: str, previous_uid: str | None) -> dict[str, Any]:
         # Fetch items using To-do platform
         client = await hass_ws_client()
         data = {
@@ -64,15 +66,14 @@ async def ws_move_item(
         if previous_uid is not None:
             data["previous_uid"] = previous_uid
         await client.send_json_auto_id(data)
-        resp = await client.receive_json()
-        assert resp.get("success")
+        return await client.receive_json()
 
     return move
 
 
 @pytest.fixture(autouse=True)
 async def set_time_zone(hass: HomeAssistant) -> None:
-    """Set the time zone for the tests that keesp UTC-6 all year round."""
+    """Set the time zone for the tests that keeps UTC-6 all year round."""
     await hass.config.async_set_time_zone("America/Regina")
 
 
@@ -103,7 +104,7 @@ async def test_add_item(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -148,7 +149,7 @@ async def test_add_item(
 async def test_remove_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -192,7 +193,7 @@ async def test_remove_item(
 async def test_bulk_remove(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test removing multiple todo items."""
     for i in range(5):
@@ -239,7 +240,11 @@ EXPECTED_UPDATE_ITEM = {
     [
         (
             {ATTR_STATUS: "completed"},
-            {**EXPECTED_UPDATE_ITEM, "status": "completed"},
+            {
+                **EXPECTED_UPDATE_ITEM,
+                "status": "completed",
+                "completed": "2023-11-18T08:00:00+00:00",
+            },
             "0",
         ),
         (
@@ -262,7 +267,7 @@ EXPECTED_UPDATE_ITEM = {
 async def test_update_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
     expected_state: str,
@@ -291,13 +296,15 @@ async def test_update_item(
     assert state.state == "1"
 
     # Update item
-    await hass.services.async_call(
-        TODO_DOMAIN,
-        TodoServices.UPDATE_ITEM,
-        {ATTR_ITEM: item["uid"], **item_data},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
-        blocking=True,
-    )
+    update_time = datetime(2023, 11, 18, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item["uid"], **item_data},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
 
     # Verify item is updated
     items = await ws_get_items()
@@ -323,6 +330,7 @@ async def test_update_item(
                 "status": "completed",
                 "description": "Additional detail",
                 "due": "2024-01-01",
+                "completed": "2023-11-18T08:00:00+00:00",
             },
         ),
         (
@@ -386,7 +394,7 @@ async def test_update_item(
 async def test_update_existing_field(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     item_data: dict[str, Any],
     expected_item_data: dict[str, Any],
 ) -> None:
@@ -414,13 +422,15 @@ async def test_update_existing_field(
     assert item["status"] == "needs_action"
 
     # Perform update
-    await hass.services.async_call(
-        TODO_DOMAIN,
-        TodoServices.UPDATE_ITEM,
-        {ATTR_ITEM: item["uid"], **item_data},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
-        blocking=True,
-    )
+    update_time = datetime(2023, 11, 18, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item["uid"], **item_data},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
 
     # Verify item is updated
     items = await ws_get_items()
@@ -435,7 +445,7 @@ async def test_update_existing_field(
 async def test_rename(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
 ) -> None:
     """Test renaming a todo item."""
 
@@ -509,8 +519,8 @@ async def test_rename(
 async def test_move_item(
     hass: HomeAssistant,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
-    ws_move_item: Callable[[str, str | None], Awaitable[None]],
+    ws_get_items: WsGetItemsType,
+    ws_move_item: WsMoveItemType,
     src_idx: int,
     dst_idx: int | None,
     expected_items: list[str],
@@ -532,10 +542,9 @@ async def test_move_item(
     assert summaries == ["item 1", "item 2", "item 3", "item 4"]
 
     # Prepare items for moving
-    previous_uid = None
-    if dst_idx is not None:
-        previous_uid = uids[dst_idx]
-    await ws_move_item(uids[src_idx], previous_uid)
+    previous_uid = None if dst_idx is None else uids[dst_idx]
+    resp = await ws_move_item(uids[src_idx], previous_uid)
+    assert resp.get("success")
 
     items = await ws_get_items()
     assert len(items) == 4
@@ -546,22 +555,11 @@ async def test_move_item(
 async def test_move_item_unknown(
     hass: HomeAssistant,
     setup_integration: None,
-    hass_ws_client: WebSocketGenerator,
+    ws_move_item: WsMoveItemType,
 ) -> None:
     """Test moving a todo item that does not exist."""
 
-    # Prepare items for moving
-    client = await hass_ws_client()
-    data = {
-        "id": 1,
-        "type": "todo/item/move",
-        "entity_id": TEST_ENTITY,
-        "uid": "unknown",
-        "previous_uid": "item-2",
-    }
-    await client.send_json(data)
-    resp = await client.receive_json()
-    assert resp.get("id") == 1
+    resp = await ws_move_item("unknown", "item-2")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
     assert "not found in todo list" in resp["error"]["message"]
@@ -570,8 +568,8 @@ async def test_move_item_unknown(
 async def test_move_item_previous_unknown(
     hass: HomeAssistant,
     setup_integration: None,
-    hass_ws_client: WebSocketGenerator,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
+    ws_move_item: WsMoveItemType,
 ) -> None:
     """Test moving a todo item that does not exist."""
 
@@ -585,18 +583,7 @@ async def test_move_item_previous_unknown(
     items = await ws_get_items()
     assert len(items) == 1
 
-    # Prepare items for moving
-    client = await hass_ws_client()
-    data = {
-        "id": 1,
-        "type": "todo/item/move",
-        "entity_id": TEST_ENTITY,
-        "uid": items[0]["uid"],
-        "previous_uid": "unknown",
-    }
-    await client.send_json(data)
-    resp = await client.receive_json()
-    assert resp.get("id") == 1
+    resp = await ws_move_item(items[0]["uid"], "unknown")
     assert not resp.get("success")
     assert resp.get("error", {}).get("code") == "failed"
     assert "not found in todo list" in resp["error"]["message"]
@@ -618,6 +605,7 @@ async def test_move_item_previous_unknown(
                     UID:077cb7f2-6c89-11ee-b2a9-0242ac110002
                     CREATED:20231017T010348
                     LAST-MODIFIED:20231024T014011
+                    COMPLETED:20231025T014011Z
                     SEQUENCE:1
                     STATUS:COMPLETED
                     SUMMARY:Complete Task
@@ -726,7 +714,7 @@ async def test_parse_existing_ics(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     setup_integration: None,
-    ws_get_items: Callable[[], Awaitable[dict[str, str]]],
+    ws_get_items: WsGetItemsType,
     snapshot: SnapshotAssertion,
     expected_state: str,
 ) -> None:
@@ -799,3 +787,89 @@ async def test_susbcribe(
     assert items[0]["summary"] == "milk"
     assert items[0]["status"] == "needs_action"
     assert "uid" in items[0]
+
+
+async def test_reset_item_via_update(
+    hass: HomeAssistant,
+    setup_integration: None,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test resetting a todo item via update action."""
+
+    # Create new item
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    # Fetch item
+    items = await ws_get_items()
+    assert len(items) == 1
+
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item["status"] == "needs_action"
+    item_uid = item.pop("uid")
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"
+
+    # Complete item
+    update_time = datetime(2023, 11, 18, 8, 0, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item_uid, ATTR_STATUS: "completed"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    # Verify item is completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert "uid" in item
+    del item["uid"]
+    assert item == {
+        **EXPECTED_UPDATE_ITEM,
+        "status": "completed",
+        "completed": "2023-11-18T08:00:00+00:00",
+    }
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "0"
+
+    # Reset item
+    update_time = datetime(2023, 11, 18, 8, 1, 0, tzinfo=dt_util.UTC)
+    with freeze_time(update_time):
+        await hass.services.async_call(
+            TODO_DOMAIN,
+            TodoServices.UPDATE_ITEM,
+            {ATTR_ITEM: item_uid, ATTR_STATUS: "needs_action"},
+            target={ATTR_ENTITY_ID: TEST_ENTITY},
+            blocking=True,
+        )
+
+    # Verify item is not completed
+    items = await ws_get_items()
+    assert len(items) == 1
+    item = items[0]
+    assert item["summary"] == "soda"
+    assert item.get("completed") is None  # automatically unset
+    assert "uid" in item
+    del item["uid"]
+    assert item == {
+        **EXPECTED_UPDATE_ITEM,
+        "status": "needs_action",
+    }
+
+    state = hass.states.get(TEST_ENTITY)
+    assert state
+    assert state.state == "1"

@@ -1,8 +1,6 @@
 """Support for AVM FRITZ!SmartHome lightbulbs."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -17,6 +15,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import COLOR_MODE, LOGGER
 from .coordinator import FritzboxConfigEntry, FritzboxDataUpdateCoordinator
 from .entity import FritzBoxDeviceEntity
+
+# Coordinator handles data updates, so we can allow unlimited parallel updates
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -83,16 +84,19 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
             self._attr_min_color_temp_kelvin = int(min(supported_color_temps))
 
     @property
+    @override
     def is_on(self) -> bool:
         """If the light is currently on or off."""
         return self.data.state  # type: ignore [no-any-return]
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the current Brightness."""
         return self.data.level  # type: ignore [no-any-return]
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Return the hs color value."""
         hue = self.data.hue
@@ -101,11 +105,13 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         return (hue, float(saturation) * 100.0 / 255.0)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int:
         """Return the CT color value."""
         return self.data.color_temp  # type: ignore [no-any-return]
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self.data.has_color:
@@ -116,6 +122,7 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
             return ColorMode.BRIGHTNESS
         return ColorMode.ONOFF
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if kwargs.get(ATTR_BRIGHTNESS) is not None:
@@ -137,7 +144,8 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
                 )
             else:
                 LOGGER.debug(
-                    "device has no fullcolorsupport, using supported colors with 'setcolor'"
+                    "device has no fullcolorsupport,"
+                    " using supported colors with 'setcolor'"
                 )
                 # find supported hs values closest to what user selected
                 hue = min(
@@ -159,6 +167,7 @@ class FritzboxLight(FritzBoxDeviceEntity, LightEntity):
         await self.hass.async_add_executor_job(self.data.set_state_on, True)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.hass.async_add_executor_job(self.data.set_state_off, True)

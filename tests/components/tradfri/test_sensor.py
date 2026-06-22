@@ -1,7 +1,5 @@
 """Tradfri sensor platform tests."""
 
-from __future__ import annotations
-
 import pytest
 from pytradfri.const import (
     ATTR_AIR_PURIFIER_AIR_QUALITY,

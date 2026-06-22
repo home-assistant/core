@@ -1,7 +1,5 @@
 """Support for PurpleAir sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 
@@ -132,7 +130,7 @@ SENSOR_DESCRIPTIONS = [
         entity_registry_enabled_default=False,
         native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
         state_class=SensorStateClass.MEASUREMENT,
-        value_fn=lambda sensor: sensor.pressure,
+        value_fn=lambda sensor: sensor.rssi,
     ),
     PurpleAirSensorEntityDescription(
         key="temperature",

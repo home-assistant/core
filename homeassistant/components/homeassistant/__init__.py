@@ -44,11 +44,14 @@ from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.issue_registry import IssueSeverity
 from homeassistant.helpers.service import (
     async_extract_config_entry_ids,
-    async_extract_referenced_entity_ids,
     async_register_admin_service,
 )
 from homeassistant.helpers.signal import KEY_HA_STOP
 from homeassistant.helpers.system_info import async_get_system_info
+from homeassistant.helpers.target import (
+    TargetSelection,
+    async_extract_referenced_entity_ids,
+)
 from homeassistant.helpers.template import async_load_custom_templates
 from homeassistant.helpers.typing import ConfigType
 
@@ -111,7 +114,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
 
     async def async_handle_turn_service(service: ServiceCall) -> None:
         """Handle calls to homeassistant.turn_on/off."""
-        referenced = async_extract_referenced_entity_ids(hass, service)
+        referenced = async_extract_referenced_entity_ids(
+            hass, TargetSelection(service.data)
+        )
         all_referenced = referenced.referenced | referenced.indirectly_referenced
 
         # Generic turn on/off method requires entity id
@@ -284,9 +289,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         """Service handler for reloading core config."""
         try:
             conf = await conf_util.async_hass_config_yaml(hass)
-        except HomeAssistantError as err:
-            _LOGGER.error(err)
-            return
+        except (HomeAssistantError, FileNotFoundError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="core_config_reload_failed",
+                translation_placeholders={"error": str(err)},
+            ) from err
 
         # auth only processed during startup
         await core_config.async_process_ha_core_config(hass, conf.get(DOMAIN) or {})
@@ -334,7 +342,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
         reload_entries: set[str] = set()
         if ATTR_ENTRY_ID in call.data:
             reload_entries.add(call.data[ATTR_ENTRY_ID])
-        reload_entries.update(await async_extract_config_entry_ids(hass, call))
+        reload_entries.update(await async_extract_config_entry_ids(call))
         if not reload_entries:
             raise ValueError("There were no matching config entries to reload")
         await asyncio.gather(
@@ -404,7 +412,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
     exposed_entities = ExposedEntities(hass)
     await exposed_entities.async_initialize()
     hass.data[DATA_EXPOSED_ENTITIES] = exposed_entities
-    async_set_stop_handler(hass, _async_stop)
+    async_set_stop_handler(hass)
 
     async def _async_check_deprecation(event: Event) -> None:
         """Check and create deprecation issues after startup."""
@@ -447,6 +455,17 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:  # noqa:
                         "arch": arch,
                     },
                 )
+        if not info["docker"] and not info["virtualenv"]:
+            ir.async_create_issue(
+                hass,
+                DOMAIN,
+                "unsupported_local_deps",
+                breaks_in_ha_version="2026.11.0",
+                learn_more_url=DEPRECATION_URL,
+                is_fixable=False,
+                severity=IssueSeverity.WARNING,
+                translation_key="unsupported_local_deps",
+            )
 
     # Delay deprecation check to make sure installation method is determined correctly
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_check_deprecation)
@@ -464,7 +483,11 @@ async def _async_stop(hass: HomeAssistant, restart: bool) -> None:
 @callback
 def async_set_stop_handler(
     hass: HomeAssistant,
-    stop_handler: Callable[[HomeAssistant, bool], Coroutine[Any, Any, None]],
+    stop_handler: Callable[[HomeAssistant, bool], Coroutine[Any, Any, None]]
+    | None = None,
 ) -> None:
-    """Set function which is called by the stop and restart services."""
-    hass.data[DATA_STOP_HANDLER] = stop_handler
+    """Set function which is called by the stop and restart services.
+
+    If stop handler is omitted it will restore the default stop handler.
+    """
+    hass.data[DATA_STOP_HANDLER] = _async_stop if stop_handler is None else stop_handler

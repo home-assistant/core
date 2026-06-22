@@ -1,9 +1,8 @@
 """Home Assistant hardware firmware update coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import ClientSession
 from ha_silabs_firmware_client import (
@@ -12,6 +11,7 @@ from ha_silabs_firmware_client import (
     ManifestMissing,
 )
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -24,19 +24,26 @@ FIRMWARE_REFRESH_INTERVAL = timedelta(hours=8)
 class FirmwareUpdateCoordinator(DataUpdateCoordinator[FirmwareManifest]):
     """Coordinator to manage firmware updates."""
 
-    def __init__(self, hass: HomeAssistant, session: ClientSession, url: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        session: ClientSession,
+        url: str,
+    ) -> None:
         """Initialize the firmware update coordinator."""
         super().__init__(
             hass,
             _LOGGER,
             name="firmware update coordinator",
             update_interval=FIRMWARE_REFRESH_INTERVAL,
+            config_entry=config_entry,
         )
-        self.hass = hass
         self.session = session
 
         self.client = FirmwareUpdateClient(url, session)
 
+    @override
     async def _async_update_data(self) -> FirmwareManifest:
         try:
             return await self.client.async_update_data()

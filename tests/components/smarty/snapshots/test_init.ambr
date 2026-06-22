@@ -9,7 +9,7 @@
     }),
     'disabled_by': None,
     'entry_type': None,
-    'hw_version': 111,
+    'hw_version': '111',
     'id': <ANY>,
     'identifiers': set({
       tuple(
@@ -17,7 +17,6 @@
         '01JAZ5DPW8C62D620DGYNG2R8H',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'Salda',
@@ -27,8 +26,7 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
-    'sw_version': 127,
+    'sw_version': '127',
     'via_device_id': None,
   })
 # ---

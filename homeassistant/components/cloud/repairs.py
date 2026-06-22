@@ -1,19 +1,17 @@
 """Repairs implementation for the cloud integration."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
 
+from hass_nabucasa.payments_api import SubscriptionInfo
 import voluptuous as vol
 
 from homeassistant.components.repairs import (
     ConfirmRepairFlow,
     RepairsFlow,
+    RepairsFlowResult,
     repairs_flow_manager,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers import issue_registry as ir
 
 from .const import DATA_CLOUD, DOMAIN
@@ -26,7 +24,7 @@ MAX_RETRIES = 60  # This allows for 10 minutes of retries
 @callback
 def async_manage_legacy_subscription_issue(
     hass: HomeAssistant,
-    subscription_info: dict[str, Any],
+    subscription_info: SubscriptionInfo,
 ) -> None:
     """Manage the legacy subscription issue.
 
@@ -50,16 +48,16 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
     """Handler for an issue fixing flow."""
 
     wait_task: asyncio.Task | None = None
-    _data: dict[str, Any] | None = None
+    _data: SubscriptionInfo | None = None
 
-    async def async_step_init(self, _: None = None) -> FlowResult:
+    async def async_step_init(self, _: None = None) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         return await self.async_step_confirm_change_plan()
 
     async def async_step_confirm_change_plan(
         self,
         user_input: dict[str, str] | None = None,
-    ) -> FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step of a fix flow."""
         if user_input is not None:
             return await self.async_step_change_plan()
@@ -68,7 +66,7 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
             step_id="confirm_change_plan", data_schema=vol.Schema({})
         )
 
-    async def async_step_change_plan(self, _: None = None) -> FlowResult:
+    async def async_step_change_plan(self, _: None = None) -> RepairsFlowResult:
         """Wait for the user to authorize the app installation."""
 
         cloud = self.hass.data[DATA_CLOUD]
@@ -109,11 +107,11 @@ class LegacySubscriptionRepairFlow(RepairsFlow):
 
         return self.async_external_step_done(next_step_id="complete")
 
-    async def async_step_complete(self, _: None = None) -> FlowResult:
+    async def async_step_complete(self, _: None = None) -> RepairsFlowResult:
         """Handle the final step of a fix flow."""
         return self.async_create_entry(data={})
 
-    async def async_step_timeout(self, _: None = None) -> FlowResult:
+    async def async_step_timeout(self, _: None = None) -> RepairsFlowResult:
         """Handle the final step of a fix flow."""
         return self.async_abort(reason="operation_took_too_long")
 

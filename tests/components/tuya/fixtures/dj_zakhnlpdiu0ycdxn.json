@@ -1,0 +1,75 @@
+{
+  "endpoint": "https://apigw.tuyaeu.com",
+  "mqtt_connected": true,
+  "disabled_by": null,
+  "disabled_polling": false,
+  "name": "Stoel",
+  "category": "dj",
+  "product_id": "zakhnlpdiu0ycdxn",
+  "product_name": "LED SMART",
+  "online": false,
+  "sub": false,
+  "time_zone": "+01:00",
+  "active_time": "2023-08-10T18:55:12+00:00",
+  "create_time": "2023-08-10T18:55:12+00:00",
+  "update_time": "2023-08-10T18:55:12+00:00",
+  "function": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    }
+  },
+  "status_range": {
+    "switch_led": {
+      "type": "Boolean",
+      "value": {}
+    },
+    "temp_value": {
+      "type": "Integer",
+      "value": {
+        "min": 0,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    },
+    "bright_value": {
+      "type": "Integer",
+      "value": {
+        "min": 25,
+        "scale": 0,
+        "unit": "",
+        "max": 255,
+        "step": 1
+      }
+    }
+  },
+  "status": {
+    "switch_led": false,
+    "bright_value": 71,
+    "temp_value": 0
+  },
+  "set_up": true,
+  "support_local": true
+}

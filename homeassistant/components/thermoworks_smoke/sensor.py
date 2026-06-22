@@ -3,13 +3,11 @@
 Requires Smoke Gateway Wifi with an internet connection.
 """
 
-from __future__ import annotations
-
 import logging
 
 from requests import RequestException
 from requests.exceptions import HTTPError
-from stringcase import camelcase, snakecase
+from stringcase import camelcase
 import thermoworks_smoke
 import voluptuous as vol
 
@@ -30,6 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import snakecase
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -163,5 +162,5 @@ class ThermoworksSmokeSensor(SensorEntity):
                     self._attr_native_unit_of_measurement
                 )
 
-        except (RequestException, ValueError, KeyError):
+        except RequestException, ValueError, KeyError:
             _LOGGER.warning("Could not update status for %s", self.name)

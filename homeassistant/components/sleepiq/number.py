@@ -1,33 +1,37 @@
 """Support for SleepIQ SleepNumber firmness number entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, cast
 
 from asyncsleepiq import (
+    CoreTemps,
     FootWarmingTemps,
     SleepIQActuator,
     SleepIQBed,
+    SleepIQCoreClimate,
     SleepIQFootWarmer,
     SleepIQSleeper,
 )
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
+from homeassistant.const import UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
     ACTUATOR,
-    DOMAIN,
+    CORE_CLIMATE_TIMER,
     ENTITY_TYPES,
     FIRMNESS,
     FOOT_WARMING_TIMER,
     ICON_OCCUPIED,
 )
-from .coordinator import SleepIQData, SleepIQDataUpdateCoordinator
+from .coordinator import SleepIQConfigEntry, SleepIQDataUpdateCoordinator
 from .entity import SleepIQBedEntity, sleeper_for_side
 
 
@@ -55,7 +59,9 @@ def _get_actuator_name(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
     if actuator.side:
         return (
             "SleepNumber"
-            f" {bed.name} {actuator.side_full} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
+            f" {bed.name} {actuator.side_full}"
+            f" {actuator.actuator_full}"
+            f" {ENTITY_TYPES[ACTUATOR]}"
         )
 
     return f"SleepNumber {bed.name} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
@@ -80,7 +86,7 @@ async def _async_set_foot_warmer_time(
     foot_warmer: SleepIQFootWarmer, time: int
 ) -> None:
     temperature = FootWarmingTemps(foot_warmer.temperature)
-    if temperature != FootWarmingTemps.OFF:
+    if temperature is not FootWarmingTemps.OFF:
         await foot_warmer.turn_on(temperature, time)
 
     foot_warmer.timer = time
@@ -93,6 +99,27 @@ def _get_foot_warming_name(bed: SleepIQBed, foot_warmer: SleepIQFootWarmer) -> s
 
 def _get_foot_warming_unique_id(bed: SleepIQBed, foot_warmer: SleepIQFootWarmer) -> str:
     return f"{bed.id}_{foot_warmer.side.value}_{FOOT_WARMING_TIMER}"
+
+
+async def _async_set_core_climate_time(
+    core_climate: SleepIQCoreClimate, time: int
+) -> None:
+    temperature = CoreTemps(core_climate.temperature)
+    if temperature is not CoreTemps.OFF:
+        await core_climate.turn_on(temperature, time)
+
+    core_climate.timer = time
+
+
+def _get_core_climate_name(bed: SleepIQBed, core_climate: SleepIQCoreClimate) -> str:
+    sleeper = sleeper_for_side(bed, core_climate.side)
+    return f"SleepNumber {bed.name} {sleeper.name} {ENTITY_TYPES[CORE_CLIMATE_TIMER]}"
+
+
+def _get_core_climate_unique_id(
+    bed: SleepIQBed, core_climate: SleepIQCoreClimate
+) -> str:
+    return f"{bed.id}_{core_climate.side.value}_{CORE_CLIMATE_TIMER}"
 
 
 NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
@@ -131,17 +158,33 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
         set_value_fn=_async_set_foot_warmer_time,
         get_name_fn=_get_foot_warming_name,
         get_unique_id_fn=_get_foot_warming_unique_id,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
+    ),
+    CORE_CLIMATE_TIMER: SleepIQNumberEntityDescription(
+        key=CORE_CLIMATE_TIMER,
+        native_min_value=0,
+        native_max_value=SleepIQCoreClimate.max_core_climate_time,
+        native_step=30,
+        name=ENTITY_TYPES[CORE_CLIMATE_TIMER],
+        icon="mdi:timer",
+        value_fn=lambda core_climate: core_climate.timer,
+        set_value_fn=_async_set_core_climate_time,
+        get_name_fn=_get_core_climate_name,
+        get_unique_id_fn=_get_core_climate_unique_id,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
     ),
 }
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SleepIQConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SleepIQ bed sensors."""
-    data: SleepIQData = hass.data[DOMAIN][entry.entry_id]
+    data = entry.runtime_data
 
     entities: list[SleepIQNumberEntity] = []
     for bed in data.client.beds.values():
@@ -171,6 +214,15 @@ async def async_setup_entry(
                 NUMBER_DESCRIPTIONS[FOOT_WARMING_TIMER],
             )
             for foot_warmer in bed.foundation.foot_warmers
+        )
+        entities.extend(
+            SleepIQNumberEntity(
+                data.data_coordinator,
+                bed,
+                core_climate,
+                NUMBER_DESCRIPTIONS[CORE_CLIMATE_TIMER],
+            )
+            for core_climate in bed.foundation.core_climates
         )
 
     async_add_entities(entities)

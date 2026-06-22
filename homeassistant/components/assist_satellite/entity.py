@@ -8,10 +8,10 @@ from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
 import time
-from typing import Any, Literal, final
+from typing import Any, Literal, final, override
 
 from hassil import Intents, recognize
-from hassil.expression import Expression, ListReference, Sequence
+from hassil.expression import Expression, Group, ListReference
 from hassil.intents import WildcardSlotList
 
 from homeassistant.components import conversation, media_source, stt, tts
@@ -146,6 +146,7 @@ class AssistSatelliteEntity(entity.Entity):
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return state of the entity."""
         return self.__assist_satellite_state
@@ -291,7 +292,8 @@ class AssistSatelliteEntity(entity.Entity):
         self._is_announcing = True
         self._set_state(AssistSatelliteState.RESPONDING)
 
-        # Provide our start info to the LLM so it understands context of incoming message
+        # Provide our start info to the LLM so it understands
+        # context of incoming message
         if extra_system_prompt is not None:
             self._extra_system_prompt = extra_system_prompt
         else:
@@ -413,7 +415,7 @@ class AssistSatelliteEntity(entity.Entity):
         for intent in intents.intents.values():
             for intent_data in intent.data:
                 for sentence in intent_data.sentences:
-                    _collect_list_references(sentence, wildcard_names)
+                    _collect_list_references(sentence.expression, wildcard_names)
 
         for wildcard_name in wildcard_names:
             intents.slot_lists[wildcard_name] = WildcardSlotList(wildcard_name)
@@ -501,7 +503,8 @@ class AssistSatelliteEntity(entity.Entity):
         with chat_session.async_get_chat_session(
             self.hass, self._conversation_id
         ) as session:
-            # Store the conversation ID. If it is no longer valid, get_chat_session will reset it
+            # Store the conversation ID. If it is no longer valid,
+            # get_chat_session will reset it
             self._conversation_id = session.conversation_id
             self._pipeline_task = (
                 self.platform.config_entry.async_create_background_task(
@@ -522,6 +525,7 @@ class AssistSatelliteEntity(entity.Entity):
                         pipeline_id=self._resolve_pipeline(),
                         conversation_id=session.conversation_id,
                         device_id=device_id,
+                        satellite_id=self.entity_id,
                         tts_audio_output=self.tts_options,
                         wake_word_phrase=wake_word_phrase,
                         audio_settings=AudioSettings(
@@ -727,9 +731,9 @@ class AssistSatelliteEntity(entity.Entity):
 
 def _collect_list_references(expression: Expression, list_names: set[str]) -> None:
     """Collect list reference names recursively."""
-    if isinstance(expression, Sequence):
-        seq: Sequence = expression
-        for item in seq.items:
+    if isinstance(expression, Group):
+        grp: Group = expression
+        for item in grp.items:
             _collect_list_references(item, list_names)
     elif isinstance(expression, ListReference):
         # {list}

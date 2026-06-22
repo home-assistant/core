@@ -1,12 +1,11 @@
 """Platform for the Daikin AC."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
 from aiohttp import ClientConnectionError
 from pydaikin.daikin_base import Appliance
+from pydaikin.exceptions import DaikinException
 from pydaikin.factory import DaikinFactory
 
 from homeassistant.const import (
@@ -23,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC
 from homeassistant.util.ssl import client_context_no_verify
 
-from .const import KEY_MAC, TIMEOUT
+from .const import KEY_MAC, TIMEOUT_SEC
 from .coordinator import DaikinConfigEntry, DaikinCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +41,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
     session = async_get_clientsession(hass)
     host = conf[CONF_HOST]
     try:
-        async with asyncio.timeout(TIMEOUT):
+        async with asyncio.timeout(TIMEOUT_SEC):
             device: Appliance = await DaikinFactory(
                 host,
                 session,
@@ -53,10 +52,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: DaikinConfigEntry) -> bo
             )
         _LOGGER.debug("Connection to %s successful", host)
     except TimeoutError as err:
-        _LOGGER.debug("Connection to %s timed out in 60 seconds", host)
+        _LOGGER.debug("Connection to %s timed out in %s seconds", host, TIMEOUT_SEC)
         raise ConfigEntryNotReady from err
     except ClientConnectionError as err:
         _LOGGER.debug("ClientConnectionError to %s", host)
+        raise ConfigEntryNotReady from err
+    except DaikinException as err:
+        # pydaikin has no subclass hierarchy for transient vs permanent errors.
+        # DaikinException during factory/init almost always means the device is not
+        # yet ready (e.g. "Empty values." when the unit hasn't finished booting),
+        # so treat all factory-time DaikinExceptions as transient.
+        _LOGGER.debug("DaikinException from %s: %s", host, err)
         raise ConfigEntryNotReady from err
 
     coordinator = DaikinCoordinator(hass, entry, device)

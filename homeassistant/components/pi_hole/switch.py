@@ -1,7 +1,5 @@
 """Support for turning on and off Pi-hole system."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -14,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PiHoleConfigEntry
 from .const import SERVICE_DISABLE, SERVICE_DISABLE_ATTR_DURATION
+from .coordinator import PiHoleConfigEntry
 from .entity import PiHoleEntity
 
 _LOGGER = logging.getLogger(__name__)
@@ -77,6 +75,7 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         try:
             await self.api.enable()
             await self.async_update()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
             _LOGGER.error("Unable to enable Pi-hole: %s", err)
 
@@ -98,5 +97,6 @@ class PiHoleSwitch(PiHoleEntity, SwitchEntity):
         try:
             await self.api.disable(duration_seconds)
             await self.async_update()
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except HoleError as err:
             _LOGGER.error("Unable to disable Pi-hole: %s", err)

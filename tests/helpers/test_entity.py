@@ -16,7 +16,7 @@ from pytest_unordered import unordered
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigSubentryData
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
@@ -33,7 +33,12 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, NoEntitySpecifiedError
-from homeassistant.helpers import device_registry as dr, entity, entity_registry as er
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    entity,
+    entity_registry as er,
+)
 from homeassistant.helpers.entity_component import async_update_entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
@@ -584,13 +589,13 @@ async def test_async_remove_no_platform(hass: HomeAssistant) -> None:
     ent = entity.Entity()
     ent.hass = hass
     ent.entity_id = "test.test"
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     ent.async_write_ha_state()
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     assert len(hass.states.async_entity_ids()) == 1
     await ent.async_remove()
     assert len(hass.states.async_entity_ids()) == 0
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
 
 
 async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
@@ -600,9 +605,9 @@ async def test_async_remove_runs_callbacks(hass: HomeAssistant) -> None:
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.entity_id = "test.test"
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
-    assert ent._platform_state == entity.EntityPlatformState.ADDED
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
     ent.async_on_remove(lambda: result.append(1))
     await ent.async_remove()
     assert len(result) == 1
@@ -653,12 +658,12 @@ async def test_async_remove_twice(hass: HomeAssistant) -> None:
     await ent.async_remove()
     assert len(result) == 1
     assert len(ent.remove_calls) == 1
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
 
     await ent.async_remove()
     assert len(result) == 1
     assert len(ent.remove_calls) == 1
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
 
 
 async def test_set_context(hass: HomeAssistant) -> None:
@@ -781,7 +786,7 @@ async def test_warn_slow_write_state(
     mock_entity = entity.Entity()
     mock_entity.hass = hass
     mock_entity.entity_id = "comp_test.test_entity"
-    mock_entity.platform = MagicMock(platform_name="hue")
+    mock_entity.platform_data = MagicMock(platform_name="hue")
     mock_entity._platform_state = entity.EntityPlatformState.ADDED
 
     with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
@@ -809,7 +814,7 @@ async def test_warn_slow_write_state_custom_component(
     mock_entity = CustomComponentEntity()
     mock_entity.hass = hass
     mock_entity.entity_id = "comp_test.test_entity"
-    mock_entity.platform = MagicMock(platform_name="hue")
+    mock_entity.platform_data = MagicMock(platform_name="hue")
     mock_entity._platform_state = entity.EntityPlatformState.ADDED
 
     with patch("homeassistant.helpers.entity.timer", side_effect=[0, 10]):
@@ -1026,8 +1031,9 @@ async def _test_friendly_name(
         "expected_friendly_name",
     ),
     [
-        (False, "Entity Blu", "Device Bla", "Entity Blu"),
-        (False, None, "Device Bla", None),
+        (False, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla", "Device Bla Entity Blu"),
+        (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", UNDEFINED, "Entity Blu"),
@@ -1063,12 +1069,13 @@ async def test_friendly_name_attr(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla None"),
+        (True, UNDEFINED, "Device Bla"),
     ],
 )
 async def test_friendly_name_description(
@@ -1100,9 +1107,10 @@ async def test_friendly_name_description(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         (True, UNDEFINED, "Device Bla English cls"),
@@ -1169,7 +1177,7 @@ async def test_friendly_name_description_device_class_name(
         "expected_friendly_name",
     ),
     [
-        (False, None, None, None, "Entity Blu"),
+        (False, None, None, None, "Device Bla Entity Blu"),
         (True, None, None, None, "Device Bla Entity Blu"),
         (
             True,
@@ -1187,7 +1195,8 @@ async def test_friendly_name_description_device_class_name(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent"
                 },
             },
             {"placeholder": "special"},
@@ -1198,7 +1207,8 @@ async def test_friendly_name_description_device_class_name(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "English ent {placeholder}"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "English ent {placeholder}"
                 },
             },
             {"placeholder": "special"},
@@ -1262,7 +1272,8 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent {2ndplaceholder}"
                 },
             },
             {"placeholder": "special"},
@@ -1276,7 +1287,8 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent {2ndplaceholder}"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent {2ndplaceholder}"
                 },
             },
             {"placeholder": "special"},
@@ -1287,7 +1299,8 @@ async def test_entity_name_translation_placeholders(
             "test_entity",
             {
                 "en": {
-                    "component.test.entity.test_domain.test_entity.name": "{placeholder} English ent"
+                    "component.test.entity.test_domain"
+                    ".test_entity.name": "{placeholder} English ent"
                 },
             },
             None,
@@ -1367,12 +1380,13 @@ async def test_entity_name_translation_placeholder_errors(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
-        (True, UNDEFINED, "Device Bla None"),
+        (True, UNDEFINED, "Device Bla"),
     ],
 )
 async def test_friendly_name_property(
@@ -1403,13 +1417,14 @@ async def test_friendly_name_property(
 @pytest.mark.parametrize(
     ("has_entity_name", "entity_name", "expected_friendly_name"),
     [
-        (False, "Entity Blu", "Entity Blu"),
-        (False, None, None),
-        (False, UNDEFINED, None),
+        (False, "Entity Blu", "Device Bla Entity Blu"),
+        (False, "Device Bla Entity Blu", "Device Bla Entity Blu"),
+        (False, None, "Device Bla"),
+        (False, UNDEFINED, "Device Bla"),
         (True, "Entity Blu", "Device Bla Entity Blu"),
         (True, None, "Device Bla"),
         # Won't use the device class name because the entity overrides the name property
-        (True, UNDEFINED, "Device Bla None"),
+        (True, UNDEFINED, "Device Bla"),
     ],
 )
 async def test_friendly_name_property_device_class_name(
@@ -1464,7 +1479,7 @@ async def test_friendly_name_property_device_class_name(
 @pytest.mark.parametrize(
     ("has_entity_name", "expected_friendly_name"),
     [
-        (False, None),
+        (False, "Device Bla"),
         (True, "Device Bla English cls"),
     ],
 )
@@ -1513,6 +1528,38 @@ async def test_friendly_name_device_class_name(
             ent,
             expected_friendly_name,
         )
+
+
+async def test_friendly_name_ignores_area(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that the entity's area is not included in the friendly name."""
+    area = area_registry.async_create("Living Room")
+    entry = entity_registry.async_get_or_create(
+        "test_domain",
+        "test",
+        "qwer",
+        original_name="Entity Blu",
+        has_entity_name=True,
+    )
+    entity_registry.async_update_entity(entry.entity_id, area_id=area.id)
+
+    ent = MockEntity(
+        unique_id="qwer",
+        device_info={
+            "identifiers": {("hue", "1234")},
+            "connections": {(dr.CONNECTION_NETWORK_MAC, "abcd")},
+            "name": "Device Bla",
+        },
+    )
+    ent._attr_has_entity_name = True
+    ent._attr_name = "Entity Blu"
+
+    await _test_friendly_name(hass, ent, "Device Bla Entity Blu")
+
+    assert entity_registry.async_get(ent.entity_id).area_id == area.id
 
 
 @pytest.mark.parametrize(
@@ -1633,7 +1680,7 @@ async def test_repr(hass: HomeAssistant) -> None:
             """Return the state."""
             raise ValueError("Boom")
 
-    platform = MockEntityPlatform(hass, domain="hello")
+    platform = MockEntityPlatform(hass, domain="test")
     my_entity = MyEntity(entity_id="test.test", available=False)
 
     # Not yet added
@@ -1791,9 +1838,9 @@ async def test_reuse_entity_object_after_abort(
     platform = MockEntityPlatform(hass, domain="test")
     ent = entity.Entity()
     ent.entity_id = "invalid"
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
     assert "Invalid entity ID: invalid" in caplog.text
     await platform.async_add_entities([ent])
     assert ent._platform_state == entity.EntityPlatformState.REMOVED
@@ -1813,11 +1860,11 @@ async def test_reuse_entity_object_after_entity_registry_remove(
     platform = MockEntityPlatform(hass, domain="test", platform_name="test")
     ent = entity.Entity()
     ent._attr_unique_id = "5678"
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert ent.registry_entry is entry
     assert len(hass.states.async_entity_ids()) == 1
-    assert ent._platform_state == entity.EntityPlatformState.ADDED
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
 
     entity_registry.async_remove(entry.entity_id)
     await hass.async_block_till_done()
@@ -1840,11 +1887,11 @@ async def test_reuse_entity_object_after_entity_registry_disabled(
     platform = MockEntityPlatform(hass, domain="test", platform_name="test")
     ent = entity.Entity()
     ent._attr_unique_id = "5678"
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert ent.registry_entry is entry
     assert len(hass.states.async_entity_ids()) == 1
-    assert ent._platform_state == entity.EntityPlatformState.ADDED
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
 
     entity_registry.async_update_entity(
         entry.entity_id, disabled_by=er.RegistryEntryDisabler.USER
@@ -1886,11 +1933,11 @@ async def test_change_entity_id(
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = MockEntity()
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test").state == STATE_UNKNOWN
     assert len(ent.added_calls) == 1
-    assert ent._platform_state == entity.EntityPlatformState.ADDED
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
 
     entry = entity_registry.async_update_entity(
         entry.entity_id, new_entity_id="test.test2"
@@ -1909,6 +1956,70 @@ async def test_change_entity_id(
     assert len(ent.added_calls) == 3
     assert len(ent.remove_calls) == 2
     assert ent._platform_state == entity.EntityPlatformState.ADDED
+
+
+@pytest.mark.parametrize("config_subentry_id", [None, "mock-subentry-id-1"])
+async def test_change_entity_id_config_entry(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    config_subentry_id: str | None,
+) -> None:
+    """Test changing entity id does not effect the config entry."""
+
+    class MockEntity(entity.Entity):
+        _attr_unique_id = "5678"
+
+    async def async_setup_entry(
+        hass: HomeAssistant,
+        config_entry: ConfigEntry,
+        async_add_entities: AddConfigEntryEntitiesCallback,
+    ) -> None:
+        """Mock setup entry method."""
+        async_add_entities([MockEntity()], config_subentry_id=config_subentry_id)
+
+    platform = MockPlatform(async_setup_entry=async_setup_entry)
+    config_entry = MockConfigEntry(
+        entry_id="super-mock-id",
+        subentries_data=[
+            ConfigSubentryData(
+                data={},
+                subentry_id="mock-subentry-id-1",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="test",
+            ),
+        ],
+    )
+    config_entry.add_to_hass(hass)
+    entity_platform = MockEntityPlatform(
+        hass, platform_name=config_entry.domain, platform=platform
+    )
+
+    assert await entity_platform.async_setup_entry(config_entry)
+    await hass.async_block_till_done()
+
+    ent = entity_registry.async_get(next(iter(hass.states.async_entity_ids())))
+    assert ent == snapshot
+    # The snapshot check asserts on any (sub)entry ID
+    assert ent.config_entry_id == config_entry.entry_id
+    assert ent.config_subentry_id == config_subentry_id
+
+    state = hass.states.async_all()[0]
+    assert state == snapshot
+
+    entity_registry.async_update_entity(
+        ent.entity_id, new_entity_id="test_domain.test2"
+    )
+    await hass.async_block_till_done(wait_background_tasks=True)
+    new_ent = entity_registry.async_get("test_domain.test2")
+    assert new_ent == snapshot
+    # The snapshot check asserts on any (sub)entry ID
+    assert new_ent.config_entry_id == config_entry.entry_id
+    assert new_ent.config_subentry_id == config_subentry_id
+
+    new_state = hass.states.get("test_domain.test2")
+    assert new_state == snapshot
 
 
 def test_entity_description_as_dataclass(snapshot: SnapshotAssertion) -> None:
@@ -2549,7 +2660,7 @@ async def test_remove_entity_registry(
     assert len(result) == 1
     assert len(ent.added_calls) == 1
     assert len(ent.remove_calls) == 1
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
 
     assert hass.states.get("test.test") is None
 
@@ -2700,10 +2811,10 @@ async def test_platform_state(
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = MockEntity()
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test").state == "added_to_hass"
-    assert ent._platform_state == entity.EntityPlatformState.ADDED
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
 
     entry = entity_registry.async_remove(entry.entity_id)
     await hass.async_block_till_done()
@@ -2728,7 +2839,7 @@ async def test_platform_state_no_platform(hass: HomeAssistant) -> None:
     assert hass.states.get("test.test") is None
 
     # The attempt to write when in state NOT_ADDED should be allowed
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     ent.async_set_state("not_added")
     assert hass.states.get("test.test").state == "not_added"
 
@@ -2766,10 +2877,10 @@ async def test_platform_state_fail_to_add(
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = MockEntity()
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test") is None
-    assert ent._platform_state == entity.EntityPlatformState.ADDING
+    assert ent._platform_state is entity.EntityPlatformState.ADDING
 
     entry = entity_registry.async_remove(entry.entity_id)
     await hass.async_block_till_done()
@@ -2796,10 +2907,10 @@ async def test_platform_state_write_from_init(
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = MockEntity(hass)
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.unnamed_device").state == "init"
-    assert ent._platform_state == entity.EntityPlatformState.ADDED
+    assert ent._platform_state is entity.EntityPlatformState.ADDED
 
     assert len(hass.states.async_all()) == 1
 
@@ -2823,7 +2934,7 @@ async def test_platform_state_write_from_init_entity_id(
             self.hass = hass
             # The attempt to write when in state NOT_ADDED is not prevented because
             # the platform is not yet set
-            assert self._platform_state == entity.EntityPlatformState.NOT_ADDED
+            assert self._platform_state is entity.EntityPlatformState.NOT_ADDED
             self._attr_state = "init"
             self.async_write_ha_state()
             assert hass.states.get("test.test").state == "init"
@@ -2836,10 +2947,10 @@ async def test_platform_state_write_from_init_entity_id(
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = MockEntity(hass)
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test").state == "init"
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
 
     assert len(hass.states.async_all()) == 1
 
@@ -2873,7 +2984,7 @@ async def test_platform_state_write_from_init_unique_id(
             self.hass = hass
             # The attempt to write when in state NOT_ADDED is not prevented because
             # the platform is not yet set
-            assert self._platform_state == entity.EntityPlatformState.NOT_ADDED
+            assert self._platform_state is entity.EntityPlatformState.NOT_ADDED
             self._attr_state = "init"
             self.async_write_ha_state()
             assert hass.states.get("test.test").state == "init"
@@ -2886,10 +2997,10 @@ async def test_platform_state_write_from_init_unique_id(
 
     platform = MockEntityPlatform(hass, domain="test")
     ent = MockEntity(hass)
-    assert ent._platform_state == entity.EntityPlatformState.NOT_ADDED
+    assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test").state == "init"
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
 
     assert len(hass.states.async_all()) == 1
 

@@ -1,10 +1,8 @@
 """Config flow for HERE Travel Time integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from here_routing import (
     HERERoutingApi,
@@ -33,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     EntitySelector,
     LocationSelector,
     TimeSelector,
@@ -50,6 +49,7 @@ from .const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
+    CONF_TRAFFIC_MODE,
     DEFAULT_NAME,
     DOMAIN,
     ROUTE_MODE_FASTEST,
@@ -65,6 +65,7 @@ DEFAULT_OPTIONS = {
     CONF_ROUTE_MODE: ROUTE_MODE_FASTEST,
     CONF_ARRIVAL_TIME: None,
     CONF_DEPARTURE_TIME: None,
+    CONF_TRAFFIC_MODE: True,
 }
 
 
@@ -87,6 +88,8 @@ def get_user_step_schema(data: Mapping[str, Any]) -> vol.Schema:
         travel_mode = TRAVEL_MODE_PUBLIC
     return vol.Schema(
         {
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Optional(
                 CONF_NAME, default=data.get(CONF_NAME, DEFAULT_NAME)
             ): cv.string,
@@ -102,6 +105,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for HERE Travel Time."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Init Config Flow."""
@@ -109,12 +113,14 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> HERETravelTimeOptionsFlow:
         """Get the options flow."""
         return HERETravelTimeOptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -126,7 +132,7 @@ class HERETravelTimeConfigFlow(ConfigFlow, domain=DOMAIN):
                 await async_validate_api_key(user_input[CONF_API_KEY])
             except HERERoutingUnauthorizedError:
                 errors["base"] = "invalid_auth"
-            except (HERERoutingError, HERETransitError):
+            except HERERoutingError, HERETransitError:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             if not errors:
@@ -307,7 +313,9 @@ class HERETravelTimeOptionsFlow(OptionsFlow):
         """Manage the HERE Travel Time options."""
         if user_input is not None:
             self._config = user_input
-            return await self.async_step_time_menu()
+            if self._config[CONF_TRAFFIC_MODE]:
+                return await self.async_step_time_menu()
+            return self.async_create_entry(title="", data=self._config)
 
         schema = self.add_suggested_values_to_schema(
             vol.Schema(
@@ -318,11 +326,20 @@ class HERETravelTimeOptionsFlow(OptionsFlow):
                             CONF_ROUTE_MODE, DEFAULT_OPTIONS[CONF_ROUTE_MODE]
                         ),
                     ): vol.In(ROUTE_MODES),
+                    vol.Optional(
+                        CONF_TRAFFIC_MODE,
+                        default=self.config_entry.options.get(
+                            CONF_TRAFFIC_MODE, DEFAULT_OPTIONS[CONF_TRAFFIC_MODE]
+                        ),
+                    ): BooleanSelector(),
                 }
             ),
             {
                 CONF_ROUTE_MODE: self.config_entry.options.get(
                     CONF_ROUTE_MODE, DEFAULT_OPTIONS[CONF_ROUTE_MODE]
+                ),
+                CONF_TRAFFIC_MODE: self.config_entry.options.get(
+                    CONF_TRAFFIC_MODE, DEFAULT_OPTIONS[CONF_TRAFFIC_MODE]
                 ),
             },
         )

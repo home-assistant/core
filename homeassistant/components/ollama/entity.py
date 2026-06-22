@@ -1,7 +1,5 @@
 """Base entity for the Ollama integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, AsyncIterator, Callable
 import json
 import logging
@@ -13,15 +11,16 @@ from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_MODEL
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, llm
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.json import json_dumps
 
 from . import OllamaConfigEntry
 from .const import (
     CONF_KEEP_ALIVE,
     CONF_MAX_HISTORY,
-    CONF_MODEL,
     CONF_NUM_CTX,
     CONF_THINK,
     DEFAULT_KEEP_ALIVE,
@@ -75,7 +74,11 @@ def _parse_tool_args(arguments: dict[str, Any]) -> dict[str, Any]:
     small local tool use models. This will repair invalid json arguments and
     omit unnecessary arguments with empty values that will fail intent parsing.
     """
-    return {k: _fix_invalid_arguments(v) for k, v in arguments.items() if v}
+    return {
+        k: _fix_invalid_arguments(v)
+        for k, v in arguments.items()
+        if v is not None and v != ""
+    }
 
 
 def _convert_content(
@@ -89,12 +92,13 @@ def _convert_content(
     if isinstance(chat_content, conversation.ToolResultContent):
         return ollama.Message(
             role=MessageRole.TOOL.value,
-            content=json.dumps(chat_content.tool_result),
+            content=json_dumps(chat_content.tool_result),
         )
     if isinstance(chat_content, conversation.AssistantContent):
         return ollama.Message(
             role=MessageRole.ASSISTANT.value,
             content=chat_content.content,
+            thinking=chat_content.thinking_content,
             tool_calls=[
                 ollama.Message.ToolCall(
                     function=ollama.Message.ToolCall.Function(
@@ -103,12 +107,22 @@ def _convert_content(
                     )
                 )
                 for tool_call in chat_content.tool_calls or ()
-            ],
+            ]
+            or None,
         )
     if isinstance(chat_content, conversation.UserContent):
+        images: list[ollama.Image] = []
+        for attachment in chat_content.attachments or ():
+            if not attachment.mime_type.startswith("image/"):
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="unsupported_attachment_type",
+                )
+            images.append(ollama.Image(value=attachment.path))
         return ollama.Message(
             role=MessageRole.USER.value,
             content=chat_content.content,
+            images=images or None,
         )
     if isinstance(chat_content, conversation.SystemContent):
         return ollama.Message(
@@ -127,9 +141,11 @@ async def _transform_stream(
 
     response: message=Message(role="assistant", content="Paris")
     response: message=Message(role="assistant", content=".")
-    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", content=""),
+        done: True, done_reason: "stop"
     response: message=Message(role="assistant", tool_calls=[...])
-    response: message=Message(role="assistant", content=""), done: True, done_reason: "stop"
+    response: message=Message(role="assistant", content=""),
+        done: True, done_reason: "stop"
 
     This generator conforms to the chatlog delta stream expectations in that it
     yields deltas, then the role only once the response is done.
@@ -153,6 +169,8 @@ async def _transform_stream(
             ]
         if (content := response_message.get("content")) is not None:
             chunk["content"] = content
+        if (thinking := response_message.get("thinking")) is not None:
+            chunk["thinking_content"] = thinking
         if response_message.get("done"):
             new_msg = True
         yield chunk
@@ -161,11 +179,13 @@ async def _transform_stream(
 class OllamaBaseLLMEntity(Entity):
     """Ollama base LLM entity."""
 
+    _attr_has_entity_name = True
+    _attr_name = None
+
     def __init__(self, entry: OllamaConfigEntry, subentry: ConfigSubentry) -> None:
         """Initialize the entity."""
         self.entry = entry
         self.subentry = subentry
-        self._attr_name = subentry.title
         self._attr_unique_id = subentry.subentry_id
 
         model, _, version = subentry.data[CONF_MODEL].partition(":")

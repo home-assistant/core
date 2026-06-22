@@ -21,6 +21,7 @@ async def mock_config_fixture(hass: HomeAssistant, data, options):
         options=options,
         entry_id="test",
         version=WazeConfigFlow.VERSION,
+        minor_version=WazeConfigFlow.MINOR_VERSION,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -53,7 +54,7 @@ def mock_update_fixture():
 @pytest.fixture(name="validate_config_entry")
 def validate_config_entry_fixture(mock_update):
     """Return valid config entry."""
-    mock_update.return_value = None
+    mock_update.return_value = []
     return mock_update
 
 

@@ -1,5 +1,6 @@
 """Test websocket API."""
 
+from dataclasses import replace
 import os
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -11,13 +12,14 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.backup import BackupManagerError, ManagerBackup
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.backup.manager import AgentBackupStatus
 from homeassistant.components.hassio import DOMAIN
 from homeassistant.components.hassio.const import (
     ATTR_DATA,
     ATTR_ENDPOINT,
     ATTR_METHOD,
+    ATTR_PARAMS,
     ATTR_WS_EVENT,
     EVENT_SUPERVISOR_EVENT,
     WS_ID,
@@ -43,39 +45,27 @@ def mock_all(
     supervisor_is_connected: AsyncMock,
     resolution_info: AsyncMock,
     addon_info: AsyncMock,
+    host_info: AsyncMock,
+    supervisor_root_info: AsyncMock,
+    homeassistant_info: AsyncMock,
+    supervisor_info: AsyncMock,
+    addons_list: AsyncMock,
+    network_info: AsyncMock,
+    os_info: AsyncMock,
+    store_info: AsyncMock,
+    ingress_panels: AsyncMock,
 ) -> None:
     """Mock all setup requests."""
-    aioclient_mock.post("http://127.0.0.1/homeassistant/options", json={"result": "ok"})
-    aioclient_mock.post("http://127.0.0.1/supervisor/options", json={"result": "ok"})
-    aioclient_mock.get(
-        "http://127.0.0.1/info",
-        json={
-            "result": "ok",
-            "data": {"supervisor": "222", "homeassistant": "0.110.0", "hassos": None},
-        },
+    supervisor_root_info.return_value = replace(
+        supervisor_root_info.return_value, hassos=None
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/host/info",
-        json={
-            "result": "ok",
-            "data": {
-                "result": "ok",
-                "data": {
-                    "chassis": "vm",
-                    "operating_system": "Debian GNU/Linux 10 (buster)",
-                    "kernel": "4.19.0-6-amd64",
-                },
-            },
-        },
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/core/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0", "version": "1.0.0"}},
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/os/info",
-        json={"result": "ok", "data": {"version_latest": "1.0.0"}},
-    )
+    addons_list.return_value.pop(1)
+    addon_info.return_value.version = "2.0.0"
+    addon_info.return_value.version_latest = "2.0.1"
+    addon_info.return_value.update_available = True
+
+    # The websocket API still relies on HassIO.send_command for all Supervisor API calls
+    # So must keep some aioclient mocks normally covered by aiohasupervisor in component
     aioclient_mock.get(
         "http://127.0.0.1/supervisor/info",
         json={
@@ -101,28 +91,15 @@ def mock_all(
             },
         },
     )
-    aioclient_mock.get(
-        "http://127.0.0.1/ingress/panels", json={"result": "ok", "data": {"panels": {}}}
-    )
-    aioclient_mock.get(
-        "http://127.0.0.1/network/info",
-        json={
-            "result": "ok",
-            "data": {
-                "host_internet": True,
-                "supervisor_internet": True,
-            },
-        },
-    )
 
 
 @pytest.mark.usefixtures("hassio_env")
 async def test_ws_subscription(
-    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+    hass: HomeAssistant, hass_supervisor_ws_client: WebSocketGenerator
 ) -> None:
     """Test websocket subscription."""
-    assert await async_setup_component(hass, "hassio", {})
-    client = await hass_ws_client(hass)
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_supervisor_ws_client()
     await client.send_json({WS_ID: 5, WS_TYPE: WS_TYPE_SUBSCRIBE})
     response = await client.receive_json()
     assert response["success"]
@@ -155,13 +132,34 @@ async def test_ws_subscription(
 
 
 @pytest.mark.usefixtures("hassio_env")
+async def test_admin_non_supervisor_publish_supervisor_event_failure(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
+) -> None:
+    """Test non admin user cannot publish supervisor event."""
+    hass_admin_user.groups = []
+    assert await async_setup_component(hass, DOMAIN, {})
+    client = await hass_ws_client(hass)
+
+    await client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: "supervisor/event",
+            ATTR_DATA: {ATTR_WS_EVENT: "test", "lorem": "ipsum"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"] is False
+    assert msg["error"]["message"] == "Only allowed as Supervisor"
+
+
+@pytest.mark.usefixtures("hassio_env")
 async def test_websocket_supervisor_api(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test Supervisor websocket api."""
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
     aioclient_mock.post(
         "http://127.0.0.1/backups/new/partial",
@@ -199,13 +197,44 @@ async def test_websocket_supervisor_api(
 
 
 @pytest.mark.usefixtures("hassio_env")
+async def test_websocket_supervisor_api_with_params(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test Supervisor websocket api with query params."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    websocket_client = await hass_ws_client(hass)
+    aioclient_mock.get(
+        "http://127.0.0.1/backups/backup_id/info",
+        json={"result": "ok", "data": {"slug": "backup_id"}},
+    )
+
+    await websocket_client.send_json(
+        {
+            WS_ID: 1,
+            WS_TYPE: WS_TYPE_API,
+            ATTR_ENDPOINT: "/backups/backup_id/info",
+            ATTR_METHOD: "get",
+            ATTR_PARAMS: {"extra_info": "true"},
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["result"]["slug"] == "backup_id"
+
+    # Verify the params were passed to the request URL
+    assert aioclient_mock.mock_calls[-1][1].query == {"extra_info": "true"}
+
+
+@pytest.mark.usefixtures("hassio_env")
 async def test_websocket_supervisor_api_error(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test Supervisor websocket api error."""
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
     aioclient_mock.get(
         "http://127.0.0.1/ping",
@@ -234,7 +263,7 @@ async def test_websocket_supervisor_api_error_without_msg(
     aioclient_mock: AiohttpClientMocker,
 ) -> None:
     """Test Supervisor websocket api error."""
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
     aioclient_mock.get(
         "http://127.0.0.1/ping",
@@ -265,11 +294,21 @@ async def test_websocket_non_admin_user(
 ) -> None:
     """Test Supervisor websocket api error."""
     hass_admin_user.groups = []
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
     aioclient_mock.get(
         "http://127.0.0.1/addons/test_addon/info",
-        json={"result": "ok", "data": {}},
+        json={
+            "result": "ok",
+            "data": {
+                "name": "test",
+                "state": "started",
+                "slug": "test_addon",
+                "version": "2.0.0",
+                "ingress_url": "http://127.0.0.1/ingress/test_addon",
+                "options": {"option1": "value1", "option2": "value2"},
+            },
+        },
     )
     aioclient_mock.get(
         "http://127.0.0.1/ingress/session",
@@ -280,6 +319,9 @@ async def test_websocket_non_admin_user(
         json={"result": "ok", "data": {}},
     )
 
+    # Should return the fields frontend needs
+    # (name, version, state, slug and ingress_url) but not options,
+    # as user is not admin and options can contain sensitive information
     await websocket_client.send_json(
         {
             WS_ID: 1,
@@ -289,7 +331,14 @@ async def test_websocket_non_admin_user(
         }
     )
     msg = await websocket_client.receive_json()
-    assert msg["result"] == {}
+    assert msg["result"] == {
+        "name": "test",
+        "state": "started",
+        "slug": "test_addon",
+        "version": "2.0.0",
+        "ingress_url": "http://127.0.0.1/ingress/test_addon",
+    }
+    assert "options" not in msg["result"]
 
     await websocket_client.send_json(
         {
@@ -339,7 +388,7 @@ async def test_update_addon(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -442,7 +491,7 @@ async def test_update_addon_with_backup(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -585,7 +634,7 @@ async def test_update_addon_with_backup_removes_old_backups(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -648,7 +697,7 @@ async def test_update_core(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -743,7 +792,7 @@ async def test_update_core_with_backup(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -782,7 +831,7 @@ async def test_update_addon_with_error(
     with patch.dict(os.environ, MOCK_ENVIRON):
         assert await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
     await hass.async_block_till_done()
@@ -822,7 +871,7 @@ async def test_update_addon_with_backup_and_error(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -861,7 +910,7 @@ async def test_update_core_with_error(
     with patch.dict(os.environ, MOCK_ENVIRON):
         assert await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
     await hass.async_block_till_done()
@@ -889,7 +938,7 @@ async def test_update_core_with_backup_and_error(
     with patch.dict(os.environ, MOCK_ENVIRON):
         result = await async_setup_component(
             hass,
-            "hassio",
+            DOMAIN,
             {"http": {"server_port": 9999, "server_host": "127.0.0.1"}, "hassio": {}},
         )
         assert result
@@ -920,7 +969,7 @@ async def test_read_update_config(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test read and update config."""
-    assert await async_setup_component(hass, "hassio", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     websocket_client = await hass_ws_client(hass)
 
     await websocket_client.send_json_auto_id({"type": "hassio/update/config/info"})

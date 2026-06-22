@@ -1,12 +1,9 @@
 """MediaPlayer platform for Roon integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 
 from roonapi import split_media_path
-import voluptuous as vol
 
 from homeassistant.components.media_player import (
     BrowseMedia,
@@ -16,10 +13,8 @@ from homeassistant.components.media_player import (
     MediaType,
     RepeatMode,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import DEVICE_DEFAULT_NAME
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
@@ -29,14 +24,11 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import convert
 from homeassistant.util.dt import utcnow
 
+from . import RoonConfigEntry
 from .const import DOMAIN
 from .media_browser import browse_media
 
 _LOGGER = logging.getLogger(__name__)
-
-SERVICE_TRANSFER = "transfer"
-
-ATTR_TRANSFER = "transfer_id"
 
 REPEAT_MODE_MAPPING_TO_HA = {
     "loop": RepeatMode.ALL,
@@ -51,20 +43,12 @@ REPEAT_MODE_MAPPING_TO_ROON = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roon MediaPlayer from Config Entry."""
-    roon_server = hass.data[DOMAIN][config_entry.entry_id]
+    roon_server = config_entry.runtime_data
     media_players = set()
-
-    # Register entity services
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(
-        SERVICE_TRANSFER,
-        {vol.Required(ATTR_TRANSFER): cv.entity_id},
-        "async_transfer",
-    )
 
     @callback
     def async_update_media_player(player_data):
@@ -223,7 +207,7 @@ class RoonDevice(MediaPlayerEntity):
         return volume
 
     def _parse_now_playing(self, player_data):
-        """Parse now playing data to determine title, artist, position, duration and artwork."""
+        """Parse now playing data for title, artist, position, etc."""
         now_playing = {
             "title": None,
             "artist": None,

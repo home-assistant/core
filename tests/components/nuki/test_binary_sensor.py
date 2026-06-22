@@ -3,6 +3,7 @@
 from unittest.mock import patch
 
 import pytest
+import requests_mock
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -19,9 +20,18 @@ async def test_binary_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
+    mock_nuki_requests: requests_mock.Mocker,
 ) -> None:
     """Test binary sensors."""
     with patch("homeassistant.components.nuki.PLATFORMS", [Platform.BINARY_SENSOR]):
-        entry = await init_integration(hass)
+        entry = await init_integration(hass, mock_nuki_requests)
 
     await snapshot_platform(hass, entity_registry, snapshot, entry.entry_id)
+
+    # Unload the config entry after taking a snapshot is required
+    # because the integration may cache DNS results or keep
+    # references to the original gethostbyname, so unloading
+    # ensures the patch is effective for subsequent tests and
+    # avoids DNS lookups
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()

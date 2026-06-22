@@ -1,8 +1,6 @@
 """Support for HomematicIP Cloud switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homematicip.base.enums import DeviceType, FunctionalChannelType
 from homematicip.device import (
@@ -17,7 +15,11 @@ from homematicip.device import (
     PlugableSwitch,
     PrintedCircuitBoardSwitch2,
     PrintedCircuitBoardSwitchBattery,
+    StatusBoard8,
     SwitchMeasuring,
+    WiredInput32,
+    WiredInputSwitch6,
+    WiredSwitch4,
     WiredSwitch8,
 )
 from homematicip.group import ExtendedLinkedSwitchingGroup, SwitchingGroup
@@ -51,8 +53,10 @@ async def async_setup_entry(
         elif isinstance(
             device,
             (
+                WiredSwitch4,
                 WiredSwitch8,
                 OpenCollector8Module,
+                StatusBoard8,
                 BrandSwitch2,
                 PrintedCircuitBoardSwitch2,
                 HeatingSwitch2,
@@ -60,6 +64,8 @@ async def async_setup_entry(
                 MotionDetectorSwitchOutdoor,
                 DinRailSwitch,
                 DinRailSwitch4,
+                WiredInput32,
+                WiredInputSwitch6,
             ),
         ):
             channel_indices = [
@@ -101,21 +107,31 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
     ) -> None:
         """Initialize the multi switch device."""
         super().__init__(
-            hap, device, channel=channel, is_multi_channel=is_multi_channel
+            hap,
+            device,
+            channel=channel,
+            is_multi_channel=is_multi_channel,
+            feature_id="switch",
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
-        return self.functional_channel.on
+        channel = self.get_channel_or_raise()
+        return channel.on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
-        await self.functional_channel.async_turn_on()
+        channel = self.get_channel_or_raise()
+        await channel.async_turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
-        await self.functional_channel.async_turn_off()
+        channel = self.get_channel_or_raise()
+        await channel.async_turn_off()
 
 
 class HomematicipSwitch(HomematicipMultiSwitch, SwitchEntity):
@@ -129,17 +145,21 @@ class HomematicipSwitch(HomematicipMultiSwitch, SwitchEntity):
 class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
     """Representation of the HomematicIP switching group."""
 
+    _attr_has_entity_name = False
+
     def __init__(self, hap: HomematicipHAP, device, post: str = "Group") -> None:
         """Initialize switching group."""
         device.modelType = f"HmIP-{post}"
-        super().__init__(hap, device, post)
+        super().__init__(hap, device, post, feature_id="switch")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if group is on."""
         return self._device.on
 
     @property
+    @override
     def available(self) -> bool:
         """Switch-Group available."""
         # A switch-group must be available, and should not be affected by the
@@ -149,6 +169,7 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
         return True
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the switch-group."""
         state_attr = super().extra_state_attributes
@@ -158,10 +179,12 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
 
         return state_attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the group on."""
         await self._device.turn_on_async()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the group off."""
         await self._device.turn_off_async()

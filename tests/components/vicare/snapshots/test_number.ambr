@@ -1,13 +1,14 @@
 # serializer version: 1
 # name: test_all_entities[number.model0_comfort_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
@@ -25,6 +26,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Comfort temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -46,7 +48,7 @@
       'friendly_name': 'model0 Comfort temperature',
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -60,13 +62,14 @@
 # ---
 # name: test_all_entities[number.model0_comfort_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
@@ -84,6 +87,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Comfort temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -105,7 +109,7 @@
       'friendly_name': 'model0 Comfort temperature',
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -119,13 +123,14 @@
 # ---
 # name: test_all_entities[number.model0_dhw_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -143,6 +148,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'DHW temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -164,7 +170,7 @@
       'friendly_name': 'model0 DHW temperature',
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -178,13 +184,14 @@
 # ---
 # name: test_all_entities[number.model0_heating_curve_shift-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 40,
       'min': -13,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -202,6 +209,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating curve shift',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -223,7 +231,7 @@
       'friendly_name': 'model0 Heating curve shift',
       'max': 40,
       'min': -13,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -237,13 +245,14 @@
 # ---
 # name: test_all_entities[number.model0_heating_curve_shift_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 40,
       'min': -13,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
     }),
     'config_entry_id': <ANY>,
@@ -261,6 +270,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating curve shift',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -282,7 +292,7 @@
       'friendly_name': 'model0 Heating curve shift',
       'max': 40,
       'min': -13,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -296,13 +306,14 @@
 # ---
 # name: test_all_entities[number.model0_heating_curve_slope-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3.5,
       'min': 0.2,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 0.1,
     }),
     'config_entry_id': <ANY>,
@@ -320,6 +331,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating curve slope',
     'options': dict({
     }),
     'original_device_class': None,
@@ -340,7 +352,7 @@
       'friendly_name': 'model0 Heating curve slope',
       'max': 3.5,
       'min': 0.2,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 0.1,
     }),
     'context': <ANY>,
@@ -353,13 +365,14 @@
 # ---
 # name: test_all_entities[number.model0_heating_curve_slope_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3.5,
       'min': 0.2,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 0.1,
     }),
     'config_entry_id': <ANY>,
@@ -377,6 +390,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Heating curve slope',
     'options': dict({
     }),
     'original_device_class': None,
@@ -397,7 +411,7 @@
       'friendly_name': 'model0 Heating curve slope',
       'max': 3.5,
       'min': 0.2,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 0.1,
     }),
     'context': <ANY>,
@@ -410,13 +424,14 @@
 # ---
 # name: test_all_entities[number.model0_normal_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
@@ -434,6 +449,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Normal temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -455,7 +471,7 @@
       'friendly_name': 'model0 Normal temperature',
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -469,13 +485,14 @@
 # ---
 # name: test_all_entities[number.model0_normal_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
@@ -493,6 +510,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Normal temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -514,7 +532,7 @@
       'friendly_name': 'model0 Normal temperature',
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -528,13 +546,14 @@
 # ---
 # name: test_all_entities[number.model0_reduced_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
@@ -552,6 +571,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reduced temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -573,7 +593,7 @@
       'friendly_name': 'model0 Reduced temperature',
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),
@@ -587,13 +607,14 @@
 # ---
 # name: test_all_entities[number.model0_reduced_temperature_2-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
     }),
     'config_entry_id': <ANY>,
@@ -611,6 +632,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reduced temperature',
     'options': dict({
     }),
     'original_device_class': <NumberDeviceClass.TEMPERATURE: 'temperature'>,
@@ -632,7 +654,7 @@
       'friendly_name': 'model0 Reduced temperature',
       'max': 100.0,
       'min': 0.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
+      'mode': <NumberMode.BOX: 'box'>,
       'step': 1.0,
       'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
     }),

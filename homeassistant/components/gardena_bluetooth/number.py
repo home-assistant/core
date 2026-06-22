@@ -1,10 +1,15 @@
 """Support for number entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
+from typing import override
 
-from gardena_bluetooth.const import DeviceConfiguration, Sensor, Valve
+from gardena_bluetooth.const import (
+    AquaContourWatering,
+    DeviceConfiguration,
+    Sensor,
+    Spray,
+    Valve,
+)
 from gardena_bluetooth.parse import (
     Characteristic,
     CharacteristicInt,
@@ -13,11 +18,12 @@ from gardena_bluetooth.parse import (
 )
 
 from homeassistant.components.number import (
+    NumberDeviceClass,
     NumberEntity,
     NumberEntityDescription,
     NumberMode,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
+from homeassistant.const import DEGREE, PERCENTAGE, EntityCategory, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -33,6 +39,7 @@ class GardenaBluetoothNumberEntityDescription(NumberEntityDescription):
         default_factory=lambda: CharacteristicInt("")
     )
     connected_state: Characteristic | None = None
+    scale: float = 1.0
 
     @property
     def context(self) -> set[str]:
@@ -45,7 +52,7 @@ class GardenaBluetoothNumberEntityDescription(NumberEntityDescription):
 
 DESCRIPTIONS = (
     GardenaBluetoothNumberEntityDescription(
-        key=Valve.manual_watering_time.uuid,
+        key=Valve.manual_watering_time.unique_id,
         translation_key="manual_watering_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         mode=NumberMode.BOX,
@@ -54,9 +61,22 @@ DESCRIPTIONS = (
         native_step=60,
         entity_category=EntityCategory.CONFIG,
         char=Valve.manual_watering_time,
+        device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=Valve.remaining_open_time.uuid,
+        key=AquaContourWatering.manual_watering_time.unique_id,
+        translation_key="manual_watering_time",
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        mode=NumberMode.BOX,
+        native_min_value=0.0,
+        native_max_value=24 * 60 * 60,
+        native_step=60,
+        entity_category=EntityCategory.CONFIG,
+        char=AquaContourWatering.manual_watering_time,
+        device_class=NumberDeviceClass.DURATION,
+    ),
+    GardenaBluetoothNumberEntityDescription(
+        key=Valve.remaining_open_time.unique_id,
         translation_key="remaining_open_time",
         native_unit_of_measurement=UnitOfTime.SECONDS,
         native_min_value=0.0,
@@ -64,9 +84,10 @@ DESCRIPTIONS = (
         native_step=60.0,
         entity_category=EntityCategory.DIAGNOSTIC,
         char=Valve.remaining_open_time,
+        device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=DeviceConfiguration.rain_pause.uuid,
+        key=DeviceConfiguration.rain_pause.unique_id,
         translation_key="rain_pause",
         native_unit_of_measurement=UnitOfTime.MINUTES,
         mode=NumberMode.BOX,
@@ -75,9 +96,10 @@ DESCRIPTIONS = (
         native_step=6 * 60.0,
         entity_category=EntityCategory.CONFIG,
         char=DeviceConfiguration.rain_pause,
+        device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=DeviceConfiguration.seasonal_adjust.uuid,
+        key=DeviceConfiguration.seasonal_adjust.unique_id,
         translation_key="seasonal_adjust",
         native_unit_of_measurement=UnitOfTime.DAYS,
         mode=NumberMode.BOX,
@@ -86,9 +108,10 @@ DESCRIPTIONS = (
         native_step=1.0,
         entity_category=EntityCategory.CONFIG,
         char=DeviceConfiguration.seasonal_adjust,
+        device_class=NumberDeviceClass.DURATION,
     ),
     GardenaBluetoothNumberEntityDescription(
-        key=Sensor.threshold.uuid,
+        key=Sensor.threshold.unique_id,
         translation_key="sensor_threshold",
         native_unit_of_measurement=PERCENTAGE,
         mode=NumberMode.BOX,
@@ -98,6 +121,29 @@ DESCRIPTIONS = (
         entity_category=EntityCategory.CONFIG,
         char=Sensor.threshold,
         connected_state=Sensor.connected_state,
+    ),
+    GardenaBluetoothNumberEntityDescription(
+        key="spray_sector",
+        translation_key="spray_sector",
+        native_unit_of_measurement=DEGREE,
+        mode=NumberMode.BOX,
+        native_min_value=0.0,
+        native_max_value=359.0,
+        native_step=1.0,
+        entity_category=EntityCategory.CONFIG,
+        char=Spray.sector,
+    ),
+    GardenaBluetoothNumberEntityDescription(
+        key="spray_distance",
+        translation_key="spray_distance",
+        native_unit_of_measurement=PERCENTAGE,
+        mode=NumberMode.SLIDER,
+        native_min_value=0.0,
+        native_max_value=100.0,
+        native_step=0.1,
+        char=Spray.distance,
+        entity_category=EntityCategory.CONFIG,
+        scale=10.0,
     ),
 )
 
@@ -112,9 +158,9 @@ async def async_setup_entry(
     entities: list[NumberEntity] = [
         GardenaBluetoothNumber(coordinator, description, description.context)
         for description in DESCRIPTIONS
-        if description.key in coordinator.characteristics
+        if description.char.unique_id in coordinator.characteristics
     ]
-    if Valve.remaining_open_time.uuid in coordinator.characteristics:
+    if Valve.remaining_open_time.unique_id in coordinator.characteristics:
         entities.append(GardenaBluetoothRemainingOpenSetNumber(coordinator))
     async_add_entities(entities)
 
@@ -124,12 +170,13 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
 
     entity_description: GardenaBluetoothNumberEntityDescription
 
+    @override
     def _handle_coordinator_update(self) -> None:
         data = self.coordinator.get_cached(self.entity_description.char)
         if data is None:
             self._attr_native_value = None
         else:
-            self._attr_native_value = float(data)
+            self._attr_native_value = float(data) / self.entity_description.scale
 
         if char := self.entity_description.connected_state:
             self._attr_available = bool(self.coordinator.get_cached(char))
@@ -138,9 +185,12 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
-        await self.coordinator.write(self.entity_description.char, int(value))
+        await self.coordinator.write(
+            self.entity_description.char, int(value * self.entity_description.scale)
+        )
         self.async_write_ha_state()
 
 
@@ -153,6 +203,7 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
     _attr_native_min_value = 0.0
     _attr_native_max_value = 24 * 60
     _attr_native_step = 1.0
+    _attr_device_class = NumberDeviceClass.DURATION
 
     def __init__(
         self,
@@ -162,6 +213,7 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
         super().__init__(coordinator, {Valve.remaining_open_time.uuid})
         self._attr_unique_id = f"{coordinator.address}-remaining_open_set"
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.coordinator.write(Valve.remaining_open_time, int(value * 60))

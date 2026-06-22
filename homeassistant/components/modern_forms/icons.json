@@ -1,33 +1,33 @@
 {
   "entity": {
     "binary_sensor": {
-      "light_sleep_timer_active": {
+      "fan_sleep_timer_active": {
         "default": "mdi:av-timer"
       },
-      "fan_sleep_timer_active": {
+      "light_sleep_timer_active": {
         "default": "mdi:av-timer"
       }
     },
     "sensor": {
-      "light_timer_remaining_time": {
+      "fan_timer_remaining_time": {
         "default": "mdi:timer-outline"
       },
-      "fan_timer_remaining_time": {
+      "light_timer_remaining_time": {
         "default": "mdi:timer-outline"
       }
     },
     "switch": {
-      "away_mode": {
-        "default": "mdi:airplane-takeoff"
-      },
       "adaptive_learning": {
         "default": "mdi:school-outline"
+      },
+      "away_mode": {
+        "default": "mdi:airplane-takeoff"
       }
     }
   },
   "services": {
-    "set_light_sleep_timer": {
-      "service": "mdi:timer"
+    "clear_fan_sleep_timer": {
+      "service": "mdi:timer-cancel"
     },
     "clear_light_sleep_timer": {
       "service": "mdi:timer-cancel"
@@ -35,8 +35,8 @@
     "set_fan_sleep_timer": {
       "service": "mdi:timer"
     },
-    "clear_fan_sleep_timer": {
-      "service": "mdi:timer-cancel"
+    "set_light_sleep_timer": {
+      "service": "mdi:timer"
     }
   }
 }

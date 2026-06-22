@@ -1,0 +1,19 @@
+{
+  "traceId": "1234",
+  "code": 0,
+  "msg": "request success",
+  "module": null,
+  "stacktrace": null,
+  "result": {
+    "returnStatus": {
+      "curentTemp": 17,
+      "cookSetTemp": 180,
+      "mode": "manual",
+      "cookSetTime": 15,
+      "cookLastTime": 10,
+      "cookStatus": "cooking",
+      "tempUnit": "celsius",
+      "accountId": ""
+    }
+  }
+}

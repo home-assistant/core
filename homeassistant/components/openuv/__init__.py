@@ -1,13 +1,10 @@
 """Support for UV data from openuv.io."""
 
-from __future__ import annotations
-
 import asyncio
 from typing import Any
 
 from pyopenuv import Client
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_API_KEY,
     CONF_BINARY_SENSORS,
@@ -27,15 +24,18 @@ from .const import (
     DATA_UV,
     DEFAULT_FROM_WINDOW,
     DEFAULT_TO_WINDOW,
-    DOMAIN,
     LOGGER,
 )
-from .coordinator import OpenUvCoordinator
+from .coordinator import (
+    OpenUvConfigEntry,
+    OpenUvCoordinator,
+    OpenUvProtectionWindowCoordinator,
+)
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
     """Set up OpenUV as config entry."""
     websession = aiohttp_client.async_get_clientsession(hass)
     client = Client(
@@ -54,7 +54,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         return await client.uv_protection_window(low=low, high=high)
 
     coordinators: dict[str, OpenUvCoordinator] = {
-        coordinator_name: OpenUvCoordinator(
+        coordinator_name: coordinator_cls(
             hass,
             entry=entry,
             name=coordinator_name,
@@ -62,9 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             longitude=client.longitude,
             update_method=update_method,
         )
-        for coordinator_name, update_method in (
-            (DATA_UV, client.uv_index),
-            (DATA_PROTECTION_WINDOW, async_update_protection_data),
+        for coordinator_cls, coordinator_name, update_method in (
+            (OpenUvCoordinator, DATA_UV, client.uv_index),
+            (
+                OpenUvProtectionWindowCoordinator,
+                DATA_PROTECTION_WINDOW,
+                async_update_protection_data,
+            ),
         )
     }
 
@@ -74,24 +78,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ]
     await asyncio.gather(*init_tasks)
 
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN][entry.entry_id] = coordinators
+    entry.runtime_data = coordinators
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_unload_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
     """Unload an OpenUV config entry."""
-    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    if unload_ok:
-        hass.data[DOMAIN].pop(entry.entry_id)
-
-    return unload_ok
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
-async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_migrate_entry(hass: HomeAssistant, entry: OpenUvConfigEntry) -> bool:
     """Migrate the config entry upon new versions."""
     version = entry.version
     data = {**entry.data}

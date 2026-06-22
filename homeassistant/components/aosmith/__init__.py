@@ -1,7 +1,5 @@
 """The A. O. Smith integration."""
 
-from __future__ import annotations
-
 from py_aosmith import AOSmithAPIClient
 
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD, Platform
@@ -16,7 +14,7 @@ from .coordinator import (
     AOSmithStatusCoordinator,
 )
 
-PLATFORMS: list[Platform] = [Platform.SENSOR, Platform.WATER_HEATER]
+PLATFORMS: list[Platform] = [Platform.SELECT, Platform.SENSOR, Platform.WATER_HEATER]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: AOSmithConfigEntry) -> bool:

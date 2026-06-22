@@ -17,6 +17,7 @@ from homeassistant.components.swiss_public_transport.const import (
     CONF_TIME_OFFSET,
     CONF_TIME_STATION,
     CONF_VIA,
+    DOMAIN,
     MAX_VIA,
 )
 from homeassistant.components.swiss_public_transport.helper import unique_id_from_config
@@ -90,7 +91,8 @@ MOCK_ADVANCED_DATA_STEP_TIME_OFFSET = {
         (
             MOCK_USER_DATA_STEP_MANY_VIA,
             None,
-            "test_start test_destination via via_station_1, via_station_2, via_station_3",
+            "test_start test_destination via"
+            " via_station_1, via_station_2, via_station_3",
         ),
         (MOCK_USER_DATA_STEP_ARRIVAL, None, "test_start test_destination arrival"),
         (
@@ -110,7 +112,7 @@ async def test_flow_user_init_data_success(
 ) -> None:
     """Test success response."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -129,7 +131,7 @@ async def test_flow_user_init_data_success(
         )
 
         if time_mode_input:
-            assert result["type"] == FlowResultType.FORM
+            assert result["type"] is FlowResultType.FORM
             if CONF_TIME_FIXED in time_mode_input:
                 assert result["step_id"] == "time_fixed"
             if CONF_TIME_OFFSET in time_mode_input:
@@ -139,7 +141,7 @@ async def test_flow_user_init_data_success(
                 user_input=time_mode_input,
             )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == config_title
 
         assert result["data"] == {**user_input, **(time_mode_input or {})}
@@ -159,7 +161,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_1(
 ) -> None:
     """Test errors in user step."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": "user"}
     )
     with patch(
         "homeassistant.components.swiss_public_transport.config_flow.OpendataTransport.async_get_data",
@@ -182,7 +184,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_1(
             user_input=MOCK_USER_DATA_STEP,
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "test_start test_destination"
 
         assert result["data"] == MOCK_USER_DATA_STEP
@@ -205,7 +207,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
 ) -> None:
     """Test errors in time mode step."""
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN, context={"source": "user"}
+        DOMAIN, context={"source": "user"}
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -222,7 +224,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
             result["flow_id"],
             user_input=MOCK_USER_DATA_STEP_TIME_FIXED,
         )
-        assert result["type"] == FlowResultType.FORM
+        assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "time_fixed"
 
     with patch(
@@ -246,7 +248,7 @@ async def test_flow_user_init_data_error_and_recover_on_step_2(
             user_input=user_input,
         )
 
-        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["type"] is FlowResultType.CREATE_ENTRY
         assert result["result"].title == "test_start test_destination at 18:03:00"
 
 
@@ -254,7 +256,7 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
     """Test we abort user data set when entry is already configured."""
 
     entry = MockConfigEntry(
-        domain=config_flow.DOMAIN,
+        domain=DOMAIN,
         data=MOCK_USER_DATA_STEP,
         unique_id=unique_id_from_config(MOCK_USER_DATA_STEP),
     )
@@ -266,7 +268,7 @@ async def test_flow_user_init_data_already_configured(hass: HomeAssistant) -> No
         return_value=True,
     ):
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN, context={"source": "user"}
+            DOMAIN, context={"source": "user"}
         )
 
         result = await hass.config_entries.flow.async_configure(

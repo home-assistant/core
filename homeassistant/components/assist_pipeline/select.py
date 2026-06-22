@@ -1,8 +1,8 @@
 """Select entities for a pipeline."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
+from dataclasses import replace
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory, Platform
@@ -64,18 +64,34 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         translation_key="pipeline",
         entity_category=EntityCategory.CONFIG,
     )
+
     _attr_should_poll = False
     _attr_current_option = OPTION_PREFERRED
     _attr_options = [OPTION_PREFERRED]
 
-    def __init__(self, hass: HomeAssistant, domain: str, unique_id_prefix: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        domain: str,
+        unique_id_prefix: str,
+        index: int = 0,
+    ) -> None:
         """Initialize a pipeline selector."""
+        if index >= 1:
+            self.entity_description = replace(
+                self.entity_description,
+                key=f"pipeline_{index + 1}",
+                translation_key="pipeline_n",
+                translation_placeholders={"index": str(index + 1)},
+            )
+
         self._domain = domain
         self._unique_id_prefix = unique_id_prefix
-        self._attr_unique_id = f"{unique_id_prefix}-pipeline"
+        self._attr_unique_id = f"{unique_id_prefix}-{self.entity_description.key}"
         self.hass = hass
         self._update_options()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
@@ -87,7 +103,7 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
         )
 
         state = await self.async_get_last_state()
-        if state is not None and state.state in self.options:
+        if (state is not None) and (state.state in self.options):
             self._attr_current_option = state.state
 
         if self.registry_entry and (device_id := self.registry_entry.device_id):
@@ -97,10 +113,11 @@ class AssistPipelineSelect(SelectEntity, restore_state.RestoreEntity):
 
             def cleanup() -> None:
                 """Clean up registered device."""
-                pipeline_data.pipeline_devices.pop(device_id)
+                pipeline_data.pipeline_devices.pop(device_id, None)
 
             self.async_on_remove(cleanup)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         self._attr_current_option = option
@@ -142,6 +159,7 @@ class VadSensitivitySelect(SelectEntity, restore_state.RestoreEntity):
         self._attr_unique_id = f"{unique_id_prefix}-vad_sensitivity"
         self.hass = hass
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
@@ -150,6 +168,7 @@ class VadSensitivitySelect(SelectEntity, restore_state.RestoreEntity):
         if state is not None and state.state in self.options:
             self._attr_current_option = state.state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Select an option."""
         self._attr_current_option = option

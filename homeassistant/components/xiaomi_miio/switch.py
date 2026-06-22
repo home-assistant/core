@@ -1,7 +1,5 @@
 """Support for Xiaomi Smart WiFi Socket and Smart Power Strip."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from functools import partial
@@ -15,7 +13,6 @@ from miio import (
     DeviceException,
     PowerStrip,
 )
-from miio.gateway.devices import SubDevice
 from miio.gateway.devices.switch import Switch
 from miio.powerstrip import PowerMode
 import voluptuous as vol
@@ -28,6 +25,7 @@ from homeassistant.components.switch import (
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_MODE,
+    ATTR_MODEL,
     ATTR_TEMPERATURE,
     CONF_DEVICE,
     CONF_HOST,
@@ -121,6 +119,7 @@ from .const import (
     SERVICE_SET_WIFI_LED_ON,
     SUCCESS,
 )
+from .coordinator import GatewayDeviceCoordinator
 from .entity import XiaomiCoordinatedMiioEntity, XiaomiGatewayDevice, XiaomiMiioEntity
 from .typing import ServiceMethodDetails, XiaomiMiioConfigEntry
 
@@ -151,7 +150,6 @@ ATTR_LED = "led"
 ATTR_IONIZER = "ionizer"
 ATTR_ANION = "anion"
 ATTR_LOAD_POWER = "load_power"
-ATTR_MODEL = "model"
 ATTR_POWER = "power"
 ATTR_POWER_MODE = "power_mode"
 ATTR_POWER_PRICE = "power_price"
@@ -411,18 +409,18 @@ async def async_setup_other_entry(
     unique_id = config_entry.unique_id
     if config_entry.data[CONF_FLOW_TYPE] == CONF_GATEWAY:
         gateway = config_entry.runtime_data.gateway
+        gateway_coordinators = config_entry.runtime_data.gateway_coordinators
         # Gateway sub devices
         sub_devices = gateway.devices
         for sub_device in sub_devices.values():
             if sub_device.device_type != "Switch":
                 continue
-            coordinator = config_entry.runtime_data.gateway_coordinators[sub_device.sid]
             switch_variables = set(sub_device.status) & set(GATEWAY_SWITCH_VARS)
             if switch_variables:
                 entities.extend(
                     [
                         XiaomiGatewaySwitch(
-                            coordinator, sub_device, config_entry, variable
+                            gateway_coordinators[sub_device.sid], variable
                         )
                         for variable in switch_variables
                     ]
@@ -471,7 +469,7 @@ async def async_setup_other_entry(
             )
             entities.append(device)
             hass.data[DATA_KEY][host] = device
-        elif model in ["lumi.acpartner.v3"]:
+        elif model == "lumi.acpartner.v3":
             ac_companion = AirConditioningCompanionV3(host, token)
             device = XiaomiAirConditioningCompanionSwitch(
                 name, ac_companion, config_entry, unique_id
@@ -519,6 +517,7 @@ async def async_setup_other_entry(
 
         for plug_service, method in SERVICE_TO_METHOD.items():
             schema = method.schema or SERVICE_SCHEMA
+            # pylint: disable-next=home-assistant-service-registered-in-setup-entry
             hass.services.async_register(
                 DOMAIN, plug_service, async_service_handler, schema=schema
             )
@@ -768,19 +767,15 @@ class XiaomiGatewaySwitch(XiaomiGatewayDevice, SwitchEntity):
     _attr_device_class = SwitchDeviceClass.SWITCH
     _sub_device: Switch
 
-    def __init__(
-        self,
-        coordinator: DataUpdateCoordinator[dict[str, bool]],
-        sub_device: SubDevice,
-        entry: XiaomiMiioConfigEntry,
-        variable: str,
-    ) -> None:
-        """Initialize the XiaomiSensor."""
-        super().__init__(coordinator, sub_device, entry)
+    def __init__(self, coordinator: GatewayDeviceCoordinator, variable: str) -> None:
+        """Initialize the XiaomiGatewaySwitch."""
+        super().__init__(coordinator)
         self._channel = GATEWAY_SWITCH_VARS[variable][KEY_CHANNEL]
         self._data_key = f"status_ch{self._channel}"
-        self._attr_unique_id = f"{sub_device.sid}-ch{self._channel}"
-        self._attr_name = f"{sub_device.name} ch{self._channel} ({sub_device.sid})"
+        self._attr_unique_id = f"{self._sub_device.sid}-ch{self._channel}"
+        self._attr_name = (
+            f"{self._sub_device.name} ch{self._channel} ({self._sub_device.sid})"
+        )
 
     @property
     def is_on(self) -> bool:

@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -27,7 +28,7 @@ from tests.typing import ClientSessionGenerator
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup application credentials component."""
-    await async_setup_component(hass, "application_credentials", {})
+    await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,
@@ -50,7 +51,7 @@ async def test_config_flow_no_credentials(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result.get("type") == FlowResultType.ABORT
+    assert result.get("type") is FlowResultType.ABORT
     assert result.get("reason") == "missing_credentials"
 
 
@@ -71,7 +72,7 @@ async def test_full_flow(
         DOMAIN, context={"source": config_entries.SOURCE_USER, "entry_id": DOMAIN}
     )
 
-    assert result.get("type") == FlowResultType.EXTERNAL_STEP
+    assert result.get("type") is FlowResultType.EXTERNAL_STEP
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

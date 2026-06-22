@@ -1,7 +1,7 @@
 """The Homee fan platform."""
 
 import math
-from typing import Any, cast
+from typing import Any, cast, override
 
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
@@ -19,22 +19,32 @@ from homeassistant.util.scaling import int_states_in_range
 from . import HomeeConfigEntry
 from .const import DOMAIN, PRESET_AUTO, PRESET_MANUAL, PRESET_SUMMER
 from .entity import HomeeNodeEntity
+from .helpers import setup_homee_platform
 
 PARALLEL_UPDATES = 0
+
+
+async def add_fan_entities(
+    config_entry: HomeeConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+    nodes: list[HomeeNode],
+) -> None:
+    """Add homee fan entities."""
+    async_add_entities(
+        HomeeFan(node, config_entry)
+        for node in nodes
+        if node.profile == NodeProfile.VENTILATION_CONTROL
+    )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
-    async_add_devices: AddConfigEntryEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Homee fan platform."""
 
-    async_add_devices(
-        HomeeFan(node, config_entry)
-        for node in config_entry.runtime_data.nodes
-        if node.profile == NodeProfile.VENTILATION_CONTROL
-    )
+    await setup_homee_platform(add_fan_entities, async_add_entities, config_entry)
 
 
 class HomeeFan(HomeeNodeEntity, FanEntity):
@@ -57,6 +67,7 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
         )
 
     @property
+    @override
     def supported_features(self) -> FanEntityFeature:
         """Return the supported features based on preset_mode."""
         features = FanEntityFeature.PRESET_MODE
@@ -71,11 +82,13 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
         return features
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the entity is on."""
         return self.percentage > 0
 
     @property
+    @override
     def percentage(self) -> int:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(
@@ -83,10 +96,12 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
         )
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return the mode from the float state."""
         return self._attr_preset_modes[int(self._mode_attribute.current_value)]
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         await self.async_set_homee_value(
@@ -94,16 +109,19 @@ class HomeeFan(HomeeNodeEntity, FanEntity):
             math.ceil(percentage_to_ranged_value(self.speed_range, percentage)),
         )
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode of the fan."""
         await self.async_set_homee_value(
             self._mode_attribute, self._attr_preset_modes.index(preset_mode)
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.async_set_homee_value(self._speed_attribute, 0)
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,

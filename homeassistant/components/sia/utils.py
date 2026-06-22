@@ -1,7 +1,5 @@
 """Helper functions for the SIA integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -52,7 +50,7 @@ def get_unavailability_interval(ping: int) -> float:
 
 def get_attr_from_sia_event(event: SIAEvent) -> dict[str, Any]:
     """Create the attributes dict from a SIAEvent."""
-    timestamp = event.timestamp if event.timestamp else utcnow()
+    timestamp = event.timestamp or utcnow()
     return {
         ATTR_ZONE: event.ri,
         ATTR_CODE: event.code,

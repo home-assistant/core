@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for System Bridge."""
 
-from __future__ import annotations
-
 from asyncio import Task
 from collections.abc import Callable
 from datetime import timedelta
@@ -13,13 +11,13 @@ from systembridgeconnector.exceptions import (
     ConnectionClosedException,
     ConnectionErrorException,
 )
-from systembridgeconnector.websocket_client import WebSocketClient
-from systembridgemodels.modules import (
+from systembridgeconnector.models.modules import (
     GetData,
     Module,
     ModulesData,
     RegisterDataListener,
 )
+from systembridgeconnector.websocket_client import WebSocketClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -31,23 +29,25 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
+from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, GET_DATA_WAIT_TIMEOUT, MODULES
 from .data import SystemBridgeData
+
+type SystemBridgeConfigEntry = ConfigEntry[SystemBridgeDataUpdateCoordinator]
 
 
 class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData]):
     """Class to manage fetching System Bridge data from single endpoint."""
 
-    config_entry: ConfigEntry
+    config_entry: SystemBridgeConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         LOGGER: logging.Logger,
         *,
-        entry: ConfigEntry,
+        entry: SystemBridgeConfigEntry,
     ) -> None:
         """Initialize global System Bridge data updater."""
         self.title = entry.title
@@ -198,7 +198,9 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
                     exception,
                 )
                 await self.clean_disconnect()
-                return self.data
+                raise UpdateFailed(
+                    f"Connection error occurred for {self.title}: {exception}"
+                ) from exception
 
             self.logger.debug("Registered data listener for %s", self.title)
 

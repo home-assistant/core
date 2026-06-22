@@ -1,7 +1,5 @@
 """Config flow for probe_plus integration."""
 
-from __future__ import annotations
-
 import dataclasses
 import logging
 from typing import Any
@@ -13,7 +11,7 @@ from homeassistant.components.bluetooth import (
     async_discovered_service_info,
 )
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, CONF_MODEL
 
 from .const import DOMAIN
 
@@ -73,6 +71,7 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=discovery.title,
                 data={
                     CONF_ADDRESS: discovery.discovery_info.address,
+                    CONF_MODEL: discovery.discovery_info.name,
                 },
             )
         self._set_confirm_only()
@@ -95,10 +94,10 @@ class ProbeConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery = self._discovered_devices[address]
             return self.async_create_entry(
                 title=discovery.title,
-                data=user_input,
+                data={**user_input, CONF_MODEL: discovery.discovery_info.name},
             )
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:

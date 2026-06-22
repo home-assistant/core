@@ -1,4 +1,11 @@
 {
+  "entity": {
+    "number": {
+      "fan_min_on_time": {
+        "default": "mdi:fan-clock"
+      }
+    }
+  },
   "services": {
     "create_vacation": {
       "service": "mdi:umbrella-beach"
@@ -9,11 +16,11 @@
     "resume_program": {
       "service": "mdi:play"
     },
-    "set_fan_min_on_time": {
-      "service": "mdi:fan-clock"
-    },
     "set_dst_mode": {
       "service": "mdi:sun-clock"
+    },
+    "set_fan_min_on_time": {
+      "service": "mdi:fan-clock"
     },
     "set_mic_mode": {
       "service": "mdi:microphone"

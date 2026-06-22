@@ -1,7 +1,5 @@
 """The air-Q integration."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -9,7 +7,7 @@ from homeassistant.core import HomeAssistant
 from .const import CONF_CLIP_NEGATIVE, CONF_RETURN_AVERAGE
 from .coordinator import AirQCoordinator
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.NUMBER, Platform.SENSOR]
 
 AirQConfigEntry = ConfigEntry[AirQCoordinator]
 

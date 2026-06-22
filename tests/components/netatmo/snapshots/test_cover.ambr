@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entity[cover.bubendorff_blind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
@@ -41,6 +43,7 @@
       'current_position': 0,
       'device_class': 'shutter',
       'friendly_name': 'Bubendorff blind',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
@@ -53,8 +56,9 @@
 # ---
 # name: test_entity[cover.entrance_blinds-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -72,6 +76,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <CoverDeviceClass.SHUTTER: 'shutter'>,
@@ -93,6 +98,7 @@
       'current_position': 0,
       'device_class': 'shutter',
       'friendly_name': 'Entrance Blinds',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,

@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_cloud_all_sensors[sensor.geniushub_errors-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GeniusHub Errors',
     'options': dict({
     }),
     'original_device_class': None,
@@ -51,8 +53,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.geniushub_information-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -70,6 +73,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GeniusHub Information',
     'options': dict({
     }),
     'original_device_class': None,
@@ -101,8 +105,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.geniushub_warnings-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -120,6 +125,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'GeniusHub Warnings',
     'options': dict({
     }),
     'original_device_class': None,
@@ -151,8 +157,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.radiator_valve_11-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -170,6 +177,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 11',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -206,8 +214,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.radiator_valve_56-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -225,6 +234,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 56',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -261,8 +271,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.radiator_valve_68-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -280,6 +291,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 68',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -316,8 +328,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.radiator_valve_78-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -335,6 +348,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 78',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -371,8 +385,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.radiator_valve_85-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -390,6 +405,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 85',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -426,8 +442,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.radiator_valve_88-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -445,6 +462,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 88',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -481,8 +499,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.radiator_valve_89-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -500,6 +519,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 89',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -536,8 +556,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.radiator_valve_90-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -555,6 +576,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Radiator Valve 90',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -591,8 +613,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.room_sensor_16-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -610,6 +633,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 16',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -648,8 +672,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.room_sensor_17-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -667,6 +692,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 17',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -705,8 +731,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.room_sensor_18-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -724,6 +751,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 18',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -762,8 +790,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.room_sensor_20-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -781,6 +810,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 20',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -819,8 +849,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.room_sensor_21-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -838,6 +869,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 21',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -876,8 +908,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.room_sensor_50-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -895,6 +928,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 50',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,
@@ -933,8 +967,9 @@
 # ---
 # name: test_cloud_all_sensors[sensor.room_sensor_53-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -952,6 +987,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Room Sensor 53',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.BATTERY: 'battery'>,

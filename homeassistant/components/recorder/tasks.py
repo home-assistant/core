@@ -1,7 +1,5 @@
 """Support for recording details."""
 
-from __future__ import annotations
-
 import abc
 import asyncio
 from collections.abc import Callable, Iterable
@@ -77,6 +75,7 @@ class UpdateStatisticsMetadataTask(RecorderTask):
     on_done: Callable[[], None] | None
     statistic_id: str
     new_statistic_id: str | None | UndefinedType
+    new_unit_class: str | None | UndefinedType
     new_unit_of_measurement: str | None | UndefinedType
 
     def run(self, instance: Recorder) -> None:
@@ -85,6 +84,7 @@ class UpdateStatisticsMetadataTask(RecorderTask):
             instance,
             self.statistic_id,
             self.new_statistic_id,
+            self.new_unit_class,
             self.new_unit_of_measurement,
         )
         if self.on_done:
@@ -175,7 +175,7 @@ class StatisticsTask(RecorderTask):
 
 @dataclass(slots=True)
 class CompileMissingStatisticsTask(RecorderTask):
-    """An object to insert into the recorder queue to run a compile missing statistics."""
+    """An object to insert into the recorder queue to compile missing statistics."""
 
     def run(self, instance: Recorder) -> None:
         """Run statistics task to compile missing statistics."""

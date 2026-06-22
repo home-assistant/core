@@ -1,7 +1,5 @@
 """Importer for the Elvia integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import TYPE_CHECKING, cast
 
@@ -20,6 +18,7 @@ from homeassistant.components.recorder.statistics import (
 from homeassistant.components.recorder.util import get_instance
 from homeassistant.const import UnitOfEnergy
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_conversion import EnergyConverter
 
 from .const import DOMAIN, LOGGER
 
@@ -153,6 +152,7 @@ class ElviaImporter:
                 name=f"{self.metering_point_id} Consumption",
                 source=DOMAIN,
                 statistic_id=statistic_id,
+                unit_class=EnergyConverter.UNIT_CLASS,
                 unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
             ),
             statistics=statistics,

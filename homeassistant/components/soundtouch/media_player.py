@@ -1,7 +1,5 @@
 """Support for interface with a Bose SoundTouch."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 from typing import Any
@@ -19,16 +17,12 @@ from homeassistant.components.media_player import (
     MediaType,
     async_process_play_media_url,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_START
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import SoundTouchConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -46,16 +40,16 @@ ATTR_SOUNDTOUCH_ZONE = "soundtouch_zone"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SoundTouchConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Bose SoundTouch media player based on a config entry."""
-    device = hass.data[DOMAIN][entry.entry_id].device
+    device = entry.runtime_data.device
     media_player = SoundTouchMediaPlayer(device)
 
     async_add_entities([media_player], True)
 
-    hass.data[DOMAIN][entry.entry_id].media_player = media_player
+    entry.runtime_data.media_player = media_player
 
 
 class SoundTouchMediaPlayer(MediaPlayerEntity):
@@ -91,9 +85,7 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
         self._attr_unique_id = device.config.device_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.config.device_id)},
-            connections={
-                (CONNECTION_NETWORK_MAC, format_mac(device.config.mac_address))
-            },
+            connections={(CONNECTION_NETWORK_MAC, device.config.mac_address)},
             manufacturer="Bose Corporation",
             model=device.config.type,
             name=device.config.name,
@@ -333,9 +325,9 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
             self._device.add_zone_slave([slave.device for slave in slaves])
 
     @property
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return entity specific state attributes."""
-        attributes = {}
+        attributes: dict[str, Any] = {}
 
         if self._zone and "master" in self._zone:
             attributes[ATTR_SOUNDTOUCH_ZONE] = self._zone
@@ -388,14 +380,16 @@ class SoundTouchMediaPlayer(MediaPlayerEntity):
 
     def _get_instance_by_ip(self, ip_address):
         """Search and return a SoundTouchDevice instance by it's IP address."""
-        for data in self.hass.data[DOMAIN].values():
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            data = entry.runtime_data
             if data.device.config.device_ip == ip_address:
                 return data.media_player
         return None
 
     def _get_instance_by_id(self, instance_id):
-        """Search and return a SoundTouchDevice instance by it's ID (aka MAC address)."""
-        for data in self.hass.data[DOMAIN].values():
+        """Search and return a SoundTouchDevice by its ID."""
+        for entry in self.hass.config_entries.async_loaded_entries(DOMAIN):
+            data = entry.runtime_data
             if data.device.config.device_id == instance_id:
                 return data.media_player
         return None

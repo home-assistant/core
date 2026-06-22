@@ -14,8 +14,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_admin].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -33,6 +34,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Admin',
     'options': dict({
     }),
     'original_device_class': None,
@@ -65,7 +67,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -75,7 +76,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -96,8 +96,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_created].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -115,6 +116,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Created',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -147,7 +149,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -157,7 +158,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -182,8 +182,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_days_until_expiration].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -201,6 +202,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Days until expiration',
     'options': dict({
     }),
     'original_device_class': None,
@@ -233,7 +235,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -243,7 +244,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -264,8 +264,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_expires].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -283,6 +284,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Expires',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -315,7 +317,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -325,7 +326,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -346,8 +346,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_last_updated].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -365,6 +366,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
@@ -397,7 +399,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -407,7 +408,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -427,8 +427,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_owner].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -446,6 +447,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Owner',
     'options': dict({
     }),
     'original_device_class': None,
@@ -478,7 +480,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -488,7 +489,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -508,8 +508,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_registrant].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -527,6 +528,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registrant',
     'options': dict({
     }),
     'original_device_class': None,
@@ -559,7 +561,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -569,7 +570,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -589,8 +589,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_registrar].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -608,6 +609,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Registrar',
     'options': dict({
     }),
     'original_device_class': None,
@@ -640,7 +642,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -650,7 +651,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -670,8 +670,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_reseller].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -689,6 +690,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Reseller',
     'options': dict({
     }),
     'original_device_class': None,
@@ -721,7 +723,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -731,7 +732,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -777,8 +777,9 @@
 # ---
 # name: test_whois_sensors[sensor.home_assistant_io_status].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -822,6 +823,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
@@ -854,7 +856,6 @@
         'home-assistant.io',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': None,
@@ -864,7 +865,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -885,8 +885,9 @@
 # ---
 # name: test_whois_sensors_missing_some_attrs.1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -904,6 +905,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Last updated',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,

@@ -1,14 +1,12 @@
 """Plugwise platform for Home Assistant Core."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import DOMAIN, LOGGER, PLATFORMS
+from .const import DEV_CLASS, DOMAIN, LOGGER, PLATFORMS
 from .coordinator import PlugwiseConfigEntry, PlugwiseDataUpdateCoordinator
 
 
@@ -47,7 +45,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: PlugwiseConfigEntry) ->
 def async_migrate_entity_entry(entry: er.RegistryEntry) -> dict[str, Any] | None:
     """Migrate Plugwise entity entries.
 
-    - Migrates old unique ID's from old binary_sensors and switches to the new unique ID's
+    Migrates old unique ID's from old binary_sensors and
+    switches to the new unique ID's.
     """
     if entry.domain == Platform.BINARY_SENSOR and entry.unique_id.endswith(
         "-slave_boiler_state"
@@ -80,7 +79,7 @@ def migrate_sensor_entities(
     # Migrating opentherm_outdoor_temperature
     # to opentherm_outdoor_air_temperature sensor
     for device_id, device in coordinator.data.items():
-        if device["dev_class"] != "heater_central":
+        if device[DEV_CLASS] != "heater_central":
             continue
 
         old_unique_id = f"{device_id}-outdoor_temperature"

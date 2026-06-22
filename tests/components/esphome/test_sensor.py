@@ -54,7 +54,6 @@ async def test_generic_numeric_sensor(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [SensorState(key=1, state=50)]
@@ -110,7 +109,6 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             entity_category=ESPHomeEntityCategory.DIAGNOSTIC,
             icon="mdi:leaf",
         )
@@ -147,7 +145,6 @@ async def test_generic_numeric_sensor_state_class_measurement(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             state_class=ESPHomeSensorStateClass.MEASUREMENT,
             device_class="power",
             unit_of_measurement="W",
@@ -165,6 +162,45 @@ async def test_generic_numeric_sensor_state_class_measurement(
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
+    entry = entity_registry.async_get("sensor.test_my_sensor")
+    assert entry is not None
+    # Note that ESPHome includes the EntityInfo type in the unique id
+    # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
+    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.entity_category is None
+
+
+async def test_generic_numeric_sensor_state_class_measurement_angle(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a generic sensor entity."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            state_class=ESPHomeSensorStateClass.MEASUREMENT_ANGLE,
+            unit_of_measurement="°",
+        )
+    ]
+    states = [SensorState(key=1, state=50)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "50"
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT_ANGLE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°"
     entry = entity_registry.async_get("sensor.test_my_sensor")
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
@@ -184,7 +220,6 @@ async def test_generic_numeric_sensor_device_class_timestamp(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             device_class="timestamp",
         )
     ]
@@ -206,13 +241,12 @@ async def test_generic_numeric_sensor_legacy_last_reset_convert(
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test a state class of measurement with last reset type of auto is converted to total increasing."""
+    """Test measurement with last_reset auto converts to total_increasing."""
     entity_info = [
         SensorInfo(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             legacy_last_reset_type=LastResetType.AUTO,
             state_class=ESPHomeSensorStateClass.MEASUREMENT,
         )
@@ -242,7 +276,6 @@ async def test_generic_numeric_sensor_no_state(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = []
@@ -269,7 +302,6 @@ async def test_generic_numeric_sensor_nan_state(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [SensorState(key=1, state=math.nan, missing_state=False)]
@@ -296,7 +328,6 @@ async def test_generic_numeric_sensor_missing_state(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [SensorState(key=1, state=True, missing_state=True)]
@@ -323,7 +354,6 @@ async def test_generic_text_sensor(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [TextSensorState(key=1, state="i am a teapot")]
@@ -350,7 +380,6 @@ async def test_generic_text_sensor_missing_state(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
         )
     ]
     states = [TextSensorState(key=1, state=True, missing_state=True)]
@@ -377,7 +406,6 @@ async def test_generic_text_sensor_device_class_timestamp(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             device_class=SensorDeviceClass.TIMESTAMP,
         )
     ]
@@ -406,7 +434,6 @@ async def test_generic_text_sensor_device_class_date(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             device_class=SensorDeviceClass.DATE,
         )
     ]
@@ -435,7 +462,6 @@ async def test_generic_numeric_sensor_empty_string_uom(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             unit_of_measurement="",
         )
     ]
@@ -493,7 +519,6 @@ async def test_suggested_display_precision_by_device_class(
             object_id="mysensor",
             key=1,
             name="my sensor",
-            unique_id="my_sensor",
             accuracy_decimals=expected_precision,
             device_class=device_class.value,
             unit_of_measurement=unit_of_measurement,

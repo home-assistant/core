@@ -1,7 +1,5 @@
 """Weather component that handles meteorological data for your location."""
 
-from __future__ import annotations
-
 from datetime import datetime
 
 from pytomorrowio.const import DAILY, FORECASTS, HOURLY, NOWCAST, WeatherCode
@@ -69,6 +67,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up a config entry."""
+    # Uses legacy hass.data[DOMAIN] pattern
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator = hass.data[DOMAIN][config_entry.data[CONF_API_KEY]]
     entity_registry = er.async_get(hass)
 
@@ -175,37 +175,37 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         return CONDITIONS[condition]
 
     @property
-    def native_temperature(self):
+    def native_temperature(self) -> float | None:
         """Return the platform temperature."""
         return self._get_current_property(TMRW_ATTR_TEMPERATURE)
 
     @property
-    def native_pressure(self):
+    def native_pressure(self) -> float | None:
         """Return the raw pressure."""
         return self._get_current_property(TMRW_ATTR_PRESSURE)
 
     @property
-    def humidity(self):
+    def humidity(self) -> float | None:
         """Return the humidity."""
         return self._get_current_property(TMRW_ATTR_HUMIDITY)
 
     @property
-    def native_wind_speed(self):
+    def native_wind_speed(self) -> float | None:
         """Return the raw wind speed."""
         return self._get_current_property(TMRW_ATTR_WIND_SPEED)
 
     @property
-    def wind_bearing(self):
+    def wind_bearing(self) -> float | None:
         """Return the wind bearing."""
         return self._get_current_property(TMRW_ATTR_WIND_DIRECTION)
 
     @property
-    def ozone(self):
+    def ozone(self) -> float | None:
         """Return the O3 (ozone) level."""
         return self._get_current_property(TMRW_ATTR_OZONE)
 
     @property
-    def condition(self):
+    def condition(self) -> str | None:
         """Return the condition."""
         return self._translate_condition(
             self._get_current_property(TMRW_ATTR_CONDITION),
@@ -213,7 +213,7 @@ class TomorrowioWeatherEntity(TomorrowioEntity, SingleCoordinatorWeatherEntity):
         )
 
     @property
-    def native_visibility(self):
+    def native_visibility(self) -> float | None:
         """Return the raw visibility."""
         return self._get_current_property(TMRW_ATTR_VISIBILITY)
 

@@ -1,11 +1,15 @@
 """Test ZHA Device Tracker."""
 
+from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import time
 from unittest.mock import patch
 
 import pytest
-from zha.application.registries import SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE
+from zha.application.platforms.device_tracker import (
+    SMARTTHINGS_ARRIVAL_SENSOR_DEVICE_TYPE,
+)
+from zigpy.device import Device
 from zigpy.profiles import zha
 from zigpy.zcl.clusters import general
 
@@ -28,7 +32,7 @@ from tests.common import async_fire_time_changed
 
 @pytest.fixture(autouse=True)
 def device_tracker_platforms_only():
-    """Only set up the device_tracker platforms and required base platforms to speed up tests."""
+    """Only set up device_tracker and base platforms."""
     with patch(
         "homeassistant.components.zha.PLATFORMS",
         (
@@ -44,7 +48,9 @@ def device_tracker_platforms_only():
 
 
 async def test_device_tracker(
-    hass: HomeAssistant, setup_zha, zigpy_device_mock
+    hass: HomeAssistant,
+    setup_zha: Callable[..., Coroutine[None]],
+    zigpy_device_mock: Callable[..., Device],
 ) -> None:
     """Test ZHA device tracker platform."""
 

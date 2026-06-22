@@ -1,6 +1,4 @@
-"""Handle KNX Devices."""
-
-from __future__ import annotations
+"""Handle Home Assistant Devices for the KNX integration."""
 
 from xknx import XKNX
 from xknx.core import XknxConnectionState

@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for the OpenSky integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from python_opensky import OpenSky, OpenSkyError, StateVector
@@ -30,14 +28,16 @@ from .const import (
     LOGGER,
 )
 
+type OpenSkyConfigEntry = ConfigEntry[OpenSkyDataUpdateCoordinator]
+
 
 class OpenSkyDataUpdateCoordinator(DataUpdateCoordinator[int]):
     """An OpenSky Data Update Coordinator."""
 
-    config_entry: ConfigEntry
+    config_entry: OpenSkyConfigEntry
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, opensky: OpenSky
+        self, hass: HomeAssistant, config_entry: OpenSkyConfigEntry, opensky: OpenSky
     ) -> None:
         """Initialize the OpenSky data coordinator."""
         super().__init__(

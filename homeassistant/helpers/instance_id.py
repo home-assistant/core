@@ -1,7 +1,5 @@
 """Helper to create a unique instance ID."""
 
-from __future__ import annotations
-
 import logging
 import uuid
 
@@ -41,6 +39,17 @@ async def async_get(hass: HomeAssistant) -> str:
 
     if data is not None:
         return data["uuid"]
+
+    data = {"uuid": uuid.uuid4().hex}
+
+    await store.async_save(data)
+
+    return data["uuid"]
+
+
+async def async_recreate(hass: HomeAssistant) -> str:
+    """Recreate a new unique ID for the hass instance."""
+    store = storage.Store[dict[str, str]](hass, DATA_VERSION, DATA_KEY, True)
 
     data = {"uuid": uuid.uuid4().hex}
 

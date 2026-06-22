@@ -29,7 +29,6 @@
         'TestLS',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'iotty',
@@ -39,7 +38,6 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': None,
-    'suggested_area': None,
     'sw_version': None,
     'via_device_id': None,
   })
@@ -52,8 +50,9 @@
 # ---
 # name: test_devices_creaction_ok[entity]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -71,6 +70,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,

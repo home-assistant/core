@@ -1,7 +1,5 @@
 """Common methods for Sense."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 import datetime
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch

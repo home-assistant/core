@@ -1,6 +1,4 @@
-"""Support for KNX/IP notifications."""
-
-from __future__ import annotations
+"""Support for KNX notify entities."""
 
 from xknx import XKNX
 from xknx.devices import Notification as XknxNotification
@@ -12,9 +10,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType
 
-from . import KNXModule
 from .const import KNX_ADDRESS, KNX_MODULE_KEY
 from .entity import KnxYamlEntity
+from .knx_module import KNXModule
 
 
 async def async_setup_entry(
@@ -46,12 +44,13 @@ class KNXNotify(KnxYamlEntity, NotifyEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX notification."""
+        self._device = _create_notification_instance(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_notification_instance(knx_module.xknx, config),
+            unique_id=str(self._device.remote_value.group_address),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.remote_value.group_address)
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a notification to knx bus."""

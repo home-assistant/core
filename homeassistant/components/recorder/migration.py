@@ -1,7 +1,5 @@
 """Schema migration helpers."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Iterable
 import contextlib
@@ -13,7 +11,15 @@ from typing import TYPE_CHECKING, Any, TypedDict, cast, final
 from uuid import UUID
 
 import sqlalchemy
-from sqlalchemy import ForeignKeyConstraint, MetaData, Table, func, text, update
+from sqlalchemy import (
+    ForeignKeyConstraint,
+    MetaData,
+    Table,
+    cast as cast_,
+    func,
+    text,
+    update,
+)
 from sqlalchemy.engine import CursorResult, Engine
 from sqlalchemy.exc import (
     DatabaseError,
@@ -26,8 +32,9 @@ from sqlalchemy.exc import (
 from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.session import Session
 from sqlalchemy.schema import AddConstraint, CreateTable, DropConstraint
-from sqlalchemy.sql.expression import true
+from sqlalchemy.sql.expression import and_, true
 from sqlalchemy.sql.lambdas import StatementLambdaElement
+from sqlalchemy.types import BINARY
 
 from homeassistant.core import HomeAssistant
 from homeassistant.util.enum import try_parse_enum
@@ -103,7 +110,11 @@ from .queries import (
     migrate_single_short_term_statistics_row_to_timestamp,
     migrate_single_statistics_row_to_timestamp,
 )
-from .statistics import cleanup_statistics_timestamp_migration, get_start_time
+from .statistics import (
+    _PRIMARY_UNIT_CONVERTERS,
+    cleanup_statistics_timestamp_migration,
+    get_start_time,
+)
 from .tasks import RecorderTask
 from .util import (
     database_job_retry_wrapper,
@@ -117,10 +128,10 @@ from .util import (
 if TYPE_CHECKING:
     from . import Recorder
 
-# Live schema migration supported starting from schema version 42 or newer
-# Schema version 41 was introduced in HA Core 2023.4
-# Schema version 42 was introduced in HA Core 2023.11
-LIVE_MIGRATION_MIN_SCHEMA_VERSION = 42
+# Live schema migration supported starting from schema version 48 or newer
+# Schema version 47 was introduced in HA Core 2024.9
+# Schema version 48 was introduced in HA Core 2025.1
+LIVE_MIGRATION_MIN_SCHEMA_VERSION = 48
 
 MIGRATION_NOTE_OFFLINE = (
     "Note: this may take several hours on large databases and slow machines. "
@@ -640,7 +651,7 @@ def _add_columns(
             connection.execute(
                 text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
-        except (InternalError, OperationalError, ProgrammingError):
+        except InternalError, OperationalError, ProgrammingError:
             # Some engines support adding all columns at once,
             # this error is when they don't
             _LOGGER.info("Unable to use quick column add. Adding 1 by 1")
@@ -703,7 +714,7 @@ def _modify_columns(
             connection.execute(
                 text(f"ALTER TABLE {table_name} {', '.join(columns_def)}")
             )
-        except (InternalError, OperationalError):
+        except InternalError, OperationalError:
             _LOGGER.info("Unable to use quick column modify. Modifying 1 by 1")
         else:
             return
@@ -713,7 +724,7 @@ def _modify_columns(
             try:
                 connection = session.connection()
                 connection.execute(text(f"ALTER TABLE {table_name} {column_def}"))
-            except (InternalError, OperationalError):
+            except InternalError, OperationalError:
                 _LOGGER.exception(
                     "Could not modify column %s in table %s", column_def, table_name
                 )
@@ -778,7 +789,7 @@ def _update_states_table_with_foreign_key_options(
                         add_constraint = AddConstraint(fkc)
                         fkc._create_rule = create_rule  # noqa: SLF001
                         connection.execute(add_constraint)
-            except (InternalError, OperationalError):
+            except InternalError, OperationalError:
                 _LOGGER.exception(
                     "Could not update foreign options in %s table", TABLE_STATES
                 )
@@ -814,7 +825,7 @@ def _drop_foreign_key_constraints(
             try:
                 connection = session.connection()
                 connection.execute(DropConstraint(drop))
-            except (InternalError, OperationalError):
+            except InternalError, OperationalError:
                 _LOGGER.exception(
                     "Could not drop foreign constraints in %s table on %s",
                     TABLE_STATES,
@@ -894,7 +905,7 @@ def _add_constraint(
         try:
             connection = session.connection()
             connection.execute(add_constraint)
-        except (InternalError, OperationalError):
+        except InternalError, OperationalError:
             _LOGGER.exception("Could not update foreign options in %s table", table)
             raise
 
@@ -944,7 +955,8 @@ def _delete_foreign_key_violations(
                             f"t1.{column} IS NOT NULL AND "
                             "NOT EXISTS "
                             "(SELECT 1 "
-                            f"FROM (SELECT {foreign_column} from {foreign_table}) AS t2 "
+                            f"FROM (SELECT {foreign_column} "
+                            f"from {foreign_table}) AS t2 "
                             f"WHERE t2.{foreign_column} = t1.{column})) "
                             "LIMIT 100000;"
                         )
@@ -1348,7 +1360,7 @@ class _SchemaVersion20Migrator(_SchemaVersionMigrator, target_version=20):
 class _SchemaVersion21Migrator(_SchemaVersionMigrator, target_version=21):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        # Try to change the character set of the statistic_meta table
+        # Try to change the character set of events, states and statistics_meta tables
         if self.engine.dialect.name == SupportedDialect.MYSQL:
             for table in ("events", "states", "statistics_meta"):
                 _correct_table_character_set_and_collation(table, self.session_maker)
@@ -1599,7 +1611,8 @@ class _SchemaVersion32Migrator(_SchemaVersionMigrator, target_version=32):
         _drop_index(self.session_maker, "states", "ix_states_last_updated")
         _drop_index(self.session_maker, "events", "ix_events_time_fired")
         with session_scope(session=self.session_maker()) as session:
-            # In version 31 we migrated all the time_fired, last_updated, and last_changed
+            # In version 31 we migrated all the time_fired,
+            # last_updated, and last_changed
             # columns to be timestamps. In version 32 we need to wipe the old columns
             # since they are no longer used and take up a significant amount of space.
             assert self.instance.engine is not None, "engine should never be None"
@@ -1819,13 +1832,17 @@ class _SchemaVersion39Migrator(_SchemaVersionMigrator, target_version=39):
 class _SchemaVersion40Migrator(_SchemaVersionMigrator, target_version=40):
     def _apply_update(self) -> None:
         """Version specific update method."""
-        # ix_events_event_type_id is a left-prefix of ix_events_event_type_id_time_fired_ts
+        # ix_events_event_type_id is a left-prefix of
+        # ix_events_event_type_id_time_fired_ts
         _drop_index(self.session_maker, "events", "ix_events_event_type_id")
-        # ix_states_metadata_id is a left-prefix of ix_states_metadata_id_last_updated_ts
+        # ix_states_metadata_id is a left-prefix of
+        # ix_states_metadata_id_last_updated_ts
         _drop_index(self.session_maker, "states", "ix_states_metadata_id")
-        # ix_statistics_metadata_id is a left-prefix of ix_statistics_statistic_id_start_ts
+        # ix_statistics_metadata_id is a left-prefix of
+        # ix_statistics_statistic_id_start_ts
         _drop_index(self.session_maker, "statistics", "ix_statistics_metadata_id")
-        # ix_statistics_short_term_metadata_id is a left-prefix of ix_statistics_short_term_statistic_id_start_ts
+        # ix_statistics_short_term_metadata_id is a left-prefix
+        # of ix_statistics_short_term_statistic_id_start_ts
         _drop_index(
             self.session_maker,
             "statistics_short_term",
@@ -2008,7 +2025,8 @@ class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
             self.session_maker,
             "statistics_meta",
             [
-                f"mean_type {self.column_types.small_int_type} NOT NULL DEFAULT {StatisticMeanType.NONE.value}"
+                f"mean_type {self.column_types.small_int_type}"
+                f" NOT NULL DEFAULT {StatisticMeanType.NONE.value}"
             ],
         )
 
@@ -2023,7 +2041,8 @@ class _SchemaVersion49Migrator(_SchemaVersionMigrator, target_version=49):
             connection = session.connection()
             connection.execute(
                 text(
-                    "UPDATE statistics_meta SET mean_type=:mean_type WHERE has_mean=true"
+                    "UPDATE statistics_meta SET mean_type=:mean_type"
+                    " WHERE has_mean=true"
                 ),
                 {"mean_type": StatisticMeanType.ARITHMETIC.value},
             )
@@ -2035,6 +2054,98 @@ class _SchemaVersion50Migrator(_SchemaVersionMigrator, target_version=50):
         with session_scope(session=self.session_maker()) as session:
             connection = session.connection()
             connection.execute(text("UPDATE statistics_meta SET has_mean=NULL"))
+
+
+class _SchemaVersion51Migrator(_SchemaVersionMigrator, target_version=51):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # Replaced with version 52 which corrects issues with MySQL string comparisons.
+
+
+class _SchemaVersion52Migrator(_SchemaVersionMigrator, target_version=52):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        if self.engine.dialect.name == SupportedDialect.MYSQL:
+            self._apply_update_mysql()
+        else:
+            self._apply_update_postgresql_sqlite()
+
+    def _apply_update_mysql(self) -> None:
+        """Version specific update method for mysql."""
+        _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            for conv in _PRIMARY_UNIT_CONVERTERS:
+                case_sensitive_units = {
+                    u.encode("utf-8") if u else u for u in conv.VALID_UNITS
+                }
+                # Reset unit_class to None for entries that do not match
+                # the valid units (case sensitive) but matched before due to
+                # case insensitive comparisons.
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS),
+                            cast_(StatisticsMeta.unit_of_measurement, BINARY).not_in(
+                                case_sensitive_units
+                            ),
+                        )
+                    )
+                    .values(unit_class=None)
+                )
+                # Do an explicitly case sensitive match (actually binary) to set the
+                # correct unit_class. This is needed because we use the case sensitive
+                # utf8mb4_unicode_ci collation.
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            cast_(StatisticsMeta.unit_of_measurement, BINARY).in_(
+                                case_sensitive_units
+                            ),
+                            StatisticsMeta.unit_class.is_(None),
+                        )
+                    )
+                    .values(unit_class=conv.UNIT_CLASS)
+                )
+
+    def _apply_update_postgresql_sqlite(self) -> None:
+        """Version specific update method for postgresql and sqlite."""
+        _add_columns(self.session_maker, "statistics_meta", ["unit_class VARCHAR(255)"])
+        with session_scope(session=self.session_maker()) as session:
+            connection = session.connection()
+            for conv in _PRIMARY_UNIT_CONVERTERS:
+                # Set the correct unit_class. Unlike MySQL, Postgres and SQLite
+                # have case sensitive string comparisons by default, so we
+                # can directly match on the valid units.
+                connection.execute(
+                    update(StatisticsMeta)
+                    .where(
+                        and_(
+                            StatisticsMeta.unit_of_measurement.in_(conv.VALID_UNITS),
+                            StatisticsMeta.unit_class.is_(None),
+                        )
+                    )
+                    .values(unit_class=conv.UNIT_CLASS)
+                )
+
+
+class _SchemaVersion53Migrator(_SchemaVersionMigrator, target_version=53):
+    def _apply_update(self) -> None:
+        """Version specific update method."""
+        # Try to change the character set of events, states and statistics_meta tables
+        if self.engine.dialect.name == SupportedDialect.MYSQL:
+            for table in (
+                "events",
+                "event_data",
+                "states",
+                "state_attributes",
+                "statistics",
+                "statistics_meta",
+                "statistics_short_term",
+            ):
+                _correct_table_character_set_and_collation(table, self.session_maker)
 
 
 def _migrate_statistics_columns_to_timestamp_removing_duplicates(
@@ -2068,7 +2179,8 @@ def _migrate_statistics_columns_to_timestamp_removing_duplicates(
         # Log at error level to ensure the user sees this message in the log
         # since we logged the error above.
         _LOGGER.error(
-            "Statistics migration successfully recovered after statistics table duplicate cleanup"
+            "Statistics migration successfully recovered after"
+            " statistics table duplicate cleanup"
         )
 
 
@@ -2079,8 +2191,10 @@ def _correct_table_character_set_and_collation(
     """Correct issues detected by validate_db_schema."""
     # Attempt to convert the table to utf8mb4
     _LOGGER.warning(
-        "Updating character set and collation of table %s to utf8mb4. %s",
+        "Updating table %s to character set %s and collation %s. %s",
         table,
+        MYSQL_DEFAULT_CHARSET,
+        MYSQL_COLLATE,
         MIGRATION_NOTE_MINUTES,
     )
     with (
@@ -2137,7 +2251,8 @@ def _wipe_old_string_time_columns(
             text(
                 "UPDATE events set time_fired=NULL "
                 "where event_id in "
-                "(select event_id from events where time_fired_ts is NOT NULL LIMIT 100000);"
+                "(select event_id from events"
+                " where time_fired_ts is NOT NULL LIMIT 100000);"
             )
         )
         session.commit()
@@ -2145,7 +2260,9 @@ def _wipe_old_string_time_columns(
             text(
                 "UPDATE states set last_updated=NULL, last_changed=NULL "
                 "where state_id in "
-                "(select state_id from states where last_updated_ts is NOT NULL LIMIT 100000);"
+                "(select state_id from states"
+                " where last_updated_ts is NOT NULL"
+                " LIMIT 100000);"
             )
         )
         session.commit()
@@ -2181,15 +2298,19 @@ def _migrate_columns_to_timestamp(
                 )
             )
     elif engine.dialect.name == SupportedDialect.MYSQL:
-        # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
-        # We also need to do this in a loop since we can't be sure that we have
-        # updated all rows in the table until the rowcount is 0
+        # With MySQL we do this in chunks to avoid hitting
+        # the `innodb_buffer_pool_size` limit.
+        # We also need to do this in a loop since we can't
+        # be sure that we have updated all rows in the table
+        # until the rowcount is 0
         while result is None or result.rowcount > 0:
             with session_scope(session=session_maker()) as session:
                 result = session.connection().execute(
                     text(
                         "UPDATE events set time_fired_ts="
-                        "IF(time_fired is NULL or UNIX_TIMESTAMP(time_fired) is NULL,0,"
+                        "IF(time_fired is NULL"
+                        " or UNIX_TIMESTAMP(time_fired)"
+                        " is NULL,0,"
                         "UNIX_TIMESTAMP(time_fired)"
                         ") "
                         "where time_fired_ts is NULL "
@@ -2202,7 +2323,9 @@ def _migrate_columns_to_timestamp(
                 result = session.connection().execute(
                     text(
                         "UPDATE states set last_updated_ts="
-                        "IF(last_updated is NULL or UNIX_TIMESTAMP(last_updated) is NULL,0,"
+                        "IF(last_updated is NULL"
+                        " or UNIX_TIMESTAMP(last_updated)"
+                        " is NULL,0,"
                         "UNIX_TIMESTAMP(last_updated) "
                         "), "
                         "last_changed_ts="
@@ -2221,9 +2344,13 @@ def _migrate_columns_to_timestamp(
                     text(
                         "UPDATE events SET "
                         "time_fired_ts= "
-                        "(case when time_fired is NULL then 0 else EXTRACT(EPOCH FROM time_fired::timestamptz) end) "
+                        "(case when time_fired is NULL then 0"
+                        " else EXTRACT(EPOCH FROM"
+                        " time_fired::timestamptz) end) "
                         "WHERE event_id IN ( "
-                        "SELECT event_id FROM events where time_fired_ts is NULL LIMIT 100000 "
+                        "SELECT event_id FROM events"
+                        " where time_fired_ts is NULL"
+                        " LIMIT 100000 "
                         " );"
                     )
                 )
@@ -2233,10 +2360,15 @@ def _migrate_columns_to_timestamp(
                 result = session.connection().execute(
                     text(
                         "UPDATE states set last_updated_ts="
-                        "(case when last_updated is NULL then 0 else EXTRACT(EPOCH FROM last_updated::timestamptz) end), "
-                        "last_changed_ts=EXTRACT(EPOCH FROM last_changed::timestamptz) "
+                        "(case when last_updated is NULL then 0"
+                        " else EXTRACT(EPOCH FROM"
+                        " last_updated::timestamptz) end), "
+                        "last_changed_ts=EXTRACT(EPOCH FROM"
+                        " last_changed::timestamptz) "
                         "where state_id IN ( "
-                        "SELECT state_id FROM states where last_updated_ts is NULL LIMIT 100000 "
+                        "SELECT state_id FROM states"
+                        " where last_updated_ts is NULL"
+                        " LIMIT 100000 "
                         " );"
                     )
                 )
@@ -2303,9 +2435,12 @@ def _migrate_statistics_columns_to_timestamp(
     # Migrate all data in statistics.start to statistics.start_ts
     # Migrate all data in statistics.created to statistics.created_ts
     # Migrate all data in statistics.last_reset to statistics.last_reset_ts
-    # Migrate all data in statistics_short_term.start to statistics_short_term.start_ts
-    # Migrate all data in statistics_short_term.created to statistics_short_term.created_ts
-    # Migrate all data in statistics_short_term.last_reset to statistics_short_term.last_reset_ts
+    # Migrate all data in statistics_short_term.start
+    # to statistics_short_term.start_ts
+    # Migrate all data in statistics_short_term.created
+    # to statistics_short_term.created_ts
+    # Migrate all data in statistics_short_term.last_reset
+    # to statistics_short_term.last_reset_ts
     result: CursorResult | None = None
     if engine.dialect.name == SupportedDialect.SQLITE:
         # With SQLite we do this in one go since it is faster
@@ -2322,9 +2457,11 @@ def _migrate_statistics_columns_to_timestamp(
                     )
                 )
     elif engine.dialect.name == SupportedDialect.MYSQL:
-        # With MySQL we do this in chunks to avoid hitting the `innodb_buffer_pool_size` limit
-        # We also need to do this in a loop since we can't be sure that we have
-        # updated all rows in the table until the rowcount is 0
+        # With MySQL we do this in chunks to avoid hitting
+        # the `innodb_buffer_pool_size` limit.
+        # We also need to do this in a loop since we can't
+        # be sure that we have updated all rows in the table
+        # until the rowcount is 0
         for table in STATISTICS_TABLES:
             result = None
             while result is None or result.rowcount > 0:
@@ -2354,11 +2491,17 @@ def _migrate_statistics_columns_to_timestamp(
                     result = session.connection().execute(
                         text(
                             f"UPDATE {table} set start_ts="  # noqa: S608
-                            "(case when start is NULL then 0 else EXTRACT(EPOCH FROM start::timestamptz) end), "
-                            "created_ts=EXTRACT(EPOCH FROM created::timestamptz), "
-                            "last_reset_ts=EXTRACT(EPOCH FROM last_reset::timestamptz) "
+                            "(case when start is NULL then 0"
+                            " else EXTRACT(EPOCH FROM"
+                            " start::timestamptz) end), "
+                            "created_ts=EXTRACT(EPOCH FROM"
+                            " created::timestamptz), "
+                            "last_reset_ts=EXTRACT(EPOCH FROM"
+                            " last_reset::timestamptz) "
                             "where id IN ("
-                            f"SELECT id FROM {table} where start_ts is NULL LIMIT 100000"
+                            "SELECT id FROM "
+                            f"{table} where start_ts is NULL"
+                            " LIMIT 100000"
                             ");"
                         )
                     )
@@ -2490,7 +2633,7 @@ class BaseMigration(ABC):
         start_schema_version: int,
         migration_changes: dict[str, int],
     ) -> None:
-        """Initialize a new BaseRunTimeMigration.
+        """Initialize a new BaseMigration.
 
         :param initial_schema_version: The schema version the database was created with.
         :param start_schema_version: The schema version when starting the migration.
@@ -2519,7 +2662,7 @@ class BaseMigration(ABC):
     def migrate_data_impl(self, instance: Recorder) -> DataMigrationStatus:
         """Migrate some data, return if the migration needs to run and if it is done."""
 
-    def migration_done(self, instance: Recorder, session: Session) -> None:
+    def migration_done(self, instance: Recorder, session: Session) -> None:  # noqa: B027
         """Will be called after migrate returns True or if migration is not needed."""
 
     @abstractmethod
@@ -2708,7 +2851,13 @@ class StatesContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                             "context_parent_id": None,
                             "context_parent_id_bin": _to_bytes(context_parent_id),
                         }
-                        for state_id, last_updated_ts, context_id, context_user_id, context_parent_id in states
+                        for (
+                            state_id,
+                            last_updated_ts,
+                            context_id,
+                            context_user_id,
+                            context_parent_id,
+                        ) in states
                     ],
                 )
             is_done = not states
@@ -2752,7 +2901,13 @@ class EventsContextIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
                             "context_parent_id": None,
                             "context_parent_id_bin": _to_bytes(context_parent_id),
                         }
-                        for event_id, time_fired_ts, context_id, context_user_id, context_parent_id in events
+                        for (
+                            event_id,
+                            time_fired_ts,
+                            context_id,
+                            context_user_id,
+                            context_parent_id,
+                        ) in events
                     ],
                 )
             is_done = not events
@@ -2849,7 +3004,8 @@ class EntityIDMigration(BaseMigrationWithQuery, BaseOffLineMigration):
         while we are migrating.
 
         1. Link the states to the states_meta table
-        2. Remove the entity_id column from the states table (in post_migrate_entity_ids)
+        2. Remove the entity_id column from the states table
+           (in post_migrate_entity_ids)
         """
         _LOGGER.debug("Migrating entity_ids")
         states_meta_manager = instance.states_meta_manager
@@ -2964,7 +3120,12 @@ class EventIDPostMigration(BaseRunTimeMigration):
                     _drop_foreign_key_constraints(
                         session_maker, instance.engine, TABLE_STATES, "event_id"
                     )
-                except (InternalError, OperationalError):
+                except (InternalError, OperationalError) as err:
+                    _LOGGER.debug(
+                        "Could not drop foreign key constraint on states.event_id, "
+                        "will try again later",
+                        exc_info=err,
+                    )
                     fk_remove_ok = False
                 else:
                     fk_remove_ok = True
@@ -3076,7 +3237,8 @@ def rebuild_sqlite_table(
             session.connection().execute(text("PRAGMA foreign_keys=OFF"))
         # Step 2 - create a transaction
         with session_scope(session=session_maker()) as session:
-            # Step 3 - we know all the indexes, triggers, and views associated with table X
+            # Step 3 - we know all the indexes, triggers, and
+            # views associated with table X
             new_sql = str(CreateTable(table_table).compile(engine)).strip("\n") + ";"
             source_sql = f"CREATE TABLE {orig_name}"
             replacement_sql = f"CREATE TABLE {temp_name}"

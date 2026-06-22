@@ -10,6 +10,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import discovery_flow, json as json_helper
 from homeassistant.helpers.discovery_flow import DiscoveryKey
+from homeassistant.util import json as json_util
 
 
 @pytest.fixture
@@ -106,7 +107,7 @@ async def test_async_create_flow_checks_existing_flows_after_startup(
 async def test_async_create_flow_checks_existing_flows_before_startup(
     hass: HomeAssistant, mock_flow_init: AsyncMock
 ) -> None:
-    """Test existing flows prevent an identical ones from being created before startup."""
+    """Test existing flows prevent identical ones from being created."""
     hass.set_state(CoreState.stopped)
     for _ in range(2):
         discovery_flow.async_create_flow(
@@ -151,6 +152,6 @@ def test_discovery_key_serialize_deserialize(key: str | tuple[str]) -> None:
     )
     serialized = json_helper.json_dumps(discovery_key_1)
     assert (
-        discovery_flow.DiscoveryKey.from_json_dict(json_helper.json_loads(serialized))
+        discovery_flow.DiscoveryKey.from_json_dict(json_util.json_loads(serialized))
         == discovery_key_1
     )

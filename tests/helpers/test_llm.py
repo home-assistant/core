@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.components import calendar, todo
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
-from homeassistant.components.script.config import ScriptConfig
+from homeassistant.components.script import ScriptConfig
 from homeassistant.core import Context, HomeAssistant, State, SupportsResponse
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -183,19 +183,23 @@ async def test_assist_api(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["GetLiveContext"]
+    assert [tool.name for tool in api.tools] == ["GetDateTime", "GetLiveContext"]
 
     # Match all
     intent_handler.platforms = None
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert [tool.name for tool in api.tools] == ["test_intent", "GetLiveContext"]
+    assert [tool.name for tool in api.tools] == [
+        "test_intent",
+        "GetDateTime",
+        "GetLiveContext",
+    ]
 
     # Match specific domain
     intent_handler.platforms = {"light"}
 
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 2
+    assert len(api.tools) == 3
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "Execute Home Assistant test_intent intent"
@@ -245,7 +249,6 @@ async def test_assist_api(
         "data": {
             "failed": [],
             "success": [],
-            "targets": [],
         },
         "reprompt": {
             "plain": {
@@ -304,7 +307,6 @@ async def test_assist_api(
         "data": {
             "failed": [],
             "success": [],
-            "targets": [],
         },
         "response_type": "action_done",
         "reprompt": {
@@ -365,6 +367,7 @@ async def test_assist_api_tools(
         "HassTurnOn",
         "HassTurnOff",
         "HassSetPosition",
+        "HassStopMoving",
         "HassStartTimer",
         "HassCancelTimer",
         "HassCancelAllTimers",
@@ -374,6 +377,7 @@ async def test_assist_api_tools(
         "HassUnpauseTimer",
         "HassTimerStatus",
         "Super_crazy_intent_with_unique_name",
+        "GetDateTime",
     ]
 
 
@@ -390,7 +394,7 @@ async def test_assist_api_description(
 
     assert len(llm.async_get_apis(hass)) == 1
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert len(api.tools) == 1
+    assert len(api.tools) == 2
     tool = api.tools[0]
     assert tool.name == "test_intent"
     assert tool.description == "my intent handler"
@@ -415,8 +419,10 @@ async def test_assist_api_prompt(
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
+
     assert api.api_prompt == (
-        "Only if the user wants to control a device, tell them to expose entities to their "
+        "Only if the user wants to control a device, tell them to expose"
+        " entities to their "
         "voice assistant in Home Assistant."
     )
 
@@ -450,7 +456,7 @@ async def test_assist_api_prompt(
     entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
-        connections={("test", "1234")},
+        connections={("test", "123456")},
         suggested_area="Test Area",
     )
     area = area_registry.async_get_area_by_name("Test Area")
@@ -477,8 +483,50 @@ async def test_assist_api_prompt(
     )
     hass.states.async_set(entry2.entity_id, "on", {"friendly_name": "Living Room"})
 
+    # Create two sensors with different display precisions
+    power1 = entity_registry.async_get_or_create(
+        "sensor",
+        "power1",
+        "mock-id-power-1",
+        original_name="Power 1",
+        suggested_object_id="power1",
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity_options(
+        power1.entity_id,
+        "sensor",
+        {"display_precision": 0},
+    )
+    hass.states.async_set(
+        power1.entity_id,
+        "1234.1234",
+        {"friendly_name": "Power 1"},
+    )
+    async_expose_entity(hass, "conversation", power1.entity_id, True)
+    power2 = entity_registry.async_get_or_create(
+        "sensor",
+        "power2",
+        "mock-id-power-2",
+        original_name="Power 2",
+        suggested_object_id="power2",
+        device_id=device.id,
+    )
+    entity_registry.async_update_entity_options(
+        power2.entity_id,
+        "sensor",
+        {"suggested_display_precision": 2},
+    )
+    hass.states.async_set(
+        power2.entity_id,
+        "1234.1234",
+        {"friendly_name": "Power 2"},
+    )
+    async_expose_entity(hass, "conversation", power2.entity_id, True)
+
     def create_entity(
-        device: dr.DeviceEntry, write_state=True, aliases: set[str] | None = None
+        device: dr.DeviceEntry,
+        write_state=True,
+        aliases: list[er.AliasEntry] | None = None,
     ) -> None:
         """Create an entity for a device and track entity_id."""
         entity = entity_registry.async_get_or_create(
@@ -503,7 +551,7 @@ async def test_assist_api_prompt(
             model="Test Model",
             suggested_area="Test Area",
         ),
-        aliases={"my test light"},
+        aliases=[er.COMPUTED_NAME, "my test light"],
     )
     for i in range(3):
         create_entity(
@@ -570,13 +618,14 @@ async def test_assist_api_prompt(
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             connections={("test", "9876-integer-values")},
-            name=1,
-            manufacturer=2,
-            model=3,
+            name="1",
+            manufacturer="2",
+            model="3",
             suggested_area="Test Area 2",
         )
     )
-    exposed_entities_prompt = """Live Context: An overview of the areas and the devices in this smart home:
+    exposed_entities_prompt = """\
+Live Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
   state: unavailable
@@ -590,6 +639,14 @@ async def test_assist_api_prompt(
 - names: Living Room
   domain: light
   state: 'on'
+  areas: Test Area, Alternative name
+- names: Power 1
+  domain: sensor
+  state: '1234'
+  areas: Test Area, Alternative name
+- names: Power 2
+  domain: sensor
+  state: '1234.12'
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
@@ -624,7 +681,8 @@ async def test_assist_api_prompt(
   state: unavailable
   areas: Test Area 2
 """
-    stateless_exposed_entities_prompt = """Static Context: An overview of the areas and the devices in this smart home:
+    stateless_exposed_entities_prompt = """\
+Static Context: An overview of the areas and the devices in this smart home:
 - names: '1'
   domain: light
   areas: Test Area 2
@@ -632,6 +690,12 @@ async def test_assist_api_prompt(
   domain: light
 - names: Living Room
   domain: light
+  areas: Test Area, Alternative name
+- names: Power 1
+  domain: sensor
+  areas: Test Area, Alternative name
+- names: Power 2
+  domain: sensor
   areas: Test Area, Alternative name
 - names: Test Device, my test light
   domain: light
@@ -668,30 +732,45 @@ async def test_assist_api_prompt(
 
     area_prompt = (
         "When a user asks to turn on all devices of a specific type, "
-        "ask user to specify an area, unless there is only one device of that type."
+        "ask the user to specify an area, unless there is only one device of that type."
     )
-    dynamic_context_prompt = """You ARE equipped to answer questions about the current state of
-the home using the `GetLiveContext` tool. This is a primary function. Do not state you lack the
-functionality if the question requires live data.
-If the user asks about device existence/type (e.g., "Do I have lights in the bedroom?"): Answer
-from the static context below.
-If the user asks about the CURRENT state, value, or mode (e.g., "Is the lock locked?",
-"Is the fan on?", "What mode is the thermostat in?", "What is the temperature outside?"):
-    1.  Recognize this requires live data.
-    2.  You MUST call `GetLiveContext`. This tool will provide the needed real-time information (like temperature from the local weather, lock status, etc.).
-    3.  Use the tool's response** to answer the user accurately (e.g., "The temperature outside is [value from tool].").
-For general knowledge questions not about the home: Answer truthfully from internal knowledge.
-"""
+    dynamic_context_prompt = (
+        "You ARE equipped to answer questions about the"
+        " current state of\nthe home using the"
+        " `GetLiveContext` tool. This is a primary"
+        " function. Do not state you lack the\n"
+        "functionality if the question requires live"
+        " data.\nIf the user asks about device"
+        ' existence/type (e.g., "Do I have lights in'
+        ' the bedroom?"): Answer\nfrom the static'
+        " context below.\nIf the user asks about the"
+        ' CURRENT state, value, or mode (e.g., "Is'
+        ' the lock locked?",\n"Is the fan on?",'
+        ' "What mode is the thermostat in?", "What'
+        ' is the temperature outside?"):\n'
+        "    1.  Recognize this requires live data.\n"
+        "    2.  You MUST call `GetLiveContext`. This"
+        " tool will provide the needed real-time"
+        " information (like temperature from the local"
+        " weather, lock status, etc.).\n"
+        "    3.  Use the tool's response** to answer"
+        ' the user accurately (e.g., "The temperature'
+        ' outside is [value from tool].").\n'
+        "For general knowledge questions not about the"
+        " home: Answer truthfully from internal"
+        " knowledge.\n"
+    )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
-    # Verify that the GetLiveContext tool returns the same results as the exposed_entities_prompt
+    # Verify that the GetLiveContext tool returns the same results
+    # as the exposed_entities_prompt
     result = await api.async_call_tool(
         llm.ToolInput(tool_name="GetLiveContext", tool_args={})
     )
@@ -709,26 +788,27 @@ For general knowledge questions not about the home: Answer truthfully from inter
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Add floor
     floor = floor_registry.async_create("2")
     area_registry.async_update(area.id, floor_id=floor.floor_id)
     area_prompt = (
-        "You are in area Test Area (floor 2) and all generic commands like 'turn on the lights' "
+        "You are in area Test Area (floor 2) and all generic commands"
+        " like 'turn on the lights' "
         "should target this area."
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
-{no_timer_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}
+{no_timer_prompt}"""
     )
 
     # Register device for timers
@@ -738,10 +818,345 @@ For general knowledge questions not about the home: Answer truthfully from inter
     # The no_timer_prompt is gone
     assert api.api_prompt == (
         f"""{first_part_prompt}
-{area_prompt}
 {dynamic_context_prompt}
-{stateless_exposed_entities_prompt}"""
+{stateless_exposed_entities_prompt}
+{area_prompt}"""
     )
+
+
+async def test_get_live_context_tool_filter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    area_registry: ar.AreaRegistry,
+) -> None:
+    """Test the filter parameters of the GetLiveContext tool."""
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(hass, "intent", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+
+    entry = MockConfigEntry(title=None)
+    entry.add_to_hass(hass)
+
+    office = area_registry.async_create("Office")
+    area_registry.async_update(office.id, aliases={"Workspace"})
+    area_registry.async_create("Kitchen")
+
+    office_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "office-1")},
+        suggested_area="Office",
+    )
+    kitchen_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        connections={("test", "kitchen-1")},
+        suggested_area="Kitchen",
+    )
+
+    office_light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "office_light",
+        original_name="Office Light",
+        device_id=office_device.id,
+        suggested_object_id="office_light",
+    )
+    kitchen_light = entity_registry.async_get_or_create(
+        "light",
+        "test",
+        "kitchen_light",
+        original_name="Kitchen Light",
+        device_id=kitchen_device.id,
+        suggested_object_id="kitchen_light",
+    )
+    office_switch = entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "office_switch",
+        original_name="Office Switch",
+        device_id=office_device.id,
+        suggested_object_id="office_switch",
+    )
+    front_door = entity_registry.async_get_or_create(
+        "lock",
+        "test",
+        "front_door",
+        original_name="Front Door",
+        suggested_object_id="front_door",
+    )
+    # Two entities sharing the same name in different areas
+    office_ac = entity_registry.async_get_or_create(
+        "climate",
+        "test",
+        "office_ac",
+        original_name="AC",
+        device_id=office_device.id,
+        suggested_object_id="office_ac",
+    )
+    kitchen_ac = entity_registry.async_get_or_create(
+        "climate",
+        "test",
+        "kitchen_ac",
+        original_name="AC",
+        device_id=kitchen_device.id,
+        suggested_object_id="kitchen_ac",
+    )
+    entity_registry.async_update_entity(
+        kitchen_light.entity_id, aliases=[er.COMPUTED_NAME, "Cooking Lamp"]
+    )
+
+    for entity_id in (
+        office_light.entity_id,
+        kitchen_light.entity_id,
+        office_switch.entity_id,
+        front_door.entity_id,
+        office_ac.entity_id,
+        kitchen_ac.entity_id,
+    ):
+        async_expose_entity(hass, "conversation", entity_id, True)
+
+    hass.states.async_set(office_light.entity_id, "on")
+    hass.states.async_set(kitchen_light.entity_id, "off")
+    hass.states.async_set(office_switch.entity_id, "on")
+    hass.states.async_set(front_door.entity_id, "locked")
+    hass.states.async_set(office_ac.entity_id, "cool")
+    hass.states.async_set(kitchen_ac.entity_id, "heat")
+
+    api = await llm.async_get_api(hass, "assist", llm_context)
+
+    # Filter by area and domain (example 1)
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "Office", "domain": "light"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Office Switch" not in result["result"]
+    assert "Front Door" not in result["result"]
+
+    # Filter by name (example 2)
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Front Door"},
+        )
+    )
+    assert result["success"] is True
+    assert "Front Door" in result["result"]
+    assert "Office Light" not in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Office Switch" not in result["result"]
+
+    # Name filter is case insensitive
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "front door"},
+        )
+    )
+    assert result["success"] is True
+    assert "Front Door" in result["result"]
+
+    # Area filter matches area aliases
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "workspace"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Front Door" not in result["result"]
+
+    # Domain filter accepts a list
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"domain": ["switch", "lock"]},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Switch" in result["result"]
+    assert "Front Door" in result["result"]
+    assert "Office Light" not in result["result"]
+    assert "Kitchen Light" not in result["result"]
+
+    # Domain filter is case insensitive
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"domain": "Light"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" in result["result"]
+    assert "Office Switch" not in result["result"]
+    assert "Front Door" not in result["result"]
+
+    # No filters returns all exposed entities
+    result = await api.async_call_tool(
+        llm.ToolInput(tool_name="GetLiveContext", tool_args={})
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Front Door" in result["result"]
+
+    # Filter that matches nothing returns a descriptive error
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Does Not Exist"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "No exposed entities matched name 'Does Not Exist'",
+    }
+
+    # Name filter strips surrounding whitespace
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "  Front Door  "},
+        )
+    )
+    assert result["success"] is True
+    assert "Front Door" in result["result"]
+
+    # Area filter strips surrounding whitespace
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "  Office  "},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+
+    # Name filter accepts entity_id
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": office_light.entity_id},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Office Switch" not in result["result"]
+
+    # Area filter accepts area_id
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": office.id},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" in result["result"]
+    assert "Kitchen Light" not in result["result"]
+    assert "Front Door" not in result["result"]
+
+    # Name filter matches entity aliases
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "cooking lamp"},
+        )
+    )
+    assert result["success"] is True
+    assert "Kitchen Light" in result["result"]
+    assert "Office Light" not in result["result"]
+
+    # Combining name + area narrows the result
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Office Light", "area": "Office"},
+        )
+    )
+    assert result["success"] is True
+    assert "Office Light" in result["result"]
+    assert "Office Switch" not in result["result"]
+
+    # Combining name + area returns the failing constraint in the error
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "Office Light", "area": "Kitchen"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "No exposed entities found in area 'Kitchen'",
+    }
+
+    # Unknown area distinguishes "invalid area" from "no entities in area"
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"area": "Garage"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "Area 'Garage' does not exist",
+    }
+
+    # Unknown domain reports which domain(s) failed
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"domain": "fan"},
+        )
+    )
+    assert result == {
+        "success": False,
+        "error": "No exposed entities found in domain(s): fan",
+    }
+
+    # Entities sharing a name are all returned rather than failing as an
+    # ambiguous match, since this tool only returns context.
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "AC"},
+        )
+    )
+    assert result["success"] is True
+    assert result["result"].count("domain: climate") == 2
+    assert "Office" in result["result"]
+    assert "Kitchen" in result["result"]
+
+    # Combining a shared name with an area narrows to the single match
+    result = await api.async_call_tool(
+        llm.ToolInput(
+            tool_name="GetLiveContext",
+            tool_args={"name": "AC", "area": "Kitchen"},
+        )
+    )
+    assert result["success"] is True
+    assert result["result"].count("domain: climate") == 1
+    assert "Kitchen" in result["result"]
+    assert "Office" not in result["result"]
 
 
 async def test_script_tool(
@@ -769,6 +1184,7 @@ async def test_script_tool(
         {
             "script": {
                 "test_script": {
+                    "alias": "test script",
                     "description": "This is a test script",
                     "sequence": [
                         {"variables": {"result": {"drinks": 2}}},
@@ -785,6 +1201,7 @@ async def test_script_tool(
                     },
                 },
                 "script_with_no_fields": {
+                    "alias": "test script 2",
                     "description": "This is another test script",
                     "sequence": [],
                 },
@@ -798,7 +1215,9 @@ async def test_script_tool(
     async_expose_entity(hass, "conversation", "script.script_with_no_fields", True)
 
     entity_registry.async_update_entity(
-        "script.test_script", name="script name", aliases={"script alias"}
+        "script.test_script",
+        name="script name",
+        aliases=[er.COMPUTED_NAME, "script alias"],
     )
 
     area = area_registry.async_create("Living room")
@@ -815,7 +1234,7 @@ async def test_script_tool(
     assert tool.name == "test_script"
     assert (
         tool.description
-        == "This is a test script. Aliases: ['script name', 'script alias']"
+        == "This is a test script. Aliases: ['script alias', 'script name']"
     )
     schema = {
         vol.Required("beer", description="Number of beers"): cv.string,
@@ -830,10 +1249,13 @@ async def test_script_tool(
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
-            "This is a test script. Aliases: ['script name', 'script alias']",
+            "This is a test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
         ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "script_with_no_fields": (
+            "This is another test script. Aliases: ['test script 2']",
+            vol.Schema({}),
+        ),
     }
 
     # Test script with response
@@ -936,17 +1358,20 @@ async def test_script_tool(
     assert tool.name == "test_script"
     assert (
         tool.description
-        == "This is a new test script. Aliases: ['script name', 'script alias']"
+        == "This is a new test script. Aliases: ['script alias', 'script name']"
     )
     schema = {vol.Required("beer", description="Number of beers"): cv.string}
     assert tool.parameters.schema == schema
 
     assert hass.data[llm.ACTION_PARAMETERS_CACHE]["script"] == {
         "test_script": (
-            "This is a new test script. Aliases: ['script name', 'script alias']",
+            "This is a new test script. Aliases: ['script alias', 'script name']",
             vol.Schema(schema),
         ),
-        "script_with_no_fields": ("This is another test script", vol.Schema({})),
+        "script_with_no_fields": (
+            "This is another test script. Aliases: ['test script 2']",
+            vol.Schema({}),
+        ),
     }
 
 
@@ -1127,6 +1552,19 @@ async def test_selector_serializer(
         },
         "required": ["media_content_id", "media_content_type"],
     }
+    assert selector_serializer(selector.MediaSelector({"multiple": True})) == {
+        "type": "array",
+        "items": {
+            "type": "object",
+            "properties": {
+                "entity_id": {"type": "string"},
+                "media_content_id": {"type": "string"},
+                "media_content_type": {"type": "string"},
+                "metadata": {"type": "object", "additionalProperties": True},
+            },
+            "required": ["media_content_id", "media_content_type"],
+        },
+    }
     assert selector_serializer(selector.NumberSelector({"mode": "box"})) == {
         "type": "number"
     }
@@ -1161,6 +1599,7 @@ async def test_selector_serializer(
             "name": {"type": "string"},
             "percentage": {"type": "number", "minimum": 30, "maximum": 100},
         },
+        "required": ["name"],
     }
     assert selector_serializer(
         selector.ObjectSelector(
@@ -1190,6 +1629,7 @@ async def test_selector_serializer(
                     "maximum": 100,
                 },
             },
+            "required": ["name"],
         },
     }
     assert selector_serializer(
@@ -1214,43 +1654,14 @@ async def test_selector_serializer(
         selector.StateSelector({"entity_id": "sensor.test"})
     ) == {"type": "string"}
     target_schema = selector_serializer(selector.TargetSelector())
-    target_schema["properties"]["entity_id"]["anyOf"][0][
-        "enum"
-    ].sort()  # Order is not deterministic
     assert target_schema == {
         "type": "object",
         "properties": {
-            "area_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
-            "device_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
-            "entity_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["all", "none"], "format": "lower"},
-                    {"type": "string", "nullable": True},
-                    {"type": "array", "items": {"type": "string"}},
-                ]
-            },
-            "floor_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
-            "label_id": {
-                "anyOf": [
-                    {"type": "string", "enum": ["none"]},
-                    {"type": "array", "items": {"type": "string", "nullable": True}},
-                ]
-            },
+            "area_id": {"items": {"type": "string"}, "type": "array"},
+            "device_id": {"items": {"type": "string"}, "type": "array"},
+            "entity_id": {"items": {"type": "string"}, "type": "array"},
+            "floor_id": {"items": {"type": "string"}, "type": "array"},
+            "label_id": {"items": {"type": "string"}, "type": "array"},
         },
         "required": [],
     }
@@ -1490,6 +1901,41 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     }
 
 
+async def test_get_date_time_tool(hass: HomeAssistant) -> None:
+    """Test the GetDateTime tool."""
+
+    assert await async_setup_component(hass, "homeassistant", {})
+    context = Context()
+    llm_context = llm.LLMContext(
+        platform="test_platform",
+        context=context,
+        language="*",
+        assistant="conversation",
+        device_id=None,
+    )
+    api = await llm.async_get_api(hass, "assist", llm_context)
+    tool = next((tool for tool in api.tools if tool.name == "GetDateTime"), None)
+    assert tool is not None
+
+    now = dt_util.parse_datetime("2025-09-22 12:30:45Z")
+
+    with patch("homeassistant.util.dt.now", return_value=now):
+        result = await tool.async_call(
+            hass,
+            llm.ToolInput("GetDateTime", {}),
+            llm_context,
+        )
+        assert result == {
+            "success": True,
+            "result": {
+                "date": "2025-09-22",
+                "time": "12:30:45",
+                "timezone": "UTC",
+                "weekday": "Monday",
+            },
+        }
+
+
 async def test_no_tools_exposed(hass: HomeAssistant) -> None:
     """Test that tools are not exposed when no entities are exposed."""
     assert await async_setup_component(hass, "homeassistant", {})
@@ -1502,7 +1948,7 @@ async def test_no_tools_exposed(hass: HomeAssistant) -> None:
         device_id=None,
     )
     api = await llm.async_get_api(hass, "assist", llm_context)
-    assert api.tools == []
+    assert [tool.name for tool in api.tools] == ["GetDateTime"]
 
 
 async def test_merged_api(hass: HomeAssistant, llm_context: llm.LLMContext) -> None:
@@ -1557,3 +2003,70 @@ This is prompt 2
         llm.ToolInput(tool_name="api-2__Tool_2", tool_args={"arg2": "value2"})
     )
     assert result == {"result": {"Tool_2": {"arg2": "value2"}}}
+
+
+async def test_get_exposed_entities_timestamp_conversion(hass: HomeAssistant) -> None:
+    """Test that _get_exposed_entities converts timestamp states to local time."""
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    # Set the timezone to something other than UTC to ensure conversion is tested
+    await hass.config.async_set_time_zone("America/New_York")
+
+    # Set up a timestamp sensor with UTC time
+    utc_timestamp = "2024-01-15T10:30:00+00:00"
+    hass.states.async_set(
+        "sensor.test_timestamp",
+        utc_timestamp,
+        {"device_class": "timestamp", "friendly_name": "Test Timestamp"},
+    )
+
+    # Also test with a non-timestamp sensor to ensure it's not affected
+    hass.states.async_set(
+        "sensor.regular_sensor",
+        "2024-01-15T10:30:00+00:00",
+        {"friendly_name": "Regular Sensor"},  # No device_class
+    )
+
+    # And test with invalid/empty timestamp
+    hass.states.async_set(
+        "sensor.invalid_timestamp",
+        "not-a-timestamp",
+        {"device_class": "timestamp", "friendly_name": "Invalid Timestamp"},
+    )
+
+    hass.states.async_set(
+        "sensor.empty_timestamp",
+        "",
+        {"device_class": "timestamp", "friendly_name": "Empty Timestamp"},
+    )
+
+    # Expose the entities
+    async_expose_entity(hass, "conversation", "sensor.test_timestamp", True)
+    async_expose_entity(hass, "conversation", "sensor.regular_sensor", True)
+    async_expose_entity(hass, "conversation", "sensor.invalid_timestamp", True)
+    async_expose_entity(hass, "conversation", "sensor.empty_timestamp", True)
+
+    # Call _get_exposed_entities
+    exposed = llm._get_exposed_entities(hass, "conversation", include_state=True)
+
+    # Check the converted timestamp
+    sensor_info = exposed["entities"]["sensor.test_timestamp"]
+
+    assert sensor_info["state"] == "2024-01-15T05:30:00-05:00"
+    # Regular sensor without device_class should keep original value
+    regular_info = exposed["entities"]["sensor.regular_sensor"]
+    assert regular_info["state"] == "2024-01-15T10:30:00+00:00"  # Unchanged
+
+    # Invalid timestamp should remain as-is
+    invalid_info = exposed["entities"]["sensor.invalid_timestamp"]
+    assert invalid_info["state"] == "not-a-timestamp"
+
+    # Empty timestamp should remain empty
+    empty_info = exposed["entities"]["sensor.empty_timestamp"]
+    assert empty_info["state"] == ""
+
+    # Test with include_state=False to ensure no conversion happens
+    exposed_no_state = llm._get_exposed_entities(
+        hass, "conversation", include_state=False
+    )
+    assert "state" not in exposed_no_state["entities"]["sensor.test_timestamp"]

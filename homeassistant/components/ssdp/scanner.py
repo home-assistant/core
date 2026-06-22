@@ -1,14 +1,12 @@
 """The SSDP integration scanner."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Mapping
 from datetime import timedelta
 from enum import Enum
-from ipaddress import IPv4Address
+from ipaddress import IPv4Address, IPv6Address
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 from async_upnp_client.aiohttp import AiohttpSessionRequester
 from async_upnp_client.const import AddressTupleVXType, DeviceOrServiceType, SsdpSource
@@ -260,6 +258,7 @@ class Scanner:
         for source_ip in await async_build_source_set(self.hass):
             source_ip_str = str(source_ip)
             if source_ip.version == 6:
+                source_ip = cast(IPv6Address, source_ip)
                 assert source_ip.scope_id is not None
                 source_tuple: AddressTupleVXType = (
                     source_ip_str,
@@ -368,7 +367,7 @@ class Scanner:
         callbacks = self._async_get_matching_callbacks(combined_headers)
 
         # If there are no changes from a search, do not trigger a config flow
-        if source != SsdpSource.SEARCH_ALIVE:
+        if source is not SsdpSource.SEARCH_ALIVE:
             matching_domains = self.integration_matchers.async_matching_domains(
                 CaseInsensitiveDict(combined_headers.as_dict(), **info_desc)
             )
@@ -376,7 +375,7 @@ class Scanner:
         if (
             not callbacks
             and not matching_domains
-            and source != SsdpSource.ADVERTISEMENT_BYEBYE
+            and source is not SsdpSource.ADVERTISEMENT_BYEBYE
         ):
             return
 
@@ -389,8 +388,9 @@ class Scanner:
             ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
             _async_process_callbacks(self.hass, callbacks, discovery_info, ssdp_change)
 
-        # Config flows should only be created for alive/update messages from alive devices
-        if source == SsdpSource.ADVERTISEMENT_BYEBYE:
+        # Config flows should only be created for alive/update
+        # messages from alive devices
+        if source is SsdpSource.ADVERTISEMENT_BYEBYE:
             self._async_dismiss_discoveries(discovery_info)
             return
 

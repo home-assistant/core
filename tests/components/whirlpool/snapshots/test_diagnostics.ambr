@@ -22,6 +22,23 @@
         }),
       }),
       'ovens': dict({
+        'Dual Cavity Oven': dict({
+          'category': 'oven',
+          'data_model': 'oven',
+          'model_number': '12345',
+        }),
+        'Single Cavity Oven': dict({
+          'category': 'oven',
+          'data_model': 'oven',
+          'model_number': '12345',
+        }),
+      }),
+      'refrigerators': dict({
+        'Beer fridge': dict({
+          'category': 'refrigerator',
+          'data_model': 'refrigerator',
+          'model_number': '12345',
+        }),
       }),
       'washers': dict({
         'Washer': dict({
@@ -51,7 +68,7 @@
       'subentries': list([
       ]),
       'title': 'Mock Title',
-      'unique_id': None,
+      'unique_id': '**REDACTED**',
       'version': 1,
     }),
   })

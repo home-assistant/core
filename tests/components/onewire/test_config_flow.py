@@ -3,7 +3,7 @@
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, patch
 
-from pyownet import protocol
+from aio_ownet.exceptions import OWServerConnectionError
 import pytest
 
 from homeassistant.components.onewire.const import (
@@ -65,7 +65,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+        "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -86,8 +86,8 @@ async def test_user_flow_recovery(hass: HomeAssistant) -> None:
 
     # Invalid server
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
-        side_effect=protocol.ConnError,
+        "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
+        side_effect=OWServerConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -100,7 +100,7 @@ async def test_user_flow_recovery(hass: HomeAssistant) -> None:
 
     # Valid server
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+        "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -148,8 +148,8 @@ async def test_reconfigure_flow(
 
     # Invalid server
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
-        side_effect=protocol.ConnError,
+        "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
+        side_effect=OWServerConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -162,7 +162,7 @@ async def test_reconfigure_flow(
 
     # Valid server
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+        "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -222,8 +222,8 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
 
     # Cannot connect to server => retry
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
-        side_effect=protocol.ConnError,
+        "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
+        side_effect=OWServerConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -236,7 +236,7 @@ async def test_hassio_flow(hass: HomeAssistant) -> None:
 
     # Connect OK
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+        "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -274,8 +274,8 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
 
     # Cannot connect to server => retry
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
-        side_effect=protocol.ConnError,
+        "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
+        side_effect=OWServerConnectionError,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -288,7 +288,7 @@ async def test_zeroconf_flow(hass: HomeAssistant) -> None:
 
     # Connect OK
     with patch(
-        "homeassistant.components.onewire.onewirehub.protocol.proxy",
+        "homeassistant.components.onewire.onewirehub.OWServerStatelessProxy.validate",
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -320,7 +320,8 @@ async def test_user_options_clear(
     """Test clearing the options."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    # Verify that first config step comes back with a selection list of all the 28-family devices
+    # Verify that first config step comes back with a selection
+    # list of all the 28-family devices
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["data_schema"].schema["device_selection"].options == {
         "28.111111111111": False,
@@ -344,7 +345,8 @@ async def test_user_options_empty_selection_recovery(
     """Test leaving the selection of devices empty."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    # Verify that first config step comes back with a selection list of all the 28-family devices
+    # Verify that first config step comes back with a selection
+    # list of all the 28-family devices
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["data_schema"].schema["device_selection"].options == {
         "28.111111111111": False,
@@ -361,7 +363,8 @@ async def test_user_options_empty_selection_recovery(
     assert result["step_id"] == "device_selection"
     assert result["errors"] == {"base": "device_not_selected"}
 
-    # Verify that a single selected device to configure comes back as a form with the device to configure
+    # Verify that a single selected device to configure comes back
+    # as a form with the device to configure
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={INPUT_ENTRY_DEVICE_SELECTION: ["28.111111111111"]},
@@ -369,7 +372,8 @@ async def test_user_options_empty_selection_recovery(
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"]["sensor_id"] == "28.111111111111"
 
-    # Verify that the setting for the device comes back as default when no input is given
+    # Verify that the setting for the device comes back as default
+    # when no input is given
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={},
@@ -391,7 +395,8 @@ async def test_user_options_set_single(
 
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    # Verify that first config step comes back with a selection list of all the 28-family devices
+    # Verify that first config step comes back with a selection
+    # list of all the 28-family devices
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     assert result["data_schema"].schema["device_selection"].options == {
         "28.111111111111": False,
@@ -399,7 +404,8 @@ async def test_user_options_set_single(
         "28.222222222223": False,
     }
 
-    # Verify that a single selected device to configure comes back as a form with the device to configure
+    # Verify that a single selected device to configure comes back
+    # as a form with the device to configure
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={INPUT_ENTRY_DEVICE_SELECTION: ["28.111111111111"]},
@@ -407,7 +413,8 @@ async def test_user_options_set_single(
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"]["sensor_id"] == "28.111111111111"
 
-    # Verify that the setting for the device comes back as default when no input is given
+    # Verify that the setting for the device comes back as default
+    # when no input is given
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={},
@@ -427,7 +434,8 @@ async def test_user_options_set_multiple(
     """Test configuring multiple consecutive devices in a row."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    # Verify that first config step comes back with a selection list of all the 28-family devices
+    # Verify that first config step comes back with a selection
+    # list of all the 28-family devices
     for entry in dr.async_entries_for_config_entry(
         filled_device_registry, config_entry.entry_id
     ):
@@ -467,7 +475,8 @@ async def test_user_options_set_multiple(
         == "Given Name (28.111111111111)"
     )
 
-    # Verify that the setting for the device comes back as default when no input is given
+    # Verify that the setting for the device comes back as default
+    # when no input is given
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={"precision": "temperature9"},
@@ -489,7 +498,8 @@ async def test_user_options_no_devices(
     """Test that options does not change when no devices are available."""
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
-    # Verify that first config step comes back with an empty list of possible devices to choose from
+    # Verify that first config step comes back with an empty list
+    # of possible devices to choose from
     result = await hass.config_entries.options.async_init(config_entry.entry_id)
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.ABORT

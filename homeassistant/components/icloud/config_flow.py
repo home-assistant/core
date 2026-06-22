@@ -1,11 +1,9 @@
 """Config flow to configure the iCloud integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import os
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyicloud import PyiCloudService
 from pyicloud.exceptions import (
@@ -16,7 +14,7 @@ from pyicloud.exceptions import (
 )
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.helpers.storage import Store
 
@@ -142,7 +140,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             if not devices:
                 raise PyiCloudNoDevicesException  # noqa: TRY301
-        except (PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException):
+        except PyiCloudServiceNotActivatedException, PyiCloudNoDevicesException:
             _LOGGER.error("No device found in the iCloud account: %s", self._username)
             self.api = None
             return self.async_abort(reason="no_device")
@@ -155,8 +153,8 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
             CONF_GPS_ACCURACY_THRESHOLD: self._gps_accuracy_threshold,
         }
 
-        # If this is a password update attempt, update the entry instead of creating one
-        if step_id == "user":
+        # If this is a password update attempt, don't try and creating one
+        if self.source == SOURCE_USER:
             return self.async_create_entry(title=self._username, data=data)
 
         entry = await self.async_set_unique_id(self.unique_id)
@@ -164,6 +162,7 @@ class IcloudFlowHandler(ConfigFlow, domain=DOMAIN):
         await self.hass.config_entries.async_reload(entry.entry_id)
         return self.async_abort(reason="reauth_successful")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

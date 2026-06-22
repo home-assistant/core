@@ -1,9 +1,6 @@
 """Support for exposing Home Assistant via Zeroconf."""
 
-from __future__ import annotations
-
 from contextlib import suppress
-from functools import partial
 from ipaddress import IPv4Address, IPv6Address
 import logging
 import sys
@@ -21,25 +18,14 @@ from homeassistant.const import (
 )
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, instance_id
-from homeassistant.helpers.deprecation import (
-    DeprecatedConstant,
-    all_with_deprecated_constants,
-    check_if_deprecated_constant,
-    dir_with_deprecated_constants,
-)
 from homeassistant.helpers.network import NoURLAvailableError, get_url
-from homeassistant.helpers.service_info.zeroconf import (
-    ATTR_PROPERTIES_ID as _ATTR_PROPERTIES_ID,
-    ZeroconfServiceInfo as _ZeroconfServiceInfo,
-)
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import async_get_homekit, async_get_zeroconf, bind_hass
+from homeassistant.loader import async_get_homekit, async_get_zeroconf
 from homeassistant.setup import async_when_setup_or_start
 
 from . import websocket_api
-from .const import DOMAIN, ZEROCONF_TYPE
+from .const import DATA_DISCOVERY, DATA_INSTANCE, DOMAIN, ZEROCONF_TYPE
 from .discovery import (  # noqa: F401
-    DATA_DISCOVERY,
     ZeroconfDiscovery,
     build_homekit_model_lookups,
     info_from_service,
@@ -62,13 +48,6 @@ MAX_PROPERTY_VALUE_LEN = 230
 # Dns label max length
 MAX_NAME_LEN = 63
 
-# Attributes for ZeroconfServiceInfo[ATTR_PROPERTIES]
-_DEPRECATED_ATTR_PROPERTIES_ID = DeprecatedConstant(
-    _ATTR_PROPERTIES_ID,
-    "homeassistant.helpers.service_info.zeroconf.ATTR_PROPERTIES_ID",
-    "2026.2",
-)
-
 CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.All(
@@ -85,20 +64,12 @@ CONFIG_SCHEMA = vol.Schema(
     extra=vol.ALLOW_EXTRA,
 )
 
-_DEPRECATED_ZeroconfServiceInfo = DeprecatedConstant(
-    _ZeroconfServiceInfo,
-    "homeassistant.helpers.service_info.zeroconf.ZeroconfServiceInfo",
-    "2026.2",
-)
 
-
-@bind_hass
 async def async_get_instance(hass: HomeAssistant) -> HaZeroconf:
     """Get or create the shared HaZeroconf instance."""
     return cast(HaZeroconf, (_async_get_instance(hass)).zeroconf)
 
 
-@bind_hass
 async def async_get_async_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     """Get or create the shared HaAsyncZeroconf instance."""
     return _async_get_instance(hass)
@@ -115,8 +86,8 @@ def async_get_async_zeroconf(hass: HomeAssistant) -> HaAsyncZeroconf:
 
 
 def _async_get_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
-    if DOMAIN in hass.data:
-        return cast(HaAsyncZeroconf, hass.data[DOMAIN])
+    if DATA_INSTANCE in hass.data:
+        return hass.data[DATA_INSTANCE]
 
     zeroconf = HaZeroconf(**_async_get_zc_args(hass))
     aio_zc = HaAsyncZeroconf(zc=zeroconf)
@@ -130,7 +101,7 @@ def _async_get_instance(hass: HomeAssistant) -> HaAsyncZeroconf:
     # Wait to the close event to shutdown zeroconf to give
     # integrations time to send a good bye message
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_CLOSE, _async_stop_zeroconf)
-    hass.data[DOMAIN] = aio_zc
+    hass.data[DATA_INSTANCE] = aio_zc
 
     return aio_zc
 
@@ -190,12 +161,14 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     homekit_model_lookup, homekit_model_matchers = build_homekit_model_lookups(
         homekit_models
     )
+    local_service_info = await _async_get_local_service_info(hass)
     discovery = ZeroconfDiscovery(
         hass,
         zeroconf,
         zeroconf_types,
         homekit_model_lookup,
         homekit_model_matchers,
+        local_service_info,
     )
     await discovery.async_setup()
     hass.data[DATA_DISCOVERY] = discovery
@@ -206,8 +179,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         Wait till started or otherwise HTTP is not up and running.
         """
-        uuid = await instance_id.async_get(hass)
-        await _async_register_hass_zc_service(hass, aio_zc, uuid)
+        await _async_register_hass_zc_service(aio_zc, local_service_info)
 
     async def _async_zeroconf_hass_stop(_event: Event) -> None:
         await discovery.async_stop()
@@ -227,48 +199,12 @@ def _filter_disallowed_characters(name: str) -> str:
 
 
 async def _async_register_hass_zc_service(
-    hass: HomeAssistant, aio_zc: HaAsyncZeroconf, uuid: str
+    aio_zc: HaAsyncZeroconf, local_service_info: AsyncServiceInfo
 ) -> None:
-    # Get instance UUID
-    valid_location_name = _truncate_location_name_to_valid(
-        _filter_disallowed_characters(hass.config.location_name or "Home")
-    )
-
-    params = {
-        "location_name": valid_location_name,
-        "uuid": uuid,
-        "version": __version__,
-        "external_url": "",
-        "internal_url": "",
-        # Old base URL, for backward compatibility
-        "base_url": "",
-        # Always needs authentication
-        "requires_api_password": True,
-    }
-
-    # Get instance URL's
-    with suppress(NoURLAvailableError):
-        params["external_url"] = get_url(hass, allow_internal=False)
-
-    with suppress(NoURLAvailableError):
-        params["internal_url"] = get_url(hass, allow_external=False)
-
-    # Set old base URL based on external or internal
-    params["base_url"] = params["external_url"] or params["internal_url"]
-
-    _suppress_invalid_properties(params)
-
-    info = AsyncServiceInfo(
-        ZEROCONF_TYPE,
-        name=f"{valid_location_name}.{ZEROCONF_TYPE}",
-        server=f"{uuid}.local.",
-        parsed_addresses=await network.async_get_announce_addresses(hass),
-        port=hass.http.server_port,
-        properties=params,
-    )
+    """Register the zeroconf service for the local Home Assistant instance."""
 
     _LOGGER.info("Starting Zeroconf broadcast")
-    await aio_zc.async_register_service(info, allow_name_change=True)
+    await aio_zc.async_register_service(local_service_info, allow_name_change=True)
 
 
 def _suppress_invalid_properties(properties: dict) -> None:
@@ -307,9 +243,40 @@ def _truncate_location_name_to_valid(location_name: str) -> str:
     return location_name.encode("utf-8")[:MAX_NAME_LEN].decode("utf-8", "ignore")
 
 
-# These can be removed if no deprecated constant are in this module anymore
-__getattr__ = partial(check_if_deprecated_constant, module_globals=globals())
-__dir__ = partial(
-    dir_with_deprecated_constants, module_globals_keys=[*globals().keys()]
-)
-__all__ = all_with_deprecated_constants(globals())
+async def _async_get_local_service_info(hass: HomeAssistant) -> AsyncServiceInfo:
+    """Return the zeroconf service info for the local Home Assistant instance."""
+    valid_location_name = _truncate_location_name_to_valid(
+        _filter_disallowed_characters(hass.config.location_name or "Home")
+    )
+    uuid = await instance_id.async_get(hass)
+
+    params = {
+        "location_name": valid_location_name,
+        "uuid": uuid,
+        "version": __version__,
+        "external_url": "",
+        "internal_url": "",
+        # Old base URL, for backward compatibility
+        "base_url": "",
+    }
+
+    # Get instance URL's
+    with suppress(NoURLAvailableError):
+        params["external_url"] = get_url(hass, allow_internal=False)
+
+    with suppress(NoURLAvailableError):
+        params["internal_url"] = get_url(hass, allow_external=False)
+
+    # Set old base URL based on external or internal
+    params["base_url"] = params["external_url"] or params["internal_url"]
+
+    _suppress_invalid_properties(params)
+
+    return AsyncServiceInfo(
+        ZEROCONF_TYPE,
+        name=f"{valid_location_name}.{ZEROCONF_TYPE}",
+        server=f"{uuid}.local.",
+        parsed_addresses=await network.async_get_announce_addresses(hass),
+        port=hass.http.server_port,
+        properties=params,
+    )

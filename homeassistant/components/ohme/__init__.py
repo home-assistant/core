@@ -11,7 +11,6 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import (
-    OhmeAdvancedSettingsCoordinator,
     OhmeChargeSessionCoordinator,
     OhmeConfigEntry,
     OhmeDeviceInfoCoordinator,
@@ -56,7 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OhmeConfigEntry) -> bool
 
     coordinators = (
         OhmeChargeSessionCoordinator(hass, entry, client),
-        OhmeAdvancedSettingsCoordinator(hass, entry, client),
         OhmeDeviceInfoCoordinator(hass, entry, client),
     )
 

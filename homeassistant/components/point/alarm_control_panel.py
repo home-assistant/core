@@ -1,7 +1,5 @@
 """Support for Minut Point."""
 
-from __future__ import annotations
-
 import logging
 
 from pypoint import PointSession
@@ -16,8 +14,8 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import PointConfigEntry
 from .const import DOMAIN, SIGNAL_WEBHOOK
+from .coordinator import PointConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -60,7 +58,7 @@ class MinutPointAlarmControl(AlarmControlPanelEntity):
         self._home = point.homes[self._home_id]
 
         self._attr_name = self._home["name"]
-        self._attr_unique_id = f"point.{home_id}"
+        self._attr_unique_id = f"point.{home_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, home_id)},
             manufacturer="Minut",

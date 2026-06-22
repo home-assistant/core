@@ -1,7 +1,5 @@
 """Config flow for Tado integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
@@ -15,7 +13,6 @@ from yarl import URL
 
 from homeassistant.config_entries import (
     SOURCE_REAUTH,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
     OptionsFlow,
@@ -31,6 +28,7 @@ from .const import (
     CONST_OVERLAY_TADO_OPTIONS,
     DOMAIN,
 )
+from .coordinator import TadoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -42,6 +40,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     login_task: asyncio.Task | None = None
     refresh_token: str | None = None
     tado: Tado | None = None
+    tado_device_url: str = ""
+    user_code: str = ""
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
@@ -71,8 +71,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Error while initiating Tado")
                 return self.async_abort(reason="cannot_connect")
             assert self.tado is not None
-            tado_device_url = self.tado.device_verification_url()
-            user_code = URL(tado_device_url).query["user_code"]
+            self.tado_device_url = self.tado.device_verification_url()
+            self.user_code = URL(self.tado_device_url).query["user_code"]
 
         async def _wait_for_login() -> None:
             """Wait for the user to login."""
@@ -81,6 +81,16 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             try:
                 await self.hass.async_add_executor_job(self.tado.device_activation)
             except Exception as ex:
+                ratelimit = await self.hass.async_add_executor_job(
+                    self.tado.rate_limit_info
+                )
+                if ratelimit.get("remaining") == "0":
+                    _LOGGER.error(
+                        "Tado API rate limit reached while"
+                        " waiting for device activation: %s",
+                        ex,
+                    )
+                    raise TadoRateLimitExceeded from ex
                 _LOGGER.exception("Error while waiting for device activation")
                 raise CannotConnect from ex
 
@@ -97,7 +107,10 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if self.login_task.done():
             _LOGGER.debug("Login task is done, checking results")
-            if self.login_task.exception():
+            ex = self.login_task.exception()
+            if isinstance(ex, TadoRateLimitExceeded):
+                return self.async_abort(reason="api_rate_limit_reached")
+            if ex:
                 return self.async_show_progress_done(next_step_id="timeout")
             self.refresh_token = await self.hass.async_add_executor_job(
                 self.tado.get_refresh_token
@@ -108,8 +121,8 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user",
             progress_action="wait_for_device",
             description_placeholders={
-                "url": tado_device_url,
-                "code": user_code,
+                "url": self.tado_device_url,
+                "code": self.user_code,
             },
             progress_task=self.login_task,
         )
@@ -176,7 +189,7 @@ class TadoConfigFlow(ConfigFlow, domain=DOMAIN):
     @staticmethod
     @callback
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: TadoConfigEntry,
     ) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
@@ -209,3 +222,7 @@ class OptionsFlowHandler(OptionsFlow):
 
 class CannotConnect(HomeAssistantError):
     """Error to indicate we cannot connect."""
+
+
+class TadoRateLimitExceeded(HomeAssistantError):
+    """Error to indicate Tado API rate limit exceeded."""

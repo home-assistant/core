@@ -1,7 +1,5 @@
 """Sensor component for LaCrosse View."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 import logging
@@ -146,7 +144,8 @@ SENSOR_DESCRIPTIONS = {
         suggested_display_precision=2,
     ),
 }
-# map of API returned unit of measurement strings to their corresponding unit of measurement
+# map of API returned unit of measurement strings to their
+# corresponding unit of measurement
 UNIT_OF_MEASUREMENT_MAP = {
     "degrees_celsius": UnitOfTemperature.CELSIUS,
     "degrees_fahrenheit": UnitOfTemperature.FAHRENHEIT,
@@ -185,7 +184,8 @@ async def async_setup_entry(
                 _LOGGER.warning(message)
                 continue
 
-            # if the API returns a different unit of measurement from the description, update it
+            # if the API returns a different unit of measurement
+            # from the description, update it
             if sensor.data is not None and sensor.data.get(field) is not None:
                 native_unit_of_measurement = UNIT_OF_MEASUREMENT_MAP.get(
                     sensor.data[field].get("unit")

@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable, Coroutine
 import http
 import time
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from google_drive_api.exceptions import GoogleDriveApiError
 import pytest
@@ -12,6 +12,9 @@ import pytest
 from homeassistant.components.google_drive.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -41,10 +44,6 @@ async def test_setup_success(
 ) -> None:
     """Test successful setup and unload."""
     # Setup looks up existing folder to make sure it still exists
-    mock_api.list_files = AsyncMock(
-        return_value={"files": [{"id": "HA folder ID", "name": "HA folder name"}]}
-    )
-
     await setup_integration()
 
     entries = hass.config_entries.async_entries(DOMAIN)
@@ -76,7 +75,7 @@ async def test_create_folder_if_missing(
     assert len(entries) == 1
     assert entries[0].state is ConfigEntryState.LOADED
 
-    mock_api.list_files.assert_called_once()
+    assert mock_api.list_files.call_count == 2
     mock_api.create_file.assert_called_once()
 
 
@@ -104,10 +103,6 @@ async def test_expired_token_refresh_success(
     mock_api: MagicMock,
 ) -> None:
     """Test expired token is refreshed."""
-    # Setup looks up existing folder to make sure it still exists
-    mock_api.list_files = AsyncMock(
-        return_value={"files": [{"id": "HA folder ID", "name": "HA folder name"}]}
-    )
     aioclient_mock.post(
         "https://oauth2.googleapis.com/token",
         json={
@@ -162,3 +157,20 @@ async def test_expired_token_refresh_failure(
     # Verify a transient failure has occurred
     entries = hass.config_entries.async_entries(DOMAIN)
     assert entries[0].state is expected_state
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.google_drive.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

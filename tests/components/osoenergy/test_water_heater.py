@@ -7,14 +7,18 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.osoenergy.const import DOMAIN
 from homeassistant.components.osoenergy.water_heater import (
+    ATTR_DURATION_DAYS,
     ATTR_UNTIL_TEMP_LIMIT,
     ATTR_V40MIN,
     SERVICE_GET_PROFILE,
     SERVICE_SET_PROFILE,
     SERVICE_SET_V40MIN,
+    SERVICE_TURN_AWAY_MODE_ON,
 )
 from homeassistant.components.water_heater import (
+    ATTR_AWAY_MODE,
     DOMAIN as WATER_HEATER_DOMAIN,
+    SERVICE_SET_AWAY_MODE,
     SERVICE_SET_TEMPERATURE,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -61,9 +65,14 @@ async def test_get_profile(
     )
 
     # The profile is returned in UTC format from the server
-    # Each index represents an hour from the current day (0-23). For example index 2 - 02:00 UTC
-    # Depending on the time zone and the DST the UTC hour is converted to local time and the value is placed in the correct index
-    # Example: time zone 'US/Pacific' and DST (-7 hours difference) - index 9 (09:00 UTC) will be converted to index 2 (02:00 Local)
+    # Each index represents an hour from the current day (0-23).
+    # For example index 2 - 02:00 UTC.
+    # Depending on the time zone and the DST the UTC hour is
+    # converted to local time and the value is placed in the
+    # correct index.
+    # Example: time zone 'US/Pacific' and DST (-7 hours
+    # difference) - index 9 (09:00 UTC) will be converted to
+    # index 2 (02:00 Local)
     assert profile == {
         "water_heater.test_device": {
             "profile": [
@@ -112,9 +121,14 @@ async def test_set_profile(
     )
 
     # The server expects to receive the profile in UTC format
-    # Each field represents an hour from the current day (0-23). For example field hour_01 - 01:00 Local time
-    # Depending on the time zone and the DST the Local hour is converted to UTC time and the value is placed in the correct index
-    # Example: time zone 'US/Pacific' and DST (-7 hours difference) - index 1 (01:00 Local) will be converted to index 8 (08:00 Utc)
+    # Each field represents an hour from the current day (0-23).
+    # For example field hour_01 - 01:00 Local time.
+    # Depending on the time zone and the DST the Local hour is
+    # converted to UTC time and the value is placed in the
+    # correct index.
+    # Example: time zone 'US/Pacific' and DST (-7 hours
+    # difference) - index 1 (01:00 Local) will be converted to
+    # index 8 (08:00 Utc)
     mock_osoenergy_client().hotwater.set_profile.assert_called_once_with(
         ANY,
         [
@@ -274,3 +288,59 @@ async def test_oso_turn_off(
     )
 
     mock_osoenergy_client().hotwater.turn_off.assert_called_once_with(ANY, False)
+
+
+async def test_turn_away_mode_on(
+    hass: HomeAssistant,
+    mock_osoenergy_client: MagicMock,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test turning the heater away mode on."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_AWAY_MODE,
+        {ATTR_ENTITY_ID: "water_heater.test_device", ATTR_AWAY_MODE: "on"},
+        blocking=True,
+    )
+
+    mock_osoenergy_client().hotwater.enable_holiday_mode.assert_called_once_with(ANY)
+
+
+async def test_turn_away_mode_off(
+    hass: HomeAssistant,
+    mock_osoenergy_client: MagicMock,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test turning the heater away mode off."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.services.async_call(
+        WATER_HEATER_DOMAIN,
+        SERVICE_SET_AWAY_MODE,
+        {ATTR_ENTITY_ID: "water_heater.test_device", ATTR_AWAY_MODE: "off"},
+        blocking=True,
+    )
+
+    mock_osoenergy_client().hotwater.disable_holiday_mode.assert_called_once_with(ANY)
+
+
+async def test_oso_set_away_mode_on(
+    hass: HomeAssistant,
+    mock_osoenergy_client: MagicMock,
+    mock_config_entry: ConfigEntry,
+) -> None:
+    """Test enabling away mode."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_AWAY_MODE_ON,
+        {
+            ATTR_ENTITY_ID: "water_heater.test_device",
+            ATTR_DURATION_DAYS: 10,
+        },
+        blocking=True,
+    )
+
+    mock_osoenergy_client().hotwater.enable_holiday_mode.assert_called_once_with(
+        ANY, 10
+    )

@@ -1,7 +1,5 @@
 """Diagnostics support for lutron_caseta."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,6 +23,7 @@ async def async_get_config_entry_diagnostics(
             "scenes": bridge.scenes,
             "occupancy_groups": bridge.occupancy_groups,
             "areas": bridge.areas,
+            "smart_away_state": bridge.smart_away_state,
         },
         "integration_data": {
             "keypad_button_names_to_leap": data.keypad_data.button_names_to_leap,

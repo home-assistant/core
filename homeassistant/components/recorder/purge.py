@@ -1,7 +1,5 @@
 """Purge old data helper."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime
 import logging
@@ -116,9 +114,7 @@ def purge_old_data(
         # This purge cycle is finished, clean up old event types and
         # recorder runs
         _purge_old_event_types(instance, session)
-
-        if instance.states_meta_manager.active:
-            _purge_old_entity_ids(instance, session)
+        _purge_old_entity_ids(instance, session)
 
         _purge_old_recorder_runs(instance, session, purge_before)
     with session_scope(session=instance.get_session(), read_only=True) as session:

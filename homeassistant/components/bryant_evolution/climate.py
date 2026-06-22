@@ -2,17 +2,19 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from evolutionhttp import BryantEvolutionLocalClient
 
 from homeassistant.components.climate import (
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -187,7 +189,7 @@ class BryantEvolutionClimate(ClimateEntity):
                     return HVACAction.HEATING
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="failed_to_parse_hvac_mode",
+            translation_key="failed_to_parse_hvac_action",
             translation_placeholders={
                 "mode_and_active": mode_and_active,
                 "current_temperature": str(self.current_temperature),
@@ -195,6 +197,7 @@ class BryantEvolutionClimate(ClimateEntity):
             },
         )
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode == HVACMode.HEAT_COOL:
@@ -206,26 +209,27 @@ class BryantEvolutionClimate(ClimateEntity):
         self._attr_hvac_mode = hvac_mode
         self._async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        if kwargs.get("target_temp_high"):
-            temp = int(kwargs["target_temp_high"])
+        if value := kwargs.get(ATTR_TARGET_TEMP_HIGH):
+            temp = int(value)
             if not await self._client.set_cooling_setpoint(temp):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="failed_to_set_clsp"
                 )
             self._attr_target_temperature_high = temp
 
-        if kwargs.get("target_temp_low"):
-            temp = int(kwargs["target_temp_low"])
+        if value := kwargs.get(ATTR_TARGET_TEMP_LOW):
+            temp = int(value)
             if not await self._client.set_heating_setpoint(temp):
                 raise HomeAssistantError(
                     translation_domain=DOMAIN, translation_key="failed_to_set_htsp"
                 )
             self._attr_target_temperature_low = temp
 
-        if kwargs.get("temperature"):
-            temp = int(kwargs["temperature"])
+        if value := kwargs.get(ATTR_TEMPERATURE):
+            temp = int(value)
             fn = (
                 self._client.set_heating_setpoint
                 if self.hvac_mode == HVACMode.HEAT
@@ -241,6 +245,7 @@ class BryantEvolutionClimate(ClimateEntity):
         # invalid service call (without any recognized kwarg).
         self._async_write_ha_state()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
         if not await self._client.set_fan_mode(fan_mode):

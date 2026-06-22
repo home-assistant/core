@@ -1,7 +1,5 @@
 """Test the Nord Pool config flow."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -26,7 +24,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
 async def test_form(hass: HomeAssistant, get_client: NordPoolClient) -> None:
     """Test we get the form."""
 
@@ -48,7 +46,7 @@ async def test_form(hass: HomeAssistant, get_client: NordPoolClient) -> None:
     assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
 
 
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
 async def test_single_config_entry(
     hass: HomeAssistant, load_int: None, get_client: NordPoolClient
 ) -> None:
@@ -61,7 +59,7 @@ async def test_single_config_entry(
     assert result["reason"] == "single_instance_allowed"
 
 
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
 @pytest.mark.parametrize(
     ("error_message", "p_error"),
     [
@@ -107,7 +105,40 @@ async def test_cannot_connect(
     assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
 
 
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
+async def test_missing_areas(
+    hass: HomeAssistant,
+    get_client: NordPoolClient,
+) -> None:
+    """Test cannot connect error."""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == config_entries.SOURCE_USER
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_CURRENCY: "SEK",
+        },
+    )
+
+    assert result["errors"] == {CONF_AREAS: "no_areas"}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=ENTRY_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Nord Pool"
+    assert result["data"] == {"areas": ["SE3", "SE4"], "currency": "SEK"}
+
+
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
 async def test_reconfigure(
     hass: HomeAssistant,
     load_int: MockConfigEntry,
@@ -134,7 +165,7 @@ async def test_reconfigure(
     }
 
 
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
 @pytest.mark.parametrize(
     ("error_message", "p_error"),
     [

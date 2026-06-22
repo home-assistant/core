@@ -1,7 +1,5 @@
 """Config flow for OurGroceries integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -39,7 +37,7 @@ class OurGroceriesConfigFlow(ConfigFlow, domain=DOMAIN):
             og = OurGroceries(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
             try:
                 await og.login()
-            except (TimeoutError, ClientError):
+            except TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             except InvalidLoginException:
                 errors["base"] = "invalid_auth"

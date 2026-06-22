@@ -1,7 +1,5 @@
 """The tests for Select device triggers."""
 
-from __future__ import annotations
-
 import pytest
 from pytest_unordered import unordered
 import voluptuous_serialize
@@ -143,7 +141,8 @@ async def test_if_fires_on_state_change(
                         "data": {
                             "some": (
                                 "to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -164,7 +163,8 @@ async def test_if_fires_on_state_change(
                         "data": {
                             "some": (
                                 "from - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -186,7 +186,8 @@ async def test_if_fires_on_state_change(
                         "data": {
                             "some": (
                                 "from-to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -265,7 +266,8 @@ async def test_if_fires_on_state_change_legacy(
                         "data": {
                             "some": (
                                 "to - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
+                                "{{ trigger.entity_id}} - "
+                                "{{ trigger.from_state.state}} - "
                                 "{{ trigger.to_state.state}} - {{ trigger.for }} - "
                                 "{{ trigger.id}}"
                             )
@@ -310,18 +312,21 @@ async def test_get_trigger_capabilities(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -341,18 +346,21 @@ async def test_get_trigger_capabilities(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -380,18 +388,21 @@ async def test_get_trigger_capabilities_unknown(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -421,18 +432,21 @@ async def test_get_trigger_capabilities_legacy(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]
@@ -452,18 +466,21 @@ async def test_get_trigger_capabilities_legacy(
         {
             "name": "from",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
         },
         {
             "name": "to",
             "optional": True,
+            "required": False,
             "type": "select",
             "options": [("option1", "option1"), ("option2", "option2")],
         },
         {
             "name": "for",
             "optional": True,
+            "required": False,
             "type": "positive_time_period_dict",
         },
     ]

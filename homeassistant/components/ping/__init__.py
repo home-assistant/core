@@ -1,14 +1,12 @@
 """The ping component."""
 
-from __future__ import annotations
-
 import logging
 
 from icmplib import SocketPermissionError, async_ping
 
 from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers import config_validation as cv
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
@@ -21,6 +19,28 @@ _LOGGER = logging.getLogger(__name__)
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.DEVICE_TRACKER, Platform.SENSOR]
 DATA_PRIVILEGED_KEY: HassKey[bool | None] = HassKey(DOMAIN)
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version == 1:
+        _LOGGER.debug("Migrating to minor version 2")
+
+        # Migrate device registry identifiers from homeassistant domain to ping domain
+        registry = dr.async_get(hass)
+        if (
+            device := registry.async_get_device(
+                identifiers={(HOMEASSISTANT_DOMAIN, entry.entry_id)}
+            )
+        ) is not None and entry.entry_id in device.config_entries:
+            registry.async_update_device(
+                device_id=device.id,
+                new_identifiers={(DOMAIN, entry.entry_id)},
+            )
+
+        hass.config_entries.async_update_entry(entry, minor_version=2)
+
+    return True
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -49,15 +69,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool
 
     entry.runtime_data = coordinator
 
+    # Ensure the device exists before forwarding to platforms, so that the
+    # device tracker (which looks up the device on init) is not racing the
+    # binary sensor / sensor platforms that create the device via DeviceInfo.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, entry.entry_id)},
+        manufacturer="Ping",
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
-
-
-async def async_reload_entry(hass: HomeAssistant, entry: PingConfigEntry) -> None:
-    """Handle an options update."""
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: PingConfigEntry) -> bool:

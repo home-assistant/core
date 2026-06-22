@@ -58,13 +58,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
         elif other_entry.source == SOURCE_IGNORE:
-            # There is another entry but it is ignored, delete that one and update this one
+            # There is another entry but it is ignored, delete that
+            # one and update this one
             hass.async_create_task(
                 hass.config_entries.async_remove(other_entry.entry_id)
             )
             hass.config_entries.async_update_entry(entry, unique_id=unique_id)
         else:
-            # There is another entry that already has the right unique ID. Delete this entry
+            # There is another entry that already has the right unique
+            # ID. Delete this entry
             hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
             return False
 
@@ -77,10 +79,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             identifiers={(DOMAIN, api.config.bridge_id)},
             manufacturer="Signify",
             name=api.config.name,
-            model=api.config.model_id,
+            model_id=api.config.model_id,
             sw_version=api.config.software_version,
         )
-        # create persistent notification if we found a bridge version with security vulnerability
+        # create persistent notification if we found a bridge version
+        # with security vulnerability
         if (
             api.config.model_id == "BSB002"
             and api.config.software_version < "1935144040"
@@ -105,7 +108,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HueConfigEntry) -> bool:
             },
             manufacturer=api.config.bridge_device.product_data.manufacturer_name,
             name=api.config.name,
-            model=api.config.model_id,
+            model_id=api.config.model_id,
             sw_version=api.config.software_version,
         )
 

@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from http import HTTPStatus
 from typing import Any
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, Mock, patch
 
 from aiohttp.test_utils import TestClient
 from freezegun.api import FrozenDateTimeFactory
@@ -12,7 +12,7 @@ from pytest_unordered import unordered
 import voluptuous as vol
 
 from homeassistant import config_entries as core_ce, data_entry_flow, loader
-from homeassistant.components.config import config_entries
+from homeassistant.components.config import DOMAIN, config_entries
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_RADIUS
 from homeassistant.core import HomeAssistant, callback
@@ -411,7 +411,6 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
                 data_schema=vol.Schema(schema),
                 description_placeholders={
                     "url": "https://example.com",
-                    "show_advanced_options": self.show_advanced_options,
                 },
                 errors={"username": "Should be unique."},
             )
@@ -419,7 +418,7 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
     with mock_config_flow("test", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test", "show_advanced_options": True},
+            json={"handler": "test"},
         )
 
     assert resp.status == HTTPStatus.OK
@@ -437,7 +436,6 @@ async def test_initialize_flow(hass: HomeAssistant, client: TestClient) -> None:
         ],
         "description_placeholders": {
             "url": "https://example.com",
-            "show_advanced_options": True,
         },
         "errors": {"username": "Should be unique."},
         "last_step": None,
@@ -455,7 +453,8 @@ async def test_initialize_flow_unmet_dependency(
     mock_integration(
         hass, MockModule(domain="dependency_1", config_schema=config_schema)
     )
-    # The test2 config flow should  fail because dependency_1 can't be automatically setup
+    # The test2 config flow should fail because
+    # dependency_1 can't be automatically set up
     mock_integration(
         hass,
         MockModule(domain="test2", partial_manifest={"dependencies": ["dependency_1"]}),
@@ -468,7 +467,7 @@ async def test_initialize_flow_unmet_dependency(
     with mock_config_flow("test2", TestFlow):
         resp = await client.post(
             "/api/config/config_entries/flow",
-            json={"handler": "test2", "show_advanced_options": True},
+            json={"handler": "test2"},
         )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
@@ -625,7 +624,9 @@ async def test_two_step_flow(hass: HomeAssistant, client: TestClient) -> None:
             "type": "form",
             "handler": "test",
             "step_id": "account",
-            "data_schema": [{"name": "user_title", "type": "string"}],
+            "data_schema": [
+                {"name": "user_title", "required": False, "type": "string"}
+            ],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -712,7 +713,9 @@ async def test_continue_flow_unauth(
             "type": "form",
             "handler": "test",
             "step_id": "account",
-            "data_schema": [{"name": "user_title", "type": "string"}],
+            "data_schema": [
+                {"name": "user_title", "required": False, "type": "string"}
+            ],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -732,7 +735,7 @@ async def test_get_progress_index(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test querying for the flows that are in progress."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_platform(hass, "test.config_flow", None)
     ws_client = await hass_ws_client(hass)
 
@@ -780,7 +783,7 @@ async def test_get_progress_index(
         )
 
     for form in (form_hassio, form_user, form_reconfigure):
-        assert form["type"] == data_entry_flow.FlowResultType.FORM
+        assert form["type"] is data_entry_flow.FlowResultType.FORM
         assert form["step_id"] == "account"
 
     await ws_client.send_json({"id": 5, "type": "config_entries/flow/progress"})
@@ -803,7 +806,7 @@ async def test_get_progress_index_unauth(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
 ) -> None:
     """Test we can't get flows that are in progress."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     hass_admin_user.groups = []
     ws_client = await hass_ws_client(hass)
 
@@ -887,7 +890,7 @@ async def test_get_progress_subscribe(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test querying for the flows that are in progress."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_platform(hass, "test.config_flow", None)
     ws_client = await hass_ws_client(hass)
 
@@ -956,9 +959,9 @@ async def test_get_progress_subscribe(
                 "test", context=context
             )
 
-    assert forms["bluetooth"]["type"] == data_entry_flow.FlowResultType.ABORT
+    assert forms["bluetooth"]["type"] is data_entry_flow.FlowResultType.ABORT
     for key in ("hassio", "user", "reauth", "reconfigure"):
-        assert forms[key]["type"] == data_entry_flow.FlowResultType.FORM
+        assert forms[key]["type"] is data_entry_flow.FlowResultType.FORM
         assert forms[key]["step_id"] == "account"
 
     for key in ("hassio", "user", "reauth", "reconfigure"):
@@ -998,11 +1001,41 @@ async def test_get_progress_subscribe(
         }
 
 
+async def test_get_progress_subscribe_create_entry(hass: HomeAssistant) -> None:
+    """Test flows creating entry immediately don't trigger subscription notification."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    mock_platform(hass, "test.config_flow", None)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_import(
+            self, user_input: dict[str, Any]
+        ) -> ConfigFlowResult:
+            """Handle import - creates entry immediately."""
+            return self.async_create_entry(title="Test", data={})
+
+    subscription_mock = Mock()
+    hass.config_entries.flow.async_subscribe_flow(subscription_mock)
+
+    with mock_config_flow("test", TestFlow):
+        result = await hass.config_entries.flow.async_init(
+            "test", context={"source": core_ce.SOURCE_IMPORT}, data={}
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(subscription_mock.mock_calls) == 0
+
+
 async def test_get_progress_subscribe_in_progress(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test querying for the flows that are in progress."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_platform(hass, "test.config_flow", None)
     ws_client = await hass_ws_client(hass)
 
@@ -1065,9 +1098,9 @@ async def test_get_progress_subscribe_in_progress(
                 "test", context=context
             )
 
-    assert forms["bluetooth"]["type"] == data_entry_flow.FlowResultType.ABORT
+    assert forms["bluetooth"]["type"] is data_entry_flow.FlowResultType.ABORT
     for key in ("hassio", "user", "reauth", "reconfigure"):
-        assert forms[key]["type"] == data_entry_flow.FlowResultType.FORM
+        assert forms[key]["type"] is data_entry_flow.FlowResultType.FORM
         assert forms[key]["step_id"] == "account"
 
     await ws_client.send_json({"id": 1, "type": "config_entries/flow/subscribe"})
@@ -1118,11 +1151,139 @@ async def test_get_progress_subscribe_in_progress(
         }
 
 
+async def test_get_progress_subscribe_in_progress_bad_flow(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test querying for the flows that are in progress."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    mock_platform(hass, "test.config_flow", None)
+    mock_platform(hass, "test2.config_flow", None)
+    ws_client = await hass_ws_client(hass)
+
+    mock_integration(
+        hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
+    )
+
+    entry = MockConfigEntry(domain="test", title="Test", entry_id="1234")
+    entry.add_to_hass(hass)
+
+    class TestFlow(core_ce.ConfigFlow):
+        VERSION = 5
+
+        async def async_step_bluetooth(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a bluetooth discovery."""
+            return self.async_abort(reason="already_configured")
+
+        async def async_step_hassio(
+            self, discovery_info: HassioServiceInfo
+        ) -> ConfigFlowResult:
+            """Handle a Hass.io discovery."""
+            return await self.async_step_account()
+
+        async def async_step_account(self, user_input: dict[str, Any] | None = None):
+            """Show a form to the user."""
+            return self.async_show_form(step_id="account")
+
+        async def async_step_user(self, user_input: dict[str, Any] | None = None):
+            """Handle a config flow initialized by the user."""
+            return await self.async_step_account()
+
+        async def async_step_reauth(self, user_input: dict[str, Any] | None = None):
+            """Handle a reauthentication flow."""
+            nonlocal entry
+            assert self._get_reauth_entry() is entry
+            return await self.async_step_account()
+
+        async def async_step_reconfigure(
+            self, user_input: dict[str, Any] | None = None
+        ):
+            """Handle a reconfiguration flow initialized by the user."""
+            nonlocal entry
+            assert self._get_reconfigure_entry() is entry
+            return await self.async_step_account()
+
+    class BadFlow(core_ce.ConfigFlow):
+        VERSION = 1
+
+        async def async_step_account(self, user_input: dict[str, Any] | None = None):
+            """Show a form to the user."""
+            return self.async_show_form(step_id="account")
+
+        async def async_step_reauth(self, user_input: dict[str, Any] | None = None):
+            """Handle a config flow initialized by the user."""
+            self.context["bad"] = self  # This can't be serialized by the JSON encoder
+            return await self.async_step_account()
+
+    flow_context = {
+        "bluetooth": {"source": core_ce.SOURCE_BLUETOOTH},
+        "hassio": {"source": core_ce.SOURCE_HASSIO},
+        "user": {"source": core_ce.SOURCE_USER},
+        "reauth": {"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"},
+        "reconfigure": {"source": core_ce.SOURCE_RECONFIGURE, "entry_id": "1234"},
+    }
+    forms = {}
+
+    with mock_config_flow("test", TestFlow):
+        for key, context in flow_context.items():
+            forms[key] = await hass.config_entries.flow.async_init(
+                "test", context=context
+            )
+
+    assert forms["bluetooth"]["type"] is data_entry_flow.FlowResultType.ABORT
+    for key in ("hassio", "user", "reauth", "reconfigure"):
+        assert forms[key]["type"] is data_entry_flow.FlowResultType.FORM
+        assert forms[key]["step_id"] == "account"
+
+    with mock_config_flow("test2", BadFlow):
+        forms["bad"] = await hass.config_entries.flow.async_init(
+            "test2", context={"source": core_ce.SOURCE_REAUTH, "entry_id": "1234"}
+        )
+    assert forms["bad"]["type"] is data_entry_flow.FlowResultType.FORM
+    assert forms["bad"]["step_id"] == "account"
+
+    await ws_client.send_json({"id": 1, "type": "config_entries/flow/subscribe"})
+
+    # Uninitialized flows and flows with SOURCE_USER and SOURCE_RECONFIGURE
+    # should be filtered out
+    responses = []
+    responses.append(await ws_client.receive_json())
+    assert responses == [
+        {
+            "event": unordered(
+                [
+                    {
+                        "flow": {
+                            "flow_id": forms[key]["flow_id"],
+                            "handler": "test",
+                            "step_id": "account",
+                            "context": flow_context[key],
+                        },
+                        "flow_id": forms[key]["flow_id"],
+                        "type": None,
+                    }
+                    for key in ("hassio", "reauth")
+                ]
+            ),
+            "id": 1,
+            "type": "event",
+        }
+    ]
+
+    response = await ws_client.receive_json()
+    assert response == {"id": ANY, "result": None, "success": True, "type": "result"}
+
+    assert "Unable to serialize to JSON. Bad data found at $.context.bad" in caplog.text
+
+
 async def test_get_progress_subscribe_unauth(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator, hass_admin_user: MockUser
 ) -> None:
     """Test we can't subscribe to flows."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     hass_admin_user.groups = []
     ws_client = await hass_ws_client(hass)
 
@@ -1272,7 +1433,7 @@ async def test_two_step_options_flow(hass: HomeAssistant, client: TestClient) ->
             "type": "form",
             "handler": "test1",
             "step_id": "finish",
-            "data_schema": [{"name": "enabled", "type": "boolean"}],
+            "data_schema": [{"name": "enabled", "required": False, "type": "boolean"}],
             "description_placeholders": None,
             "errors": None,
             "last_step": None,
@@ -1581,7 +1742,7 @@ async def test_subentry_flow_abort_duplicate(hass: HomeAssistant, client) -> Non
         "type": "form",
         "handler": ["test1", "test"],
         "step_id": "finish",
-        "data_schema": [{"name": "enabled", "type": "boolean"}],
+        "data_schema": [{"name": "enabled", "required": False, "type": "boolean"}],
         "description_placeholders": None,
         "errors": None,
         "last_step": None,
@@ -1749,7 +1910,7 @@ async def test_two_step_subentry_flow(hass: HomeAssistant, client) -> None:
         data = await resp.json()
         flow_id = data["flow_id"]
         expected_data = {
-            "data_schema": [{"name": "enabled", "type": "boolean"}],
+            "data_schema": [{"name": "enabled", "required": False, "type": "boolean"}],
             "description_placeholders": None,
             "errors": None,
             "flow_id": flow_id,
@@ -1862,7 +2023,7 @@ async def test_get_single(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can get a config entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
@@ -1921,7 +2082,7 @@ async def test_update_prefrences(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can update system options."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
@@ -1973,7 +2134,7 @@ async def test_update_entry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can update entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(domain="demo", title="Initial Title")
@@ -1998,7 +2159,7 @@ async def test_update_entry_nonexisting(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can update entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json(
@@ -2019,7 +2180,7 @@ async def test_disable_entry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can disable entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(domain="test", state=core_ce.ConfigEntryState.LOADED)
@@ -2080,7 +2241,7 @@ async def test_disable_entry_nonexisting(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can disable entry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json(
@@ -2120,7 +2281,7 @@ async def test_ignore_flow(
     entry_discovery_keys: dict[str, tuple[DiscoveryKey, ...]],
 ) -> None:
     """Test we can ignore a flow."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
@@ -2170,7 +2331,7 @@ async def test_ignore_flow_nonexisting(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test we can ignore a flow."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     await ws_client.send_json(
@@ -2192,7 +2353,7 @@ async def test_get_matching_entries_ws(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get entries with the websocket api."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
         hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
@@ -2645,7 +2806,7 @@ async def test_subscribe_entries_ws(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test subscribe entries with the websocket api."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
         hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
@@ -2864,7 +3025,7 @@ async def test_subscribe_entries_ws_filtered(
 ) -> None:
     """Test subscribe entries with the websocket api with a type filter."""
     created = utcnow().timestamp()
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     mock_integration(hass, MockModule("comp1"))
     mock_integration(
         hass, MockModule("comp2", partial_manifest={"integration_type": "helper"})
@@ -3141,7 +3302,7 @@ async def test_flow_with_multiple_schema_errors(
 async def test_flow_with_multiple_schema_errors_base(
     hass: HomeAssistant, client: TestClient
 ) -> None:
-    """Test an config flow with multiple schema errors where fields are not in the schema."""
+    """Test config flow with multiple schema errors."""
     mock_integration(
         hass, MockModule("test", async_setup_entry=AsyncMock(return_value=True))
     )
@@ -3292,7 +3453,7 @@ async def test_list_subentries(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can list subentries."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(
@@ -3347,11 +3508,87 @@ async def test_list_subentries(
     }
 
 
+async def test_update_subentry(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Test that we can update a subentry."""
+    assert await async_setup_component(hass, DOMAIN, {})
+    ws_client = await hass_ws_client(hass)
+
+    entry = MockConfigEntry(
+        domain="test",
+        state=core_ce.ConfigEntryState.LOADED,
+        subentries_data=[
+            core_ce.ConfigSubentryData(
+                data={"test": "test"},
+                subentry_id="mock_id",
+                subentry_type="test",
+                title="Mock title",
+                unique_id="mock_unique_id",
+            )
+        ],
+    )
+    entry.add_to_hass(hass)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/update",
+            "entry_id": entry.entry_id,
+            "subentry_id": "mock_id",
+            "title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert response["success"]
+    assert response["result"] is None
+
+    assert list(entry.subentries.values())[0].title == "Updated Title"
+    assert list(entry.subentries.values())[0].unique_id == "mock_unique_id"
+    assert list(entry.subentries.values())[0].data["test"] == "test"
+
+    # Try renaming subentry from an unknown entry
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/update",
+            "entry_id": "no_such_entry",
+            "subentry_id": "mock_id",
+            "title": "Updated Title",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config entry not found",
+    }
+
+    # Try renaming subentry from an unknown subentry
+    ws_client = await hass_ws_client(hass)
+    await ws_client.send_json_auto_id(
+        {
+            "type": "config_entries/subentries/update",
+            "entry_id": entry.entry_id,
+            "subentry_id": "no_such_entry2",
+            "title": "Updated Title2",
+        }
+    )
+    response = await ws_client.receive_json()
+
+    assert not response["success"]
+    assert response["error"] == {
+        "code": "not_found",
+        "message": "Config subentry not found",
+    }
+
+
 async def test_delete_subentry(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test that we can delete a subentry."""
-    assert await async_setup_component(hass, "config", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     ws_client = await hass_ws_client(hass)
 
     entry = MockConfigEntry(

@@ -1,24 +1,24 @@
 """Set up some common test helper things."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
 import datetime
 import functools
 import gc
+import ipaddress
 import itertools
 import logging
 import os
 import pathlib
 import reprlib
-from shutil import rmtree
+from shutil import copytree, rmtree
+import socket
 import sqlite3
 import ssl
 import sys
 import threading
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 from unittest.mock import AsyncMock, MagicMock, Mock, _patch, patch
 
 from aiohttp import client
@@ -60,14 +60,14 @@ from homeassistant.auth.models import Credentials
 from homeassistant.auth.providers import homeassistant
 from homeassistant.components.device_tracker.legacy import Device
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.auth import (
     TYPE_AUTH,
     TYPE_AUTH_OK,
     TYPE_AUTH_REQUIRED,
 )
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.websocket_api.http import URL
 from homeassistant.config import YAML_CONFIG_FILE
 from homeassistant.config_entries import (
@@ -99,6 +99,7 @@ from homeassistant.helpers import (
     translation as translation_helper,
 )
 from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.translation import _TranslationsCacheData
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
@@ -122,7 +123,6 @@ from .typing import (
 if TYPE_CHECKING:
     # Local import to avoid processing recorder and SQLite modules when running a
     # testcase which does not use the recorder.
-    from homeassistant.auth.models import RefreshToken
     from homeassistant.components import recorder
 
 
@@ -136,6 +136,7 @@ from .common import (  # noqa: E402, isort:skip
     MockUser,
     async_fire_mqtt_message,
     async_test_home_assistant,
+    get_test_config_dir,
     mock_storage,
     patch_yaml_files,
     extract_stack_to_frame,
@@ -154,10 +155,14 @@ asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
 # Disable fixtures overriding our beautiful policy
 asyncio.set_event_loop_policy = lambda policy: None
 
+# Capture the real socket functions before any test patches them
+_real_getaddrinfo = socket.getaddrinfo
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
     parser.addoption("--dburl", action="store", default="sqlite://")
+    parser.addoption("--drop-existing-db", action="store_const", const=True)
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -174,21 +179,65 @@ def pytest_configure(config: pytest.Config) -> None:
     SnapshotSession.finish = override_syrupy_finish
 
 
+class HASocketBlockedError(pytest_socket.SocketBlockedError):
+    """SocketBlockedError variant which counts instances."""
+
+    instances: list[Self] = []
+
+    def __init__(self, *_args, **_kwargs) -> None:
+        """Initialize HASocketBlockedError and increment instance count."""
+        super().__init__(*_args, **_kwargs)
+        self.__class__.instances.append(self)
+
+
 def pytest_runtest_setup() -> None:
     """Prepare pytest_socket and freezegun.
 
     pytest_socket:
-    Throw if tests attempt to open sockets.
+    - Throw if tests attempt to open sockets.
 
-    allow_unix_socket is set to True because it's needed by asyncio.
-    Important: socket_allow_hosts must be called before disable_socket, otherwise all
-    destinations will be allowed.
+    - allow_unix_socket is set to True because it's needed by asyncio.
+      Important: socket_allow_hosts must be called before disable_socket, otherwise all
+      destinations will be allowed.
+
+    - Replace pytest_socket.SocketBlockedError with a variant which counts the number
+      of times it was raised.
 
     freezegun:
-    Modified to include https://github.com/spulec/freezegun/pull/424
+    - Modified to include
+      https://github.com/spulec/freezegun/pull/424
+      and improve class str.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
+
+    def _validate_host(host):
+        if host in ("localhost", "127.0.0.1", "::1", None, "", "0.0.0.0", "::"):
+            return
+        try:
+            ipaddress.ip_address(host)
+        except ValueError:
+            raise RuntimeError("DNS resolution disabled in tests") from None
+
+    def getaddrinfo_patched(host, *args: Any, **kwargs: Any):
+        _validate_host(host)
+        return _real_getaddrinfo(host, *args, **kwargs)
+
+    def gethostbyname_patched(host, *args, **kwargs):
+        _validate_host(host)
+        return host
+
+    def gethostbyname_ex_patched(host, *args, **kwargs):
+        _validate_host(host)
+        return (host, [], [host])
+
+    socket.getaddrinfo = getaddrinfo_patched
+    socket.gethostbyname = gethostbyname_patched
+    socket.gethostbyname_ex = gethostbyname_ex_patched
+
+    pytest_socket.SocketBlockedError = HASocketBlockedError
+
+    freezegun.api.FakeDate = patch_time.HAFakeDate  # type: ignore[attr-defined]
 
     freezegun.api.datetime_to_fakedatetime = patch_time.ha_datetime_to_fakedatetime  # type: ignore[attr-defined]
     freezegun.api.FakeDatetime = patch_time.HAFakeDatetime  # type: ignore[attr-defined]
@@ -329,17 +378,24 @@ def long_repr_strings() -> Generator[None]:
 
 
 @pytest.fixture(autouse=True)
-def enable_event_loop_debug() -> None:
+async def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
-    asyncio.get_event_loop().set_debug(True)
+    asyncio.get_running_loop().set_debug(True)
 
 
-@pytest.fixture(autouse=True)
+@pytest_asyncio.fixture(autouse=True)
 def verify_cleanup(
     expected_lingering_tasks: bool,
     expected_lingering_timers: bool,
 ) -> Generator[None]:
-    """Verify that the test has cleaned up resources correctly."""
+    """Verify that the test has cleaned up resources correctly.
+
+    This fixture requires the event loop to be stopped.
+    It therefore cannot be an async fixture.
+
+    Use @pytest_asyncio.fixture to make sure the correct event loop is set
+    regardless before calling the fixture.
+    """
     event_loop = asyncio.get_event_loop()
     threads_before = frozenset(threading.enumerate())
     tasks_before = asyncio.all_tasks(event_loop)
@@ -397,11 +453,23 @@ def verify_cleanup(
     try:
         # Verify respx.mock has been cleaned up
         assert not respx.mock.routes, (
-            "respx.mock routes not cleaned up, maybe the test needs to be decorated with @respx.mock"
+            "respx.mock routes not cleaned up, maybe the test"
+            " needs to be decorated with @respx.mock"
         )
     finally:
         # Clear mock routes not break subsequent tests
         respx.mock.clear()
+
+    try:
+        # Verify no socket connections were attempted
+        assert not HASocketBlockedError.instances, "the test opens sockets"
+    except AssertionError:
+        for instance in HASocketBlockedError.instances:
+            _LOGGER.exception("Socket opened during test", exc_info=instance)
+        raise
+    finally:
+        # Reset socket connection instance count to not break subsequent tests
+        HASocketBlockedError.instances = []
 
 
 @pytest.fixture(autouse=True)
@@ -494,7 +562,9 @@ def aiohttp_client_cls() -> type[CoalescingClient]:
 
 @pytest.fixture
 def aiohttp_client() -> Generator[ClientSessionGenerator]:
-    """Override the default aiohttp_client since 3.x does not support aiohttp_client_cls.
+    """Override the default aiohttp_client since 3.x does not support it.
+
+    The aiohttp_client_cls is not supported in 3.x.
 
     Remove this when upgrading to 4.x as aiohttp_client_cls
     will do the same thing
@@ -553,9 +623,41 @@ def hass_fixture_setup() -> list[bool]:
 
 
 @pytest.fixture
+def hass_tmp_config_dir(tmp_path: pathlib.Path) -> str:
+    """Fixture to provide a temporary config directory.
+
+    Use this fixture in a fixture overriding hass_config_dir to provide
+    a temporary config directory which does not need to be cleaned up:
+
+    @pytest.fixture
+    def hass_config_dir(hass_tmp_config_dir: str) -> str:
+        # Use temporary config directory for this test/module.
+        return hass_tmp_config_dir
+    """
+    copytree(
+        get_test_config_dir(),
+        tmp_path,
+        symlinks=True,
+        dirs_exist_ok=True,
+    )
+    return str(tmp_path)
+
+
+@pytest.fixture
+def hass_config_dir() -> str:
+    """Fixture to provide a test config directory.
+
+    Override this fixture to provide a custom config directory,
+    for example with pre-populated config files.
+    """
+    return get_test_config_dir()
+
+
+@pytest.fixture
 async def hass(
     hass_fixture_setup: list[bool],
     load_registries: bool,
+    hass_config_dir: str | None,
     hass_storage: dict[str, Any],
     request: pytest.FixtureRequest,
     mock_recorder_before_hass: None,
@@ -582,14 +684,20 @@ async def hass(
         orig_exception_handler(loop, context)
 
     exceptions: list[Exception] = []
-    async with async_test_home_assistant(loop, load_registries) as hass:
+    async with async_test_home_assistant(
+        loop, load_registries, config_dir=hass_config_dir
+    ) as hass:
         orig_exception_handler = loop.get_exception_handler()
         loop.set_exception_handler(exc_handle)
         frame.async_setup(hass)
 
+        # Ensure translations for "homeassistant" are always pre-loaded
+        await translation_helper.async_load_integrations(hass, {ha.DOMAIN})
+
         yield hass
 
-        # Config entries are not normally unloaded on HA shutdown. They are unloaded here
+        # Config entries are not normally unloaded on HA shutdown.
+        # They are unloaded here
         # to ensure that they could, and to help track lingering tasks and timers.
         loaded_entries = [
             entry
@@ -909,7 +1017,11 @@ def hass_ws_client(
 def fail_on_log_exception(
     request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Fixture to fail if a callback wrapped by catch_log_exception or coroutine wrapped by async_create_catching_coro throws."""
+    """Fixture to fail if a callback or coroutine throws.
+
+    Catches callbacks wrapped by catch_log_exception or coroutines
+    wrapped by async_create_catching_coro.
+    """
     if "no_fail_on_log_exception" in request.keywords:
         return
 
@@ -955,23 +1067,23 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
             self.mid = mid
             self.rc = 0
 
-    with patch(
-        "homeassistant.components.mqtt.async_client.AsyncMQTTClient"
-    ) as mock_client:
+    with patch("homeassistant.components.mqtt.client.AsyncMQTTClient") as mock_client:
         # The below use a call_soon for the on_publish/on_subscribe/on_unsubscribe
         # callbacks to simulate the behavior of the real MQTT client which will
         # not be synchronous.
 
         @ha.callback
-        def _async_fire_mqtt_message(topic, payload, qos, retain):
-            async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
+        def _async_fire_mqtt_message(topic, payload, qos, retain, properties=None):
+            async_fire_mqtt_message(
+                hass, topic, payload or b"", qos, retain, properties=properties
+            )
             mid = get_mid()
             hass.loop.call_soon(
                 mock_client.on_publish, Mock(), 0, mid, MockMqttReasonCode(), None
             )
             return FakeInfo(mid)
 
-        def _subscribe(topic, qos=0):
+        def _subscribe(topic_or_list, qos=0, **kwargs):
             mid = get_mid()
             hass.loop.call_soon(
                 mock_client.on_subscribe, Mock(), 0, mid, [MockMqttReasonCode()], None
@@ -1038,7 +1150,10 @@ async def _mqtt_mock_entry(
     from homeassistant.components import mqtt  # noqa: PLC0415
 
     if mqtt_config_entry_data is None:
-        mqtt_config_entry_data = {mqtt.CONF_BROKER: "mock-broker"}
+        mqtt_config_entry_data = {
+            mqtt.CONF_BROKER: "mock-broker",
+            mqtt.CONF_PROTOCOL: "5",
+        }
     if mqtt_config_entry_options is None:
         mqtt_config_entry_options = {mqtt.CONF_BIRTH_MESSAGE: {}}
 
@@ -1257,18 +1372,43 @@ def translations_once() -> Generator[_patch]:
 def evict_faked_translations(translations_once) -> Generator[_patch]:
     """Clear translations for mocked integrations from the cache after each module."""
     real_component_strings = translation_helper._async_get_component_strings
-    with patch(
-        "homeassistant.helpers.translation._async_get_component_strings",
-        wraps=real_component_strings,
-    ) as mock_component_strings:
+
+    def _async_get_cached_translations(
+        _hass: HomeAssistant,
+        _language: str,
+        _category: str,
+        _integration: str | None = None,
+    ) -> dict[str, str]:
+        # Override default implementation to ensure "homeassistant"
+        # is always considered when getting "global" cached translations
+        cache = translation_helper._async_get_translations_cache(_hass)
+        _components = (
+            {_integration}
+            if _integration
+            else _hass.config.top_level_components | {ha.DOMAIN}
+        )
+        return cache.get_cached(_language, _category, _components)
+
+    with (
+        patch(
+            "homeassistant.helpers.translation.async_get_cached_translations",
+            _async_get_cached_translations,
+        ),
+        patch(
+            "homeassistant.helpers.translation._async_get_component_strings",
+            wraps=real_component_strings,
+        ) as mock_component_strings,
+    ):
         yield
     cache: _TranslationsCacheData = translations_once.kwargs["return_value"]
     component_paths = components.__path__
 
     for call in mock_component_strings.mock_calls:
+        _components: set[str] = call.args[2]
         integrations: dict[str, loader.Integration] = call.args[3]
-        for domain, integration in integrations.items():
-            if any(
+        for domain in _components:
+            # If the integration exists, don't evict from cache
+            if (integration := integrations.get(domain)) and any(
                 pathlib.Path(f"{component_path}/{domain}") == integration.file_path
                 for component_path in component_paths
             ):
@@ -1489,44 +1629,59 @@ def recorder_db_url(
     assert not hass_fixture_setup
 
     db_url = cast(str, pytestconfig.getoption("dburl"))
+    drop_existing_db = pytestconfig.getoption("drop_existing_db")
+
+    def drop_db() -> None:
+        import sqlalchemy as sa  # noqa: PLC0415
+        import sqlalchemy_utils  # noqa: PLC0415
+
+        if db_url.startswith("mysql://"):
+            made_url = sa.make_url(db_url)
+            db = made_url.database
+            engine = sa.create_engine(db_url)
+            # Check for any open connections to the database before dropping it
+            # to ensure that InnoDB does not deadlock.
+            with engine.begin() as connection:
+                query = sa.text(
+                    "select id FROM information_schema.processlist"
+                    " WHERE db=:db and id != CONNECTION_ID()"
+                )
+                rows = connection.execute(query, parameters={"db": db}).fetchall()
+                if rows:
+                    raise RuntimeError(
+                        f"Unable to drop database {db} because it is in use by {rows}"
+                    )
+            engine.dispose()
+            sqlalchemy_utils.drop_database(db_url)
+        elif db_url.startswith("postgresql://"):
+            sqlalchemy_utils.drop_database(db_url)
+
     if db_url == "sqlite://" and persistent_database:
         tmp_path = tmp_path_factory.mktemp("recorder")
         db_url = "sqlite:///" + str(tmp_path / "pytest.db")
-    elif db_url.startswith("mysql://"):
+    elif db_url.startswith(("mysql://", "postgresql://")):
         import sqlalchemy_utils  # noqa: PLC0415
 
-        charset = "utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
-        assert not sqlalchemy_utils.database_exists(db_url)
-        sqlalchemy_utils.create_database(db_url, encoding=charset)
-    elif db_url.startswith("postgresql://"):
-        import sqlalchemy_utils  # noqa: PLC0415
+        if drop_existing_db and sqlalchemy_utils.database_exists(db_url):
+            drop_db()
 
-        assert not sqlalchemy_utils.database_exists(db_url)
-        sqlalchemy_utils.create_database(db_url, encoding="utf8")
+        if sqlalchemy_utils.database_exists(db_url):
+            raise RuntimeError(
+                f"Database {db_url} already exists. Use --drop-existing-db "
+                "to automatically drop existing database before start of test."
+            )
+
+        sqlalchemy_utils.create_database(
+            db_url,
+            encoding="utf8mb4' COLLATE = 'utf8mb4_unicode_ci"
+            if db_url.startswith("mysql://")
+            else "utf8",
+        )
     yield db_url
     if db_url == "sqlite://" and persistent_database:
         rmtree(tmp_path, ignore_errors=True)
-    elif db_url.startswith("mysql://"):
-        import sqlalchemy as sa  # noqa: PLC0415
-
-        made_url = sa.make_url(db_url)
-        db = made_url.database
-        engine = sa.create_engine(db_url)
-        # Check for any open connections to the database before dropping it
-        # to ensure that InnoDB does not deadlock.
-        with engine.begin() as connection:
-            query = sa.text(
-                "select id FROM information_schema.processlist WHERE db=:db and id != CONNECTION_ID()"
-            )
-            rows = connection.execute(query, parameters={"db": db}).fetchall()
-            if rows:
-                raise RuntimeError(
-                    f"Unable to drop database {db} because it is in use by {rows}"
-                )
-        engine.dispose()
-        sqlalchemy_utils.drop_database(db_url)
-    elif db_url.startswith("postgresql://"):
-        sqlalchemy_utils.drop_database(db_url)
+    elif db_url.startswith(("mysql://", "postgresql://")):
+        drop_db()
 
 
 async def _async_init_recorder_component(
@@ -1656,10 +1811,12 @@ async def async_test_recorder(
     migrate_entity_ids = (
         migration.EntityIDMigration.migrate_data if enable_migrate_entity_ids else None
     )
-    legacy_event_id_foreign_key_exists = (
-        migration.EventIDPostMigration._legacy_event_id_foreign_key_exists
+    post_migrate_event_ids = (
+        migration.EventIDPostMigration.needs_migrate_impl
         if enable_migrate_event_ids
-        else lambda _: None
+        else lambda _1, _2, _3: migration.DataMigrationStatus(
+            needs_migrate=False, migration_done=True
+        )
     )
     with (
         patch(
@@ -1698,8 +1855,8 @@ async def async_test_recorder(
             autospec=True,
         ),
         patch(
-            "homeassistant.components.recorder.migration.EventIDPostMigration._legacy_event_id_foreign_key_exists",
-            side_effect=legacy_event_id_foreign_key_exists,
+            "homeassistant.components.recorder.migration.EventIDPostMigration.needs_migrate_impl",
+            side_effect=post_migrate_event_ids,
             autospec=True,
         ),
         patch(
@@ -1817,6 +1974,16 @@ async def mock_enable_bluetooth(
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
     with (
+        # Simulate the Bluetooth management API being unavailable, as it is on
+        # CI and most dev machines. Letting the real setup() run would attempt
+        # real socket I/O on Linux hosts that do have BlueZ available, and
+        # mocking it as successful would enable the advertising side channel,
+        # changing the scanner code path the existing tests were written for.
+        patch(
+            "habluetooth.channels.bluez.MGMTBluetoothCtl.setup",
+            AsyncMock(side_effect=OSError),
+        ),
+        patch("habluetooth.util.recover_adapter"),
         patch("bluetooth_auto_recovery.recover_adapter"),
         patch("bluetooth_adapters.systems.platform.system", return_value="Linux"),
         patch("bluetooth_adapters.systems.linux.LinuxAdapters.refresh"),
@@ -1845,37 +2012,48 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     # Late imports to avoid loading bleak unless we need it
 
-    from habluetooth import scanner as bluetooth_scanner  # noqa: PLC0415
+    from habluetooth import (  # noqa: PLC0415
+        manager as bluetooth_manager,
+        scanner as bluetooth_scanner,
+    )
 
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
     # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
+
+    # Mock BlueZ management controller to successfully setup
+    # This prevents the manager from operating in degraded mode
+    mock_mgmt_bluetooth_ctl = Mock()
+    mock_mgmt_bluetooth_ctl.setup = AsyncMock(return_value=None)
+
     with (
         patch.object(
             bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),
+        patch.object(
+            bluetooth_manager, "MGMTBluetoothCtl", return_value=mock_mgmt_bluetooth_ctl
+        ),
     ):
         yield mock_bleak_scanner_start
 
 
 @pytest.fixture
-def hassio_env(supervisor_is_connected: AsyncMock) -> Generator[None]:
+def hassio_env(
+    supervisor_is_connected: AsyncMock, supervisor_root_info: AsyncMock
+) -> Generator[None]:
     """Fixture to inject hassio env."""
-    from homeassistant.components.hassio import HassioAPIError  # noqa: PLC0415
+    from aiohasupervisor import SupervisorError  # noqa: PLC0415
 
     from .components.hassio import SUPERVISOR_TOKEN  # noqa: PLC0415
 
+    supervisor_root_info.side_effect = SupervisorError()
     with (
         patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
         patch.dict(os.environ, {"SUPERVISOR_TOKEN": SUPERVISOR_TOKEN}),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            Mock(side_effect=HassioAPIError()),
-        ),
     ):
         yield
 
@@ -1887,34 +2065,13 @@ async def hassio_stubs(
     hass_client: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
     supervisor_client: AsyncMock,
-) -> RefreshToken:
+    ingress_panels: AsyncMock,
+) -> None:
     """Create mock hassio http client."""
-    from homeassistant.components.hassio import HassioAPIError  # noqa: PLC0415
-
-    with (
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_api",
-            return_value={"result": "ok"},
-        ) as hass_api,
-        patch(
-            "homeassistant.components.hassio.HassIO.update_hass_config",
-            return_value={"result": "ok"},
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_info",
-            side_effect=HassioAPIError(),
-        ),
-        patch(
-            "homeassistant.components.hassio.HassIO.get_ingress_panels",
-            return_value={"panels": []},
-        ),
-        patch(
-            "homeassistant.components.hassio.issues.SupervisorIssues.setup",
-        ),
+    with patch(
+        "homeassistant.components.hassio.issues.SupervisorIssues.setup",
     ):
         await async_setup_component(hass, "hassio", {})
-
-    return hass_api.call_args[0][1]
 
 
 @pytest.fixture
@@ -2078,3 +2235,33 @@ def disable_block_async_io() -> Generator[None]:
             blocking_call.object, blocking_call.function, blocking_call.original_func
         )
     calls.clear()
+
+
+# Ensure that incorrectly formatted mac addresses are rejected during
+# DhcpServiceInfo initialisation
+_real_dhcp_service_info_init = DhcpServiceInfo.__init__
+
+
+def _dhcp_service_info_init(self: DhcpServiceInfo, *args: Any, **kwargs: Any) -> None:
+    """Override __init__ for DhcpServiceInfo.
+
+    Ensure that the macaddress is always in lowercase and
+    without colons to match DHCP service.
+    """
+    _real_dhcp_service_info_init(self, *args, **kwargs)
+    if self.macaddress != self.macaddress.lower().replace(":", ""):
+        raise ValueError("macaddress is not correctly formatted")
+
+
+DhcpServiceInfo.__init__ = _dhcp_service_info_init
+
+
+@pytest.fixture(autouse=True)
+def disable_http_server() -> Generator[None]:
+    """Disable automatic start of HTTP server during tests.
+
+    This prevents the HTTP server from starting in tests that setup
+    integrations which depend on the HTTP component.
+    """
+    with patch("homeassistant.components.http.start_http_server_and_save_config"):
+        yield

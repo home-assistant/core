@@ -13,7 +13,11 @@ import requests_mock
 from requests_mock import ANY
 
 from homeassistant import config_entries
-from homeassistant.components.huawei_lte.const import CONF_UNAUTHENTICATED_MODE, DOMAIN
+from homeassistant.components.huawei_lte.const import (
+    CONF_UNAUTHENTICATED_MODE,
+    CONF_UPNP_UDN,
+    DOMAIN,
+)
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -57,7 +61,9 @@ FIXTURE_USER_INPUT_OPTIONS = {
 async def test_show_set_form(hass: HomeAssistant) -> None:
     """Test that the setup form is served."""
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=None
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+        data=None,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -72,7 +78,9 @@ async def test_urlize_plain_host(
     host = "192.168.100.1"
     user_input = {**FIXTURE_USER_INPUT, CONF_URL: host}
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}, data=user_input
+        DOMAIN,
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
+        data=user_input,
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -104,7 +112,7 @@ async def test_already_configured(
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
         data=FIXTURE_USER_INPUT,
     )
 
@@ -173,35 +181,55 @@ def login_requests_mock(requests_mock: requests_mock.Mocker) -> requests_mock.Mo
     [
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.USERNAME_WRONG}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.USERNAME_WRONG}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {CONF_USERNAME: "incorrect_username"},
         ),
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.PASSWORD_WRONG}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.PASSWORD_WRONG}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {CONF_PASSWORD: "incorrect_password"},
         ),
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.USERNAME_PWD_WRONG}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.USERNAME_PWD_WRONG}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {CONF_USERNAME: "invalid_auth"},
         ),
         (
             {
-                "text": f"<error><code>{LoginErrorEnum.USERNAME_PWD_OVERRUN}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{LoginErrorEnum.USERNAME_PWD_OVERRUN}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {"base": "login_attempts_exceeded"},
         ),
         (
             {
-                "text": f"<error><code>{ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN}</code><message/></error>",
+                "text": (
+                    "<error><code>"
+                    f"{ResponseCodeEnum.ERROR_SYSTEM_UNKNOWN}"
+                    "</code><message/></error>"
+                ),
             },
             {},
             {"base": "response_error"},
@@ -227,7 +255,7 @@ async def test_login_error(
     )
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
-        context={"source": config_entries.SOURCE_USER},
+        context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
         data={**FIXTURE_USER_INPUT, **fixture_override},
     )
 
@@ -257,7 +285,7 @@ async def test_success(hass: HomeAssistant, login_requests_mock, scheme: str) ->
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
-            context={"source": config_entries.SOURCE_USER},
+            context=config_entries.ConfigFlowContext(source=config_entries.SOURCE_USER),
             data=user_input,
         )
         await hass.async_block_till_done()
@@ -328,14 +356,16 @@ async def test_ssdp(
 ) -> None:
     """Test SSDP discovery initiates config properly."""
     url = FIXTURE_USER_INPUT[CONF_URL][:-1]  # strip trailing slash for appending port
-    context = {"source": config_entries.SOURCE_SSDP}
+    context = config_entries.ConfigFlowContext(source=config_entries.SOURCE_SSDP)
     login_requests_mock.request(**requests_mock_request_kwargs)
     service_info = SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="upnp:rootdevice",
         ssdp_location=f"{url}:60957/rootDesc.xml",
         upnp={
-            ATTR_UPNP_DEVICE_TYPE: "urn:schemas-upnp-org:device:InternetGatewayDevice:1",
+            ATTR_UPNP_DEVICE_TYPE: (
+                "urn:schemas-upnp-org:device:InternetGatewayDevice:1"
+            ),
             ATTR_UPNP_MANUFACTURER: "Huawei",
             ATTR_UPNP_MANUFACTURER_URL: "http://www.huawei.com/",
             ATTR_UPNP_MODEL_NAME: "Huawei router",
@@ -353,11 +383,12 @@ async def test_ssdp(
 
     for k, v in expected_result.items():
         assert result[k] == v  # type: ignore[literal-required] # expected is a subset
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if result.get("data_schema"):
         assert result["data_schema"] is not None
         assert result["data_schema"]({})[CONF_URL] == url + "/"
 
-    if result["type"] == FlowResultType.ABORT:
+    if result["type"] is FlowResultType.ABORT:
         return
 
     login_requests_mock.request(
@@ -371,8 +402,9 @@ async def test_ssdp(
     )
     await hass.async_block_till_done()
 
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == service_info.upnp[ATTR_UPNP_MODEL_NAME]
+    assert result["result"].data[CONF_UPNP_UDN] == service_info.upnp[ATTR_UPNP_UDN]
 
 
 @pytest.mark.parametrize(

@@ -1,17 +1,28 @@
 {
   "entity": {
-    "number": {
-      "manual_speed": {
-        "default": "mdi:pump"
+    "binary_sensor": {
+      "is_lighting": {
+        "default": "mdi:lightbulb-outline",
+        "state": {
+          "on": "mdi:lightbulb-on"
+        }
       },
+      "is_uvc_connected": {
+        "default": "mdi:lightbulb-off",
+        "state": {
+          "on": "mdi:lightbulb-outline"
+        }
+      }
+    },
+    "number": {
       "day_speed": {
         "default": "mdi:weather-sunny"
       },
+      "manual_speed": {
+        "default": "mdi:pump"
+      },
       "night_speed": {
         "default": "mdi:moon-waning-crescent"
-      },
-      "temperature_offset": {
-        "default": "mdi:thermometer"
       },
       "night_temperature_offset": {
         "default": "mdi:thermometer"
@@ -21,20 +32,23 @@
         "state": {
           "0": "mdi:led-off"
         }
+      },
+      "temperature_offset": {
+        "default": "mdi:thermometer"
       }
     },
     "sensor": {
       "current_speed": {
         "default": "mdi:pump"
       },
-      "service_hours": {
-        "default": "mdi:wrench-clock"
-      },
       "error_code": {
         "default": "mdi:alert-octagon",
         "state": {
           "no_error": "mdi:check-circle"
         }
+      },
+      "service_hours": {
+        "default": "mdi:wrench-clock"
       }
     },
     "switch": {

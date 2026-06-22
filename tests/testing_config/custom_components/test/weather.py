@@ -3,8 +3,6 @@
 Call init before using it in your tests to ensure clean test data.
 """
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.weather import (

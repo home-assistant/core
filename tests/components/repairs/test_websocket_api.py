@@ -1,7 +1,5 @@
 """Test the repairs websocket API."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import ANY, AsyncMock, Mock
@@ -599,7 +597,6 @@ async def test_fix_issue_aborted(
         "handler": "fake_integration",
         "reason": "not_given",
         "description_placeholders": None,
-        "result": None,
     }
 
     await ws_client.send_json({"id": 4, "type": "repairs/list_issues"})

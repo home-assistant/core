@@ -1,7 +1,5 @@
 """Config flow to configure the LCN integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -120,7 +118,7 @@ class LcnFlowHandler(config_entries.ConfigFlow, domain=DOMAIN):
                 errors={CONF_BASE: error},
             )
 
-        data: dict = {
+        data: dict[str, Any] = {
             **user_input,
             CONF_DEVICES: [],
             CONF_ENTITIES: [],

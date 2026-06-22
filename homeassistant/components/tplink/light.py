@@ -1,7 +1,5 @@
 """Support for TPLink lights."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass
 import logging
@@ -179,16 +177,18 @@ class TPLinkLightEntityDescription(
 LIGHT_DESCRIPTIONS: tuple[TPLinkLightEntityDescription, ...] = (
     TPLinkLightEntityDescription(
         key="light",
-        exists_fn=lambda dev, _: Module.Light in dev.modules
-        and Module.LightEffect not in dev.modules,
+        exists_fn=lambda dev, _: (
+            Module.Light in dev.modules and Module.LightEffect not in dev.modules
+        ),
     ),
 )
 
 LIGHT_EFFECT_DESCRIPTIONS: tuple[TPLinkLightEntityDescription, ...] = (
     TPLinkLightEntityDescription(
         key="light_effect",
-        exists_fn=lambda dev, _: Module.Light in dev.modules
-        and Module.LightEffect in dev.modules,
+        exists_fn=lambda dev, _: (
+            Module.Light in dev.modules and Module.LightEffect in dev.modules
+        ),
     ),
 )
 

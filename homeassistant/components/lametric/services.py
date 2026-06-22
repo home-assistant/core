@@ -1,7 +1,5 @@
 """Support for LaMetric time services."""
 
-from __future__ import annotations
-
 from demetriek import (
     AlarmSound,
     Chart,
@@ -108,6 +106,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_MESSAGE,
         _async_service_message,
         schema=SERVICE_MESSAGE_SCHEMA,
+        description_placeholders={"icons_url": "https://developer.lametric.com/icons"},
     )
 
 

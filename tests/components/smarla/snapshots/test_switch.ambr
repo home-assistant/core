@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[switch.smarla-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,9 +21,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': None,
     'platform': 'smarla',
@@ -37,6 +39,7 @@
 # name: test_entities[switch.smarla-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'switch',
       'friendly_name': 'Smarla',
     }),
     'context': <ANY>,
@@ -49,8 +52,9 @@
 # ---
 # name: test_entities[switch.smarla_smart_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -68,9 +72,10 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart Mode',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SwitchDeviceClass.SWITCH: 'switch'>,
     'original_icon': None,
     'original_name': 'Smart Mode',
     'platform': 'smarla',
@@ -85,6 +90,7 @@
 # name: test_entities[switch.smarla_smart_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'device_class': 'switch',
       'friendly_name': 'Smarla Smart Mode',
     }),
     'context': <ANY>,

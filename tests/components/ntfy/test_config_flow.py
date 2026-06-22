@@ -12,8 +12,19 @@ from aiontfy.exceptions import (
 )
 import pytest
 
-from homeassistant.components.ntfy.const import CONF_TOPIC, DOMAIN, SECTION_AUTH
-from homeassistant.config_entries import SOURCE_USER, ConfigSubentry
+from homeassistant import config_entries
+from homeassistant.components.ntfy.const import (
+    CONF_MESSAGE,
+    CONF_PRIORITY,
+    CONF_TAGS,
+    CONF_TITLE,
+    CONF_TOPIC,
+    DOMAIN,
+    SECTION_AUTH,
+    SECTION_FILTER,
+    SUBENTRY_TYPE_TOPIC,
+)
+from homeassistant.config_entries import SOURCE_USER, ConfigSubentry, FlowType
 from homeassistant.const import (
     CONF_NAME,
     CONF_PASSWORD,
@@ -78,6 +89,28 @@ async def test_form(
     assert result["title"] == "ntfy.sh"
     assert result["data"] == entry_data
     assert len(mock_setup_entry.mock_calls) == 1
+
+    await hass.async_block_till_done(wait_background_tasks=True)
+    subentry_flows = hass.config_entries.subentries.async_progress()
+    assert len(subentry_flows) == 1
+    assert result["next_flow"][0] == FlowType.CONFIG_SUBENTRIES_FLOW
+    result = await hass.config_entries.subentries.async_configure(
+        result["next_flow"][1], {"next_step_id": "add_topic"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "add_topic"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {},
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "mytopic"
+    assert result["data"] == {CONF_TOPIC: "mytopic"}
 
 
 @pytest.mark.parametrize(
@@ -186,7 +219,7 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "topic"),
+        (config_entry.entry_id, SUBENTRY_TYPE_TOPIC),
         context={"source": SOURCE_USER},
     )
 
@@ -204,15 +237,29 @@ async def test_add_topic_flow(hass: HomeAssistant) -> None:
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "mytopic"},
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {
+                CONF_PRIORITY: ["5"],
+                CONF_TAGS: ["octopus", "+1"],
+                CONF_TITLE: "title",
+                CONF_MESSAGE: "triggered",
+            },
+        },
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry_id = list(config_entry.subentries)[0]
     assert config_entry.subentries == {
         subentry_id: ConfigSubentry(
-            data={CONF_TOPIC: "mytopic"},
+            data={
+                CONF_TOPIC: "mytopic",
+                CONF_PRIORITY: ["5"],
+                CONF_TAGS: ["octopus", "+1"],
+                CONF_TITLE: "title",
+                CONF_MESSAGE: "triggered",
+            },
             subentry_id=subentry_id,
-            subentry_type="topic",
+            subentry_type=SUBENTRY_TYPE_TOPIC,
             title="mytopic",
             unique_id="mytopic",
         )
@@ -234,7 +281,7 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "topic"),
+        (config_entry.entry_id, SUBENTRY_TYPE_TOPIC),
         context={"source": SOURCE_USER},
     )
 
@@ -252,23 +299,30 @@ async def test_generated_topic(hass: HomeAssistant, mock_random: AsyncMock) -> N
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: ""},
+        user_input={
+            CONF_TOPIC: "",
+            SECTION_FILTER: {},
+        },
     )
 
     mock_random.assert_called_once()
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "randomtopic", CONF_NAME: "mytopic"},
+        user_input={
+            CONF_TOPIC: "randomtopic",
+            CONF_NAME: "mytopic",
+            SECTION_FILTER: {},
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     subentry_id = list(config_entry.subentries)[0]
     assert config_entry.subentries == {
         subentry_id: ConfigSubentry(
-            data={CONF_TOPIC: "randomtopic", CONF_NAME: "mytopic"},
+            data={CONF_TOPIC: "randomtopic"},
             subentry_id=subentry_id,
-            subentry_type="topic",
+            subentry_type=SUBENTRY_TYPE_TOPIC,
             title="mytopic",
             unique_id="randomtopic",
         )
@@ -288,7 +342,7 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "topic"),
+        (config_entry.entry_id, SUBENTRY_TYPE_TOPIC),
         context={"source": SOURCE_USER},
     )
 
@@ -306,15 +360,21 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "invalid,topic"},
+        user_input={
+            CONF_TOPIC: "invalid,topic",
+            SECTION_FILTER: {},
+        },
     )
 
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_topic"}
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "mytopic"},
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {},
+        },
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -323,7 +383,7 @@ async def test_invalid_topic(hass: HomeAssistant, mock_random: AsyncMock) -> Non
         subentry_id: ConfigSubentry(
             data={CONF_TOPIC: "mytopic"},
             subentry_id=subentry_id,
-            subentry_type="topic",
+            subentry_type=SUBENTRY_TYPE_TOPIC,
             title="mytopic",
             unique_id="mytopic",
         )
@@ -343,7 +403,7 @@ async def test_topic_already_configured(
     await hass.async_block_till_done()
 
     result = await hass.config_entries.subentries.async_init(
-        (config_entry.entry_id, "topic"),
+        (config_entry.entry_id, SUBENTRY_TYPE_TOPIC),
         context={"source": SOURCE_USER},
     )
     assert result["type"] is FlowResultType.MENU
@@ -360,7 +420,10 @@ async def test_topic_already_configured(
 
     result = await hass.config_entries.subentries.async_configure(
         result["flow_id"],
-        user_input={CONF_TOPIC: "mytopic"},
+        user_input={
+            CONF_TOPIC: "mytopic",
+            SECTION_FILTER: {},
+        },
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -387,7 +450,8 @@ async def test_flow_reauth(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken", last_access=datetime.now()
+        token="newtoken",
+        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
@@ -446,7 +510,8 @@ async def test_form_reauth_errors(
     )
     mock_aiontfy.account.side_effect = exception
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken", last_access=datetime.now()
+        token="newtoken",
+        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reauth_flow(hass)
@@ -532,7 +597,8 @@ async def test_flow_reconfigure(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken", last_access=datetime.now()
+        token="newtoken",
+        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
     )
     config_entry.add_to_hass(hass)
     result = await config_entry.start_reconfigure_flow(hass)
@@ -634,7 +700,8 @@ async def test_flow_reconfigure_errors(
         },
     )
     mock_aiontfy.generate_token.return_value = AccountTokenResponse(
-        token="newtoken", last_access=datetime.now()
+        token="newtoken",
+        last_access=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
     )
     mock_aiontfy.account.side_effect = exception
 
@@ -731,3 +798,65 @@ async def test_flow_reconfigure_account_mismatch(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "account_mismatch"
+
+
+@pytest.mark.usefixtures("mock_aiontfy")
+async def test_topic_reconfigure_flow(hass: HomeAssistant) -> None:
+    """Test topic subentry reconfigure flow."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_URL: "https://ntfy.sh/", CONF_USERNAME: None},
+        subentries_data=[
+            config_entries.ConfigSubentryData(
+                data={
+                    CONF_TOPIC: "mytopic",
+                    CONF_PRIORITY: ["1"],
+                    CONF_TAGS: ["owl", "-1"],
+                    CONF_TITLE: "",
+                    CONF_MESSAGE: "triggered",
+                },
+                subentry_id="subentry_id",
+                subentry_type=SUBENTRY_TYPE_TOPIC,
+                title="mytopic",
+                unique_id="mytopic",
+            )
+        ],
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await config_entry.start_subentry_reconfigure_flow(hass, "subentry_id")
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_PRIORITY: ["5"],
+            CONF_TAGS: ["octopus", "+1"],
+            CONF_TITLE: "title",
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    assert config_entry.subentries == {
+        "subentry_id": ConfigSubentry(
+            data={
+                CONF_TOPIC: "mytopic",
+                CONF_PRIORITY: ["5"],
+                CONF_TAGS: ["octopus", "+1"],
+                CONF_TITLE: "title",
+                CONF_MESSAGE: None,
+            },
+            subentry_id="subentry_id",
+            subentry_type=SUBENTRY_TYPE_TOPIC,
+            title="mytopic",
+            unique_id="mytopic",
+        )
+    }
+
+    await hass.async_block_till_done()

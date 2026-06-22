@@ -1,7 +1,5 @@
 """Platform for Miele vacuum integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from enum import IntEnum
 import logging
@@ -29,8 +27,9 @@ PARALLEL_UPDATES = 1
 _LOGGER = logging.getLogger(__name__)
 
 # The following const classes define program speeds and programs for the vacuum cleaner.
-# Miele have used the same and overlapping names for fan_speeds and programs even
-# if the contexts are different. This is an attempt to make it clearer in the integration.
+# Miele have used the same and overlapping names for
+# fan_speeds and programs even if the contexts are different.
+# This is an attempt to make it clearer in the integration.
 
 
 class FanSpeed(IntEnum):
@@ -64,7 +63,7 @@ PROGRAM_TO_SPEED: dict[int, str] = {
 }
 
 
-class MieleVacuumStateCode(MieleEnum):
+class MieleVacuumStateCode(MieleEnum, missing_to_none=True):
     """Define vacuum state codes."""
 
     idle = 0
@@ -82,12 +81,10 @@ class MieleVacuumStateCode(MieleEnum):
     blocked_front_wheel = 5900
     docked = 5903, 5904
     remote_controlled = 5910
-    missing2none = -9999
 
 
 SUPPORTED_FEATURES = (
     VacuumEntityFeature.STATE
-    | VacuumEntityFeature.BATTERY
     | VacuumEntityFeature.FAN_SPEED
     | VacuumEntityFeature.START
     | VacuumEntityFeature.STOP
@@ -130,7 +127,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the vacuum platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
 
     async_add_entities(
         MieleVacuum(coordinator, device_id, definition.description)
@@ -175,11 +172,6 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
         )
 
     @property
-    def battery_level(self) -> int | None:
-        """Return the battery level."""
-        return self.device.state_battery_level
-
-    @property
     def fan_speed(self) -> str | None:
         """Return the fan speed."""
         return PROGRAM_TO_SPEED.get(self.device.state_program_id)
@@ -188,22 +180,23 @@ class MieleVacuum(MieleEntity, StateVacuumEntity):
     def available(self) -> bool:
         """Return the availability of the entity."""
 
-        return (
+        return super().available and (
             self.action.power_off_enabled or self.action.power_on_enabled
-        ) and super().available
+        )
 
     async def send(self, device_id: str, action: dict[str, Any]) -> None:
         """Send action to the device."""
         try:
             await self.api.send_action(device_id, action)
-        except ClientResponseError as ex:
+        except ClientResponseError as err:
+            _LOGGER.debug("Error setting vacuum state for %s: %s", self.entity_id, err)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_state_error",
                 translation_placeholders={
                     "entity": self.entity_id,
                 },
-            ) from ex
+            ) from err
 
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Clean spot."""

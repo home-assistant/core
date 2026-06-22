@@ -1,6 +1,7 @@
-"""Support for repeating alerts when conditions are met."""
+"""Support for repeating alerts when conditions are met.
 
-from __future__ import annotations
+DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
+"""
 
 import voluptuous as vol
 
@@ -63,7 +64,10 @@ CONFIG_SCHEMA = vol.Schema(
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Alert component."""
+    """Set up the Alert component.
+
+    DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
+    """
     component = EntityComponent[AlertEntity](LOGGER, DOMAIN, hass)
 
     entities: list[AlertEntity] = []

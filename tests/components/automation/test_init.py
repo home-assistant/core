@@ -32,15 +32,22 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import (
+    CALLBACK_TYPE,
     Context,
     CoreState,
+    Event,
     HomeAssistant,
     ServiceCall,
     State,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, Unauthorized
-from homeassistant.helpers import device_registry as dr
+from homeassistant.exceptions import (
+    ConfigValidationError,
+    HomeAssistantError,
+    ServiceValidationError,
+    Unauthorized,
+)
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.script import (
     SCRIPT_MODE_CHOICES,
@@ -50,16 +57,26 @@ from homeassistant.helpers.script import (
     SCRIPT_MODE_SINGLE,
     _async_stop_scripts_at_shutdown,
 )
+from homeassistant.helpers.trigger import (
+    NotTriggeredInfo,
+    Trigger,
+    TriggerActionRunner,
+    TriggerNotTriggeredReporter,
+)
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util, yaml as yaml_util
 
 from tests.common import (
     MockConfigEntry,
+    MockModule,
     MockUser,
     assert_setup_component,
     async_capture_events,
     async_fire_time_changed,
     async_mock_service,
+    mock_integration,
+    mock_platform,
     mock_restore_cache,
 )
 from tests.components.logbook.common import MockRow, mock_humanify
@@ -257,12 +274,12 @@ async def test_trigger_service_ignoring_condition(
     assert caplog.record_tuples[0][1] == logging.WARNING
 
     await hass.services.async_call(
-        "automation", "trigger", {"entity_id": "automation.test"}, blocking=True
+        DOMAIN, "trigger", {"entity_id": "automation.test"}, blocking=True
     )
     assert len(calls) == 1
 
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.test", "skip_condition": True},
         blocking=True,
@@ -270,7 +287,7 @@ async def test_trigger_service_ignoring_condition(
     assert len(calls) == 2
 
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.test", "skip_condition": False},
         blocking=True,
@@ -700,9 +717,14 @@ async def test_reload_config_handles_load_fails(
     assert len(calls) == 1
     assert calls[0].data.get("event") == "test_event"
 
-    with patch(
-        "homeassistant.config.load_yaml_config_file",
-        side_effect=HomeAssistantError("bla"),
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            side_effect=HomeAssistantError("bla"),
+        ),
+        pytest.raises(
+            ServiceValidationError, match="Failed to load configuration: bla"
+        ),
     ):
         await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
 
@@ -711,6 +733,35 @@ async def test_reload_config_handles_load_fails(
     hass.bus.async_fire("test_event")
     await hass.async_block_till_done()
     assert len(calls) == 2
+
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+        ),
+        patch(
+            "homeassistant.config.async_process_component_and_handle_errors",
+            side_effect=ConfigValidationError(
+                "config_schema_unknown_err",
+                [Exception("bla")],
+                translation_domain="homeassistant",
+                translation_placeholders={"domain": "bla", "error": "bla"},
+            ),
+        ),
+        pytest.raises(
+            ServiceValidationError,
+            match="Unknown error calling bla CONFIG_SCHEMA - bla",
+        ) as exc_info,
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+    assert exc_info.value.translation_domain == "homeassistant"
+    assert exc_info.value.translation_key == "config_schema_unknown_err"
+    assert exc_info.value.translation_placeholders == {"domain": "bla", "error": "bla"}
+
+    assert hass.states.get("automation.hello") is not None
+
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 3
 
 
 @pytest.mark.parametrize(
@@ -1657,7 +1708,22 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
                 "actions": [],
             },
             "failed to setup triggers",
-            "Integration 'automation' does not provide trigger support.",
+            "Integration 'automation' does not provide trigger support"
+            ". Got {'alias': 'bad_automation', "
+            "'triggers': [{'platform': 'automation'}], 'actions': []",
+            "validation_failed_triggers",
+        ),
+        (
+            {
+                "triggers": [
+                    {"platform": "event", "event_type": "test_event"},
+                    {"platform": "automation"},
+                ],
+                "actions": [],
+            },
+            "failed to setup triggers",
+            "Integration 'automation' does not provide trigger support"
+            ". Got {'alias': 'bad_automation',",
             "validation_failed_triggers",
         ),
         (
@@ -1672,7 +1738,8 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
                 "actions": [],
             },
             "failed to setup conditions",
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            ". Got {'alias': 'bad_automation',",
             "validation_failed_conditions",
         ),
         (
@@ -1686,7 +1753,23 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
                 },
             },
             "failed to setup actions",
-            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd.",
+            "Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            ". Got {'alias': 'bad_automation',",
+            "validation_failed_actions",
+        ),
+        (
+            {
+                "triggers": {"platform": "event", "event_type": "test_event"},
+                "actions": {
+                    "wait_for_trigger": [
+                        {"platform": "event", "event_type": "valid"},
+                        {"platform": "not_a_platform"},
+                    ],
+                },
+            },
+            "failed to setup actions",
+            "Invalid trigger 'not_a_platform' specified"
+            ". Got {'alias': 'bad_automation',",
             "validation_failed_actions",
         ),
     ],
@@ -1738,7 +1821,7 @@ async def test_automation_bad_config_validation(
     assert issues[0]["translation_placeholders"]["error"].startswith(details)
 
     # Make sure both automations are setup
-    assert set(hass.states.async_entity_ids("automation")) == {
+    assert set(hass.states.async_entity_ids(DOMAIN)) == {
         "automation.bad_automation",
         "automation.good_automation",
     }
@@ -1768,6 +1851,34 @@ async def test_automation_bad_config_validation(
         )
     issues = await get_repairs(hass, hass_ws_client)
     assert len(issues) == 0
+
+
+async def test_automation_trigger_validation_home_assistant_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger validation raising HomeAssistantError doesn't crash."""
+    with patch(
+        "homeassistant.components.automation.config.async_validate_trigger_config",
+        side_effect=HomeAssistantError("trigger validator went boom"),
+    ):
+        assert await async_setup_component(
+            hass,
+            automation.DOMAIN,
+            {
+                automation.DOMAIN: {
+                    "alias": "bad_automation",
+                    "triggers": {"platform": "event", "event_type": "test_event"},
+                    "actions": [],
+                }
+            },
+        )
+
+    assert (
+        "Automation with alias 'bad_automation' failed to setup triggers"
+        " and has been disabled: trigger validator went boom"
+    ) in caplog.text
+    assert hass.states.get("automation.bad_automation").state == STATE_UNAVAILABLE
 
 
 async def test_automation_with_error_in_script(
@@ -2232,6 +2343,375 @@ async def test_extraction_functions(
     assert automation.blueprint_in_automation(hass, "automation.test3") is None
 
 
+async def test_extraction_functions_with_trigger_targets(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test extraction functions with targets in triggers.
+
+    This test verifies that targets specified in trigger configurations
+    (using new-style triggers that support target) are properly extracted for
+    entity, device, area, floor, and label references.
+    """
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+
+    trigger_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:01")},
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(
+        hass, "scene", {"scene": {"name": "test", "entities": {}}}
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "alias": "test1",
+                    "triggers": [
+                        # Single entity_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"entity_id": "scene.target_entity"},
+                        },
+                        # Multiple entity_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "entity_id": [
+                                    "scene.target_entity_list1",
+                                    "scene.target_entity_list2",
+                                ]
+                            },
+                        },
+                        # Single device_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"device_id": trigger_device.id},
+                        },
+                        # Multiple device_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "device_id": [
+                                    "target-device-1",
+                                    "target-device-2",
+                                ]
+                            },
+                        },
+                        # Single area_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"area_id": "area-target-single"},
+                        },
+                        # Multiple area_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"area_id": ["area-target-1", "area-target-2"]},
+                        },
+                        # Single floor_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"floor_id": "floor-target-single"},
+                        },
+                        # Multiple floor_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "floor_id": ["floor-target-1", "floor-target-2"]
+                            },
+                        },
+                        # Single label_id in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {"label_id": "label-target-single"},
+                        },
+                        # Multiple label_ids in target
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "label_id": ["label-target-1", "label-target-2"]
+                            },
+                        },
+                        # Combined targets
+                        {
+                            "trigger": "scene.activated",
+                            "target": {
+                                "entity_id": "scene.combined_entity",
+                                "device_id": "combined-device",
+                                "area_id": "combined-area",
+                                "floor_id": "combined-floor",
+                                "label_id": "combined-label",
+                            },
+                        },
+                    ],
+                    "conditions": [],
+                    "actions": [
+                        {
+                            "action": "test.script",
+                            "data": {"entity_id": "light.action_entity"},
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+
+    # Test entity extraction from trigger targets
+    assert set(automation.entities_in_automation(hass, "automation.test1")) == {
+        "scene.target_entity",
+        "scene.target_entity_list1",
+        "scene.target_entity_list2",
+        "scene.combined_entity",
+        "light.action_entity",
+    }
+
+    # Test device extraction from trigger targets
+    assert set(automation.devices_in_automation(hass, "automation.test1")) == {
+        trigger_device.id,
+        "target-device-1",
+        "target-device-2",
+        "combined-device",
+    }
+
+    # Test area extraction from trigger targets
+    assert set(automation.areas_in_automation(hass, "automation.test1")) == {
+        "area-target-single",
+        "area-target-1",
+        "area-target-2",
+        "combined-area",
+    }
+
+    # Test floor extraction from trigger targets
+    assert set(automation.floors_in_automation(hass, "automation.test1")) == {
+        "floor-target-single",
+        "floor-target-1",
+        "floor-target-2",
+        "combined-floor",
+    }
+
+    # Test label extraction from trigger targets
+    assert set(automation.labels_in_automation(hass, "automation.test1")) == {
+        "label-target-single",
+        "label-target-1",
+        "label-target-2",
+        "combined-label",
+    }
+
+    # Test automations_with_* functions
+    assert set(automation.automations_with_entity(hass, "scene.target_entity")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_device(hass, trigger_device.id)) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_area(hass, "area-target-single")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_floor(hass, "floor-target-single")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_label(hass, "label-target-single")) == {
+        "automation.test1"
+    }
+
+
+async def test_extraction_functions_with_condition_targets(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test extraction functions with targets in conditions."""
+    config_entry = MockConfigEntry(domain="fake_integration", data={})
+    config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    config_entry.add_to_hass(hass)
+
+    condition_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "00:00:00:00:00:02")},
+    )
+
+    await async_setup_component(hass, "homeassistant", {})
+    await async_setup_component(hass, "light", {"light": {"platform": "demo"}})
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            DOMAIN: [
+                {
+                    "alias": "test1",
+                    "triggers": [
+                        {"trigger": "state", "entity_id": "sensor.trigger_state"},
+                    ],
+                    "conditions": [
+                        # Single entity_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"entity_id": "light.condition_entity"},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple entity_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "entity_id": [
+                                    "light.condition_entity_list1",
+                                    "light.condition_entity_list2",
+                                ]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Single device_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"device_id": condition_device.id},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple device_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "device_id": [
+                                    "target-device-1",
+                                    "target-device-2",
+                                ]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Single area_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"area_id": "area-condition-single"},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple area_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "area_id": ["area-condition-1", "area-condition-2"]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Single floor_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"floor_id": "floor-condition-single"},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple floor_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "floor_id": ["floor-condition-1", "floor-condition-2"]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Single label_id in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {"label_id": "label-condition-single"},
+                            "options": {"behavior": "any"},
+                        },
+                        # Multiple label_ids in target
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "label_id": ["label-condition-1", "label-condition-2"]
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                        # Combined targets
+                        {
+                            "condition": "light.is_on",
+                            "target": {
+                                "entity_id": "light.combined_entity",
+                                "device_id": "combined-device",
+                                "area_id": "combined-area",
+                                "floor_id": "combined-floor",
+                                "label_id": "combined-label",
+                            },
+                            "options": {"behavior": "any"},
+                        },
+                    ],
+                    "actions": [
+                        {
+                            "action": "test.script",
+                            "data": {"entity_id": "light.action_entity"},
+                        },
+                    ],
+                },
+            ]
+        },
+    )
+
+    # Test entity extraction from condition targets
+    assert set(automation.entities_in_automation(hass, "automation.test1")) == {
+        "sensor.trigger_state",
+        "light.condition_entity",
+        "light.condition_entity_list1",
+        "light.condition_entity_list2",
+        "light.combined_entity",
+        "light.action_entity",
+    }
+
+    # Test device extraction from condition targets
+    assert set(automation.devices_in_automation(hass, "automation.test1")) == {
+        condition_device.id,
+        "target-device-1",
+        "target-device-2",
+        "combined-device",
+    }
+
+    # Test area extraction from condition targets
+    assert set(automation.areas_in_automation(hass, "automation.test1")) == {
+        "area-condition-single",
+        "area-condition-1",
+        "area-condition-2",
+        "combined-area",
+    }
+
+    # Test floor extraction from condition targets
+    assert set(automation.floors_in_automation(hass, "automation.test1")) == {
+        "floor-condition-single",
+        "floor-condition-1",
+        "floor-condition-2",
+        "combined-floor",
+    }
+
+    # Test label extraction from condition targets
+    assert set(automation.labels_in_automation(hass, "automation.test1")) == {
+        "label-condition-single",
+        "label-condition-1",
+        "label-condition-2",
+        "combined-label",
+    }
+
+    # Test automations_with_* functions
+    assert set(automation.automations_with_entity(hass, "light.condition_entity")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_device(hass, condition_device.id)) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_area(hass, "area-condition-single")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_floor(hass, "floor-condition-single")) == {
+        "automation.test1"
+    }
+    assert set(automation.automations_with_label(hass, "label-condition-single")) == {
+        "automation.test1"
+    }
+
+
 async def test_logbook_humanify_automation_triggered_event(hass: HomeAssistant) -> None:
     """Test humanifying Automation Trigger event."""
     hass.config.components.add("recorder")
@@ -2452,7 +2932,7 @@ async def test_automation_bad_trigger_variables(
 async def test_automation_this_var_always(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Test automation always has reference to this, even with no variable or trigger variables configured."""
+    """Test automation always has reference to this, even without variables."""
     calls = async_mock_service(hass, "test", "automation")
 
     assert await async_setup_component(
@@ -2486,7 +2966,7 @@ async def test_blueprint_automation(
     """Test blueprint automation."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -2521,7 +3001,7 @@ async def test_blueprint_automation_legacy_schema(
     """Test blueprint automation where the blueprint is using legacy schema."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -2581,7 +3061,7 @@ async def test_blueprint_automation_override(
     """Test blueprint automation where the automation config overrides the blueprint."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -2657,7 +3137,7 @@ async def test_blueprint_automation_bad_config(
     """Test blueprint automation with bad inputs."""
     assert await async_setup_component(
         hass,
-        "automation",
+        DOMAIN,
         {
             "automation": {
                 "use_blueprint": {
@@ -2696,7 +3176,7 @@ async def test_blueprint_automation_fails_substitution(
     ):
         assert await async_setup_component(
             hass,
-            "automation",
+            DOMAIN,
             {
                 "automation": {
                     "use_blueprint": {
@@ -2747,7 +3227,7 @@ async def test_trigger_service(hass: HomeAssistant, calls: list[ServiceCall]) ->
     )
     context = Context()
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "trigger",
         {"entity_id": "automation.hello"},
         blocking=True,
@@ -3151,6 +3631,34 @@ async def test_websocket_config(
     assert msg["error"]["code"] == "not_found"
 
 
+async def test_websocket_config_requires_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test config command requires admin."""
+    config = {
+        "alias": "hello",
+        "triggers": {"trigger": "event", "event_type": "test_event"},
+        "actions": {"action": "test.automation", "data": 100},
+    }
+    assert await async_setup_component(
+        hass, automation.DOMAIN, {automation.DOMAIN: config}
+    )
+    client = await hass_ws_client(hass, hass_read_only_access_token)
+    await client.send_json(
+        {
+            "id": 5,
+            "type": "automation/config",
+            "entity_id": "automation.hello",
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
+
+
 async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> None:
     """Test an automation that turns off another automation."""
     hass.set_state(CoreState.not_running)
@@ -3216,7 +3724,7 @@ async def test_automation_turns_off_other_automation(hass: HomeAssistant) -> Non
     assert len(calls) == 0
 
     await hass.services.async_call(
-        "automation",
+        DOMAIN,
         "turn_on",
         {"entity_id": "automation.automation_1"},
         blocking=True,
@@ -3431,7 +3939,10 @@ async def test_action_backward_compatibility(
                 "condition": {"condition": "template", "value_template": "{{ True }}"},
                 "conditions": {"condition": "template", "value_template": "{{ True }}"},
             },
-            "Cannot specify both 'condition' and 'conditions'. Please use 'conditions' only.",
+            (
+                "Cannot specify both 'condition' and 'conditions'."
+                " Please use 'conditions' only."
+            ),
         ),
         (
             {
@@ -3493,3 +4004,350 @@ async def test_valid_configuration(
         },
     )
     await hass.async_block_till_done()
+
+
+async def test_remove_automation_unloads_condition_and_script(
+    hass: HomeAssistant,
+    calls: list[ServiceCall],
+) -> None:
+    """Test that removing an automation unloads its condition and action script."""
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "sun",
+                "alias": "test_unload",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "binary_sensor.test",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    entity = hass.data[automation.DATA_COMPONENT].get_entity("automation.test_unload")
+    assert entity is not None
+    assert isinstance(entity, AutomationEntity)
+
+    # Reload with empty config to remove the automation
+    with (
+        patch(
+            "homeassistant.config.load_yaml_config_file",
+            autospec=True,
+            return_value={automation.DOMAIN: []},
+        ),
+        patch.object(
+            entity._condition, "async_unload", wraps=entity._condition.async_unload
+        ) as condition_unload,
+        patch.object(
+            entity.action_script,
+            "async_unload",
+            wraps=entity.action_script.async_unload,
+        ) as script_unload,
+    ):
+        await hass.services.async_call(automation.DOMAIN, SERVICE_RELOAD, blocking=True)
+        await hass.async_block_till_done()
+
+    condition_unload.assert_called_once()
+    script_unload.assert_called_once()
+
+
+async def test_automation_changed_entity_id(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    calls: list[ServiceCall],
+) -> None:
+    """Test that an automation still works after its entity_id is changed."""
+    entry = entity_registry.async_get_or_create(
+        "automation", "automation", "test_automation"
+    )
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.custom_id"
+    )
+    assert entry.entity_id == "automation.custom_id"
+
+    hass.states.async_set("binary_sensor.test", "on")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "id": "test_automation",
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {
+                    "condition": "state",
+                    "entity_id": "binary_sensor.test",
+                    "state": "on",
+                },
+                "action": {"action": "test.automation"},
+            }
+        },
+    )
+
+    # Automation should work with the custom entity_id
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 1
+
+    # Change entity_id while loaded
+    entry = entity_registry.async_update_entity(
+        entry.entity_id, new_entity_id="automation.custom_id_2"
+    )
+    assert entry.entity_id == "automation.custom_id_2"
+    await hass.async_block_till_done()
+
+    # Automation should still work after entity_id change
+    hass.bus.async_fire("test_event")
+    await hass.async_block_till_done()
+    assert len(calls) == 2
+
+
+class _MockDiagnosticTrigger(Trigger):
+    """A new-style trigger that fires on demand and otherwise reports why not."""
+
+    @classmethod
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return config
+
+    async def async_attach_runner(
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
+    ) -> CALLBACK_TYPE:
+        """Fire on `mock_diag_event` with `fire`, else report not-triggered."""
+
+        @callback
+        def handle_event(event: Event) -> None:
+            if event.data.get("fire"):
+                run_action({"extra": "fired"}, "mock fired", event.context)
+            elif did_not_trigger is not None:
+                did_not_trigger(
+                    NotTriggeredInfo(reason="mock_reason", data={"x": 1}),
+                    event.context,
+                )
+
+        return self._hass.bus.async_listen("mock_diag_event", handle_event)
+
+
+async def _setup_diagnostic_automation(
+    hass: HomeAssistant, stored_traces: int | None = None
+) -> list[Any]:
+    """Set up an automation driven by the mock diagnostic trigger."""
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"diag": _MockDiagnosticTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+    calls = async_mock_service(hass, "test", "automation")
+
+    config: dict[str, Any] = {
+        "id": "diag_auto",
+        "trigger": {"platform": "test.diag"},
+        "action": {"service": "test.automation"},
+    }
+    if stored_traces is not None:
+        config["trace"] = {"stored_traces": stored_traces}
+
+    assert await async_setup_component(
+        hass, automation.DOMAIN, {automation.DOMAIN: config}
+    )
+    await hass.async_block_till_done()
+    return calls
+
+
+async def test_automation_records_not_triggered_trace(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """A non-firing evaluation records a not-triggered trace with diagnostics."""
+    calls = await _setup_diagnostic_automation(hass)
+    client = await hass_ws_client()
+    msg_id = 0
+
+    def next_id() -> int:
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
+
+    hass.bus.async_fire("mock_diag_event", {"fire": False})
+    await hass.async_block_till_done()
+
+    # The action did not run, but a not-triggered trace was recorded.
+    assert len(calls) == 0
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/list",
+            "domain": "automation",
+            "item_id": "diag_auto",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    assert len(traces) == 1
+    assert traces[0]["not_triggered"] is True
+    assert traces[0]["script_execution"] == "not_triggered"
+
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/get",
+            "domain": "automation",
+            "item_id": "diag_auto",
+            "run_id": traces[0]["run_id"],
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    trace = response["result"]
+    assert trace["trace"]["trigger/0"][0]["result"] == {
+        "reason": "mock_reason",
+        "data": {"x": 1},
+    }
+
+
+async def test_not_triggered_traces_counted_separately(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """Not-triggered traces are capped independently from run traces."""
+    calls = await _setup_diagnostic_automation(hass, stored_traces=2)
+    client = await hass_ws_client()
+    msg_id = 0
+
+    def next_id() -> int:
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
+
+    # Fire more non-firing and firing evaluations than the stored-traces limit.
+    for _ in range(3):
+        hass.bus.async_fire("mock_diag_event", {"fire": False})
+        await hass.async_block_till_done()
+    for _ in range(3):
+        hass.bus.async_fire("mock_diag_event", {"fire": True})
+        await hass.async_block_till_done()
+
+    assert len(calls) == 3
+    await client.send_json(
+        {
+            "id": next_id(),
+            "type": "trace/list",
+            "domain": "automation",
+            "item_id": "diag_auto",
+        }
+    )
+    response = await client.receive_json()
+    assert response["success"]
+    traces = response["result"]
+    not_triggered = [trace for trace in traces if trace.get("not_triggered")]
+    runs = [trace for trace in traces if not trace.get("not_triggered")]
+    # Each bucket is capped at 2 independently; neither evicts the other.
+    assert len(not_triggered) == 2
+    assert len(runs) == 2
+
+
+async def test_not_triggered_trace_isolated_from_chained_run(
+    hass: HomeAssistant, hass_ws_client: WebSocketGenerator
+) -> None:
+    """A not-triggered trace must not corrupt the trace of the run that caused it.
+
+    Automation "parent" fires the event that automation "child"'s trigger
+    evaluates and declines. The child's not-triggered handler runs inline in the
+    parent's context; without a copied context its ``trace_clear()`` would
+    redirect the parent's remaining action steps into the child's trace.
+    """
+
+    async def async_get_triggers(
+        hass: HomeAssistant,
+    ) -> dict[str, type[Trigger]]:
+        return {"diag": _MockDiagnosticTrigger}
+
+    mock_integration(hass, MockModule("test"))
+    mock_platform(hass, "test.trigger", Mock(async_get_triggers=async_get_triggers))
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "id": "parent",
+                    "trigger": {"platform": "event", "event_type": "chain_start"},
+                    "action": [
+                        # The child trigger evaluates this and declines to fire.
+                        {"event": "mock_diag_event"},
+                        # The parent's own step after the chained evaluation.
+                        {"event": "chain_marker"},
+                    ],
+                },
+                {
+                    "id": "child",
+                    "trigger": {"platform": "test.diag"},
+                    "action": {"event": "child_ran"},
+                },
+            ]
+        },
+    )
+    await hass.async_block_till_done()
+
+    child_ran = async_capture_events(hass, "child_ran")
+    hass.bus.async_fire("chain_start")
+    await hass.async_block_till_done()
+
+    # The child trigger evaluated the event but did not fire.
+    assert len(child_ran) == 0
+
+    client = await hass_ws_client()
+    msg_id = 0
+
+    def next_id() -> int:
+        nonlocal msg_id
+        msg_id += 1
+        return msg_id
+
+    async def _get_only_trace(item_id: str) -> dict[str, Any]:
+        await client.send_json(
+            {
+                "id": next_id(),
+                "type": "trace/list",
+                "domain": "automation",
+                "item_id": item_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        assert len(response["result"]) == 1
+        run_id = response["result"][0]["run_id"]
+        await client.send_json(
+            {
+                "id": next_id(),
+                "type": "trace/get",
+                "domain": "automation",
+                "item_id": item_id,
+                "run_id": run_id,
+            }
+        )
+        response = await client.receive_json()
+        assert response["success"]
+        return response["result"]
+
+    # The parent keeps all of its own steps; action/1 must not leak away into
+    # the child's trace. This fails if the context is not copied.
+    parent_trace = await _get_only_trace("parent")
+    assert set(parent_trace["trace"]) == {"trigger/0", "action/0", "action/1"}
+
+    # The child's not-triggered trace holds only its own trigger step.
+    child_trace = await _get_only_trace("child")
+    assert child_trace["not_triggered"] is True
+    assert set(child_trace["trace"]) == {"trigger/0"}

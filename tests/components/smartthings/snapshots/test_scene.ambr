@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[scene.away-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -13,13 +14,14 @@
     'domain': 'scene',
     'entity_category': None,
     'entity_id': 'scene.away',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Away',
     'options': dict({
     }),
     'original_device_class': None,
@@ -52,8 +54,9 @@
 # ---
 # name: test_all_entities[scene.home-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -64,13 +67,14 @@
     'domain': 'scene',
     'entity_category': None,
     'entity_id': 'scene.home',
-    'has_entity_name': False,
+    'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
     'id': <ANY>,
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Home',
     'options': dict({
     }),
     'original_device_class': None,

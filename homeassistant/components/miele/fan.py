@@ -1,7 +1,5 @@
 """Platform for Miele fan entity."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 import math
@@ -66,7 +64,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the fan platform."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
     added_devices: set[str] = set()
 
     def _async_add_new_devices() -> None:
@@ -137,19 +135,22 @@ class MieleFan(MieleEntity, FanEntity):
         _LOGGER.debug("Calc ventilation_step: %s", ventilation_step)
         if ventilation_step == 0:
             await self.async_turn_off()
+        elif ventilation_step == self.device.state_ventilation_step:
+            return
         else:
             try:
                 await self.api.send_action(
                     self._device_id, {VENTILATION_STEP: ventilation_step}
                 )
-            except ClientResponseError as ex:
+            except ClientResponseError as err:
+                _LOGGER.debug("Error setting fan state for %s: %s", self.entity_id, err)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_state_error",
                     translation_placeholders={
                         "entity": self.entity_id,
                     },
-                ) from ex
+                ) from err
             self.device.state_ventilation_step = ventilation_step
             self.async_write_ha_state()
 

@@ -1,7 +1,5 @@
 """Support for Slide covers."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -78,8 +76,6 @@ class SlideCoverLocal(SlideEntity, CoverEntity):
         if pos is not None:
             if (1 - pos) <= DEFAULT_OFFSET or pos <= DEFAULT_OFFSET:
                 pos = round(pos)
-            if not self.invert:
-                pos = 1 - pos
             pos = int(pos * 100)
         return pos
 

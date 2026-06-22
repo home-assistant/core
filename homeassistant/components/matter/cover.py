@@ -1,7 +1,6 @@
 """Matter cover."""
 
-from __future__ import annotations
-
+from dataclasses import dataclass
 from enum import IntEnum
 from math import floor
 from typing import Any
@@ -16,14 +15,13 @@ from homeassistant.components.cover import (
     CoverEntityDescription,
     CoverEntityFeature,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
-from .entity import MatterEntity
-from .helpers import get_matter
+from .entity import MatterEntity, MatterEntityDescription
+from .helpers import MatterConfigEntry
 from .models import MatterDiscoverySchema
 
 # The MASK used for extracting bits 0 to 1 of the byte.
@@ -31,13 +29,21 @@ OPERATIONAL_STATUS_MASK = 0b11
 
 # map Matter window cover types to HA device class
 TYPE_MAP = {
+    clusters.WindowCovering.Enums.Type.kRollerShade: CoverDeviceClass.SHADE,
+    clusters.WindowCovering.Enums.Type.kRollerShade2Motor: CoverDeviceClass.SHADE,
+    clusters.WindowCovering.Enums.Type.kRollerShadeExterior: CoverDeviceClass.SHADE,
+    clusters.WindowCovering.Enums.Type.kRollerShadeExterior2Motor: (
+        CoverDeviceClass.SHADE
+    ),
     clusters.WindowCovering.Enums.Type.kAwning: CoverDeviceClass.AWNING,
     clusters.WindowCovering.Enums.Type.kDrapery: CoverDeviceClass.CURTAIN,
+    clusters.WindowCovering.Enums.Type.kTiltBlindTiltOnly: CoverDeviceClass.BLIND,
+    clusters.WindowCovering.Enums.Type.kTiltBlindLiftAndTilt: CoverDeviceClass.BLIND,
 }
 
 
 class OperationalStatus(IntEnum):
-    """Currently ongoing operations enumeration for coverings, as defined in the Matter spec."""
+    """Ongoing operations enumeration for coverings per Matter spec."""
 
     COVERING_IS_CURRENTLY_NOT_MOVING = 0b00
     COVERING_IS_CURRENTLY_OPENING = 0b01
@@ -47,22 +53,27 @@ class OperationalStatus(IntEnum):
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MatterConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Matter Cover from Config Entry."""
-    matter = get_matter(hass)
+    matter = config_entry.runtime_data.adapter
     matter.register_platform_handler(Platform.COVER, async_add_entities)
+
+
+@dataclass(frozen=True, kw_only=True)
+class MatterCoverEntityDescription(CoverEntityDescription, MatterEntityDescription):
+    """Describe Matter Cover entities."""
 
 
 class MatterCover(MatterEntity, CoverEntity):
     """Representation of a Matter Cover."""
 
-    entity_description: CoverEntityDescription
+    entity_description: MatterCoverEntityDescription
 
     @property
     def is_closed(self) -> bool | None:
-        """Return true if cover is closed, if there is no position report, return None."""
+        """Return true if cover is closed, None if no position."""
         if not self._entity_info.endpoint.has_attribute(
             None, clusters.WindowCovering.Attributes.CurrentPositionLiftPercent100ths
         ):
@@ -192,7 +203,7 @@ class MatterCover(MatterEntity, CoverEntity):
 DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(
+        entity_description=MatterCoverEntityDescription(
             key="MatterCover",
             name=None,
         ),
@@ -208,7 +219,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(
+        entity_description=MatterCoverEntityDescription(
             key="MatterCoverPositionAwareLift", name=None
         ),
         entity_class=MatterCover,
@@ -223,7 +234,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(
+        entity_description=MatterCoverEntityDescription(
             key="MatterCoverPositionAwareTilt", name=None
         ),
         entity_class=MatterCover,
@@ -238,7 +249,7 @@ DISCOVERY_SCHEMAS = [
     ),
     MatterDiscoverySchema(
         platform=Platform.COVER,
-        entity_description=CoverEntityDescription(
+        entity_description=MatterCoverEntityDescription(
             key="MatterCoverPositionAwareLiftAndTilt", name=None
         ),
         entity_class=MatterCover,

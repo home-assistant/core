@@ -1,13 +1,13 @@
 """Constants for PlayStation 4."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     from . import PS4Data
+
+PS4_DOCS_URL = "https://www.home-assistant.io/components/ps4/"
 
 ATTR_MEDIA_IMAGE_URL = "media_image_url"
 CONFIG_ENTRY_VERSION = 3

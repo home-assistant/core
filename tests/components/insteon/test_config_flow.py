@@ -247,7 +247,7 @@ async def test_failed_connection_plm_manually(hass: HomeAssistant) -> None:
 
     result = await _init_form(hass, STEP_PLM)
 
-    result2, _ = await _device_form(
+    _result2, _ = await _device_form(
         hass, result["flow_id"], mock_successful_connection, MOCK_USER_INPUT_PLM_MANUAL
     )
     result3, _ = await _device_form(
@@ -280,7 +280,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
@@ -312,7 +312,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 

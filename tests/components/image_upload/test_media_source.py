@@ -1,5 +1,6 @@
 """Test image_upload media source."""
 
+from pathlib import Path
 import tempfile
 from unittest.mock import patch
 
@@ -7,6 +8,9 @@ from aiohttp import ClientSession
 import pytest
 
 from homeassistant.components import media_source
+from homeassistant.components.image_upload import DOMAIN
+from homeassistant.components.media_player import BrowseError
+from homeassistant.components.media_source import Unresolvable
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -29,7 +33,7 @@ async def __upload_test_image(
         tempfile.TemporaryDirectory() as tempdir,
         patch.object(hass.config, "path", return_value=tempdir),
     ):
-        assert await async_setup_component(hass, "image_upload", {})
+        assert await async_setup_component(hass, DOMAIN, {})
         client: ClientSession = await hass_client()
 
         file = await hass.async_add_executor_job(TEST_IMAGE.open, "rb")
@@ -53,14 +57,14 @@ async def test_browsing(
     item = await media_source.async_browse_media(hass, "media-source://image_upload")
 
     assert item is not None
-    assert item.title == "Image Upload"
+    assert item.title == "Image upload"
     assert len(item.children) == 1
     assert item.children[0].media_content_type == "image/png"
     assert item.children[0].identifier == image_id
     assert item.children[0].thumbnail == f"/api/image/serve/{image_id}/256x256"
 
     with pytest.raises(
-        media_source.BrowseError,
+        BrowseError,
         match="Unknown item",
     ):
         await media_source.async_browse_media(
@@ -79,10 +83,11 @@ async def test_resolving(
     assert item is not None
     assert item.url == f"/api/image/serve/{image_id}/original"
     assert item.mime_type == "image/png"
+    assert item.path == Path(hass.config.path("image")) / image_id / "original"
 
     invalid_id = "aabbccddeeff"
     with pytest.raises(
-        media_source.Unresolvable,
+        Unresolvable,
         match=f"Could not resolve media item: {invalid_id}",
     ):
         await media_source.async_resolve_media(

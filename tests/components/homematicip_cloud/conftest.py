@@ -1,5 +1,6 @@
 """Initializer helpers for HomematicIP fake server."""
 
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 from homematicip.async_home import AsyncHome
@@ -69,6 +70,124 @@ async def default_mock_hap_factory_fixture(
     return HomeFactory(hass, mock_connection, hmip_config_entry)
 
 
+@pytest.fixture(name="full_flush_lock_controller_device_data")
+def full_flush_lock_controller_device_data_fixture() -> dict[str, Any]:
+    """Return fixture data for an HmIP-FLC device."""
+    return {
+        "availableFirmwareVersion": "0.0.0",
+        "connectionType": "HMIP_RF",
+        "deviceArchetype": "HMIP",
+        "firmwareVersion": "1.0.10",
+        "firmwareVersionInteger": 65546,
+        "functionalChannels": {
+            "0": {
+                "configPending": False,
+                "deviceId": "3014F7110000000000000026",
+                "dutyCycle": False,
+                "functionalChannelType": "DEVICE_BASE",
+                "groupIndex": 0,
+                "groups": [],
+                "index": 0,
+                "label": "",
+                "lowBat": None,
+                "routerModuleEnabled": False,
+                "routerModuleSupported": False,
+                "rssiDeviceValue": -82,
+                "rssiPeerValue": -97,
+                "supportedOptionalFeatures": {
+                    "IFeatureRssiValue": True,
+                    "IOptionalFeatureDutyCycle": True,
+                    "IOptionalFeatureLowBat": False,
+                },
+                "unreach": False,
+            },
+            "1": {
+                "actionParameter": "NOT_CUSTOMISABLE",
+                "binaryBehaviorType": "NORMALLY_OPEN",
+                "channelRole": "DOOR_LOCK_SENSOR",
+                "corrosionPreventionActive": False,
+                "deviceId": "3014F7110000000000000026",
+                "doorBellSensorEventTimestamp": None,
+                "eventDelay": 0,
+                "functionalChannelType": "MULTI_MODE_LOCK_INPUT_CHANNEL",
+                "glassBroken": True,
+                "groupIndex": 1,
+                "groups": [],
+                "index": 1,
+                "label": "",
+                "lockState": "LOCKED",
+                "multiModeInputMode": "BINARY_BEHAVIOR",
+                "supportedOptionalFeatures": {},
+                "windowState": "OPEN",
+            },
+            "3": {
+                "channelRole": "DOOR_LOCK_ACTUATOR",
+                "deviceId": "3014F7110000000000000026",
+                "doorLockActive": False,
+                "functionalChannelType": "DOOR_SWITCH_CHANNEL",
+                "groupIndex": 3,
+                "groups": [],
+                "impulseDuration": 111600.0,
+                "index": 3,
+                "internalLinkConfiguration": {
+                    "firstInputAction": "TOGGLE",
+                    "internalLinkConfigurationType": "SINGLE_INPUT_DOOR_SWITCH",
+                },
+                "label": "",
+                "multiModeInputMode": "KEY_BEHAVIOR",
+                "processing": False,
+                "profileMode": "AUTOMATIC",
+                "supportedOptionalFeatures": {},
+                "userDesiredProfileMode": "AUTOMATIC",
+            },
+            "4": {
+                "channelRole": "DOOR_OPENER_ACTUATOR",
+                "deviceId": "3014F7110000000000000026",
+                "doorLockActive": False,
+                "functionalChannelType": "DOOR_SWITCH_CHANNEL",
+                "groupIndex": 4,
+                "groups": [],
+                "impulseDuration": 0.9,
+                "index": 4,
+                "internalLinkConfiguration": {
+                    "firstInputAction": "LOCK_OPEN",
+                    "internalLinkConfigurationType": "SINGLE_INPUT_DOOR_SWITCH",
+                },
+                "label": "",
+                "multiModeInputMode": "SWITCH_BEHAVIOR",
+                "processing": False,
+                "profileMode": "AUTOMATIC",
+                "supportedOptionalFeatures": {},
+                "userDesiredProfileMode": "AUTOMATIC",
+            },
+            "5": {
+                "authorized": True,
+                "channelRole": "DOOR_LOCK_ACTUATOR",
+                "deviceId": "3014F7110000000000000026",
+                "functionalChannelType": "ACCESS_AUTHORIZATION_CHANNEL",
+                "groupIndex": 3,
+                "groups": [],
+                "index": 5,
+                "label": "",
+                "supportedOptionalFeatures": {},
+            },
+        },
+        "homeId": "00000000-0000-0000-0000-000000000001",
+        "id": "3014F7110000000000000026",
+        "label": "Universal Motorschloss Controller",
+        "lastStatusUpdate": 1760619002144,
+        "liveUpdateState": "LIVE_UPDATE_NOT_SUPPORTED",
+        "manufacturerCode": 1,
+        "modelId": 546,
+        "modelType": "HmIP-FLC",
+        "oem": "eQ-3",
+        "permanentlyReachable": True,
+        "serializedGlobalTradeItemNumber": "3014F7110000000000000026",
+        "type": "FULL_FLUSH_LOCK_CONTROLLER",
+        "updateState": "UP_TO_DATE",
+    }
+
+
 @pytest.fixture(name="hmip_config")
 def hmip_config_fixture() -> ConfigType:
     """Create a config for homematic ip cloud."""
@@ -131,10 +250,15 @@ def simple_mock_home_fixture():
         get_current_state_async=AsyncMock(),
     )
 
-    with patch(
-        "homeassistant.components.homematicip_cloud.hap.AsyncHome",
-        autospec=True,
-        return_value=mock_home,
+    with (
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.AsyncHome",
+            autospec=True,
+            return_value=mock_home,
+        ),
+        patch(
+            "homeassistant.components.homematicip_cloud.hap.ConnectionContextBuilder.build_context_async",
+        ),
     ):
         yield
 

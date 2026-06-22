@@ -1,7 +1,5 @@
 """Support for Tado thermostats."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -29,7 +27,6 @@ from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import VolDictType
 
-from . import TadoConfigEntry
 from .const import (
     CONST_EXCLUSIVE_OVERLAY_GROUP,
     CONST_FAN_AUTO,
@@ -71,7 +68,7 @@ from .const import (
     TYPE_AIR_CONDITIONING,
     TYPE_HEATING,
 )
-from .coordinator import TadoDataUpdateCoordinator
+from .coordinator import TadoConfigEntry, TadoDataUpdateCoordinator
 from .entity import TadoZoneEntity
 from .helper import decide_duration, decide_overlay_mode, generate_supported_fanmodes
 
@@ -106,7 +103,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Tado climate platform."""
 
-    tado = entry.runtime_data.coordinator
+    tado = entry.runtime_data
     entities = await _generate_entities(tado)
 
     platform = entity_platform.async_get_current_platform()
@@ -784,11 +781,11 @@ class TadoClimate(TadoZoneEntity, ClimateEntity):
             duration=duration,
             device_type=self.zone_type,
             mode=self._current_tado_hvac_mode,
-            fan_speed=fan_speed,  # api defaults to not sending fanSpeed if None specified
-            swing=swing,  # api defaults to not sending swing if None specified
-            fan_level=fan_level,  # api defaults to not sending fanLevel if fanSpeend not None
-            vertical_swing=vertical_swing,  # api defaults to not sending verticalSwing if swing not None
-            horizontal_swing=horizontal_swing,  # api defaults to not sending horizontalSwing if swing not None
+            fan_speed=fan_speed,
+            swing=swing,
+            fan_level=fan_level,
+            vertical_swing=vertical_swing,
+            horizontal_swing=horizontal_swing,
         )
 
     def _is_valid_setting_for_hvac_mode(self, setting: str) -> bool:

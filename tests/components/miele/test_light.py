@@ -1,21 +1,25 @@
 """Tests for miele light module."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, Mock
 
-from aiohttp import ClientError
+from aiohttp import ClientResponseError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, SERVICE_TURN_OFF, SERVICE_TURN_ON
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-TEST_PLATFORM = LIGHT_DOMAIN
-pytestmark = pytest.mark.parametrize("platforms", [(TEST_PLATFORM,)])
+pytestmark = pytest.mark.parametrize("platforms", [(Platform.LIGHT,)])
 
 ENTITY_ID = "light.hood_light"
 
@@ -63,7 +67,7 @@ async def test_light_toggle(
     """Test the light can be turned on/off."""
 
     await hass.services.async_call(
-        TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+        LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
     )
     mock_miele_client.send_action.assert_called_once_with(
         "DummyAppliance_18", {"light": light_state}
@@ -84,12 +88,12 @@ async def test_api_failure(
     service: str,
 ) -> None:
     """Test handling of exception from API."""
-    mock_miele_client.send_action.side_effect = ClientError
+    mock_miele_client.send_action.side_effect = ClientResponseError(Mock(), Mock())
 
     with pytest.raises(
         HomeAssistantError, match=f"Failed to set state for {ENTITY_ID}"
     ):
         await hass.services.async_call(
-            TEST_PLATFORM, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
+            LIGHT_DOMAIN, service, {ATTR_ENTITY_ID: ENTITY_ID}, blocking=True
         )
     mock_miele_client.send_action.assert_called_once()

@@ -1,7 +1,5 @@
 """SQLAlchemy util functions."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator, Sequence
 import contextlib
 from contextlib import contextmanager
@@ -27,6 +25,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
+from homeassistant.const import WEEKDAYS
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.recorder import (  # noqa: F401
@@ -109,9 +108,7 @@ SUNDAY_WEEKDAY = 6
 DAYS_IN_WEEK = 7
 
 
-def execute(
-    qry: Query, to_native: bool = False, validate_entity_ids: bool = True
-) -> list[Row]:
+def execute(qry: Query) -> list[Row]:
     """Query the database and convert the objects to HA native form.
 
     This method also retries a few times in the case of stale connections.
@@ -121,33 +118,15 @@ def execute(
         try:
             if debug:
                 timer_start = time.perf_counter()
-
-            if to_native:
-                result = [
-                    row
-                    for row in (
-                        row.to_native(validate_entity_id=validate_entity_ids)
-                        for row in qry
-                    )
-                    if row is not None
-                ]
-            else:
-                result = qry.all()
+            result = qry.all()
 
             if debug:
                 elapsed = time.perf_counter() - timer_start
-                if to_native:
-                    _LOGGER.debug(
-                        "converting %d rows to native objects took %fs",
-                        len(result),
-                        elapsed,
-                    )
-                else:
-                    _LOGGER.debug(
-                        "querying %d rows took %fs",
-                        len(result),
-                        elapsed,
-                    )
+                _LOGGER.debug(
+                    "querying %d rows took %fs",
+                    len(result),
+                    elapsed,
+                )
 
         except SQLAlchemyError as err:
             _LOGGER.error("Error executing query: %s", err)
@@ -466,10 +445,10 @@ def setup_connection_for_dialect(
     slow_dependent_subquery = False
     if dialect_name == SupportedDialect.SQLITE:
         if first_connection:
-            old_isolation = dbapi_connection.isolation_level  # type: ignore[attr-defined]
-            dbapi_connection.isolation_level = None  # type: ignore[attr-defined]
+            old_isolation = dbapi_connection.isolation_level
+            dbapi_connection.isolation_level = None
             execute_on_connection(dbapi_connection, "PRAGMA journal_mode=WAL")
-            dbapi_connection.isolation_level = old_isolation  # type: ignore[attr-defined]
+            dbapi_connection.isolation_level = old_isolation
             # WAL mode only needs to be setup once
             # instead of every time we open the sqlite connection
             # as its persistent and isn't free to call every time.
@@ -802,6 +781,7 @@ PERIOD_SCHEMA = vol.Schema(
             {
                 vol.Required("period"): vol.Any("hour", "day", "week", "month", "year"),
                 vol.Optional("offset"): int,
+                vol.Optional("first_weekday"): vol.Any(*WEEKDAYS),
             }
         ),
         vol.Exclusive("fixed_period", "period"): vol.Schema(
@@ -840,7 +820,12 @@ def resolve_period(
             start_time += timedelta(days=cal_offset)
             end_time = start_time + timedelta(days=1)
         elif calendar_period == "week":
-            start_time = start_of_day - timedelta(days=start_of_day.weekday())
+            first_weekday = WEEKDAYS.index(
+                period_def["calendar"].get("first_weekday", WEEKDAYS[0])
+            )
+            start_time = start_of_day - timedelta(
+                days=(start_of_day.weekday() - first_weekday) % 7
+            )
             start_time += timedelta(days=cal_offset * 7)
             end_time = start_time + timedelta(weeks=1)
         elif calendar_period == "month":

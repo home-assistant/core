@@ -1,7 +1,5 @@
 """Statistics helper for sensor."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Iterable
 from contextlib import suppress
@@ -27,6 +25,7 @@ from homeassistant.components.recorder.models import (
     StatisticResult,
 )
 from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     REVOLUTIONS_PER_MINUTE,
     UnitOfIrradiance,
@@ -43,11 +42,14 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import run_callback_threadsafe
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.hass_dict import HassKey
+from homeassistant.util.unit_conversion import BaseUnitConverter
 
 from .const import (
+    AMBIGUOUS_UNITS,
     ATTR_LAST_RESET,
     ATTR_STATE_CLASS,
     DOMAIN,
+    UNIT_CONVERTERS,
     SensorStateClass,
     UnitOfVolumeFlowRate,
 )
@@ -79,7 +81,7 @@ EQUIVALENT_UNITS = {
     "ft3": UnitOfVolume.CUBIC_FEET,
     "m3": UnitOfVolume.CUBIC_METERS,
     "ft³/m": UnitOfVolumeFlowRate.CUBIC_FEET_PER_MINUTE,
-}
+} | AMBIGUOUS_UNITS
 
 
 # Keep track of entities for which a warning about decreasing value has been logged
@@ -90,7 +92,8 @@ WARN_NEGATIVE: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_total_increasing_nega
 # Keep track of entities for which a warning about unsupported unit has been logged
 WARN_UNSUPPORTED_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unsupported_unit")
 WARN_UNSTABLE_UNIT: HassKey[set[str]] = HassKey(f"{DOMAIN}_warn_unstable_unit")
-# Keep track of entities for which a warning about statistics mean algorithm change has been logged
+# Keep track of entities for which a warning about
+# statistics mean algorithm change has been logged
 WARN_STATISTICS_MEAN_CHANGED: HassKey[set[str]] = HassKey(
     f"{DOMAIN}_warn_statistics_mean_change"
 )
@@ -163,8 +166,8 @@ def _time_weighted_circular_mean(
 ) -> tuple[float, float]:
     """Calculate a time weighted circular mean.
 
-    The circular mean is calculated by weighting the states by duration in seconds between
-    state changes.
+    The circular mean is calculated by weighting the states
+    by duration in seconds between state changes.
     Note: there's no interpolation of values between state changes.
     """
     old_fstate: float | None = None
@@ -200,12 +203,15 @@ def _get_units(fstates: list[tuple[float, State]]) -> set[str | None]:
     return {item[1].attributes.get(ATTR_UNIT_OF_MEASUREMENT) for item in fstates}
 
 
-def _equivalent_units(units: set[str | None]) -> bool:
+def _equivalent_units(
+    units: set[str | None], all_equivalent_units: dict[str | None, str]
+) -> bool:
     """Return True if the units are equivalent."""
     if len(units) == 1:
         return True
+
     units = {
-        EQUIVALENT_UNITS[unit] if unit in EQUIVALENT_UNITS else unit  # noqa: SIM401
+        all_equivalent_units[unit] if unit in all_equivalent_units else unit  # noqa: SIM401
         for unit in units
     }
     return len(units) == 1
@@ -224,7 +230,7 @@ def _entity_history_to_float_and_state(
                 float_state
             ):
                 append((float_state, state))
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             pass
     return float_states
 
@@ -237,30 +243,84 @@ def _is_numeric(state: State) -> bool:
     return False
 
 
+def _get_unit_class(
+    device_class: str | None,
+    unit: str | None,
+) -> str | None:
+    """Return the unit class for the given device class and unit.
+
+    The unit class is determined from the device class and unit if possible,
+    otherwise from the unit.
+    """
+    if (
+        device_class
+        and (conv := UNIT_CONVERTERS.get(device_class))
+        and unit in conv.VALID_UNITS
+    ):
+        return conv.UNIT_CLASS
+    if conv := statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(unit):
+        return conv.UNIT_CLASS
+    return None
+
+
+def _get_unit_converter(
+    unit_class: str | None,
+) -> type[BaseUnitConverter] | None:
+    """Return the unit converter for the given unit class."""
+    if not unit_class:
+        return None
+    return statistics.UNIT_CLASS_TO_UNIT_CONVERTER[unit_class]
+
+
+def _collect_equivalent_units_for_entity(
+    custom_units_for_entity: dict[str | None, str] | None,
+) -> dict[str | None, str]:
+    if not custom_units_for_entity:
+        return EQUIVALENT_UNITS
+    return EQUIVALENT_UNITS | custom_units_for_entity
+
+
 def _normalize_states(
     hass: HomeAssistant,
     old_metadatas: dict[str, tuple[int, StatisticMetaData]],
     fstates: list[tuple[float, State]],
     entity_id: str,
-) -> tuple[str | None, list[tuple[float, State]]]:
+    custom_units_for_entity: dict[str | None, str] | None,
+) -> tuple[str | None, str | None, list[tuple[float, State]]]:
     """Normalize units."""
     state_unit: str | None = None
     statistics_unit: str | None
     state_unit = fstates[0][1].attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+    device_class = fstates[0][1].attributes.get(ATTR_DEVICE_CLASS)
     old_metadata = old_metadatas[entity_id][1] if entity_id in old_metadatas else None
+    equivalent_units_for_entity = _collect_equivalent_units_for_entity(
+        custom_units_for_entity
+    )
     if not old_metadata:
         # We've not seen this sensor before, the first valid state determines the unit
         # used for statistics
         statistics_unit = state_unit
+        unit_class = _get_unit_class(device_class, state_unit)
     else:
         # We have seen this sensor before, use the unit from metadata
         statistics_unit = old_metadata["unit_of_measurement"]
+        unit_class = old_metadata["unit_class"]
+        # Check if the unit class has changed
+        if (
+            (new_unit_class := _get_unit_class(device_class, state_unit)) != unit_class
+            and (new_converter := _get_unit_converter(new_unit_class))
+            and state_unit in new_converter.VALID_UNITS
+            and statistics_unit in new_converter.VALID_UNITS
+        ):
+            # The new unit class supports conversion between the units in metadata
+            # and the unit in the state, so we can use the new unit class
+            unit_class = new_unit_class
 
-    if statistics_unit not in statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER:
+    if not (converter := _get_unit_converter(unit_class)):
         # The unit used by this sensor doesn't support unit conversion
 
         all_units = _get_units(fstates)
-        if not _equivalent_units(all_units):
+        if not _equivalent_units(all_units, equivalent_units_for_entity):
             if WARN_UNSTABLE_UNIT not in hass.data:
                 hass.data[WARN_UNSTABLE_UNIT] = set()
             if entity_id not in hass.data[WARN_UNSTABLE_UNIT]:
@@ -282,11 +342,15 @@ def _normalize_states(
                     extra,
                     LINK_DEV_STATISTICS,
                 )
-            return None, []
+            return None, None, []
 
-        return state_unit, fstates
+        if state_unit != statistics_unit:
+            unit_class = _get_unit_class(
+                fstates[0][1].attributes.get(ATTR_DEVICE_CLASS),
+                state_unit,
+            )
+        return unit_class, state_unit, fstates
 
-    converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER[statistics_unit]
     valid_fstates: list[tuple[float, State]] = []
     convert: Callable[[float], float] | None = None
     last_unit: str | None | UndefinedType = UNDEFINED
@@ -329,7 +393,7 @@ def _normalize_states(
 
         valid_fstates.append((fstate, state))
 
-    return statistics_unit, valid_fstates
+    return unit_class, statistics_unit, valid_fstates
 
 
 def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
@@ -344,11 +408,12 @@ def _suggest_report_issue(hass: HomeAssistant, entity_id: str) -> str:
 def warn_dip(
     hass: HomeAssistant, entity_id: str, state: State, previous_fstate: float
 ) -> None:
-    """Log a warning once if a sensor with state_class_total has a decreasing value.
+    """Log a warning once if a sensor with TOTAL_INCREASING has a decreasing value.
 
-    The log will be suppressed until two dips have been seen to prevent warning due to
-    rounding issues with databases storing the state as a single precision float, which
-    was fixed in recorder DB version 20.
+    The log will be suppressed until two dips have been seen
+    to prevent warning due to rounding issues with databases
+    storing the state as a single precision float, which was
+    fixed in recorder DB version 20.
     """
     if SEEN_DIP not in hass.data:
         hass.data[SEEN_DIP] = set()
@@ -365,12 +430,13 @@ def warn_dip(
             return
         _LOGGER.warning(
             (
-                "Entity %s %shas state class total_increasing, but its state is not"
-                " strictly increasing. Triggered by state %s (%s) with last_updated set"
-                " to %s. Please %s"
+                "Entity %s %shas state class %s, but its state is not"
+                " strictly increasing. Triggered by state %s (previous state: %s) with"
+                " last_updated set to %s. Please %s"
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
+            SensorStateClass.TOTAL_INCREASING,
             state.state,
             previous_fstate,
             state.last_updated.isoformat(),
@@ -379,7 +445,7 @@ def warn_dip(
 
 
 def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
-    """Log a warning once if a sensor with state_class_total has a negative value."""
+    """Log a warning once if a sensor with TOTAL_INCREASING has a negative value."""
     if WARN_NEGATIVE not in hass.data:
         hass.data[WARN_NEGATIVE] = set()
     if entity_id not in hass.data[WARN_NEGATIVE]:
@@ -388,11 +454,12 @@ def warn_negative(hass: HomeAssistant, entity_id: str, state: State) -> None:
         domain = entity_info["domain"] if entity_info else None
         _LOGGER.warning(
             (
-                "Entity %s %shas state class total_increasing, but its state is "
+                "Entity %s %shas state class %s, but its state is "
                 "negative. Triggered by state %s with last_updated set to %s. Please %s"
             ),
             entity_id,
             f"from integration {domain} " if domain else "",
+            SensorStateClass.TOTAL_INCREASING,
             state.state,
             state.last_updated.isoformat(),
             _suggest_report_issue(hass, entity_id),
@@ -456,6 +523,7 @@ def compile_statistics(  # noqa: C901
     session: Session,
     start: datetime.datetime,
     end: datetime.datetime,
+    custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> statistics.PlatformCompiledStatistics:
     """Compile statistics for all entities during start-end."""
     result: list[StatisticResult] = []
@@ -515,22 +583,28 @@ def compile_statistics(  # noqa: C901
     old_metadatas = statistics.get_metadata_with_session(
         get_instance(hass), session, statistic_ids=set(entities_with_float_states)
     )
-    to_process: list[tuple[str, str | None, str, list[tuple[float, State]]]] = []
+    to_process: list[
+        tuple[str, str | None, str | None, str, list[tuple[float, State]]]
+    ] = []
     to_query: set[str] = set()
     for _state in sensor_states:
         entity_id = _state.entity_id
         if not (maybe_float_states := entities_with_float_states.get(entity_id)):
             continue
-        statistics_unit, valid_float_states = _normalize_states(
+        custom_units_for_entity = custom_units_for_entities.get(entity_id)
+        unit_class, statistics_unit, valid_float_states = _normalize_states(
             hass,
             old_metadatas,
             maybe_float_states,
             entity_id,
+            custom_units_for_entity,
         )
         if not valid_float_states:
             continue
         state_class: str = _state.attributes[ATTR_STATE_CLASS]
-        to_process.append((entity_id, statistics_unit, state_class, valid_float_states))
+        to_process.append(
+            (entity_id, unit_class, statistics_unit, state_class, valid_float_states)
+        )
         if "sum" in wanted_statistics[entity_id].types:
             to_query.add(entity_id)
 
@@ -539,6 +613,7 @@ def compile_statistics(  # noqa: C901
     )
     for (  # pylint: disable=too-many-nested-blocks
         entity_id,
+        unit_class,
         statistics_unit,
         state_class,
         valid_float_states,
@@ -549,8 +624,13 @@ def compile_statistics(  # noqa: C901
 
         # Check metadata
         if old_metadata := old_metadatas.get(entity_id):
+            equivalent_units_for_entity = _collect_equivalent_units_for_entity(
+                custom_units_for_entities.get(entity_id)
+            )
+
             if not _equivalent_units(
-                {old_metadata[1]["unit_of_measurement"], statistics_unit}
+                {old_metadata[1]["unit_of_measurement"], statistics_unit},
+                equivalent_units_for_entity,
             ):
                 if WARN_UNSTABLE_UNIT not in hass.data:
                     hass.data[WARN_UNSTABLE_UNIT] = set()
@@ -584,7 +664,8 @@ def compile_statistics(  # noqa: C901
                     hass.data[WARN_STATISTICS_MEAN_CHANGED].add(entity_id)
                     _LOGGER.warning(
                         (
-                            "The statistics mean algorithm for %s have changed from %s to %s."
+                            "The statistics mean algorithm for %s have"
+                            " changed from %s to %s."
                             " Generation of long term statistics will be suppressed"
                             " unless it changes back or go to %s to delete the old"
                             " statistics"
@@ -603,6 +684,7 @@ def compile_statistics(  # noqa: C901
             "name": None,
             "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
+            "unit_class": unit_class,
             "unit_of_measurement": statistics_unit,
         }
 
@@ -768,13 +850,17 @@ def list_statistic_ids(
         if "mean" in provided_statistics.types:
             mean_type = provided_statistics.mean_type
 
+        unit = attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        unit_class = _get_unit_class(attributes.get(ATTR_DEVICE_CLASS), unit)
+
         result[entity_id] = {
             "mean_type": mean_type,
             "has_sum": has_sum,
             "name": None,
             "source": RECORDER_DOMAIN,
             "statistic_id": entity_id,
-            "unit_of_measurement": attributes.get(ATTR_UNIT_OF_MEASUREMENT),
+            "unit_class": unit_class,
+            "unit_of_measurement": unit,
         }
 
     return result
@@ -785,6 +871,7 @@ def _update_issues(
     report_issue: Callable[[str, str, dict[str, Any]], None],
     sensor_states: list[State],
     metadatas: dict[str, tuple[int, StatisticMetaData]],
+    custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> None:
     """Update repair issues."""
     for state in sensor_states:
@@ -794,6 +881,10 @@ def _update_issues(
             SensorStateClass, state.attributes.get(ATTR_STATE_CLASS)
         )
         state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit_class = _get_unit_class(
+            state.attributes.get(ATTR_DEVICE_CLASS),
+            state_unit,
+        )
 
         if metadata := metadatas.get(entity_id):
             if numeric and state_class is None:
@@ -807,7 +898,13 @@ def _update_issues(
             metadata_unit = metadata[1]["unit_of_measurement"]
             converter = statistics.STATISTIC_UNIT_TO_UNIT_CONVERTER.get(metadata_unit)
             if not converter:
-                if numeric and not _equivalent_units({state_unit, metadata_unit}):
+                equivalent_units_for_entity = _collect_equivalent_units_for_entity(
+                    custom_units_for_entities.get(entity_id)
+                )
+
+                if numeric and not _equivalent_units(
+                    {state_unit, metadata_unit}, equivalent_units_for_entity
+                ):
                     # The unit has changed, and it's not possible to convert
                     report_issue(
                         UNITS_CHANGED_ISSUE,
@@ -815,7 +912,9 @@ def _update_issues(
                         {
                             "statistic_id": entity_id,
                             "state_unit": state_unit,
+                            "state_unit_class": state_unit_class,
                             "metadata_unit": metadata_unit,
+                            "metadata_unit_class": metadata[1]["unit_class"],
                             "supported_unit": metadata_unit,
                         },
                     )
@@ -829,7 +928,9 @@ def _update_issues(
                     {
                         "statistic_id": entity_id,
                         "state_unit": state_unit,
+                        "state_unit_class": state_unit_class,
                         "metadata_unit": metadata_unit,
+                        "metadata_unit_class": metadata[1]["unit_class"],
                         "supported_unit": valid_units_str,
                     },
                 )
@@ -855,6 +956,7 @@ def _update_issues(
 def update_statistics_issues(
     hass: HomeAssistant,
     session: Session,
+    custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> None:
     """Validate statistics."""
     instance = get_instance(hass)
@@ -908,6 +1010,7 @@ def update_statistics_issues(
         create_issue_registry_issue,
         sensor_states,
         metadatas,
+        custom_units_for_entities,
     )
     for issue_id in issues:
         hass.loop.call_soon_threadsafe(ir.async_delete_issue, hass, DOMAIN, issue_id)
@@ -915,6 +1018,7 @@ def update_statistics_issues(
 
 def validate_statistics(
     hass: HomeAssistant,
+    custom_units_for_entities: dict[str, dict[str | None, str]],
 ) -> dict[str, list[statistics.ValidationIssue]]:
     """Validate statistics."""
     validation_result = defaultdict(list)
@@ -938,6 +1042,7 @@ def validate_statistics(
         create_statistic_validation_issue,
         sensor_states,
         metadatas,
+        custom_units_for_entities,
     )
 
     for state in sensor_states:

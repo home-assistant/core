@@ -55,8 +55,12 @@
   creating the PR. If you're unsure about any of them, don't hesitate to ask.
   We're here to help! This is simply a reminder of what we are going to look
   for before merging your code.
+
+  AI tools are welcome, but contributors are responsible for *fully*
+  understanding the code before submitting a PR.
 -->
 
+- [ ] I understand the code I am submitting and can explain how it works.
 - [ ] The code change is tested and works locally.
 - [ ] Local tests pass. **Your PR cannot be merged unless tests pass**
 - [ ] There is no commented out code in this PR.
@@ -64,6 +68,7 @@
 - [ ] I have followed the [perfect PR recommendations][perfect-pr]
 - [ ] The code has been formatted using Ruff (`ruff format homeassistant tests`)
 - [ ] Tests have been added to verify that the new code works.
+- [ ] Any generated code has been carefully reviewed for correctness and compliance with project standards.
 
 If user exposed functionality or configuration variables are added/changed:
 
@@ -75,7 +80,7 @@ If the code communicates with devices, web services, or third-party tools:
       Updated and included derived files by running: `python3 -m script.hassfest`.
 - [ ] New or updated dependencies have been added to `requirements_all.txt`.  
       Updated by running `python3 -m script.gen_requirements_all`.
-- [ ] For the updated dependencies - a link to the changelog, or at minimum a diff between library versions is added to the PR description.
+- [ ] For the updated dependencies a diff between library versions and ideally a link to the changelog/release notes is added to the PR description.
 
 <!--
   This project is very active and we have a high turnover of pull requests.

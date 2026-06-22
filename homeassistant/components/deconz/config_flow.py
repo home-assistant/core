@@ -1,12 +1,10 @@
 """Config flow to configure deCONZ component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 import logging
 from pprint import pformat
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 from pydeconz.errors import LinkButtonNotPressed, RequestError, ResponseError
@@ -65,6 +63,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> DeconzOptionsFlowHandler:
@@ -75,6 +74,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize the deCONZ config flow."""
         self.bridge_id = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -100,7 +100,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             async with asyncio.timeout(10):
                 self.bridges = await deconz_discovery(session)
 
-        except (TimeoutError, ResponseError):
+        except TimeoutError, ResponseError:
             self.bridges = []
 
         if LOGGER.isEnabledFor(logging.DEBUG):
@@ -158,7 +158,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             except LinkButtonNotPressed:
                 errors["base"] = "linking_not_possible"
 
-            except (ResponseError, RequestError, TimeoutError):
+            except ResponseError, RequestError, TimeoutError:
                 errors["base"] = "no_key"
 
             else:
@@ -184,7 +184,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                             CONF_HOST: self.host,
                             CONF_PORT: self.port,
                             CONF_API_KEY: self.api_key,
-                        }
+                        },
+                        reload_on_update=False,
                     )
 
             except TimeoutError:
@@ -210,6 +211,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -231,7 +233,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
             updates={
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
-            }
+            },
+            reload_on_update=False,
         )
 
         self.context.update(
@@ -243,6 +246,7 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -265,7 +269,8 @@ class DeconzFlowHandler(ConfigFlow, domain=DOMAIN):
                 CONF_HOST: self.host,
                 CONF_PORT: self.port,
                 CONF_API_KEY: self.api_key,
-            }
+            },
+            reload_on_update=False,
         )
 
         self.context["configuration_url"] = HASSIO_CONFIGURATION_URL

@@ -1,7 +1,5 @@
 """The tests the History component."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from copy import copy
 from datetime import datetime, timedelta
@@ -32,6 +30,8 @@ from .common import (
     assert_states_equal_without_context,
     async_recorder_block_till_done,
     async_wait_recording_done,
+    db_state_attributes_to_native,
+    db_state_to_native,
 )
 
 from tests.typing import RecorderInstanceContextManager
@@ -49,7 +49,7 @@ def multiple_start_time_chunk_sizes(
     to call _generate_significant_states_with_session_stmt multiple times.
     """
     with patch(
-        "homeassistant.components.recorder.history.modern.MAX_IDS_FOR_INDEXED_GROUP_BY",
+        "homeassistant.components.recorder.history.MAX_IDS_FOR_INDEXED_GROUP_BY",
         ids_for_start_time_chunk_sizes,
     ):
         yield
@@ -70,7 +70,7 @@ def setup_recorder(recorder_mock: Recorder) -> recorder.Recorder:
 async def test_get_full_significant_states_with_session_entity_no_matches(
     hass: HomeAssistant,
 ) -> None:
-    """Test getting states at a specific point in time for entities that never have been recorded."""
+    """Test getting states for entities that never have been recorded."""
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
     with session_scope(hass=hass, read_only=True) as session:
@@ -95,7 +95,7 @@ async def test_get_full_significant_states_with_session_entity_no_matches(
 async def test_significant_states_with_session_entity_minimal_response_no_matches(
     hass: HomeAssistant,
 ) -> None:
-    """Test getting states at a specific point in time for entities that never have been recorded."""
+    """Test getting states for entities that never have been recorded."""
     now = dt_util.utcnow()
     time_before_recorder_ran = now - timedelta(days=1000)
     with session_scope(hass=hass, read_only=True) as session:
@@ -884,10 +884,10 @@ async def test_get_full_significant_states_handles_empty_last_changed(
                 db_state.entity_id = metadata_id_to_entity_id[
                     db_state.metadata_id
                 ].entity_id
-                state = db_state.to_native()
-                state.attributes = db_state_attributes[
-                    db_state.attributes_id
-                ].to_native()
+                state = db_state_to_native(db_state)
+                state.attributes = db_state_attributes_to_native(
+                    db_state_attributes[db_state.attributes_id]
+                )
                 native_states.append(state)
             return native_states
 
@@ -1027,7 +1027,7 @@ async def test_get_significant_states_with_non_existent_entity_ids_returns_empty
 async def test_state_changes_during_period_with_non_existent_entity_ids_returns_empty(
     hass: HomeAssistant,
 ) -> None:
-    """Test state_changes_during_period returns an empty dict when entities not in the db."""
+    """Test state_changes_during_period with non-existent entities."""
     now = dt_util.utcnow()
     assert (
         history.state_changes_during_period(hass, now, None, "nonexistent.entity") == {}

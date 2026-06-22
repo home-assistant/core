@@ -1,7 +1,5 @@
 """Provides a sensor to track various status aspects of a NUT device."""
 
-from __future__ import annotations
-
 import logging
 from typing import Final
 
@@ -25,8 +23,8 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NutConfigEntry
 from .const import KEY_STATUS, KEY_STATUS_DISPLAY, STATE_TYPES
+from .coordinator import NutConfigEntry
 from .entity import NUTBaseEntity
 
 # Coordinator is used to centralize the data updates

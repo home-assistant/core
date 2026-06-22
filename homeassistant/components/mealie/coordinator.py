@@ -1,7 +1,5 @@
 """Define an object to manage fetching Mealie data."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
 from dataclasses import dataclass
 from datetime import timedelta
@@ -16,6 +14,7 @@ from aiomealie import (
     ShoppingList,
     Statistics,
 )
+from awesomeversion import AwesomeVersion
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -33,6 +32,7 @@ class MealieData:
     """Mealie data type."""
 
     client: MealieClient
+    version: AwesomeVersion
     mealplan_coordinator: MealieMealplanCoordinator
     shoppinglist_coordinator: MealieShoppingListCoordinator
     statistics_coordinator: MealieStatisticsCoordinator

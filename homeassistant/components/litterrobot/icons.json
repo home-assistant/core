@@ -1,41 +1,74 @@
 {
   "entity": {
     "binary_sensor": {
-      "sleeping": {
-        "default": "mdi:sleep"
+      "bonnet_removed": {
+        "default": "mdi:robot-vacuum-alert"
+      },
+      "drawer_removed": {
+        "default": "mdi:robot-vacuum-alert"
+      },
+      "hopper_connected": {
+        "default": "mdi:filter-check"
+      },
+      "laser_dirty": {
+        "default": "mdi:robot-vacuum-alert"
+      },
+      "online": {
+        "default": "mdi:cloud-check"
       },
       "sleep_mode": {
         "default": "mdi:sleep"
       },
-      "hopper_connected": {
-        "default": "mdi:filter-check"
+      "sleeping": {
+        "default": "mdi:sleep"
       }
     },
     "button": {
-      "reset_waste_drawer": {
-        "default": "mdi:delete-variant"
+      "change_filter": {
+        "default": "mdi:filter-cog"
       },
       "give_snack": {
         "default": "mdi:candy-outline"
+      },
+      "reset_waste_drawer": {
+        "default": "mdi:delete-variant"
       }
     },
     "select": {
       "brightness_level": {
         "default": "mdi:lightbulb-question",
         "state": {
+          "high": "mdi:lightbulb-on",
           "low": "mdi:lightbulb-on-30",
-          "medium": "mdi:lightbulb-on-50",
-          "high": "mdi:lightbulb-on"
+          "medium": "mdi:lightbulb-on-50"
         }
       },
       "cycle_delay": {
         "default": "mdi:timer-outline"
+      },
+      "globe_brightness": {
+        "default": "mdi:lightbulb-question",
+        "state": {
+          "high": "mdi:lightbulb-on",
+          "low": "mdi:lightbulb-on-30",
+          "medium": "mdi:lightbulb-on-50"
+        }
+      },
+      "globe_light": {
+        "state": {
+          "auto": "mdi:lightbulb-auto",
+          "off": "mdi:lightbulb-off",
+          "on": "mdi:lightbulb-on"
+        }
       },
       "meal_insert_size": {
         "default": "mdi:scale"
       }
     },
     "sensor": {
+      "food_dispensed_today": {
+        "default": "mdi:counter"
+      },
       "hopper_status": {
         "default": "mdi:filter",
         "state": {
@@ -47,7 +80,16 @@
           "motor_ot_amps": "mdi:flash-alert"
         }
       },
+      "next_filter_replacement": {
+        "default": "mdi:filter-cog"
+      },
+      "scoops_saved_count": {
+        "default": "mdi:counter"
+      },
       "total_cycles": {
+        "default": "mdi:counter"
+      },
+      "visits_today": {
         "default": "mdi:counter"
       }
     },

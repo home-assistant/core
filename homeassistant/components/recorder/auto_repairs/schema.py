@@ -1,7 +1,5 @@
 """Schema repairs."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING
@@ -12,7 +10,7 @@ from sqlalchemy.orm import DeclarativeBase
 from sqlalchemy.orm.attributes import InstrumentedAttribute
 
 from ..const import SupportedDialect
-from ..db_schema import DOUBLE_PRECISION_TYPE_SQL, DOUBLE_TYPE
+from ..db_schema import DOUBLE_PRECISION_TYPE_SQL, DOUBLE_TYPE, MYSQL_COLLATE
 from ..util import session_scope
 
 if TYPE_CHECKING:
@@ -87,7 +85,10 @@ def _validate_table_schema_has_correct_collation(
     instance: Recorder,
     table_object: type[DeclarativeBase],
 ) -> set[str]:
-    """Ensure the table has the correct collation to avoid union errors with mixed collations."""
+    """Ensure the table has the correct collation.
+
+    This avoids union errors with mixed collations.
+    """
     schema_errors: set[str] = set()
     # Mark the session as read_only to ensure that the test data is not committed
     # to the database and we always rollback when the scope is exited
@@ -105,12 +106,13 @@ def _validate_table_schema_has_correct_collation(
             or dialect_kwargs.get("mariadb_collate")
             or connection.dialect._fetch_setting(connection, "collation_server")  # type: ignore[attr-defined]  # noqa: SLF001
         )
-        if collate and collate != "utf8mb4_unicode_ci":
+        if collate and collate != MYSQL_COLLATE:
             _LOGGER.debug(
-                "Database %s collation is not utf8mb4_unicode_ci",
+                "Database %s collation is not %s",
                 table,
+                MYSQL_COLLATE,
             )
-            schema_errors.add(f"{table}.utf8mb4_unicode_ci")
+            schema_errors.add(f"{table}.{MYSQL_COLLATE}")
     return schema_errors
 
 
@@ -224,7 +226,8 @@ def _check_columns(
             continue
         schema_errors.add(f"{table_name}.{supports}")
         _LOGGER.error(
-            "Column %s in database table %s does not support %s (stored=%s != expected=%s)",
+            "Column %s in database table %s does not support"
+            " %s (stored=%s != expected=%s)",
             column,
             table_name,
             supports,
@@ -240,7 +243,7 @@ def correct_db_schema_utf8(
     table_name = table_object.__tablename__
     if (
         f"{table_name}.4-byte UTF-8" in schema_errors
-        or f"{table_name}.utf8mb4_unicode_ci" in schema_errors
+        or f"{table_name}.{MYSQL_COLLATE}" in schema_errors
     ):
         from ..migration import (  # noqa: PLC0415
             _correct_table_character_set_and_collation,
@@ -261,7 +264,7 @@ def correct_db_schema_precision(
         from ..migration import _modify_columns  # noqa: PLC0415
 
         precision_columns = _get_precision_column_types(table_object)
-        # Attempt to convert timestamp columns to µs precision
+        # Attempt to convert timestamp columns to μs precision
         session_maker = instance.get_session
         engine = instance.engine
         assert engine is not None, "Engine should be set"

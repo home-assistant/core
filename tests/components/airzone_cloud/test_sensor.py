@@ -59,19 +59,19 @@ async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
 
     # Zones
     state = hass.states.get("sensor.dormitorio_air_quality_index")
-    assert state.state == "1"
+    assert state is None
 
     state = hass.states.get("sensor.dormitorio_battery")
     assert state.state == "54"
 
     state = hass.states.get("sensor.dormitorio_pm1")
-    assert state.state == "3"
+    assert state is None
 
     state = hass.states.get("sensor.dormitorio_pm2_5")
-    assert state.state == "4"
+    assert state is None
 
     state = hass.states.get("sensor.dormitorio_pm10")
-    assert state.state == "3"
+    assert state is None
 
     state = hass.states.get("sensor.dormitorio_signal_percentage")
     assert state.state == "76"
@@ -82,7 +82,7 @@ async def test_airzone_create_sensors(hass: HomeAssistant) -> None:
     state = hass.states.get("sensor.dormitorio_humidity")
     assert state.state == "24"
 
-    state = hass.states.get("sensor.dormitorio_air_quality_index")
+    state = hass.states.get("sensor.salon_air_quality_index")
     assert state.state == "1"
 
     state = hass.states.get("sensor.salon_pm1")

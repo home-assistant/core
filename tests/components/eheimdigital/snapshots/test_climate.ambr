@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_dynamic_new_devices[climate.mock_heater-entry]
+# name: test_dynamic_new_devices[climate.mock_aquarium_mock_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -25,7 +26,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.mock_heater',
+    'entity_id': 'climate.mock_aquarium_mock_heater',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -33,6 +34,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -47,7 +49,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_dynamic_new_devices[climate.mock_heater-state]
+# name: test_dynamic_new_devices[climate.mock_aquarium_mock_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 24.2,
@@ -70,17 +72,18 @@
       'temperature': 25.5,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.mock_heater',
+    'entity_id': 'climate.mock_aquarium_mock_heater',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_setup_heater[climate.mock_heater-entry]
+# name: test_setup_heater[climate.mock_aquarium_mock_heater-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'hvac_modes': list([
@@ -103,7 +106,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.mock_heater',
+    'entity_id': 'climate.mock_aquarium_mock_heater',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -111,6 +114,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -125,7 +129,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_setup_heater[climate.mock_heater-state]
+# name: test_setup_heater[climate.mock_aquarium_mock_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'current_temperature': 24.2,
@@ -148,7 +152,7 @@
       'temperature': 25.5,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.mock_heater',
+    'entity_id': 'climate.mock_aquarium_mock_heater',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

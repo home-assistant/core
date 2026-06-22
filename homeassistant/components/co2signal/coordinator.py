@@ -1,15 +1,14 @@
 """DataUpdateCoordinator for the co2signal integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from aioelectricitymaps import (
-    CarbonIntensityResponse,
     ElectricityMaps,
     ElectricityMapsError,
     ElectricityMapsInvalidTokenError,
+    HomeAssistantCarbonIntensityResponse,
 )
 
 from homeassistant.config_entries import ConfigEntry
@@ -25,7 +24,7 @@ _LOGGER = logging.getLogger(__name__)
 type CO2SignalConfigEntry = ConfigEntry[CO2SignalCoordinator]
 
 
-class CO2SignalCoordinator(DataUpdateCoordinator[CarbonIntensityResponse]):
+class CO2SignalCoordinator(DataUpdateCoordinator[HomeAssistantCarbonIntensityResponse]):
     """Data update coordinator."""
 
     config_entry: CO2SignalConfigEntry
@@ -51,7 +50,8 @@ class CO2SignalCoordinator(DataUpdateCoordinator[CarbonIntensityResponse]):
         """Return entry ID."""
         return self.config_entry.entry_id
 
-    async def _async_update_data(self) -> CarbonIntensityResponse:
+    @override
+    async def _async_update_data(self) -> HomeAssistantCarbonIntensityResponse:
         """Fetch the latest data from the source."""
 
         try:

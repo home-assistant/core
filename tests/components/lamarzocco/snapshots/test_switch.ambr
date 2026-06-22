@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_auto_on_off_switches[entry.auto_on_off_Os2OswX]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -36,8 +38,9 @@
 # ---
 # name: test_auto_on_off_switches[entry.auto_on_off_aXFz5bJ]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -55,6 +58,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -97,8 +101,9 @@
 # ---
 # name: test_switches[switch.gs012345-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,6 +121,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
@@ -133,6 +139,7 @@
 # name: test_switches[switch.gs012345-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      'entity_picture': 'https://lion.lamarzocco.io/img/thing-model/detail/gs3av/gs3av-1.png',
       'friendly_name': 'GS012345',
     }),
     'context': <ANY>,
@@ -145,8 +152,9 @@
 # ---
 # name: test_switches[switch.gs012345_auto_on_off_axfz5bj-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -164,6 +172,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (aXFz5bJ)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -193,8 +202,9 @@
 # ---
 # name: test_switches[switch.gs012345_auto_on_off_os2oswx-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -212,6 +222,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Auto on/off (Os2OswX)',
     'options': dict({
     }),
     'original_device_class': None,
@@ -241,8 +252,9 @@
 # ---
 # name: test_switches[switch.gs012345_smart_standby_enabled-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -260,6 +272,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Smart standby enabled',
     'options': dict({
     }),
     'original_device_class': None,
@@ -289,8 +302,9 @@
 # ---
 # name: test_switches[switch.gs012345_steam_boiler-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,6 +322,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Steam boiler',
     'options': dict({
     }),
     'original_device_class': None,

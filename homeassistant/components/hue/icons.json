@@ -1,22 +1,28 @@
 {
   "entity": {
     "light": {
+      "hue_grouped_light": {
+        "default": "mdi:lightbulb-group",
+        "state": {
+          "off": "mdi:lightbulb-group-off"
+        }
+      },
       "hue_light": {
         "state_attributes": {
           "effect": {
             "state": {
               "candle": "mdi:candle",
-              "sparkle": "mdi:shimmer",
+              "cosmos": "mdi:star-shooting",
+              "enchant": "mdi:magic-staff",
+              "fire": "mdi:fire",
               "glisten": "mdi:creation",
+              "opal": "mdi:diamond-stone",
+              "prism": "mdi:triangle-outline",
+              "sparkle": "mdi:shimmer",
+              "sunbeam": "mdi:spotlight-beam",
               "sunrise": "mdi:weather-sunset-up",
               "sunset": "mdi:weather-sunset",
-              "fire": "mdi:fire",
-              "prism": "mdi:triangle-outline",
-              "opal": "mdi:diamond-stone",
-              "underwater": "mdi:waves",
-              "cosmos": "mdi:star-shooting",
-              "sunbeam": "mdi:spotlight-beam",
-              "enchant": "mdi:magic-staff"
+              "underwater": "mdi:waves"
             }
           }
         }
@@ -24,10 +30,10 @@
     }
   },
   "services": {
-    "hue_activate_scene": {
+    "activate_scene": {
       "service": "mdi:palette"
     },
-    "activate_scene": {
+    "hue_activate_scene": {
       "service": "mdi:palette"
     }
   }

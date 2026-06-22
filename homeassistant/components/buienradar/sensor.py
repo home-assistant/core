@@ -1,8 +1,7 @@
 """Support for Buienradar.nl weather service."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from buienradar.constants import (
     ATTRIBUTION,
@@ -763,6 +762,7 @@ class BrSensor(SensorEntity):
         if description.key.startswith(PRECIPITATION_FORECAST):
             self._timeframe = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity being added to hass."""
         if self._data is None:

@@ -1,7 +1,5 @@
 """The test for the Nord Pool sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
@@ -12,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -20,8 +18,12 @@ from tests.common import async_fire_time_changed, snapshot_platform
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "load_platforms",
+    [[Platform.SENSOR]],
+)
 async def test_sensor(
     hass: HomeAssistant,
     load_int: ConfigEntry,
@@ -33,7 +35,7 @@ async def test_sensor(
     await snapshot_platform(hass, entity_registry, snapshot, load_int.entry_id)
 
 
-@pytest.mark.freeze_time("2024-11-05T18:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T18:00:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_current_price_is_0(
     hass: HomeAssistant, load_int: ConfigEntry
@@ -43,10 +45,10 @@ async def test_sensor_current_price_is_0(
     current_price = hass.states.get("sensor.nord_pool_se4_current_price")
 
     assert current_price is not None
-    assert current_price.state == "0.0"  # SE4 2024-11-05T18:00:00Z
+    assert current_price.state == "0.0"  # SE4 2025-10-01T18:00:00Z
 
 
-@pytest.mark.freeze_time("2024-11-05T23:00:00+00:00")
+@pytest.mark.freeze_time("2025-10-01T21:45:00+00:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_no_next_price(hass: HomeAssistant, load_int: ConfigEntry) -> None:
     """Test the Nord Pool sensor."""
@@ -58,12 +60,12 @@ async def test_sensor_no_next_price(hass: HomeAssistant, load_int: ConfigEntry) 
     assert current_price is not None
     assert last_price is not None
     assert next_price is not None
-    assert current_price.state == "0.12666"  # SE3 2024-11-05T23:00:00Z
-    assert last_price.state == "0.28914"  # SE3 2024-11-05T22:00:00Z
-    assert next_price.state == "0.07406"  # SE3 2024-11-06T00:00:00Z"
+    assert current_price.state == "0.78568"  # SE3 2025-10-01T21:45:00Z
+    assert last_price.state == "0.82005"  # SE3 2025-10-01T21:30:00Z
+    assert next_price.state == "0.93322"  # SE3 2025-10-01T22:00:00Z
 
 
-@pytest.mark.freeze_time("2024-11-06T00:00:00+01:00")
+@pytest.mark.freeze_time("2025-10-02T00:00:00+02:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_no_previous_price(
     hass: HomeAssistant, load_int: ConfigEntry
@@ -77,12 +79,12 @@ async def test_sensor_no_previous_price(
     assert current_price is not None
     assert last_price is not None
     assert next_price is not None
-    assert current_price.state == "0.12666"  # SE3 2024-11-05T23:00:00Z
-    assert last_price.state == "0.28914"  # SE3 2024-11-05T22:00:00Z
-    assert next_price.state == "0.07406"  # SE3 2024-11-06T00:00:00Z
+    assert current_price.state == "0.93322"  # SE3 2025-10-01T22:00:00Z
+    assert last_price.state == "0.78568"  # SE3 2025-10-01T21:45:00Z
+    assert next_price.state == "0.85422"  # SE3 2025-10-01T22:15:00Z
 
 
-@pytest.mark.freeze_time("2024-11-05T11:00:01+01:00")
+@pytest.mark.freeze_time("2025-10-01T11:00:01+01:00")
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensor_empty_response(
     hass: HomeAssistant,
@@ -101,16 +103,16 @@ async def test_sensor_empty_response(
     assert current_price is not None
     assert last_price is not None
     assert next_price is not None
-    assert current_price.state == "0.92737"
-    assert last_price.state == "1.03132"
-    assert next_price.state == "0.92505"
+    assert current_price.state == "0.67405"
+    assert last_price.state == "0.60774"
+    assert next_price.state == "0.63858"
 
     aioclient_mock.clear_requests()
     aioclient_mock.request(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-04",
+            "date": "2025-09-30",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
             "currency": "SEK",
@@ -121,7 +123,7 @@ async def test_sensor_empty_response(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-05",
+            "date": "2025-10-01",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
             "currency": "SEK",
@@ -133,7 +135,7 @@ async def test_sensor_empty_response(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-06",
+            "date": "2025-10-02",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
             "currency": "SEK",
@@ -153,16 +155,16 @@ async def test_sensor_empty_response(
     assert current_price is not None
     assert last_price is not None
     assert next_price is not None
-    assert current_price.state == "0.92505"
-    assert last_price.state == "0.92737"
-    assert next_price.state == "0.94949"
+    assert current_price.state == "0.63736"
+    assert last_price.state == "0.63482"
+    assert next_price.state == "0.66068"
 
     aioclient_mock.clear_requests()
     aioclient_mock.request(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-04",
+            "date": "2025-09-30",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
             "currency": "SEK",
@@ -173,7 +175,7 @@ async def test_sensor_empty_response(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-05",
+            "date": "2025-10-01",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
             "currency": "SEK",
@@ -185,7 +187,7 @@ async def test_sensor_empty_response(
         "GET",
         url=API + "/DayAheadPrices",
         params={
-            "date": "2024-11-06",
+            "date": "2025-10-02",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
             "currency": "SEK",
@@ -193,7 +195,7 @@ async def test_sensor_empty_response(
         status=HTTPStatus.NO_CONTENT,
     )
 
-    freezer.move_to("2024-11-05T22:00:01+00:00")
+    freezer.move_to("2025-10-01T21:45:01+00:00")
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -206,6 +208,6 @@ async def test_sensor_empty_response(
     assert current_price is not None
     assert last_price is not None
     assert next_price is not None
-    assert current_price.state == "0.28914"
-    assert last_price.state == "0.5223"
+    assert current_price.state == "0.78568"
+    assert last_price.state == "0.82005"
     assert next_price.state == STATE_UNKNOWN

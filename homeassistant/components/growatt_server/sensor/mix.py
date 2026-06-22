@@ -1,7 +1,5 @@
 """Growatt Sensor definitions for the Mix type."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import (
     PERCENTAGE,
@@ -27,6 +25,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eBatChargeToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_battery_charge_lifetime",
@@ -42,6 +41,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eBatDisChargeToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_battery_discharge_lifetime",
@@ -57,6 +57,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="epvToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_solar_generation_lifetime",
@@ -72,6 +73,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pDischarge1",
         native_unit_of_measurement=UnitOfPower.WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="mix_battery_voltage",
@@ -101,6 +103,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="elocalLoadToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_load_consumption_lifetime",
@@ -116,6 +119,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="etoGridToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_export_to_grid_lifetime",
@@ -132,6 +136,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="chargePower",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="mix_load_consumption",
@@ -139,6 +144,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pLocalLoad",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="mix_wattage_pv_1",
@@ -146,6 +152,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pPv1",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="mix_wattage_pv_2",
@@ -153,6 +160,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pPv2",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="mix_wattage_pv_all",
@@ -160,6 +168,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="ppv",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="mix_export_to_grid",
@@ -167,6 +176,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pactogrid",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="mix_import_from_grid",
@@ -174,6 +184,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pactouser",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="mix_battery_discharge_kw",
@@ -181,6 +192,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="pdisCharge1",
         native_unit_of_measurement=UnitOfPower.KILO_WATT,
         device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     GrowattSensorEntityDescription(
         key="mix_grid_voltage",
@@ -196,6 +208,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eCharge",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_load_consumption_solar_today",
@@ -203,6 +216,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eChargeToday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_self_consumption_today",
@@ -210,6 +224,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="eChargeToday1",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_load_consumption_battery_today",
@@ -217,6 +232,7 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="echarge1",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
     GrowattSensorEntityDescription(
         key="mix_import_from_grid_today",
@@ -224,8 +240,10 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
         api_key="etouser",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
     ),
-    # This sensor is manually created using the most recent X-Axis value from the chartData
+    # This sensor is manually created using the most recent
+    # X-Axis value from the chartData
     GrowattSensorEntityDescription(
         key="mix_last_update",
         translation_key="mix_last_update",
@@ -236,7 +254,9 @@ MIX_SENSOR_TYPES: tuple[GrowattSensorEntityDescription, ...] = (
     GrowattSensorEntityDescription(
         key="mix_import_from_grid_today_combined",
         translation_key="mix_import_from_grid_today_combined",
-        api_key="etouser_combined",  # This id is not present in the raw API data, it is added by the sensor
+        # This id is not present in the raw API data,
+        # it is added by the sensor
+        api_key="etouser_combined",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         device_class=SensorDeviceClass.ENERGY,
         state_class=SensorStateClass.TOTAL_INCREASING,

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 from urllib.parse import urlparse
 
 from aiotedee import TedeeLock, TedeeLockState
-from aiotedee.exception import (
+from aiotedee.exceptions import (
     TedeeClientException,
     TedeeDataUpdateException,
     TedeeLocalAuthException,
@@ -134,7 +134,10 @@ async def test_lock_without_pullspring(
 
     with pytest.raises(
         ServiceNotSupported,
-        match=f"Entity lock.lock_2c3d does not support action {LOCK_DOMAIN}.{SERVICE_OPEN}",
+        match=(
+            "Entity lock.lock_2c3d does not support action"
+            f" {LOCK_DOMAIN}.{SERVICE_OPEN}"
+        ),
     ):
         await hass.services.async_call(
             LOCK_DOMAIN,

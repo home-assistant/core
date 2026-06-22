@@ -1,6 +1,4 @@
-"""Home Assistant component for accessing the Wallbox Portal API. The switch component creates a switch entity."""
-
-from __future__ import annotations
+"""Home Assistant component for accessing the Wallbox Portal API select."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -8,7 +6,6 @@ from dataclasses import dataclass
 from requests import HTTPError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,7 +20,7 @@ from .const import (
     DOMAIN,
     EcoSmartMode,
 )
-from .coordinator import WallboxCoordinator
+from .coordinator import WallboxConfigEntry, WallboxCoordinator
 from .entity import WallboxEntity
 
 
@@ -58,11 +55,11 @@ SELECT_TYPES: dict[str, WallboxSelectEntityDescription] = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: WallboxConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create wallbox select entities in HASS."""
-    coordinator: WallboxCoordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator: WallboxCoordinator = entry.runtime_data
     if coordinator.data[CHARGER_ECO_SMART_KEY] != EcoSmartMode.DISABLED:
         async_add_entities(
             WallboxSelect(coordinator, description)
@@ -72,6 +69,10 @@ async def async_setup_entry(
                 and description.supported_fn(coordinator)
             )
         )
+
+
+# Coordinator is used to centralize the data updates
+PARALLEL_UPDATES = 0
 
 
 class WallboxSelect(WallboxEntity, SelectEntity):
@@ -87,7 +88,10 @@ class WallboxSelect(WallboxEntity, SelectEntity):
         """Initialize a Wallbox select entity."""
         super().__init__(coordinator)
         self.entity_description = description
-        self._attr_unique_id = f"{description.key}-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        self._attr_unique_id = (
+            f"{description.key}"
+            f"-{coordinator.data[CHARGER_DATA_KEY][CHARGER_SERIAL_NUMBER_KEY]}"
+        )
 
     @property
     def current_option(self) -> str | None:

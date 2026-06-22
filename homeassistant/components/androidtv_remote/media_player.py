@@ -1,9 +1,7 @@
 """Media player support for Android TV Remote."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from androidtvremote2 import AndroidTVRemote, ConnectionClosed, VolumeInfo
 
@@ -96,6 +94,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         self._update_volume_info(volume_info)
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()
@@ -108,6 +107,7 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         self._api.add_current_app_updated_callback(self._current_app_updated)
         self._api.add_volume_info_updated_callback(self._volume_info_updated)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove callbacks."""
         await super().async_will_remove_from_hass()
@@ -116,66 +116,83 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
         self._api.remove_volume_info_updated_callback(self._volume_info_updated)
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self._attr_is_on:
             return MediaPlayerState.ON
         return MediaPlayerState.OFF
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the Android TV on."""
         if not self._attr_is_on:
             self._send_key_command("POWER")
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the Android TV off."""
         if self._attr_is_on:
             self._send_key_command("POWER")
 
+    @override
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         self._send_key_command("VOLUME_UP")
 
+    @override
     async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         self._send_key_command("VOLUME_DOWN")
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         if mute != self.is_volume_muted:
             self._send_key_command("VOLUME_MUTE")
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         self._send_key_command("MEDIA_PLAY")
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         self._send_key_command("MEDIA_PAUSE")
 
+    @override
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
         self._send_key_command("MEDIA_PLAY_PAUSE")
 
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         self._send_key_command("MEDIA_STOP")
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         self._send_key_command("MEDIA_PREVIOUS")
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         self._send_key_command("MEDIA_NEXT")
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         if media_type == MediaType.CHANNEL:
             if not media_id.isnumeric():
-                raise ValueError(f"Channel must be numeric: {media_id}")
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="invalid_channel",
+                    translation_placeholders={"media_id": media_id},
+                )
             if self._channel_set_task:
                 self._channel_set_task.cancel()
             self._channel_set_task = asyncio.create_task(
@@ -188,8 +205,13 @@ class AndroidTVRemoteMediaPlayerEntity(AndroidTVRemoteBaseEntity, MediaPlayerEnt
             self._send_launch_app_command(media_id)
             return
 
-        raise ValueError(f"Invalid media type: {media_type}")
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="invalid_media_type",
+            translation_placeholders={"media_type": media_type},
+        )
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

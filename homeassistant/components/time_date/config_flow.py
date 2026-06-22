@@ -1,9 +1,6 @@
 """Adds config flow for Time & Date integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from datetime import timedelta
 import logging
 from typing import Any
 
@@ -11,8 +8,9 @@ import voluptuous as vol
 
 from homeassistant.components import websocket_api
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
+from homeassistant.const import CONF_DISPLAY_OPTIONS
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import EntityPlatform
+from homeassistant.helpers.entity_platform import PlatformData
 from homeassistant.helpers.schema_config_entry_flow import (
     SchemaCommonFlowHandler,
     SchemaConfigFlowHandler,
@@ -24,9 +22,8 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
     SelectSelectorMode,
 )
-from homeassistant.setup import async_prepare_setup_platform
 
-from .const import CONF_DISPLAY_OPTIONS, DOMAIN, OPTION_TYPES
+from .const import DOMAIN, OPTION_TYPES
 from .sensor import TimeDateSensor
 
 _LOGGER = logging.getLogger(__name__)
@@ -99,18 +96,9 @@ async def ws_start_preview(
     """Generate a preview."""
     validated = USER_SCHEMA(msg["user_input"])
 
-    # Create an EntityPlatform, needed for name translations
-    platform = await async_prepare_setup_platform(hass, {}, SENSOR_DOMAIN, DOMAIN)
-    entity_platform = EntityPlatform(
-        hass=hass,
-        logger=_LOGGER,
-        domain=SENSOR_DOMAIN,
-        platform_name=DOMAIN,
-        platform=platform,
-        scan_interval=timedelta(seconds=3600),
-        entity_namespace=None,
-    )
-    await entity_platform.async_load_translations()
+    # Create PlatformData, needed for name translations
+    platform_data = PlatformData(hass=hass, domain=SENSOR_DOMAIN, platform_name=DOMAIN)
+    await platform_data.async_load_translations()
 
     @callback
     def async_preview_updated(state: str, attributes: Mapping[str, Any]) -> None:
@@ -123,7 +111,7 @@ async def ws_start_preview(
 
     preview_entity = TimeDateSensor(validated[CONF_DISPLAY_OPTIONS])
     preview_entity.hass = hass
-    preview_entity.platform = entity_platform
+    preview_entity.platform_data = platform_data
 
     connection.send_result(msg["id"])
     connection.subscriptions[msg["id"]] = preview_entity.async_start_preview(

@@ -1,10 +1,8 @@
 """Config flow for the Daikin platform."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 from uuid import uuid4
 
 from aiohttp import ClientError, web_exceptions
@@ -20,7 +18,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util.ssl import client_context_no_verify
 
-from .const import DOMAIN, KEY_MAC, TIMEOUT
+from .const import DOMAIN, KEY_MAC, TIMEOUT_SEC
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -84,7 +82,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             password = None
 
         try:
-            async with asyncio.timeout(TIMEOUT):
+            async with asyncio.timeout(TIMEOUT_SEC):
                 device: Appliance = await DaikinFactory(
                     host,
                     async_get_clientsession(self.hass),
@@ -93,7 +91,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
                     password=password,
                     ssl_context=client_context_no_verify(),
                 )
-        except (TimeoutError, ClientError):
+        except TimeoutError, ClientError:
             self.host = None
             return self.async_show_form(
                 step_id="user",
@@ -124,6 +122,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         mac = device.mac
         return await self._create_entry(host, mac, key, uuid, password)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -143,6 +142,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
             user_input.get(CONF_PASSWORD),
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

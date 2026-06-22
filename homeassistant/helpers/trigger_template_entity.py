@@ -1,7 +1,5 @@
 """TemplateEntity utility class."""
 
-from __future__ import annotations
-
 import itertools
 import logging
 from typing import Any
@@ -13,7 +11,11 @@ from homeassistant.components.sensor import (
     CONF_STATE_CLASS,
     DEVICE_CLASSES_SCHEMA,
     STATE_CLASSES_SCHEMA,
+    SensorDeviceClass,
     SensorEntity,
+)
+from homeassistant.components.sensor.helpers import (  # pylint: disable=home-assistant-component-root-import
+    async_parse_date_datetime,
 )
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -35,10 +37,10 @@ from .template import (
     _SENTINEL,
     Template,
     TemplateStateFromEntityId,
-    _render_with_context,
     render_complex,
     result_as_boolean,
 )
+from .template.context import render_with_context
 from .typing import ConfigType
 
 CONF_AVAILABILITY = "availability"
@@ -86,7 +88,7 @@ def log_triggered_template_error(
     elif attribute:
         target = f" {CONF_ATTRIBUTES}.{attribute}"
 
-    logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}").error(
+    logging.getLogger(f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}").error(
         "Error rendering%s template for %s: %s",
         target,
         entity_id,
@@ -104,7 +106,10 @@ TEMPLATE_SENSOR_BASE_SCHEMA = vol.Schema(
 
 
 class ValueTemplate(Template):
-    """Class to hold a value_template and manage caching and rendering it with 'value' in variables."""
+    """Class to hold a value_template.
+
+    Manages caching and rendering it with 'value' in variables.
+    """
 
     @classmethod
     def from_template(cls, template: Template) -> ValueTemplate:
@@ -129,12 +134,18 @@ class ValueTemplate(Template):
         compiled = self._compiled or self._ensure_compiled()
 
         try:
-            render_result = _render_with_context(
+            render_result = render_with_context(
                 self.template, compiled, **variables
             ).strip()
         except jinja2.TemplateError as ex:
-            message = f"Error parsing value for {entity_id}: {ex} (value: {variables['value']}, template: {self.template})"
-            logger = logging.getLogger(f"{__package__}.{entity_id.split('.')[0]}")
+            message = (
+                f"Error parsing value for {entity_id}:"
+                f" {ex} (value: {variables['value']},"
+                f" template: {self.template})"
+            )
+            logger = logging.getLogger(
+                f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
+            )
             logger.debug(message)
             return error_value
 
@@ -281,7 +292,10 @@ class TriggerBaseEntity(Entity):
                     variables, parse_result=True, strict=True
                 )
             ) is False:
+                name = self._rendered.get(CONF_NAME)
                 self._rendered = dict(self._static_rendered)
+                if name is not None and CONF_NAME not in self._static_rendered:
+                    self._rendered[CONF_NAME] = name
 
             self._available = result_as_boolean(available)
 
@@ -354,7 +368,8 @@ class ManualTriggerEntity(TriggerBaseEntity):
     ) -> dict[str, Any]:
         """Render template variables.
 
-        Implementing class should call this first in update method to render variables for templates.
+        Implementing class should call this first in update
+        method to render variables for templates.
         Ex: variables = self._render_template_variables_with_value(payload)
         """
         run_variables: dict[str, Any] = {"value": value}
@@ -389,3 +404,21 @@ class ManualTriggerSensorEntity(ManualTriggerEntity, SensorEntity):
         ManualTriggerEntity.__init__(self, hass, config)
         self._attr_native_unit_of_measurement = config.get(CONF_UNIT_OF_MEASUREMENT)
         self._attr_state_class = config.get(CONF_STATE_CLASS)
+
+    @callback
+    def _set_native_value_with_possible_timestamp(self, value: Any) -> None:
+        """Set native value with possible timestamp.
+
+        If self.device_class is `date`, `timestamp`, or `uptime`,
+        it will try to parse the value to a date/datetime object.
+        """
+        if self.device_class not in (
+            SensorDeviceClass.DATE,
+            SensorDeviceClass.TIMESTAMP,
+            SensorDeviceClass.UPTIME,
+        ):
+            self._attr_native_value = value
+        elif value is not None:
+            self._attr_native_value = async_parse_date_datetime(
+                value, self.entity_id, self.device_class
+            )

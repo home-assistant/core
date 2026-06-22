@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_binary_sensors[binary_sensor.lunar_ddeeff_timer_running-entry]
+# name: test_binary_sensors[binary_sensor.kitchen_lunar_ddeeff_timer_running-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -12,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': None,
-    'entity_id': 'binary_sensor.lunar_ddeeff_timer_running',
+    'entity_id': 'binary_sensor.kitchen_lunar_ddeeff_timer_running',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -20,6 +21,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Timer running',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
@@ -34,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_binary_sensors[binary_sensor.lunar_ddeeff_timer_running-state]
+# name: test_binary_sensors[binary_sensor.kitchen_lunar_ddeeff_timer_running-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'device_class': 'running',
       'friendly_name': 'LUNAR-DDEEFF Timer running',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.lunar_ddeeff_timer_running',
+    'entity_id': 'binary_sensor.kitchen_lunar_ddeeff_timer_running',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

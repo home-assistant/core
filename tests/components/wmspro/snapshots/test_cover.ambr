@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_cover_device
+# name: test_cover_device[config_prod_awning_dimmer.json-status_prod_awning.json]
   DeviceRegistryEntrySnapshot({
     'area_id': 'terrasse',
     'config_entries': <ANY>,
@@ -17,7 +17,6 @@
         '58717',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'WAREMA Renkhoff SE',
@@ -27,22 +26,22 @@
     'name_by_user': None,
     'primary_config_entry': <ANY>,
     'serial_number': '58717',
-    'suggested_area': 'Terrasse',
     'sw_version': None,
     'via_device_id': <ANY>,
   })
 # ---
-# name: test_cover_update
+# name: test_cover_update[config_prod_awning_dimmer.json-status_prod_awning.json]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
       'current_position': 0,
       'device_class': 'awning',
       'friendly_name': 'Markise',
+      'is_closed': True,
       'supported_features': <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
-    'entity_id': 'cover.markise',
+    'entity_id': 'cover.terrasse_markise',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

@@ -1,0 +1,81 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: This integration does not provide actions.
+  appropriate-polling: done
+  brands: done
+  common-modules: done
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: This integration does not provide actions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup: done
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: This integration does not provide actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: This integration does not provide an options flow.
+  docs-installation-parameters:
+    status: done
+    comment: Documented in https://github.com/home-assistant/home-assistant.io/pull/43463
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable: done
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: todo
+  discovery:
+    status: exempt
+    comment: This is a cloud polling integration with no local discovery mechanism since the devices are not on a local network.
+  discovery-update-info:
+    status: exempt
+    comment: This is a cloud polling integration with no local discovery mechanism.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices:
+    status: exempt
+    comment: Vehicles are tied to the user account. Changes require integration reload.
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default:
+    status: exempt
+    comment: The device tracker entity is the primary entity and should be enabled by default.
+  entity-translations: done
+  exception-translations: todo
+  icon-translations: todo
+  reconfiguration-flow: todo
+  repair-issues:
+    status: exempt
+    comment: No user-actionable repair scenarios identified for this integration.
+  stale-devices:
+    status: exempt
+    comment: Vehicles removed from the LoJack account stop appearing in API responses and become unavailable.
+
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: todo

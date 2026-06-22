@@ -1,7 +1,5 @@
 """DataUpdateCoordinator for Nice G.O."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -152,7 +150,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
                 + REFRESH_TOKEN_EXPIRY_TIME.total_seconds()
             )
             try:
-                if datetime.now().timestamp() >= expiry_time:
+                if datetime.now().timestamp() >= expiry_time:  # pylint: disable=home-assistant-enforce-naive-now
                     await self.update_refresh_token()
                 else:
                     await self.api.authenticate_refresh(
@@ -196,7 +194,7 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         data = {
             **self.config_entry.data,
             CONF_REFRESH_TOKEN: refresh_token,
-            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),
+            CONF_REFRESH_TOKEN_CREATION_TIME: datetime.now().timestamp(),  # pylint: disable=home-assistant-enforce-naive-now
         }
         self.hass.config_entries.async_update_entry(self.config_entry, data=data)
 
@@ -235,7 +233,9 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
         parsed_data = await self._parse_barrier(
             self.data[
                 raw_data["deviceId"]
-            ].type,  # Device type is not sent in device state update, and it can't change, so we just reuse the existing one
+            ].type,  # Device type is not sent in device state
+            # update, and it can't change, so we just reuse
+            # the existing one
             BarrierState(
                 deviceId=raw_data["deviceId"],
                 reported=json.loads(raw_data["reported"]),
@@ -268,7 +268,11 @@ class NiceGOUpdateCoordinator(DataUpdateCoordinator[dict[str, NiceGODevice]]):
             self.async_set_updated_data(self.data)
 
     async def on_connection_lost(self, data: dict[str, Exception]) -> None:
-        """Handle the websocket connection loss. Don't need to do much since the library will automatically reconnect."""
+        """Handle the websocket connection loss.
+
+        Don't need to do much since the library will
+        automatically reconnect.
+        """
         _LOGGER.debug("Connection lost to the websocket")
         self.connected = False
 

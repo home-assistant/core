@@ -1,6 +1,7 @@
-"""Reproduce an Alert state."""
+"""Reproduce an Alert state.
 
-from __future__ import annotations
+DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
+"""
 
 import asyncio
 from collections.abc import Iterable

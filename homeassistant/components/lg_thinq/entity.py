@@ -1,7 +1,5 @@
 """Base class for ThinQ entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 import logging
 from typing import Any
@@ -34,6 +32,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         coordinator: DeviceDataUpdateCoordinator,
         entity_description: EntityDescription,
         property_id: str,
+        postfix_id: str | None = None,
     ) -> None:
         """Initialize an entity."""
         super().__init__(coordinator)
@@ -45,10 +44,17 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         self._attr_device_info = dr.DeviceInfo(
             identifiers={(DOMAIN, coordinator.unique_id)},
             manufacturer=COMPANY,
-            model=f"{coordinator.api.device.model_name} ({self.coordinator.api.device.device_type})",
+            model=(
+                f"{coordinator.api.device.model_name}"
+                f" ({self.coordinator.api.device.device_type})"
+            ),
             name=coordinator.device_name,
         )
-        self._attr_unique_id = f"{coordinator.unique_id}_{self.property_id}"
+        self._attr_unique_id = (
+            f"{coordinator.unique_id}_{self.property_id}"
+            if postfix_id is None
+            else f"{coordinator.unique_id}_{self.property_id}_{postfix_id}"
+        )
         if self.location is not None and self.location not in (
             Location.MAIN,
             Location.OVEN,
@@ -99,9 +105,7 @@ class ThinQEntity(CoordinatorEntity[DeviceDataUpdateCoordinator]):
         except ThinQAPIException as exc:
             if on_fail_method:
                 on_fail_method()
-            raise ServiceValidationError(
-                exc.message, translation_domain=DOMAIN, translation_key=exc.code
-            ) from exc
+            raise ServiceValidationError(exc.message) from exc
         except ValueError as exc:
             if on_fail_method:
                 on_fail_method()

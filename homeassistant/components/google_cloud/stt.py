@@ -1,13 +1,13 @@
 """Support for the Google Cloud STT service."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, AsyncIterable
 import logging
+from typing import override
 
 from google.api_core.exceptions import GoogleAPIError, Unauthenticated
 from google.api_core.retry import AsyncRetry
 from google.cloud import speech_v1
+from propcache.api import cached_property
 
 from homeassistant.components.stt import (
     AudioBitRates,
@@ -30,6 +30,7 @@ from .const import (
     CONF_STT_MODEL,
     DEFAULT_STT_MODEL,
     DOMAIN,
+    HA_TO_GOOGLE_STT_LANG_MAP,
     STT_LANGUAGES,
 )
 
@@ -68,40 +69,55 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         self._client = client
         self._model = entry.options.get(CONF_STT_MODEL, DEFAULT_STT_MODEL)
 
-    @property
+    @cached_property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
-        return STT_LANGUAGES
+        # Combine the native Google languages and the standard HA languages.
+        # A set is used to automatically handle duplicates.
+        supported = set(STT_LANGUAGES)
+        supported.update(HA_TO_GOOGLE_STT_LANG_MAP.keys())
+        return sorted(supported)
 
     @property
+    @override
     def supported_formats(self) -> list[AudioFormats]:
         """Return a list of supported formats."""
         return [AudioFormats.WAV, AudioFormats.OGG]
 
     @property
+    @override
     def supported_codecs(self) -> list[AudioCodecs]:
         """Return a list of supported codecs."""
         return [AudioCodecs.PCM, AudioCodecs.OPUS]
 
     @property
+    @override
     def supported_bit_rates(self) -> list[AudioBitRates]:
         """Return a list of supported bitrates."""
         return [AudioBitRates.BITRATE_16]
 
     @property
+    @override
     def supported_sample_rates(self) -> list[AudioSampleRates]:
         """Return a list of supported samplerates."""
         return [AudioSampleRates.SAMPLERATE_16000]
 
     @property
+    @override
     def supported_channels(self) -> list[AudioChannels]:
         """Return a list of supported channels."""
         return [AudioChannels.CHANNEL_MONO]
 
+    @override
     async def async_process_audio_stream(
         self, metadata: SpeechMetadata, stream: AsyncIterable[bytes]
     ) -> SpeechResult:
         """Process an audio stream to STT service."""
+        language_code = HA_TO_GOOGLE_STT_LANG_MAP.get(
+            metadata.language, metadata.language
+        )
+
         streaming_config = speech_v1.StreamingRecognitionConfig(
             config=speech_v1.RecognitionConfig(
                 encoding=(
@@ -110,7 +126,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
                     else speech_v1.RecognitionConfig.AudioEncoding.LINEAR16
                 ),
                 sample_rate_hertz=metadata.sample_rate,
-                language_code=metadata.language,
+                language_code=language_code,
                 model=self._model,
             )
         )
@@ -127,7 +143,7 @@ class GoogleCloudSpeechToTextEntity(SpeechToTextEntity):
         try:
             responses = await self._client.streaming_recognize(
                 requests=request_generator(),
-                timeout=10,
+                timeout=30,
                 retry=AsyncRetry(initial=0.1, maximum=2.0, multiplier=2.0),
             )
 

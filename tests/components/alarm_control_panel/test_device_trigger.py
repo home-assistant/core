@@ -26,11 +26,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     ("set_state", "features_reg", "features_state", "expected_trigger_types"),
     [
@@ -191,7 +186,12 @@ async def test_get_trigger_capabilities(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 
@@ -226,7 +226,12 @@ async def test_get_trigger_capabilities_legacy(
         )
         assert capabilities == {
             "extra_fields": [
-                {"name": "for", "optional": True, "type": "positive_time_period_dict"}
+                {
+                    "name": "for",
+                    "optional": True,
+                    "required": False,
+                    "type": "positive_time_period_dict",
+                }
             ]
         }
 
@@ -441,8 +446,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 6
     assert (
-        service_calls[5].data["some"]
-        == f"armed_vacation - device - {entry.entity_id} - armed_night - armed_vacation - None"
+        service_calls[5].data["some"] == f"armed_vacation - device - {entry.entity_id}"
+        f" - armed_night - armed_vacation - None"
     )
 
 

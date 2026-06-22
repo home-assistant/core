@@ -1,7 +1,5 @@
 """The iCloud component."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
@@ -20,6 +18,7 @@ from .const import (
     STORAGE_KEY,
     STORAGE_VERSION,
 )
+from .media_source import async_setup_mediasource, async_setup_photo_cache
 from .services import async_setup_services
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -29,7 +28,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up iCloud integration."""
 
     async_setup_services(hass)
-
+    async_setup_mediasource(hass)
     return True
 
 
@@ -63,10 +62,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bo
     entry.runtime_data = account
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_setup_photo_cache(hass, account)
 
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: IcloudConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await hass.async_add_executor_job(entry.runtime_data.cancel_fetch)
+    return unload_ok

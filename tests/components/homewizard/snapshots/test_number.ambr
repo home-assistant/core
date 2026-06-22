@@ -19,8 +19,9 @@
 # ---
 # name: test_number_entities[HWE-SKT-11].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -43,6 +44,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status light brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -79,7 +81,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -88,8 +89,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '3.03',
     'via_device_id': None,
   })
@@ -114,8 +114,9 @@
 # ---
 # name: test_number_entities[HWE-SKT-21].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100.0,
@@ -138,6 +139,7 @@
     'labels': set({
     }),
     'name': None,
+    'object_id_base': 'Status light brightness',
     'options': dict({
     }),
     'original_device_class': None,
@@ -174,7 +176,6 @@
         '5c2fafabcdef',
       ),
     }),
-    'is_new': False,
     'labels': set({
     }),
     'manufacturer': 'HomeWizard',
@@ -183,8 +184,7 @@
     'name': 'Device',
     'name_by_user': None,
     'primary_config_entry': <ANY>,
-    'serial_number': None,
-    'suggested_area': None,
+    'serial_number': '5c2fafabcdef',
     'sw_version': '4.07',
     'via_device_id': None,
   })

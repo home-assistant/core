@@ -1,41 +1,35 @@
 {
   "entity": {
+    "button": {
+      "preferred_position": {
+        "default": "mdi:window-shutter-auto"
+      }
+    },
     "climate": {
       "thermostat": {
         "state_attributes": {
           "preset_mode": {
             "state": {
               "frost_guard": "mdi:snowflake-thermometer",
-              "schedule": "mdi:clock-outline",
-              "manual": "mdi:gesture-tap"
+              "manual": "mdi:gesture-tap",
+              "schedule": "mdi:clock-outline"
             }
           }
         }
       }
     },
-    "button": {
-      "preferred_position": {
-        "default": "mdi:window-shutter-auto"
-      }
-    },
     "sensor": {
-      "temp_trend": {
-        "default": "mdi:trending-up"
-      },
-      "pressure_trend": {
-        "default": "mdi:trending-up"
-      },
-      "wind_direction": {
-        "default": "mdi:compass-outline"
-      },
-      "wind_angle": {
+      "gust_angle": {
         "default": "mdi:compass-outline"
       },
       "gust_direction": {
         "default": "mdi:compass-outline"
       },
-      "gust_angle": {
-        "default": "mdi:compass-outline"
+      "health_idx": {
+        "default": "mdi:cloud"
+      },
+      "pressure_trend": {
+        "default": "mdi:trending-up"
       },
       "reachable": {
         "default": "mdi:signal"
@@ -43,22 +37,40 @@
       "rf_strength": {
         "default": "mdi:signal"
       },
+      "temp_trend": {
+        "default": "mdi:trending-up"
+      },
       "wifi_strength": {
         "default": "mdi:wifi"
       },
-      "health_idx": {
-        "default": "mdi:cloud"
+      "wind_angle": {
+        "default": "mdi:compass-outline"
+      },
+      "wind_direction": {
+        "default": "mdi:compass-outline"
       }
     }
   },
   "services": {
+    "clear_temperature_setting": {
+      "service": "mdi:thermometer"
+    },
+    "register_webhook": {
+      "service": "mdi:link-variant"
+    },
     "set_camera_light": {
       "service": "mdi:led-on"
     },
-    "set_schedule": {
-      "service": "mdi:calendar-clock"
+    "set_person_away": {
+      "service": "mdi:walk"
+    },
+    "set_persons_home": {
+      "service": "mdi:home"
     },
     "set_preset_mode_with_end_datetime": {
+      "service": "mdi:calendar-clock"
+    },
+    "set_schedule": {
       "service": "mdi:calendar-clock"
     },
     "set_temperature_with_end_datetime": {
@@ -66,18 +78,6 @@
     },
     "set_temperature_with_time_period": {
       "service": "mdi:thermometer"
-    },
-    "clear_temperature_setting": {
-      "service": "mdi:thermometer"
-    },
-    "set_persons_home": {
-      "service": "mdi:home"
-    },
-    "set_person_away": {
-      "service": "mdi:walk"
-    },
-    "register_webhook": {
-      "service": "mdi:link-variant"
     },
     "unregister_webhook": {
       "service": "mdi:link-variant-off"

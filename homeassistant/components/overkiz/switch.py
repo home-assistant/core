@@ -1,7 +1,5 @@
 """Support for Overkiz switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
@@ -100,6 +98,15 @@ SWITCH_DESCRIPTIONS: list[OverkizSwitchDescription] = [
         ),
         entity_category=EntityCategory.CONFIG,
     ),
+    OverkizSwitchDescription(
+        key=UIWidget.DISCRETE_EXTERIOR_HEATING,
+        turn_on=OverkizCommand.ON,
+        turn_off=OverkizCommand.OFF,
+        icon="mdi:radiator",
+        is_on=lambda select_state: (
+            select_state(OverkizState.CORE_ON_OFF) == OverkizCommandParam.ON
+        ),
+    ),
 ]
 
 SUPPORTED_DEVICES = {
@@ -138,7 +145,7 @@ class OverkizSwitch(OverkizDescriptiveEntity, SwitchEntity):
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         if self.entity_description.is_on:
-            return self.entity_description.is_on(self.executor.select_state)
+            return self.entity_description.is_on(self.device.states.get_value)
 
         return None
 

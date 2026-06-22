@@ -1,7 +1,5 @@
 """Tests for ESPHomeClient."""
 
-from __future__ import annotations
-
 from aioesphomeapi import APIClient, APIVersion, BluetoothProxyFeature, DeviceInfo
 from bleak.exc import BleakError
 from bleak_esphome.backend.client import ESPHomeClient, ESPHomeClientData
@@ -55,4 +53,4 @@ async def test_client_usage_while_not_connected(client_data: ESPHomeClientData) 
     with pytest.raises(
         BleakError, match=f"{ESP_NAME}.*{ESP_MAC_ADDRESS}.*not connected"
     ):
-        assert await client.write_gatt_char("test", b"test") is False
+        assert await client.write_gatt_char("test", b"test", False) is False

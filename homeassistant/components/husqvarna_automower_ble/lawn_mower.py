@@ -1,8 +1,8 @@
 """The Husqvarna Autoconnect Bluetooth lawn mower platform."""
 
-from __future__ import annotations
+from typing import override
 
-from automower_ble.protocol import MowerActivity, MowerState
+from automower_ble.protocol import MowerActivity, MowerState, ResponseResult
 
 from homeassistant.components import bluetooth
 from homeassistant.components.lawn_mower import (
@@ -73,6 +73,10 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         if state in (MowerState.STOPPED, MowerState.OFF, MowerState.WAIT_FOR_SAFETYPIN):
             # This is actually stopped, but that isn't an option
             return LawnMowerActivity.ERROR
+        if state == MowerState.PENDING_START and activity == MowerActivity.NONE:
+            # This happens when the mower is safety stopped and we try to send a
+            # command to start it.
+            return LawnMowerActivity.ERROR
         if state in (
             MowerState.RESTRICTED,
             MowerState.IN_OPERATION,
@@ -91,6 +95,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         return LawnMowerActivity.ERROR
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         LOGGER.debug("AutomowerLawnMower: _handle_coordinator_update")
@@ -99,6 +104,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         self._attr_available = self._attr_activity is not None
         super()._handle_coordinator_update()
 
+    @override
     async def async_start_mowing(self) -> None:
         """Start mowing."""
         LOGGER.debug("Starting mower")
@@ -107,7 +113,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
             device = bluetooth.async_ble_device_from_address(
                 self.coordinator.hass, self.coordinator.address, connectable=True
             )
-            if not await self.coordinator.mower.connect(device):
+            if await self.coordinator.mower.connect(device) is not ResponseResult.OK:
                 return
 
         await self.coordinator.mower.mower_resume()
@@ -118,6 +124,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         self._attr_activity = self._get_activity()
         self.async_write_ha_state()
 
+    @override
     async def async_dock(self) -> None:
         """Start docking."""
         LOGGER.debug("Start docking")
@@ -126,7 +133,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
             device = bluetooth.async_ble_device_from_address(
                 self.coordinator.hass, self.coordinator.address, connectable=True
             )
-            if not await self.coordinator.mower.connect(device):
+            if await self.coordinator.mower.connect(device) is not ResponseResult.OK:
                 return
 
         await self.coordinator.mower.mower_park()
@@ -135,6 +142,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
         self._attr_activity = self._get_activity()
         self.async_write_ha_state()
 
+    @override
     async def async_pause(self) -> None:
         """Pause mower."""
         LOGGER.debug("Pausing mower")
@@ -143,7 +151,7 @@ class AutomowerLawnMower(HusqvarnaAutomowerBleEntity, LawnMowerEntity):
             device = bluetooth.async_ble_device_from_address(
                 self.coordinator.hass, self.coordinator.address, connectable=True
             )
-            if not await self.coordinator.mower.connect(device):
+            if await self.coordinator.mower.connect(device) is not ResponseResult.OK:
                 return
 
         await self.coordinator.mower.mower_pause()

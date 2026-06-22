@@ -266,6 +266,8 @@ async def mock_states(hass: HomeAssistant) -> Mock:
     result.mock_repeat_switch_id = switch.ENTITY_ID_FORMAT.format("repeat")
     hass.states.async_set(result.mock_repeat_switch_id, STATE_OFF)
 
+    result.mock_media_image_url_id = f"{input_select.DOMAIN}.entity_picture"
+    hass.states.async_set(result.mock_media_image_url_id, "/local/picture.png")
     return result
 
 
@@ -289,6 +291,7 @@ def config_children_and_attr(mock_states):
             "repeat": mock_states.mock_repeat_switch_id,
             "sound_mode_list": mock_states.mock_sound_mode_list_id,
             "sound_mode": mock_states.mock_sound_mode_id,
+            "entity_picture": mock_states.mock_media_image_url_id,
         },
     }
 
@@ -598,6 +601,22 @@ async def test_sound_mode_list_children_and_attr(
     assert ump.sound_mode_list == "['music', 'movie', 'game']"
 
 
+async def test_entity_picture_children_and_attr(
+    hass: HomeAssistant, config_children_and_attr, mock_states
+) -> None:
+    """Test entity picture property w/ children and attrs."""
+    config = validate_config(config_children_and_attr)
+
+    ump = universal.UniversalMediaPlayer(hass, config)
+
+    assert ump.entity_picture == "/local/picture.png"
+
+    hass.states.async_set(
+        mock_states.mock_sound_mode_list_id, "/local/other_picture.png"
+    )
+    assert ump.sound_mode_list == "/local/other_picture.png"
+
+
 async def test_source_list_children_and_attr(
     hass: HomeAssistant, config_children_and_attr, mock_states
 ) -> None:
@@ -774,6 +793,7 @@ async def test_overrides(hass: HomeAssistant, config_children_and_attr) -> None:
         "clear_playlist": excmd,
         "play_media": excmd,
         "toggle": excmd,
+        "entity_picture": excmd,
     }
     await async_setup_component(hass, "media_player", {"media_player": config})
     await hass.async_block_till_done()
@@ -1364,7 +1384,11 @@ async def test_reload(hass: HomeAssistant) -> None:
     hass.states.async_set(
         "remote.alexander_master_bedroom",
         STATE_ON,
-        {"activity_list": ["act1", "act2"], "current_activity": "act2"},
+        {
+            "activity_list": ["act1", "act2"],
+            "current_activity": "act2",
+            "entity_picture": "/local/picture_remote.png",
+        },
     )
 
     yaml_path = get_fixture_path("configuration.yaml", "universal")
@@ -1382,6 +1406,10 @@ async def test_reload(hass: HomeAssistant) -> None:
     assert hass.states.get("media_player.tv") is None
     assert hass.states.get("media_player.master_bed_tv").state == "on"
     assert hass.states.get("media_player.master_bed_tv").attributes["source"] == "act2"
+    assert (
+        hass.states.get("media_player.master_bed_tv").attributes["entity_picture"]
+        == "/local/picture_remote.png"
+    )
     assert (
         "device_class" not in hass.states.get("media_player.master_bed_tv").attributes
     )

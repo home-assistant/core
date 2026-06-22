@@ -1,10 +1,8 @@
 """The HERE Travel Time integration."""
 
-from __future__ import annotations
-
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import here_routing
 from here_routing import (
@@ -13,6 +11,7 @@ from here_routing import (
     Return,
     RoutingMode,
     Spans,
+    TrafficMode,
     TransportMode,
 )
 import here_transit
@@ -44,6 +43,7 @@ from .const import (
     CONF_ORIGIN_LATITUDE,
     CONF_ORIGIN_LONGITUDE,
     CONF_ROUTE_MODE,
+    CONF_TRAFFIC_MODE,
     DEFAULT_SCAN_INTERVAL,
     DOMAIN,
     ROUTE_MODE_FASTEST,
@@ -80,6 +80,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
         )
         self._api = HERERoutingApi(api_key)
 
+    @override
     async def _async_update_data(self) -> HERETravelTimeData:
         """Get the latest data from the HERE Routing API."""
         params = prepare_parameters(self.hass, self.config_entry)
@@ -87,7 +88,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
         _LOGGER.debug(
             (
                 "Requesting route for origin: %s, destination: %s, route_mode: %s,"
-                " mode: %s, arrival: %s, departure: %s"
+                " mode: %s, arrival: %s, departure: %s, traffic_mode: %s"
             ),
             params.origin,
             params.destination,
@@ -95,6 +96,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
             TransportMode(params.travel_mode),
             params.arrival,
             params.departure,
+            params.traffic_mode,
         )
 
         try:
@@ -109,6 +111,7 @@ class HERERoutingDataUpdateCoordinator(DataUpdateCoordinator[HERETravelTimeData]
                 routing_mode=params.route_mode,
                 arrival_time=params.arrival,
                 departure_time=params.departure,
+                traffic_mode=params.traffic_mode,
                 return_values=[Return.POLYINE, Return.SUMMARY],
                 spans=[Spans.NAMES],
             )
@@ -202,6 +205,7 @@ class HERETransitDataUpdateCoordinator(
         )
         self._api = HERETransitApi(api_key)
 
+    @override
     async def _async_update_data(self) -> HERETravelTimeData | None:
         """Get the latest data from the HERE Routing API."""
         params = prepare_parameters(self.hass, self.config_entry)
@@ -350,6 +354,11 @@ def prepare_parameters(
         if config_entry.options[CONF_ROUTE_MODE] == ROUTE_MODE_FASTEST
         else RoutingMode.SHORT
     )
+    traffic_mode = (
+        TrafficMode.DISABLED
+        if config_entry.options[CONF_TRAFFIC_MODE] is False
+        else TrafficMode.DEFAULT
+    )
 
     return HERETravelTimeAPIParams(
         destination=destination,
@@ -358,6 +367,7 @@ def prepare_parameters(
         route_mode=route_mode,
         arrival=arrival,
         departure=departure,
+        traffic_mode=traffic_mode,
     )
 
 
@@ -379,6 +389,6 @@ def build_hass_attribution(sections: list[dict[str, Any]]) -> str | None:
 def next_datetime(simple_time: time) -> datetime:
     """Take a time like 08:00:00 and combine it with the current date."""
     combined = datetime.combine(dt_util.start_of_local_day(), simple_time)
-    if combined < datetime.now():
+    if combined < datetime.now():  # pylint: disable=home-assistant-enforce-naive-now
         combined = combined + timedelta(days=1)
     return combined

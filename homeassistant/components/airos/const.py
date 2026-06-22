@@ -1,0 +1,24 @@
+"""Constants for the Ubiquiti airOS integration."""
+
+from datetime import timedelta
+
+DOMAIN = "airos"
+
+SCAN_INTERVAL = timedelta(minutes=1)
+UPDATE_SCAN_INTERVAL = timedelta(days=1)
+
+MANUFACTURER = "Ubiquiti"
+
+DEFAULT_VERIFY_SSL = False
+DEFAULT_SSL = True
+
+SECTION_ADDITIONAL_SETTINGS = "additional_settings"
+
+# Discovery related
+DEFAULT_USERNAME = "ubnt"
+HOSTNAME = "hostname"
+IP_ADDRESS = "ip_address"
+MAC_ADDRESS = "mac_address"
+DEVICE_NAME = "airOS device"
+
+CONF_LEGACY_SSL = "legacy_ssl"

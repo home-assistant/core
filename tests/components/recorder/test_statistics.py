@@ -12,7 +12,7 @@ import voluptuous as vol
 
 from homeassistant import exceptions
 from homeassistant.components import recorder
-from homeassistant.components.recorder import Recorder, history, statistics
+from homeassistant.components.recorder import DOMAIN, Recorder, history, statistics
 from homeassistant.components.recorder.db_schema import StatisticsShortTerm
 from homeassistant.components.recorder.models import (
     StatisticMeanType,
@@ -20,6 +20,8 @@ from homeassistant.components.recorder.models import (
     process_timestamp,
 )
 from homeassistant.components.recorder.statistics import (
+    _PRIMARY_UNIT_CONVERTERS,
+    _SECONDARY_UNIT_CONVERTERS,
     STATISTIC_UNIT_TO_UNIT_CONVERTER,
     PlatformCompiledStatistics,
     _generate_max_mean_min_statistic_in_sub_period_stmt,
@@ -29,6 +31,7 @@ from homeassistant.components.recorder.statistics import (
     async_add_external_statistics,
     async_import_statistics,
     async_list_statistic_ids,
+    async_update_statistics_metadata,
     get_last_short_term_statistics,
     get_last_statistics,
     get_latest_short_term_statistics_with_session,
@@ -36,6 +39,7 @@ from homeassistant.components.recorder.statistics import (
     get_metadata_with_session,
     get_short_term_statistics_run_cache,
     list_statistic_ids,
+    update_statistics_issues,
     validate_statistics,
 )
 from homeassistant.components.recorder.table_managers.statistics_meta import (
@@ -48,6 +52,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
+from homeassistant.util.unit_system import METRIC_SYSTEM
 
 from .common import (
     assert_dict_of_states_equal_without_context_and_last_changed,
@@ -61,6 +66,12 @@ from .common import (
 
 from tests.common import MockPlatform, MockUser, mock_platform
 from tests.typing import RecorderInstanceContextManager, WebSocketGenerator
+
+POWER_SENSOR_KW_ATTRIBUTES = {
+    "device_class": "power",
+    "state_class": "measurement",
+    "unit_of_measurement": "kW",
+}
 
 
 @pytest.fixture
@@ -105,7 +116,13 @@ async def _setup_mock_domain(
 def test_converters_align_with_sensor() -> None:
     """Ensure STATISTIC_UNIT_TO_UNIT_CONVERTER is aligned with UNIT_CONVERTERS."""
     for converter in UNIT_CONVERTERS.values():
-        assert converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+        assert (
+            converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
+            or converter in _SECONDARY_UNIT_CONVERTERS
+        )
+
+    for converter in _SECONDARY_UNIT_CONVERTERS:
+        assert converter not in STATISTIC_UNIT_TO_UNIT_CONVERTER.values()
 
     for converter in STATISTIC_UNIT_TO_UNIT_CONVERTER.values():
         assert converter in UNIT_CONVERTERS.values()
@@ -392,16 +409,17 @@ def mock_sensor_statistics():
         """Generate fake statistics."""
         return {
             "meta": {
-                "has_mean": True,
                 "has_sum": False,
+                "mean_type": StatisticMeanType.ARITHMETIC,
                 "name": None,
                 "statistic_id": entity_id,
+                "unit_class": None,
                 "unit_of_measurement": "dogs",
             },
             "stat": {"start": start},
         }
 
-    def get_fake_stats(_hass, session, start, _end):
+    def get_fake_stats(_hass, session, start, _end, _custom_equivalent_units):
         instance = recorder.get_instance(_hass)
         return statistics.PlatformCompiledStatistics(
             [
@@ -658,8 +676,8 @@ async def test_rename_entity_collision(
 
     # Insert metadata for sensor.test99
     metadata_1 = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "sensor.test99",
@@ -765,8 +783,8 @@ async def test_rename_entity_collision_states_meta_check_disabled(
 
     # Insert metadata for sensor.test99
     metadata_1 = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "sensor.test99",
@@ -778,7 +796,8 @@ async def test_rename_entity_collision_states_meta_check_disabled(
 
     instance = recorder.get_instance(hass)
     # Patch out the safeguard in the states meta manager
-    # so that we hit the filter_unique_constraint_integrity_error safeguard in the statistics
+    # so that we hit the filter_unique_constraint_integrity_error
+    # safeguard in the statistics
     with patch.object(instance.statistics_meta_manager, "get", return_value=None):
         # Rename entity sensor.test1 to sensor.test99
         entity_registry.async_update_entity(
@@ -838,7 +857,25 @@ async def test_statistics_duplicated(
         caplog.clear()
 
 
+# Integration frame mocked because of deprecation warnings about missing
+# unit_class, can be removed in HA Core 2025.11
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
 @pytest.mark.parametrize("last_reset_str", ["2022-01-01T00:00:00+02:00", None])
+@pytest.mark.parametrize(
+    ("external_metadata_extra"),
+    [
+        {},
+        {"unit_class": "energy"},
+    ],
+)
+@pytest.mark.parametrize(
+    ("external_metadata_extra_2"),
+    [
+        {"has_mean": False},
+        {"mean_type": StatisticMeanType.NONE},
+    ],
+)
 @pytest.mark.parametrize(
     ("source", "statistic_id", "import_fn"),
     [
@@ -846,11 +883,13 @@ async def test_statistics_duplicated(
         ("recorder", "sensor.total_energy_import", async_import_statistics),
     ],
 )
+@pytest.mark.usefixtures("recorder_mock")
 async def test_import_statistics(
-    recorder_mock: Recorder,
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     caplog: pytest.LogCaptureFixture,
+    external_metadata_extra: dict[str, str],
+    external_metadata_extra_2: dict[str, Any],
     source,
     statistic_id,
     import_fn,
@@ -881,14 +920,17 @@ async def test_import_statistics(
         "sum": 3,
     }
 
-    external_metadata = {
-        "has_mean": False,
-        "has_sum": True,
-        "name": "Total imported energy",
-        "source": source,
-        "statistic_id": statistic_id,
-        "unit_of_measurement": "kWh",
-    }
+    external_metadata = (
+        {
+            "has_sum": True,
+            "name": "Total imported energy",
+            "source": source,
+            "statistic_id": statistic_id,
+            "unit_of_measurement": "kWh",
+        }
+        | external_metadata_extra
+        | external_metadata_extra_2
+    )
 
     import_fn(hass, external_metadata, (external_statistics1, external_statistics2))
     await async_wait_recording_done(hass)
@@ -938,6 +980,7 @@ async def test_import_statistics(
                 "name": "Total imported energy",
                 "source": source,
                 "statistic_id": statistic_id,
+                "unit_class": "energy",
                 "unit_of_measurement": "kWh",
             },
         )
@@ -1030,6 +1073,7 @@ async def test_import_statistics(
                 "name": "Total imported energy renamed",
                 "source": source,
                 "statistic_id": statistic_id,
+                "unit_class": "energy",
                 "unit_of_measurement": "kWh",
             },
         )
@@ -1113,11 +1157,12 @@ async def test_external_statistics_errors(
     }
 
     _external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1201,11 +1246,12 @@ async def test_import_statistics_errors(
     }
 
     _external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1267,6 +1313,213 @@ async def test_import_statistics_errors(
     assert statistics_during_period(hass, zero, period="hour") == {}
     assert list_statistic_ids(hass) == []
     assert get_metadata(hass, statistic_ids={"sensor.total_energy_import"}) == {}
+
+
+# Integration frame mocked because of deprecation warnings about missing
+# unit_class, can be removed in HA Core 2025.11
+@pytest.mark.parametrize("integration_frame_path", ["custom_components/my_integration"])
+@pytest.mark.usefixtures("mock_integration_frame")
+@pytest.mark.parametrize(
+    (
+        "requested_new_unit",
+        "update_statistics_extra",
+        "new_unit",
+        "new_unit_class",
+        "new_display_unit",
+    ),
+    [
+        ("dogs", {}, "dogs", None, "dogs"),
+        ("dogs", {"new_unit_class": None}, "dogs", None, "dogs"),
+        (None, {}, None, "unitless", None),
+        (None, {"new_unit_class": "unitless"}, None, "unitless", None),
+        ("W", {}, "W", "power", "kW"),
+        ("W", {"new_unit_class": "power"}, "W", "power", "kW"),
+        # Note: Display unit is guessed even if unit_class is None
+        ("W", {"new_unit_class": None}, "W", None, "kW"),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_statistics_metadata(
+    hass: HomeAssistant,
+    requested_new_unit,
+    update_statistics_extra,
+    new_unit,
+    new_unit_class,
+    new_display_unit,
+) -> None:
+    """Test removing statistics."""
+    now = get_start_time(dt_util.utcnow())
+
+    units = METRIC_SYSTEM
+    attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
+    state = 10
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, period="hourly", start=now)
+    await async_recorder_block_till_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "kW",
+            "unit_class": "power",
+        }
+    ]
+
+    async_update_statistics_metadata(
+        hass,
+        "sensor.test",
+        new_unit_of_measurement=requested_new_unit,
+        **update_statistics_extra,
+    )
+    await async_recorder_block_till_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": new_display_unit,
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": new_unit,
+            "unit_class": new_unit_class,
+        }
+    ]
+
+    assert statistics_during_period(
+        hass,
+        now,
+        period="5minute",
+        statistic_ids={"sensor.test"},
+        units={"power": "W"},
+    ) == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).timestamp(),
+                "last_reset": None,
+                "max": 10.0,
+                "mean": 10.0,
+                "min": 10.0,
+                "start": now.timestamp(),
+            }
+        ],
+    }
+
+
+@pytest.mark.parametrize(
+    (
+        "requested_new_unit",
+        "update_statistics_extra",
+        "error_message",
+    ),
+    [
+        ("dogs", {"new_unit_class": "cats"}, "Unsupported unit_class: 'cats'"),
+        (
+            "dogs",
+            {"new_unit_class": "power"},
+            "Unsupported unit_of_measurement 'dogs' for unit_class 'power'",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("recorder_mock")
+async def test_update_statistics_metadata_error(
+    hass: HomeAssistant,
+    requested_new_unit,
+    update_statistics_extra,
+    error_message,
+) -> None:
+    """Test removing statistics."""
+    now = get_start_time(dt_util.utcnow())
+
+    units = METRIC_SYSTEM
+    attributes = POWER_SENSOR_KW_ATTRIBUTES | {"device_class": None}
+    state = 10
+
+    hass.config.units = units
+    await async_setup_component(hass, "sensor", {})
+    await async_recorder_block_till_done(hass)
+    hass.states.async_set(
+        "sensor.test", state, attributes=attributes, timestamp=now.timestamp()
+    )
+    await async_wait_recording_done(hass)
+
+    do_adhoc_statistics(hass, period="hourly", start=now)
+    await async_recorder_block_till_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "kW",
+            "unit_class": "power",
+        }
+    ]
+
+    with pytest.raises(HomeAssistantError, match=error_message):
+        async_update_statistics_metadata(
+            hass,
+            "sensor.test",
+            new_unit_of_measurement=requested_new_unit,
+            **update_statistics_extra,
+        )
+    await async_recorder_block_till_done(hass)
+
+    statistic_ids = await async_list_statistic_ids(hass)
+    assert statistic_ids == [
+        {
+            "statistic_id": "sensor.test",
+            "display_unit_of_measurement": "kW",
+            "has_mean": True,
+            "mean_type": StatisticMeanType.ARITHMETIC,
+            "has_sum": False,
+            "name": None,
+            "source": "recorder",
+            "statistics_unit_of_measurement": "kW",
+            "unit_class": "power",
+        }
+    ]
+
+    assert statistics_during_period(
+        hass,
+        now,
+        period="5minute",
+        statistic_ids={"sensor.test"},
+        units={"power": "W"},
+    ) == {
+        "sensor.test": [
+            {
+                "end": (now + timedelta(minutes=5)).timestamp(),
+                "last_reset": None,
+                "max": 10000.0,
+                "mean": 10000.0,
+                "min": 10000.0,
+                "start": now.timestamp(),
+            }
+        ],
+    }
 
 
 @pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
@@ -1331,11 +1584,12 @@ async def test_daily_statistics_sum(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1512,19 +1766,21 @@ async def test_multiple_daily_statistics_sum(
         },
     )
     external_metadata1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy 1",
         "source": "test",
         "statistic_id": "test:total_energy_import2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy 2",
         "source": "test",
         "statistic_id": "test:total_energy_import1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1710,11 +1966,12 @@ async def test_weekly_statistics_mean(
         },
     )
     external_metadata = {
-        "has_mean": True,
         "has_sum": False,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -1856,11 +2113,12 @@ async def test_weekly_statistics_sum(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -2037,11 +2295,12 @@ async def test_monthly_statistics_sum(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -2212,6 +2471,244 @@ async def test_monthly_statistics_sum(
     assert stats == {}
 
 
+@pytest.mark.usefixtures("multiple_start_time_chunk_sizes")
+@pytest.mark.parametrize("timezone", ["America/Regina", "Europe/Vienna", "UTC"])
+@pytest.mark.freeze_time("2020-01-01 00:00:00+00:00")
+async def test_yearly_statistics_sum(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    timezone,
+) -> None:
+    """Test monthly statistics."""
+    await hass.config.async_set_time_zone(timezone)
+    await async_wait_recording_done(hass)
+    assert "Compiling statistics for" not in caplog.text
+    assert "Statistics already compiled" not in caplog.text
+
+    zero = dt_util.utcnow()
+    period1 = dt_util.as_utc(dt_util.parse_datetime("2020-01-01 00:00:00"))
+    period2 = dt_util.as_utc(dt_util.parse_datetime("2020-12-31 23:00:00"))
+    period3 = dt_util.as_utc(dt_util.parse_datetime("2021-01-01 00:00:00"))
+    period4 = dt_util.as_utc(dt_util.parse_datetime("2021-12-31 23:00:00"))
+    period5 = dt_util.as_utc(dt_util.parse_datetime("2022-01-01 00:00:00"))
+    period6 = dt_util.as_utc(dt_util.parse_datetime("2022-12-31 23:00:00"))
+
+    external_statistics = (
+        {
+            "start": period1,
+            "last_reset": None,
+            "state": 0,
+            "sum": 2,
+        },
+        {
+            "start": period2,
+            "last_reset": None,
+            "state": 1,
+            "sum": 3,
+        },
+        {
+            "start": period3,
+            "last_reset": None,
+            "state": 2,
+            "sum": 4,
+        },
+        {
+            "start": period4,
+            "last_reset": None,
+            "state": 3,
+            "sum": 5,
+        },
+        {
+            "start": period5,
+            "last_reset": None,
+            "state": 4,
+            "sum": 6,
+        },
+        {
+            "start": period6,
+            "last_reset": None,
+            "state": 5,
+            "sum": 7,
+        },
+    )
+    external_metadata = {
+        "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
+        "name": "Total imported energy",
+        "source": "test",
+        "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
+        "unit_of_measurement": "kWh",
+    }
+
+    async_add_external_statistics(hass, external_metadata, external_statistics)
+    await async_wait_recording_done(hass)
+    stats = statistics_during_period(
+        hass, zero, period="year", statistic_ids={"test:total_energy_import"}
+    )
+    yr2020_start = dt_util.as_utc(dt_util.parse_datetime("2020-01-01 00:00:00"))
+    yr2020_end = dt_util.as_utc(dt_util.parse_datetime("2021-01-01 00:00:00"))
+    yr2021_start = dt_util.as_utc(dt_util.parse_datetime("2021-01-01 00:00:00"))
+    yr2021_end = dt_util.as_utc(dt_util.parse_datetime("2022-01-01 00:00:00"))
+    yr2022_start = dt_util.as_utc(dt_util.parse_datetime("2022-01-01 00:00:00"))
+    yr2022_end = dt_util.as_utc(dt_util.parse_datetime("2023-01-01 00:00:00"))
+    expected_stats = {
+        "test:total_energy_import": [
+            {
+                "start": yr2020_start.timestamp(),
+                "end": yr2020_end.timestamp(),
+                "last_reset": None,
+                "state": pytest.approx(1.0),
+                "sum": pytest.approx(3.0),
+            },
+            {
+                "start": yr2021_start.timestamp(),
+                "end": yr2021_end.timestamp(),
+                "last_reset": None,
+                "state": pytest.approx(3.0),
+                "sum": pytest.approx(5.0),
+            },
+            {
+                "start": yr2022_start.timestamp(),
+                "end": yr2022_end.timestamp(),
+                "last_reset": None,
+                "state": 5.0,
+                "sum": 7.0,
+            },
+        ]
+    }
+    assert stats == expected_stats
+
+    # Get change
+    stats = statistics_during_period(
+        hass,
+        start_time=period1,
+        statistic_ids={"test:total_energy_import"},
+        period="year",
+        types={"change"},
+    )
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": yr2020_start.timestamp(),
+                "end": yr2020_end.timestamp(),
+                "change": 3.0,
+            },
+            {
+                "start": yr2021_start.timestamp(),
+                "end": yr2021_end.timestamp(),
+                "change": 2.0,
+            },
+            {
+                "start": yr2022_start.timestamp(),
+                "end": yr2022_end.timestamp(),
+                "change": 2.0,
+            },
+        ]
+    }
+    # Get data with start during the first period
+    stats = statistics_during_period(
+        hass,
+        start_time=period1 + timedelta(days=1),
+        statistic_ids={"test:total_energy_import"},
+        period="year",
+    )
+    assert stats == expected_stats
+
+    # Get data with end during the third period
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        end_time=period6 - timedelta(days=1),
+        statistic_ids={"test:total_energy_import"},
+        period="year",
+    )
+    assert stats == expected_stats
+
+    # Try to get data for entities which do not exist
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids={"not", "the", "same", "test:total_energy_import"},
+        period="year",
+    )
+    assert stats == expected_stats
+
+    # Get only sum
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids={"not", "the", "same", "test:total_energy_import"},
+        period="year",
+        types={"sum"},
+    )
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": yr2020_start.timestamp(),
+                "end": yr2020_end.timestamp(),
+                "sum": pytest.approx(3.0),
+            },
+            {
+                "start": yr2021_start.timestamp(),
+                "end": yr2021_end.timestamp(),
+                "sum": pytest.approx(5.0),
+            },
+            {
+                "start": yr2022_start.timestamp(),
+                "end": yr2022_end.timestamp(),
+                "sum": pytest.approx(7.0),
+            },
+        ]
+    }
+
+    # Get only sum + convert units
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids={"not", "the", "same", "test:total_energy_import"},
+        period="year",
+        types={"sum"},
+        units={"energy": "Wh"},
+    )
+    assert stats == {
+        "test:total_energy_import": [
+            {
+                "start": yr2020_start.timestamp(),
+                "end": yr2020_end.timestamp(),
+                "sum": pytest.approx(3000.0),
+            },
+            {
+                "start": yr2021_start.timestamp(),
+                "end": yr2021_end.timestamp(),
+                "sum": pytest.approx(5000.0),
+            },
+            {
+                "start": yr2022_start.timestamp(),
+                "end": yr2022_end.timestamp(),
+                "sum": pytest.approx(7000.0),
+            },
+        ]
+    }
+
+    # Use 5minute to ensure table switch works
+    stats = statistics_during_period(
+        hass,
+        start_time=zero,
+        statistic_ids=["test:total_energy_import", "with_other"],
+        period="5minute",
+    )
+    assert stats == {}
+
+    # Ensure future date has not data
+    future = dt_util.as_utc(dt_util.parse_datetime("2221-11-01 00:00:00"))
+    stats = statistics_during_period(
+        hass, start_time=future, end_time=future, period="year"
+    )
+    assert stats == {}
+
+
 def test_cache_key_for_generate_statistics_during_period_stmt() -> None:
     """Test cache key for _generate_statistics_during_period_stmt."""
     stmt = _generate_statistics_during_period_stmt(
@@ -2366,11 +2863,12 @@ async def test_change(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -2702,19 +3200,21 @@ async def test_change_multiple(
         },
     )
     external_metadata1 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     async_import_statistics(hass, external_metadata1, external_statistics)
@@ -3091,11 +3591,12 @@ async def test_change_with_none(
         },
     )
     external_metadata = {
-        "has_mean": False,
         "has_sum": True,
+        "mean_type": StatisticMeanType.NONE,
         "name": "Total imported energy",
         "source": "test",
         "statistic_id": "test:total_energy_import",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
 
@@ -3280,6 +3781,9 @@ async def test_recorder_platform_with_statistics(
     def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
         return PlatformCompiledStatistics([], {})
 
+    def _mock_custom_equivalent_units(*args: Any) -> dict[str, dict[str | None, str]]:
+        return {}
+
     def _mock_list_statistic_ids(*args: Any, **kwargs: Any) -> dict:
         return {}
 
@@ -3288,6 +3792,7 @@ async def test_recorder_platform_with_statistics(
 
     recorder_platform = Mock(
         compile_statistics=Mock(wraps=_mock_compile_statistics),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units),
         list_statistic_ids=Mock(wraps=_mock_list_statistic_ids),
         update_statistics_issues=Mock(),
         validate_statistics=Mock(wraps=_mock_validate_statistics),
@@ -3300,6 +3805,7 @@ async def test_recorder_platform_with_statistics(
     assert recorder_data.recorder_platforms == {"some_domain": recorder_platform}
 
     recorder_platform.compile_statistics.assert_not_called()
+    recorder_platform.async_custom_equivalent_units.assert_not_called()
     recorder_platform.list_statistic_ids.assert_not_called()
     recorder_platform.update_statistics_issues.assert_not_called()
     recorder_platform.validate_statistics.assert_not_called()
@@ -3312,15 +3818,17 @@ async def test_recorder_platform_with_statistics(
     await async_wait_recording_done(hass)
 
     recorder_platform.compile_statistics.assert_called_once_with(
-        hass, ANY, zero, zero + timedelta(minutes=5)
+        hass, ANY, zero, zero + timedelta(minutes=5), {}
     )
-    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY)
+    recorder_platform.async_custom_equivalent_units.assert_called_once()
+    recorder_platform.update_statistics_issues.assert_called_once_with(hass, ANY, {})
     recorder_platform.list_statistic_ids.assert_not_called()
     recorder_platform.validate_statistics.assert_not_called()
 
     # Test list statistic IDs
     await async_list_statistic_ids(hass)
     recorder_platform.compile_statistics.assert_called_once()
+    recorder_platform.async_custom_equivalent_units.assert_called_once()
     recorder_platform.list_statistic_ids.assert_called_once_with(
         hass, statistic_ids=None, statistic_type=None
     )
@@ -3335,7 +3843,7 @@ async def test_recorder_platform_with_statistics(
     recorder_platform.compile_statistics.assert_called_once()
     recorder_platform.list_statistic_ids.assert_called_once()
     recorder_platform.update_statistics_issues.assert_called_once()
-    recorder_platform.validate_statistics.assert_called_once_with(hass)
+    recorder_platform.validate_statistics.assert_called_once_with(hass, {})
 
 
 async def test_recorder_platform_without_statistics(
@@ -3424,6 +3932,300 @@ async def test_recorder_platform_with_partial_statistics_support(
 
     for meth in supported_methods:
         getattr(recorder_platform, meth).assert_called_once()
+
+
+async def test_recorder_platforms_with_custom_equivalent_units(
+    hass: HomeAssistant,
+    setup_recorder: None,
+) -> None:
+    """Test recorder platforms providing custom equivalent units are joined."""
+    instance = recorder.get_instance(hass)
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    custom_equivalent_units_recorder_platform_one = {
+        "sensor.test_sensor_1": {"custom_unitA": "unitA"}
+    }
+
+    def _mock_custom_equivalent_units_one(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return custom_equivalent_units_recorder_platform_one
+
+    def _mock_update_statistics_issues(*args: Any) -> None:
+        return
+
+    def _mock_validate_statistics(*args: Any) -> dict:
+        return {}
+
+    recorder_platform_one = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_one),
+        list_statistic_ids=None,
+        update_statistics_issues=Mock(wraps=_mock_update_statistics_issues),
+        validate_statistics=Mock(wraps=_mock_validate_statistics),
+    )
+
+    mock_platform(hass, "some_domain_one.recorder", recorder_platform_one)
+    assert await async_setup_component(hass, "some_domain_one", {})
+
+    custom_equivalent_units_recorder_platform_two = {
+        "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        # None is a valid unit, therefore we allow integrations to
+        # declare it equivalent to any other unit
+        "sensor.test_sensor_3": {None: ""},
+    }
+
+    def _mock_custom_equivalent_units_two(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_two = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_two),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_two.recorder", recorder_platform_two)
+    assert await async_setup_component(hass, "some_domain_two", {})
+
+    # Wait for the recorder platforms to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {
+        "some_domain_one": recorder_platform_one,
+        "some_domain_two": recorder_platform_two,
+    }
+
+    recorder_platform_one.compile_statistics.assert_not_called()
+    recorder_platform_one.async_custom_equivalent_units.assert_not_called()
+    recorder_platform_two.async_custom_equivalent_units.assert_not_called()
+
+    # Test compile statistics
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    expected_custom_equivalent_units = {
+        **custom_equivalent_units_recorder_platform_one,
+        **custom_equivalent_units_recorder_platform_two,
+    }
+
+    recorder_platform_one.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5), expected_custom_equivalent_units
+    )
+    recorder_platform_one.update_statistics_issues.assert_called_once_with(
+        hass, ANY, expected_custom_equivalent_units
+    )
+    recorder_platform_one.async_custom_equivalent_units.assert_called_once()
+    recorder_platform_two.async_custom_equivalent_units.assert_called_once()
+
+    # Test update statistics issues
+    recorder_platform_one.update_statistics_issues.reset_mock()
+
+    await instance.async_add_executor_job(update_statistics_issues, hass)
+
+    recorder_platform_one.update_statistics_issues.assert_called_once_with(
+        hass, ANY, expected_custom_equivalent_units
+    )
+    assert recorder_platform_one.async_custom_equivalent_units.call_count == 2
+    assert recorder_platform_two.async_custom_equivalent_units.call_count == 2
+
+    # Test validate statistics
+    await instance.async_add_executor_job(validate_statistics, hass)
+
+    recorder_platform_one.validate_statistics.assert_called_once_with(
+        hass, expected_custom_equivalent_units
+    )
+    assert recorder_platform_one.async_custom_equivalent_units.call_count == 3
+    assert recorder_platform_two.async_custom_equivalent_units.call_count == 3
+
+
+async def test_recorder_platforms_with_custom_equivalent_units_continues_on_exception(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test custom equivalent units are skipped on exception."""
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_custom_equivalent_units_one(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        raise Exception("test error")  # noqa: TRY002
+
+    recorder_platform_one = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_one),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_one.recorder", recorder_platform_one)
+    assert await async_setup_component(hass, "some_domain_one", {})
+
+    custom_equivalent_units_recorder_platform_two = {
+        "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        # None is a valid unit, therefore we allow integrations to
+        # declare it equivalent to any other unit
+        "sensor.test_sensor_3": {None: ""},
+    }
+
+    def _mock_custom_equivalent_units_two(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_two = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_two),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_two.recorder", recorder_platform_two)
+    assert await async_setup_component(hass, "some_domain_two", {})
+
+    # Wait for the recorder platforms to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {
+        "some_domain_one": recorder_platform_one,
+        "some_domain_two": recorder_platform_two,
+    }
+
+    recorder_platform_one.compile_statistics.assert_not_called()
+    recorder_platform_one.async_custom_equivalent_units.assert_not_called()
+    recorder_platform_two.async_custom_equivalent_units.assert_not_called()
+
+    # Test compile statistics
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    expected_custom_equivalent_units = custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_one.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5), expected_custom_equivalent_units
+    )
+    recorder_platform_one.async_custom_equivalent_units.assert_called_once()
+    recorder_platform_two.async_custom_equivalent_units.assert_called_once()
+
+    assert (
+        "Error calling async_custom_equivalent_units for recorder"
+        " platform domain some_domain_one: test error" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    "invalid_custom_equivalent_units",
+    [
+        None,
+        {},
+        123,
+        {"invalid": "dict"},
+        {2: "dict"},
+        {"invalid": {"dict": 3}},
+        {"invalid": {"dict": b"four"}},
+        {"invalid": {"dict": {"five": "5"}}},
+    ],
+)
+async def test_recorder_platforms_custom_equivalent_units_on_invalid_types(
+    hass: HomeAssistant,
+    setup_recorder: None,
+    caplog: pytest.LogCaptureFixture,
+    invalid_custom_equivalent_units: Any,
+) -> None:
+    """Test custom equivalent units are skipped on invalid types."""
+    recorder_data = hass.data["recorder"]
+    assert not recorder_data.recorder_platforms
+
+    def _mock_compile_statistics(*args: Any) -> PlatformCompiledStatistics:
+        return PlatformCompiledStatistics([], {})
+
+    def _mock_custom_equivalent_units_one(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return invalid_custom_equivalent_units
+
+    recorder_platform_one = Mock(
+        compile_statistics=Mock(wraps=_mock_compile_statistics),
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_one),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_one.recorder", recorder_platform_one)
+    assert await async_setup_component(hass, "some_domain_one", {})
+
+    custom_equivalent_units_recorder_platform_two = {
+        "sensor.test_sensor_2": {"custom_unitB": "unitB"},
+        # None is a valid unit, therefore we allow integrations to
+        # declare it equivalent to any other unit
+        "sensor.test_sensor_3": {None: ""},
+    }
+
+    def _mock_custom_equivalent_units_two(
+        *args: Any,
+    ) -> dict[str, dict[str | None, str]]:
+        return custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_two = Mock(
+        compile_statistics=None,
+        async_custom_equivalent_units=Mock(wraps=_mock_custom_equivalent_units_two),
+        list_statistic_ids=None,
+        update_statistics_issues=None,
+        validate_statistics=None,
+    )
+
+    mock_platform(hass, "some_domain_two.recorder", recorder_platform_two)
+    assert await async_setup_component(hass, "some_domain_two", {})
+
+    # Wait for the recorder platforms to be added
+    await async_recorder_block_till_done(hass)
+    assert recorder_data.recorder_platforms == {
+        "some_domain_one": recorder_platform_one,
+        "some_domain_two": recorder_platform_two,
+    }
+
+    recorder_platform_one.compile_statistics.assert_not_called()
+    recorder_platform_one.async_custom_equivalent_units.assert_not_called()
+    recorder_platform_two.async_custom_equivalent_units.assert_not_called()
+
+    # Test compile statistics
+    zero = get_start_time(dt_util.utcnow()).replace(minute=50) + timedelta(hours=1)
+    do_adhoc_statistics(hass, start=zero)
+    await async_wait_recording_done(hass)
+
+    expected_custom_equivalent_units = custom_equivalent_units_recorder_platform_two
+
+    recorder_platform_one.compile_statistics.assert_called_once_with(
+        hass, ANY, zero, zero + timedelta(minutes=5), expected_custom_equivalent_units
+    )
+    recorder_platform_one.async_custom_equivalent_units.assert_called_once()
+    recorder_platform_two.async_custom_equivalent_units.assert_called_once()
+
+    # If the dict is None or empty it will be skipped before validation
+    if invalid_custom_equivalent_units:
+        assert (
+            "Error processing result of"
+            " async_custom_equivalent_units for recorder"
+            " platform domain some_domain_one" in caplog.text
+        )
+
+    # Reset domains for which warnings were shown
+    statistics._warn_custom_units_error.clear()
 
 
 @pytest.mark.parametrize(
@@ -3645,19 +4447,21 @@ async def test_get_statistics_service(
         },
     )
     external_metadata1 = {
-        "has_mean": True,
         "has_sum": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import1",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     external_metadata2 = {
-        "has_mean": True,
         "has_sum": True,
+        "mean_type": StatisticMeanType.ARITHMETIC,
         "name": "Total imported energy",
         "source": "recorder",
         "statistic_id": "sensor.total_energy_import2",
+        "unit_class": "energy",
         "unit_of_measurement": "kWh",
     }
     async_import_statistics(hass, external_metadata1, external_statistics)
@@ -3667,13 +4471,13 @@ async def test_get_statistics_service(
     await async_recorder_block_till_done(hass)
 
     result = await hass.services.async_call(
-        "recorder", "get_statistics", service_args, return_response=True, blocking=True
+        DOMAIN, "get_statistics", service_args, return_response=True, blocking=True
     )
     assert result == expected_result
 
     with pytest.raises(exceptions.Unauthorized):
         result = await hass.services.async_call(
-            "recorder",
+            DOMAIN,
             "get_statistics",
             service_args,
             return_response=True,
@@ -3734,9 +4538,30 @@ async def test_get_statistics_service_missing_mandatory_keys(
         match=re.escape(f"required key not provided @ data['{missing_key}']"),
     ):
         await hass.services.async_call(
-            "recorder",
+            DOMAIN,
             "get_statistics",
             service_args,
             return_response=True,
             blocking=True,
+        )
+
+
+# The STATISTIC_UNIT_TO_UNIT_CONVERTER keys are sorted to ensure that pytest runs are
+# consistent and avoid `different tests were collected between gw0 and gw1`
+@pytest.mark.parametrize(
+    "uom", sorted(STATISTIC_UNIT_TO_UNIT_CONVERTER, key=lambda x: (x is None, x))
+)
+def test_STATISTIC_UNIT_TO_UNIT_CONVERTER(uom: str) -> None:
+    """Ensure unit does not belong to multiple converters."""
+    unit_converter = STATISTIC_UNIT_TO_UNIT_CONVERTER[uom]
+    if other := next(
+        (
+            c
+            for c in _PRIMARY_UNIT_CONVERTERS
+            if unit_converter is not c and uom in c.VALID_UNITS
+        ),
+        None,
+    ):
+        pytest.fail(
+            f"{uom} is present in both {other.__name__} and {unit_converter.__name__}"
         )

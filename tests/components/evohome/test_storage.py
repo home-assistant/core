@@ -1,7 +1,5 @@
 """The tests for evohome storage load & save."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 from typing import Any, Final, NotRequired, TypedDict
 
@@ -139,7 +137,7 @@ async def test_auth_tokens_past(
 ) -> None:
     """Test credentials manager when cache contains expired data for this user."""
 
-    dt_dtm, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
+    _dt_dtm, dt_str = dt_pair(dt_util.now() - timedelta(hours=1))
 
     # make this access token have expired in the past...
     test_data = TEST_STORAGE_DATA[idx].copy()  # shallow copy is OK here

@@ -7,7 +7,6 @@ from unittest.mock import AsyncMock, patch
 from uuid import UUID
 
 from aiohttp import ClientError
-from freezegun.api import freeze_time
 from habiticalib import (
     Checklist,
     Direction,
@@ -28,6 +27,7 @@ from homeassistant.components.habitica.const import (
     ATTR_ALIAS,
     ATTR_CLEAR_DATE,
     ATTR_CLEAR_REMINDER,
+    ATTR_COLLAPSE_CHECKLIST,
     ATTR_CONFIG_ENTRY,
     ATTR_COST,
     ATTR_COUNTER_DOWN,
@@ -260,7 +260,8 @@ async def test_cast_skill(
             },
             ERROR_NOT_FOUND,
             ServiceValidationError,
-            "Unable to cast skill, your character does not have the skill or spell smash",
+            "Unable to cast skill, your character does not have"
+            " the skill or spell smash",
         ),
         (
             {
@@ -269,7 +270,8 @@ async def test_cast_skill(
             },
             ERROR_NOT_AUTHORIZED,
             ServiceValidationError,
-            "Unable to cast skill, not enough mana. Your character has 50 MP, but the skill costs 10 MP",
+            "Unable to cast skill, not enough mana. Your character"
+            " has 50 MP, but the skill costs 10 MP",
         ),
         (
             {
@@ -322,10 +324,7 @@ async def test_get_config_entry(
 ) -> None:
     """Test Habitica config entry exceptions."""
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="The selected character is not configured in Home Assistant",
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CAST_SKILL,
@@ -337,13 +336,11 @@ async def test_get_config_entry(
             return_response=True,
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_found"
 
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
-    with pytest.raises(
-        ServiceValidationError,
-        match="The selected character is currently not loaded or disabled in Home Assistant",
-    ):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CAST_SKILL,
@@ -355,6 +352,7 @@ async def test_get_config_entry(
             return_response=True,
             blocking=True,
         )
+    assert err.value.translation_key == "service_config_entry_not_loaded"
 
 
 @pytest.mark.parametrize(
@@ -407,7 +405,8 @@ async def test_handle_quests(
         (
             ERROR_NOT_AUTHORIZED,
             ServiceValidationError,
-            "Action not allowed, only quest leader or group leader can perform this action",
+            "Action not allowed, only quest leader or group leader"
+            " can perform this action",
         ),
         (
             ERROR_BAD_REQUEST,
@@ -595,7 +594,8 @@ async def test_score_task(
             },
             ERROR_NOT_AUTHORIZED,
             HomeAssistantError,
-            "Unable to buy reward, not enough gold. Your character has 137.63 GP, but the reward costs 10.00 GP",
+            "Unable to buy reward, not enough gold. Your character"
+            " has 137.63 GP, but the reward costs 10.00 GP",
         ),
     ],
 )
@@ -780,7 +780,8 @@ async def test_transformation(
             ERROR_NOT_FOUND,
             None,
             ServiceValidationError,
-            "Unable to find target, you are currently not in a party. You can only target yourself",
+            "Unable to find target, you are currently not in a"
+            " party. You can only target yourself",
         ),
         (
             {
@@ -1057,7 +1058,10 @@ async def test_task_not_found(
 
     with pytest.raises(
         ServiceValidationError,
-        match="Unable to complete action, could not find the task '7f902bbc-eb3d-4a8f-82cf-4e2025d69af1'",
+        match=(
+            "Unable to complete action, could not find the task"
+            " '7f902bbc-eb3d-4a8f-82cf-4e2025d69af1'"
+        ),
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -1498,6 +1502,18 @@ async def test_create_habit(
             },
             Task(alias="ALIAS"),
         ),
+        (
+            {
+                ATTR_COLLAPSE_CHECKLIST: "collapsed",
+            },
+            Task(collapseChecklist=True),
+        ),
+        (
+            {
+                ATTR_COLLAPSE_CHECKLIST: "expanded",
+            },
+            Task(collapseChecklist=False),
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
@@ -1595,6 +1611,20 @@ async def test_update_todo(
                 ATTR_ALIAS: "ALIAS",
             },
             Task(type=TaskType.TODO, text="TITLE", alias="ALIAS"),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_COLLAPSE_CHECKLIST: "collapsed",
+            },
+            Task(type=TaskType.TODO, text="TITLE", collapseChecklist=True),
+        ),
+        (
+            {
+                ATTR_NAME: "TITLE",
+                ATTR_COLLAPSE_CHECKLIST: "expanded",
+            },
+            Task(type=TaskType.TODO, text="TITLE", collapseChecklist=False),
         ),
     ],
 )
@@ -1746,6 +1776,12 @@ async def test_create_todo(
         ),
         (
             {
+                ATTR_INTERVAL: 0,
+            },
+            Task(everyX=0),
+        ),
+        (
+            {
                 ATTR_FREQUENCY: "weekly",
                 ATTR_REPEAT: ["m", "t", "w", "th"],
             },
@@ -1818,7 +1854,7 @@ async def test_create_todo(
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
-@freeze_time("2025-02-25T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-02-25T22:00:00.000Z")
 async def test_update_daily(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -1996,7 +2032,7 @@ async def test_update_daily(
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
-@freeze_time("2025-02-25T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-02-25T22:00:00.000Z")
 async def test_create_daily(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -2037,7 +2073,7 @@ async def test_create_daily(
     ],
 )
 @pytest.mark.usefixtures("mock_uuid4")
-@freeze_time("2025-02-25T22:00:00.000Z")
+@pytest.mark.freeze_time("2025-02-25T22:00:00.000Z")
 async def test_update_daily_service_validation_errors(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

@@ -1,6 +1,6 @@
 """Test Ecovacs config flow."""
 
-from collections.abc import Awaitable, Callable
+from collections.abc import Callable
 from dataclasses import dataclass, field
 import ssl
 from typing import Any
@@ -51,26 +51,6 @@ async def _test_user_flow(
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "auth"
-    assert not result["errors"]
-
-    return await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        user_input=user_input.auth,
-    )
-
-
-async def _test_user_flow_show_advanced_options(
-    hass: HomeAssistant,
-    user_input: _TestFnUserInput,
-) -> dict[str, Any]:
-    """Test config flow."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_USER, "show_advanced_options": True},
-    )
-
-    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert not result["errors"]
 
@@ -90,37 +70,29 @@ async def _test_user_flow_show_advanced_options(
 
 
 @pytest.mark.parametrize(
-    ("test_fn", "test_fn_user_input", "entry_data"),
+    ("test_fn_user_input", "entry_data"),
     [
         (
-            _test_user_flow_show_advanced_options,
             _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
             VALID_ENTRY_DATA_CLOUD,
         ),
         (
-            _test_user_flow_show_advanced_options,
             _TestFnUserInput(VALID_ENTRY_DATA_SELF_HOSTED, _USER_STEP_SELF_HOSTED),
             VALID_ENTRY_DATA_SELF_HOSTED,
         ),
-        (
-            _test_user_flow,
-            _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
-            VALID_ENTRY_DATA_CLOUD,
-        ),
     ],
-    ids=["advanced_cloud", "advanced_self_hosted", "cloud"],
+    ids=["cloud", "self_hosted"],
 )
 async def test_user_flow(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,
     mock_authenticator_authenticate: AsyncMock,
     mock_mqtt_client: Mock,
-    test_fn: Callable[[HomeAssistant, _TestFnUserInput], Awaitable[dict[str, Any]]],
     test_fn_user_input: _TestFnUserInput,
     entry_data: dict[str, Any],
 ) -> None:
     """Test the user config flow."""
-    result = await test_fn(hass, test_fn_user_input)
+    result = await _test_user_flow(hass, test_fn_user_input)
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == entry_data[CONF_USERNAME]
     assert result["data"] == entry_data
@@ -156,25 +128,18 @@ def _cannot_connect_error(user_input: dict[str, Any]) -> str:
     ids=["cannot_connect", "invalid_auth", "unknown"],
 )
 @pytest.mark.parametrize(
-    ("test_fn", "test_fn_user_input", "entry_data"),
+    ("test_fn_user_input", "entry_data"),
     [
         (
-            _test_user_flow_show_advanced_options,
             _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
             VALID_ENTRY_DATA_CLOUD,
         ),
         (
-            _test_user_flow_show_advanced_options,
             _TestFnUserInput(VALID_ENTRY_DATA_SELF_HOSTED, _USER_STEP_SELF_HOSTED),
             VALID_ENTRY_DATA_SELF_HOSTED_WITH_VALIDATE_CERT,
         ),
-        (
-            _test_user_flow,
-            _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
-            VALID_ENTRY_DATA_CLOUD,
-        ),
     ],
-    ids=["advanced_cloud", "advanced_self_hosted", "cloud"],
+    ids=["cloud", "self_hosted"],
 )
 async def test_user_flow_raise_error(
     hass: HomeAssistant,
@@ -185,7 +150,6 @@ async def test_user_flow_raise_error(
     reason_rest: str,
     side_effect_mqtt: Exception,
     errors_mqtt: Callable[[dict[str, Any]], str],
-    test_fn: Callable[[HomeAssistant, _TestFnUserInput], Awaitable[dict[str, Any]]],
     test_fn_user_input: _TestFnUserInput,
     entry_data: dict[str, Any],
 ) -> None:
@@ -194,7 +158,7 @@ async def test_user_flow_raise_error(
 
     # Authenticator raises error
     mock_authenticator_authenticate.side_effect = side_effect_rest
-    result = await test_fn(hass, test_fn_user_input)
+    result = await _test_user_flow(hass, test_fn_user_input)
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"] == {"base": reason_rest}
@@ -240,7 +204,7 @@ async def test_user_flow_self_hosted_error(
 ) -> None:
     """Test handling selfhosted errors and custom ssl context."""
 
-    result = await _test_user_flow_show_advanced_options(
+    result = await _test_user_flow(
         hass,
         _TestFnUserInput(
             VALID_ENTRY_DATA_SELF_HOSTED
@@ -289,32 +253,21 @@ async def test_user_flow_self_hosted_error(
 
 
 @pytest.mark.parametrize(
-    ("test_fn", "test_fn_user_input"),
+    ("test_fn_user_input"),
     [
-        (
-            _test_user_flow_show_advanced_options,
-            _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
-        ),
-        (
-            _test_user_flow_show_advanced_options,
-            _TestFnUserInput(VALID_ENTRY_DATA_SELF_HOSTED, _USER_STEP_SELF_HOSTED),
-        ),
-        (
-            _test_user_flow,
-            _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
-        ),
+        _TestFnUserInput(VALID_ENTRY_DATA_CLOUD),
+        _TestFnUserInput(VALID_ENTRY_DATA_SELF_HOSTED, _USER_STEP_SELF_HOSTED),
     ],
-    ids=["advanced_cloud", "advanced_self_hosted", "cloud"],
+    ids=["cloud", "self_hosted"],
 )
 async def test_already_exists(
     hass: HomeAssistant,
-    test_fn: Callable[[HomeAssistant, _TestFnUserInput], Awaitable[dict[str, Any]]],
     test_fn_user_input: _TestFnUserInput,
 ) -> None:
     """Test we don't allow duplicated config entries."""
     MockConfigEntry(domain=DOMAIN, data=test_fn_user_input.auth).add_to_hass(hass)
 
-    result = await test_fn(
+    result = await _test_user_flow(
         hass,
         test_fn_user_input,
     )

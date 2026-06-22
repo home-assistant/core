@@ -1,6 +1,5 @@
 """Config flow to configure Met component."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-config-flow-name-field  # Name field is no longer allowed in config flow schemas
 
 from typing import Any
 
@@ -10,7 +9,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import (
     CONF_ELEVATION,
@@ -54,7 +53,8 @@ def _get_data_schema(
     hass: HomeAssistant, config_entry: ConfigEntry | None = None
 ) -> vol.Schema:
     """Get a schema with default values."""
-    # If tracking home or no config entry is passed in, default value come from Home location
+    # If tracking home or no config entry is passed in,
+    # default value come from Home location
     if config_entry is None or config_entry.data.get(CONF_TRACK_HOME, False):
         return vol.Schema(
             {
@@ -147,7 +147,7 @@ class MetConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return MetOptionsFlowHandler()
 
 
-class MetOptionsFlowHandler(OptionsFlow):
+class MetOptionsFlowHandler(OptionsFlowWithReload):
     """Options flow for Met component."""
 
     async def async_step_init(

@@ -1,56 +1,53 @@
 """Services for the Blink integration."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_PIN
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
+from homeassistant.const import CONF_FILE_PATH, CONF_FILENAME
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import config_validation as cv, service
 
-from .const import ATTR_CONFIG_ENTRY_ID, DOMAIN, SERVICE_SEND_PIN
-from .coordinator import BlinkConfigEntry
+from .const import DOMAIN
 
-SERVICE_SEND_PIN_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_CONFIG_ENTRY_ID): vol.All(cv.ensure_list, [cv.string]),
-        vol.Optional(CONF_PIN): cv.string,
-    }
-)
-
-
-async def _send_pin(call: ServiceCall) -> None:
-    """Call blink to send new pin."""
-    config_entry: BlinkConfigEntry | None
-    for entry_id in call.data[ATTR_CONFIG_ENTRY_ID]:
-        if not (config_entry := call.hass.config_entries.async_get_entry(entry_id)):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="integration_not_found",
-                translation_placeholders={"target": DOMAIN},
-            )
-        if config_entry.state != ConfigEntryState.LOADED:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="not_loaded",
-                translation_placeholders={"target": config_entry.title},
-            )
-        coordinator = config_entry.runtime_data
-        await coordinator.api.auth.send_auth_key(
-            coordinator.api,
-            call.data[CONF_PIN],
-        )
+SERVICE_RECORD = "record"
+SERVICE_TRIGGER = "trigger_camera"
+SERVICE_SAVE_VIDEO = "save_video"
+SERVICE_SAVE_RECENT_CLIPS = "save_recent_clips"
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the Blink integration."""
 
-    hass.services.async_register(
+    service.async_register_platform_entity_service(
+        hass,
         DOMAIN,
-        SERVICE_SEND_PIN,
-        _send_pin,
-        schema=SERVICE_SEND_PIN_SCHEMA,
+        SERVICE_RECORD,
+        entity_domain=CAMERA_DOMAIN,
+        schema=None,
+        func="record",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_TRIGGER,
+        entity_domain=CAMERA_DOMAIN,
+        schema=None,
+        func="trigger_camera",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SAVE_RECENT_CLIPS,
+        entity_domain=CAMERA_DOMAIN,
+        schema={vol.Required(CONF_FILE_PATH): cv.string},
+        func="save_recent_clips",
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SAVE_VIDEO,
+        entity_domain=CAMERA_DOMAIN,
+        schema={vol.Required(CONF_FILENAME): cv.string},
+        func="save_video",
     )

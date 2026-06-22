@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for the Discovergy integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from pydiscovergy import Discovergy
 from pydiscovergy.error import DiscovergyClientError, HTTPError, InvalidLogin
@@ -13,6 +12,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -43,6 +44,7 @@ class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
             update_interval=timedelta(seconds=30),
         )
 
+    @override
     async def _async_update_data(self) -> Reading:
         """Get last reading for meter."""
         try:
@@ -51,7 +53,12 @@ class DiscovergyUpdateCoordinator(DataUpdateCoordinator[Reading]):
             )
         except InvalidLogin as err:
             raise ConfigEntryAuthFailed(
-                "Auth expired while fetching last reading"
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
             ) from err
         except (HTTPError, DiscovergyClientError) as err:
-            raise UpdateFailed(f"Error while fetching last reading: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="reading_update_failed",
+                translation_placeholders={"meter_id": self.meter.meter_id},
+            ) from err

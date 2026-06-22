@@ -1,7 +1,5 @@
 """Support for LaCrosse sensor components."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
 from typing import Any
@@ -152,7 +150,7 @@ class LaCrosseSensor(SensorEntity):
         self._attr_name = name
 
         lacrosse.register_callback(
-            int(self._config["id"]), self._callback_lacrosse, None
+            int(self._config[CONF_ID]), self._callback_lacrosse, None
         )
 
     @property

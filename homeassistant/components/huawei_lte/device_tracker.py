@@ -1,29 +1,23 @@
 """Support for device tracking of Huawei LTE routers."""
 
-from __future__ import annotations
-
 import logging
-import re
-from typing import Any, cast
-
-from stringcase import snakecase
+from typing import Any, cast, override
 
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ScannerEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import snakecase
 
-from . import Router
+from . import HuaweiLteConfigEntry, Router
 from .const import (
     CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_TRACK_WIRED_CLIENTS,
-    DOMAIN,
     KEY_LAN_HOST_INFO,
     KEY_WLAN_HOST_LIST,
     UPDATE_SIGNAL,
@@ -52,7 +46,7 @@ def _get_hosts(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: HuaweiLteConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up from config entry."""
@@ -60,7 +54,7 @@ async def async_setup_entry(
     # Grab hosts list once to examine whether the initial fetch has got some data for
     # us, i.e. if wlan host list is supported. Only set up a subscription and proceed
     # with adding and tracking entities if it is.
-    router = hass.data[DOMAIN].routers[config_entry.entry_id]
+    router = config_entry.runtime_data
     if (hosts := _get_hosts(router, True)) is None:
         return
 
@@ -121,7 +115,8 @@ def _is_connected(host: _HostType | None) -> bool:
 
 def _is_us(host: _HostType) -> bool:
     """Try to determine if the host entry is us, the HA instance."""
-    # LAN host info entries have an "isLocalDevice" property, "1" / "0"; WLAN host list ones don't.
+    # LAN host info entries have an "isLocalDevice" property,
+    # "1" / "0"; WLAN host list ones don't.
     return cast(str, host.get("isLocalDevice", "0")) == "1"
 
 
@@ -156,22 +151,6 @@ def async_add_new_entities(
     async_add_entities(new_entities, True)
 
 
-def _better_snakecase(text: str) -> str:
-    # Awaiting https://github.com/okunishinishi/python-stringcase/pull/18
-    if text == text.upper():
-        # All uppercase to all lowercase to get http for HTTP, not h_t_t_p
-        text = text.lower()
-    else:
-        # Three or more consecutive uppercase with middle part lowercased
-        # to get http_response for HTTPResponse, not h_t_t_p_response
-        text = re.sub(
-            r"([A-Z])([A-Z]+)([A-Z](?:[^A-Z]|$))",
-            lambda match: f"{match.group(1)}{match.group(2).lower()}{match.group(3)}",
-            text,
-        )
-    return cast(str, snakecase(text))
-
-
 class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
     """Huawei LTE router scanner entity."""
 
@@ -186,39 +165,47 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         self._mac_address = mac_address
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the entity."""
         return self.hostname or self.mac_address
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         return self.mac_address
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._ip_address
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._mac_address
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         return self._hostname
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Get whether the entity is connected."""
         return self._is_connected
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Get additional attributes related to entity state."""
         return self._extra_state_attributes
 
+    @override
     async def async_update(self) -> None:
         """Update state."""
         if (hosts := _get_hosts(self.router)) is None:
@@ -231,11 +218,12 @@ class HuaweiLteScannerEntity(HuaweiLteBaseEntity, ScannerEntity):
         self._is_connected = _is_connected(host)
         if host is not None:
             # IpAddress can contain multiple semicolon separated addresses.
-            # Pick one for model sanity; e.g. the dhcp component to which it is fed, parses and expects to see just one.
+            # Pick one for model sanity; e.g. the dhcp component
+            # to which it is fed, parses and expects to see just one.
             self._ip_address = (host.get("IpAddress") or "").split(";", 2)[0] or None
             self._hostname = host.get("HostName")
             self._extra_state_attributes = {
-                _better_snakecase(k): v
+                snakecase(k): v
                 for k, v in host.items()
                 if k
                 in {

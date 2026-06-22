@@ -1,6 +1,7 @@
 """Tests for the Ollama integration."""
 
 from collections.abc import AsyncGenerator
+import datetime
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -23,6 +24,10 @@ from homeassistant.helpers import (
 )
 
 from tests.common import MockConfigEntry
+from tests.components.conversation import (
+    MockChatLog,
+    mock_chat_log,  # noqa: F401
+)
 
 
 @pytest.fixture(autouse=True)
@@ -79,7 +84,7 @@ async def test_chat(
             Message(role="user", content="test message"),
         ]
 
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
@@ -95,7 +100,10 @@ async def test_chat(
     ]
     # AGENT_DETAIL event contains the raw prompt passed to the model
     detail_event = trace_events[1]
-    assert "Current time is" in detail_event["data"]["messages"][0]["content"]
+    assert (
+        "You are a voice assistant for Home Assistant."
+        in detail_event["data"]["messages"][0]["content"]
+    )
 
 
 async def test_chat_stream(
@@ -139,10 +147,74 @@ async def test_chat_stream(
             Message(role="user", content="test message"),
         ]
 
-        assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
             result
         )
         assert result.response.speech["plain"]["speech"] == "test response"
+
+
+async def test_thinking_content(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+) -> None:
+    """Test that thinking content is retained in multi-turn conversation."""
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={
+            **subentry.data,
+            ollama.CONF_THINK: True,
+        },
+    )
+
+    conversation_id = "conversation_id_1234"
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=stream_generator(
+            {
+                "message": {
+                    "role": "assistant",
+                    "content": "test response",
+                    "thinking": "test thinking",
+                },
+                "done": True,
+                "done_reason": "stop",
+            },
+        ),
+    ) as mock_chat:
+        await conversation.async_converse(
+            hass,
+            "test message",
+            conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+        await conversation.async_converse(
+            hass,
+            "test message 2",
+            conversation_id,
+            Context(),
+            agent_id=mock_config_entry.entry_id,
+        )
+
+        assert mock_chat.call_count == 2
+        assert mock_chat.call_args.kwargs["messages"][1:] == [
+            Message(role="user", content="test message"),
+            Message(
+                role="assistant",
+                content="test response",
+                thinking="test thinking",
+            ),
+            Message(role="user", content="test message 2"),
+        ]
 
 
 async def test_template_variables(
@@ -182,7 +254,7 @@ async def test_template_variables(
             hass, "hello", None, context, agent_id=mock_config_entry.entry_id
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE, (
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
         result
     )
 
@@ -209,6 +281,14 @@ async def test_template_variables(
         (
             {"domain": "['light']"},
             {"domain": "['light']"},  # Preserve invalid json that can't be parsed
+        ),
+        (
+            {"position": 0},
+            {"position": 0},  # Preserve 0 as a valid value
+        ),
+        (
+            {"enabled": False},
+            {"enabled": False},  # Preserve False as a valid value
         ),
     ],
 )
@@ -277,7 +357,7 @@ async def test_function_call(
         )
 
     assert mock_chat.call_count == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "I have successfully called the function"
@@ -361,7 +441,7 @@ async def test_function_exception(
         )
 
     assert mock_chat.call_count == 2
-    assert result.response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert (
         result.response.speech["plain"]["speech"]
         == "There was an error calling the function"
@@ -381,6 +461,108 @@ async def test_function_exception(
             device_id=None,
         ),
     )
+
+
+async def test_history_conversion(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component,
+    mock_chat_log: MockChatLog,  # noqa: F811
+) -> None:
+    """Test that the pre-existing chat_log history is handled properly."""
+
+    agent_id = "conversation.ollama_conversation"
+
+    # Add some pre-existing content from conversation.default_agent
+    mock_chat_log.async_add_user_content(
+        conversation.UserContent(content="What time is it?")
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id=agent_id,
+            tool_calls=[
+                llm.ToolInput(
+                    tool_name="HassGetCurrentTime",
+                    tool_args={},
+                    id="01KGW7TFC1VVVK7ANHVMDA4DJ6",
+                    external=True,
+                )
+            ],
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.ToolResultContent(
+            agent_id=agent_id,
+            tool_call_id="01KGW7TFC1VVVK7ANHVMDA4DJ6",
+            tool_name="HassGetCurrentTime",
+            tool_result={
+                "speech": {"plain": {"speech": "4:24 PM", "extra_data": None}},
+                "response_type": "action_done",
+                "speech_slots": {"time": datetime.time(16, 24, 17, 813343)},
+                "data": {"success": [], "failed": []},
+            },
+        )
+    )
+    mock_chat_log.async_add_assistant_content_without_tools(
+        conversation.AssistantContent(
+            agent_id=agent_id,
+            content="4:24 PM",
+        )
+    )
+
+    entry = MockConfigEntry()
+    entry.add_to_hass(hass)
+
+    with patch(
+        "ollama.AsyncClient.chat",
+        return_value=stream_generator(
+            {"message": {"role": "assistant", "content": "test response"}}
+        ),
+    ) as mock_chat:
+        result = await conversation.async_converse(
+            hass,
+            "test message",
+            mock_chat_log.conversation_id,
+            Context(),
+            agent_id=agent_id,
+        )
+
+        assert mock_chat.call_count == 1
+        args = mock_chat.call_args.kwargs
+        prompt = args["messages"][0]["content"]
+
+        assert args["model"] == "test_model:latest"
+        assert args["messages"] == [
+            Message(role="system", content=prompt),
+            Message(role="user", content="What time is it?"),
+            Message(
+                role="assistant",
+                tool_calls=[
+                    Message.ToolCall(
+                        function=Message.ToolCall.Function(
+                            name="HassGetCurrentTime", arguments={}
+                        )
+                    )
+                ],
+            ),
+            Message(
+                role="tool",
+                content=(
+                    '{"speech":{"plain":{"speech":"4:24 PM",'
+                    '"extra_data":null}},'
+                    '"response_type":"action_done",'
+                    '"speech_slots":{"time":"16:24:17.813343"},'
+                    '"data":{"success":[],"failed":[]}}'
+                ),
+            ),
+            Message(role="assistant", content="4:24 PM"),
+            Message(role="user", content="test message"),
+        ]
+
+        assert result.response.response_type is intent.IntentResponseType.ACTION_DONE, (
+            result
+        )
+        assert result.response.speech["plain"]["speech"] == "test response"
 
 
 async def test_unknown_hass_api(
@@ -442,7 +624,7 @@ async def test_message_history_trimming(
                 agent_id=mock_config_entry.entry_id,
             )
             assert (
-                result.response.response_type == intent.IntentResponseType.ACTION_DONE
+                result.response.response_type is intent.IntentResponseType.ACTION_DONE
             ), result
 
         assert mock_chat.call_count == 5
@@ -543,7 +725,7 @@ async def test_message_history_unlimited(
                 agent_id=mock_config_entry.entry_id,
             )
             assert (
-                result.response.response_type == intent.IntentResponseType.ACTION_DONE
+                result.response.response_type is intent.IntentResponseType.ACTION_DONE
             ), result
 
         args = mock_chat.call_args_list
@@ -568,7 +750,7 @@ async def test_error_handling(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
 
 
@@ -594,7 +776,7 @@ async def test_template_error(
             hass, "hello", None, Context(), agent_id=mock_config_entry.entry_id
         )
 
-    assert result.response.response_type == intent.IntentResponseType.ERROR, result
+    assert result.response.response_type is intent.IntentResponseType.ERROR, result
     assert result.response.error_code == "unknown", result
 
 
@@ -619,7 +801,6 @@ async def test_conversation_agent(
     assert entity_entry
     subentry = mock_config_entry.subentries.get(entity_entry.unique_id)
     assert subentry
-    assert entity_entry.original_name == subentry.title
 
     device_entry = device_registry.async_get(entity_entry.device_id)
     assert device_entry

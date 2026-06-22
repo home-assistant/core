@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONF_SECUREON_PASSWORD, DEFAULT_NAME, DOMAIN
 
 
 async def validate(
@@ -48,6 +48,7 @@ async def validate_options(
 
 DATA_SCHEMA = {vol.Required(CONF_MAC): TextSelector()}
 OPTIONS_SCHEMA = {
+    vol.Optional(CONF_SECUREON_PASSWORD): TextSelector(),
     vol.Optional(CONF_BROADCAST_ADDRESS): TextSelector(),
     vol.Optional(CONF_BROADCAST_PORT): NumberSelector(
         NumberSelectorConfig(min=0, max=65535, step=1, mode=NumberSelectorMode.BOX)
@@ -73,6 +74,7 @@ class WakeonLanConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW
+    options_flow_reloads = True
 
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""

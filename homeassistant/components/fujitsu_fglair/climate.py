@@ -1,6 +1,6 @@
 """Support for Fujitsu HVAC devices that use the Ayla Iot platform."""
 
-from typing import Any
+from typing import Any, override
 
 from ayla_iot_unofficial.fujitsu_hvac import (
     Capability,
@@ -15,6 +15,7 @@ from homeassistant.components.climate import (
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
+    FAN_OFF,
     SWING_BOTH,
     SWING_HORIZONTAL,
     SWING_OFF,
@@ -31,6 +32,7 @@ from .coordinator import FGLairConfigEntry, FGLairCoordinator
 from .entity import FGLairEntity
 
 HA_TO_FUJI_FAN = {
+    FAN_OFF: FanSpeed.QUIET,
     FAN_LOW: FanSpeed.LOW,
     FAN_MEDIUM: FanSpeed.MEDIUM,
     FAN_HIGH: FanSpeed.HIGH,
@@ -98,25 +100,30 @@ class FGLairDevice(FGLairEntity, ClimateEntity):
         self._set_attr()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return super().available and self.coordinator_context in self.coordinator.data
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set Fan mode."""
         await self.device.async_set_fan_speed(HA_TO_FUJI_FAN[fan_mode])
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVAC mode."""
         await self.device.async_set_op_mode(HA_TO_FUJI_HVAC[hvac_mode])
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set swing mode."""
         await self.device.async_set_swing_mode(HA_TO_FUJI_SWING[swing_mode])
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -149,6 +156,7 @@ class FGLairDevice(FGLairEntity, ClimateEntity):
             self._attr_current_temperature = self.device.sensed_temp
             self._attr_target_temperature = self.device.set_temp
 
+    @override
     def _handle_coordinator_update(self) -> None:
         self._set_attr()
         super()._handle_coordinator_update()

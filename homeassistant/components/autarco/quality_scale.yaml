@@ -6,10 +6,7 @@ rules:
       This integration does not provide additional actions.
   appropriate-polling: done
   brands: done
-  common-modules:
-    status: todo
-    comment: |
-      The entity.py file is not used in this integration.
+  common-modules: done
   config-flow-test-coverage: done
   config-flow: done
   dependency-transparency: done
@@ -85,7 +82,7 @@ rules:
     comment: |
       This integration does not have any entities that should disabled by default.
   entity-translations: done
-  exception-translations: done
+  exception-translations: todo
   icon-translations: done
   reconfiguration-flow: todo
   repair-issues:

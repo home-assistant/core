@@ -9,6 +9,9 @@
       "address": {
         "default": "mdi:map-marker"
       },
+      "battery_range": {
+        "default": "mdi:ev-station"
+      },
       "battery_voltage": {
         "default": "mdi:car-battery"
       },

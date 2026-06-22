@@ -1,7 +1,5 @@
 """Adds config flow for Yale Smart Alarm integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from typing import Any
 
@@ -13,7 +11,7 @@ from homeassistant.config_entries import (
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlow,
+    OptionsFlowWithReload,
 )
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import callback
@@ -66,7 +64,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Yale integration."""
 
     VERSION = 2
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @staticmethod
     @callback
@@ -171,7 +169,7 @@ class YaleConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
 
-class YaleOptionsFlowHandler(OptionsFlow):
+class YaleOptionsFlowHandler(OptionsFlowWithReload):
     """Handle Yale options."""
 
     async def async_step_init(

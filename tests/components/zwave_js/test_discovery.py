@@ -7,6 +7,10 @@ import pytest
 from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node
 
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.light import ATTR_SUPPORTED_COLOR_MODES, ColorMode
 from homeassistant.components.number import (
@@ -23,12 +27,21 @@ from homeassistant.components.zwave_js.discovery import (
     FirmwareVersionRange,
     ZWaveDiscoverySchema,
     ZWaveValueDiscoverySchema,
+    check_value,
 )
 from homeassistant.components.zwave_js.discovery_data_template import (
     DynamicCurrentTempClimateDataTemplate,
 )
-from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY
-from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_UNKNOWN, EntityCategory
+from homeassistant.components.zwave_js.helpers import get_device_id
+from homeassistant.config_entries import RELOAD_AFTER_UPDATE_DELAY, ConfigEntryState
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_UNKNOWN,
+    EntityCategory,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
@@ -98,6 +111,20 @@ async def test_ge_12730(hass: HomeAssistant, client, ge_12730, integration) -> N
     assert state
 
 
+async def test_enbrighten_58446_zwa4013(
+    hass: HomeAssistant, client, enbrighten_58446_zwa4013, integration
+) -> None:
+    """Test GE 12730 Fan Controller v2.0 multilevel switch is discovered as a fan."""
+    node = enbrighten_58446_zwa4013
+    assert node.device_class.specific.label == "Multilevel Power Switch"
+
+    state = hass.states.get("light.zwa4013_fan")
+    assert not state
+
+    state = hass.states.get("fan.zwa4013_fan")
+    assert state
+
+
 async def test_inovelli_lzw36(
     hass: HomeAssistant, client, inovelli_lzw36, integration
 ) -> None:
@@ -135,6 +162,16 @@ async def test_lock_popp_electric_strike_lock_control(
         is not None
     )
     assert hass.states.get("select.node_62_current_lock_mode") is not None
+
+
+async def test_fortrez_ssa2_siren(
+    hass: HomeAssistant,
+    client: MagicMock,
+    fortrezz_ssa2_siren: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test Fortrezz SSA2 siren gets discovered correctly."""
+    assert hass.states.get("select.siren_and_strobe_alarm") is not None
 
 
 async def test_fortrez_ssa3_siren(
@@ -239,6 +276,7 @@ async def test_merten_507801_disabled_enitites(
         assert updated_entry.disabled is False
 
 
+@pytest.mark.parametrize("platforms", [[Platform.BUTTON, Platform.NUMBER]])
 async def test_zooz_zen72(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -310,6 +348,9 @@ async def test_zooz_zen72(
     assert args["value"] is True
 
 
+@pytest.mark.parametrize(
+    "platforms", [[Platform.BINARY_SENSOR, Platform.SENSOR, Platform.SWITCH]]
+)
 async def test_indicator_test(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -409,7 +450,7 @@ async def test_indicator_test(
 async def test_light_device_class_is_null(
     hass: HomeAssistant, client, light_device_class_is_null, integration
 ) -> None:
-    """Test that a Multilevel Switch CC value with a null device class is discovered as a light.
+    """Test Multilevel Switch CC with null device class is a light.
 
     Tied to #117121.
     """
@@ -481,3 +522,223 @@ async def test_aeotec_smart_switch_7(
     entity_entry = entity_registry.async_get(state.entity_id)
     assert entity_entry
     assert entity_entry.entity_category is EntityCategory.CONFIG
+
+
+async def test_nabu_casa_zwa2(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    nabu_casa_zwa2: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test ZWA-2 discovery."""
+    state = hass.states.get("light.home_assistant_connect_zwa_2_led")
+    assert state, "The LED indicator should be enabled by default"
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry, "Entity for the LED indicator not found"
+
+    assert entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.ONOFF,
+    ], "The LED indicator should be an ON/OFF light"
+
+    assert not entry.disabled, "The entity should be enabled by default"
+
+    assert entry.entity_category is EntityCategory.CONFIG, (
+        "The LED indicator should be configuration"
+    )
+
+    # Test that the entity name is properly set to "LED"
+    assert entry.original_name == "LED", (
+        "The LED entity should have the original name 'LED'"
+    )
+    assert state.attributes["friendly_name"] == "Home Assistant Connect ZWA-2 LED", (
+        "The LED should have the correct friendly name"
+    )
+
+
+def _make_mock_value(cc_specific: dict | None = None) -> MagicMock:
+    """Create a base mock ZwaveValue for check_value tests."""
+    value = MagicMock()
+    value.command_class = 49
+    value.endpoint = 0
+    value.property_ = "Air temperature"
+    value.property_name = "Air temperature"
+    value.property_key = None
+    value.metadata.type = "number"
+    value.metadata.readable = True
+    value.metadata.writeable = False
+    value.metadata.states = None
+    value.metadata.cc_specific = cc_specific
+    value.metadata.stateful = None
+    value.value = 9
+    return value
+
+
+def test_check_value_all_available_cc_specific_match() -> None:
+    """Test check_value matches when all cc_specific key/value pairs are present."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        all_available_cc_specific={("scale", 0), ("sensorType", 1)},
+    )
+    value = _make_mock_value({"scale": 0, "sensorType": 1})
+    assert check_value(value, schema) is True
+
+
+def test_check_value_all_available_cc_specific_partial_match() -> None:
+    """Test check_value fails when not all cc_specific key/value pairs match."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        all_available_cc_specific={("scale", 0), ("sensorType", 1)},
+    )
+    value = _make_mock_value({"scale": 0, "sensorType": 5})
+    assert check_value(value, schema) is False
+
+
+def test_check_value_all_available_cc_specific_none() -> None:
+    """Test check_value fails when cc_specific is None and all_available is set."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        all_available_cc_specific={("scale", 0)},
+    )
+    value = _make_mock_value()
+    assert check_value(value, schema) is False
+
+
+def test_check_value_any_available_cc_specific_match() -> None:
+    """Test check_value matches when any cc_specific key/value pair is present."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        any_available_cc_specific={("sensorType", 1), ("sensorType", 3)},
+    )
+    value = _make_mock_value({"sensorType": 1, "scale": 0})
+    assert check_value(value, schema) is True
+
+
+def test_check_value_any_available_cc_specific_no_match() -> None:
+    """Test check_value fails when no cc_specific key/value pair matches."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        any_available_cc_specific={("sensorType", 1), ("sensorType", 3)},
+    )
+    value = _make_mock_value({"sensorType": 5, "scale": 0})
+    assert check_value(value, schema) is False
+
+
+def test_check_value_any_available_cc_specific_none() -> None:
+    """Test check_value fails when cc_specific is None and any_available is set."""
+    schema = ZWaveValueDiscoverySchema(
+        command_class={49},
+        any_available_cc_specific={("sensorType", 1)},
+    )
+    value = _make_mock_value()
+    assert check_value(value, schema) is False
+
+
+async def test_nabu_casa_zwa2_legacy(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    nabu_casa_zwa2_legacy: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test ZWA-2 discovery with legacy firmware."""
+    state = hass.states.get("light.home_assistant_connect_zwa_2_led")
+    assert state, "The LED indicator should be enabled by default"
+
+    entry = entity_registry.async_get(state.entity_id)
+    assert entry, "Entity for the LED indicator not found"
+
+    assert entry.capabilities.get(ATTR_SUPPORTED_COLOR_MODES) == [
+        ColorMode.HS,
+    ], "The LED indicator should be a color light"
+
+    assert not entry.disabled, "The entity should be enabled by default"
+
+    assert entry.entity_category is EntityCategory.CONFIG, (
+        "The LED indicator should be configuration"
+    )
+
+    # Test that the entity name is properly set to "LED"
+    assert entry.original_name == "LED", (
+        "The LED entity should have the original name 'LED'"
+    )
+    assert state.attributes["friendly_name"] == "Home Assistant Connect ZWA-2 LED", (
+        "The LED should have the correct friendly name"
+    )
+
+
+@pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR, Platform.LIGHT]])
+async def test_fibaro_fgms001_unknown_firmware_setup(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    fibaro_fgms001_unknown_firmware: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test setup completes when an FGMS001 node has no firmware version.
+
+    Regression test for a crash where comparing AwesomeVersion(None) to a
+    schema's firmware_version_range raised AwesomeVersionCompareException
+    and aborted setup of the whole config entry.
+    """
+    assert integration.state is ConfigEntryState.LOADED
+
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, fibaro_fgms001_unknown_firmware)}
+    )
+    assert device is not None
+
+    entries = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+    motion_entries = [
+        entry
+        for entry in entries
+        if entry.domain == BINARY_SENSOR_DOMAIN
+        and entry.original_device_class == BinarySensorDeviceClass.MOTION
+    ]
+    assert motion_entries == []
+
+
+@pytest.mark.parametrize("platforms", [[Platform.BINARY_SENSOR, Platform.LIGHT]])
+async def test_fibaro_fgms001_v2_8_motion_discovery(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    fibaro_fgms001_v2_8: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the Fibaro FGMS001 on firmware 2.8 is discovered as a motion sensor.
+
+    The device exposes its motion state via the Sensor Binary CC under the
+    "Any" sensor type. Without the device-specific discovery override the
+    value would either fall through to the disabled legacy boolean schema
+    or be misclassified, so we assert that exactly one binary_sensor entity
+    with device_class=motion is created and no light entity exists.
+    """
+    device = device_registry.async_get_device(
+        identifiers={get_device_id(client.driver, fibaro_fgms001_v2_8)}
+    )
+    assert device is not None
+
+    entries = er.async_entries_for_device(
+        entity_registry, device.id, include_disabled_entities=True
+    )
+
+    motion_entries = [
+        entry
+        for entry in entries
+        if entry.domain == BINARY_SENSOR_DOMAIN
+        and entry.original_device_class == BinarySensorDeviceClass.MOTION
+    ]
+    assert len(motion_entries) == 1
+    motion_entry = motion_entries[0]
+    assert motion_entry.disabled_by is None
+
+    state = hass.states.get(motion_entry.entity_id)
+    assert state is not None
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.MOTION
+
+    assert not [entry for entry in entries if entry.domain == Platform.LIGHT]

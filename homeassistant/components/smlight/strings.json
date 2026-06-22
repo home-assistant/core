@@ -1,53 +1,53 @@
 {
   "config": {
-    "step": {
-      "user": {
-        "description": "Set up SMLIGHT Zigbee integration",
-        "data": {
-          "host": "[%key:common::config_flow::data::host%]"
-        },
-        "data_description": {
-          "host": "The hostname or IP address of the SMLIGHT SLZB-06x device"
-        }
-      },
-      "auth": {
-        "description": "Please enter the username and password",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "username": "Username for the device's web login.",
-          "password": "Password for the device's web login."
-        }
-      },
-      "reauth_confirm": {
-        "title": "[%key:common::config_flow::title::reauth%]",
-        "description": "Please enter the correct username and password",
-        "data": {
-          "username": "[%key:common::config_flow::data::username%]",
-          "password": "[%key:common::config_flow::data::password%]"
-        },
-        "data_description": {
-          "username": "[%key:component::smlight::config::step::auth::data_description::username%]",
-          "password": "[%key:component::smlight::config::step::auth::data_description::password%]"
-        }
-      },
-      "confirm_discovery": {
-        "description": "Do you want to set up SMLIGHT at {host}?"
-      }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
-      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
-    },
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "reauth_failed": "[%key:common::config_flow::error::invalid_auth%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "unsupported_device": "This device is not yet supported by the SMLIGHT integration"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "auth": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "Password for the device's web login.",
+          "username": "Username for the device's web login."
+        },
+        "description": "Please enter the username and password"
+      },
+      "confirm_discovery": {
+        "description": "Do you want to set up SMLIGHT at {host}?"
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "password": "[%key:component::smlight::config::step::auth::data_description::password%]",
+          "username": "[%key:component::smlight::config::step::auth::data_description::username%]"
+        },
+        "description": "Please enter the correct username and password",
+        "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the SMLIGHT SLZB-06x device"
+        },
+        "description": "Set up SMLIGHT Zigbee integration"
+      }
     }
   },
   "entity": {
@@ -65,31 +65,43 @@
         "name": "Wi-Fi"
       }
     },
-    "sensor": {
-      "zigbee_temperature": {
-        "name": "Zigbee chip temp"
+    "button": {
+      "core_restart": {
+        "name": "Core restart"
       },
+      "reconnect_zigbee_router": {
+        "name": "Reconnect Zigbee router"
+      },
+      "zigbee_flash_mode": {
+        "name": "Zigbee flash mode"
+      },
+      "zigbee_restart": {
+        "name": "Zigbee restart"
+      }
+    },
+    "infrared": {
+      "infrared_emitter": {
+        "name": "IR emitter"
+      }
+    },
+    "light": {
+      "ambilight": {
+        "name": "Ambilight"
+      }
+    },
+    "sensor": {
       "core_temperature": {
         "name": "Core chip temp"
       },
-      "fs_usage": {
-        "name": "Filesystem usage"
-      },
-      "ram_usage": {
-        "name": "RAM usage"
-      },
       "core_uptime": {
         "name": "Core uptime"
-      },
-      "socket_uptime": {
-        "name": "Zigbee uptime"
       },
       "device_mode": {
         "name": "Connection mode",
         "state": {
           "eth": "Ethernet",
-          "wifi": "Wi-Fi",
-          "usb": "USB"
+          "usb": "USB",
+          "wifi": "Wi-Fi"
         }
       },
       "firmware_channel": {
@@ -99,6 +111,21 @@
           "release": "Stable"
         }
       },
+      "fs_usage": {
+        "name": "Filesystem usage"
+      },
+      "psram_usage": {
+        "name": "PSRAM usage"
+      },
+      "ram_usage": {
+        "name": "RAM usage"
+      },
+      "socket_uptime": {
+        "name": "Zigbee uptime"
+      },
+      "zigbee_temperature": {
+        "name": "Zigbee chip temp"
+      },
       "zigbee_type": {
         "name": "Zigbee type",
         "state": {
@@ -106,20 +133,6 @@
           "router": "Router",
           "thread": "Thread"
         }
-      }
-    },
-    "button": {
-      "core_restart": {
-        "name": "Core restart"
-      },
-      "zigbee_restart": {
-        "name": "Zigbee restart"
-      },
-      "zigbee_flash_mode": {
-        "name": "Zigbee flash mode"
-      },
-      "reconnect_zigbee_router": {
-        "name": "Reconnect Zigbee router"
       }
     },
     "switch": {
@@ -146,17 +159,57 @@
     }
   },
   "exceptions": {
+    "cannot_connect_device": {
+      "message": "An error occurred while connecting to the SMLIGHT device: {error}."
+    },
     "firmware_update_failed": {
       "message": "Firmware update failed for {device_name}."
     },
-    "cannot_connect_device": {
-      "message": "An error occurred while connecting to the SMLIGHT device: {error}."
+    "no_device_found": {
+      "message": "No valid SMLIGHT device found for the given targets."
+    },
+    "not_supported_buzzer": {
+      "message": "The selected SMLIGHT device does not support the buzzer feature. This feature is only available on Ultima models."
+    },
+    "play_tone_failed": {
+      "message": "Failed to play tone on {device_name}: {error}."
+    },
+    "send_ir_code_failed": {
+      "message": "Failed to send IR code: {error}."
     }
   },
   "issues": {
     "unsupported_firmware": {
-      "title": "SLZB core firmware update required",
-      "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration."
+      "description": "Your SMLIGHT SLZB-06x device is running an unsupported core firmware version. Please update it to the latest version to enjoy all the features of this integration.",
+      "title": "SLZB core firmware update required"
+    }
+  },
+  "services": {
+    "play_rtttl": {
+      "description": "Play an RTTTL melody on the SMLIGHT device buzzer.",
+      "fields": {
+        "bpm": {
+          "description": "Tempo in beats per minute. Omit to use the RTTTL default of 63.",
+          "name": "BPM"
+        },
+        "device_id": {
+          "description": "The SMLIGHT device.",
+          "name": "Device"
+        },
+        "duration": {
+          "description": "Default note duration (1, 2, 4, 8, 16 or 32). Omit to use the RTTTL default of 4.",
+          "name": "Duration"
+        },
+        "notes": {
+          "description": "The note sequence in RTTTL format, e.g. 8d,8d#,8e,c6.",
+          "name": "Notes"
+        },
+        "octave": {
+          "description": "Default octave (4–7).",
+          "name": "Octave"
+        }
+      },
+      "name": "Play RTTTL tone"
     }
   }
 }

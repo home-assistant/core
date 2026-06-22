@@ -9,25 +9,25 @@
       "effect_speed": {
         "default": "mdi:speedometer"
       },
-      "pixels_per_segment": {
-        "default": "mdi:dots-grid"
-      },
-      "segments": {
-        "default": "mdi:segment"
-      },
       "music_pixels_per_segment": {
         "default": "mdi:dots-grid"
       },
       "music_segments": {
         "default": "mdi:segment"
+      },
+      "pixels_per_segment": {
+        "default": "mdi:dots-grid"
+      },
+      "segments": {
+        "default": "mdi:segment"
       }
     },
     "select": {
-      "power_restored": {
-        "default": "mdi:transmission-tower-off"
-      },
       "ic_type": {
         "default": "mdi:chip"
+      },
+      "power_restored": {
+        "default": "mdi:transmission-tower-off"
       },
       "wiring": {
         "default": "mdi:led-strip-variant"
@@ -39,16 +39,16 @@
       }
     },
     "switch": {
-      "remote_access": {
-        "default": "mdi:cloud-off-outline",
-        "state": {
-          "on": "mdi:cloud-outline"
-        }
-      },
       "music": {
         "default": "mdi:microphone-off",
         "state": {
           "on": "mdi:microphone"
+        }
+      },
+      "remote_access": {
+        "default": "mdi:cloud-off-outline",
+        "state": {
+          "on": "mdi:cloud-outline"
         }
       }
     }
@@ -57,11 +57,11 @@
     "set_custom_effect": {
       "service": "mdi:creation"
     },
-    "set_zones": {
-      "service": "mdi:texture-box"
-    },
     "set_music_mode": {
       "service": "mdi:music"
+    },
+    "set_zones": {
+      "service": "mdi:texture-box"
     }
   }
 }

@@ -1,7 +1,5 @@
 """The PEGELONLINE component."""
 
-from __future__ import annotations
-
 import logging
 
 from aiopegelonline import PegelOnline
@@ -12,7 +10,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_STATION
+from .const import CONF_STATION, DOMAIN
 from .coordinator import PegelOnlineConfigEntry, PegelOnlineDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -30,7 +28,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PegelOnlineConfigEntry) 
     try:
         station = await api.async_get_station_details(station_uuid)
     except CONNECT_ERRORS as err:
-        raise ConfigEntryNotReady("Failed to connect") from err
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="communication_error",
+            translation_placeholders={"error": str(err)},
+        ) from err
 
     coordinator = PegelOnlineDataUpdateCoordinator(hass, entry, api, station)
 

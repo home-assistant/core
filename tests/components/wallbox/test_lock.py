@@ -5,7 +5,7 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components.lock import SERVICE_LOCK, SERVICE_UNLOCK
-from homeassistant.components.wallbox.coordinator import InvalidAuth
+from homeassistant.components.wallbox.coordinator import InsufficientRights
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -96,7 +96,7 @@ async def test_wallbox_lock_class_error_handling(
     with (
         patch.object(mock_wallbox, "lockCharger", side_effect=http_403_error),
         patch.object(mock_wallbox, "unlockCharger", side_effect=http_403_error),
-        pytest.raises(InvalidAuth),
+        pytest.raises(InsufficientRights),
     ):
         await hass.services.async_call(
             "lock",

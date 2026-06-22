@@ -1,16 +1,13 @@
 """Fixtures for the Tuya integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import MagicMock, patch
 
 import pytest
-from tuya_sharing import CustomerDevice
+from tuya_device_handlers import TUYA_QUIRKS_REGISTRY
+from tuya_sharing import CustomerDevice, Manager
 
-from homeassistant.components.tuya import ManagerCompat
 from homeassistant.components.tuya.const import (
-    CONF_APP_TYPE,
     CONF_ENDPOINT,
     CONF_TERMINAL_ID,
     CONF_TOKEN_INFO,
@@ -19,18 +16,9 @@ from homeassistant.components.tuya.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, async_load_json_object_fixture
+from . import DEVICE_MOCKS, TuyaNotificationHelper, create_device, create_manager
 
-
-@pytest.fixture
-def mock_old_config_entry() -> MockConfigEntry:
-    """Mock an old config entry that can be migrated."""
-    return MockConfigEntry(
-        title="Old Tuya configuration entry",
-        domain=DOMAIN,
-        data={CONF_APP_TYPE: "tuyaSmart"},
-        unique_id="12345",
-    )
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
@@ -52,7 +40,7 @@ def mock_config_entry() -> MockConfigEntry:
 @pytest.fixture
 async def mock_loaded_entry(
     hass: HomeAssistant,
-    mock_manager: ManagerCompat,
+    mock_manager: Manager,
     mock_config_entry: MockConfigEntry,
     mock_device: CustomerDevice,
 ) -> MockConfigEntry:
@@ -65,7 +53,10 @@ async def mock_loaded_entry(
 
     # Initialize the component
     with (
-        patch("homeassistant.components.tuya.ManagerCompat", return_value=mock_manager),
+        patch(
+            "homeassistant.components.tuya.coordinator.Manager",
+            return_value=mock_manager,
+        ),
     ):
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
@@ -110,12 +101,9 @@ def mock_tuya_login_control() -> Generator[MagicMock]:
 
 
 @pytest.fixture
-def mock_manager() -> ManagerCompat:
-    """Mock Tuya Manager."""
-    manager = MagicMock(spec=ManagerCompat)
-    manager.device_map = {}
-    manager.mq = MagicMock()
-    return manager
+def mock_manager() -> Manager:
+    """Fixture for Tuya Manager."""
+    return create_manager()
 
 
 @pytest.fixture
@@ -129,25 +117,36 @@ def mock_device_code() -> str:
 
 
 @pytest.fixture
+async def mock_devices(hass: HomeAssistant) -> list[CustomerDevice]:
+    """Load all Tuya CustomerDevice fixtures.
+
+    Use this to generate global snapshots for each platform.
+    """
+    return [await create_device(hass, device_code) for device_code in DEVICE_MOCKS]
+
+
+@pytest.fixture
 async def mock_device(hass: HomeAssistant, mock_device_code: str) -> CustomerDevice:
-    """Mock a Tuya CustomerDevice."""
-    details = await async_load_json_object_fixture(
-        hass, f"{mock_device_code}.json", DOMAIN
-    )
-    device = MagicMock(spec=CustomerDevice)
-    device.id = details["id"]
-    device.name = details["name"]
-    device.category = details["category"]
-    device.product_id = details["product_id"]
-    device.product_name = details["product_name"]
-    device.online = details["online"]
-    device.function = {
-        key: MagicMock(type=value["type"], values=value["values"])
-        for key, value in details["function"].items()
-    }
-    device.status_range = {
-        key: MagicMock(type=value["type"], values=value["values"])
-        for key, value in details["status_range"].items()
-    }
-    device.status = details["status"]
-    return device
+    """Load a single Tuya CustomerDevice fixture.
+
+    Use this for testing behavior on a specific device.
+    """
+    return await create_device(hass, mock_device_code)
+
+
+@pytest.fixture
+def notification_helper(
+    hass: HomeAssistant, mock_manager: Manager
+) -> TuyaNotificationHelper:
+    """Fixture for Tuya NotificationHelper."""
+    return TuyaNotificationHelper(hass, mock_manager)
+
+
+@pytest.fixture
+def no_quirk() -> Generator[None]:
+    """Fixture to bypass all quirk registration."""
+    with (
+        patch.dict(TUYA_QUIRKS_REGISTRY._quirks, clear=True),
+        patch("homeassistant.components.tuya.coordinator.register_tuya_quirks"),
+    ):
+        yield

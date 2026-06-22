@@ -1,7 +1,5 @@
 """Config flow for moat ble integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from moat_ble import MoatBluetoothDeviceData as DeviceData
@@ -72,7 +70,7 @@ class MoatConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self._discovered_devices[address], data={}
             )
 
-        current_addresses = self._async_current_ids()
+        current_addresses = self._async_current_ids(include_ignore=False)
         for discovery_info in async_discovered_service_info(self.hass, False):
             address = discovery_info.address
             if address in current_addresses or address in self._discovered_devices:

@@ -98,16 +98,19 @@ async def decrement(hass: HomeAssistant, entity_id: str) -> None:
     )
 
 
-async def test_config(hass: HomeAssistant) -> None:
-    """Test config."""
-    invalid_configs = [
+@pytest.mark.parametrize(
+    "invalid_config",
+    [
         None,
-        {},
         {"name with space": None},
         {"test_1": {"min": 50, "max": 50}},
-    ]
-    for cfg in invalid_configs:
-        assert not await async_setup_component(hass, DOMAIN, {DOMAIN: cfg})
+        {"test_1": {"min": 0, "max": 10, "initial": 11}},
+    ],
+)
+async def test_config(hass: HomeAssistant, invalid_config) -> None:
+    """Test config."""
+
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: invalid_config})
 
 
 async def test_set_value(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
@@ -324,14 +327,14 @@ async def test_input_number_context(
 ) -> None:
     """Test that input_number context works."""
     assert await async_setup_component(
-        hass, "input_number", {"input_number": {"b1": {"min": 0, "max": 100}}}
+        hass, DOMAIN, {"input_number": {"b1": {"min": 0, "max": 100}}}
     )
 
     state = hass.states.get("input_number.b1")
     assert state is not None
 
     await hass.services.async_call(
-        "input_number",
+        DOMAIN,
         "increment",
         {"entity_id": state.entity_id},
         True,

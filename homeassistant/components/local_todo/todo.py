@@ -132,7 +132,7 @@ class LocalTodoListEntity(TodoListEntity):
         self._store = store
         self._calendar = calendar
         self._calendar_lock = asyncio.Lock()
-        self._attr_name = name.capitalize()
+        self._attr_name = name
         self._attr_unique_id = unique_id
 
     def _new_todo_store(self) -> TodoStore:
@@ -154,6 +154,7 @@ class LocalTodoListEntity(TodoListEntity):
                     ),
                     due=due,
                     description=item.description,
+                    completed=item.completed,
                 )
             )
         self._attr_todo_items = todo_items
@@ -168,7 +169,7 @@ class LocalTodoListEntity(TodoListEntity):
         await self.async_update_ha_state(force_refresh=True)
 
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list."""
+        """Update an item in the To-do list."""
         todo = _convert_item(item)
         async with self._calendar_lock:
             todo_store = self._new_todo_store()
@@ -178,10 +179,10 @@ class LocalTodoListEntity(TodoListEntity):
 
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
-        store = self._new_todo_store()
         async with self._calendar_lock:
+            todo_store = self._new_todo_store()
             for uid in uids:
-                store.delete(uid)
+                todo_store.delete(uid)
             await self.async_save()
         await self.async_update_ha_state(force_refresh=True)
 
@@ -196,11 +197,11 @@ class LocalTodoListEntity(TodoListEntity):
             item_idx: dict[str, int] = {itm.uid: idx for idx, itm in enumerate(todos)}
             if uid not in item_idx:
                 raise HomeAssistantError(
-                    "Item '{uid}' not found in todo list {self.entity_id}"
+                    f"Item '{uid}' not found in todo list {self.entity_id}"
                 )
             if previous_uid and previous_uid not in item_idx:
                 raise HomeAssistantError(
-                    "Item '{previous_uid}' not found in todo list {self.entity_id}"
+                    f"Item '{previous_uid}' not found in todo list {self.entity_id}"
                 )
             dst_idx = item_idx[previous_uid] + 1 if previous_uid else 0
             src_idx = item_idx[uid]
