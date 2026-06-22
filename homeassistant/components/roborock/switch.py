@@ -1,10 +1,12 @@
 """Support for Roborock switch."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 import logging
 from typing import Any
 
+from roborock.devices.traits.b01 import Q10PropertiesApi
+from roborock.devices.traits.common import TraitUpdateListener
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.common import RoborockSwitchBase
 from roborock.exceptions import RoborockException
@@ -18,11 +20,16 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
 from .coordinator import (
+    RoborockB01Q10UpdateCoordinator,
     RoborockConfigEntry,
     RoborockDataUpdateCoordinator,
     RoborockDataUpdateCoordinatorA01,
 )
-from .entity import RoborockCoordinatedEntityA01, RoborockEntityV1
+from .entity import (
+    RoborockCoordinatedEntityA01,
+    RoborockCoordinatedEntityB01Q10,
+    RoborockEntityV1,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,6 +94,61 @@ A01_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionA01] = [
 ]
 
 
+@dataclass(frozen=True, kw_only=True)
+class RoborockSwitchDescriptionQ10(SwitchEntityDescription):
+    """Class to describe a Roborock Q10 switch entity."""
+
+    # Current state, or ``None`` for write-only switches with no read-back.
+    is_on_fn: Callable[[Q10PropertiesApi], bool | None]
+    enable_fn: Callable[[Q10PropertiesApi], Coroutine[Any, Any, None]]
+    disable_fn: Callable[[Q10PropertiesApi], Coroutine[Any, Any, None]]
+    # Trait to listen to for pushed state changes, or ``None`` for write-only.
+    listen_fn: Callable[[Q10PropertiesApi], TraitUpdateListener] | None = None
+    # Write-only switches (no read-back) report an assumed state.
+    assumed_state: bool = False
+
+
+Q10_SWITCH_DESCRIPTIONS: list[RoborockSwitchDescriptionQ10] = [
+    RoborockSwitchDescriptionQ10(
+        key="child_lock",
+        translation_key="child_lock",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=lambda api: api.child_lock.is_on,
+        enable_fn=lambda api: api.child_lock.enable(),
+        disable_fn=lambda api: api.child_lock.disable(),
+        listen_fn=lambda api: api.child_lock,
+    ),
+    RoborockSwitchDescriptionQ10(
+        key="do_not_disturb",
+        translation_key="do_not_disturb",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=lambda api: api.do_not_disturb.is_on,
+        enable_fn=lambda api: api.do_not_disturb.enable(),
+        disable_fn=lambda api: api.do_not_disturb.disable(),
+        listen_fn=lambda api: api.do_not_disturb,
+    ),
+    RoborockSwitchDescriptionQ10(
+        key="dust_collection",
+        translation_key="dust_collection",
+        entity_category=EntityCategory.CONFIG,
+        is_on_fn=lambda api: api.dust_collection.is_on,
+        enable_fn=lambda api: api.dust_collection.enable(),
+        disable_fn=lambda api: api.dust_collection.disable(),
+        listen_fn=lambda api: api.dust_collection,
+    ),
+    RoborockSwitchDescriptionQ10(
+        key="button_light",
+        translation_key="button_light",
+        entity_category=EntityCategory.CONFIG,
+        # The button light is write-only; the device does not report its state.
+        is_on_fn=lambda api: None,
+        enable_fn=lambda api: api.button_light.enable(),
+        disable_fn=lambda api: api.button_light.disable(),
+        assumed_state=True,
+    ),
+]
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: RoborockConfigEntry,
@@ -117,6 +179,13 @@ async def async_setup_entry(
         for coordinator in config_entry.runtime_data.a01
         for description in A01_SWITCH_DESCRIPTIONS
         if description.data_protocol in coordinator.request_protocols
+    )
+
+    # Q10 switches
+    async_add_entities(
+        RoborockSwitchQ10(coordinator, description)
+        for coordinator in config_entry.runtime_data.b01_q10
+        for description in Q10_SWITCH_DESCRIPTIONS
     )
 
 
@@ -218,3 +287,55 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
         if status is None:
             return None
         return bool(status)
+
+
+class RoborockSwitchQ10(RoborockCoordinatedEntityB01Q10, SwitchEntity):
+    """A class to toggle a setting on a Roborock Q10 (B01/ss07) device."""
+
+    entity_description: RoborockSwitchDescriptionQ10
+    coordinator: RoborockB01Q10UpdateCoordinator
+
+    def __init__(
+        self,
+        coordinator: RoborockB01Q10UpdateCoordinator,
+        description: RoborockSwitchDescriptionQ10,
+    ) -> None:
+        """Initialize the entity."""
+        self.entity_description = description
+        self._attr_assumed_state = description.assumed_state
+        super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
+
+    async def async_added_to_hass(self) -> None:
+        """Register a trait listener for push-based state updates."""
+        await super().async_added_to_hass()
+        if (listen_fn := self.entity_description.listen_fn) is not None:
+            self.async_on_remove(
+                listen_fn(self.coordinator.api).add_update_listener(
+                    self.async_write_ha_state
+                )
+            )
+
+    @property
+    def is_on(self) -> bool | None:
+        """Return True if the switch is on, or None if write-only."""
+        return self.entity_description.is_on_fn(self.coordinator.api)
+
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the switch on."""
+        await self._async_toggle(self.entity_description.enable_fn)
+
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the switch off."""
+        await self._async_toggle(self.entity_description.disable_fn)
+
+    async def _async_toggle(
+        self, action: Callable[[Q10PropertiesApi], Coroutine[Any, Any, None]]
+    ) -> None:
+        try:
+            await action(self.coordinator.api)
+        except RoborockException as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+                translation_placeholders={"command": self.entity_description.key},
+            ) from err
