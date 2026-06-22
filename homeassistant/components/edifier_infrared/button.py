@@ -1,6 +1,7 @@
 """Button platform for Edifier infrared integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from infrared_protocols.codes.edifier.models import EdifierCommandSet, EdifierModel
 from infrared_protocols.codes.edifier.r1280db import EdifierR1280DBCode
@@ -175,6 +176,7 @@ class EdifierIrButton(EdifierIrEntity, InfraredEmitterConsumerEntity, ButtonEnti
         self._infrared_emitter_entity_id = infrared_entity_id
         self.entity_description = description
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         await self._send_command(self.entity_description.command_code.to_command())

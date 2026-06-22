@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from data_grand_lyon_ha import (
@@ -62,6 +62,7 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -71,6 +72,7 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
             SUBENTRY_TYPE_VELOV_STATION: VelovStationSubentryFlowHandler,
         }
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

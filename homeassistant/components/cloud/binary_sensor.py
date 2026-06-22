@@ -1,7 +1,7 @@
 """Support for Home Assistant Cloud binary sensors."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from hass_nabucasa import Cloud
 
@@ -45,15 +45,18 @@ class CloudRemoteBinary(BinarySensorEntity):
         self.cloud = cloud
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.cloud.remote.is_connected
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.cloud.remote.certificate is not None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update dispatcher."""
 
