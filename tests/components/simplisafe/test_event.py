@@ -1,54 +1,37 @@
 """Define tests for SimpliSafe event entities."""
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
-from simplipy.websocket import (
-    EVENT_CAMERA_MOTION_DETECTED,
-    EVENT_DOORBELL_DETECTED,
-    EVENT_SECRET_ALERT_TRIGGERED,
-    WebsocketEvent,
-)
+import pytest
+from simplipy.websocket import EVENT_CAMERA_MOTION_DETECTED, WebsocketEvent
+from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 CAMERA_SERIAL = "1234567890"
-SYSTEM_EVENT_ENTITY_ID = "event.alarm_control_panel_system_events"
 CAMERA_EVENT_ENTITY_ID = "event.camera_camera_motion"
 
 
-async def test_system_event_entity_created(
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_event_entities(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     patch_simplisafe_api,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that a system event entity is created."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    """Test that all event entities are created."""
+    with patch(
+        "homeassistant.components.simplisafe.PLATFORMS", [Platform.EVENT]
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    state = hass.states.get(SYSTEM_EVENT_ENTITY_ID)
-    assert state is not None
-    # System events should NOT include camera-specific events:
-    event_types = state.attributes["event_types"]
-    assert EVENT_CAMERA_MOTION_DETECTED not in event_types
-    assert EVENT_DOORBELL_DETECTED not in event_types
-    # But should include other websocket events like secret_alert_triggered:
-    assert EVENT_SECRET_ALERT_TRIGGERED in event_types
-
-
-async def test_camera_event_entity_created(
-    hass: HomeAssistant,
-    config_entry: MockConfigEntry,
-    patch_simplisafe_api,
-) -> None:
-    """Test that camera event entities are created for V3 systems with cameras."""
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(CAMERA_EVENT_ENTITY_ID)
-    assert state is not None
-    assert state.attributes["event_types"] == [EVENT_CAMERA_MOTION_DETECTED]
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
 async def test_camera_event_triggers_on_matching_serial(

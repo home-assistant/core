@@ -1,0 +1,136 @@
+# serializer version: 1
+# name: test_event_entities[event.alarm_control_panel_system_events-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'automatic_test',
+        'device_test',
+        'secret_alert_triggered',
+        'sensor_paired_and_named',
+        'user_initiated_test',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.alarm_control_panel_system_events',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'System events',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'System events',
+    'platform': 'simplisafe',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'system_events',
+    'unique_id': '1234ABCD-system_events',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entities[event.alarm_control_panel_system_events-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'event_type': None,
+      'event_types': list([
+        'automatic_test',
+        'device_test',
+        'secret_alert_triggered',
+        'sensor_paired_and_named',
+        'user_initiated_test',
+      ]),
+      'friendly_name': 'Alarm control panel System events',
+      'last_event_info': 'System Disarmed by PIN 2',
+      'last_event_sensor_name': 'Kitchen',
+      'last_event_sensor_type': 'keypad',
+      'last_event_timestamp': 1564018073,
+      'system_id': 12345,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.alarm_control_panel_system_events',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
+# name: test_event_entities[event.camera_camera_motion-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      'event_types': list([
+        'camera_motion_detected',
+      ]),
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'event',
+    'entity_category': None,
+    'entity_id': 'event.camera_camera_motion',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Motion',
+    'options': dict({
+    }),
+    'original_device_class': <EventDeviceClass.MOTION: 'motion'>,
+    'original_icon': None,
+    'original_name': 'Motion',
+    'platform': 'simplisafe',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'motion',
+    'unique_id': '1234567890-motion',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_event_entities[event.camera_camera_motion-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      'device_class': 'motion',
+      'event_type': None,
+      'event_types': list([
+        'camera_motion_detected',
+      ]),
+      'friendly_name': 'Camera Camera Motion',
+      'last_event_info': 'System Disarmed by PIN 2',
+      'last_event_sensor_name': 'Kitchen',
+      'last_event_sensor_type': 'keypad',
+      'last_event_timestamp': 1564018073,
+      'system_id': 12345,
+    }),
+    'context': <ANY>,
+    'entity_id': 'event.camera_camera_motion',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
