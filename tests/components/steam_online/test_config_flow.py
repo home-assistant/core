@@ -67,7 +67,7 @@ async def test_flow_user_errors(
     error_msg: str,
     steam_api: MagicMock,
 ) -> None:
-    """Test user initialized flow with unreachable server."""
+    """Test user initialized flow with errors."""
 
     steam_api.return_value.GetPlayerSummaries.side_effect = side_effect
 
