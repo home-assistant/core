@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from screenlogicpy.const.common import UNIT, ScreenLogicCommunicationError
 from screenlogicpy.const.data import ATTR, DEVICE, VALUE
@@ -101,16 +101,19 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         self._last_preset = None
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return water temperature."""
         return self.entity_data[VALUE.LAST_TEMPERATURE][ATTR.VALUE]
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Target temperature."""
         return self.entity_data[VALUE.HEAT_SETPOINT][ATTR.VALUE]
 
     @property
+    @override
     def temperature_unit(self) -> str:
         """Return the unit of measurement."""
         if self.gateway.temperature_unit == UNIT.CELSIUS:
@@ -118,6 +121,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         return UnitOfTemperature.FAHRENHEIT
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current hvac mode."""
         if self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE] > 0:
@@ -125,6 +129,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current action of the heater."""
         if self.entity_data[VALUE.HEAT_STATE][ATTR.VALUE] > 0:
@@ -134,12 +139,14 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
         return HVACAction.OFF
 
     @property
+    @override
     def preset_mode(self) -> str:
         """Return current/last preset mode."""
         if self.hvac_mode == HVACMode.OFF:
             return HEAT_MODE(self._last_preset).name.lower()
         return HEAT_MODE(self.entity_data[VALUE.HEAT_MODE][ATTR.VALUE]).name.lower()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the heater."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -157,6 +164,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             ) from sle
         _LOGGER.debug("Set temperature for body %s to %s", self._data_key, temperature)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the operation mode."""
         if hvac_mode == HVACMode.OFF:
@@ -174,6 +182,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             ) from sle
         _LOGGER.debug("Set hvac_mode on body %s to %s", self._data_key, mode.name)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         mode = HEAT_MODE.parse(preset_mode)
@@ -192,6 +201,7 @@ class ScreenLogicClimate(ScreenLogicPushEntity, ClimateEntity, RestoreEntity):
             ) from sle
         _LOGGER.debug("Set preset_mode on body %s to %s", self._data_key, mode.name)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is about to be added."""
         await super().async_added_to_hass()

@@ -5,7 +5,7 @@ from collections import deque
 from collections.abc import Iterator
 from dataclasses import dataclass
 import datetime as dt
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import Context
 from homeassistant.helpers.trace import (
@@ -112,6 +112,7 @@ class ActionTrace(BaseTrace):
         self._state = "stopped"
         self._script_execution = script_execution_get()
 
+    @override
     def as_extended_dict(self) -> dict[str, Any]:
         """Return an extended dictionary version of this ActionTrace."""
         if self._dict:
@@ -138,6 +139,7 @@ class ActionTrace(BaseTrace):
             self._dict = result
         return result
 
+    @override
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this ActionTrace."""
         if self._short_dict:
@@ -191,10 +193,12 @@ class RestoredTrace(BaseTrace):
         self._dict = extended_dict
         self._short_dict = short_dict
 
+    @override
     def as_extended_dict(self) -> dict[str, Any]:
         """Return an extended dictionary version of this RestoredTrace."""
         return self._dict  # type: ignore[no-any-return]
 
+    @override
     def as_short_dict(self) -> dict[str, Any]:
         """Return a brief dictionary version of this RestoredTrace."""
         return self._short_dict  # type: ignore[no-any-return]

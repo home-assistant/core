@@ -1,7 +1,7 @@
 """Config flow for SAJ."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import pysaj
 import voluptuous as vol
@@ -124,6 +124,7 @@ class SAJConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return serial_number
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,6 +1,6 @@
 """Base entity for the Trane Local integration."""
 
-from typing import Any
+from typing import Any, override
 
 from steamloop import ThermostatConnection, Zone
 
@@ -21,6 +21,7 @@ class TraneEntity(Entity):
         """Initialize the entity."""
         self._conn = conn
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register event callback when added to hass."""
         self.async_on_remove(self._conn.add_event_callback(self._handle_event))
@@ -55,6 +56,7 @@ class TraneZoneEntity(TraneEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the zone is available."""
         return self._zone_id in self._conn.state.zones

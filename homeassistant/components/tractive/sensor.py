@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -75,6 +75,7 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
         self._attr_native_value = self.entity_description.value_fn(

@@ -1,6 +1,7 @@
 """SAJ solar inverter interface."""
 
 from datetime import date
+from typing import override
 
 import pysaj
 import voluptuous as vol
@@ -164,6 +165,7 @@ class SAJsensor(SensorEntity):
         ):
             self._attr_device_class = SensorDeviceClass.TEMPERATURE
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for inverter poll updates."""
         await super().async_added_to_hass()
@@ -172,6 +174,7 @@ class SAJsensor(SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self._state

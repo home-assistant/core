@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.const import CONF_DEVICE_ID, CONF_OPTIMISTIC
 from homeassistant.core import Context, HomeAssistant, callback
@@ -170,6 +170,7 @@ class AbstractTemplateEntity(Entity):
             domain,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up scripts when removing from Home Assistant."""
         if not self.registry_entry or self.registry_entry.entity_id == self.entity_id:

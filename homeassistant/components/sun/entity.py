@@ -2,7 +2,7 @@
 
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from astral import Observer
 import astral.sun
@@ -131,6 +131,7 @@ class Sun(Entity):
             EVENT_CORE_CONFIG_UPDATE, self.update_location
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Update after entity has been added."""
         await super().async_added_to_hass()
@@ -158,6 +159,7 @@ class Sun(Entity):
             self._update_sun_position_listener()
 
     @property
+    @override
     def state(self) -> str:
         """Return the state of the sun."""
         # 0.8333 is the same value as astral uses
@@ -167,6 +169,7 @@ class Sun(Entity):
         return STATE_BELOW_HORIZON
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sun."""
         return {

@@ -3,7 +3,7 @@
 from collections.abc import Callable, Mapping
 import contextlib
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from propcache.api import under_cached_property
 import voluptuous as vol
@@ -191,6 +191,7 @@ class TemplateEntity(AbstractTemplateEntity):
                 self.entity_id = None  # type: ignore[assignment]
 
             @under_cached_property
+            @override
             def name(self) -> str:
                 """Name of this state."""
                 return "<None>"
@@ -258,6 +259,7 @@ class TemplateEntity(AbstractTemplateEntity):
         )
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         if self._blueprint_inputs is None:
@@ -283,6 +285,7 @@ class TemplateEntity(AbstractTemplateEntity):
 
         return TemplateStateFromEntityId(self.hass, entity_id)
 
+    @override
     def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         if isinstance(self._run_variables, dict):
@@ -292,6 +295,7 @@ class TemplateEntity(AbstractTemplateEntity):
             self.hass, {"this": self._get_this_variable()}
         )
 
+    @override
     def setup_state_template(
         self,
         attribute: str,
@@ -341,6 +345,7 @@ class TemplateEntity(AbstractTemplateEntity):
             none_on_template_error=False,
         )
 
+    @override
     def setup_template(
         self,
         option: str,
@@ -564,6 +569,7 @@ class TemplateEntity(AbstractTemplateEntity):
             preview_callback(None, None, None, str(err))
         return self._call_on_remove_callbacks
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._async_setup_templates()

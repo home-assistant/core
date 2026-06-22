@@ -1,6 +1,6 @@
 """Tuya Home Assistant Base Device Model."""
 
-from typing import Any
+from typing import Any, override
 
 from tuya_device_handlers.device_wrapper import DeviceWrapper
 from tuya_sharing import CustomerDevice, Manager
@@ -34,10 +34,12 @@ class TuyaEntity(Entity):
         self.device_manager = device_manager
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return self.device.online
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self.async_on_remove(

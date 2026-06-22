@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from aiohttp import ClientResponseError, ContentTypeError
 from teltasync import Teltasync, TeltonikaAuthenticationError, TeltonikaConnectionError
@@ -54,6 +54,7 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
         self.client = client
         self.base_url = base_url
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator - authenticate and fetch device info."""
         try:
@@ -89,6 +90,7 @@ class TeltonikaDataUpdateCoordinator(DataUpdateCoordinator[dict[str, ModemStatus
             configuration_url=self.base_url,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, ModemStatusFull]:
         """Fetch data from Teltonika device."""
         modems = Modems(self.client.auth)

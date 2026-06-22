@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
 from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
 from tesla_fleet_api.teslemetry import Vehicle
@@ -210,6 +210,7 @@ class TeslemetrySelectEntity(TeslemetryRootEntity, SelectEntity):
     entity_description: TeslemetrySelectEntityDescription
     _climate: bool = False
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope(Scope.VEHICLE_CMDS)
@@ -238,6 +239,7 @@ class TeslemetryVehiclePollingSelectEntity(
         self.scoped = Scope.VEHICLE_CMDS in scopes
         super().__init__(data, description.key)
 
+    @override
     def _async_update_attrs(self) -> None:
         """Handle updated data from the coordinator."""
         self._climate = bool(self.get("climate_state_is_climate_on"))
@@ -264,6 +266,7 @@ class TeslemetryStreamingSelectEntity(
         self._attr_current_option = None
         super().__init__(data, description.key)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -316,10 +319,12 @@ class TeslemetryOperationSelectEntity(TeslemetryEnergyInfoEntity, SelectEntity):
         self.scoped = Scope.ENERGY_CMDS in scopes
         super().__init__(data, "default_real_mode")
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         self._attr_current_option = self._value
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope(Scope.ENERGY_CMDS)
@@ -348,6 +353,7 @@ class TeslemetryExportRuleSelectEntity(
         self.scoped = Scope.ENERGY_CMDS in scopes
         super().__init__(data, "components_customer_preferred_export_rule")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await super().async_added_to_hass()
@@ -358,6 +364,7 @@ class TeslemetryExportRuleSelectEntity(
                 if state.state in self._attr_options:
                     self._attr_current_option = state.state
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         if value := self._value:
@@ -371,6 +378,7 @@ class TeslemetryExportRuleSelectEntity(
             self._attr_current_option = None  # Unknown
         # In VPP Mode, Export isn't disabled, so use last known state
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         self.raise_for_scope(Scope.ENERGY_CMDS)

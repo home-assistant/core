@@ -1,5 +1,7 @@
 """StarLine base entity."""
 
+from typing import override
+
 from homeassistant.helpers.entity import Entity
 
 from .account import StarlineAccount, StarlineDevice
@@ -22,6 +24,7 @@ class StarlineEntity(Entity):
         self._attr_device_info = account.device_info(device)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._account.api.available
@@ -30,6 +33,7 @@ class StarlineEntity(Entity):
         """Read new state data."""
         self.schedule_update_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         await super().async_added_to_hass()

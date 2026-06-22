@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from typing import override
 
 from srpenergy.client import SrpEnergyClient
 
@@ -46,6 +47,7 @@ class SRPEnergyDataUpdateCoordinator(DataUpdateCoordinator[float]):
             update_interval=MIN_TIME_BETWEEN_UPDATES,
         )
 
+    @override
     async def _async_update_data(self) -> float:
         """Fetch data from API endpoint.
 

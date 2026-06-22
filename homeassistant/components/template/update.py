@@ -1,7 +1,7 @@
 """Support for updates which integrates with other components."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -234,6 +234,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             self._attr_in_progress = True
         self._attr_update_percentage = result
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -264,6 +265,7 @@ class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
         AbstractTemplateUpdate.__init__(self, name, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
         # This is needed to override the base update entity functionality
@@ -298,6 +300,7 @@ class TriggerUpdateEntity(TriggerEntity, AbstractTemplateUpdate):
         if CONF_PICTURE in config:
             self._parse_result.add(CONF_PICTURE)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -312,6 +315,7 @@ class TriggerUpdateEntity(TriggerEntity, AbstractTemplateUpdate):
             self.restore_attributes(last_state)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if (picture := self._rendered.get(CONF_PICTURE)) is None:

@@ -3,7 +3,7 @@
 from collections.abc import Callable
 import contextlib
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -422,6 +422,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         if self._supports_transition is True:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         optimistic_set = self.set_optimistic_attributes(**kwargs)
@@ -435,6 +436,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         if optimistic_set:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         off_script = self._action_scripts[CONF_OFF_ACTION]

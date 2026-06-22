@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any, TypedDict, cast, final
+from typing import Any, TypedDict, cast, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -162,6 +162,7 @@ class SirenEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if (
@@ -185,6 +186,7 @@ class SirenEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return None
 
     @cached_property
+    @override
     def supported_features(self) -> SirenEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features

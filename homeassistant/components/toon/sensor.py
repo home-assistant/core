@@ -1,6 +1,7 @@
 """Support for Toon sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -84,6 +85,7 @@ class ToonSensor(ToonEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the sensor."""
         section = getattr(self.coordinator.data, self.entity_description.section)

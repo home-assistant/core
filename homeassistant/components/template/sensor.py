@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import date, datetime
 from decimal import Decimal
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -263,6 +263,7 @@ class TriggerSensorEntity(TriggerEntity, AbstractTemplateSensor):
         TriggerEntity.__init__(self, hass, coordinator, config)
         AbstractTemplateSensor.__init__(self, config)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()

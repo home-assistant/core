@@ -1,7 +1,7 @@
 """Offer sun based automation rules."""
 
 from datetime import datetime, timedelta
-from typing import Any, Unpack, cast
+from typing import Any, Unpack, cast, override
 
 import voluptuous as vol
 
@@ -127,6 +127,7 @@ class SunCondition(Condition):
     _options: dict[str, Any]
 
     @classmethod
+    @override
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
@@ -137,6 +138,7 @@ class SunCondition(Condition):
         return await super().async_validate_complete_config(hass, complete_config)
 
     @classmethod
+    @override
     async def async_validate_config(
         cls, hass: HomeAssistant, config: ConfigType
     ) -> ConfigType:
@@ -153,6 +155,7 @@ class SunCondition(Condition):
         self._before_offset = self._options.get("before_offset")
         self._after_offset = self._options.get("after_offset")
 
+    @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
         return sun(
