@@ -57,7 +57,7 @@
       "message": "Authentication token expired"
     },
     "consent_required": {
-      "message": "The terms and conditions for your Anglian Water account have been updated. Please visit and login to your Anglian Water account to accept the new terms and conditions."
+      "message": "The terms and conditions for your Anglian Water account have been updated. Please visit and log in to your Anglian Water account to accept the new terms and conditions."
     },
     "service_unavailable": {
       "message": "Anglian Water web services are currently unavailable, check the logs for more details."
