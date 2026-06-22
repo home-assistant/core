@@ -89,6 +89,9 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Set up the PLM modem type."""
         errors = {}
+        schema_defaults: dict[str, Any] = {}
+        if self.source == SOURCE_RECONFIGURE:
+            schema_defaults = dict(self._get_reconfigure_entry().data)
         if user_input is not None:
             if user_input[CONF_DEVICE] == PLM_MANUAL:
                 return await self.async_step_plm_manually()
@@ -96,10 +99,6 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
                 return self._async_finish_flow(user_input)
             errors["base"] = "cannot_connect"
             schema_defaults = user_input
-        elif self.source == SOURCE_RECONFIGURE:
-            schema_defaults = dict(self._get_reconfigure_entry().data)
-        else:
-            schema_defaults = {}
         ports = await async_get_usb_ports(self.hass)
         if not ports:
             return await self.async_step_plm_manually()
@@ -114,10 +113,9 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Set up the PLM modem type manually."""
         errors = {}
+        schema_defaults: dict[str, Any] = {}
         if self.source == SOURCE_RECONFIGURE:
             schema_defaults = dict(self._get_reconfigure_entry().data)
-        else:
-            schema_defaults = {}
         if user_input is not None:
             if await _async_connect(**user_input):
                 return self._async_finish_flow(user_input)
@@ -145,6 +143,10 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Set up the Hub versions 1 and 2."""
         errors = {}
+        schema_defaults: dict[str, Any] = dict(self.discovered_conf)
+        if self.source == SOURCE_RECONFIGURE:
+            schema_defaults = dict(self._get_reconfigure_entry().data)
+            schema_defaults.pop(CONF_HUB_VERSION, None)
         if user_input is not None:
             user_input[CONF_HUB_VERSION] = hub_version
             if await _async_connect(**user_input):
@@ -152,11 +154,6 @@ class InsteonFlowHandler(ConfigFlow, domain=DOMAIN):
             user_input.pop(CONF_HUB_VERSION)
             errors["base"] = "cannot_connect"
             schema_defaults = user_input
-        elif self.source == SOURCE_RECONFIGURE:
-            schema_defaults = dict(self._get_reconfigure_entry().data)
-            schema_defaults.pop(CONF_HUB_VERSION, None)
-        else:
-            schema_defaults = self.discovered_conf
         data_schema = build_hub_schema(hub_version=hub_version, **schema_defaults)
         step_id = STEP_HUB_V2 if hub_version == 2 else STEP_HUB_V1
         return self.async_show_form(
