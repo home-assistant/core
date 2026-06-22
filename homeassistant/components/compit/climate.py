@@ -1,9 +1,9 @@
 """Module contains the CompitClimate class for controlling climate entities."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
-from compit_inext_api import Param, Parameter
+from compit_inext_api import Parameter
 from compit_inext_api.consts import (
     CompitFanMode,
     CompitHVACMode,
@@ -137,6 +137,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -145,22 +146,25 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         value = self.get_parameter_value(CompitParameter.CURRENT_TEMPERATURE)
         if value is None:
             return None
-        return float(value.value)
+        return float(value)
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         value = self.get_parameter_value(CompitParameter.SET_TARGET_TEMPERATURE)
         if value is None:
             return None
-        return float(value.value)
+        return float(value)
 
     @cached_property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return the available preset modes."""
         if self.available_presets is None or self.available_presets.details is None:
@@ -176,6 +180,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         return preset_modes
 
     @cached_property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Return the available fan modes."""
         if self.available_fan_modes is None or self.available_fan_modes.details is None:
@@ -191,33 +196,34 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         return fan_modes
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         preset_mode = self.get_parameter_value(CompitParameter.PRESET_MODE)
 
-        if preset_mode:
-            compit_preset_mode = CompitPresetMode(preset_mode.value)
-            return COMPIT_PRESET_MAP.get(compit_preset_mode)
+        if preset_mode is not None:
+            return COMPIT_PRESET_MAP.get(CompitPresetMode(preset_mode))
         return None
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the current fan mode."""
         fan_mode = self.get_parameter_value(CompitParameter.FAN_MODE)
-        if fan_mode:
-            compit_fan_mode = CompitFanMode(fan_mode.value)
-            return COMPIT_FANSPEED_MAP.get(compit_fan_mode)
+        if fan_mode is not None:
+            return COMPIT_FANSPEED_MAP.get(CompitFanMode(fan_mode))
         return None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return the current HVAC mode."""
         hvac_mode = self.get_parameter_value(CompitParameter.HVAC_MODE)
-        if hvac_mode:
-            compit_hvac_mode = CompitHVACMode(hvac_mode.value)
-            return COMPIT_MODE_MAP.get(compit_hvac_mode)
+        if hvac_mode is not None:
+            return COMPIT_MODE_MAP.get(CompitHVACMode(hvac_mode))
         return None
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temp = kwargs.get(ATTR_TEMPERATURE)
@@ -225,6 +231,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
             raise ServiceValidationError("Temperature argument missing")
         await self.set_parameter_value(CompitParameter.SET_TARGET_TEMPERATURE, temp)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
 
@@ -233,6 +240,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
 
         await self.set_parameter_value(CompitParameter.HVAC_MODE, mode.value)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
 
@@ -242,6 +250,7 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
 
         await self.set_parameter_value(CompitParameter.PRESET_MODE, compit_preset.value)
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
 
@@ -258,8 +267,6 @@ class CompitClimate(CoordinatorEntity[CompitDataUpdateCoordinator], ClimateEntit
         )
         self.async_write_ha_state()
 
-    def get_parameter_value(self, parameter: CompitParameter) -> Param | None:
+    def get_parameter_value(self, parameter: CompitParameter) -> str | float | None:
         """Get the parameter value from the device state."""
-        return self.coordinator.connector.get_device_parameter(
-            self.device_id, parameter
-        )
+        return self.coordinator.connector.get_current_value(self.device_id, parameter)

@@ -1,5 +1,6 @@
 """Test bluetooth diagnostics."""
 
+import sys
 from unittest.mock import ANY, MagicMock, patch
 
 from bleak.backends.scanner import AdvertisementData, BLEDevice
@@ -43,6 +44,7 @@ class FakeHaScanner(FakeScannerMixin, HaScanner):
         }
 
 
+@pytest.mark.skipif(sys.platform != "linux", reason="Requires Linux Bluetooth stack")
 @patch("homeassistant.components.bluetooth.HaScanner", FakeHaScanner)
 @pytest.mark.usefixtures("enable_bluetooth", "two_adapters")
 async def test_diagnostics(
@@ -255,7 +257,7 @@ async def test_diagnostics(
                         "type": "FakeHaScanner",
                         "current_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
-                            "repr": "<BluetoothScanningMode.AUTO: 'auto'>",
+                            "repr": "<BluetoothScanningMode.PASSIVE: 'passive'>",
                         },
                         "requested_mode": {
                             "__type": "<enum 'BluetoothScanningMode'>",
@@ -325,8 +327,10 @@ async def test_diagnostics_macos(
                 "Core Bluetooth": {
                     "adapter_type": None,
                     "address": "00:00:00:00:00:00",
+                    "advertise": True,
                     "manufacturer": "Apple",
                     "passive_scan": False,
+                    "powered": True,
                     "product": "Unknown MacOS Model",
                     "product_id": "Unknown",
                     "sw_version": ANY,
@@ -346,8 +350,10 @@ async def test_diagnostics_macos(
                     "Core Bluetooth": {
                         "adapter_type": None,
                         "address": "00:00:00:00:00:00",
+                        "advertise": True,
                         "manufacturer": "Apple",
                         "passive_scan": False,
+                        "powered": True,
                         "product": "Unknown MacOS Model",
                         "product_id": "Unknown",
                         "sw_version": ANY,

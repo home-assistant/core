@@ -322,9 +322,6 @@
     "credential_rejected_wrong_uuid": {
       "message": "The device rejected the credential because the user unique identifier does not match."
     },
-    "credential_slot_out_of_range": {
-      "message": "Credential slot for {credential_type} must be between 1 and {max_slot}."
-    },
     "credential_type_not_supported": {
       "message": "Credential type {credential_type} is not supported on this device"
     },

@@ -19,7 +19,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
 from homeassistant.helpers.update_coordinator import (
@@ -177,6 +177,7 @@ class RingBaseEntity(
         self._attr_extra_state_attributes = {}
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device.device_id)},  # device_id is the mac
+            connections={(CONNECTION_NETWORK_MAC, device.device_id)},
             manufacturer="Ring",
             model=device.model,
             name=device.name,

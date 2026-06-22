@@ -7,15 +7,10 @@ from typing import TYPE_CHECKING, Any, cast
 from homeassistant.const import SUN_EVENT_SUNRISE, SUN_EVENT_SUNSET
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 
 if TYPE_CHECKING:
     import astral
     import astral.location
-
-DATA_LOCATION_CACHE: HassKey[
-    dict[tuple[str, str, str, float, float], astral.location.Location]
-] = HassKey("astral_location_cache")
 
 ELEVATION_AGNOSTIC_EVENTS = ("noon", "midnight")
 
@@ -34,16 +29,8 @@ def get_astral_location(
     longitude = hass.config.longitude
     timezone = str(hass.config.time_zone)
     elevation = hass.config.elevation
-    info = ("", "", timezone, latitude, longitude)
 
-    # Cache astral locations so they aren't recreated with the same args
-    if DATA_LOCATION_CACHE not in hass.data:
-        hass.data[DATA_LOCATION_CACHE] = {}
-
-    if info not in hass.data[DATA_LOCATION_CACHE]:
-        hass.data[DATA_LOCATION_CACHE][info] = Location(LocationInfo(*info))
-
-    return hass.data[DATA_LOCATION_CACHE][info], elevation
+    return Location(LocationInfo("", "", timezone, latitude, longitude)), elevation
 
 
 @callback

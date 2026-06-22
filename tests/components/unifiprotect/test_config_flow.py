@@ -918,6 +918,38 @@ async def test_discovered_by_unifi_discovery_partial(
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.parametrize(
+    ("overrides", "expected_name"),
+    [
+        (
+            {"name": "Front Gate", "hostname": "unvr", "product_name": "UNVR"},
+            "Front Gate",
+        ),
+        ({"name": None, "hostname": "unvr", "product_name": "UNVR"}, "unvr"),
+        (
+            {"name": None, "hostname": None, "product_name": "Dream Machine"},
+            "Dream Machine",
+        ),
+    ],
+    ids=["console-name", "hostname", "product-name"],
+)
+async def test_discovery_name_resolution(
+    hass: HomeAssistant, overrides: dict[str, str | None], expected_name: str
+) -> None:
+    """Test the discovery title prefers the console name over raw platform codes."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_INTEGRATION_DISCOVERY},
+        data={**UNIFI_DISCOVERY_DICT, **overrides},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert flows[0]["context"]["title_placeholders"]["name"] == expected_name
+
+
 async def test_discovered_by_unifi_discovery_direct_connect_on_different_interface(
     hass: HomeAssistant,
 ) -> None:

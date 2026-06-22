@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioairzone_cloud.const import (
     AZD_AIDOOS,
@@ -40,6 +40,7 @@ class AirzoneEntity(CoordinatorEntity[AirzoneUpdateCoordinator], ABC):
     _attr_has_entity_name = True
 
     @property
+    @override
     def available(self) -> bool:
         """Return Airzone Cloud entity availability."""
         return super().available and self.get_airzone_value(AZD_AVAILABLE)
@@ -75,6 +76,7 @@ class AirzoneAidooEntity(AirzoneEntity):
             via_device=(DOMAIN, aidoo_data[AZD_WEBSERVER]),
         )
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return Aidoo value by key."""
         value = None
@@ -82,6 +84,7 @@ class AirzoneAidooEntity(AirzoneEntity):
             value = aidoo.get(key)
         return value
 
+    @override
     async def _async_update_params(self, params: dict[str, Any]) -> None:
         """Send Aidoo parameters to Cloud API."""
         _LOGGER.debug("aidoo=%s: update_params=%s", self.entity_id, params)
@@ -118,6 +121,7 @@ class AirzoneGroupEntity(AirzoneEntity):
             name=group_data[AZD_NAME],
         )
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return Group value by key."""
         value = None
@@ -125,6 +129,7 @@ class AirzoneGroupEntity(AirzoneEntity):
             value = group.get(key)
         return value
 
+    @override
     async def _async_update_params(self, params: dict[str, Any]) -> None:
         """Send Group parameters to Cloud API."""
         _LOGGER.debug("group=%s: update_params=%s", self.entity_id, params)
@@ -162,6 +167,7 @@ class AirzoneHotWaterEntity(AirzoneEntity):
             via_device=(DOMAIN, dhw_data[AZD_WEBSERVER]),
         )
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return DHW value by key."""
         value = None
@@ -169,6 +175,7 @@ class AirzoneHotWaterEntity(AirzoneEntity):
             value = dhw.get(key)
         return value
 
+    @override
     async def _async_update_params(self, params: dict[str, Any]) -> None:
         """Send DHW parameters to Cloud API."""
         _LOGGER.debug("dhw=%s: update_params=%s", self.entity_id, params)
@@ -203,6 +210,7 @@ class AirzoneInstallationEntity(AirzoneEntity):
             name=inst_data[AZD_NAME],
         )
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return Installation value by key."""
         value = None
@@ -210,6 +218,7 @@ class AirzoneInstallationEntity(AirzoneEntity):
             value = inst.get(key)
         return value
 
+    @override
     async def _async_update_params(self, params: dict[str, Any]) -> None:
         """Send Installation parameters to Cloud API."""
         _LOGGER.debug(
@@ -252,6 +261,7 @@ class AirzoneSystemEntity(AirzoneEntity):
             sw_version=system_data.get(AZD_FIRMWARE),
         )
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return system value by key."""
         value = None
@@ -283,6 +293,7 @@ class AirzoneWebServerEntity(AirzoneEntity):
             sw_version=ws_data[AZD_FIRMWARE],
         )
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return WebServer value by key."""
         value = None
@@ -315,6 +326,7 @@ class AirzoneZoneEntity(AirzoneEntity):
             sw_version=zone_data.get(AZD_THERMOSTAT_FW),
         )
 
+    @override
     def get_airzone_value(self, key: str) -> Any:
         """Return zone value by key."""
         value = None
@@ -322,6 +334,7 @@ class AirzoneZoneEntity(AirzoneEntity):
             value = zone.get(key)
         return value
 
+    @override
     async def _async_update_params(self, params: dict[str, Any]) -> None:
         """Send Zone parameters to Cloud API."""
         _LOGGER.debug("zone=%s: update_params=%s", self.entity_id, params)

@@ -74,6 +74,18 @@
   },
   "title": "Battery",
   "triggers": {
+    "became_low": {
+      "description": "Triggers after one or more batteries become low.",
+      "fields": {
+        "behavior": {
+          "name": "[%key:component::battery::common::trigger_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::battery::common::trigger_for_name%]"
+        }
+      },
+      "name": "Battery low"
+    },
     "level_changed": {
       "description": "Triggers after the battery level of one or more batteries changes.",
       "fields": {
@@ -98,19 +110,7 @@
       },
       "name": "Battery level crossed threshold"
     },
-    "low": {
-      "description": "Triggers after one or more batteries become low.",
-      "fields": {
-        "behavior": {
-          "name": "[%key:component::battery::common::trigger_behavior_name%]"
-        },
-        "for": {
-          "name": "[%key:component::battery::common::trigger_for_name%]"
-        }
-      },
-      "name": "Battery low"
-    },
-    "not_low": {
+    "no_longer_low": {
       "description": "Triggers after one or more batteries are no longer low.",
       "fields": {
         "behavior": {

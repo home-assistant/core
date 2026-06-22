@@ -5,7 +5,7 @@ import datetime
 from datetime import timedelta
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from pyenphase import Envoy, EnvoyError, EnvoyTokenAuth
 from pyenphase.models.home import EnvoyInterfaceInformation
@@ -320,6 +320,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             },
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch all device and sensor data from api."""
         envoy = self.envoy

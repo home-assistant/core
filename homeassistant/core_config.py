@@ -248,7 +248,7 @@ def _validate_currency(data: Any) -> Any:
 
 
 def validate_stun_or_turn_url(value: Any) -> str:
-    """Validate an URL."""
+    """Validate a URL."""
     url_in = str(value)
     url = urlparse(url_in)
 
@@ -448,7 +448,7 @@ async def async_process_ha_core_config(hass: HomeAssistant, config: dict) -> Non
             set(config[LEGACY_CONF_WHITELIST_EXTERNAL_DIRS])
         )
 
-    # Init whitelist external URL list – make sure to add / to every URL that doesn't
+    # Init whitelist external URL list - make sure to add / to every URL that doesn't
     # already have it so that we can properly test "path ownership"
     if CONF_ALLOWLIST_EXTERNAL_URLS in config:
         hac.allowlist_external_urls.update(

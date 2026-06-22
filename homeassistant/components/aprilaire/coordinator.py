@@ -2,7 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 import pyaprilaire.client
 from pyaprilaire.const import MODELS, Attribute, FunctionalDomain
@@ -55,6 +55,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
             self.data = self.client.data
 
     @callback
+    @override
     def async_add_listener(
         self, update_callback: CALLBACK_TYPE, context: Any = None
     ) -> Callable[[], None]:
@@ -193,6 +194,7 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
 
         device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
+            connections={(dr.CONNECTION_NETWORK_MAC, data[Attribute.MAC_ADDRESS])},
             name=self.create_device_name(data),
             manufacturer="Aprilaire",
         )
