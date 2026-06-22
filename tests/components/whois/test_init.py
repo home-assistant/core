@@ -3,7 +3,7 @@
 from unittest.mock import MagicMock
 
 import pytest
-from whois.exceptions import (
+from whoisdomain.exceptions import (
     FailedParsingWhoisOutput,
     UnknownDateFormat,
     UnknownTld,
