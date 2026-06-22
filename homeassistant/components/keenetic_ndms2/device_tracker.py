@@ -1,7 +1,7 @@
 """Support for Keenetic routers as device tracker."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from ndms2_client import Device
 
@@ -91,6 +91,7 @@ class KeeneticTracker(ScannerEntity):
         )
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return (
@@ -100,31 +101,37 @@ class KeeneticTracker(ScannerEntity):
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the device."""
         return self._device.name or self._device.mac
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique identifier for this device."""
         return f"{self._device.mac}_{self._router.config_entry.entry_id}"
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
         return self._device.ip if self.is_connected else None
 
     @property
+    @override
     def mac_address(self) -> str:
         """Return the mac address of the device."""
         return self._device.mac
 
     @property
+    @override
     def available(self) -> bool:
         """Return if controller is available."""
         return self._router.available
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the device state attributes."""
         if self.is_connected:
@@ -133,6 +140,7 @@ class KeeneticTracker(ScannerEntity):
             }
         return None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Client entity created."""
         _LOGGER.debug("New network device tracker %s (%s)", self.name, self.unique_id)
