@@ -3,12 +3,13 @@
 import datetime
 import logging
 
-from ccm15 import CCM15Device, CCM15DeviceState, CCM15SlaveDevice
+from ccm15 import CCM15Device, CCM15DeviceState, CCM15ReturnCode, CCM15SlaveDevice
 import httpx
 
 from homeassistant.components.climate import HVACMode
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.httpx_client import get_async_client
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -28,7 +29,12 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
     """Class to coordinate multiple CCM15Climate devices."""
 
     def __init__(
-        self, hass: HomeAssistant, entry: CCM15ConfigEntry, host: str, port: int
+        self,
+        hass: HomeAssistant,
+        entry: CCM15ConfigEntry,
+        host: str,
+        port: int,
+        password: str | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -39,7 +45,11 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
             update_interval=datetime.timedelta(seconds=DEFAULT_INTERVAL),
         )
         self._ccm15 = CCM15Device(
-            host, port, DEFAULT_TIMEOUT, client=get_async_client(hass)
+            host,
+            port,
+            DEFAULT_TIMEOUT,
+            client=get_async_client(hass),
+            password=password,
         )
         self._host = host
 
@@ -60,8 +70,20 @@ class CCM15Coordinator(DataUpdateCoordinator[CCM15DeviceState]):
 
     async def async_set_state(self, ac_index: int, data) -> None:
         """Set new target states."""
-        if await self._ccm15.async_set_state(ac_index, data):
+        # CCM15ReturnCode.OK == 0, so a truthy check would invert the success
+        # branch — compare by identity instead.
+        result = await self._ccm15.async_set_state(ac_index, data)
+        if result is CCM15ReturnCode.WRONG_PASSWORD:
+            # HA only auto-starts reauth from _async_update_data /
+            # async_setup_entry. Service-call paths have to kick the flow
+            # themselves.
+            if self.config_entry is not None:
+                self.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError("CCM15 rejected the configured password")
+        if result is CCM15ReturnCode.OK:
             await self.async_request_refresh()
+            return
+        _LOGGER.warning("CCM15 set_state returned %s (no refresh scheduled)", result)
 
     def get_ac_data(self, ac_index: int) -> CCM15SlaveDevice | None:
         """Get ac data from the ac_index."""
