@@ -1,140 +1,113 @@
-"""Support for Schluter thermostats."""
+"""Support for Schluter DITRA-HEAT thermostats."""
 
-import logging
 from typing import Any
 
-from requests import RequestException
-import voluptuous as vol
-
 from homeassistant.components.climate import (
-    PLATFORM_SCHEMA as CLIMATE_PLATFORM_SCHEMA,
-    SCAN_INTERVAL,
     ClimateEntity,
     ClimateEntityFeature,
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_TEMPERATURE, CONF_SCAN_INTERVAL, UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, PRECISION_HALVES, UnitOfTemperature
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-    UpdateFailed,
-)
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import DATA_SCHLUTER_API, DATA_SCHLUTER_SESSION, DOMAIN
+from .api import CannotConnectError, InvalidSessionError, SchluterThermostat
+from .const import DOMAIN
+from .coordinator import SchluterConfigEntry, SchluterCoordinator
 
-_LOGGER = logging.getLogger(__name__)
-PLATFORM_SCHEMA = CLIMATE_PLATFORM_SCHEMA.extend(
-    {vol.Optional(CONF_SCAN_INTERVAL): vol.All(vol.Coerce(int), vol.Range(min=1))}
-)
+PARALLEL_UPDATES = 1
 
 
-async def async_setup_platform(
+async def async_setup_entry(
     hass: HomeAssistant,
-    config: ConfigType,
-    async_add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    entry: SchluterConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Schluter thermostats."""
-    if discovery_info is None:
-        return
-    session_id = hass.data[DOMAIN][DATA_SCHLUTER_SESSION]
-    api = hass.data[DOMAIN][DATA_SCHLUTER_API]
-
-    async def async_update_data():
-        try:
-            thermostats = await hass.async_add_executor_job(
-                api.get_thermostats, session_id
-            )
-        except RequestException as err:
-            raise UpdateFailed(f"Error communicating with Schluter API: {err}") from err
-
-        if thermostats is None:
-            return {}
-
-        return {thermo.serial_number: thermo for thermo in thermostats}
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=None,
-        name="schluter",
-        update_method=async_update_data,
-        update_interval=SCAN_INTERVAL,
-    )
-
-    await coordinator.async_refresh()
-
+    """Set up Schluter thermostat entities from a config entry."""
+    coordinator = entry.runtime_data
     async_add_entities(
-        SchluterThermostat(coordinator, serial_number, api, session_id)
-        for serial_number, thermostat in coordinator.data.items()
+        SchluterThermostatEntity(coordinator, serial_number)
+        for serial_number in coordinator.data
     )
 
 
-class SchluterThermostat(CoordinatorEntity, ClimateEntity):
-    """Representation of a Schluter thermostat."""
+class SchluterThermostatEntity(CoordinatorEntity[SchluterCoordinator], ClimateEntity):
+    """Climate entity for a single Schluter DITRA-HEAT thermostat."""
 
-    _attr_hvac_mode = HVACMode.HEAT
+    _attr_has_entity_name = True
+    _attr_name = None
     _attr_hvac_modes = [HVACMode.HEAT]
+    _attr_hvac_mode = HVACMode.HEAT
     _attr_supported_features = ClimateEntityFeature.TARGET_TEMPERATURE
+    _attr_target_temperature_step = PRECISION_HALVES
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
-    def __init__(self, coordinator, serial_number, api, session_id):
-        """Initialize the thermostat."""
+    def __init__(self, coordinator: SchluterCoordinator, serial_number: str) -> None:
+        """Initialize the thermostat entity."""
         super().__init__(coordinator)
         self._serial_number = serial_number
-        self._api = api
-        self._session_id = session_id
         self._attr_unique_id = serial_number
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, serial_number)},
+            name=coordinator.data[serial_number].name,
+            manufacturer="Schluter",
+            model="DITRA-HEAT-E-Wi-Fi",
+            serial_number=serial_number,
+            sw_version=coordinator.data[serial_number].sw_version,
+        )
 
     @property
-    def name(self) -> str:
-        """Return the name of the thermostat."""
-        return self.coordinator.data[self._serial_number].name
+    def _thermostat(self) -> SchluterThermostat:
+        return self.coordinator.data[self._serial_number]
 
     @property
     def current_temperature(self) -> float:
         """Return the current temperature."""
-        return self.coordinator.data[self._serial_number].temperature
-
-    @property
-    def hvac_action(self) -> HVACAction:
-        """Return current operation. Can only be heating or idle."""
-        if self.coordinator.data[self._serial_number].is_heating:
-            return HVACAction.HEATING
-        return HVACAction.IDLE
+        return self._thermostat.temperature
 
     @property
     def target_temperature(self) -> float:
-        """Return the temperature we try to reach."""
-        return self.coordinator.data[self._serial_number].set_point_temp
+        """Return the target temperature."""
+        return self._thermostat.set_point_temp
 
     @property
     def min_temp(self) -> float:
-        """Identify min_temp in Schluter API."""
-        return self.coordinator.data[self._serial_number].min_temp
+        """Return the minimum temperature."""
+        return self._thermostat.min_temp
 
     @property
     def max_temp(self) -> float:
-        """Identify max_temp in Schluter API."""
-        return self.coordinator.data[self._serial_number].max_temp
+        """Return the maximum temperature."""
+        return self._thermostat.max_temp
+
+    @property
+    def hvac_action(self) -> HVACAction:
+        """Return current HVAC action; can only be heating or idle."""
+        if self._thermostat.is_heating:
+            return HVACAction.HEATING
+        return HVACAction.IDLE
 
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
-        """Mode is always heating, so do nothing."""
+        """HVAC mode is always HEAT for floor heating; nothing to do."""
 
-    def set_temperature(self, **kwargs: Any) -> None:
-        """Set new target temperature."""
-        target_temp = None
-        target_temp = kwargs.get(ATTR_TEMPERATURE)
-        serial_number = self.coordinator.data[self._serial_number].serial_number
-        _LOGGER.debug("Setting thermostat temperature: %s", target_temp)
-
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set a new target temperature."""
+        if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            return
         try:
-            if target_temp is not None:
-                self._api.set_temperature(self._session_id, serial_number, target_temp)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except RequestException as ex:
-            _LOGGER.error("An error occurred while setting temperature: %s", ex)
+            await self.coordinator.api.async_set_temperature(
+                self.coordinator.session_id,
+                self._serial_number,
+                temperature,
+            )
+        except (InvalidSessionError, CannotConnectError) as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_temperature_failed",
+            ) from err
+        finally:
+            await self.coordinator.async_request_refresh()
