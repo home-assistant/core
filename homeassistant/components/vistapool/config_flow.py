@@ -1,7 +1,7 @@
 """Config Flow for the Vistapool integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioaquarite import AquariteAuth, AquariteClient, AquariteError, AuthenticationError
 import voluptuous as vol
@@ -28,6 +28,7 @@ RECONFIGURE_SCHEMA = vol.Schema({vol.Required(CONF_PASSWORD): cv.string})
 class VistapoolConfigFlow(ConfigFlow, domain=DOMAIN):
     """Vistapool config flow (one entry per Hayward account)."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

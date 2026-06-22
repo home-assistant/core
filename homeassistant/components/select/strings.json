@@ -14,7 +14,7 @@
           "name": "Option"
         }
       },
-      "name": "Option is selected"
+      "name": "Dropdown option is selected"
     }
   },
   "device_automation": {
@@ -97,8 +97,8 @@
   "title": "Select",
   "triggers": {
     "selection_changed": {
-      "description": "Triggers after the selected option of one or more dropdowns changes.",
-      "name": "Selection changed"
+      "description": "Triggers when the selected option of one or more dropdowns changes.",
+      "name": "Dropdown selection changed"
     }
   }
 }

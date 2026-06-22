@@ -15,7 +15,16 @@ import sys
 import threading
 import time
 from types import FunctionType
-from typing import TYPE_CHECKING, Any, Final, Literal, NotRequired, TypedDict, final
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Final,
+    Literal,
+    NotRequired,
+    TypedDict,
+    final,
+    override,
+)
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -591,6 +600,7 @@ class Entity(
     _attr_unique_id: str | None = None
     _attr_unit_of_measurement: str | None
 
+    @override
     def __init_subclass__(cls, **kwargs: Any) -> None:
         """Initialize an Entity subclass."""
         super().__init_subclass__(**kwargs)
@@ -1684,6 +1694,7 @@ class Entity(
         ):
             self.async_on_remove(self._async_unsubscribe_device_updates)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation.
 
@@ -1732,6 +1743,7 @@ class ToggleEntity(
 
     @property
     @final
+    @override
     def state(self) -> Literal["on", "off"] | None:
         """Return the state."""
         if (is_on := self.is_on) is None:

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from yoto_api import CardInsertionState, DayMode, YotoPlayer
 
@@ -98,6 +99,7 @@ class YotoSensor(YotoPlayerEntity, SensorEntity):
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.player)

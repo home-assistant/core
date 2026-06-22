@@ -1,7 +1,7 @@
 """Support for waterheater entities."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from thinqconnect import DeviceType
 from thinqconnect.integration import ExtendedProperty
@@ -96,6 +96,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
                 DEVICE_OP_MODE_TO_HA.get(mode, mode) for mode in modes
             ]
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -132,6 +133,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
             self.data.is_on,
         )
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
         _LOGGER.debug(
@@ -154,6 +156,7 @@ class ThinQWaterHeaterEntity(ThinQEntity, WaterHeaterEntity):
                 )
             )
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         mode = HA_STATE_TO_DEVICE_OP_MODE.get(operation_mode, operation_mode)
@@ -183,6 +186,7 @@ class ThinQWaterBoilerEntity(ThinQWaterHeaterEntity):
         # For SYSTEM_BOILER, we only support heat pump mode and off mode.
         self._attr_operation_list = [STATE_HEAT_PUMP, STATE_OFF]
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         _LOGGER.debug(
@@ -190,6 +194,7 @@ class ThinQWaterBoilerEntity(ThinQWaterHeaterEntity):
         )
         await self.async_call_api(self.coordinator.api.async_turn_on(self.property_id))
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         _LOGGER.debug(
@@ -197,6 +202,7 @@ class ThinQWaterBoilerEntity(ThinQWaterHeaterEntity):
         )
         await self.async_call_api(self.coordinator.api.async_turn_off(self.property_id))
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         _LOGGER.debug(

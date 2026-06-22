@@ -1,7 +1,7 @@
 """Support for IBM Watson TTS integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from ibm_cloud_sdk_core.authenticators import IAMAuthenticator
 from ibm_watson import TextToSpeechV1
@@ -165,25 +165,30 @@ class WatsonTTSProvider(Provider):
         self.name = "Watson TTS"
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return self.supported_langs
 
     @property
+    @override
     def default_language(self) -> str:
         """Return the default language."""
         return self.default_lang
 
     @property
+    @override
     def default_options(self) -> dict[str, Any]:
         """Return dict include default options."""
         return {CONF_VOICE: self.default_voice}
 
     @property
+    @override
     def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return [CONF_VOICE]
 
+    @override
     def get_tts_audio(
         self, message: str, language: str, options: dict[str, Any]
     ) -> TtsAudioType:

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from yoto_api import (
     AMBIENT_PRESET_KEYS,
@@ -90,10 +91,12 @@ class YotoSelect(YotoConfigEntity, SelectEntity):
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected colour preset, or None for a custom value."""
         return self.entity_description.value_fn(self.player.info.config)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Update the configured colour preset."""
         await self._async_set_config(**{self.entity_description.config_field: option})

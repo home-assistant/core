@@ -48,6 +48,20 @@
         }
       }
     },
+    "switch": {
+      "bluetooth_pairing": {
+        "default": "mdi:bluetooth"
+      },
+      "day_mode_auto_brightness": {
+        "default": "mdi:brightness-auto"
+      },
+      "max_headphone_volume": {
+        "default": "mdi:headphones-settings"
+      },
+      "night_mode_auto_brightness": {
+        "default": "mdi:brightness-auto"
+      }
+    },
     "time": {
       "day_mode_start": {
         "default": "mdi:weather-sunny"

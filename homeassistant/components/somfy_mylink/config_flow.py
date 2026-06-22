@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 import logging
-from typing import Any
+from typing import Any, override
 
 from somfy_mylink_synergy import SomfyMyLinkSynergy
 import voluptuous as vol
@@ -65,6 +65,7 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.mac: str | None = None
         self.ip_address: str | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -80,6 +81,7 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = {"ip": self.ip_address, "mac": self.mac}
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -115,6 +117,7 @@ class SomfyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: SomfyMyLinkConfigEntry,
     ) -> OptionsFlowHandler:
