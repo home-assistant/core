@@ -378,6 +378,7 @@ homeassistant.components.min_max.*
 homeassistant.components.minecraft_server.*
 homeassistant.components.mjpeg.*
 homeassistant.components.modbus.*
+homeassistant.components.modbus_connection.*
 homeassistant.components.modem_callerid.*
 homeassistant.components.mold_indicator.*
 homeassistant.components.monzo.*
