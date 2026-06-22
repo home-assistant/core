@@ -4,6 +4,7 @@ from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
 from itertools import chain
+from typing import override
 
 import pypck
 
@@ -140,6 +141,7 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if (
@@ -181,6 +183,7 @@ class LcnLedLogicSensor(LcnEntity, SensorEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusLedsAndLogicOps):

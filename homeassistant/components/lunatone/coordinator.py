@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 import aiohttp
 from lunatone_rest_api_client import (
@@ -60,6 +61,7 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
         )
         self.info_api = info_api
 
+    @override
     async def _async_update_data(self) -> InfoData:
         """Update info data."""
         try:
@@ -96,6 +98,7 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Devic
         )
         self.devices_api = devices_api
 
+    @override
     async def _async_update_data(self) -> dict[int, Device]:
         """Update devices data."""
         try:
@@ -132,6 +135,7 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
         )
         self.sensors_api = sensors_api
 
+    @override
     async def _async_update_data(self) -> dict[int, Sensor]:
         """Update sensor data."""
         try:

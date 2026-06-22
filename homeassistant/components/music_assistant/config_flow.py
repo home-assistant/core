@@ -1,7 +1,7 @@
 """Config flow for MusicAssistant integration."""
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlencode
 
 from music_assistant_client import MusicAssistantClient
@@ -85,6 +85,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self.token: str | None = None
         self.server_info: ServerInfoMessage | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -131,6 +132,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -201,6 +203,7 @@ class MusicAssistantConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="hassio_confirm")
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

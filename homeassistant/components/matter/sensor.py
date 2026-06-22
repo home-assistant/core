@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor
@@ -298,6 +298,7 @@ class MatterSensor(MatterEntity, SensorEntity):
     entity_description: MatterSensorEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value: Nullable | float | None
@@ -315,6 +316,7 @@ class MatterDraftElectricalMeasurementSensor(MatterEntity, SensorEntity):
     entity_description: MatterSensorEntityDescription
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         raw_value: Nullable | float | None
@@ -345,6 +347,7 @@ class MatterOperationalStateSensor(MatterSensor):
     states_map: dict[int, str]
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # the operational state list is a list of the possible operational states
@@ -383,6 +386,7 @@ class MatterListSensor(MatterSensor):
     _attr_device_class = SensorDeviceClass.ENUM
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         self._attr_options = list_values = cast(

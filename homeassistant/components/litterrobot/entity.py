@@ -1,7 +1,7 @@
 """Litter-Robot entities for common data and methods."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from typing import Any, Concatenate, Generic, TypeVar
+from typing import Any, Concatenate, Generic, TypeVar, override
 
 from pylitterbot import Pet, Robot
 from pylitterbot.exceptions import LitterRobotException
@@ -80,6 +80,7 @@ class LitterRobotEntity(
         self._attr_unique_id = f"{_id}-{description.key}"
         self._attr_device_info = get_device_info(robot)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set up a listener for the entity."""
         await super().async_added_to_hass()

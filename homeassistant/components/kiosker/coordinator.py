@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from kiosker import (
     AuthenticationError,
@@ -70,6 +71,7 @@ class KioskerDataUpdateCoordinator(DataUpdateCoordinator[KioskerData]):
         screensaver = self.api.screensaver_get_state()
         return status, blackout, screensaver
 
+    @override
     async def _async_update_data(self) -> KioskerData:
         """Update data via library."""
         try:

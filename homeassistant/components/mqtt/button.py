@@ -1,5 +1,7 @@
 """Support for MQTT buttons."""
 
+from typing import override
+
 import voluptuous as vol
 
 from homeassistant.components import button
@@ -66,10 +68,12 @@ class MqttButton(MqttEntity, ButtonEntity):
     _entity_id_format = button.ENTITY_ID_FORMAT
 
     @staticmethod
+    @override
     def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._command_template = MqttCommandTemplate(
@@ -78,12 +82,15 @@ class MqttButton(MqttEntity, ButtonEntity):
         self._attr_device_class = self._config.get(CONF_DEVICE_CLASS)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
 
+    @override
     async def async_press(self) -> None:
         """Turn the device on.
 

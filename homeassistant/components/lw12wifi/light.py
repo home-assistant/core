@@ -1,7 +1,7 @@
 """Support for Lagute LW-12 WiFi LED Controller."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import lw12
 import voluptuous as vol
@@ -76,11 +76,13 @@ class LW12WiFi(LightEntity):
         self._attr_brightness = 255
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Read back the hue-saturation of the light."""
         return color_util.color_RGB_to_hs(*self._rgb_color)
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return current light effect."""
         if self._effect is None:
@@ -88,6 +90,7 @@ class LW12WiFi(LightEntity):
         return self._effect.replace("_", " ").title()
 
     @property
+    @override
     def effect_list(self) -> list[str]:
         """Return a list of available effects.
 
@@ -95,6 +98,7 @@ class LW12WiFi(LightEntity):
         """
         return [effect.name.replace("_", " ").title() for effect in lw12.LW12_EFFECT]
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         self._light.light_on()
@@ -122,6 +126,7 @@ class LW12WiFi(LightEntity):
             self._light.set_light_option(lw12.LW12_LIGHT.FLASH, transition_speed)
         self._attr_is_on = True
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         self._light.light_off()

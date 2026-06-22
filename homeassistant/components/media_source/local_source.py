@@ -5,7 +5,7 @@ import logging
 import mimetypes
 from pathlib import Path
 import shutil
-from typing import Any, Protocol, cast
+from typing import Any, Protocol, cast, override
 
 from aiohttp import web
 from aiohttp.web_request import FileField
@@ -150,6 +150,7 @@ class LocalSource(MediaSource):
 
         return f"{target_folder.media_source_id}/{uploaded_file.filename}"
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media to a url."""
         source_dir_id, location = self.async_parse_identifier(item)
@@ -158,6 +159,7 @@ class LocalSource(MediaSource):
         assert isinstance(mime_type, str)
         return PlayMedia(f"{self.url_prefix}/{item.identifier}", mime_type, path=path)
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return media."""
         if item.identifier:

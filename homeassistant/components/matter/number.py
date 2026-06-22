@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, ClusterCommand
@@ -74,6 +74,7 @@ class MatterNumber(MatterEntity, NumberEntity):
 
     entity_description: MatterNumberEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         sendvalue = int(value)
@@ -82,6 +83,7 @@ class MatterNumber(MatterEntity, NumberEntity):
         await self.write_attribute(value=sendvalue)
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)
@@ -95,6 +97,7 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
 
     entity_description: MatterRangeNumberEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         send_value = self.entity_description.ha_to_device(value)
@@ -110,6 +113,7 @@ class MatterRangeNumber(MatterEntity, NumberEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         # get the value from the primary attribute and convert
@@ -143,6 +147,7 @@ class MatterLevelControlNumber(MatterEntity, NumberEntity):
 
     entity_description: MatterNumberEntityDescription
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set level value."""
         send_value = int(value)
@@ -155,6 +160,7 @@ class MatterLevelControlNumber(MatterEntity, NumberEntity):
         )
 
     @callback
+    @override
     def _update_from_device(self) -> None:
         """Update from device."""
         value = self.get_matter_attribute_value(self._entity_info.primary_attribute)

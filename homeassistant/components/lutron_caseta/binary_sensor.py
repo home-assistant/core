@@ -1,7 +1,7 @@
 """Support for Lutron Caseta Occupancy/Vacancy/Battery Sensors."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pylutron_caseta import OCCUPANCY_GROUP_OCCUPIED, BridgeResponseError
 
@@ -76,10 +76,12 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
             self._attr_device_info[ATTR_SUGGESTED_AREA] = area
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the brightness of the light."""
         return self._device["status"] == OCCUPANCY_GROUP_OCCUPIED
 
+    @override
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
@@ -88,16 +90,19 @@ class LutronOccupancySensor(LutronCasetaEntity, BinarySensorEntity):
         )
 
     @property
+    @override
     def device_id(self):
         """Return the device ID used for calling pylutron_caseta."""
         return self._device["occupancy_group_id"]
 
     @property
+    @override
     def unique_id(self):
         """Return a unique identifier."""
         return f"occupancygroup_{self._bridge_unique_id}_{self.device_id}"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return {"device_id": self.device_id}
@@ -121,10 +126,12 @@ class LutronCasetaBatterySensor(LutronCasetaEntity, BinarySensorEntity):
         self._attr_is_on: bool | None = None
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID of the battery sensor."""
         return f"{super().unique_id}_battery"
 
+    @override
     # pylint: disable-next=home-assistant-missing-super-call
     async def async_added_to_hass(self) -> None:
         """Skip bridge subscriptions; the battery sensor is polled."""

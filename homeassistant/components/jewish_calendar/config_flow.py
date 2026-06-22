@@ -1,7 +1,7 @@
 """Config flow for Jewish calendar integration."""
 
 import logging
-from typing import Any, get_args
+from typing import Any, get_args, override
 import zoneinfo
 
 from hdate.translator import Language
@@ -127,12 +127,14 @@ class JewishCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: JewishCalendarConfigEntry,
     ) -> JewishCalendarOptionsFlowHandler:
         """Get the options flow for this handler."""
         return JewishCalendarOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

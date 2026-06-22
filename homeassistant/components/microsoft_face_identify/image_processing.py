@@ -1,6 +1,7 @@
 """Component that will help set the Microsoft face for verify processing."""
 
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -76,6 +77,7 @@ class MicrosoftFaceIdentifyEntity(ImageProcessingFaceEntity):
         else:
             self._attr_name = f"MicrosoftFace {split_entity_id(camera_entity)[1]}"
 
+    @override
     async def async_process_image(self, image: bytes) -> None:
         """Process image.
 

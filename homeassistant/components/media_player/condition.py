@@ -1,7 +1,7 @@
 """Provides conditions for media players."""
 
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
@@ -22,6 +22,7 @@ class _MediaPlayerMutedConditionBase(EntityConditionBase):
     _domain_specs = {DOMAIN: DomainSpec()}
     _target_muted: bool
 
+    @override
     def _state_valid_since(self, state: State) -> datetime:
         """Anchor `for:` durations to `last_updated` for the muted attribute.
 
@@ -37,6 +38,7 @@ class _MediaPlayerMutedConditionBase(EntityConditionBase):
             or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
         )
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip entities without volume attributes from the all/count check."""
         return super()._should_include(state) and self._has_volume_attributes(state)
@@ -48,6 +50,7 @@ class _MediaPlayerMutedConditionBase(EntityConditionBase):
             or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 0
         )
 
+    @override
     def is_valid_state(self, entity_state: State) -> bool:
         """Check if the entity state matches the targeted muted state."""
         if not self._has_volume_attributes(entity_state):
@@ -73,6 +76,7 @@ class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
     _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL)}
     _valid_unit = "%"
 
+    @override
     def _get_tracked_value(self, entity_state: State) -> Any:
         """Get the volume value converted from 0.0-1.0 to percentage (0-100)."""
         raw = super()._get_tracked_value(entity_state)
@@ -83,6 +87,7 @@ class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
         except TypeError, ValueError:
             return None
 
+    @override
     def _should_include(self, state: State) -> bool:
         """Skip media players that do not expose a volume_level attribute."""
         return (

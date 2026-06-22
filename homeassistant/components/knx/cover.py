@@ -1,6 +1,6 @@
 """Support for KNX cover entities."""
 
-from typing import Any
+from typing import Any, override
 
 from xknx import XKNX
 from xknx.devices import Cover as XknxCover
@@ -106,6 +106,7 @@ class _KnxCover(CoverEntity):
         self._attr_device_class = CoverDeviceClass.BLIND if _supports_tilt else None
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of the cover.
 
@@ -117,6 +118,7 @@ class _KnxCover(CoverEntity):
         return None
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         # state shall be "unknown" when xknx travelcalculator is not initialized
@@ -125,44 +127,53 @@ class _KnxCover(CoverEntity):
         return self._device.is_closed()
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._device.is_opening()
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._device.is_closing()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self._device.set_down()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self._device.set_up()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         knx_position = 100 - kwargs[ATTR_POSITION]
         await self._device.set_position(knx_position)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._device.stop()
 
     @property
+    @override
     def current_cover_tilt_position(self) -> int | None:
         """Return current tilt position of cover."""
         if (angle := self._device.current_angle()) is not None:
             return 100 - angle
         return None
 
+    @override
     async def async_set_cover_tilt_position(self, **kwargs: Any) -> None:
         """Move the cover tilt to a specific position."""
         knx_tilt_position = 100 - kwargs[ATTR_TILT_POSITION]
         await self._device.set_angle(knx_tilt_position)
 
+    @override
     async def async_open_cover_tilt(self, **kwargs: Any) -> None:
         """Open the cover tilt."""
         if self._device.angle.writable:
@@ -170,6 +181,7 @@ class _KnxCover(CoverEntity):
         else:
             await self._device.set_short_up()
 
+    @override
     async def async_close_cover_tilt(self, **kwargs: Any) -> None:
         """Close the cover tilt."""
         if self._device.angle.writable:
@@ -177,6 +189,7 @@ class _KnxCover(CoverEntity):
         else:
             await self._device.set_short_down()
 
+    @override
     async def async_stop_cover_tilt(self, **kwargs: Any) -> None:
         """Stop the cover tilt."""
         await self._device.stop()
