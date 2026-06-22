@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import datetime, time, timedelta
+from datetime import date, datetime, time, timedelta
 import logging
 import random
 from typing import override
@@ -612,9 +612,19 @@ class ThinQEnergySensorEntityDescription(SensorEntityDescription):
     start_date_fn: Callable[[datetime], datetime]
     end_date_fn: Callable[[datetime], datetime]
     update_interval: timedelta = timedelta(days=1)
+    reset_at_midnight: bool = False
 
 
 ENERGY_USAGE_SENSORS: tuple[ThinQEnergySensorEntityDescription, ...] = (
+    ThinQEnergySensorEntityDescription(
+        key="today",
+        translation_key="energy_usage_today",
+        usage_period=USAGE_DAILY,
+        start_date_fn=lambda today: today,
+        end_date_fn=lambda today: today,
+        update_interval=timedelta(hours=1),
+        reset_at_midnight=True,
+    ),
     ThinQEnergySensorEntityDescription(
         key="yesterday",
         translation_key="energy_usage_yesterday",
@@ -815,6 +825,7 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
 
     entity_description: ThinQEnergySensorEntityDescription
     _stop_update: Callable[[], None] | None = None
+    _last_fetch_date: date | None = None
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -859,22 +870,36 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
             dt_util.get_time_zone(self.coordinator.hass.config.time_zone)
         )
         next_update = local_now + self.entity_description.update_interval
-        if self.coordinator.update_energy_at_time_of_day is not None:
-            # calculate next_update time by combining tomorrow
-            # and update_energy_at_time_of_day
+        if (
+            self.coordinator.update_energy_at_time_of_day is not None
+            and self.entity_description.update_interval >= timedelta(days=1)
+        ):
+            # For daily sensors: align to a consistent time of day to avoid
+            # clock drift and reduce the chance of multiple sensors fetching
+            # simultaneously across restarts.
             next_update = datetime.combine(
-                (next_update).date(),
+                next_update.date(),
                 self.coordinator.update_energy_at_time_of_day,
                 next_update.tzinfo,
             )
+        start_date = (self.entity_description.start_date_fn(local_now)).date()
+        end_date = (self.entity_description.end_date_fn(local_now)).date()
         try:
             self._attr_native_value = await self.coordinator.api.async_get_energy_usage(
                 energy_property=self.property_id,
                 period=self.entity_description.usage_period,
-                start_date=(self.entity_description.start_date_fn(local_now)).date(),
-                end_date=(self.entity_description.end_date_fn(local_now)).date(),
+                start_date=start_date,
+                end_date=end_date,
                 detail=False,
             )
+            if (
+                self.entity_description.reset_at_midnight
+                and start_date != self._last_fetch_date
+            ):
+                self._attr_last_reset = datetime.combine(
+                    start_date, time.min, local_now.tzinfo
+                )
+                self._last_fetch_date = start_date
         except ThinQAPIException as exc:
             _LOGGER.warning(
                 "[%s:%s] Failed to fetch energy usage data. reason=%s",
