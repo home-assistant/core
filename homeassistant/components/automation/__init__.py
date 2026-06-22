@@ -10,9 +10,8 @@ from typing import Any, cast
 from propcache.api import cached_property
 import voluptuous as vol
 
-from homeassistant.components import labs, websocket_api
+from homeassistant.components import websocket_api
 from homeassistant.components.blueprint import CONF_USE_BLUEPRINT
-from homeassistant.components.labs import async_subscribe_preview_feature
 from homeassistant.const import (
     ATTR_AREA_ID,
     ATTR_ENTITY_ID,
@@ -111,121 +110,6 @@ ATTR_LAST_TRIGGERED = "last_triggered"
 ATTR_SOURCE = "source"
 ATTR_VARIABLES = "variables"
 SERVICE_TRIGGER = "trigger"
-
-NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG = "new_triggers_conditions"
-
-_EXPERIMENTAL_CONDITION_PLATFORMS = {
-    "air_quality",
-    "alarm_control_panel",
-    "assist_satellite",
-    "battery",
-    "calendar",
-    "climate",
-    "counter",
-    "cover",
-    "device_tracker",
-    "door",
-    "fan",
-    "garage_door",
-    "gate",
-    "humidifier",
-    "humidity",
-    "illuminance",
-    "lawn_mower",
-    "light",
-    "lock",
-    "media_player",
-    "moisture",
-    "motion",
-    "occupancy",
-    "person",
-    "power",
-    "remote",
-    "schedule",
-    "select",
-    "siren",
-    "switch",
-    "temperature",
-    "text",
-    "timer",
-    "todo",
-    "update",
-    "vacuum",
-    "valve",
-    "water_heater",
-    "window",
-}
-
-_EXPERIMENTAL_TRIGGER_PLATFORMS = {
-    "air_quality",
-    "alarm_control_panel",
-    "assist_satellite",
-    "battery",
-    "button",
-    "climate",
-    "counter",
-    "cover",
-    "device_tracker",
-    "door",
-    "doorbell",
-    "event",
-    "fan",
-    "garage_door",
-    "gate",
-    "humidifier",
-    "humidity",
-    "illuminance",
-    "lawn_mower",
-    "light",
-    "lock",
-    "media_player",
-    "moisture",
-    "motion",
-    "occupancy",
-    "person",
-    "power",
-    "remote",
-    "scene",
-    "schedule",
-    "select",
-    "siren",
-    "switch",
-    "temperature",
-    "text",
-    "timer",
-    "todo",
-    "update",
-    "vacuum",
-    "valve",
-    "water_heater",
-    "window",
-}
-
-
-@callback
-def is_disabled_experimental_condition(hass: HomeAssistant, platform: str) -> bool:
-    """Check if the platform is a disabled experimental condition platform."""
-    return (
-        platform in _EXPERIMENTAL_CONDITION_PLATFORMS
-        and not labs.async_is_preview_feature_enabled(
-            hass,
-            DOMAIN,
-            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        )
-    )
-
-
-@callback
-def is_disabled_experimental_trigger(hass: HomeAssistant, platform: str) -> bool:
-    """Check if the platform is a disabled experimental trigger platform."""
-    return (
-        platform in _EXPERIMENTAL_TRIGGER_PLATFORMS
-        and not labs.async_is_preview_feature_enabled(
-            hass,
-            DOMAIN,
-            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        )
-    )
 
 
 class IfAction(condition_helper.ConditionsChecker):
@@ -423,19 +307,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         SERVICE_RELOAD,
         reload_helper.execute_service,
         schema=vol.Schema({vol.Optional(CONF_ID): str}),
-    )
-
-    async def new_triggers_conditions_listener(
-        _event_data: labs.EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        await reload_helper.execute_service(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
-
-    async_subscribe_preview_feature(
-        hass,
-        DOMAIN,
-        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        new_triggers_conditions_listener,
     )
 
     websocket_api.async_register_command(hass, websocket_config)

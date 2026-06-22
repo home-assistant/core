@@ -44,7 +44,6 @@ from homeassistant.helpers.trigger import (
     async_validate_trigger_config,
 )
 from homeassistant.helpers.typing import UNDEFINED, TemplateVarsType, UndefinedType
-from homeassistant.setup import async_setup_component
 from homeassistant.util.yaml import load_yaml_dict
 
 from tests.common import MockConfigEntry, mock_device_registry
@@ -1411,72 +1410,6 @@ def other_states(state: StrEnum | Iterable[StrEnum]) -> list[str]:
         enum_class = list(state)[0].__class__
 
     return sorted({s.value for s in enum_class} - excluded_values)
-
-
-async def assert_condition_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Helper to check that a condition is gated by the labs flag."""
-
-    # Local include to avoid importing the automation component unnecessarily
-    from homeassistant.components import automation  # noqa: PLC0415
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {"platform": "event", "event_type": "test_event"},
-                "condition": {
-                    CONF_CONDITION: condition,
-                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-                    CONF_OPTIONS: {"behavior": "any"},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
-    )
-
-    assert (
-        "Unnamed automation failed to setup conditions and has been disabled: "
-        f"Condition '{condition}' requires the experimental 'New triggers and "
-        "conditions' feature to be enabled in Home Assistant Labs settings "
-        "(feature flag: 'new_triggers_conditions')"
-    ) in caplog.text
-
-
-async def assert_trigger_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger: str
-) -> None:
-    """Helper to check that a trigger is gated by the labs flag."""
-
-    # Local include to avoid importing the automation component unnecessarily
-    from homeassistant.components import automation  # noqa: PLC0415
-
-    await async_setup_component(
-        hass,
-        automation.DOMAIN,
-        {
-            automation.DOMAIN: {
-                "trigger": {
-                    CONF_PLATFORM: trigger,
-                    CONF_TARGET: {ATTR_LABEL_ID: "test_label"},
-                },
-                "action": {
-                    "service": "test.automation",
-                },
-            }
-        },
-    )
-
-    assert (
-        "Unnamed automation failed to setup triggers and has been disabled: Trigger "
-        f"'{trigger}' requires the experimental 'New triggers and conditions' "
-        "feature to be enabled in Home Assistant Labs settings (feature flag: "
-        "'new_triggers_conditions')"
-    ) in caplog.text
 
 
 async def _validate_condition_options(
