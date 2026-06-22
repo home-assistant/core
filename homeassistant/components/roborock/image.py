@@ -12,9 +12,14 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import RoborockConfigEntry, RoborockDataUpdateCoordinator
+from .coordinator import (
+    RoborockConfigEntry,
+    RoborockCoordinatorType,
+    RoborockDataUpdateCoordinator,
+)
 from .entity import RoborockCoordinatedEntityV1
 
 _LOGGER = logging.getLogger(__name__)
@@ -28,20 +33,38 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roborock image platform."""
+    coordinators = config_entry.runtime_data
 
-    async_add_entities(
-        (
+    @callback
+    def async_add_coordinator_entities(
+        coordinator: RoborockCoordinatorType,
+    ) -> None:
+        """Add entities for a specific coordinator."""
+        if not isinstance(coordinator, RoborockDataUpdateCoordinator):
+            return
+        entities = [
             RoborockMap(
                 config_entry,
-                coord,
-                coord.properties_api.home,
+                coordinator,
+                coordinator.properties_api.home,
                 map_info.map_flag,
                 map_info.name,
             )
-            for coord in config_entry.runtime_data.v1
-            if coord.properties_api.home is not None
-            for map_info in (coord.properties_api.home.home_map_info or {}).values()
-        ),
+            for map_info in (
+                coordinator.properties_api.home.home_map_info or {}
+            ).values()
+        ]
+        async_add_entities(entities)
+
+    for coordinator in coordinators.values():
+        async_add_coordinator_entities(coordinator)
+
+    config_entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"roborock_coordinator_added_{config_entry.entry_id}",
+            async_add_coordinator_entities,
+        )
     )
 
 
