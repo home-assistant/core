@@ -5,7 +5,6 @@ from unittest.mock import AsyncMock
 import pyaxencoapi
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.myneomitis import select as select_platform
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -97,28 +96,32 @@ async def test_select_option(
     assert state.state == "on"
 
 
-def test_resolve_select_maps_list_presets() -> None:
-    """List preset structures should map through PRESET_MODE_MAP."""
-    preset_list = pyaxencoapi.PRESET_MODE_MODELS["EV30"]
-    preset_map = {key: pyaxencoapi.PRESET_MODE_MAP[key] for key in preset_list}
-    expected_reverse = {code: key for key, code in preset_map.items()}
+async def test_select_options_from_preset_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Test select entity exposes options from the preset model."""
+    mock_pyaxenco_client.get_devices.return_value = [RELAIS_DEVICE]
 
-    options, mapped, reverse = select_platform._resolve_select_maps("EV30", {}, {})
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert options == list(preset_list)
-    assert mapped == preset_map
-    assert reverse == expected_reverse
+    state = hass.states.get("select.relais_device")
+    assert state is not None
+    assert state.attributes["options"] == list(pyaxencoapi.PRESET_MODE_MAP_RELAIS)
 
-
-def test_resolve_select_maps_empty_fallback() -> None:
-    """Missing preset models with empty fallbacks should return empty mappings."""
-    options, mapped, reverse = select_platform._resolve_select_maps(
-        "UNKNOWN_MODEL", {}, {}
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {ATTR_ENTITY_ID: "select.relais_device", "option": "on"},
+        blocking=True,
     )
 
-    assert options == []
-    assert mapped == {}
-    assert reverse == {}
+    mock_pyaxenco_client.set_device_mode.assert_awaited_once_with(
+        "relais1", pyaxencoapi.PRESET_MODE_MAP_RELAIS["on"]
+    )
 
 
 async def test_select_option_ufh(

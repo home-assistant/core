@@ -7,7 +7,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.myneomitis import climate as climate_platform
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
@@ -121,17 +120,34 @@ async def test_set_temperature(
     assert state.attributes["temperature"] == 23.5
 
 
-def test_resolve_preset_maps_list_presets() -> None:
-    """List preset structures should map through PRESET_MODE_MAP."""
-    preset_list = pyaxencoapi.PRESET_MODE_MODELS["EV30"]
-    preset_map = {key: pyaxencoapi.PRESET_MODE_MAP[key] for key in preset_list}
-    expected_reverse = {code: key for key, code in preset_map.items()}
+async def test_select_options_from_preset_model(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_pyaxenco_client: AsyncMock,
+) -> None:
+    """Test select entity exposes options from the preset model."""
+    mock_pyaxenco_client.get_devices.return_value = [CLIMATE_DEVICE]
 
-    options, mapped, reverse = climate_platform._resolve_preset_maps("EV30")
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
 
-    assert options == list(preset_list)
-    assert mapped == preset_map
-    assert reverse == expected_reverse
+    state = hass.states.get("climate.climate_device")
+    assert state is not None
+    assert state.attributes["preset_modes"] == list(
+        pyaxencoapi.PRESET_MODE_MODELS["EV30"]
+    )
+
+    await hass.services.async_call(
+        "climate",
+        "set_preset_mode",
+        {ATTR_ENTITY_ID: "climate.climate_device", "preset_mode": "comfort"},
+        blocking=True,
+    )
+
+    mock_pyaxenco_client.set_device_mode.assert_awaited_once_with(
+        "climate1", pyaxencoapi.PRESET_MODE_MAP["comfort"]
+    )
 
 
 async def test_set_preset_mode(
