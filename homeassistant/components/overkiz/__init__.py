@@ -18,6 +18,7 @@ from pyoverkiz.exceptions import (
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
+    ServiceUnavailableError,
     TooManyRequestsError,
 )
 from pyoverkiz.models import Device, PersistedActionGroup
@@ -147,6 +148,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         raise ConfigEntryNotReady("Failed to connect") from exception
     except MaintenanceError as exception:
         raise ConfigEntryNotReady("Server is down for maintenance") from exception
+    except ServiceUnavailableError as exception:
+        raise ConfigEntryNotReady("Server is unavailable") from exception
 
     coordinator = OverkizDataUpdateCoordinator(
         hass,
