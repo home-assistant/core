@@ -409,3 +409,28 @@ async def test_reconfigure_failed_connection(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["errors"] == {"base": "cannot_connect"}
     assert config_entry.data == entry_data
+
+
+async def test_reconfigure_plm_manual(hass: HomeAssistant) -> None:
+    """Test reconfiguring a PLM falls back to manual entry when no USB ports exist."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
+    config_entry.add_to_hass(hass)
+
+    async def _no_usb_ports(hass: HomeAssistant) -> dict[str, str]:
+        return {}
+
+    with patch(PATCH_USB_LIST, _no_usb_ports):
+        result = await config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == STEP_PLM_MANUALLY
+
+    result2, mock_setup_entry = await _device_form(
+        hass,
+        result["flow_id"],
+        mock_successful_connection,
+        {CONF_DEVICE: "/dev/ttyUSB99"},
+    )
+    assert result2["type"] is FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert config_entry.data == {CONF_DEVICE: "/dev/ttyUSB99"}
+    assert len(mock_setup_entry.mock_calls) == 1
