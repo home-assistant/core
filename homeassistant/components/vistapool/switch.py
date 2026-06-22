@@ -23,7 +23,7 @@ class VistapoolSwitchEntityDescription(SwitchEntityDescription):
     """Describes a Vistapool switch entity."""
 
     value_path: str
-    is_relay: bool = False
+    extra_read_paths: tuple[str, ...] = ()
     exists_path: str | tuple[str, ...] | None = None
     translation_placeholders: dict[str, str] | None = None
 
@@ -40,7 +40,7 @@ SWITCH_DESCRIPTIONS: tuple[VistapoolSwitchEntityDescription, ...] = (
             translation_key="relay",
             translation_placeholders={"number": str(i)},
             value_path=f"relays.relay{i}.info.onoff",
-            is_relay=True,
+            extra_read_paths=(f"relays.relay{i}.info.status",),
         )
         for i in (1, 2, 3, 4)
     ),
@@ -125,18 +125,15 @@ class VistapoolSwitch(VistapoolEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool | None:
-        """Return true if the switch is on."""
+        """Return true if the writable path or any extra read path is truthy."""
         value = self.coordinator.get_value(self.entity_description.value_path)
         if value is None:
             return None
         on = value in (True, "1")
-        if self.entity_description.is_relay:
-            # Relays report a separate read-only `status` next to the writable
-            # `onoff`; show the switch as on when either is truthy.
-            status_path = self.entity_description.value_path.replace("onoff", "status")
-            status = self.coordinator.get_value(status_path)
-            if status is not None:
-                on = on or status in (True, "1")
+        for extra_path in self.entity_description.extra_read_paths:
+            extra = self.coordinator.get_value(extra_path)
+            if extra is not None:
+                on = on or extra in (True, "1")
         return on
 
     async def async_turn_on(self, **kwargs: Any) -> None:
