@@ -1,6 +1,7 @@
 """Support for number entities."""
 
 from dataclasses import dataclass, field
+from typing import override
 
 from gardena_bluetooth.const import (
     AquaContourWatering,
@@ -169,6 +170,7 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
 
     entity_description: GardenaBluetoothNumberEntityDescription
 
+    @override
     def _handle_coordinator_update(self) -> None:
         data = self.coordinator.get_cached(self.entity_description.char)
         if data is None:
@@ -183,6 +185,7 @@ class GardenaBluetoothNumber(GardenaBluetoothDescriptorEntity, NumberEntity):
 
         super()._handle_coordinator_update()
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.coordinator.write(
@@ -210,6 +213,7 @@ class GardenaBluetoothRemainingOpenSetNumber(GardenaBluetoothEntity, NumberEntit
         super().__init__(coordinator, {Valve.remaining_open_time.uuid})
         self._attr_unique_id = f"{coordinator.address}-remaining_open_set"
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.coordinator.write(Valve.remaining_open_time, int(value * 60))

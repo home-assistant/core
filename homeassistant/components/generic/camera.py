@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import httpx
 import voluptuous as vol
@@ -123,10 +123,12 @@ class GenericCamera(Camera):
         )
 
     @property
+    @override
     def use_stream_for_stills(self) -> bool:
         """Whether or not to use stream to generate stills."""
         return not self._still_image_url
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -184,10 +186,12 @@ class GenericCamera(Camera):
             return self._last_image
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of this device."""
         return self._name
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         if self._stream_source is None:

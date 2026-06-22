@@ -1,5 +1,7 @@
 """Weather entity."""
 
+from typing import override
+
 from google_weather_api import (
     DailyForecastResponse,
     HourlyForecastResponse,
@@ -174,6 +176,7 @@ class GoogleWeatherEntity(
         GoogleWeatherBaseEntity.__init__(self, entry, subentry)
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         return _get_condition(
@@ -182,61 +185,73 @@ class GoogleWeatherEntity(
         )
 
     @property
+    @override
     def native_temperature(self) -> float:
         """Return the temperature."""
         return self.coordinator.data.temperature.degrees
 
     @property
+    @override
     def native_apparent_temperature(self) -> float:
         """Return the apparent temperature."""
         return self.coordinator.data.feels_like_temperature.degrees
 
     @property
+    @override
     def native_dew_point(self) -> float:
         """Return the dew point."""
         return self.coordinator.data.dew_point.degrees
 
     @property
+    @override
     def humidity(self) -> int:
         """Return the humidity."""
         return self.coordinator.data.relative_humidity
 
     @property
+    @override
     def uv_index(self) -> float:
         """Return the UV index."""
         return float(self.coordinator.data.uv_index)
 
     @property
+    @override
     def native_pressure(self) -> float:
         """Return the pressure."""
         return self.coordinator.data.air_pressure.mean_sea_level_millibars
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float:
         """Return the wind gust speed."""
         return self.coordinator.data.wind.gust.value
 
     @property
+    @override
     def native_wind_speed(self) -> float:
         """Return the wind speed."""
         return self.coordinator.data.wind.speed.value
 
     @property
+    @override
     def wind_bearing(self) -> int:
         """Return the wind bearing."""
         return self.coordinator.data.wind.direction.degrees
 
     @property
+    @override
     def native_visibility(self) -> float:
         """Return the visibility."""
         return self.coordinator.data.visibility.distance
 
     @property
+    @override
     def cloud_coverage(self) -> float:
         """Return the Cloud coverage in %."""
         return float(self.coordinator.data.cloud_cover)
 
     @callback
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         coordinator = self.forecast_coordinators["daily"]
@@ -281,6 +296,7 @@ class GoogleWeatherEntity(
         ]
 
     @callback
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         coordinator = self.forecast_coordinators["hourly"]
@@ -315,6 +331,7 @@ class GoogleWeatherEntity(
         ]
 
     @callback
+    @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the twice daily forecast in native units."""
         coordinator = self.forecast_coordinators["twice_daily"]

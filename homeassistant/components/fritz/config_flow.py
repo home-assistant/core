@@ -4,7 +4,7 @@ from collections.abc import Mapping
 import ipaddress
 import logging
 import socket
-from typing import Any, Self
+from typing import Any, Self, override
 from urllib.parse import ParseResult, urlparse
 
 from fritzconnection import FritzConnection
@@ -65,6 +65,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: FritzConfigEntry,
     ) -> FritzBoxToolsOptionsFlowHandler:
@@ -155,6 +156,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             return int(port)
         return DEFAULT_HTTPS_PORT if user_input[CONF_SSL] else DEFAULT_HTTP_PORT
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -193,6 +195,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     def is_matching(self, other_flow: Self) -> bool:
         """Return True if other_flow is matching this flow."""
         return other_flow._host == self._host
@@ -263,6 +266,7 @@ class FritzBoxToolsFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

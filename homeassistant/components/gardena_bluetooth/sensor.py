@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
+from typing import override
 
 from gardena_bluetooth.const import (
     AquaContourBattery,
@@ -241,6 +242,7 @@ class GardenaBluetoothSensor(GardenaBluetoothDescriptorEntity, SensorEntity):
 
     entity_description: GardenaBluetoothSensorEntityDescription
 
+    @override
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self.entity_description.char)
         value = self.entity_description.get(value)
@@ -272,6 +274,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         self._attr_translation_key = key
         self._char = char
 
+    @override
     def _handle_coordinator_update(self) -> None:
         value = self.coordinator.get_cached(self._char)
         if not value:
@@ -291,6 +294,7 @@ class GardenaBluetoothRemainSensor(GardenaBluetoothEntity, SensorEntity):
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Sensor only available when open."""
         return super().available and self._attr_native_value is not None

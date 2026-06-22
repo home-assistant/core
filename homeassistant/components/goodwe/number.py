@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from goodwe import Inverter, InverterError
 
@@ -134,6 +135,7 @@ class InverterNumberEntity(NumberEntity):
         value = await self.entity_description.getter(self._inverter)
         self._attr_native_value = float(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.entity_description.setter(self._inverter, int(value))

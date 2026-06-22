@@ -1,7 +1,7 @@
 """Config flow for Gardena Bluetooth integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import PRODUCT_NAMES, DeviceInformation
@@ -60,6 +60,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PRODUCT_TYPE: self.devices[self.address].product_type.name,
         }
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -98,6 +99,7 @@ class GardenaBluetoothConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
