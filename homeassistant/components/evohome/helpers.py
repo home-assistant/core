@@ -32,24 +32,3 @@ def async_create_deprecation_issue_once(
         translation_key=translation_key or issue_id,
         translation_placeholders=placeholders,
     )
-
-
-@callback
-def async_create_breaking_change_issue_once(
-    hass: HomeAssistant,
-    issue_id: str,
-    translation_key: str | None = None,
-    translation_placeholders: dict[str, str] | None = None,
-) -> None:
-    """Create or update a breaking change issue entry."""
-
-    ir.async_get(hass).async_get_or_create(
-        DOMAIN,
-        issue_id,
-        is_fixable=False,
-        is_persistent=True,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.ERROR,
-        translation_key=translation_key or issue_id,
-        translation_placeholders=translation_placeholders or {},
-    )
