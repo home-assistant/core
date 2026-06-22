@@ -23,6 +23,7 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
     """Make sure all entities are enabled."""
 
 
+@pytest.mark.freeze_time("2026-05-03T12:00:00+00:00")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
