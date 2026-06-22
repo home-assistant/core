@@ -84,7 +84,6 @@ class AmazonSelectEntity(AmazonEntity, SelectEntity):
     async def async_added_to_hass(self) -> None:
         """Restore last known option."""
         await super().async_added_to_hass()
-        # API values: "All", "Home", "Off"
         self._attr_current_option = self._device.communication_settings[
             self.entity_description.key
         ].lower()
@@ -97,7 +96,6 @@ class AmazonSelectEntity(AmazonEntity, SelectEntity):
             assert method is not None
 
         async with alexa_api_call(self.coordinator):
-            # API values: "All", "Home", "Off"
             await method(self.device, AmazonDropInStatus(option.capitalize()))
 
         self._attr_current_option = option
