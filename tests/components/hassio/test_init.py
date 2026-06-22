@@ -254,6 +254,7 @@ async def test_setup_onboarding_supervisor_update_error(
     supervisor_client.supervisor.update.assert_called_once()
 
 
+@pytest.mark.usefixtures("supervisor_client")
 @pytest.mark.parametrize(
     ("update_key", "expected_calls"),
     [("network", 1), ("supervisor", 0)],
@@ -261,7 +262,6 @@ async def test_setup_onboarding_supervisor_update_error(
 )
 async def test_supervisor_network_event_reloads_adapters(
     hass: HomeAssistant,
-    supervisor_client: AsyncMock,
     update_key: str,
     expected_calls: int,
 ) -> None:

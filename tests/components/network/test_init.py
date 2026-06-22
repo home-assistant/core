@@ -707,8 +707,8 @@ _ADAPTERS_WITH_MANUAL_CONFIG = [
 async def test_async_reload_adapters(hass: HomeAssistant) -> None:
     """Test reloading adapters dispatches a signal only when they change."""
     with patch(
-        "homeassistant.components.network.util.ifaddr.get_adapters",
-        return_value=[],
+        "homeassistant.components.network.network.async_load_adapters",
+        return_value=deepcopy(_ADAPTERS_WITH_MANUAL_CONFIG),
     ):
         assert await async_setup_component(hass, DOMAIN, {DOMAIN: {}})
         await hass.async_block_till_done()
@@ -721,22 +721,28 @@ async def test_async_reload_adapters(hass: HomeAssistant) -> None:
 
     async_dispatcher_connect(hass, SIGNAL_NETWORK_ADAPTERS_CHANGED, _track)
 
-    # Unchanged adapters do not dispatch a signal.
+    # The same hardware loads unconfigured (all disabled); once configured it
+    # matches the current adapters, so no signal is dispatched.
+    unconfigured = deepcopy(_ADAPTERS_WITH_MANUAL_CONFIG)
+    for adapter in unconfigured:
+        adapter["enabled"] = False
     with patch(
         "homeassistant.components.network.network.async_load_adapters",
-        return_value=network.async_get_loaded_adapters(hass),
+        return_value=unconfigured,
     ):
         await network.async_reload_adapters(hass)
     assert signals == []
 
-    # Changed adapters dispatch a signal and update the loaded adapters.
+    # A physically different adapter set dispatches a signal.
+    changed = deepcopy(_ADAPTERS_WITH_MANUAL_CONFIG)
+    changed[1]["ipv4"][0]["address"] = "192.168.1.99"
     with patch(
         "homeassistant.components.network.network.async_load_adapters",
-        return_value=deepcopy(_ADAPTERS_WITH_MANUAL_CONFIG),
+        return_value=changed,
     ):
         await network.async_reload_adapters(hass)
     assert len(signals) == 1
-    assert network.async_get_loaded_adapters(hass) == _ADAPTERS_WITH_MANUAL_CONFIG
+    assert network.async_get_loaded_adapters(hass) == changed
 
 
 async def test_async_get_announce_addresses(hass: HomeAssistant) -> None:
