@@ -75,6 +75,11 @@ WIRELESS_DISCONNECTION = (
 )
 
 
+def _is_locally_administered_mac(mac: str) -> bool:
+    """Return True if the MAC has the locally-administered (U/L) bit set."""
+    return bool(int(mac.split(":", 1)[0], 16) & 0x02)
+
+
 @callback
 def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Check if client is allowed."""
@@ -85,6 +90,10 @@ def async_client_allowed_fn(hub: UnifiHub, obj_id: str) -> bool:
         return False
 
     client = hub.api.clients[obj_id]
+
+    if hub.config.option_ignore_local_mac and _is_locally_administered_mac(client.mac):
+        return False
+
     if client.mac not in hub.entity_loader.wireless_clients:
         if not hub.config.option_track_wired_clients:
             return False
