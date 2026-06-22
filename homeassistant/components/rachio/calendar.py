@@ -10,7 +10,6 @@ from homeassistant.components.calendar import (
     CalendarEvent,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
@@ -121,7 +120,7 @@ class RachioCalendarEntity(
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
         if not self.coordinator.data:
-            raise HomeAssistantError("No events scheduled")
+            return []
         schedule = self.coordinator.data
         event_list: list[CalendarEvent] = []
 
