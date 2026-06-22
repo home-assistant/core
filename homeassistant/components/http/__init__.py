@@ -401,13 +401,11 @@ class HomeAssistantHTTP:
         self.site: HomeAssistantTCPSite | None = None
         self.supervisor_site: HomeAssistantUnixSite | None = None
         self.context: ssl.SSLContext | None = None
-        # Under Supervisor the server moved off the previous default port
-        # (SERVER_PORT). Redirect that port to the active one and relax CORS
-        # for same-host requests so already-flashed devices and bookmarks keep
+        # Under Supervisor the server listens on port 80. Redirect the previous
+        # default port (SERVER_PORT) to the active one and relax CORS for
+        # same-host requests so already-flashed devices and bookmarks keep
         # working, until onboarding completes.
-        self._port_transition = (
-            ENV_SUPERVISOR in os.environ and server_port != SERVER_PORT
-        )
+        self._port_transition = ENV_SUPERVISOR in os.environ
         self._port_transition_cors = self._port_transition
         self._legacy_redirect_runner: web.AppRunner | None = None
 
