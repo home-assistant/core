@@ -507,7 +507,10 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
                     )
                 if await self.mass.music.verify_item_uri(
                     uri=media_id_verify_str, username=username
-                ) or await asyncio.to_thread(os.path.isfile, media_id_str):
+                ):
+                    media_uris.append(media_id_verify_str)
+                    continue
+                if await asyncio.to_thread(os.path.isfile, media_id_str):
                     media_uris.append(media_id_str)
                     continue
             # last resort: search for media item by name/search

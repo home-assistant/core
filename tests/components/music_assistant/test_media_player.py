@@ -568,6 +568,36 @@ async def test_media_player_play_media_action(
             blocking=True,
         )
 
+    # test with schema 33
+    music_assistant_client.server_info.schema_version = 33
+    ## numeric media id with media_type must verify as library item
+
+    music_assistant_client.send_command.reset_mock()
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "1",
+            ATTR_MEDIA_TYPE: "audiobook",
+            ATTR_MEDIA_ENQUEUE: "add",
+            ATTR_USERNAME: "user_user",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["library://audiobook/1"],
+        option=QueueOption.ADD,
+        radio_mode=False,
+        start_item=None,
+        sort_by=None,
+        username="user_user",
+    )
+
 
 async def test_media_player_play_announcement_action(
     hass: HomeAssistant,
