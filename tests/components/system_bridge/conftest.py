@@ -1,6 +1,7 @@
 """Fixtures for System Bridge integration tests."""
 
 from collections.abc import Generator
+from dataclasses import asdict
 from typing import Final
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -85,6 +86,19 @@ def mock_version() -> Generator[AsyncMock]:
         version.check_supported.return_value = True
 
         yield version
+
+
+@pytest.fixture
+def mock_http_client() -> Generator[AsyncMock]:
+    """Return a mocked System Bridge HTTPClient class."""
+    with patch(
+        "homeassistant.components.system_bridge.HTTPClient",
+        autospec=True,
+    ) as mock_client:
+        client = mock_client.return_value
+        client.get.return_value = asdict(FIXTURE_SYSTEM)
+
+        yield client
 
 
 @pytest.fixture
@@ -225,6 +239,7 @@ async def init_integration(
     mock_config_entry: MockConfigEntry,
     mock_version: MagicMock,
     mock_websocket_client: MagicMock,
+    mock_http_client: AsyncMock,
 ) -> MockConfigEntry:
     """Initialize the System Bridge integration."""
     assert await setup_integration(hass, mock_config_entry)
