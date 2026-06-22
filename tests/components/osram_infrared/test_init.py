@@ -1,5 +1,7 @@
 """Tests for the OSRAM Infrared integration setup."""
 
+import pytest
+
 from homeassistant.components.osram_infrared.const import (
     CONF_IR_EMITTER_ENTITY_ID,
     CONF_IR_RECEIVER_ENTITY_ID,
@@ -12,10 +14,6 @@ from tests.common import MockConfigEntry
 from tests.components.infrared import (
     EMITTER_ENTITY_ID as MOCK_INFRARED_EMITTER_ENTITY_ID,
     RECEIVER_ENTITY_ID as MOCK_INFRARED_RECEIVER_ENTITY_ID,
-)
-from tests.components.infrared.common import (
-    MockInfraredEmitterEntity,
-    MockInfraredReceiverEntity,
 )
 
 
@@ -34,11 +32,13 @@ async def test_setup_and_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
 
+@pytest.mark.usefixtures(
+    "mock_infrared_emitter_entity",
+    "mock_infrared_receiver_entity",
+    "mock_osram_light_code_to_command",
+)
 async def test_migrate_v1_to_v2(
     hass: HomeAssistant,
-    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
-    mock_infrared_receiver_entity: MockInfraredReceiverEntity,
-    mock_osram_light_code_to_command: None,
 ) -> None:
     """Test migration from v1 legacy unique ID to v2 without unique ID."""
     entry = MockConfigEntry(

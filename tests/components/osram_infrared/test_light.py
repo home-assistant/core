@@ -11,6 +11,7 @@ from homeassistant.components.light import (
     ATTR_EFFECT,
     ATTR_HS_COLOR,
     DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
 )
 from homeassistant.components.osram_infrared.light import (
     EFFECT_FLASH,
@@ -444,3 +445,56 @@ async def test_receiver_resubscribes_after_receiver_unavailable(
 
     assert state is not None
     assert state.state == STATE_ON
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_turn_on_with_effect_off_restores_last_static_color(
+    hass: HomeAssistant,
+    mock_infrared_emitter_entity: MockInfraredEmitterEntity,
+) -> None:
+    """Test turning an effect off restores the last static color."""
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.osram_light",
+            ATTR_HS_COLOR: (92.0, 100.0),
+        },
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.osram_light",
+            ATTR_EFFECT: EFFECT_FLASH,
+        },
+        blocking=True,
+    )
+
+    mock_infrared_emitter_entity.send_command_calls.clear()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.osram_light",
+            ATTR_EFFECT: EFFECT_OFF,
+        },
+        blocking=True,
+    )
+
+    assert (
+        mock_infrared_emitter_entity.send_command_calls
+        == [
+            OsramLightCode.HUE_120,
+        ]
+        * 5
+    )
+
+    state = hass.states.get("light.osram_light")
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
+    assert tuple(state.attributes[ATTR_HS_COLOR]) == (120.0, 100.0)
