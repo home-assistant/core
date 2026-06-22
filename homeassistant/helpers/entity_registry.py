@@ -1150,12 +1150,13 @@ class EntityRegistry(BaseRegistry):
 
     @callback
     def async_get_entity_id(
-        self, domain: str, platform: str, unique_id: str
+        self, domain: Platform | str, platform: str, unique_id: str
     ) -> str | None:
         """Check if an entity_id is currently registered."""
-        if domain not in Platform._value2member_map_:
-            raise ValueError(
-                f"Invalid domain '{domain}': must be part of Platform enum"
+        if isinstance(domain, str):
+            _LOGGER.warning(
+                "Passing domain as a string to async_get_entity_id is deprecated and will be removed"
+                " in Home Assistant 2026.12; pass domain as a Platform enum instead"
             )
         return self.entities.get_entity_id((domain, platform, unique_id))
 
