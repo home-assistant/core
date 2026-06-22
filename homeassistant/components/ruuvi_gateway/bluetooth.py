@@ -1,7 +1,5 @@
 """Bluetooth support for Ruuvi Gateway."""
 
-from __future__ import annotations
-
 import logging
 import time
 

@@ -1,10 +1,8 @@
 """Support for MQTT binary sensors."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -92,6 +90,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
     _expire_after: int | None
     _expiration_trigger: CALLBACK_TYPE | None = None
 
+    @override
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
         if (
@@ -126,9 +125,9 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
                 remain_seconds,
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
-        """Remove exprire triggers."""
-        # Clean up expire triggers
+        """Clean up expire triggers."""
         if self._expiration_trigger:
             _LOGGER.debug("Clean up expire after trigger for %s", self.entity_id)
             self._expiration_trigger()
@@ -137,10 +136,12 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         await MqttEntity.async_will_remove_from_hass(self)
 
     @staticmethod
+    @override
     def config_schema() -> vol.Schema:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._expire_after = config.get(CONF_EXPIRE_AFTER)
@@ -231,12 +232,14 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
             )
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
             CONF_STATE_TOPIC, self._state_message_received, {"_attr_is_on", "_expired"}
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -250,6 +253,7 @@ class MqttBinarySensor(MqttEntity, BinarySensorEntity, RestoreEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185

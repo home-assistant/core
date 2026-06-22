@@ -1,7 +1,5 @@
 """Code to generate common control usage patterns."""
 
-from __future__ import annotations
-
 from collections import Counter
 from collections.abc import Callable, Sequence
 from datetime import datetime, timedelta

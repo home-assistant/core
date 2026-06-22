@@ -1,6 +1,6 @@
 """Support for KNX weather entities."""
 
-from __future__ import annotations
+from typing import override
 
 from xknx import XKNX
 from xknx.devices import Weather as XknxWeather
@@ -85,39 +85,46 @@ class KNXWeather(KnxYamlEntity, WeatherEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize of a KNX sensor."""
+        self._device = _create_weather(knx_module.xknx, config)
         super().__init__(
             knx_module=knx_module,
-            device=_create_weather(knx_module.xknx, config),
+            unique_id=str(self._device._temperature.group_address_state),  # noqa: SLF001
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
-        self._attr_unique_id = str(self._device._temperature.group_address_state)  # noqa: SLF001
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return current temperature in C."""
         return self._device.temperature
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return current air pressure in Pa."""
         return self._device.air_pressure
 
     @property
+    @override
     def condition(self) -> str:
         """Return current weather condition."""
         return self._device.ha_current_state().value
 
     @property
+    @override
     def humidity(self) -> float | None:
         """Return current humidity."""
         return self._device.humidity
 
     @property
+    @override
     def wind_bearing(self) -> int | None:
         """Return current wind bearing in degrees."""
         return self._device.wind_bearing
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return current wind speed in m/s."""
         return self._device.wind_speed

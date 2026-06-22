@@ -331,6 +331,22 @@ async def test_download_diagnostics(
     }
 
 
+async def test_download_diagnostics_requires_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test diagnostics download is restricted to admin users."""
+    config_entry = MockConfigEntry(domain="fake_integration")
+    config_entry.add_to_hass(hass)
+
+    client = await hass_client(hass_read_only_access_token)
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}"
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+
 async def test_failure_scenarios(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:

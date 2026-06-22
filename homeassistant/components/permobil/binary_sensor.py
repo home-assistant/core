@@ -1,14 +1,11 @@
 """Platform for binary sensor integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from mypermobil import BATTERY_CHARGING
 
-from homeassistant import config_entries
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
@@ -16,8 +13,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import MyPermobilCoordinator
+from .coordinator import PermobilConfigEntry
 from .entity import PermobilEntity
 
 
@@ -41,12 +37,12 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[PermobilBinarySensorEntityDescription, ...] = 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: config_entries.ConfigEntry,
+    config_entry: PermobilConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Create and setup the binary sensor."""
 
-    coordinator: MyPermobilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         PermobilbinarySensor(coordinator=coordinator, description=description)
@@ -60,11 +56,13 @@ class PermobilbinarySensor(PermobilEntity, BinarySensorEntity):
     entity_description: PermobilBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the wheelchair is charging."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if the sensor has value."""
         return super().available and self.entity_description.available_fn(

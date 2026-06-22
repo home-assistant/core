@@ -1,6 +1,6 @@
 """Support for Nexia / Trane XL Thermostats."""
 
-from __future__ import annotations
+from typing import override
 
 from nexia.const import UNIT_CELSIUS
 from nexia.thermostat import NexiaThermostat
@@ -215,6 +215,7 @@ class NexiaThermostatSensor(NexiaThermostatEntity, SensorEntity):
             self._attr_translation_key = translation_key
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         val = getattr(self._thermostat, self._call)()
@@ -255,6 +256,7 @@ class NexiaThermostatZoneSensor(NexiaThermostatZoneEntity, SensorEntity):
             self._attr_translation_key = translation_key
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         val = getattr(self._zone, self._call)()

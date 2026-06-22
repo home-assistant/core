@@ -61,10 +61,7 @@ rules:
   entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
-  exception-translations:
-    status: exempt
-    comment: |
-      The coordinator needs translation when the update failed.
+  exception-translations: done
   icon-translations: done
   reconfiguration-flow: done
   repair-issues:

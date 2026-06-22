@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number_entities[number.nrgkick_test_charging_current-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 32.0,
@@ -61,8 +62,9 @@
 # ---
 # name: test_number_entities[number.nrgkick_test_energy_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100000,
@@ -121,8 +123,9 @@
 # ---
 # name: test_number_entities[number.nrgkick_test_phase_count-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 3.0,

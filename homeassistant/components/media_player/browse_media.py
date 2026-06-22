@@ -1,12 +1,10 @@
 """Browse media features for media player."""
 
-from __future__ import annotations
-
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 from urllib.parse import quote
 
 import yarl
@@ -25,6 +23,7 @@ from .const import CONTENT_AUTH_EXPIRY_TIME, MediaClass, MediaType
 
 # Paths that we don't need to sign
 PATHS_WITHOUT_AUTH = (
+    "/local/",
     "/api/tts_proxy/",
     "/api/esphome/ffmpeg_proxy/",
     "/api/assist_satellite/static/",
@@ -164,6 +163,7 @@ class BrowseMedia:
         if all(child.media_class == proposed_class for child in self.children):
             self.children_media_class = proposed_class
 
+    @override
     def __repr__(self) -> str:
         """Return representation of browse media."""
         return f"<BrowseMedia {self.title} ({self.media_class})>"

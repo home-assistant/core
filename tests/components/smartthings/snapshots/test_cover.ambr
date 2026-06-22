@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[c2c_shade][cover.curtain_1a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -54,8 +55,9 @@
 # ---
 # name: test_all_entities[ikea_kadrilj][cover.kitchen_ikea_kadrilj_window_blind-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

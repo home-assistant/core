@@ -1,18 +1,15 @@
 """Helpers for media source."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 
 from homeassistant.components.media_player import BrowseError, BrowseMedia
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.frame import report_usage
 from homeassistant.helpers.typing import UNDEFINED, UndefinedType
-from homeassistant.loader import bind_hass
 
 from .const import DOMAIN, MEDIA_SOURCE_DATA
 from .error import UnknownMediaSource, Unresolvable
-from .models import BrowseMediaSource, MediaSourceItem, PlayMedia
+from .models import BrowseMediaSource, MediaSourceItem, PlayMedia, RootBrowseMediaSource
 
 
 @callback
@@ -37,13 +34,12 @@ def _get_media_item(
     return item
 
 
-@bind_hass
 async def async_browse_media(
     hass: HomeAssistant,
     media_content_id: str | None,
     *,
     content_filter: Callable[[BrowseMedia], bool] | None = None,
-) -> BrowseMediaSource:
+) -> BrowseMediaSource | RootBrowseMediaSource:
     """Return media player browse media results."""
     if DOMAIN not in hass.data:
         raise BrowseError("Media Source not loaded")
@@ -71,7 +67,6 @@ async def async_browse_media(
     return item
 
 
-@bind_hass
 async def async_resolve_media(
     hass: HomeAssistant,
     media_content_id: str,

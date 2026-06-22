@@ -12,9 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
 
-async def test_full_flow(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_flipr_client: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_flipr_client: AsyncMock) -> None:
     """Test the full flow."""
 
     result = await hass.config_entries.flow.async_init(
@@ -51,9 +50,9 @@ async def test_full_flow(
         (ConnectionError, {"base": "cannot_connect"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_flipr_client: AsyncMock,
     exception: Exception,
     expected: dict[str, str],
@@ -92,8 +91,9 @@ async def test_errors(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_no_flipr_found(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_flipr_client: AsyncMock
+    hass: HomeAssistant, mock_flipr_client: AsyncMock
 ) -> None:
     """Test the case where there is no flipr found."""
 

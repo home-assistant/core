@@ -1,7 +1,5 @@
 """Provide common test tools for hassio."""
 
-from __future__ import annotations
-
 from dataclasses import fields
 import logging
 from types import MethodType
@@ -84,6 +82,7 @@ def mock_addon_store_info(
     supervisor_client.store.addon_info.return_value = addon_info = Mock(
         spec=StoreAddonComplete,
         slug="test",
+        name="test",
         repository="core",
         available=True,
         installed=False,
@@ -109,15 +108,19 @@ def mock_addon_info(
     supervisor_client.addons.addon_info.return_value = addon_info = Mock(
         spec=InstalledAddonComplete,
         slug="test",
+        name="test",
         repository="core",
         available=False,
         hostname="",
         options={},
         state="unknown",
         update_available=False,
-        version=None,
+        version="1.0.0",
+        version_latest="1.0.0",
         supervisor_api=False,
         supervisor_role="default",
+        icon=False,
+        auto_update=False,
     )
     addon_info.name = "test"
     addon_info.to_dict = MethodType(

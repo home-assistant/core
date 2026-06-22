@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_numbers[number.device_name_away_extract_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 70,
@@ -61,8 +62,9 @@
 # ---
 # name: test_numbers[number.device_name_away_supply_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 74,
@@ -121,8 +123,9 @@
 # ---
 # name: test_numbers[number.device_name_cooker_hood_extract_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -181,8 +184,9 @@
 # ---
 # name: test_numbers[number.device_name_cooker_hood_supply_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -241,8 +245,9 @@
 # ---
 # name: test_numbers[number.device_name_fireplace_extract_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -301,8 +306,9 @@
 # ---
 # name: test_numbers[number.device_name_fireplace_mode_runtime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 360,
@@ -361,8 +367,9 @@
 # ---
 # name: test_numbers[number.device_name_fireplace_supply_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -421,8 +428,9 @@
 # ---
 # name: test_numbers[number.device_name_high_extract_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -481,8 +489,9 @@
 # ---
 # name: test_numbers[number.device_name_high_supply_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -541,8 +550,9 @@
 # ---
 # name: test_numbers[number.device_name_home_extract_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -601,8 +611,9 @@
 # ---
 # name: test_numbers[number.device_name_home_supply_fan_setpoint-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,

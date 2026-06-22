@@ -1,14 +1,12 @@
 """Constants for the Version integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from logging import Logger, getLogger
 from typing import Any, Final
 
 from pyhaversion.consts import HaVersionChannel, HaVersionSource
 
-from homeassistant.const import CONF_NAME, Platform
+from homeassistant.const import CONF_NAME, CONF_SOURCE, Platform
 
 DOMAIN: Final = "version"
 LOGGER: Final[Logger] = getLogger(__package__)
@@ -25,7 +23,6 @@ CONF_BOARD: Final = "board"
 CONF_CHANNEL: Final = "channel"
 CONF_IMAGE: Final = "image"
 CONF_VERSION_SOURCE: Final = "version_source"
-CONF_SOURCE: Final = "source"
 
 ATTR_CHANNEL: Final = CONF_CHANNEL
 ATTR_VERSION_SOURCE: Final = CONF_VERSION_SOURCE

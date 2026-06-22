@@ -1,10 +1,8 @@
 """Config flow for the Immich integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioimmich import Immich
 from aioimmich.const import CONNECT_ERRORS
@@ -71,6 +69,7 @@ async def check_user_info(
     """Test connection and fetch own user info."""
     session = async_get_clientsession(hass, verify_ssl)
     immich = Immich(session, api_key, host, port, ssl)
+    await immich.async_setup()
     return await immich.users.async_get_my_user()
 
 
@@ -82,6 +81,7 @@ class ImmichConfigFlow(ConfigFlow, domain=DOMAIN):
     _name: str
     _current_data: Mapping[str, Any]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

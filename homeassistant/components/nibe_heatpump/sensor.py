@@ -1,6 +1,6 @@
 """The Nibe Heat Pump sensors."""
 
-from __future__ import annotations
+from typing import override
 
 from nibe.coil import Coil, CoilData
 
@@ -11,7 +11,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     EntityCategory,
@@ -28,8 +27,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import CoilCoordinator
+from .coordinator import CoilCoordinator, NibeHeatpumpConfigEntry
 from .entity import CoilEntity
 
 UNIT_DESCRIPTIONS = {
@@ -185,12 +183,12 @@ UNIT_DESCRIPTIONS = {
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: NibeHeatpumpConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up platform."""
 
-    coordinator: CoilCoordinator = hass.data[DOMAIN][config_entry.entry_id]
+    coordinator = config_entry.runtime_data
 
     async_add_entities(
         Sensor(coordinator, coil, UNIT_DESCRIPTIONS.get(coil.unit))
@@ -216,5 +214,6 @@ class Sensor(CoilEntity, SensorEntity):
             self._attr_native_unit_of_measurement = coil.unit
             self._attr_entity_category = EntityCategory.DIAGNOSTIC
 
+    @override
     def _async_read_coil(self, data: CoilData):
         self._attr_native_value = data.value

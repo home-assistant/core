@@ -1,23 +1,22 @@
 """Number platform for Growatt."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from growattServer import GrowattV1ApiError
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import PERCENTAGE, EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import GrowattConfigEntry, GrowattCoordinator
-from .sensor.sensor_entity_description import GrowattRequiredKeysMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -27,9 +26,10 @@ PARALLEL_UPDATES = (
 
 
 @dataclass(frozen=True, kw_only=True)
-class GrowattNumberEntityDescription(NumberEntityDescription, GrowattRequiredKeysMixin):
+class GrowattNumberEntityDescription(NumberEntityDescription):
     """Describes Growatt number entity."""
 
+    api_key: str
     write_key: str | None = None  # Parameter ID for writing (if different from api_key)
 
 
@@ -90,6 +90,17 @@ MIN_NUMBER_TYPES: tuple[GrowattNumberEntityDescription, ...] = (
 )
 
 
+def _create_numbers_for_device(
+    coordinator: GrowattCoordinator,
+) -> list[GrowattNumber]:
+    """Create number entities for a device coordinator."""
+    if coordinator.device_type == "min" and coordinator.api_version == "v1":
+        return [
+            GrowattNumber(coordinator, description) for description in MIN_NUMBER_TYPES
+        ]
+    return []
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GrowattConfigEntry,
@@ -98,15 +109,29 @@ async def async_setup_entry(
     """Set up Growatt number entities."""
     runtime_data = entry.runtime_data
 
-    # Add number entities for each MIN device (only supported with V1 API)
     async_add_entities(
-        GrowattNumber(device_coordinator, description)
-        for device_coordinator in runtime_data.devices.values()
-        if (
-            device_coordinator.device_type == "min"
-            and device_coordinator.api_version == "v1"
+        entity
+        for coordinator in runtime_data.devices.values()
+        for entity in _create_numbers_for_device(coordinator)
+    )
+
+    @callback
+    def _async_new_device(coordinators: list[GrowattCoordinator]) -> None:
+        """Add number entities for new devices."""
+        new_entities = [
+            entity
+            for coordinator in coordinators
+            for entity in _create_numbers_for_device(coordinator)
+        ]
+        if new_entities:
+            async_add_entities(new_entities)
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            f"{DOMAIN}_new_device_{entry.entry_id}",
+            _async_new_device,
         )
-        for description in MIN_NUMBER_TYPES
     )
 
 
@@ -130,9 +155,11 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
             identifiers={(DOMAIN, coordinator.device_id)},
             manufacturer="Growatt",
             name=coordinator.device_id,
+            serial_number=coordinator.device_id,
         )
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the current value of the number."""
         value = self.coordinator.data.get(self.entity_description.api_key)
@@ -140,6 +167,7 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
             return None
         return int(value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value of the number."""
         # Use write_key if specified, otherwise fall back to api_key
@@ -157,7 +185,11 @@ class GrowattNumber(CoordinatorEntity[GrowattCoordinator], NumberEntity):
                 int_value,
             )
         except GrowattV1ApiError as e:
-            raise HomeAssistantError(f"Error while setting parameter: {e}") from e
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+                translation_placeholders={"error": str(e)},
+            ) from e
 
         # If no exception was raised, the write was successful
         _LOGGER.debug(

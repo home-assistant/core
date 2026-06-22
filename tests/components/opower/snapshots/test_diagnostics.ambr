@@ -1,12 +1,12 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
-    'data': dict({
-      '111111': dict({
+    'data': list([
+      dict({
         'account': dict({
           'meter_type': 'ELEC',
           'read_resolution': 'HOUR',
-          'utility_account_id': '111111',
+          'utility_account_id': '**REDACTED**',
         }),
         'forecast': dict({
           'cost_to_date': 20.0,
@@ -23,11 +23,11 @@
         'last_changed': None,
         'last_updated': '2026-03-07T23:00:00+00:00',
       }),
-      '222222': dict({
+      dict({
         'account': dict({
           'meter_type': 'GAS',
           'read_resolution': 'DAY',
-          'utility_account_id': '222222',
+          'utility_account_id': '**REDACTED**',
         }),
         'forecast': dict({
           'cost_to_date': 15.0,
@@ -44,7 +44,7 @@
         'last_changed': None,
         'last_updated': '2026-03-07T23:00:00+00:00',
       }),
-    }),
+    ]),
     'entry': dict({
       'created_at': '2026-03-07T23:00:00+00:00',
       'data': dict({

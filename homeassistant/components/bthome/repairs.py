@@ -1,11 +1,8 @@
 """Repairs for the BTHome integration."""
 
-from __future__ import annotations
-
 from typing import Any
 
-from homeassistant import data_entry_flow
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
@@ -23,13 +20,13 @@ class EncryptionRemovedRepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the initial step of the repair flow."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle confirmation, remove the bindkey, and reload the entry."""
         if user_input is not None:
             entry = self.hass.config_entries.async_get_entry(self._entry_id)

@@ -1,11 +1,9 @@
 """Support to interface with the Plex API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from functools import wraps
 import logging
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate, cast, override
 
 from plexapi.client import PlexClient
 import plexapi.exceptions
@@ -145,6 +143,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         # Initializes other attributes
         self.session = session
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         _LOGGER.debug("Added %s [%s]", self.entity_id, self.unique_id)
@@ -292,12 +291,14 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     @property
     @needs_session
+    @override
     def media_content_id(self):
         """Return the content ID of current playing media."""
         return self.session.media_content_id
 
     @property
     @needs_session
+    @override
     def media_content_type(self):
         """Return the content type of current playing media."""
         return self.session.media_content_type
@@ -310,48 +311,56 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     @property
     @needs_session
+    @override
     def media_artist(self):
         """Return the artist of current playing media, music track only."""
         return self.session.media_artist
 
     @property
     @needs_session
+    @override
     def media_album_name(self):
         """Return the album name of current playing media, music track only."""
         return self.session.media_album_name
 
     @property
     @needs_session
+    @override
     def media_album_artist(self):
         """Return the album artist of current playing media, music only."""
         return self.session.media_album_artist
 
     @property
     @needs_session
+    @override
     def media_track(self):
         """Return the track number of current playing media, music only."""
         return self.session.media_track
 
     @property
     @needs_session
+    @override
     def media_duration(self):
         """Return the duration of current playing media in seconds."""
         return self.session.media_duration
 
     @property
     @needs_session
+    @override
     def media_position(self):
         """Return the duration of current playing media in seconds."""
         return self.session.media_position
 
     @property
     @needs_session
+    @override
     def media_position_updated_at(self):
         """When was the position of the current playing media valid."""
         return self.session.media_position_updated_at
 
     @property
     @needs_session
+    @override
     def media_image_url(self):
         """Return the image URL of current playing media."""
         return self.session.media_image_url
@@ -364,29 +373,34 @@ class PlexMediaPlayer(MediaPlayerEntity):
 
     @property
     @needs_session
+    @override
     def media_title(self):
         """Return the title of current playing media."""
         return self.session.media_title
 
     @property
     @needs_session
+    @override
     def media_season(self):
         """Return the season of current playing media (TV Show only)."""
         return self.session.media_season
 
     @property
     @needs_session
+    @override
     def media_series_title(self):
         """Return the title of the series of current playing media."""
         return self.session.media_series_title
 
     @property
     @needs_session
+    @override
     def media_episode(self):
         """Return the episode of current playing media (TV Show only)."""
         return self.session.media_episode
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Flag media player features that are supported."""
         if self.device and "playback" in self._device_protocol_capabilities:
@@ -407,6 +421,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             MediaPlayerEntityFeature.BROWSE_MEDIA | MediaPlayerEntityFeature.PLAY_MEDIA
         )
 
+    @override
     def set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         if self.device and "playback" in self._device_protocol_capabilities:
@@ -414,6 +429,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             self._volume_level = volume  # store since we can't retrieve
 
     @property
+    @override
     def volume_level(self):
         """Return the volume level of the client (0..1)."""
         if (
@@ -425,12 +441,14 @@ class PlexMediaPlayer(MediaPlayerEntity):
         return None
 
     @property
+    @override
     def is_volume_muted(self):
         """Return boolean if volume is currently muted."""
         if self._is_player_active and self.device:
             return self._volume_muted
         return None
 
+    @override
     def mute_volume(self, mute: bool) -> None:
         """Mute the volume.
 
@@ -448,36 +466,43 @@ class PlexMediaPlayer(MediaPlayerEntity):
         else:
             self.set_volume_level(self._previous_volume_level)
 
+    @override
     def media_play(self) -> None:
         """Send play command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.play(self._active_media_plexapi_type)
 
+    @override
     def media_pause(self) -> None:
         """Send pause command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.pause(self._active_media_plexapi_type)
 
+    @override
     def media_stop(self) -> None:
         """Send stop command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.stop(self._active_media_plexapi_type)
 
+    @override
     def media_seek(self, position: float) -> None:
         """Send the seek command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.seekTo(position * 1000, self._active_media_plexapi_type)
 
+    @override
     def media_next_track(self) -> None:
         """Send next track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipNext(self._active_media_plexapi_type)
 
+    @override
     def media_previous_track(self) -> None:
         """Send previous track command."""
         if self.device and "playback" in self._device_protocol_capabilities:
             self.device.skipPrevious(self._active_media_plexapi_type)
 
+    @override
     def play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -500,6 +525,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             ) from exc
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the scene state attributes."""
         attributes = {}
@@ -516,6 +542,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
         return attributes
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.machine_identifier is None:
@@ -542,6 +569,7 @@ class PlexMediaPlayer(MediaPlayerEntity):
             via_device=(DOMAIN, self.plex_server.machine_identifier),
         )
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,

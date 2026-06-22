@@ -1,1 +1,1 @@
-"""The panasonic_bluray component."""
+"""The Panasonic Blu-Ray Player integration."""

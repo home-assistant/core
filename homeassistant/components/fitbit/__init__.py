@@ -4,9 +4,12 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 
 from . import api
-from .const import FitbitScope
+from .const import DOMAIN, FitbitScope
 from .coordinator import FitbitConfigEntry, FitbitData, FitbitDeviceCoordinator
 from .exceptions import FitbitApiException, FitbitAuthException
 from .model import config_from_entry_data
@@ -16,11 +19,17 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 async def async_setup_entry(hass: HomeAssistant, entry: FitbitConfigEntry) -> bool:
     """Set up fitbit from a config entry."""
-    implementation = (
-        await config_entry_oauth2_flow.async_get_config_entry_implementation(
-            hass, entry
+    try:
+        implementation = (
+            await config_entry_oauth2_flow.async_get_config_entry_implementation(
+                hass, entry
+            )
         )
-    )
+    except ImplementationUnavailableError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        ) from err
     session = config_entry_oauth2_flow.OAuth2Session(hass, entry, implementation)
     fitbit_api = api.OAuthFitbitApi(
         hass, session, unit_system=entry.data.get("unit_system")

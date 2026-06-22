@@ -1,17 +1,12 @@
 """Support for Template fans."""
 
-from __future__ import annotations
-
+from enum import StrEnum
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.fan import (
-    ATTR_DIRECTION,
-    ATTR_OSCILLATING,
-    ATTR_PERCENTAGE,
-    ATTR_PRESET_MODE,
     DIRECTION_FORWARD,
     DIRECTION_REVERSE,
     DOMAIN as FAN_DOMAIN,
@@ -20,14 +15,7 @@ from homeassistant.components.fan import (
     FanEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_NAME,
-    CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
-)
+from homeassistant.const import CONF_NAME, CONF_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
@@ -46,7 +34,6 @@ from .helpers import (
     async_setup_template_preview,
 )
 from .schemas import (
-    TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
     make_template_entity_common_modern_schema,
@@ -56,13 +43,8 @@ from .trigger_entity import TriggerEntity
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_FANS = "fans"
 CONF_SPEED_COUNT = "speed_count"
 CONF_PRESET_MODES = "preset_modes"
-CONF_PERCENTAGE_TEMPLATE = "percentage_template"
-CONF_PRESET_MODE_TEMPLATE = "preset_mode_template"
-CONF_OSCILLATING_TEMPLATE = "oscillating_template"
-CONF_DIRECTION_TEMPLATE = "direction_template"
 CONF_ON_ACTION = "turn_on"
 CONF_OFF_ACTION = "turn_off"
 CONF_SET_PERCENTAGE_ACTION = "set_percentage"
@@ -77,15 +59,16 @@ CONF_OSCILLATING = "oscillating"
 CONF_PERCENTAGE = "percentage"
 CONF_PRESET_MODE = "preset_mode"
 
-LEGACY_FIELDS = {
-    CONF_DIRECTION_TEMPLATE: CONF_DIRECTION,
-    CONF_OSCILLATING_TEMPLATE: CONF_OSCILLATING,
-    CONF_PERCENTAGE_TEMPLATE: CONF_PERCENTAGE,
-    CONF_PRESET_MODE_TEMPLATE: CONF_PRESET_MODE,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-}
-
 DEFAULT_NAME = "Template Fan"
+
+SCRIPT_FIELDS = (
+    CONF_OFF_ACTION,
+    CONF_ON_ACTION,
+    CONF_SET_DIRECTION_ACTION,
+    CONF_SET_OSCILLATING_ACTION,
+    CONF_SET_PERCENTAGE_ACTION,
+    CONF_SET_PRESET_MODE_ACTION,
+)
 
 FAN_COMMON_SCHEMA = vol.Schema(
     {
@@ -109,37 +92,18 @@ FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).ex
     make_template_entity_common_modern_schema(FAN_DOMAIN, DEFAULT_NAME).schema
 )
 
-FAN_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Optional(CONF_DIRECTION_TEMPLATE): cv.template,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_OSCILLATING_TEMPLATE): cv.template,
-            vol.Optional(CONF_PERCENTAGE_TEMPLATE): cv.template,
-            vol.Optional(CONF_PRESET_MODE_TEMPLATE): cv.template,
-            vol.Optional(CONF_PRESET_MODES): cv.ensure_list,
-            vol.Optional(CONF_SET_DIRECTION_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_OSCILLATING_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PERCENTAGE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SPEED_COUNT): vol.Coerce(int),
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        }
-    ).extend(TEMPLATE_ENTITY_AVAILABILITY_SCHEMA_LEGACY.schema),
-)
-
-PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA.extend(
-    {vol.Required(CONF_FANS): cv.schema_with_slug_keys(FAN_LEGACY_YAML_SCHEMA)}
-)
-
 FAN_CONFIG_ENTRY_SCHEMA = FAN_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
 )
+
+
+class FanScriptVariable(StrEnum):
+    """Variables for scripts."""
+
+    DIRECTION = "direction"
+    OSCILLATING = "oscillating"
+    PERCENTAGE = "percentage"
+    PRESET_MODE = "preset_mode"
 
 
 async def async_setup_platform(
@@ -157,8 +121,7 @@ async def async_setup_platform(
         TriggerFanEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_FANS,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -174,6 +137,7 @@ async def async_setup_entry(
         async_add_entities,
         StateFanEntity,
         FAN_CONFIG_ENTRY_SCHEMA,
+        script_options=SCRIPT_FIELDS,
     )
 
 
@@ -196,18 +160,22 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
+    _state_option = CONF_STATE
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         self.setup_state_template(
-            CONF_STATE,
             "_attr_is_on",
             template_validators.boolean(self, CONF_STATE),
         )
 
-        # Ensure legacy template entity functionality by setting percentage to None instead
+        # Ensure legacy template entity functionality by
+        # setting percentage to None instead
         # of the FanEntity default of 0.
         self._attr_percentage = None
         self.setup_template(
@@ -259,10 +227,12 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
                 self._attr_supported_features |= supported_feature
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if device is on."""
         return self._attr_is_on
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -273,8 +243,8 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         await self.async_run_script(
             self._action_scripts[CONF_ON_ACTION],
             run_variables={
-                ATTR_PERCENTAGE: percentage,
-                ATTR_PRESET_MODE: preset_mode,
+                FanScriptVariable.PERCENTAGE: percentage,
+                FanScriptVariable.PRESET_MODE: preset_mode,
             },
             context=self._context,
         )
@@ -288,6 +258,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._attr_is_on = True
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.async_run_script(
@@ -298,6 +269,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             self._attr_is_on = False
             self.async_write_ha_state()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the percentage speed of the fan."""
         self._attr_percentage = percentage
@@ -305,7 +277,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if script := self._action_scripts.get(CONF_SET_PERCENTAGE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={ATTR_PERCENTAGE: self._attr_percentage},
+                run_variables={FanScriptVariable.PERCENTAGE: self._attr_percentage},
                 context=self._context,
             )
 
@@ -315,6 +287,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if self._attr_assumed_state or CONF_PERCENTAGE not in self._templates:
             self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset_mode of the fan."""
         self._attr_preset_mode = preset_mode
@@ -322,7 +295,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if script := self._action_scripts.get(CONF_SET_PRESET_MODE_ACTION):
             await self.async_run_script(
                 script,
-                run_variables={ATTR_PRESET_MODE: self._attr_preset_mode},
+                run_variables={FanScriptVariable.PRESET_MODE: self._attr_preset_mode},
                 context=self._context,
             )
 
@@ -332,6 +305,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         if self._attr_assumed_state or CONF_PRESET_MODE not in self._templates:
             self.async_write_ha_state()
 
+    @override
     async def async_oscillate(self, oscillating: bool) -> None:
         """Set oscillation of the fan."""
         self._attr_oscillating = oscillating
@@ -340,13 +314,14 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
         ) is not None:
             await self.async_run_script(
                 script,
-                run_variables={ATTR_OSCILLATING: self.oscillating},
+                run_variables={FanScriptVariable.OSCILLATING: self.oscillating},
                 context=self._context,
             )
 
         if CONF_OSCILLATING not in self._templates:
             self.async_write_ha_state()
 
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         if direction in _VALID_DIRECTIONS:
@@ -356,7 +331,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity):
             ) is not None:
                 await self.async_run_script(
                     script,
-                    run_variables={ATTR_DIRECTION: direction},
+                    run_variables={FanScriptVariable.DIRECTION: direction},
                     context=self._context,
                 )
             if CONF_DIRECTION not in self._templates:

@@ -1,9 +1,10 @@
 """Custom uhoo config flow setup."""
 
-from typing import Any
+from collections.abc import Mapping
+from typing import Any, override
 
 from uhooapi import Client
-from uhooapi.errors import UhooError, UnauthorizedError
+from uhooapi.errors import ForbiddenError, UhooError, UnauthorizedError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -34,6 +35,7 @@ class UhooConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -45,7 +47,7 @@ class UhooConfigFlow(ConfigFlow, domain=DOMAIN):
             client = Client(user_input[CONF_API_KEY], session, debug=True)
             try:
                 await client.login()
-            except UnauthorizedError:
+            except UnauthorizedError, ForbiddenError:
                 errors["base"] = "invalid_auth"
             except UhooError:
                 errors["base"] = "cannot_connect"
@@ -60,6 +62,42 @@ class UhooConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
+            data_schema=self.add_suggested_values_to_schema(
+                USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauthentication upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm reauthentication dialog."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            session = async_create_clientsession(self.hass)
+            client = Client(user_input[CONF_API_KEY], session, debug=True)
+            try:
+                await client.login()
+            except UnauthorizedError, ForbiddenError:
+                errors["base"] = "invalid_auth"
+            except UhooError:
+                errors["base"] = "cannot_connect"
+            except Exception:  # noqa: BLE001
+                LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates=user_input,
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm",
             data_schema=self.add_suggested_values_to_schema(
                 USER_DATA_SCHEMA, user_input
             ),

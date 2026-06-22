@@ -1,9 +1,8 @@
 """Definition and setup of the Omnilogic Sensors for Home Assistant."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONCENTRATION_PARTS_PER_MILLION,
     PERCENTAGE,
@@ -16,21 +15,19 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import check_guard
-from .const import COORDINATOR, DEFAULT_PH_OFFSET, DOMAIN, PUMP_TYPES
-from .coordinator import OmniLogicUpdateCoordinator
+from .const import DEFAULT_PH_OFFSET, PUMP_TYPES
+from .coordinator import OmniLogicConfigEntry, OmniLogicUpdateCoordinator
 from .entity import OmniLogicEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: OmniLogicConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
 
-    coordinator: OmniLogicUpdateCoordinator = hass.data[DOMAIN][entry.entry_id][
-        COORDINATOR
-    ]
+    coordinator = entry.runtime_data
     entities = []
 
     for item_id, item in coordinator.data.items():
@@ -99,6 +96,7 @@ class OmniLogicTemperatureSensor(OmnilogicSensor):
     """Define an OmniLogic Temperature (Air/Water) Sensor."""
 
     @property
+    @override
     def native_value(self):
         """Return the state for the temperature sensor."""
         sensor_data = self.coordinator.data[self._item_id][self._state_key]
@@ -129,6 +127,7 @@ class OmniLogicPumpSpeedSensor(OmnilogicSensor):
     """Define an OmniLogic Pump Speed Sensor."""
 
     @property
+    @override
     def native_value(self):
         """Return the state for the pump speed sensor."""
 
@@ -164,6 +163,7 @@ class OmniLogicSaltLevelSensor(OmnilogicSensor):
     """Define an OmniLogic Salt Level Sensor."""
 
     @property
+    @override
     def native_value(self):
         """Return the state for the salt level sensor."""
 
@@ -182,6 +182,7 @@ class OmniLogicChlorinatorSensor(OmnilogicSensor):
     """Define an OmniLogic Chlorinator Sensor."""
 
     @property
+    @override
     def native_value(self):
         """Return the state for the chlorinator sensor."""
         return self.coordinator.data[self._item_id][self._state_key]
@@ -191,6 +192,7 @@ class OmniLogicPHSensor(OmnilogicSensor):
     """Define an OmniLogic pH Sensor."""
 
     @property
+    @override
     def native_value(self):
         """Return the state for the pH sensor."""
 
@@ -235,6 +237,7 @@ class OmniLogicORPSensor(OmnilogicSensor):
         )
 
     @property
+    @override
     def native_value(self):
         """Return the state for the ORP sensor."""
 

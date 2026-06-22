@@ -113,7 +113,7 @@
         "state_attributes": {
           "event_type": {
             "state": {
-              "doorbell_chime": "[%key:component::nest::entity::event::chime::name%]"
+              "ring": "[%key:component::event::entity_component::doorbell::state_attributes::event_type::state::ring%]"
             }
           }
         }
@@ -129,6 +129,11 @@
             }
           }
         }
+      }
+    },
+    "sensor": {
+      "fan_timer_timeout": {
+        "name": "Fan timer timeout"
       }
     }
   },
@@ -162,6 +167,18 @@
       "options": {
         "create_new_topic": "Create new topic"
       }
+    }
+  },
+  "services": {
+    "set_fan_timer": {
+      "description": "Sets the fan to run for a specific duration.",
+      "fields": {
+        "duration": {
+          "description": "The duration the fan should run for.",
+          "name": "Duration"
+        }
+      },
+      "name": "Set fan timer"
     }
   }
 }

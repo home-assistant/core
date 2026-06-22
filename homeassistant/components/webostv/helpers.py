@@ -1,12 +1,10 @@
 """Helper functions for LG webOS TV."""
 
-from __future__ import annotations
-
 import logging
 
 from aiowebostv import WebOsClient, WebOsTvState
 
-from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_CLIENT_SECRET, CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
@@ -56,31 +54,6 @@ def async_get_device_id_from_entity_id(hass: HomeAssistant, entity_id: str) -> s
         )
 
     return entity_entry.device_id
-
-
-@callback
-def async_get_client_by_device_entry(
-    hass: HomeAssistant, device: DeviceEntry
-) -> WebOsClient:
-    """Get WebOsClient from Device Registry by device entry.
-
-    Raises ValueError if client is not found.
-    """
-    for config_entry_id in device.config_entries:
-        entry: WebOsTvConfigEntry | None = hass.config_entries.async_get_entry(
-            config_entry_id
-        )
-        if entry and entry.domain == DOMAIN:
-            if entry.state is ConfigEntryState.LOADED:
-                return entry.runtime_data
-
-            raise ValueError(
-                f"Device {device.id} is not from a loaded {DOMAIN} config entry"
-            )
-
-    raise ValueError(
-        f"Device {device.id} is not from an existing {DOMAIN} config entry"
-    )
 
 
 def get_sources(tv_state: WebOsTvState) -> list[str]:

@@ -4,6 +4,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Mock Title',
+      'is_closed': True,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,
@@ -19,6 +20,7 @@
     'attributes': ReadOnlyDict({
       'device_class': 'water',
       'friendly_name': 'Mock Title',
+      'is_closed': False,
       'supported_features': <ValveEntityFeature: 3>,
     }),
     'context': <ANY>,

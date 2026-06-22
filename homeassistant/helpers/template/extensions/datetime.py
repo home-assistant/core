@@ -1,7 +1,5 @@
 """DateTime functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from datetime import date, datetime, time, timedelta
 from typing import TYPE_CHECKING, Any
 
@@ -206,7 +204,7 @@ class DateTimeExtension(BaseTemplateExtension):
                 return default
 
     def as_timedelta(self, value: str) -> timedelta | None:
-        """Parse a ISO8601 duration like 'PT10M' to a timedelta."""
+        """Parse an ISO8601 duration like 'PT10M' to a timedelta."""
         return dt_util.parse_duration(value)
 
     def strptime(self, string: str, fmt: str, default: Any = _SENTINEL) -> Any:
@@ -267,8 +265,9 @@ class DateTimeExtension(BaseTemplateExtension):
 
         If the input are not a datetime object the input will be returned unmodified.
 
-        Note: This template function is deprecated in favor of `time_until`, but is still
-        supported so as not to break old templates.
+        Note: This template function is deprecated in favor
+        of `time_until`, but is still supported so as not to
+        break old templates.
         """
         if (render_info := render_info_cv.get()) is not None:
             render_info.has_time = True

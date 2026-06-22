@@ -1,9 +1,7 @@
 """Config flow for Vodafone Station integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiovodafone import exceptions as aiovodafone_exceptions
 from aiovodafone.models import get_device_type, init_device_class
@@ -83,12 +81,14 @@ class VodafoneStationConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: VodafoneConfigEntry,
     ) -> VodafoneStationOptionsFlowHandler:
         """Get the options flow for this handler."""
         return VodafoneStationOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -55,6 +55,14 @@ def mock_transmission_client() -> Generator[AsyncMock]:
             "activeTorrentCount": 0,
             "pausedTorrentCount": 0,
             "torrentCount": 0,
+            "current-stats": {
+                "uploadedBytes": 5368709120,
+                "downloadedBytes": 10737418240,
+            },
+            "cumulative-stats": {
+                "uploadedBytes": 85899345920,
+                "downloadedBytes": 107374182400,
+            },
         }
         client.session_stats.return_value = SessionStats(fields=session_stats_data)
 

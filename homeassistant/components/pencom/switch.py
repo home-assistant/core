@@ -1,9 +1,7 @@
 """Pencom relay control."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pencompy.pencompy import Pencompy
 import voluptuous as vol
@@ -84,10 +82,12 @@ class PencomRelay(SwitchEntity):
         self._addr = addr
         self._attr_name = name
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn a relay on."""
         self._hub.set(self._board, self._addr, True)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn a relay off."""
         self._hub.set(self._board, self._addr, False)
@@ -97,6 +97,7 @@ class PencomRelay(SwitchEntity):
         self._attr_is_on = self._hub.get(self._board, self._addr)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return supported attributes."""
         return {"board": self._board, "addr": self._addr}

@@ -1,8 +1,7 @@
 """Support for esphome texts."""
 
-from __future__ import annotations
-
 from functools import partial
+from typing import override
 
 from aioesphomeapi import EntityInfo, TextInfo, TextMode as EsphomeTextMode, TextState
 
@@ -31,6 +30,7 @@ class EsphomeText(EsphomeEntity[TextInfo, TextState], TextEntity):
     """A text implementation for esphome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -42,12 +42,14 @@ class EsphomeText(EsphomeEntity[TextInfo, TextState], TextEntity):
 
     @property
     @esphome_state_property
+    @override
     def native_value(self) -> str | None:
         """Return the state of the entity."""
         state = self._state
         return None if state.missing_state else state.state
 
     @convert_api_error_ha_error
+    @override
     async def async_set_value(self, value: str) -> None:
         """Update the current value."""
         self._client.text_command(

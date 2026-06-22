@@ -1,7 +1,7 @@
 """Locks on Zigbee Home Automation networks."""
 
 import functools
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -90,23 +90,26 @@ class ZhaDoorLock(ZHAEntity, LockEntity):
     _attr_translation_key: str = "door_lock"
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return true if entity is locked."""
         return self.entity_data.entity.is_locked
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self.entity_data.entity.async_lock()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self.entity_data.entity.async_unlock()
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_set_lock_user_code(self, code_slot: int, user_code: str) -> None:
         """Set the user_code to index X on the lock."""
         await self.entity_data.entity.async_set_lock_user_code(
@@ -114,25 +117,26 @@ class ZhaDoorLock(ZHAEntity, LockEntity):
         )
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_enable_lock_user_code(self, code_slot: int) -> None:
         """Enable user_code at index X on the lock."""
         await self.entity_data.entity.async_enable_lock_user_code(code_slot=code_slot)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_disable_lock_user_code(self, code_slot: int) -> None:
         """Disable user_code at index X on the lock."""
         await self.entity_data.entity.async_disable_lock_user_code(code_slot=code_slot)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
     async def async_clear_lock_user_code(self, code_slot: int) -> None:
         """Clear the user_code at index X on the lock."""
         await self.entity_data.entity.async_clear_lock_user_code(code_slot=code_slot)
         self.async_write_ha_state()
 
     @callback
+    @override
     def restore_external_state_attributes(self, state: State) -> None:
         """Restore entity state."""
         self.entity_data.entity.restore_external_state_attributes(

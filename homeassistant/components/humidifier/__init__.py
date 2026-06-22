@@ -1,11 +1,9 @@
 """Provides functionality to interact with humidifier devices."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from enum import StrEnum
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -24,7 +22,6 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ToggleEntity, ToggleEntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 from homeassistant.util.hass_dict import HassKey
 
 from .const import (  # noqa: F401
@@ -78,7 +75,6 @@ DEVICE_CLASSES = [cls.value for cls in HumidifierDeviceClass]
 # mypy: disallow-any-generics
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the humidifier is on based on the statemachine.
 
@@ -171,6 +167,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
     _attr_target_humidity_step: float | None = None
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any]:
         """Return capability attributes."""
         data: dict[str, Any] = {
@@ -186,6 +183,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         return data
 
     @cached_property
+    @override
     def device_class(self) -> HumidifierDeviceClass | None:
         """Return the class of this entity."""
         if hasattr(self, "_attr_device_class"):
@@ -196,6 +194,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         data: dict[str, Any] = {}
@@ -277,6 +276,7 @@ class HumidifierEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_AT
         return self._attr_max_humidity
 
     @cached_property
+    @override
     def supported_features(self) -> HumidifierEntityFeature:
         """Return the list of supported features."""
         return self._attr_supported_features

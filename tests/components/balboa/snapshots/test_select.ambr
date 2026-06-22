@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_selects[select.fakespa_temperature_range-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([

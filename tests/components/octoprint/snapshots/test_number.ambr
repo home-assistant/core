@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_numbers[printer0][number.octoprint_bed_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300,
@@ -61,8 +62,9 @@
 # ---
 # name: test_numbers[printer0][number.octoprint_extruder_1_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300,
@@ -121,8 +123,9 @@
 # ---
 # name: test_numbers[printer0][number.octoprint_extruder_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 300,

@@ -1,8 +1,7 @@
 """Support for particulate matter sensors connected to a serial port."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from pmsensor import serial_pm as pm
 import voluptuous as vol
@@ -80,16 +79,19 @@ class ParticulateMatterSensor(SensorEntity):
         self._collector = pm_data_collector
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return CONCENTRATION_MICROGRAMS_PER_CUBIC_METER

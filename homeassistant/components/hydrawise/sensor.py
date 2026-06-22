@@ -1,11 +1,9 @@
 """Support for Hydrawise sprinkler sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pydrawise.schema import Controller, ControllerWaterUseSummary, Zone
 
@@ -21,6 +19,8 @@ from homeassistant.util import dt as dt_util
 
 from .coordinator import HydrawiseConfigEntry
 from .entity import HydrawiseEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -202,6 +202,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
     entity_description: HydrawiseSensorEntityDescription
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit_of_measurement of the sensor."""
         if self.entity_description.device_class != SensorDeviceClass.WATER:
@@ -213,6 +214,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
         )
 
     @property
+    @override
     def icon(self) -> str | None:
         """Icon of the entity based on the value."""
         if (
@@ -223,6 +225,7 @@ class HydrawiseSensor(HydrawiseEntity, SensorEntity):
             return "mdi:water-outline"
         return None
 
+    @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_native_value = self.entity_description.value_fn(self)

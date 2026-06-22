@@ -1,12 +1,10 @@
 """Models for SQLAlchemy."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, Final, Protocol, Self
+from typing import Any, Final, Protocol, Self, override
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -173,26 +171,29 @@ def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
+    @override
     def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """Offload the datetime parsing to ciso8601."""
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
 
 
 class NativeLargeBinary(LargeBinary):
-    """A faster version of LargeBinary for engines that support python bytes natively."""
+    """A faster version of LargeBinary for native bytes engines."""
 
+    @override
     def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """No conversion needed for engines that support native bytes."""
         return None
 
 
-# Although all integers are same in SQLite, it does not allow an identity column to be BIGINT
+# Although all integers are same in SQLite, it does not allow
+# an identity column to be BIGINT
 # https://sqlite.org/forum/info/2dfa968a702e1506e885cb06d92157d492108b22bf39459506ab9f7125bca7fd
 ID_TYPE = BigInteger().with_variant(sqlite.INTEGER, "sqlite")
 # For MariaDB and MySQL we can use an unsigned integer type since it will fit 2**32
 # for sqlite and postgresql we use a bigint
 UINT_32_TYPE = BigInteger().with_variant(
-    mysql.INTEGER(unsigned=True),  # type: ignore[no-untyped-call]
+    mysql.INTEGER(unsigned=True),
     "mysql",
     "mariadb",
 )
@@ -206,12 +207,12 @@ JSONB_VARIANT_CAST = Text().with_variant(
 )
 DATETIME_TYPE = (
     DateTime(timezone=True)
-    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql", "mariadb")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DATETIME(timezone=True, fsp=6), "mysql", "mariadb")
     .with_variant(FAST_PYSQLITE_DATETIME(), "sqlite")  # type: ignore[no-untyped-call]
 )
 DOUBLE_TYPE = (
     Float()
-    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql", "mariadb")  # type: ignore[no-untyped-call]
+    .with_variant(mysql.DOUBLE(asdecimal=False), "mysql", "mariadb")
     .with_variant(oracle.DOUBLE_PRECISION(), "oracle")
     .with_variant(postgresql.DOUBLE_PRECISION(), "postgresql")
 )
@@ -234,6 +235,7 @@ class _LiteralProcessorType(Protocol):
 class JSONLiteral(JSON):
     """Teach SA how to literalize json."""
 
+    @override
     def literal_processor(self, dialect: Dialect) -> _LiteralProcessorType:
         """Processor to convert a value to JSON."""
 
@@ -284,6 +286,7 @@ class Events(Base):
     event_data_rel: Mapped[EventData | None] = relationship("EventData")
     event_type_rel: Mapped[EventTypes | None] = relationship("EventTypes")
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -309,17 +312,17 @@ class Events(Base):
     def from_event(event: Event) -> Events:
         """Create an event database object from a native event."""
         context = event.context
+        # The unused legacy columns (event_type, event_data, time_fired,
+        # context_id, context_user_id, context_parent_id) are nullable with no
+        # default, so they are intentionally left unset here. Assigning them
+        # None would still insert NULL, but each assignment goes through
+        # SQLAlchemy's instrumented attribute machinery, which is a measurable
+        # cost when run for every recorded event.
         return Events(
-            event_type=None,
-            event_data=None,
             origin_idx=event.origin.idx,
-            time_fired=None,
             time_fired_ts=event.time_fired_timestamp,
-            context_id=None,
             context_id_bin=ulid_to_bytes_or_none(context.id),
-            context_user_id=None,
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
-            context_parent_id=None,
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
         )
 
@@ -347,6 +350,7 @@ class EventData(Base):
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -389,6 +393,7 @@ class EventTypes(Base):
         String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True, unique=True
     )
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -448,6 +453,7 @@ class States(Base):
     )
     states_meta_rel: Mapped[StatesMeta | None] = relationship("StatesMeta")
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -492,19 +498,18 @@ class States(Base):
             else:
                 last_reported_ts = state.last_reported_timestamp
         context = event.context
+        # The unused legacy columns (entity_id, attributes, context_id,
+        # context_user_id, context_parent_id, last_updated, last_changed) are
+        # nullable with no default, so they are intentionally left unset here.
+        # Assigning them None would still insert NULL, but each assignment goes
+        # through SQLAlchemy's instrumented attribute machinery, which is a
+        # measurable cost when run for every recorded state change.
         return States(
             state=state_value,
-            entity_id=None,
-            attributes=None,
-            context_id=None,
             context_id_bin=ulid_to_bytes_or_none(context.id),
-            context_user_id=None,
             context_user_id_bin=uuid_hex_to_bytes_or_none(context.user_id),
-            context_parent_id=None,
             context_parent_id_bin=ulid_to_bytes_or_none(context.parent_id),
             origin_idx=event.origin.idx,
-            last_updated=None,
-            last_changed=None,
             last_updated_ts=last_updated_ts,
             last_changed_ts=last_changed_ts,
             last_reported_ts=last_reported_ts,
@@ -545,6 +550,7 @@ class StateAttributes(Base):
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -561,8 +567,13 @@ class StateAttributes(Base):
         # None state means the state was removed from the state machine
         if (state := event.data["new_state"]) is None:
             return b"{}"
-        if state_info := state.state_info:
-            unrecorded_attributes = state_info["unrecorded_attributes"]
+        if (state_info := state.state_info) and (
+            unrecorded_attributes := state_info["unrecorded_attributes"]
+        ):
+            # The entity has unrecorded attributes, so a combined exclude set
+            # has to be built. The common case (no unrecorded attributes) falls
+            # through to the shared constant below without allocating a set per
+            # recorded state change.
             exclude_attrs = {
                 *ALL_DOMAIN_EXCLUDE_ATTRS,
                 *unrecorded_attributes,
@@ -605,6 +616,7 @@ class StatesMeta(Base):
         String(MAX_LENGTH_STATE_ENTITY_ID), index=True, unique=True
     )
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -799,6 +811,7 @@ class RecorderRuns(Base):
     closed_incorrect: Mapped[bool] = mapped_column(Boolean, default=False)
     created: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         end = (
@@ -832,6 +845,7 @@ class SchemaChanges(Base):
     schema_version: Mapped[int | None] = mapped_column(Integer)
     changed: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -851,6 +865,7 @@ class StatisticsRuns(Base):
     run_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     start: Mapped[datetime] = mapped_column(DATETIME_TYPE, index=True)
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (

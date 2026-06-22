@@ -1,7 +1,5 @@
 """The tests for vacuum recorder."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from homeassistant.components import vacuum

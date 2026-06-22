@@ -1,8 +1,9 @@
 # serializer version: 1
-# name: test_light_setup[light.test_light-entry]
+# name: test_light_setup[light.test_area_test_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'supported_color_modes': list([
@@ -16,7 +17,7 @@
     'disabled_by': None,
     'domain': 'light',
     'entity_category': None,
-    'entity_id': 'light.test_light',
+    'entity_id': 'light.test_area_test_light',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -39,7 +40,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_light_setup[light.test_light-state]
+# name: test_light_setup[light.test_area_test_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'brightness': None,
@@ -52,7 +53,7 @@
       'supported_features': <LightEntityFeature: 40>,
     }),
     'context': <ANY>,
-    'entity_id': 'light.test_light',
+    'entity_id': 'light.test_area_test_light',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

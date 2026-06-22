@@ -1,0 +1,188 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "This LG device has already been configured with this infrared entity.",
+      "no_infrared_entities": "[%key:common::config_flow::abort::no_infrared_entities%]"
+    },
+    "error": {
+      "missing_infrared_entity": "Select an infrared emitter or receiver."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "device_type": "[%key:common::generic::device_type%]",
+          "infrared_entity_id": "[%key:common::config_flow::data::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "[%key:common::config_flow::data::infrared_receiver_entity_id%]"
+        },
+        "data_description": {
+          "device_type": "The type of LG device to control.",
+          "infrared_entity_id": "[%key:common::config_flow::data_description::infrared_entity_id%]",
+          "infrared_receiver_entity_id": "The infrared receiver entity to use for receiving signals."
+        },
+        "description": "Select the device type and at least one infrared emitter or receiver to use with your LG device.",
+        "title": "Set up LG IR Remote"
+      }
+    }
+  },
+  "entity": {
+    "button": {
+      "back": {
+        "name": "[%key:common::entity::button::back::name%]"
+      },
+      "down": {
+        "name": "[%key:common::entity::button::down::name%]"
+      },
+      "exit": {
+        "name": "[%key:common::entity::button::exit::name%]"
+      },
+      "guide": {
+        "name": "[%key:common::entity::button::guide::name%]"
+      },
+      "hdmi_1": {
+        "name": "[%key:common::entity::button::hdmi_1::name%]"
+      },
+      "hdmi_2": {
+        "name": "[%key:common::entity::button::hdmi_2::name%]"
+      },
+      "hdmi_3": {
+        "name": "[%key:common::entity::button::hdmi_3::name%]"
+      },
+      "hdmi_4": {
+        "name": "[%key:common::entity::button::hdmi_4::name%]"
+      },
+      "home": {
+        "name": "[%key:common::entity::button::home::name%]"
+      },
+      "info": {
+        "name": "[%key:common::entity::button::info::name%]"
+      },
+      "input": {
+        "name": "[%key:common::entity::button::input::name%]"
+      },
+      "left": {
+        "name": "[%key:common::entity::button::left::name%]"
+      },
+      "menu": {
+        "name": "[%key:common::entity::button::menu::name%]"
+      },
+      "num_0": {
+        "name": "[%key:common::entity::button::num_0::name%]"
+      },
+      "num_1": {
+        "name": "[%key:common::entity::button::num_1::name%]"
+      },
+      "num_2": {
+        "name": "[%key:common::entity::button::num_2::name%]"
+      },
+      "num_3": {
+        "name": "[%key:common::entity::button::num_3::name%]"
+      },
+      "num_4": {
+        "name": "[%key:common::entity::button::num_4::name%]"
+      },
+      "num_5": {
+        "name": "[%key:common::entity::button::num_5::name%]"
+      },
+      "num_6": {
+        "name": "[%key:common::entity::button::num_6::name%]"
+      },
+      "num_7": {
+        "name": "[%key:common::entity::button::num_7::name%]"
+      },
+      "num_8": {
+        "name": "[%key:common::entity::button::num_8::name%]"
+      },
+      "num_9": {
+        "name": "[%key:common::entity::button::num_9::name%]"
+      },
+      "ok": {
+        "name": "[%key:common::entity::button::ok::name%]"
+      },
+      "power": {
+        "name": "[%key:common::entity::button::power::name%]"
+      },
+      "power_off": {
+        "name": "[%key:common::entity::button::power_off::name%]"
+      },
+      "power_on": {
+        "name": "[%key:common::entity::button::power_on::name%]"
+      },
+      "right": {
+        "name": "[%key:common::entity::button::right::name%]"
+      },
+      "up": {
+        "name": "[%key:common::entity::button::up::name%]"
+      }
+    },
+    "event": {
+      "received_command": {
+        "name": "Received command",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "aspect": "Aspect",
+              "back": "[%key:common::entity::button::back::name%]",
+              "blue": "Blue",
+              "channel_down": "Channel down",
+              "channel_up": "Channel up",
+              "down": "[%key:common::entity::button::down::name%]",
+              "exit": "[%key:common::entity::button::exit::name%]",
+              "ez_adjust": "EZ adjust",
+              "fast_forward": "Fast forward",
+              "green": "Green",
+              "guide": "[%key:common::entity::button::guide::name%]",
+              "hdmi_1": "[%key:common::entity::button::hdmi_1::name%]",
+              "hdmi_2": "[%key:common::entity::button::hdmi_2::name%]",
+              "hdmi_3": "[%key:common::entity::button::hdmi_3::name%]",
+              "hdmi_4": "[%key:common::entity::button::hdmi_4::name%]",
+              "home": "[%key:common::entity::button::home::name%]",
+              "in_start": "In start",
+              "info": "[%key:common::entity::button::info::name%]",
+              "input": "[%key:common::entity::button::input::name%]",
+              "left": "[%key:common::entity::button::left::name%]",
+              "list": "List",
+              "menu": "[%key:common::entity::button::menu::name%]",
+              "mute": "Mute",
+              "num_0": "[%key:common::entity::button::num_0::name%]",
+              "num_1": "[%key:common::entity::button::num_1::name%]",
+              "num_2": "[%key:common::entity::button::num_2::name%]",
+              "num_3": "[%key:common::entity::button::num_3::name%]",
+              "num_4": "[%key:common::entity::button::num_4::name%]",
+              "num_5": "[%key:common::entity::button::num_5::name%]",
+              "num_6": "[%key:common::entity::button::num_6::name%]",
+              "num_7": "[%key:common::entity::button::num_7::name%]",
+              "num_8": "[%key:common::entity::button::num_8::name%]",
+              "num_9": "[%key:common::entity::button::num_9::name%]",
+              "ok": "[%key:common::entity::button::ok::name%]",
+              "pause": "Pause",
+              "play": "Play",
+              "power": "[%key:common::entity::button::power::name%]",
+              "power_off": "[%key:common::entity::button::power_off::name%]",
+              "power_on": "[%key:common::entity::button::power_on::name%]",
+              "red": "Red",
+              "rewind": "Rewind",
+              "right": "[%key:common::entity::button::right::name%]",
+              "sap": "SAP",
+              "settings": "Settings",
+              "stop": "Stop",
+              "subtitle": "Subtitle",
+              "text": "Text",
+              "unknown": "Unknown",
+              "up": "[%key:common::entity::button::up::name%]",
+              "volume_down": "Volume down",
+              "volume_up": "Volume up",
+              "yellow": "Yellow"
+            }
+          }
+        }
+      }
+    }
+  },
+  "selector": {
+    "device_type": {
+      "options": {
+        "tv": "[%key:common::generic::tv%]"
+      }
+    }
+  }
+}

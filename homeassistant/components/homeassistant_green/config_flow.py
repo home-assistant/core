@@ -1,10 +1,8 @@
 """Config flow for the Home Assistant Green integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -44,6 +42,7 @@ class HomeAssistantGreenConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> HomeAssistantGreenOptionsFlow:

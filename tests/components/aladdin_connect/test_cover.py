@@ -125,7 +125,7 @@ async def test_cover_unavailable(
     assert state is not None
     assert state.state != STATE_UNAVAILABLE
 
-    mock_aladdin_connect_api.update_door.side_effect = aiohttp.ClientError()
+    mock_aladdin_connect_api.get_doors.side_effect = aiohttp.ClientError()
     freezer.tick(15)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()

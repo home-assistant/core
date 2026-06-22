@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_number[2][number.cms_sf2000_discharge_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 100,
@@ -28,7 +29,7 @@
     'object_id_base': 'Discharge limit',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.BATTERY: 'battery'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Discharge limit',
     'platform': 'indevolt',
@@ -43,7 +44,6 @@
 # name: test_number[2][number.cms_sf2000_discharge_limit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
       'friendly_name': 'CMS-SF2000 Discharge limit',
       'max': 100,
       'min': 0,
@@ -61,8 +61,9 @@
 # ---
 # name: test_number[2][number.cms_sf2000_feed_in_power_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2400,
@@ -121,8 +122,9 @@
 # ---
 # name: test_number[2][number.cms_sf2000_inverter_input_limit-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2400,
@@ -181,8 +183,9 @@
 # ---
 # name: test_number[2][number.cms_sf2000_max_ac_output_power-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'max': 2400,

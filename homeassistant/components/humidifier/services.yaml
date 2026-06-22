@@ -11,7 +11,8 @@ set_mode:
       required: true
       example: "away"
       selector:
-        text:
+        state:
+          attribute: mode
 
 set_humidity:
   target:

@@ -1,9 +1,7 @@
 """Support for stiebel_eltron climate platform."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pystiebeleltron.pystiebeleltron import StiebelEltronAPI
 
@@ -104,11 +102,13 @@ class StiebelEltron(ClimateEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool | None]:
         """Return device specific state attributes."""
         return {"filter_alarm": self._filter_alarm}
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of the climate device."""
         return self._name
@@ -116,50 +116,60 @@ class StiebelEltron(ClimateEntity):
     # Handle ClimateEntityFeature.TARGET_TEMPERATURE
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         return self._current_temperature
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
         return self._target_temperature
 
     @property
+    @override
     def target_temperature_step(self) -> float:
         """Return the supported step of target temperature."""
         return 0.1
 
     @property
+    @override
     def min_temp(self) -> float:
         """Return the minimum temperature."""
         return 10.0
 
     @property
+    @override
     def max_temp(self) -> float:
         """Return the maximum temperature."""
         return 30.0
 
     @property
+    @override
     def current_humidity(self) -> float | None:
         """Return the current humidity."""
         return float(f"{self._current_humidity:.1f}")
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode | None:
         """Return current operation ie. heat, cool, idle."""
         return STE_TO_HA_HVAC.get(self._operation) if self._operation else None
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode, e.g., home, away, temp."""
         return STE_TO_HA_PRESET.get(self._operation) if self._operation else None
 
     @property
+    @override
     def preset_modes(self) -> list[str]:
         """Return a list of available preset modes."""
         return SUPPORT_PRESET
 
+    @override
     def set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new operation mode."""
         if self.preset_mode:
@@ -168,6 +178,7 @@ class StiebelEltron(ClimateEntity):
         _LOGGER.debug("set_hvac_mode: %s -> %s", self._operation, new_mode)
         self._client.set_operation(new_mode)
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         target_temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -175,6 +186,7 @@ class StiebelEltron(ClimateEntity):
             _LOGGER.debug("set_temperature: %s", target_temperature)
             self._client.set_target_temp(target_temperature)
 
+    @override
     def set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         new_mode = HA_TO_STE_PRESET.get(preset_mode)

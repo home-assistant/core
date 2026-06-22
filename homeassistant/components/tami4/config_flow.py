@@ -1,10 +1,8 @@
 """Config flow for edge integration."""
 
-from __future__ import annotations
-
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 from Tami4EdgeAPI import Tami4EdgeAPI, exceptions
 import voluptuous as vol
@@ -30,6 +28,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     phone: str
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -71,6 +70,7 @@ class Tami4ConfigFlow(ConfigFlow, domain=DOMAIN):
                 refresh_token = await self.hass.async_add_executor_job(
                     Tami4EdgeAPI.submit_otp, self.phone, otp
                 )
+                # pylint: disable-next=home-assistant-sequential-executor-jobs
                 api = await self.hass.async_add_executor_job(
                     Tami4EdgeAPI, refresh_token
                 )

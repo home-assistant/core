@@ -28,6 +28,7 @@ from homeassistant.components.analytics.const import (
     ATTR_USAGE,
     BASIC_ENDPOINT_URL,
     BASIC_ENDPOINT_URL_DEV,
+    DOMAIN,
     SNAPSHOT_DEFAULT_URL,
     SNAPSHOT_URL_PATH,
 )
@@ -277,6 +278,10 @@ async def test_send_base_with_supervisor(
             side_effect=Mock(return_value={}),
         ),
         patch(
+            "homeassistant.components.hassio.get_addons_info",
+            side_effect=Mock(return_value={}),
+        ),
+        patch(
             "homeassistant.components.analytics.analytics.is_hassio",
             side_effect=Mock(return_value=True),
         ) as is_hassio_mock,
@@ -359,9 +364,12 @@ async def test_send_usage_with_supervisor(
                     "healthy": True,
                     "supported": True,
                     "arch": "amd64",
-                    "addons": [{"slug": "test_addon"}],
                 }
             ),
+        ),
+        patch(
+            "homeassistant.components.hassio.get_addons_info",
+            side_effect=Mock(return_value={"test_addon": {}}),
         ),
         patch(
             "homeassistant.components.hassio.get_os_info",
@@ -578,9 +586,12 @@ async def test_send_statistics_with_supervisor(
                     "healthy": True,
                     "supported": True,
                     "arch": "amd64",
-                    "addons": [{"slug": "test_addon"}],
                 }
             ),
+        ),
+        patch(
+            "homeassistant.components.hassio.get_addons_info",
+            side_effect=Mock(return_value={"test_addon": {}}),
         ),
         patch(
             "homeassistant.components.hassio.get_os_info",
@@ -1023,7 +1034,7 @@ async def test_devices_payload_no_entities(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test devices payload with no entities."""
-    assert await async_setup_component(hass, "analytics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_devices_payload(hass) == {
         "version": "home-assistant:1",
         "home_assistant": MOCK_VERSION,
@@ -1166,7 +1177,7 @@ async def test_devices_payload_with_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test devices payload with entities."""
-    assert await async_setup_component(hass, "analytics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     mock_config_entry = MockConfigEntry(domain="hue")
     mock_config_entry.add_to_hass(hass)
@@ -1360,7 +1371,7 @@ async def test_analytics_platforms(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test analytics platforms."""
-    assert await async_setup_component(hass, "analytics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     mock_config_entry = MockConfigEntry(domain="test")
     mock_config_entry.add_to_hass(hass)

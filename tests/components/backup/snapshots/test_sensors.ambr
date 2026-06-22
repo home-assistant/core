@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_sensors[sensor.backup_backup_manager_state-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'options': list([
@@ -66,8 +67,9 @@
 # ---
 # name: test_sensors[sensor.backup_last_attempted_automatic_backup-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -116,8 +118,9 @@
 # ---
 # name: test_sensors[sensor.backup_last_successful_automatic_backup-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -166,8 +169,9 @@
 # ---
 # name: test_sensors[sensor.backup_next_scheduled_automatic_backup-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

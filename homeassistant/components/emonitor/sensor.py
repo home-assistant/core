@@ -1,6 +1,6 @@
 """Support for a Emonitor channel sensor."""
 
-from __future__ import annotations
+from typing import override
 
 from aioemonitor.monitor import EmonitorChannel, EmonitorStatus
 
@@ -118,6 +118,7 @@ class EmonitorPowerSensor(CoordinatorEntity[EmonitorStatus], SensorEntity):
         return attr_val
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_native_value = self._paired_attr(self.entity_description.key)

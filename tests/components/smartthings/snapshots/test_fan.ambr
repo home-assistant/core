@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[da_ac_air_000001][fan.air_purifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -67,8 +68,9 @@
 # ---
 # name: test_all_entities[da_ac_air_01011][fan.air_filter-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -133,8 +135,9 @@
 # ---
 # name: test_all_entities[da_ks_hood_01001][fan.range_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -191,10 +194,11 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[fake_fan][fan.fake_fan-entry]
+# name: test_all_entities[fake_fan][fan.theater_fake_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': list([
@@ -212,7 +216,7 @@
     'disabled_by': None,
     'domain': 'fan',
     'entity_category': None,
-    'entity_id': 'fan.fake_fan',
+    'entity_id': 'fan.theater_fake_fan',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -235,7 +239,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[fake_fan][fan.fake_fan-state]
+# name: test_all_entities[fake_fan][fan.theater_fake_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'friendly_name': 'Fake fan',
@@ -252,7 +256,7 @@
       'supported_features': <FanEntityFeature: 57>,
     }),
     'context': <ANY>,
-    'entity_id': 'fan.fake_fan',
+    'entity_id': 'fan.theater_fake_fan',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -261,8 +265,9 @@
 # ---
 # name: test_all_entities[generic_fan_3_speed][fan.bedroom_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
       'preset_modes': None,

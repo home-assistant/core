@@ -1,9 +1,7 @@
 """Support for Plex media server monitoring."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from plexapi.exceptions import NotFound
 import requests.exceptions
@@ -93,6 +91,7 @@ class PlexSensor(SensorEntity):
             function=self._async_refresh_sensor,
         ).async_call
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         server_id = self._server.machine_identifier
@@ -111,11 +110,13 @@ class PlexSensor(SensorEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         return self._server.sensor_attributes
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         return DeviceInfo(
@@ -149,6 +150,7 @@ class PlexLibrarySectionSensor(SensorEntity):
         self._attr_name = f"{self.server_name} Library - {plex_library_section.title}"
         self._attr_unique_id = f"library-{self.server_id}-{plex_library_section.uuid}"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when about to be added to hass."""
         self.async_on_remove(
@@ -205,6 +207,7 @@ class PlexLibrarySectionSensor(SensorEntity):
             self._attr_extra_state_attributes["last_added_timestamp"] = media.addedAt
 
     @property
+    @override
     def device_info(self) -> DeviceInfo | None:
         """Return a device description for device registry."""
         if self.unique_id is None:

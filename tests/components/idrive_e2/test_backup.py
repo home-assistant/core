@@ -9,7 +9,12 @@ from unittest.mock import AsyncMock, Mock, patch
 from botocore.exceptions import ConnectTimeoutError
 import pytest
 
-from homeassistant.components.backup import DOMAIN as BACKUP_DOMAIN, AgentBackup
+from homeassistant.components.backup import (
+    DATA_MANAGER,
+    DOMAIN as BACKUP_DOMAIN,
+    AgentBackup,
+    UploadBackupEvent,
+)
 from homeassistant.components.idrive_e2.backup import (
     MULTIPART_MIN_PART_SIZE_BYTES,
     BotoCoreError,
@@ -179,9 +184,8 @@ async def test_agents_get_backup_does_not_throw_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent get backup does not throw on a backup not found."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
 
     client = await hass_ws_client(hass)
     await client.send_json_auto_id({"type": "backup/details", "backup_id": "random"})
@@ -204,7 +208,8 @@ async def test_agents_list_backups_with_corrupted_metadata(
     agent = IDriveE2BackupAgent(hass, mock_config_entry)
 
     # Set up mock responses for both valid and corrupted metadata files
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         {
             "Contents": [
                 {
@@ -274,9 +279,8 @@ async def test_agents_delete_not_throwing_on_not_found(
     mock_client: MagicMock,
 ) -> None:
     """Test agent delete backup does not throw on a backup not found."""
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
-        {"Contents": []}
-    ]
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [{"Contents": []}]
 
     client = await hass_ws_client(hass)
 
@@ -412,13 +416,15 @@ async def test_multipart_upload_consistent_part_sizes(
 
     mock_client.upload_part.side_effect = record_upload_part
 
-    await agent._upload_multipart("test.tar", open_stream)
+    await agent._upload_multipart("test.tar", open_stream, Mock())
 
     # Verify that all non-trailing parts have the same size
     assert len(uploaded_part_sizes) >= 2, "Expected at least 2 parts"
     non_trailing_parts = uploaded_part_sizes[:-1]
     assert all(size == MULTIPART_MIN_PART_SIZE_BYTES for size in non_trailing_parts), (
-        f"All non-trailing parts should be {MULTIPART_MIN_PART_SIZE_BYTES} bytes, got {non_trailing_parts}"
+        f"All non-trailing parts should be"
+        f" {MULTIPART_MIN_PART_SIZE_BYTES} bytes,"
+        f" got {non_trailing_parts}"
     )
 
     # Verify the trailing part contains the remainder
@@ -427,6 +433,68 @@ async def test_multipart_upload_consistent_part_sizes(
     if expected_trailing == 0:
         expected_trailing = MULTIPART_MIN_PART_SIZE_BYTES
     assert uploaded_part_sizes[-1] == expected_trailing
+
+
+@pytest.mark.parametrize(
+    "agent_backup",
+    [MULTIPART_MIN_PART_SIZE_BYTES * 2],
+    indirect=True,
+    ids=["large"],
+)
+async def test_agents_upload_on_progress(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    agent_backup: AgentBackup,
+) -> None:
+    """Test agent upload backup emits UploadBackupEvent via on_progress."""
+    client = await hass_client()
+
+    manager = hass.data[DATA_MANAGER]
+    events: list[UploadBackupEvent] = []
+
+    def _collect(event: UploadBackupEvent) -> None:
+        if isinstance(event, UploadBackupEvent):
+            events.append(event)
+
+    unsub = manager.async_subscribe_events(_collect)
+
+    with (
+        patch(
+            "homeassistant.components.backup.manager.BackupManager.async_get_backup",
+            return_value=agent_backup,
+        ),
+        patch(
+            "homeassistant.components.backup.manager.read_backup",
+            return_value=agent_backup,
+        ),
+        patch("pathlib.Path.open") as mocked_open,
+    ):
+        mocked_open.return_value.read = Mock(
+            side_effect=[
+                b"a" * agent_backup.size,
+                b"",
+            ]
+        )
+        resp = await client.post(
+            f"/api/backup/upload?agent_id={DOMAIN}.{mock_config_entry.entry_id}",
+            data={"file": StringIO("test")},
+        )
+
+    unsub()
+
+    assert resp.status == 201
+    agent_id = f"{DOMAIN}.{mock_config_entry.entry_id}"
+    agent_events = [e for e in events if e.agent_id == agent_id]
+    assert len(agent_events) >= 2
+    assert all(e.total_bytes == agent_backup.size for e in agent_events)
+    # Verify events report distinct increasing byte counts
+    uploaded_bytes = [e.uploaded_bytes for e in agent_events]
+    assert uploaded_bytes == sorted(uploaded_bytes)
+    assert len(set(uploaded_bytes)) == len(uploaded_bytes)
+    # Verify at least one intermediate event (uploaded_bytes < total_bytes)
+    assert agent_events[0].uploaded_bytes < agent_events[0].total_bytes
 
 
 async def test_agents_download(
@@ -467,10 +535,9 @@ async def test_error_during_delete(
     response = await client.receive_json()
 
     assert response["success"]
+    agent_key = f"{DOMAIN}.{mock_config_entry.entry_id}"
     assert response["result"] == {
-        "agent_errors": {
-            f"{DOMAIN}.{mock_config_entry.entry_id}": "Failed during async_delete_backup"
-        }
+        "agent_errors": {agent_key: "Failed during async_delete_backup"}
     }
 
 
@@ -496,7 +563,8 @@ async def test_cache_expiration(
     metadata_content = json.dumps(agent_backup.as_dict())
     mock_body = AsyncMock()
     mock_body.read.return_value = metadata_content.encode()
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         {
             "Contents": [
                 {
@@ -599,7 +667,8 @@ async def test_list_backups_with_pagination(
 
     # Setup mock client
     mock_client = mock_config_entry.runtime_data
-    mock_client.get_paginator.return_value.paginate.return_value.__aiter__.return_value = [
+    paginate = mock_client.get_paginator.return_value.paginate
+    paginate.return_value.__aiter__.return_value = [
         page1,
         page2,
     ]

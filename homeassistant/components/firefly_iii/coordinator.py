@@ -1,11 +1,10 @@
 """Data Update Coordinator for Firefly III integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from aiohttp import CookieJar
 from pyfirefly import (
@@ -19,7 +18,7 @@ from pyfirefly.models import Account, Bill, Budget, Category, Currency
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -36,10 +35,10 @@ DEFAULT_SCAN_INTERVAL = timedelta(minutes=5)
 class FireflyCoordinatorData:
     """Data structure for Firefly III coordinator data."""
 
-    accounts: list[Account]
+    accounts: dict[str, Account]
     categories: list[Category]
-    category_details: list[Category]
-    budgets: list[Budget]
+    category_details: dict[str, Category]
+    budgets: dict[str, Budget]
     bills: list[Bill]
     primary_currency: Currency
 
@@ -68,6 +67,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             ),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -79,21 +79,22 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
                 translation_placeholders={"error": repr(err)},
             ) from err
         except FireflyConnectionError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
         except FireflyTimeoutError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+    @override
     async def _async_update_data(self) -> FireflyCoordinatorData:
         """Fetch data from Firefly III API."""
-        now = datetime.now()
+        now = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_date = now
 
@@ -142,10 +143,10 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             ) from err
 
         return FireflyCoordinatorData(
-            accounts=accounts,
+            accounts={account.id: account for account in accounts},
             categories=categories,
-            category_details=category_details,
-            budgets=budgets,
+            category_details={category.id: category for category in category_details},
+            budgets={budget.id: budget for budget in budgets},
             bills=bills,
             primary_currency=primary_currency,
         )

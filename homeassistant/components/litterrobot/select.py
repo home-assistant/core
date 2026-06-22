@@ -1,10 +1,8 @@
 """Support for Litter-Robot selects."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Generic, TypeVar
+from typing import Any, Generic, TypeVar, override
 
 from pylitterbot import FeederRobot, LitterRobot, LitterRobot4, LitterRobot5, Robot
 from pylitterbot.robot.litterrobot4 import BrightnessLevel, NightLightMode
@@ -15,14 +13,17 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import LitterRobotConfigEntry, LitterRobotDataUpdateCoordinator
-from .entity import LitterRobotEntity, _WhiskerEntityT
+from .entity import LitterRobotEntity, _WhiskerEntityT, whisker_command
+
+PARALLEL_UPDATES = 1
 
 _CastTypeT = TypeVar("_CastTypeT", int, float, str)
 
 
 @dataclass(frozen=True, kw_only=True)
 class RobotSelectEntityDescription(
-    SelectEntityDescription, Generic[_WhiskerEntityT, _CastTypeT]
+    SelectEntityDescription,
+    Generic[_WhiskerEntityT, _CastTypeT],  # noqa: UP046
 ):
     """A class that describes robot select entities."""
 
@@ -118,21 +119,33 @@ async def async_setup_entry(
 ) -> None:
     """Set up Litter-Robot selects using config entry."""
     coordinator = entry.runtime_data
-    async_add_entities(
-        LitterRobotSelectEntity(
-            robot=robot, coordinator=coordinator, description=description
-        )
-        for robot in coordinator.account.robots
-        for robot_type, descriptions in ROBOT_SELECT_MAP.items()
-        if isinstance(robot, robot_type)
-        for description in descriptions
-    )
+    known_robots: set[str] = set()
+
+    def _check_robots() -> None:
+        all_robots = coordinator.account.robots
+        current_robots = {robot.serial for robot in all_robots}
+        new_robots = current_robots - known_robots
+        if new_robots:
+            known_robots.update(new_robots)
+            async_add_entities(
+                LitterRobotSelectEntity(
+                    robot=robot, coordinator=coordinator, description=description
+                )
+                for robot in all_robots
+                if robot.serial in new_robots
+                for robot_type, descriptions in ROBOT_SELECT_MAP.items()
+                if isinstance(robot, robot_type)
+                for description in descriptions
+            )
+
+    _check_robots()
+    entry.async_on_unload(coordinator.async_add_listener(_check_robots))
 
 
 class LitterRobotSelectEntity(
     LitterRobotEntity[_WhiskerEntityT],
     SelectEntity,
-    Generic[_WhiskerEntityT, _CastTypeT],
+    Generic[_WhiskerEntityT, _CastTypeT],  # noqa: UP046
 ):
     """Litter-Robot Select."""
 
@@ -150,10 +163,13 @@ class LitterRobotSelectEntity(
         self._attr_options = list(map(str, options))
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return str(self.entity_description.current_fn(self.robot))
 
+    @whisker_command
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self.robot, option)

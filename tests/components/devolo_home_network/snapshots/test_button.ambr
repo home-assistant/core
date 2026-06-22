@@ -15,8 +15,9 @@
 # ---
 # name: test_button[identify_device_with_a_blinking_led-plcnet-async_identify_device_start].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -65,8 +66,9 @@
 # ---
 # name: test_button[restart_device-device-async_restart].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -114,8 +116,9 @@
 # ---
 # name: test_button[start_plc_pairing-plcnet-async_pair_device].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -163,8 +166,9 @@
 # ---
 # name: test_button[start_wps-device-async_start_wps].1
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,

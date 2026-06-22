@@ -1,7 +1,5 @@
 """Fixtures for Daikin tests."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Generator
 import re
 from typing import Any

@@ -2,7 +2,7 @@
 
 from collections.abc import Iterable
 import logging
-from typing import Any
+from typing import Any, override
 
 from skyboxremote import VALID_KEYS, RemoteControl
 
@@ -47,14 +47,17 @@ class SkyRemote(RemoteEntity):
             name=remote.host,
         )
 
+    @override
     def turn_on(self, activity: str | None = None, **kwargs: Any) -> None:
         """Send the power on command."""
         self.send_command(["sky"])
 
+    @override
     def turn_off(self, activity: str | None = None, **kwargs: Any) -> None:
         """Send the power command."""
         self.send_command(["power"])
 
+    @override
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send a list of commands to the device."""
         for cmd in command:
@@ -64,6 +67,7 @@ class SkyRemote(RemoteEntity):
                 )
         try:
             self._remote.send_keys(command)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ValueError as err:
             _LOGGER.error("Invalid command: %s. Error: %s", command, err)
             return

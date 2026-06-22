@@ -1,10 +1,13 @@
 # serializer version: 1
 # name: test_device_tracker_entities[device_tracker.nrgkick_test_gps_tracker-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      'tracking_type': <TrackingType.POSITION: 'position'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -40,9 +43,12 @@
     'attributes': ReadOnlyDict({
       'friendly_name': 'NRGkick Test GPS tracker',
       'gps_accuracy': 1.5,
+      'in_zones': list([
+      ]),
       'latitude': 47.0748,
       'longitude': 15.4376,
       'source_type': <SourceType.GPS: 'gps'>,
+      'tracking_type': <TrackingType.POSITION: 'position'>,
     }),
     'context': <ANY>,
     'entity_id': 'device_tracker.nrgkick_test_gps_tracker',

@@ -1,7 +1,5 @@
 """UniFi Protect Integration utils."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Generator, Iterable
 import contextlib
 from functools import wraps
@@ -37,13 +35,13 @@ from .const import (
     CONF_ALL_UPDATES,
     CONF_OVERRIDE_CHOST,
     DEVICES_FOR_SUBSCRIBE,
+    DEVICES_WS_SUBSCRIBED_MODELS,
     DOMAIN,
     ModelType,
 )
 
 if TYPE_CHECKING:
     from .data import UFPConfigEntry
-    from .entity import BaseProtectEntity
 
 
 @callback
@@ -126,6 +124,7 @@ def async_create_api_client(
         session=session,
         public_api_session=public_api_session,
         subscribed_models=DEVICES_FOR_SUBSCRIBE,
+        devices_ws_subscribed_models=DEVICES_WS_SUBSCRIBED_MODELS,
         override_connection_host=entry.options.get(CONF_OVERRIDE_CHOST, False),
         ignore_stats=not entry.options.get(CONF_ALL_UPDATES, False),
         ignore_unadopted=False,
@@ -145,7 +144,7 @@ def get_camera_base_name(channel: CameraChannel) -> str:
     return camera_name
 
 
-def async_ufp_instance_command[_EntityT: "BaseProtectEntity", **_P](
+def async_ufp_instance_command[_EntityT, **_P](
     func: Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, Any]],
 ) -> Callable[Concatenate[_EntityT, _P], Coroutine[Any, Any, None]]:
     """Decorate UniFi Protect entity instance commands to handle exceptions.

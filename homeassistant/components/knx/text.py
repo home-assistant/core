@@ -1,6 +1,6 @@
 """Support for KNX text entities."""
 
-from __future__ import annotations
+from typing import override
 
 from propcache.api import cached_property
 from xknx.devices import Notification as XknxNotification
@@ -77,6 +77,7 @@ class _KnxText(TextEntity, RestoreEntity):
     _device: XknxNotification
     _attr_native_max = 14
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
@@ -87,6 +88,7 @@ class _KnxText(TextEntity, RestoreEntity):
                 self._device.remote_value.value = last_state.state
 
     @cached_property
+    @override
     def pattern(self) -> str | None:
         """Return the regex pattern that the value must match."""
         return (
@@ -96,10 +98,12 @@ class _KnxText(TextEntity, RestoreEntity):
         )
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the value reported by the text."""
         return self._device.message
 
+    @override
     async def async_set_value(self, value: str) -> None:
         """Change the value."""
         await self._device.set(value)
@@ -112,20 +116,21 @@ class KnxYamlText(_KnxText, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX text."""
+        self._device = XknxNotification(
+            knx_module.xknx,
+            name=config[CONF_NAME],
+            group_address=config[KNX_ADDRESS],
+            group_address_state=config.get(CONF_STATE_ADDRESS),
+            respond_to_read=config[CONF_RESPOND_TO_READ],
+            value_type=config[CONF_TYPE],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxNotification(
-                knx_module.xknx,
-                name=config[CONF_NAME],
-                group_address=config[KNX_ADDRESS],
-                group_address_state=config.get(CONF_STATE_ADDRESS),
-                respond_to_read=config[CONF_RESPOND_TO_READ],
-                value_type=config[CONF_TYPE],
-            ),
+            unique_id=str(self._device.remote_value.group_address),
+            name=config[CONF_NAME],
+            entity_category=config.get(CONF_ENTITY_CATEGORY),
         )
         self._attr_mode = config[CONF_MODE]
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.remote_value.group_address)
 
 
 class KnxUiText(_KnxText, KnxUiEntity):

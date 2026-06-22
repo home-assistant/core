@@ -2,7 +2,6 @@
 
 from unittest.mock import PropertyMock, patch
 
-from homeassistant.components.atag import DOMAIN
 from homeassistant.components.atag.climate import PRESET_MAP
 from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
@@ -17,12 +16,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homeassistant import DOMAIN as HA_DOMAIN
-from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -31,7 +25,7 @@ from . import UID, init_integration
 
 from tests.test_util.aiohttp import AiohttpClientMocker
 
-CLIMATE_ID = f"{Platform.CLIMATE}.{DOMAIN}"
+CLIMATE_ID = "climate.atag_thermostat_atag"
 
 
 async def test_climate(
@@ -44,7 +38,7 @@ async def test_climate(
 
     assert entity_registry.async_is_registered(CLIMATE_ID)
     entity = entity_registry.async_get(CLIMATE_ID)
-    assert entity.unique_id == f"{UID}-{Platform.CLIMATE}"
+    assert entity.unique_id == f"{UID}-climate"
     assert hass.states.get(CLIMATE_ID).attributes[ATTR_HVAC_ACTION] == HVACAction.IDLE
 
 

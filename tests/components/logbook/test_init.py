@@ -13,13 +13,15 @@ import voluptuous as vol
 from homeassistant import core as ha
 from homeassistant.components import logbook, recorder
 
-# pylint: disable-next=hass-component-root-import
+# pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.alexa.smart_home import EVENT_ALEXA_SMART_HOME
 from homeassistant.components.automation import EVENT_AUTOMATION_TRIGGERED
+from homeassistant.components.logbook import DOMAIN
 from homeassistant.components.logbook.models import EventAsRow, LazyEventPartialState
 from homeassistant.components.logbook.processor import EventProcessor
 from homeassistant.components.logbook.queries.common import PSEUDO_EVENT_STATE_CHANGED
 from homeassistant.components.recorder import Recorder
+from homeassistant.components.recorder.models import ulid_to_bytes_or_none
 from homeassistant.components.script import EVENT_SCRIPT_STARTED
 from homeassistant.components.sensor import SensorStateClass
 from homeassistant.const import (
@@ -41,13 +43,19 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Context, Event, HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_ENTITY_GLOBS
 from homeassistant.setup import async_setup_component
 from homeassistant.util import dt as dt_util
 
-from .common import MockRow, mock_humanify
+from .common import (
+    MockRow,
+    assert_thermostat_context_chain_events,
+    mock_humanify,
+    setup_thermostat_context_test_entities,
+    simulate_thermostat_context_chain,
+)
 
 from tests.common import MockConfigEntry, async_capture_events, mock_platform
 from tests.components.recorder.common import (
@@ -130,7 +138,7 @@ async def test_service_call_create_logbook_entry_invalid_entity_id(
     hass: HomeAssistant,
 ) -> None:
     """Test if service call create log book entry with an invalid entity id."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     hass.bus.async_fire(
         logbook.EVENT_LOGBOOK_ENTRY,
@@ -349,7 +357,7 @@ async def test_logbook_view(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the logbook view."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     client = await hass_client()
     response = await client.get(f"/api/logbook/{dt_util.utcnow().isoformat()}")
@@ -361,7 +369,7 @@ async def test_logbook_view_invalid_start_date_time(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the logbook view with an invalid date time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     client = await hass_client()
     response = await client.get("/api/logbook/INVALID")
@@ -373,7 +381,7 @@ async def test_logbook_view_invalid_end_date_time(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the logbook view."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     client = await hass_client()
     response = await client.get(
@@ -388,7 +396,7 @@ async def test_logbook_view_period_entity(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the logbook view with period and entity."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     entity_id_test = "switch.test"
@@ -492,7 +500,7 @@ async def test_logbook_describe_event(
         ),
     )
 
-    assert await async_setup_component(hass, "logbook", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     with freeze_time(dt_util.utcnow() - timedelta(seconds=5)):
         hass.bus.async_fire("some_event")
         await async_wait_recording_done(hass)
@@ -598,7 +606,7 @@ async def test_logbook_view_end_time_entity(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the logbook view with end_time and entity."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     entity_id_test = "switch.test"
@@ -661,8 +669,8 @@ async def test_logbook_entity_filter_with_automations(
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -745,8 +753,8 @@ async def test_logbook_entity_filter_with_automations(
 async def test_logbook_entity_no_longer_in_state_machine(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the logbook view with an entity that hass been removed from the state machine."""
-    await async_setup_component(hass, "logbook", {})
+    """Test logbook view with entity removed from state machine."""
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "automation", {})
     await async_setup_component(hass, "script", {})
 
@@ -787,7 +795,7 @@ async def test_filter_continuous_sensor_values(
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test remove continuous sensor events from logbook."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     entity_id_test = "switch.test"
@@ -832,8 +840,8 @@ async def test_exclude_new_entities(
     """Test if events are excluded on first update."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -873,8 +881,8 @@ async def test_exclude_removed_entities(
     """Test if events are excluded on last update."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -921,8 +929,8 @@ async def test_exclude_attribute_changes(
     """Test if events of attribute changes are filtered."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -964,8 +972,8 @@ async def test_logbook_entity_context_id(
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1115,11 +1123,11 @@ async def test_logbook_entity_context_id(
 async def test_logbook_context_id_automation_script_started_manually(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
-    """Test the logbook populates context_ids for scripts and automations started manually."""
+    """Test logbook context_ids for manually started scripts/automations."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1211,8 +1219,8 @@ async def test_logbook_entity_context_parent_id(
     """Test the logbook view links events via context parent_id."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -1394,29 +1402,27 @@ async def test_logbook_context_from_template(
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
     assert await async_setup_component(
         hass,
-        "switch",
+        "template",
         {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
-                    }
+            "template": {
+                "switch": {
+                    "default_entity_id": "switch.test_template_switch",
+                    "state": "{{ states.switch.test_state.state }}",
+                    "turn_on": {
+                        "service": "switch.turn_on",
+                        "entity_id": "switch.test_state",
+                    },
+                    "turn_off": {
+                        "service": "switch.turn_off",
+                        "entity_id": "switch.test_state",
+                    },
                 },
             }
         },
@@ -1483,25 +1489,23 @@ async def test_logbook_(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the logbook view with a single entity and ."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(
         hass,
-        "switch",
+        "template",
         {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
-                    }
+            "template": {
+                "switch": {
+                    "default_entity_id": "switch.test_template_switch",
+                    "state": "{{ states.switch.test_state.state }}",
+                    "turn_on": {
+                        "service": "switch.turn_on",
+                        "entity_id": "switch.test_state",
+                    },
+                    "turn_off": {
+                        "service": "switch.turn_off",
+                        "entity_id": "switch.test_state",
+                    },
                 },
             }
         },
@@ -1555,7 +1559,7 @@ async def test_logbook_many_entities_multiple_calls(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the logbook view with a many entities called multiple times."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_setup_component(hass, "automation", {})
 
     await async_recorder_block_till_done(hass)
@@ -1628,7 +1632,7 @@ async def test_custom_log_entry_discoverable_via_(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test if a custom log entry is later discoverable via ."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     logbook.async_log_entry(
@@ -1666,25 +1670,23 @@ async def test_logbook_multiple_entities(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the logbook view with a multiple entities."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     assert await async_setup_component(
         hass,
-        "switch",
+        "template",
         {
-            "switch": {
-                "platform": "template",
-                "switches": {
-                    "test_template_switch": {
-                        "value_template": "{{ states.switch.test_state.state }}",
-                        "turn_on": {
-                            "service": "switch.turn_on",
-                            "entity_id": "switch.test_state",
-                        },
-                        "turn_off": {
-                            "service": "switch.turn_off",
-                            "entity_id": "switch.test_state",
-                        },
-                    }
+            "template": {
+                "switch": {
+                    "default_entity_id": "switch.test_template_switch",
+                    "state": "{{ states.switch.test_state.state }}",
+                    "turn_on": {
+                        "service": "switch.turn_on",
+                        "entity_id": "switch.test_state",
+                    },
+                    "turn_off": {
+                        "service": "switch.turn_off",
+                        "entity_id": "switch.test_state",
+                    },
                 },
             }
         },
@@ -1793,7 +1795,7 @@ async def test_logbook_invalid_entity(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test the logbook view with requesting an invalid entity."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await hass.async_block_till_done()
     client = await hass_client()
 
@@ -1816,8 +1818,8 @@ async def test_icon_and_state(
     """Test to ensure state and custom icons are returned."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
@@ -1860,7 +1862,7 @@ async def test_fire_logbook_entries(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test many logbook entry calls."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     for _ in range(10):
@@ -1909,7 +1911,7 @@ async def test_exclude_events_domain(
             logbook.DOMAIN: {CONF_EXCLUDE: {CONF_DOMAINS: ["switch", "alexa"]}},
         }
     )
-    await async_setup_component(hass, "logbook", config)
+    await async_setup_component(hass, DOMAIN, config)
     await async_recorder_block_till_done(hass)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START)
@@ -1953,7 +1955,7 @@ async def test_exclude_events_domain_glob(
     )
     await asyncio.gather(
         async_setup_component(hass, "homeassistant", {}),
-        async_setup_component(hass, "logbook", config),
+        async_setup_component(hass, DOMAIN, config),
     )
     await async_recorder_block_till_done(hass)
 
@@ -1998,7 +2000,7 @@ async def test_include_events_entity(
     )
     await asyncio.gather(
         async_setup_component(hass, "homeassistant", {}),
-        async_setup_component(hass, "logbook", config),
+        async_setup_component(hass, DOMAIN, config),
     )
     await async_recorder_block_till_done(hass)
 
@@ -2036,7 +2038,7 @@ async def test_exclude_events_entity(
     )
     await asyncio.gather(
         async_setup_component(hass, "homeassistant", {}),
-        async_setup_component(hass, "logbook", config),
+        async_setup_component(hass, DOMAIN, config),
     )
     await async_recorder_block_till_done(hass)
 
@@ -2075,7 +2077,7 @@ async def test_include_events_domain(
     )
     await asyncio.gather(
         async_setup_component(hass, "homeassistant", {}),
-        async_setup_component(hass, "logbook", config),
+        async_setup_component(hass, DOMAIN, config),
     )
     await async_recorder_block_till_done(hass)
 
@@ -2124,7 +2126,7 @@ async def test_include_events_domain_glob(
     )
     await asyncio.gather(
         async_setup_component(hass, "homeassistant", {}),
-        async_setup_component(hass, "logbook", config),
+        async_setup_component(hass, DOMAIN, config),
     )
     await async_recorder_block_till_done(hass)
 
@@ -2189,7 +2191,7 @@ async def test_include_exclude_events_no_globs(
     )
     await asyncio.gather(
         async_setup_component(hass, "homeassistant", {}),
-        async_setup_component(hass, "logbook", config),
+        async_setup_component(hass, DOMAIN, config),
     )
     await async_recorder_block_till_done(hass)
 
@@ -2251,7 +2253,7 @@ async def test_include_exclude_events_with_glob_filters(
     )
     await asyncio.gather(
         async_setup_component(hass, "homeassistant", {}),
-        async_setup_component(hass, "logbook", config),
+        async_setup_component(hass, DOMAIN, config),
     )
     await async_recorder_block_till_done(hass)
 
@@ -2303,7 +2305,7 @@ async def test_empty_config(
     )
     await asyncio.gather(
         async_setup_component(hass, "homeassistant", {}),
-        async_setup_component(hass, "logbook", config),
+        async_setup_component(hass, DOMAIN, config),
     )
     await async_recorder_block_till_done(hass)
 
@@ -2328,7 +2330,7 @@ async def test_context_filter(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
     """Test we can filter by context."""
-    assert await async_setup_component(hass, "logbook", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     entity_id = "switch.blu"
@@ -2409,8 +2411,8 @@ async def test_get_events(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -2527,7 +2529,7 @@ async def test_get_events_future_start_time(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get_events with a future start time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
     future = dt_util.utcnow() + timedelta(hours=10)
 
@@ -2553,7 +2555,7 @@ async def test_get_events_bad_start_time(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get_events bad start time."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -2575,7 +2577,7 @@ async def test_get_events_bad_end_time(
 ) -> None:
     """Test get_events bad end time."""
     now = dt_util.utcnow()
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -2597,7 +2599,7 @@ async def test_get_events_invalid_filters(
     hass: HomeAssistant, hass_ws_client: WebSocketGenerator
 ) -> None:
     """Test get_events invalid filters."""
-    await async_setup_component(hass, "logbook", {})
+    await async_setup_component(hass, DOMAIN, {})
     await async_recorder_block_till_done(hass)
 
     client = await hass_ws_client()
@@ -2633,8 +2635,8 @@ async def test_get_events_with_device_ids(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
 
@@ -2771,8 +2773,8 @@ async def test_logbook_select_entities_context_id(
     """Test the logbook view with end_time and entity with automations and scripts."""
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook", "automation", "script")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook", "automation", "script")
         ]
     )
 
@@ -2908,8 +2910,8 @@ async def test_get_events_with_context_state(
     now = dt_util.utcnow()
     await asyncio.gather(
         *[
-            async_setup_component(hass, comp, {})
-            for comp in ("homeassistant", "logbook")
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
         ]
     )
     await async_recorder_block_till_done(hass)
@@ -3002,3 +3004,346 @@ async def test_logbook_with_non_iterable_entity_filter(hass: HomeAssistant) -> N
         },
     )
     await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_logbook_user_id_from_parent_context(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test user attribution is inherited through the full context chain.
+
+    Simulates the generic_thermostat pattern:
+    1. User calls set_hvac_mode → parent context (has user_id)
+       - Climate state changes off → heat (parent context)
+    2. Thermostat calls homeassistant.turn_on → child context (no user_id)
+       - SERVICE_CALL event fired (child context)
+    3. Switch state changes off → on (child context)
+
+    All entries should have user_id attributed, either directly (step 1)
+    or inherited from the parent context (steps 2-3).
+    """
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+
+    await async_recorder_block_till_done(hass)
+
+    setup_thermostat_context_test_entities(hass)
+    await hass.async_block_till_done()
+
+    parent_context, _ = simulate_thermostat_context_chain(hass)
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
+    end_time = start_date + timedelta(hours=24)
+
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    assert_thermostat_context_chain_events(json_dict, parent_context)
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_logbook_user_id_from_parent_context_state_changes_only(
+    hass: HomeAssistant, hass_client: ClientSessionGenerator
+) -> None:
+    """Test user attribution is inherited when only state changes are present.
+
+    Same chain as the full test but without the EVENT_CALL_SERVICE event.
+    This exercises the code path where context_lookup resolves the child
+    context to the state change row itself, and augment walks up to the
+    parent state change.
+    """
+    await asyncio.gather(
+        *[
+            async_setup_component(hass, domain, {})
+            for domain in ("homeassistant", "logbook")
+        ]
+    )
+
+    await async_recorder_block_till_done(hass)
+
+    # Set initial states so that subsequent changes are real state transitions
+    hass.states.async_set(
+        "climate.living_room",
+        "off",
+        {ATTR_FRIENDLY_NAME: "Living Room Thermostat"},
+    )
+    hass.states.async_set("switch.heater", STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Parent context with user_id
+    parent_context = ha.Context(
+        id="01GTDGKBCH00GW0X476W5TVAAA",
+        user_id="b400facee45711eaa9308bfd3d19e474",
+    )
+
+    # Climate state change with the parent context
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        {ATTR_FRIENDLY_NAME: "Living Room Thermostat"},
+        context=parent_context,
+    )
+    await hass.async_block_till_done()
+
+    # Child context WITHOUT user_id, no service call event
+    child_context = ha.Context(
+        id="01GTDGKBCH00GW0X476W5TVDDD",
+        parent_id="01GTDGKBCH00GW0X476W5TVAAA",
+    )
+
+    # Switch state change with the child context
+    hass.states.async_set(
+        "switch.heater",
+        STATE_ON,
+        {ATTR_FRIENDLY_NAME: "Heater"},
+        context=child_context,
+    )
+    await hass.async_block_till_done()
+
+    # Climate updates again in response to switch state change
+    hass.states.async_set(
+        "climate.living_room",
+        "heat",
+        {ATTR_FRIENDLY_NAME: "Living Room Thermostat"},
+        context=child_context,
+    )
+    await hass.async_block_till_done()
+
+    await async_wait_recording_done(hass)
+
+    client = await hass_client()
+
+    start = dt_util.utcnow().date()
+    start_date = datetime(start.year, start.month, start.day, tzinfo=dt_util.UTC)
+    end_time = start_date + timedelta(hours=24)
+
+    response = await client.get(
+        f"/api/logbook/{start_date.isoformat()}",
+        params={"end_time": end_time.isoformat()},
+    )
+    assert response.status == HTTPStatus.OK
+    json_dict = await response.json()
+
+    # Switch state change should be attributed to the climate entity
+    # and inherit user_id from the parent context
+    heater_entries = [
+        entry for entry in json_dict if entry.get("entity_id") == "switch.heater"
+    ]
+    assert len(heater_entries) == 1
+
+    heater_entry = heater_entries[0]
+    assert heater_entry["context_entity_id"] == "climate.living_room"
+    assert heater_entry["context_entity_id_name"] == "Living Room Thermostat"
+    assert heater_entry["context_state"] == "heat"
+    assert heater_entry["context_user_id"] == "b400facee45711eaa9308bfd3d19e474"
+
+
+async def test_context_user_ids_lru_eviction(
+    hass: HomeAssistant,
+) -> None:
+    """Test that the parent context user-id cache is bounded by LRU eviction.
+
+    The cache must keep memory bounded under sustained load. New entries
+    arriving after the cap evict the least recently used entries. An
+    early parent context whose entry has been evicted should no longer
+    contribute its user_id to a later child state change.
+    """
+    user_id = "b400facee45711eaa9308bfd3d19e474"
+    early_parent_context = ha.Context(
+        id="01GTDGKBCH00GW0X476W5TVAAA",
+        user_id=user_id,
+    )
+    child_context = ha.Context(
+        id="01GTDGKBCH00GW0X476W5TVDDD",
+        parent_id=early_parent_context.id,
+    )
+
+    logbook_run = logbook.processor.LogbookRun(
+        context_lookup={None: None},
+        external_events={},
+        event_cache=logbook.processor.EventCache({}),
+        entity_name_cache=logbook.processor.EntityNameCache(hass),
+        include_entity_name=True,
+        timestamp=False,
+        memoize_new_contexts=False,
+        for_live_stream=True,
+    )
+    context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
+    ent_reg = er.async_get(hass)
+
+    processor = logbook.processor.EventProcessor.__new__(
+        logbook.processor.EventProcessor
+    )
+    processor.hass = hass
+    processor.ent_reg = ent_reg
+    processor.logbook_run = logbook_run
+    processor.context_augmenter = context_augmenter
+
+    hass.states.async_set("switch.heater", STATE_OFF)
+    await hass.async_block_till_done()
+
+    # Seed: the early parent SERVICE_CALL event populates the cache.
+    parent_row = MockRow(
+        EVENT_CALL_SERVICE,
+        {
+            ATTR_DOMAIN: "climate",
+            ATTR_SERVICE: "set_hvac_mode",
+            "service_data": {ATTR_ENTITY_ID: "climate.living_room"},
+        },
+        context=early_parent_context,
+    )
+    parent_row.context_only = True
+    parent_row.icon = None
+    processor.humanify([parent_row])
+    assert (
+        ulid_to_bytes_or_none(early_parent_context.id) in logbook_run.context_user_ids
+    )
+
+    # Flood the cache with MAX+1 unrelated parent contexts so the early
+    # parent is evicted from the front of the LRU.
+    filler_rows = []
+    for index in range(logbook.processor.MAX_CONTEXT_USER_IDS_CACHE + 1):
+        filler_context = ha.Context(
+            user_id=f"ffffffff{index:024x}"[:32],
+        )
+        filler_row = MockRow(
+            EVENT_CALL_SERVICE,
+            {
+                ATTR_DOMAIN: "test",
+                ATTR_SERVICE: "noop",
+                "service_data": {},
+            },
+            context=filler_context,
+        )
+        filler_row.context_only = True
+        filler_row.icon = None
+        filler_rows.append(filler_row)
+    processor.humanify(filler_rows)
+
+    assert (
+        len(logbook_run.context_user_ids)
+        == logbook.processor.MAX_CONTEXT_USER_IDS_CACHE
+    )
+    assert (
+        ulid_to_bytes_or_none(early_parent_context.id)
+        not in logbook_run.context_user_ids
+    )
+
+    # The child state change can no longer inherit the early parent's user_id
+    # because that entry was evicted.
+    child_row = MockRow(
+        PSEUDO_EVENT_STATE_CHANGED,
+        context=child_context,
+    )
+    child_row.state = STATE_ON
+    child_row.entity_id = "switch.heater"
+    child_row.icon = None
+    results = processor.humanify([child_row])
+
+    heater_entries = [e for e in results if e.get("entity_id") == "switch.heater"]
+    assert len(heater_entries) == 1
+    assert "context_user_id" not in heater_entries[0]
+
+
+async def test_parent_user_attribution_does_not_use_origin_event_fallback(
+    hass: HomeAssistant,
+) -> None:
+    """Test that parent context lookup doesn't fall back to origin_event.
+
+    ContextAugmenter.get_context() has a fallback: when a context_id isn't in
+    context_lookup, it returns async_event_to_row(row.context.origin_event).
+    This fallback uses the *child row's* origin event, not the parent's,
+    so it can attribute the wrong user_id to a child context.
+
+    In practice this scenario is unlikely — child contexts don't carry a
+    user_id, so the origin_event fallback would return None for user_id
+    anyway. We guard against it nevertheless to ensure the lookup is
+    semantically correct: the parent context should only be resolved via
+    context_lookup, never via an unrelated fallback path.
+
+    Scenario:
+    - A user_id is set directly on child_context (not realistic, but
+      exercises the fallback path).
+    - Creating an Event with that context sets context.origin_event,
+      which carries the user_id.
+    - A state change for switch.heater uses that same child_context.
+    - The parent context is NOT in context_lookup (simulating live stream).
+    - The parent user_id should NOT be resolved via the origin_event fallback.
+    """
+    wrong_user_id = "aaaaaaaaaaa711eaa9308bfd3d19e474"
+    parent_context = Context(id="01GTDGKBCH00GW0X476W5TVAAA")
+
+    # Child context whose origin_event will carry wrong_user_id
+    child_context = Context(
+        id="01GTDGKBCH00GW0X476W5TVDDD",
+        parent_id=parent_context.id,
+        user_id=wrong_user_id,
+    )
+    # Creating an Event sets context.origin_event = self, which carries
+    # wrong_user_id via child_context.user_id.
+    Event(EVENT_CALL_SERVICE, {}, context=child_context)
+    assert child_context.origin_event is not None
+
+    hass.states.async_set("switch.heater", STATE_OFF)
+    await hass.async_block_till_done()
+
+    logbook_run = logbook.processor.LogbookRun(
+        context_lookup={None: None},
+        external_events={},
+        event_cache=logbook.processor.EventCache({}),
+        entity_name_cache=logbook.processor.EntityNameCache(hass),
+        include_entity_name=True,
+        timestamp=False,
+        memoize_new_contexts=False,
+    )
+    context_augmenter = logbook.processor.ContextAugmenter(logbook_run)
+    ent_reg = er.async_get(hass)
+
+    processor = logbook.processor.EventProcessor.__new__(
+        logbook.processor.EventProcessor
+    )
+    processor.hass = hass
+    processor.ent_reg = ent_reg
+    processor.logbook_run = logbook_run
+    processor.context_augmenter = context_augmenter
+
+    # Build a child state-change EventAsRow with the child_context.
+    # The row itself has no user_id (context_user_id_bin=None) but
+    # the child_context.origin_event carries wrong_user_id.
+    child_row = EventAsRow(
+        row_id=1,
+        event_type=PSEUDO_EVENT_STATE_CHANGED,
+        event_data=None,
+        time_fired_ts=dt_util.utcnow().timestamp(),
+        context_id_bin=ulid_to_bytes_or_none(child_context.id),
+        context_user_id_bin=None,
+        context_parent_id_bin=ulid_to_bytes_or_none(child_context.parent_id),
+        state=STATE_ON,
+        entity_id="switch.heater",
+        icon=None,
+        context_only=False,
+        data={},
+        context=child_context,
+    )
+
+    results = processor.humanify([child_row])
+
+    heater_entries = [e for e in results if e.get("entity_id") == "switch.heater"]
+    assert len(heater_entries) == 1
+    # The parent context is unknown — no user should be attributed.
+    # If get_context's origin_event fallback is used, wrong_user_id leaks in.
+    assert "context_user_id" not in heater_entries[0]

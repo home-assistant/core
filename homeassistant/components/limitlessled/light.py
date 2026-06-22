@@ -1,10 +1,8 @@
 """Support for LimitlessLED bulbs."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import Any, Concatenate, cast
+from typing import Any, Concatenate, cast, override
 
 from limitlessled import Color
 from limitlessled.bridge import Bridge
@@ -255,6 +253,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         self.config = config
         self._attr_is_on = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity about to be added to hass event."""
         await super().async_added_to_hass()
@@ -267,6 +266,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
             self._attr_hs_color = last_state.attributes.get("hs_color")
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness property."""
         if self.effect == EFFECT_NIGHT:
@@ -275,6 +275,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         return self._attr_brightness
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._fixed_color_mode:
@@ -290,6 +291,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         return ColorMode.HS
 
     @state(False)
+    @override
     def turn_off(self, transition_time: int, pipeline: Pipeline, **kwargs: Any) -> None:
         """Turn off a group."""
         if self.config[CONF_FADE]:
@@ -297,6 +299,7 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         pipeline.off()
 
     @state(True)
+    @override
     def turn_on(self, transition_time: int, pipeline: Pipeline, **kwargs: Any) -> None:
         """Turn on (or adjust property of) a group."""
         # The night effect does not need a turned on light

@@ -1,8 +1,6 @@
 """Support for scenes provided by WMS WebControl pro."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from wmspro.scene import Scene as WMS_Scene
 
@@ -59,6 +57,7 @@ class WebControlProScene(Scene):
             configuration_url=f"http://{scene.host}/control",
         )
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate scene. Try to get entities into requested state."""
         await self._scene()

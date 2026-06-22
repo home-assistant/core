@@ -1,7 +1,5 @@
 """Support for Google Nest SDM Cameras."""
 
-from __future__ import annotations
-
 from abc import ABC
 import asyncio
 from collections.abc import Awaitable, Callable
@@ -9,6 +7,7 @@ import datetime
 import functools
 import logging
 from pathlib import Path
+from typing import override
 
 from google_nest_sdm.camera_traits import (
     CameraLiveStreamTrait,
@@ -154,6 +153,7 @@ class NestCameraBaseEntity(Camera, ABC):
         # The API "name" field is a unique device identifier.
         self._attr_unique_id = f"{self._device.name}-camera"
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to register update signal handler."""
         self.async_on_remove(
@@ -175,11 +175,13 @@ class NestRTSPEntity(NestCameraBaseEntity):
         self._refresh_unsub: Callable[[], None] | None = None
 
     @property
+    @override
     def use_stream_for_stills(self) -> bool:
         """Always use the RTSP stream to generate snapshots."""
         return True
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         # Cameras are marked unavailable on stream errors in #54659 however nest
@@ -189,6 +191,7 @@ class NestRTSPEntity(NestCameraBaseEntity):
         # streams are fixed, just leave the streams as available.
         return True
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         async with self._create_stream_url_lock:
@@ -231,6 +234,7 @@ class NestRTSPEntity(NestCameraBaseEntity):
             self.stream.update_source(self._rtsp_stream.rtsp_stream_url)
         return self._rtsp_stream.expires_at
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Invalidates the RTSP token when unloaded."""
         await super().async_will_remove_from_hass()
@@ -264,10 +268,14 @@ class NestWebRTCEntity(NestCameraBaseEntity):
             return webrtc_stream.expires_at
         return None
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
-        """Return a placeholder image for WebRTC cameras that don't support snapshots."""
+        """Return a placeholder image for WebRTC cameras.
+
+        WebRTC cameras don't support snapshots.
+        """
         return await self.hass.async_add_executor_job(self.placeholder_image)
 
     @classmethod
@@ -276,6 +284,7 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         """Return placeholder image to use when no stream is available."""
         return PLACEHOLDER.read_bytes()
 
+    @override
     async def async_handle_async_webrtc_offer(
         self, offer_sdp: str, session_id: str, send_message: WebRTCSendMessage
     ) -> None:
@@ -297,6 +306,7 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         )
         self._refresh_unsub[session_id] = refresh.unsub
 
+    @override
     async def async_on_webrtc_candidate(
         self, session_id: str, candidate: RTCIceCandidateInit
     ) -> None:
@@ -304,6 +314,7 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         return
 
     @callback
+    @override
     def close_webrtc_session(self, session_id: str) -> None:
         """Close a WebRTC session."""
         if (stream := self._webrtc_sessions.pop(session_id, None)) is not None:
@@ -323,10 +334,12 @@ class NestWebRTCEntity(NestCameraBaseEntity):
         super().close_webrtc_session(session_id)
 
     @callback
+    @override
     def _async_get_webrtc_client_configuration(self) -> WebRTCClientConfiguration:
         """Return the WebRTC client configuration adjustable per integration."""
         return WebRTCClientConfiguration(data_channel="dataSendChannel")
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Invalidates the RTSP token when unloaded."""
         await super().async_will_remove_from_hass()

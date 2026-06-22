@@ -1,8 +1,7 @@
 """Support for Rain Bird Irrigation system LNK Wi-Fi Module."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
@@ -60,6 +59,7 @@ class RainBirdSensor(CoordinatorEntity[RainbirdUpdateCoordinator], SensorEntity)
             )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.coordinator.data.rain_delay

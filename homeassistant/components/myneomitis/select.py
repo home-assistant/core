@@ -3,11 +3,9 @@
 This module defines and sets up the select entities for the MyNeomitis integration.
 """
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyaxencoapi import PyAxencoAPI
 
@@ -104,12 +102,8 @@ async def async_setup_entry(
     def _create_entity(device: dict) -> MyNeoSelect:
         """Create a select entity for a device."""
         if device["model"] == "EWS":
-            # According to the MyNeomitis API, EWS "relais" devices expose a "relayMode"
-            # field in their state, while "pilote" devices do not. We therefore use the
-            # presence of "relayMode" as an explicit heuristic to distinguish relais
-            # from pilote devices. If the upstream API changes this behavior, this
-            # detection logic must be revisited.
-            if "relayMode" in device.get("state", {}):
+            state = device.get("state") or {}
+            if state.get("deviceType") == 0:
                 description = SELECT_TYPES["relais"]
             else:
                 description = SELECT_TYPES["pilote"]
@@ -160,6 +154,7 @@ class MyNeoSelect(SelectEntity):
         )
         self._unavailable_logged: bool = False
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register listener when entity is added to hass."""
         await super().async_added_to_hass()
@@ -195,6 +190,7 @@ class MyNeoSelect(SelectEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Send the new mode via the API."""
         mode_code = self.entity_description.preset_mode_map.get(option)

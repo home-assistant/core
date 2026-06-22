@@ -1,7 +1,5 @@
 """Support for RSS/Atom feeds."""
 
-from __future__ import annotations
-
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.util.hass_dict import HassKey
