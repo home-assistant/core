@@ -14,13 +14,18 @@ from homeassistant.components.notify import (
     ATTR_TITLE,
     ATTR_TITLE_DEFAULT,
     BaseNotificationService,
+    NotifyEntity,
+    NotifyEntityFeature,
 )
-from homeassistant.const import ATTR_ICON, CONF_HOST
+from homeassistant.const import ATTR_ICON, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
+from . import NFAndroidTVConfigEntry
 from .const import (
     ATTR_COLOR,
     ATTR_DURATION,
@@ -46,6 +51,48 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+
+async def async_setup_entry(
+    hass: HomeAssistant,
+    config_entry: NFAndroidTVConfigEntry,
+    async_add_entities: AddConfigEntryEntitiesCallback,
+) -> None:
+    """Set up the notify platform."""
+    async_add_entities([NFAndroidTVNotifyEntity(config_entry)])
+
+
+class NFAndroidTVNotifyEntity(NotifyEntity):
+    """Representation of a notify entity."""
+
+    _attr_supported_features = NotifyEntityFeature.TITLE
+    _attr_translation_key = "notify"
+    _attr_has_entity_name = True
+    _attr_name = None
+
+    def __init__(self, entry: NFAndroidTVConfigEntry) -> None:
+        """Initialize the entity."""
+        self._attr_unique_id = entry.entry_id
+        self._attr_device_info = DeviceInfo(
+            entry_type=DeviceEntryType.SERVICE,
+            name=entry.title,
+            model="Notifications",
+            manufacturer="dream apps",
+            identifiers={(DOMAIN, entry.entry_id)},
+        )
+        self.entry = entry
+        self.client = entry.runtime_data
+
+    def send_message(self, message: str, title: str | None = None) -> None:
+        """Send a message via notify.send_message action."""
+        try:
+            self.client.send(message=message, title=title)
+        except ConnectError as e:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="notify_connection_error",
+                translation_placeholders={CONF_NAME: self.entry.title},
+            ) from e
 
 
 async def async_get_service(
