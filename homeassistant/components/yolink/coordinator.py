@@ -4,9 +4,11 @@ import asyncio
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+import time
 from typing import Any
 
 from yolink.client_request import ClientRequest
+from yolink.const import ATTR_DEVICE_SPRINKLER_V2
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
@@ -22,6 +24,30 @@ from .const import ATTR_DEVICE_STATE, ATTR_LORA_INFO, DOMAIN, YOLINK_OFFLINE_TIM
 
 _LOGGER = logging.getLogger(__name__)
 
+SPRINKLER_ACTIVE_INTERVAL = timedelta(seconds=30)
+SPRINKLER_IDLE_INTERVAL = timedelta(minutes=30)
+
+MIN_API_INTERVAL = 0.25  # 250ms guard (YoLink enforces 200ms)
+
+
+class YoLinkThrottle:
+    """Global per-account throttle ensuring >=250ms between API calls."""
+
+    def __init__(self, min_interval: float = MIN_API_INTERVAL) -> None:
+        """Init throttle with minimum interval between API calls."""
+        self._min_interval = min_interval
+        self._lock = asyncio.Lock()
+        self._last_call: float = 0.0
+
+    async def acquire(self) -> None:
+        """Wait until min_interval has elapsed since last call, then mark now."""
+        async with self._lock:
+            now = time.monotonic()
+            wait = self._min_interval - (now - self._last_call)
+            if wait > 0:
+                await asyncio.sleep(wait)
+            self._last_call = time.monotonic()
+
 
 @dataclass
 class YoLinkHomeStore:
@@ -29,6 +55,7 @@ class YoLinkHomeStore:
 
     home_instance: YoLinkHome
     device_coordinators: dict[str, YoLinkCoordinator]
+    throttle: YoLinkThrottle
 
 
 type YoLinkConfigEntry = ConfigEntry[YoLinkHomeStore]
@@ -45,6 +72,7 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         config_entry: YoLinkConfigEntry,
         device: YoLinkDevice,
         paired_device: YoLinkDevice | None = None,
+        throttle: YoLinkThrottle | None = None,
     ) -> None:
         """Init YoLink DataUpdateCoordinator.
 
@@ -63,12 +91,16 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         self.paired_device = paired_device
         self.dev_online = True
         self.dev_net_type = None
+        self._throttle = throttle or YoLinkThrottle()
 
     async def _async_update_data(self) -> dict:
         """Fetch device state."""
         try:
             async with asyncio.timeout(10):
-                device_state_resp = await self.device.fetch_state()
+                if self.device.device_type == ATTR_DEVICE_SPRINKLER_V2:
+                    device_state_resp = await self._fetch_sprinkler_v2()
+                else:
+                    device_state_resp = await self.device.fetch_state()
                 device_state = device_state_resp.data.get(ATTR_DEVICE_STATE)
                 device_reporttime = device_state_resp.data.get("reportAt")
                 if device_reporttime is not None:
@@ -92,6 +124,13 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
         except YoLinkAuthFailError as yl_auth_err:
             raise ConfigEntryAuthFailed from yl_auth_err
         except YoLinkClientError as yl_client_err:
+            if self.device.device_type == ATTR_DEVICE_SPRINKLER_V2 and self.data:
+                _LOGGER.debug(
+                    "SprinklerV2 %s poll failed (%s), keeping previous data",
+                    self.device.device_id,
+                    yl_client_err,
+                )
+                return self.data
             _LOGGER.error(
                 "Failed to obtain device status, device: %s, error: %s ",
                 self.device.device_id,
@@ -99,16 +138,75 @@ class YoLinkCoordinator(DataUpdateCoordinator[dict]):
             )
             raise UpdateFailed from yl_client_err
         if device_state is not None:
+            if self.device.device_type == ATTR_DEVICE_SPRINKLER_V2:
+                # SprinklerV2 returns the full API response (not just the
+                # "state" sub-dict) because progress, target, and attributes
+                # live at the top level alongside "state". Note the key
+                # collision: data["state"]["running"] is a bool (valve open),
+                # while data["running"] is a dict (progress/target info).
+                # Sensor value lambdas for SprinklerV2 must account for this
+                # different shape vs other device types.
+                full_data = device_state_resp.data
+                dev_lora_info = full_data.get(ATTR_LORA_INFO)
+                if dev_lora_info is not None:
+                    self.dev_net_type = dev_lora_info.get("devNetType")
+                if (
+                    self.data
+                    and "attributes" not in full_data
+                    and "attributes" in self.data
+                ):
+                    full_data["attributes"] = self.data["attributes"]
+                self.adjust_sprinkler_interval(full_data)
+                return full_data
             dev_lora_info = device_state.get(ATTR_LORA_INFO)
             if dev_lora_info is not None:
                 self.dev_net_type = dev_lora_info.get("devNetType")
+            self.adjust_sprinkler_interval(device_state)
             return device_state
         return {}
+
+    async def _fetch_sprinkler_v2(self) -> BRDP:
+        """Fetch SprinklerV2 state: getState for live data, fetchState as fallback.
+
+        Uses self.device.call_device (returns BRDP), not the coordinator's
+        self.call_device wrapper (returns dict).
+        """
+        try:
+            await self._throttle.acquire()
+            return await self.device.call_device(ClientRequest("getState", {}))
+        except YoLinkClientError as err:
+            _LOGGER.debug(
+                "SprinklerV2 %s getState failed (%s), falling back to fetchState",
+                self.device.device_id,
+                err,
+            )
+            await self._throttle.acquire()
+            return await self.device.fetch_state()
+
+    def adjust_sprinkler_interval(self, device_state: dict) -> None:
+        """Speed up polling while SprinklerV2 valve is running."""
+        if self.device.device_type != ATTR_DEVICE_SPRINKLER_V2:
+            return
+        is_running = (
+            state.get("running")
+            if (state := device_state.get("state")) is not None
+            else False
+        )
+        new_interval = (
+            SPRINKLER_ACTIVE_INTERVAL if is_running else SPRINKLER_IDLE_INTERVAL
+        )
+        if self.update_interval != new_interval:
+            self.update_interval = new_interval
+            self._schedule_refresh()
+            _LOGGER.debug(
+                "SprinklerV2 %s poll interval -> %s",
+                self.device.device_id,
+                new_interval,
+            )
 
     async def call_device(self, request: ClientRequest) -> dict[str, Any]:
         """Call device api."""
         try:
-            # call_device will check result, fail by raise YoLinkClientError
             resp: BRDP = await self.device.call_device(request)
         except YoLinkAuthFailError as yl_auth_err:
             self.config_entry.async_start_reauth(self.hass)

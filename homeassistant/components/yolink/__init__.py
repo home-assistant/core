@@ -4,7 +4,11 @@ import asyncio
 from datetime import timedelta
 from typing import Any
 
-from yolink.const import ATTR_DEVICE_SMART_REMOTER, ATTR_DEVICE_SWITCH
+from yolink.const import (
+    ATTR_DEVICE_SMART_REMOTER,
+    ATTR_DEVICE_SPRINKLER_V2,
+    ATTR_DEVICE_SWITCH,
+)
 from yolink.device import YoLinkDevice
 from yolink.exception import YoLinkAuthFailError, YoLinkClientError
 from yolink.home_manager import YoLinkHome
@@ -28,7 +32,12 @@ from homeassistant.helpers.typing import ConfigType
 
 from . import api
 from .const import ATTR_LORA_INFO, DOMAIN, SUPPORTED_REMOTERS, YOLINK_EVENT
-from .coordinator import YoLinkConfigEntry, YoLinkCoordinator, YoLinkHomeStore
+from .coordinator import (
+    YoLinkConfigEntry,
+    YoLinkCoordinator,
+    YoLinkHomeStore,
+    YoLinkThrottle,
+)
 from .device_trigger import CONF_LONG_PRESS, CONF_SHORT_PRESS
 from .services import async_setup_services
 
@@ -72,7 +81,26 @@ class YoLinkHomeMessageListener(MessageListener):
         device_coordinator.dev_online = True
         if (lora_info := msg_data.get(ATTR_LORA_INFO)) is not None:
             device_coordinator.dev_net_type = lora_info.get("devNetType")
-        device_coordinator.async_set_updated_data(msg_data)
+        if (
+            device_coordinator.device.device_type == ATTR_DEVICE_SPRINKLER_V2
+            and device_coordinator.data
+        ):
+            merged = {**device_coordinator.data, **msg_data}
+            for key in ("state", "running", "attributes"):
+                if key in device_coordinator.data and key in msg_data:
+                    if isinstance(device_coordinator.data[key], dict) and isinstance(
+                        msg_data[key], dict
+                    ):
+                        merged[key] = {
+                            **device_coordinator.data[key],
+                            **msg_data[key],
+                        }
+            device_coordinator.adjust_sprinkler_interval(merged)
+            device_coordinator.async_set_updated_data(merged)
+            if (state := msg_data.get("state")) is not None and state.get("running"):
+                self._hass.async_create_task(device_coordinator.async_request_refresh())
+        else:
+            device_coordinator.async_set_updated_data(msg_data)
         # handling events
         if (
             device_coordinator.device.device_type
@@ -133,6 +161,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bo
         raise ConfigEntryNotReady from err
 
     device_coordinators = {}
+    throttle = YoLinkThrottle()
 
     # revese mapping
     device_pairing_mapping = {}
@@ -151,14 +180,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: YoLinkConfigEntry) -> bo
             paried_device_id := device_pairing_mapping.get(device.device_id)
         ) is not None:
             paried_device = yolink_home.get_device(paried_device_id)
-        device_coordinator = YoLinkCoordinator(hass, entry, device, paried_device)
+        device_coordinator = YoLinkCoordinator(
+            hass, entry, device, paried_device, throttle
+        )
         try:
             await device_coordinator.async_config_entry_first_refresh()
         except ConfigEntryNotReady:
             # Not failure by fetching device state
             device_coordinator.data = {}
         device_coordinators[device.device_id] = device_coordinator
-    entry.runtime_data = YoLinkHomeStore(yolink_home, device_coordinators)
+    entry.runtime_data = YoLinkHomeStore(yolink_home, device_coordinators, throttle)
 
     # Clean up yolink devices which are not associated to the account anymore.
     device_registry = dr.async_get(hass)
