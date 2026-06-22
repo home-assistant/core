@@ -1,7 +1,8 @@
 """The motion_blinds component."""
-# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
+# pylint: disable=home-assistant-use-runtime-data
 
 import asyncio
+import contextlib
 import logging
 
 from motionblinds import AsyncMotionMulticast
@@ -40,13 +41,37 @@ async def async_setup_entry(
     # Create multicast Listener
     async with setup_lock:
         if KEY_MULTICAST_LISTENER not in hass.data[DOMAIN]:
-            # check multicast interface
-            check_multicast_class = ConnectMotionGateway(
-                hass, interface=multicast_interface
-            )
-            working_interface = await check_multicast_class.async_check_interface(
-                host, key
-            )
+            working_interface = None
+            if multicast_interface not in (DEFAULT_INTERFACE, None):
+                test_multicast = AsyncMotionMulticast(interface=multicast_interface)
+                try:
+                    await test_multicast.Start_listen()
+                except OSError:
+                    pass
+                else:
+                    working_interface = multicast_interface
+                    _LOGGER.debug(
+                        "Stored Motionblinds interface '%s' validated for host %s",
+                        multicast_interface,
+                        host,
+                    )
+                    with contextlib.suppress(OSError):
+                        test_multicast.Stop_listen()
+
+            if working_interface is None:
+                if multicast_interface not in (DEFAULT_INTERFACE, None):
+                    _LOGGER.debug(
+                        "Stored Motionblinds interface '%s' unavailable, reprobing for host %s",
+                        multicast_interface,
+                        host,
+                    )
+                check_multicast_class = ConnectMotionGateway(
+                    hass, interface=multicast_interface
+                )
+                working_interface = await check_multicast_class.async_check_interface(
+                    host, key
+                )
+
             if working_interface != multicast_interface:
                 data = {**entry.data, CONF_INTERFACE: working_interface}
                 hass.config_entries.async_update_entry(entry, data=data)
@@ -61,10 +86,8 @@ async def async_setup_entry(
 
             multicast = AsyncMotionMulticast(interface=working_interface)
             hass.data[DOMAIN][KEY_MULTICAST_LISTENER] = multicast
-            # start listening for local pushes (only once)
             await multicast.Start_listen()
 
-            # register stop callback to shutdown listening for local pushes
             def stop_motion_multicast(event):
                 """Stop multicast thread."""
                 _LOGGER.debug("Shutting down Motion Listener")
