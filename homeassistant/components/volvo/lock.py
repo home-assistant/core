@@ -12,7 +12,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DOMAIN
-from .coordinator import VolvoConfigEntry
+from .coordinator import VolvoConfigEntry, schedule_location_update
 from .entity import VolvoEntity, VolvoEntityDescription
 
 PARALLEL_UPDATES = 0
@@ -119,6 +119,7 @@ class VolvoLock(VolvoEntity, LockEntity):
 
         if locked:
             api_field.value = self.entity_description.api_lock_value
+            schedule_location_update(self.coordinator)
         else:
             api_field.value = self.entity_description.api_unlock_value
 
