@@ -186,7 +186,8 @@ SERVICE_SET_SYSTEM_PROPERTIES_SCHEMA = vol.Schema(
 )
 
 # These events are fired on the HA bus as SIMPLISAFE_EVENT for backwards
-# compatibility. New integrations should use the system event entity instead.
+# compatibility. Do not use SIMPLISAFE_EVENT and do not copy this pattern when
+# making new integrations.
 WEBSOCKET_EVENTS_TO_FIRE_HASS_EVENT = [
     EVENT_AUTOMATIC_TEST,
     EVENT_CAMERA_MOTION_DETECTED,
