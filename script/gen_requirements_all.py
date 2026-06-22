@@ -649,13 +649,13 @@ def main(validate: bool, ci: bool) -> int:
                 lock_content = [
                     f"{line}\n"
                     for line in Path(lock_file).read_text(encoding="utf-8").split("\n")
-                ][1:]
+                ][2:]
 
                 generate_lock_file(tmp_lock, source_files)
                 generated_lock_content = [
                     f"{line}\n"
                     for line in Path(tmp_lock).read_text(encoding="utf-8").split("\n")
-                ][1:]
+                ][2:]
                 lock_diff = diff_content(
                     lock_content,
                     lock_file,
