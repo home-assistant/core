@@ -126,8 +126,8 @@ async def test_state(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(COVER_GROUP)
     assert state.attributes[ATTR_ENTITY_ID] == [
-        DEMO_COVER,
         DEMO_COVER_POS,
+        DEMO_COVER,
         DEMO_COVER_TILT,
         DEMO_TILT,
     ]
@@ -287,8 +287,8 @@ async def test_attributes(
     state = hass.states.get(COVER_GROUP)
     assert state.state == CoverState.CLOSED
     assert state.attributes[ATTR_ENTITY_ID] == [
-        DEMO_COVER,
         DEMO_COVER_POS,
+        DEMO_COVER,
         DEMO_COVER_TILT,
         DEMO_TILT,
     ]

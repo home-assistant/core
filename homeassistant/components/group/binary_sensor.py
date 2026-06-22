@@ -13,7 +13,6 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
     CONF_DEVICE_CLASS,
     CONF_ENTITIES,
     CONF_NAME,
@@ -55,13 +54,14 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Binary Sensor Group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
         [
             BinarySensorGroup(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
                 config.get(CONF_DEVICE_CLASS),
-                config[CONF_ENTITIES],
+                entities,
                 config.get(CONF_ALL),
             )
         ]
@@ -74,16 +74,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Binary Sensor Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
+    target_config = dict(config_entry.options[CONF_ENTITIES])
+    entity_ids = target_config.get("entity_id", [])
+    if entity_ids:
+        registry = er.async_get(hass)
+        entities = er.async_validate_entity_ids(registry, entity_ids)
+        target_config["entity_id"] = entities
     mode = config_entry.options[CONF_ALL]
 
     async_add_entities(
         [
             BinarySensorGroup(
-                config_entry.entry_id, config_entry.title, None, entities, mode
+                config_entry.entry_id, config_entry.title, None, target_config, mode
             )
         ]
     )
@@ -113,14 +115,14 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
         unique_id: str | None,
         name: str,
         device_class: BinarySensorDeviceClass | None,
-        entity_ids: list[str],
+        target_config: dict[str, Any],
         mode: bool | None,
     ) -> None:
         """Initialize a BinarySensorGroup entity."""
         super().__init__()
-        self._entity_ids = entity_ids
+        self._target_config = target_config
+        self._domains = [BINARY_SENSOR_DOMAIN]
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
         self._device_class = device_class
         self.mode = any

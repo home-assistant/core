@@ -47,7 +47,7 @@ async def test_default_state(
     state = hass.states.get("lock.door_group")
     assert state is not None
     assert state.state == LockState.LOCKED
-    assert state.attributes.get(ATTR_ENTITY_ID) == ["lock.front", "lock.back"]
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["lock.back", "lock.front"]
 
     entry = entity_registry.async_get("lock.door_group")
     assert entry

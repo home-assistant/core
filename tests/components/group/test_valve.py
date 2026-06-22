@@ -117,9 +117,9 @@ async def test_state(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     state = hass.states.get(VALVE_GROUP)
     assert state.attributes[ATTR_ENTITY_ID] == [
+        DEMO_VALVE_POS1,
         DEMO_VALVE1,
         DEMO_VALVE2,
-        DEMO_VALVE_POS1,
         DEMO_VALVE_POS2,
     ]
 
@@ -277,9 +277,9 @@ async def test_attributes(
     state = hass.states.get(VALVE_GROUP)
     assert state.state == ValveState.CLOSED
     assert state.attributes[ATTR_ENTITY_ID] == [
+        DEMO_VALVE_POS1,
         DEMO_VALVE1,
         DEMO_VALVE2,
-        DEMO_VALVE_POS1,
         DEMO_VALVE_POS2,
     ]
 

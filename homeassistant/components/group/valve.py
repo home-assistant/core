@@ -63,12 +63,9 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the Valve Group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
-        [
-            ValveGroup(
-                config.get(CONF_UNIQUE_ID), config[CONF_NAME], config[CONF_ENTITIES]
-            )
-        ]
+        [ValveGroup(config.get(CONF_UNIQUE_ID), config[CONF_NAME], entities)]
     )
 
 
@@ -78,13 +75,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Valve Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
-
+    target_config = dict(config_entry.options[CONF_ENTITIES])
+    entity_ids = target_config.get("entity_id", [])
+    if entity_ids:
+        registry = er.async_get(hass)
+        entities = er.async_validate_entity_ids(registry, entity_ids)
+        target_config["entity_id"] = entities
     async_add_entities(
-        [ValveGroup(config_entry.entry_id, config_entry.title, entities)]
+        [ValveGroup(config_entry.entry_id, config_entry.title, target_config)]
     )
 
 
@@ -110,17 +108,19 @@ class ValveGroup(GroupEntity, ValveEntity):
     _attr_is_opening: bool | None = False
     _attr_reports_position: bool = False
 
-    def __init__(self, unique_id: str | None, name: str, entities: list[str]) -> None:
+    def __init__(
+        self, unique_id: str | None, name: str, target_config: dict[str, Any]
+    ) -> None:
         """Initialize a ValveGroup entity."""
-        self._entity_ids = entities
+        super().__init__()
+        self._target_config = target_config
+        self._domains = [VALVE_DOMAIN]
         self._valves: dict[str, set[str]] = {
             KEY_OPEN_CLOSE: set(),
             KEY_STOP: set(),
             KEY_SET_POSITION: set(),
         }
-
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entities}
         self._attr_unique_id = unique_id
 
     @callback

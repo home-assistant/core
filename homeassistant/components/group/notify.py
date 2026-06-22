@@ -132,13 +132,14 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize Notify Group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
-
+    target_config = dict(config_entry.options[CONF_ENTITIES])
+    entity_ids = target_config.get("entity_id", [])
+    if entity_ids:
+        registry = er.async_get(hass)
+        entities = er.async_validate_entity_ids(registry, entity_ids)
+        target_config["entity_id"] = entities
     async_add_entities(
-        [NotifyGroup(config_entry.entry_id, config_entry.title, entities)]
+        [NotifyGroup(config_entry.entry_id, config_entry.title, target_config)]
     )
 
 
@@ -160,15 +161,13 @@ class NotifyGroup(GroupEntity, NotifyEntity):
     _attr_available: bool = False
 
     def __init__(
-        self,
-        unique_id: str | None,
-        name: str,
-        entity_ids: list[str],
+        self, unique_id: str | None, name: str, target_config: dict[str, Any]
     ) -> None:
         """Initialize a NotifyGroup."""
-        self._entity_ids = entity_ids
+        super().__init__()
+        self._target_config = target_config
+        self._domains = [NOTIFY_DOMAIN]
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:

@@ -77,7 +77,7 @@ async def test_default_state(
     assert state is not None
     assert state.state == STATE_ON
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 0
-    assert state.attributes.get(ATTR_ENTITY_ID) == ["light.kitchen", "light.bedroom"]
+    assert state.attributes.get(ATTR_ENTITY_ID) == ["light.bedroom", "light.kitchen"]
     assert state.attributes.get(ATTR_BRIGHTNESS) is None
     assert state.attributes.get(ATTR_HS_COLOR) is None
     assert state.attributes.get(ATTR_COLOR_TEMP_KELVIN) is None
@@ -1473,6 +1473,7 @@ async def test_invalid_service_calls(hass: HomeAssistant) -> None:
     assert add_entities.call_count == 1
     grouped_light = add_entities.call_args[0][0][0]
     grouped_light.hass = hass
+    grouped_light._entity_ids = ["light.test1", "light.test2"]
 
     service_call_events = async_capture_events(hass, EVENT_CALL_SERVICE)
 

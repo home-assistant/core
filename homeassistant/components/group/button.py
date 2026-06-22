@@ -49,12 +49,13 @@ async def async_setup_platform(
     __: DiscoveryInfoType | None = None,
 ) -> None:
     """Set up the button group platform."""
+    entities = {"entity_id": config[CONF_ENTITIES]}
     async_add_entities(
         [
             ButtonGroup(
                 config.get(CONF_UNIQUE_ID),
                 config[CONF_NAME],
-                config[CONF_ENTITIES],
+                entities,
             )
         ]
     )
@@ -66,16 +67,18 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Initialize button group config entry."""
-    registry = er.async_get(hass)
-    entities = er.async_validate_entity_ids(
-        registry, config_entry.options[CONF_ENTITIES]
-    )
+    target_config = dict(config_entry.options[CONF_ENTITIES])
+    entity_ids = target_config.get("entity_id", [])
+    if entity_ids:
+        registry = er.async_get(hass)
+        entities = er.async_validate_entity_ids(registry, entity_ids)
+        target_config["entity_id"] = entities
     async_add_entities(
         [
             ButtonGroup(
                 config_entry.entry_id,
                 config_entry.title,
-                entities,
+                target_config,
             )
         ]
     )
@@ -103,12 +106,13 @@ class ButtonGroup(GroupEntity, ButtonEntity):
         self,
         unique_id: str | None,
         name: str,
-        entity_ids: list[str],
+        target_config: dict[str, Any],
     ) -> None:
         """Initialize a button group."""
-        self._entity_ids = entity_ids
+        super().__init__()
+        self._target_config = target_config
+        self._domains = [BUTTON_DOMAIN]
         self._attr_name = name
-        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
 
     async def async_press(self) -> None:

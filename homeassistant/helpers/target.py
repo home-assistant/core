@@ -427,6 +427,8 @@ class TargetStateChangeTracker(TargetEntityChangeTracker):
         """Resubscribe to state changes; return the update coroutine, if any."""
         previous_entities = self._tracked_entities
         self._tracked_entities = tracked_entities
+        if previous_entities == tracked_entities:
+            return
 
         # Carry over the tracked states of still-tracked entities: they are
         # consistent with the already-dispatched event stream, while the live

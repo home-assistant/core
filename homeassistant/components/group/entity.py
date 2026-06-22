@@ -25,6 +25,12 @@ from homeassistant.helpers import start
 from homeassistant.helpers.entity import Entity, async_generate_entity_id
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.helpers.target import (
+    TargetSelection,
+    TargetStateChangedData,
+    async_extract_referenced_entity_ids,
+    async_track_target_selector_state_change_event,
+)
 
 from .const import ATTR_AUTO, ATTR_ORDER, DATA_COMPONENT, DOMAIN, GROUP_ORDER, REG_KEY
 from .registry import GroupIntegrationRegistry, SingleStateType
@@ -43,6 +49,8 @@ class GroupEntity(Entity):
 
     _attr_should_poll = False
     _entity_ids: list[str]
+    _target_config: dict[str, Any]
+    _domains: list[str]
 
     @callback
     def async_start_preview(
@@ -51,6 +59,7 @@ class GroupEntity(Entity):
     ) -> CALLBACK_TYPE:
         """Render a preview."""
 
+        self.update_entities(False)
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is None:
                 continue
@@ -74,8 +83,51 @@ class GroupEntity(Entity):
             self.hass, self._entity_ids, async_state_changed_listener
         )
 
+    @callback
+    def filter_entities_by_domain(self, entity_ids: set[str]) -> set[str]:
+        """Filter entities by domain."""
+        return {
+            entity_id
+            for entity_id in entity_ids
+            if split_entity_id(entity_id)[0] in self._domains
+            and entity_id != self.entity_id
+        }
+
+    @callback
+    def update_entities(self, update_group_members: bool = True) -> None:
+        """Update the entities in the group."""
+        selected = async_extract_referenced_entity_ids(
+            self.hass,
+            TargetSelection(self._target_config),
+            expand_group=True,
+            primary_entities_only=False,
+        )
+
+        self._entity_ids = []
+        # Prepend entities from config to ensure order for explicitly configured entities
+        if entity_list := self._target_config.get("entity_id"):
+            self._entity_ids = list(entity_list)
+
+        self._entity_ids.extend(
+            [
+                entity
+                for entity in self.filter_entities_by_domain(
+                    selected.referenced | selected.indirectly_referenced
+                )
+                if entity not in self._entity_ids
+            ]
+        )
+
+        self._attr_extra_state_attributes = {ATTR_ENTITY_ID: self._entity_ids}
+        if update_group_members:
+            self.update_group_member(self._entity_ids)
+
+    def update_group_member(self, entities: list[str]) -> None:
+        """Update the group member."""
+
     async def async_added_to_hass(self) -> None:
         """Register listeners."""
+        self.update_entities()
         for entity_id in self._entity_ids:
             if (state := self.hass.states.get(entity_id)) is None:
                 continue
@@ -83,18 +135,50 @@ class GroupEntity(Entity):
 
         @callback
         def async_state_changed_listener(
-            event: Event[EventStateChangedData],
+            target_state_change_data: TargetStateChangedData,
         ) -> None:
             """Handle child updates."""
+            event = target_state_change_data.state_change_event
             self.async_set_context(event.context)
             self.async_update_supported_features(
                 event.data["entity_id"], event.data["new_state"]
             )
             self.async_defer_or_update_ha_state()
 
+        @callback
+        def async_update_entities(added: set[str], removed: set[str]) -> None:
+            """Handle entity changes."""
+            for entity_id in added:
+                if entity_id not in self._entity_ids:
+                    self._entity_ids.append(entity_id)
+            for entity_id in removed:
+                if entity_id in self._entity_ids:
+                    self._entity_ids.remove(entity_id)
+
+            # Ensure the group does not include itself as member
+            if self.entity_id in self._entity_ids:
+                self._entity_ids.remove(self.entity_id)
+
+            self._attr_extra_state_attributes = {
+                ATTR_ENTITY_ID: sorted(self._entity_ids)
+            }
+
+            for entity_id in self._entity_ids:
+                if (state := self.hass.states.get(entity_id)) is None:
+                    continue
+                self.async_update_supported_features(entity_id, state)
+
+            self.update_group_member(self._entity_ids)
+            self.async_defer_or_update_ha_state()
+
         self.async_on_remove(
-            async_track_state_change_event(
-                self.hass, self._entity_ids, async_state_changed_listener
+            async_track_target_selector_state_change_event(
+                self.hass,
+                self._target_config,
+                async_state_changed_listener,
+                self.filter_entities_by_domain,
+                on_entities_update=async_update_entities,
+                primary_entities_only=False,
             )
         )
         self.async_on_remove(start.async_at_start(self.hass, self._update_at_start))
