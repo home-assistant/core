@@ -128,7 +128,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         """
         if not super().available:
             return False
-        return datetime.now() - self._device.lastseen < DEVICE_TIMEOUT
+        return datetime.now() - self._device.lastseen < DEVICE_TIMEOUT  # pylint: disable=home-assistant-enforce-naive-now
 
     @property
     def is_on(self) -> bool:
