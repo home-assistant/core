@@ -143,6 +143,34 @@
         "name": "Smart minimum temperature"
       }
     },
+    "select": {
+      "filtration_timer_speed": {
+        "name": "Filtration timer speed {number}",
+        "state": {
+          "high": "[%key:component::vistapool::entity::select::pump_speed::state::high%]",
+          "medium": "[%key:component::vistapool::entity::select::pump_speed::state::medium%]",
+          "slow": "[%key:component::vistapool::entity::select::pump_speed::state::slow%]"
+        }
+      },
+      "pump_mode": {
+        "name": "Pump mode",
+        "state": {
+          "auto": "Auto",
+          "heat": "Heat",
+          "intel": "Intel",
+          "manual": "Manual",
+          "smart": "Smart"
+        }
+      },
+      "pump_speed": {
+        "name": "Pump speed",
+        "state": {
+          "high": "High",
+          "medium": "Medium",
+          "slow": "Slow"
+        }
+      }
+    },
     "sensor": {
       "chlorine": {
         "name": "Chlorine"
