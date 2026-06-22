@@ -599,7 +599,7 @@ aurorapy==0.2.7
 autarco==3.2.0
 
 # homeassistant.components.husqvarna_automower_ble
-automower-ble==0.2.8
+automower-ble==0.2.9
 
 # homeassistant.components.autoskope
 autoskope_client==1.4.1
@@ -1377,7 +1377,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==6.1.0
+infrared-protocols==6.3.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1417,7 +1417,7 @@ jellyfin-apiclient-python==1.11.0
 
 # homeassistant.components.command_line
 # homeassistant.components.rest
-jsonpath==0.82.2
+jsonpath-python==1.1.6
 
 # homeassistant.components.justnimbus
 justnimbus==0.7.4
@@ -2373,7 +2373,7 @@ pymitv==1.4.3
 pymochad==0.2.0
 
 # homeassistant.components.modbus
-pymodbus==3.11.2
+pymodbus==3.13.1
 
 # homeassistant.components.monoprice
 pymonoprice==0.5
@@ -2450,7 +2450,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.0.1
+pyoverkiz[nexity]==2.0.2
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -3411,7 +3411,7 @@ wyoming==1.9.0
 xiaomi-ble==1.11.0
 
 # homeassistant.components.knx
-xknx==3.15.0
+xknx==3.16.0
 
 # homeassistant.components.knx
 xknxproject==3.9.0
