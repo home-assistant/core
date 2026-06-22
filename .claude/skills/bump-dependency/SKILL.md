@@ -24,52 +24,53 @@ Follow these systematic steps to successfully bump a python package requirement 
 - [ ] **4. Plan-Validate-Execute (Draft Plan)**: Before modifying any files, write a brief, structured plan outlining the integrations to change, old version, new version, and the resolved comparison link. Show this draft plan to the user.
 
 ### Phase B: Execute and Validate (Local Changes)
-- [ ] **5. Git Branch Setup**: Create a clean branch starting from the latest `upstream/dev`:
+- [ ] **5. Check Uncommitted Changes**: Check for any uncommitted changes in the repository. If they exist, ask the user whether to stash, commit, or discard them before proceeding.
+- [ ] **6. Git Branch Setup**: Create a clean branch starting from the latest `upstream/dev`:
   ```bash
   git fetch upstream dev
   git checkout -b bump-<package>-to-<version> upstream/dev
   ```
-- [ ] **6. Apply Bump to manifests**: Update the version constraint string in all identified `manifest.json` files (e.g., change `"package==1.0.0"` to `"package==1.1.0"`).
-- [ ] **7. Regenerate Core Requirements**: Run the requirements generator to update all derivative requirements and constraint files:
+- [ ] **7. Apply Bump to manifests**: Update the version constraint string in all identified `manifest.json` files (e.g., change `"package==1.0.0"` to `"package==1.1.0"`).
+- [ ] **8. Regenerate Core Requirements**: Run the requirements generator to update all derivative requirements and constraint files:
   ```bash
   uv run python3 -m script.gen_requirements_all
   ```
-- [ ] **8. Validate Requirements**: Check `git diff` to ensure that only the targeted `manifest.json` files and `requirements_all.txt` (and potentially standard constraints) were modified. No unrelated files must be affected.
-- [ ] **9. Local Venv Verification**: Install the exact targeted package version directly inside the virtual environment:
+- [ ] **9. Validate Requirements**: Check `git diff` to ensure that only the targeted `manifest.json` files and `requirements_all.txt` (and potentially standard constraints) were modified. No unrelated files must be affected.
+- [ ] **10. Local Venv Verification**: Install the exact targeted package version directly inside the virtual environment:
   ```bash
   uv pip install "<package>==<version>"
   ```
 
 ### Phase C: Validation Loop (Tests & Lint)
-- [ ] **10. Run Integration Tests**: Execute the pytest suite for all integrations that consume the bumped package:
+- [ ] **11. Run Integration Tests**: Execute the pytest suite for all integrations that consume the bumped package:
   ```bash
   uv run pytest tests/components/<integration_name>
   ```
   - *Validation Loop*: If tests fail, analyze the error, apply appropriate fixes, and re-run pytest until all tests pass cleanly.
-- [ ] **11. Run prek Lint Checks**: Run the local prek hooks on modified files:
+- [ ] **12. Run prek Lint Checks**: Run the local prek hooks on modified files:
   ```bash
   uv run prek run
   ```
   - *Validation Loop*: If prek checks report any formatting or linting violations, fix them and repeat `uv run prek run` until it passes completely without errors.
 
 ### Phase D: User Confirmation & PR Creation
-- [ ] **12. Commit Changes**: Commit the clean changes:
+- [ ] **13. Commit Changes**: Commit the clean changes:
   ```bash
   git add <modified_files>
   git commit -m "Bump <package> to <version>"
   ```
-- [ ] **13. Push Branch**: Push the local branch to your origin remote:
+- [ ] **14. Push Branch**: Push the local branch to your origin remote:
   ```bash
   git push origin bump-<package>-to-<version>
   ```
-- [ ] **14. PR Description Preparation**: Generate the pull request body from `.github/PULL_REQUEST_TEMPLATE.md`:
+- [ ] **15. PR Description Preparation**: Generate the pull request body from `.github/PULL_REQUEST_TEMPLATE.md`:
   - **Proposed change**: Describe the package, old version, new version, target/source branches, and insert the resolved PyPI, changelog, and comparison diff links.
   - **Type of change**: Check only 1 box in this section, and mark the `Dependency upgrade` checkbox as checked: `[x] Dependency upgrade`.
   - **Breaking change**: You may remove the "Breaking change" section entirely from the template.
   - **Validation checklists**: Mark `The code change is tested` checkbox as checked: `[x] The code change is tested`.
   - **Keep remaining template intact**: Do NOT remove any other commented-out blocks, headers, or unchecked checkboxes in the template.
-- [ ] **15. Mandatory Review Presentation**: Format the PR proposal using the **PR Presentation Template** below and display it to the user. **Stop and wait for the user to review and explicitly confirm/approve the PR template and draft details before creating the PR.**
-- [ ] **16. Raise Pull Request**: Once the user approves, create the Pull Request using the GitHub CLI:
+- [ ] **16. Mandatory Review Presentation**: Format the PR proposal using the **PR Presentation Template** below and display it to the user. **Stop and wait for the user to review and explicitly confirm/approve the PR template and draft details before creating the PR.**
+- [ ] **17. Raise Pull Request**: Once the user approves, create the Pull Request using the GitHub CLI:
   ```bash
   gh pr create --repo home-assistant/core --base dev --head <username>:bump-<package>-to-<version> --title "Bump <package> to <version>" --body-file <pr_body_file>
   ```
