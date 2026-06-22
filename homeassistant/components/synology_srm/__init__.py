@@ -155,6 +155,7 @@ async def async_setup_entry(
     config_entry.async_on_unload(
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_connection)
     )
+    config_entry.async_on_unload(scanner.close)
 
     config_entry.runtime_data = scanner
 
