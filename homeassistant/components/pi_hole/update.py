@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from hole import Hole
 
@@ -102,6 +103,7 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
         self._attr_title = description.title
 
     @property
+    @override
     def installed_version(self) -> str | None:
         """Version installed and in use."""
         if isinstance(self.api.versions, dict):
@@ -109,6 +111,7 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
         return None
 
     @property
+    @override
     def latest_version(self) -> str | None:
         """Latest version available for install."""
         if isinstance(self.api.versions, dict):
@@ -118,6 +121,7 @@ class PiHoleUpdateEntity(PiHoleEntity, UpdateEntity):
         return None
 
     @property
+    @override
     def release_url(self) -> str | None:
         """URL to the full release notes of the latest version available."""
         if self.latest_version:

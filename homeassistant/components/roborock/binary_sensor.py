@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from roborock.data import CleanFluidStatus, RoborockStateCode
 from roborock.data.v1.v1_containers import StatusField, StatusV2
@@ -208,6 +209,7 @@ class RoborockBinarySensorEntity(RoborockCoordinatedEntityV1, BinarySensorEntity
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the value reported by the sensor."""
         if (data := self.coordinator.data) is not None:
@@ -230,6 +232,7 @@ class RoborockBinarySensorEntityA01(RoborockCoordinatedEntityA01, BinarySensorEn
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the value reported by the sensor."""
         value = self.coordinator.data[self.entity_description.data_protocol]

@@ -5,7 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 import itertools
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock.devices.traits.v1.consumeable import ConsumableAttribute
 from roborock.exceptions import RoborockException
@@ -213,6 +213,7 @@ class RoborockButtonEntity(RoborockEntityV1, ButtonEntity):
         self.entity_description = entity_description
         self._consumable = coordinator.properties_api.consumables
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:
@@ -249,6 +250,7 @@ class RoborockRoutineButtonEntity(RoborockEntity, ButtonEntity):
         self._coordinator = coordinator
         self.entity_description = entity_description
 
+    @override
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button."""
         await self._coordinator.execute_routines(self._routine_id)
@@ -270,6 +272,7 @@ class RoborockButtonEntityA01(RoborockCoordinatedEntityA01, ButtonEntity):
             f"{entity_description.key}_{coordinator.duid_slug}", coordinator
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         try:
@@ -306,6 +309,7 @@ class RoborockQ10EmptyDustbinButtonEntity(
             coordinator,
         )
 
+    @override
     async def async_press(self, **kwargs: Any) -> None:
         """Press the button to empty dustbin."""
         try:

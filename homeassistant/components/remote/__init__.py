@@ -5,7 +5,7 @@ from datetime import timedelta
 from enum import IntFlag
 import functools as ft
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -162,6 +162,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
     _attr_supported_features: RemoteEntityFeature = RemoteEntityFeature(0)
 
     @cached_property
+    @override
     def supported_features(self) -> RemoteEntityFeature:
         """Flag supported features."""
         return self._attr_supported_features
@@ -178,6 +179,7 @@ class RemoteEntity(ToggleEntity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_)
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, Any] | None:
         """Return optional state attributes."""
         if RemoteEntityFeature.ACTIVITY not in self.supported_features:

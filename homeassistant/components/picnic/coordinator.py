@@ -5,6 +5,7 @@ from contextlib import suppress
 import copy
 from datetime import timedelta
 import logging
+from typing import override
 
 from python_picnic_api2 import PicnicAPI
 from python_picnic_api2.session import PicnicAuthError
@@ -44,6 +45,7 @@ class PicnicUpdateCoordinator(DataUpdateCoordinator):
             update_interval=timedelta(minutes=30),
         )
 
+    @override
     async def _async_update_data(self) -> dict:
         """Fetch data from API endpoint."""
         try:

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 import aioptdevices
 from aioptdevices.interface import Interface, PTDevicesResponseData
@@ -54,6 +54,7 @@ class PTDevicesCoordinator(DataUpdateCoordinator[PTDevicesResponseData]):
 
         self.interface = ptdevices_interface
 
+    @override
     async def _async_update_data(self) -> PTDevicesResponseData:
         try:
             data = await self.interface.get_data()

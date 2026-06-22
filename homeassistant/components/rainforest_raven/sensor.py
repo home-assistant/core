@@ -1,7 +1,7 @@
 """Sensor entity for a Rainforest RAVEn device."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -141,6 +141,7 @@ class RAVEnSensor(CoordinatorEntity[RAVEnDataCoordinator], SensorEntity):
         return self.coordinator.data.get(self.entity_description.message_key, {})
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return entity specific state attributes."""
         if self.entity_description.attribute_keys:
@@ -151,6 +152,7 @@ class RAVEnSensor(CoordinatorEntity[RAVEnDataCoordinator], SensorEntity):
         return None
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return native value of the sensor."""
         return str(self._data.get(self.entity_description.key))
@@ -174,6 +176,7 @@ class RAVEnMeterSensor(RAVEnSensor):
         )
 
     @property
+    @override
     def _data(self) -> Any:
         """Return the raw sensor data from the source."""
         return (

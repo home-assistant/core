@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from propcache.api import cached_property
 from roborock import B01Props
@@ -135,6 +135,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
             sw_version=self._device.device_info.fv,
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         await self._verify_api()
@@ -235,6 +236,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         )
         _LOGGER.debug("Updated device properties")
 
+    @override
     async def _async_update_data(self) -> DeviceState | None:
         """Update data via library."""
         await self._verify_api()
@@ -312,6 +314,7 @@ class RoborockDataUpdateCoordinator(DataUpdateCoordinator[DeviceState | None]):
         # We optimize streaming updates to catch state transitions immediately, but
         # secondary updates (like refreshing the map) can happen on their own interval.
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and unsubscribe update listeners."""
         await super().async_shutdown()
@@ -460,6 +463,7 @@ class RoborockWashingMachineUpdateCoordinator(
             RoborockZeoProtocol.SOUND_SET,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockZeoProtocol, StateType]:
@@ -498,6 +502,7 @@ class RoborockWetDryVacUpdateCoordinator(
             RoborockDyadDataProtocol.TOTAL_RUN_TIME,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> dict[RoborockDyadDataProtocol, StateType]:
@@ -579,6 +584,7 @@ class RoborockB01Q7UpdateCoordinator(RoborockDataUpdateCoordinatorB01):
             RoborockB01Props.QUANTITY,
         ]
 
+    @override
     async def _async_update_data(
         self,
     ) -> B01Props:
@@ -631,6 +637,7 @@ class RoborockB01Q10UpdateCoordinator(DataUpdateCoordinator[None]):
         self.api = api
         self.device_info = get_device_info(device)
 
+    @override
     async def _async_update_data(self) -> None:
         """Request a status push from the device.
 

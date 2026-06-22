@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from regenmaschine.errors import RainMachineError
 import voluptuous as vol
@@ -305,6 +305,7 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
             self.entity_description.kind
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off.
 
@@ -326,6 +327,7 @@ class RainMachineActivitySwitch(RainMachineBaseSwitch):
         """Turn the switch off when its associated activity is active."""
         raise NotImplementedError
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if (
@@ -367,6 +369,7 @@ class RainMachineEnabledSwitch(RainMachineBaseSwitch):
         )
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the entity when new data is received."""
         self._attr_is_on = self.coordinator.data[self.entity_description.uid]["active"]
@@ -375,27 +378,32 @@ class RainMachineEnabledSwitch(RainMachineBaseSwitch):
 class RainMachineProgram(RainMachineActivitySwitch):
     """Define a RainMachine program."""
 
+    @override
     async def async_start_program(self) -> None:
         """Start the program."""
         await self.async_turn_on()
 
+    @override
     async def async_stop_program(self) -> None:
         """Stop the program."""
         await self.async_turn_off()
 
     @raise_on_request_error
+    @override
     async def async_turn_off_when_active(self, **kwargs: Any) -> None:
         """Turn the switch off when its associated activity is active."""
         await self._data.controller.programs.stop(self.entity_description.uid)
         self._update_activities()
 
     @raise_on_request_error
+    @override
     async def async_turn_on_when_active(self, **kwargs: Any) -> None:
         """Turn the switch on when its associated activity is active."""
         await self._data.controller.programs.start(self.entity_description.uid)
         self._update_activities()
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the entity when new data is received."""
         data = self.coordinator.data[self.entity_description.uid]
@@ -426,6 +434,7 @@ class RainMachineProgramEnabled(RainMachineEnabledSwitch):
     """Define a switch to enable/disable a RainMachine program."""
 
     @raise_on_request_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the program."""
         tasks = [
@@ -436,6 +445,7 @@ class RainMachineProgramEnabled(RainMachineEnabledSwitch):
         self._update_activities()
 
     @raise_on_request_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the program."""
         await self._data.controller.programs.enable(self.entity_description.uid)
@@ -449,6 +459,7 @@ class RainMachineRestrictionSwitch(RainMachineBaseSwitch):
     entity_description: RainMachineRestrictionSwitchDescription
 
     @raise_on_request_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the restriction."""
         await self._data.controller.restrictions.set_universal(
@@ -458,6 +469,7 @@ class RainMachineRestrictionSwitch(RainMachineBaseSwitch):
         self.async_write_ha_state()
 
     @raise_on_request_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the restriction."""
         await self._data.controller.restrictions.set_universal(
@@ -467,6 +479,7 @@ class RainMachineRestrictionSwitch(RainMachineBaseSwitch):
         self.async_write_ha_state()
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the entity when new data is received."""
         self._attr_is_on = self.coordinator.data[self.entity_description.data_key]
@@ -475,21 +488,25 @@ class RainMachineRestrictionSwitch(RainMachineBaseSwitch):
 class RainMachineZone(RainMachineActivitySwitch):
     """Define a RainMachine zone."""
 
+    @override
     async def async_start_zone(self, *, zone_run_time: int) -> None:
         """Start a particular zone for a certain amount of time."""
         await self.async_turn_on(duration=zone_run_time)
 
+    @override
     async def async_stop_zone(self) -> None:
         """Stop a zone."""
         await self.async_turn_off()
 
     @raise_on_request_error
+    @override
     async def async_turn_off_when_active(self, **kwargs: Any) -> None:
         """Turn the switch off when its associated activity is active."""
         await self._data.controller.zones.stop(self.entity_description.uid)
         self._update_activities()
 
     @raise_on_request_error
+    @override
     async def async_turn_on_when_active(self, **kwargs: Any) -> None:
         """Turn the switch on when its associated activity is active."""
         # 1. Use duration parameter if provided from service call
@@ -511,6 +528,7 @@ class RainMachineZone(RainMachineActivitySwitch):
         self._update_activities()
 
     @callback
+    @override
     def update_from_latest_data(self) -> None:
         """Update the entity when new data is received."""
         data = self.coordinator.data[self.entity_description.uid]
@@ -556,6 +574,7 @@ class RainMachineZoneEnabled(RainMachineEnabledSwitch):
     """Define a switch to enable/disable a RainMachine zone."""
 
     @raise_on_request_error
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable the zone."""
         tasks = [
@@ -566,6 +585,7 @@ class RainMachineZoneEnabled(RainMachineEnabledSwitch):
         self._update_activities()
 
     @raise_on_request_error
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable the zone."""
         await self._data.controller.zones.enable(self.entity_description.uid)

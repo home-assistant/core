@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from proxmoxer import AuthenticationError, ProxmoxAPI
 from proxmoxer.core import ResourceException
@@ -100,6 +100,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             Callable[[list[tuple[ProxmoxNodeData, dict[str, Any]]]], None]
         ] = []
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -145,6 +146,7 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
+    @override
     async def _async_update_data(self) -> dict[str, ProxmoxNodeData]:
         """Fetch data from Proxmox VE API."""
 

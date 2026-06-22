@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -528,6 +528,7 @@ class ProxmoxNodeSensor(ProxmoxNodeEntity, SensorEntity):
     entity_description: ProxmoxNodeSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self.device_name])
@@ -539,6 +540,7 @@ class ProxmoxVMSensor(ProxmoxVMEntity, SensorEntity):
     entity_description: ProxmoxVMSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.vm_data)
@@ -550,6 +552,7 @@ class ProxmoxContainerSensor(ProxmoxContainerEntity, SensorEntity):
     entity_description: ProxmoxContainerSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.container_data)
@@ -561,6 +564,7 @@ class ProxmoxStorageSensor(ProxmoxStorageEntity, SensorEntity):
     entity_description: ProxmoxStorageSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self.storage_data)

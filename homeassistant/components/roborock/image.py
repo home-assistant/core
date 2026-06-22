@@ -2,6 +2,7 @@
 
 from datetime import datetime
 import logging
+from typing import override
 
 from roborock.devices.traits.v1.home import HomeTrait
 from roborock.devices.traits.v1.map_content import MapContent
@@ -75,6 +76,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         self._attr_entity_category = EntityCategory.DIAGNOSTIC
         self._attr_image_last_updated = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass load any previously cached maps from disk."""
         await super().async_added_to_hass()
@@ -90,6 +92,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
         return None
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator.
 
@@ -102,6 +105,7 @@ class RoborockMap(RoborockCoordinatedEntityV1, ImageEntity):
             self._attr_image_last_updated = self.coordinator.last_home_update
         super()._handle_coordinator_update()
 
+    @override
     async def async_image(self) -> bytes | None:
         """Get the cached image."""
         if (map_content := self._map_content) is None:

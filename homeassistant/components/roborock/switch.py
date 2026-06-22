@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.common import RoborockSwitchBase
@@ -145,6 +145,7 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
         )
         self._trait = trait
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
@@ -155,6 +156,7 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
                 translation_key="update_options_failed",
             ) from err
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
@@ -166,6 +168,7 @@ class RoborockSwitch(RoborockEntityV1, SwitchEntity):
             ) from err
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         return self._trait.is_on
@@ -185,6 +188,7 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
         self.entity_description = description
         super().__init__(f"{description.key}_{coordinator.duid_slug}", coordinator)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the switch."""
         try:
@@ -198,6 +202,7 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
                 translation_key="update_options_failed",
             ) from err
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the switch."""
         try:
@@ -212,6 +217,7 @@ class RoborockSwitchA01(RoborockCoordinatedEntityA01, SwitchEntity):
             ) from err
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True if entity is on."""
         status = self.coordinator.data.get(self.entity_description.data_protocol)

@@ -1,6 +1,6 @@
 """The repairs integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -47,6 +47,7 @@ class RepairsFlowManager(
 ):
     """Manage repairs flows."""
 
+    @override
     async def async_create_flow(
         self,
         handler_key: str,
@@ -75,6 +76,7 @@ class RepairsFlowManager(
         flow.data = issue.data
         return flow
 
+    @override
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[
