@@ -284,6 +284,7 @@ async def _async_resolve_template_config(
         config = blueprint_inputs.async_substitute()
 
         platforms = [platform for platform in PLATFORMS if platform in config]
+        platform_config: list[ConfigType] | ConfigType
         if len(platforms) > 1:
             raise vol.Invalid("more than one platform defined per blueprint")
         if len(platforms) == 1:
@@ -292,7 +293,7 @@ async def _async_resolve_template_config(
                 if prop in config:
                     config_platform: list | dict = config[platform]
                     if isinstance(config_platform, dict):
-                        config[platform][prop] = config.pop(prop)
+                        config_platform[prop] = config.pop(prop)
                         continue
 
                     if len(config_platform) > 1:
@@ -306,7 +307,12 @@ async def _async_resolve_template_config(
             # retain CONF_VARIABLES because the variables are always executed between
             # the trigger and action.
             if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-                _merge_section_variables(config[platform], config.pop(CONF_VARIABLES))
+                section_variables = config.pop(CONF_VARIABLES)
+                platform_config = config[platform]
+                if isinstance(platform_config, dict):
+                    platform_config = [platform_config]
+                for entity_config in platform_config:
+                    _merge_section_variables(entity_config, section_variables)
 
         raw_config = dict(config)
 
@@ -318,7 +324,6 @@ async def _async_resolve_template_config(
         # variables at the entity level should be merged
         # together at the entity level.
         section_variables = config.pop(CONF_VARIABLES)
-        platform_config: list[ConfigType] | ConfigType
         platforms = [platform for platform in PLATFORMS if platform in config]
         for platform in platforms:
             platform_config = config[platform]

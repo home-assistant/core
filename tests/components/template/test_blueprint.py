@@ -98,7 +98,7 @@ def patch_invalid_blueprint_with_multiple_platforms() -> Iterator[None]:
 
 @contextlib.contextmanager
 def patch_invalid_blueprint_with_multiple_entities() -> Iterator[None]:
-    """Patch blueprint returning an invalid one."""
+    """Patch blueprint returning an invalid blueprint with multiple entities."""
 
     @callback
     def mock_load_blueprint(self, path):
@@ -106,7 +106,7 @@ def patch_invalid_blueprint_with_multiple_entities() -> Iterator[None]:
             {
                 "blueprint": {
                     "domain": "template",
-                    "name": "Invalid template blueprint",
+                    "name": "Invalid template blueprint with multiple entities",
                 },
                 "sensor": [
                     {"name": "Sensor 1", "state": "{{ now() }}"},
@@ -339,6 +339,45 @@ async def test_init_attribute_variables_from_blueprint(hass: HomeAssistant) -> N
     assert sensor.attributes["entity_picture"] == "on.png"
     assert sensor.attributes["friendly_name"] == "Foo"
     assert sensor.attributes["extra"] == "cd"
+
+
+async def test_init_attribute_variables_from_blueprint_listed(
+    hass: HomeAssistant,
+) -> None:
+    """Test a state-based blueprint using the listed platform format with variables.
+
+    The blueprint defines its `sensor:` section as a single-entry list and has
+    section-level `variables:`. The variables must still be merged into the
+    listed entity config.
+    """
+    blueprint = "test_init_attribute_variables_listed.yaml"
+    source = "switch.foo"
+    entity_id = "sensor.foo"
+    hass.states.async_set(source, "on", {"friendly_name": "Foo"})
+    config = {
+        DOMAIN: [
+            {
+                "use_blueprint": {
+                    "path": blueprint,
+                    "input": {"switch": source},
+                },
+            }
+        ],
+    }
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        config,
+    )
+    await hass.async_block_till_done()
+
+    sensor = hass.states.get(entity_id)
+    assert sensor
+    assert sensor.state == "True"
+    assert sensor.attributes["icon"] == "mdi:lightbulb"
+    assert sensor.attributes["entity_picture"] == "on.png"
+    assert sensor.attributes["friendly_name"] == "Foo"
+    assert sensor.attributes["extra"] == "ab"
 
 
 @pytest.mark.parametrize(
