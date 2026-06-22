@@ -146,9 +146,27 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
         return super().available
 
     @callback
-    def _render_script_variables(self) -> dict:
+    def _render_script_variables(self) -> dict[str, Any]:
         """Render configured variables."""
         return self._rendered_entity_variables or {}
+
+    def _render_entity_variables(self) -> dict[str, Any]:
+        """Render entity variables."""
+
+        # Attach this variable to coordinator variables
+        coordinator_variables = self._template_variables(
+            self.coordinator.data["run_variables"]
+        )
+        if self._entity_variables:
+            entity_variables = self._entity_variables.async_simple_render(
+                coordinator_variables
+            )
+            return {
+                **coordinator_variables,
+                **entity_variables,
+            }
+
+        return coordinator_variables
 
     def _render_single_template(
         self,
@@ -240,19 +258,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     @callback
     def _process_data(self) -> None:
         """Process new data."""
-
-        coordinator_variables = self.coordinator.data["run_variables"]
-        if self._entity_variables:
-            entity_variables = self._entity_variables.async_simple_render(
-                coordinator_variables
-            )
-            self._rendered_entity_variables = {
-                **coordinator_variables,
-                **entity_variables,
-            }
-        else:
-            self._rendered_entity_variables = coordinator_variables
-        variables = self._template_variables(self._rendered_entity_variables)
+        self._rendered_entity_variables = variables = self._render_entity_variables()
 
         self.async_set_context(self.coordinator.data["context"])
         if self._render_availability_template(variables):

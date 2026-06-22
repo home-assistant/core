@@ -292,6 +292,10 @@ class TemplateEntity(AbstractTemplateEntity):
             self.hass, {"this": self._get_this_variable()}
         )
 
+    def _render_entity_variables(self) -> dict[str, Any]:
+        """Render entity variables."""
+        return self._render_script_variables()
+
     def setup_state_template(
         self,
         attribute: str,
