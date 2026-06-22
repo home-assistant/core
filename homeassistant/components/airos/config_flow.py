@@ -3,7 +3,7 @@
 import asyncio
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from airos.airos6 import AirOS6
 from airos.airos8 import AirOS8
@@ -100,6 +100,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.discovery_abort_reason: str | None = None
         self.selected_device_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -258,6 +259,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=self.errors,
         )
 
+    @override
     async def async_step_discovery(
         self,
         discovery_info: dict[str, Any] | None = None,
@@ -394,6 +396,7 @@ class AirOSConfigFlow(ConfigFlow, domain=DOMAIN):
         except asyncio.CancelledError:
             pass
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

@@ -5,7 +5,7 @@ import asyncio
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from propcache.api import cached_property
 import voluptuous as vol
@@ -452,6 +452,7 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     raw_config: ConfigType | None
 
     @property
+    @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if self.unique_id is not None:
@@ -523,35 +524,42 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
         self._validation_status = validation_status
 
     @cached_property
+    @override
     def referenced_labels(self) -> set[str]:
         """Return a set of referenced labels."""
         return set()
 
     @cached_property
+    @override
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
         return set()
 
     @cached_property
+    @override
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         return set()
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         return None
 
     @cached_property
+    @override
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         return set()
 
     @cached_property
+    @override
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         return set()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Create a repair issue to notify the user the automation has errors."""
         await super().async_added_to_hass()
@@ -570,6 +578,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
             },
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         await super().async_will_remove_from_hass()
@@ -577,6 +586,7 @@ class UnavailableAutomationEntity(BaseAutomationEntity):
             self.hass, DOMAIN, f"{self.entity_id}_validation_{self._validation_status}"
         )
 
+    @override
     async def async_trigger(
         self,
         run_variables: dict[str, Any],
@@ -623,6 +633,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._attr_unique_id = automation_id
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the entity state attributes."""
         attrs = {
@@ -635,11 +646,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return attrs
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return self._async_detach_triggers is not None or self._is_enabled
 
     @cached_property
+    @override
     def referenced_labels(self) -> set[str]:
         """Return a set of referenced labels."""
         referenced = self.action_script.referenced_labels
@@ -655,6 +668,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return referenced
 
     @cached_property
+    @override
     def referenced_floors(self) -> set[str]:
         """Return a set of referenced floors."""
         referenced = self.action_script.referenced_floors
@@ -670,6 +684,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return referenced
 
     @cached_property
+    @override
     def referenced_areas(self) -> set[str]:
         """Return a set of referenced areas."""
         referenced = self.action_script.referenced_areas
@@ -683,6 +698,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return referenced
 
     @property
+    @override
     def referenced_blueprint(self) -> str | None:
         """Return referenced blueprint or None."""
         if self._blueprint_inputs is None:
@@ -690,6 +706,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return cast(str, self._blueprint_inputs[CONF_USE_BLUEPRINT][CONF_PATH])
 
     @cached_property
+    @override
     def referenced_devices(self) -> set[str]:
         """Return a set of referenced devices."""
         referenced = self.action_script.referenced_devices
@@ -704,6 +721,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         return referenced
 
     @cached_property
+    @override
     def referenced_entities(self) -> set[str]:
         """Return a set of referenced entities."""
         referenced = self.action_script.referenced_entities
@@ -718,6 +736,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         return referenced
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Startup with initial state or previous state."""
         await super().async_added_to_hass()
@@ -757,11 +776,13 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if enable_automation:
             await self._async_enable()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on and update the state."""
         await self._async_enable()
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if CONF_STOP_ACTIONS in kwargs:
@@ -770,6 +791,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
             await self._async_disable()
         self.async_write_ha_state()
 
+    @override
     async def async_trigger(
         self,
         run_variables: dict[str, Any],
@@ -896,6 +918,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
             return None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
