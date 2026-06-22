@@ -6,7 +6,12 @@ import pytest
 from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.climate import ATTR_HVAC_ACTION, HVACAction
+from homeassistant.components.climate import (
+    ATTR_HVAC_ACTION,
+    ATTR_HVAC_MODES,
+    HVACAction,
+    HVACMode,
+)
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_component, entity_registry as er
@@ -165,3 +170,52 @@ async def test_hvac_action_multi_compressor_cooling_takes_precedence(
     assert climate_states, "no climate entity exposed hvac_action"
     for state in climate_states:
         assert state.attributes[ATTR_HVAC_ACTION] == HVACAction.COOLING
+
+
+@pytest.mark.parametrize(
+    ("active_mode", "expected_state"),
+    [
+        ("cooling", HVACMode.COOL),
+        ("heatingCooling", HVACMode.AUTO),
+        ("heating", HVACMode.AUTO),
+        ("standby", HVACMode.OFF),
+    ],
+)
+async def test_hvac_mode_cooling(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    active_mode: str,
+    expected_state: HVACMode,
+) -> None:
+    """hvac_mode maps the ViCare cooling operating mode to HVACMode.COOL.
+
+    Regression test for #174444: an active mode of `cooling` resolved to None
+    (state "unknown") and COOL was never offered, as it was missing from the map.
+    """
+    fixtures: list[Fixture] = [
+        Fixture(set(), "vicare/Vitocal250A.json"),
+    ]
+    supported_modes = ["cooling", "heating", "heatingCooling", "standby"]
+
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(fixtures).as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.CLIMATE]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+        component: entity_component.EntityComponent = hass.data["climate"]
+        for entity in component.entities:
+            entity._api.getActiveMode = Mock(return_value=active_mode)
+            entity._api.getModes = Mock(return_value=supported_modes)
+            await entity.async_update_ha_state(force_refresh=True)
+
+    climate_states = hass.states.async_all("climate")
+    assert climate_states, "no climate entity created"
+    for state in climate_states:
+        assert state.state == expected_state
+        assert HVACMode.COOL in state.attributes[ATTR_HVAC_MODES]
