@@ -106,6 +106,8 @@ ATW_SENSORS: tuple[ATWBinarySensorEntityDescription, ...] = (
         state_fn=lambda unit: (
             unit.overheat_protection.enabled if unit.overheat_protection else None
         ),
+    ),
+    ATWBinarySensorEntityDescription(
         key="holiday_mode",
         translation_key="holiday_mode",
         state_fn=lambda unit: unit.holiday_mode.enabled if unit.holiday_mode else None,
