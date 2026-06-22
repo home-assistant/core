@@ -34,6 +34,7 @@ from .const import (
     SCAN_INTERVAL_MINIMUM,
 )
 from .coordinator import EvoDataUpdateCoordinator
+from .helpers import async_create_breaking_change_issue_once
 from .services import setup_service_functions
 from .storage import TokenManager
 
@@ -111,5 +112,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     setup_service_functions(hass, coordinator)
+
+    async_create_breaking_change_issue_once(hass, "breaking_change_attribute_names")
 
     return True
