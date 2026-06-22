@@ -71,6 +71,26 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "battery_with_service_label": {
+        "name": "{service_label_index} Battery"
+      },
+      "battery_with_service_name": {
+        "name": "{service_name} Battery"
+      },
+      "battery_with_valve_label": {
+        "name": "Valve {service_label_index} Battery"
+      },
+      "problem_with_service_label": {
+        "name": "{service_label_index} Problem"
+      },
+      "problem_with_service_name": {
+        "name": "{service_name} Problem"
+      },
+      "problem_with_valve_label": {
+        "name": "Valve {service_label_index} Problem"
+      }
+    },
     "event": {
       "button": {
         "state_attributes": {
@@ -93,6 +113,20 @@
             }
           }
         }
+      }
+    },
+    "number": {
+      "duration": {
+        "name": "Duration"
+      },
+      "duration_with_service_label": {
+        "name": "{service_label_index} Duration"
+      },
+      "duration_with_service_name": {
+        "name": "{service_name} Duration"
+      },
+      "duration_with_valve_label": {
+        "name": "Valve {service_label_index} Duration"
       }
     },
     "select": {
