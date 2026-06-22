@@ -155,7 +155,9 @@ class RAVEnSensor(CoordinatorEntity[RAVEnDataCoordinator], SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return native value of the sensor."""
-        return str(self._data.get(self.entity_description.key))
+        if (value := self._data.get(self.entity_description.key)) is None:
+            return None
+        return str(value)
 
 
 class RAVEnMeterSensor(RAVEnSensor):
