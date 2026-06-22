@@ -1,7 +1,7 @@
 """Class to hold all lock accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_DOOR_LOCK
 
@@ -91,6 +91,7 @@ class Lock(HomeDoorbellAccessory):
         self.async_call_service(LOCK_DOMAIN, service, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update lock after state changed."""
         hass_state = new_state.state

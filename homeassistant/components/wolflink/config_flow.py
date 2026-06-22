@@ -1,6 +1,7 @@
 """Config flow for Wolf SmartSet Service integration."""
 
 import logging
+from typing import override
 
 from httpcore import ConnectError
 import voluptuous as vol
@@ -33,6 +34,7 @@ class WolfLinkConfigFlow(ConfigFlow, domain=DOMAIN):
         self.username: str | None = None
         self.password: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:

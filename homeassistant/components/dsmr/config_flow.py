@@ -2,7 +2,7 @@
 
 import asyncio
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from dsmr_parser import obis_references as obis_ref
 from dsmr_parser.clients.protocol import create_dsmr_reader, create_tcp_dsmr_reader
@@ -165,12 +165,14 @@ class DSMRFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> DSMROptionFlowHandler:
         """Get the options flow for this handler."""
         return DSMROptionFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

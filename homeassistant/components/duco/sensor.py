@@ -4,6 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from duco_connectivity.models import Node, NodeType, VentilationState
 
@@ -95,7 +96,12 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
         value_fn=lambda node: node.sensor.co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2, NodeType.VLVCO2, NodeType.VLVCO2RH),
+        node_types=(
+            NodeType.BSCO2,
+            NodeType.UCCO2,
+            NodeType.VLVCO2,
+            NodeType.VLVCO2RH,
+        ),
     ),
     DucoSensorEntityDescription(
         key="iaq_co2",
@@ -104,7 +110,12 @@ SENSOR_DESCRIPTIONS: tuple[DucoSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
         value_fn=lambda node: node.sensor.iaq_co2 if node.sensor else None,
-        node_types=(NodeType.UCCO2, NodeType.VLVCO2, NodeType.VLVCO2RH),
+        node_types=(
+            NodeType.BSCO2,
+            NodeType.UCCO2,
+            NodeType.VLVCO2,
+            NodeType.VLVCO2RH,
+        ),
     ),
     DucoSensorEntityDescription(
         key="humidity",
@@ -232,6 +243,7 @@ class DucoSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> datetime | int | float | str | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self._node)
@@ -256,6 +268,7 @@ class DucoBoxSensorEntity(DucoEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator)

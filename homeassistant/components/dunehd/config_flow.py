@@ -1,6 +1,6 @@
 """Adds config flow for Dune HD integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pdunehd import DuneHDPlayer
 import voluptuous as vol
@@ -25,6 +25,7 @@ class DuneHDConfigFlow(ConfigFlow, domain=DOMAIN):
         if not state:
             raise CannotConnect
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

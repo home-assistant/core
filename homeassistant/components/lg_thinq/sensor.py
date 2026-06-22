@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 import logging
 import random
+from typing import override
 
 from thinqconnect import USAGE_DAILY, USAGE_MONTHLY, DeviceType, ThinQAPIException
 from thinqconnect.devices.const import Property as ThinQProperty
@@ -728,6 +729,7 @@ class ThinQSensorEntity(ThinQEntity, SensorEntity):
             else f"{self.location}_{ThinQProperty.CURRENT_STATE}"
         )
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()
@@ -814,6 +816,7 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
     entity_description: ThinQEnergySensorEntityDescription
     _stop_update: Callable[[], None] | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle added to Hass."""
         await super().async_added_to_hass()
@@ -830,6 +833,7 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
 
         await self._async_update_and_schedule()
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         if self._stop_update is not None:
@@ -837,10 +841,12 @@ class ThinQEnergySensorEntity(ThinQEntity, SensorEntity):
         return await super().async_will_remove_from_hass()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available or self.native_value is not None
 
+    @override
     async def async_update(self, now: datetime | None = None) -> None:
         """Update the state of the sensor."""
         await self._async_update_and_schedule()
@@ -912,6 +918,7 @@ class ThinQEnumTempSensorEntity(ThinQEntity, SensorEntity):
             self._attr_device_class = SensorDeviceClass.ENUM
             self._attr_native_unit_of_measurement = None
 
+    @override
     def _update_status(self) -> None:
         """Update status itself."""
         super()._update_status()

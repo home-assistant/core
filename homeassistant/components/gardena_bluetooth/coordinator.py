@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import AquaContour, DeviceConfiguration, DeviceInformation
@@ -68,11 +69,13 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
             name=config_entry.title,
         )
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator and any connection."""
         await super().async_shutdown()
         await self.client.disconnect()
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator and read initial device metadata."""
         try:
@@ -118,6 +121,7 @@ class GardenaBluetoothCoordinator(DataUpdateCoordinator[dict[str, bytes]]):
         except CharacteristicNoAccess:
             LOGGER.debug("No access to update internal time")
 
+    @override
     async def _async_update_data(self) -> dict[str, bytes]:
         """Poll the device."""
         uuids: set[str] = {

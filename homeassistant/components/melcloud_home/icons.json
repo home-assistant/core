@@ -1,0 +1,41 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "forced_hot_water": {
+        "default": "mdi:water-boiler"
+      },
+      "frost_protection": {
+        "default": "mdi:snowflake",
+        "state": {
+          "off": "mdi:snowflake-off"
+        }
+      },
+      "holiday_mode": {
+        "default": "mdi:beach"
+      },
+      "overheat_protection": {
+        "default": "mdi:fire",
+        "state": {
+          "off": "mdi:fire-off"
+        }
+      },
+      "standby": {
+        "default": "mdi:power-sleep"
+      }
+    },
+    "sensor": {
+      "room_temperature": {
+        "default": "mdi:home-thermometer"
+      },
+      "room_temperature_zone_1": {
+        "default": "mdi:home-thermometer"
+      },
+      "room_temperature_zone_2": {
+        "default": "mdi:home-thermometer"
+      },
+      "tank_water_temperature": {
+        "default": "mdi:water-thermometer"
+      }
+    }
+  }
+}

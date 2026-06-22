@@ -13,11 +13,13 @@ from reolink_aio.exceptions import NotSupportedError, ReolinkError, Subscription
 from homeassistant.components.reolink.const import CONF_BC_CONNECT, DOMAIN
 from homeassistant.components.reolink.coordinator import DEVICE_UPDATE_INTERVAL_MIN
 from homeassistant.components.reolink.host import (
+    BC,
     FIRST_ONVIF_LONG_POLL_TIMEOUT,
     FIRST_ONVIF_TIMEOUT,
     FIRST_TCP_PUSH_TIMEOUT,
     LONG_POLL_COOLDOWN,
     LONG_POLL_ERROR_COOLDOWN,
+    ONVIF,
     POLL_INTERVAL_NO_PUSH,
 )
 from homeassistant.components.webhook import async_handle_webhook
@@ -118,7 +120,7 @@ async def test_webhook_callback(
     assert config_entry.state is ConfigEntryState.LOADED
 
     entity_id = f"{Platform.BINARY_SENSOR}.{TEST_CAM_NAME}_motion"
-    webhook_id = config_entry.runtime_data.host.webhook_id
+    webhook_id = config_entry.runtime_data.host._webhook_ids[ONVIF]
     unique_id = config_entry.runtime_data.host.unique_id
 
     signal_all = MagicMock()
@@ -139,10 +141,6 @@ async def test_webhook_callback(
     signal_all.assert_called_once()
     assert hass.states.get(entity_id).state == STATE_ON
 
-    freezer.tick(timedelta(seconds=FIRST_ONVIF_TIMEOUT))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
     # test webhook callback all channels with failure to read motion_state
     signal_all.reset_mock()
     reolink_host.get_motion_state_all_ch.return_value = False
@@ -155,15 +153,19 @@ async def test_webhook_callback(
     # test webhook callback success single channel
     reolink_host.motion_detected.return_value = False
     reolink_host.ONVIF_event_callback.return_value = [0]
-    await client.post(f"/api/webhook/{webhook_id}", data="test_data")
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
     await hass.async_block_till_done()
     signal_ch.assert_called_once()
     assert hass.states.get(entity_id).state == STATE_OFF
 
+    freezer.tick(timedelta(seconds=FIRST_ONVIF_TIMEOUT))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     # test webhook callback single channel with error in event callback
     signal_ch.reset_mock()
     reolink_host.ONVIF_event_callback.side_effect = Exception("Test error")
-    await client.post(f"/api/webhook/{webhook_id}", data="test_data")
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
     await hass.async_block_till_done()
     signal_ch.assert_not_called()
 
@@ -186,6 +188,27 @@ async def test_webhook_callback(
     with pytest.raises(CancelledError):
         await async_handle_webhook(hass, webhook_id, request)
     signal_all.assert_not_called()
+
+
+async def test_bc_webhook_callback(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+) -> None:
+    """Test BC webhook callback for battery camera."""
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    webhook_id = config_entry.runtime_data.host._webhook_ids[BC]
+    client = await hass_client_no_auth()
+
+    reolink_host.baichuan.webhook_push_callback.assert_not_called()
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
+    await hass.async_block_till_done()
+    reolink_host.baichuan.webhook_push_callback.assert_called_once()
 
 
 async def test_no_mac(
@@ -414,7 +437,7 @@ async def test_register_webhook_errors(
 ) -> None:
     """Test errors while registering the webhook."""
     with patch(
-        "homeassistant.components.reolink.host.get_url",
+        "homeassistant.components.reolink.host.webhook.async_generate_url",
         side_effect=NoURLAvailableError("Test error"),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id) is False
@@ -442,8 +465,8 @@ async def test_long_poll_stop_when_push(
     # simulate ONVIF push callback
     client = await hass_client_no_auth()
     reolink_host.ONVIF_event_callback.return_value = None
-    webhook_id = config_entry.runtime_data.host.webhook_id
-    await client.post(f"/api/webhook/{webhook_id}")
+    webhook_id = config_entry.runtime_data.host._webhook_ids[ONVIF]
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
 
     freezer.tick(DEVICE_UPDATE_INTERVAL_MIN)
     async_fire_time_changed(hass)
@@ -545,13 +568,20 @@ async def test_diagnostics_event_connection(
     # simulate ONVIF push callback
     client = await hass_client_no_auth()
     reolink_host.ONVIF_event_callback.return_value = None
-    webhook_id = config_entry.runtime_data.host.webhook_id
-    await client.post(f"/api/webhook/{webhook_id}")
+    webhook_id = config_entry.runtime_data.host._webhook_ids[ONVIF]
+    await client.post(f"/api/webhook/{webhook_id}", data=b"test_data")
 
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag["event connection"] == "ONVIF push"
 
     # set TCP push as active
     reolink_host.baichuan.events_active = True
+    reolink_host.baichuan.webhook_subscribed = False
     diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
     assert diag["event connection"] == "TCP push"
+
+    # set Webhook push as active
+    reolink_host.baichuan.events_active = True
+    reolink_host.baichuan.webhook_subscribed = True
+    diag = await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
+    assert diag["event connection"] == "Webhook push"

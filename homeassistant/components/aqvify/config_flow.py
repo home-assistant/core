@@ -2,13 +2,17 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from pyaqvify import AqvifyAPI, AqvifyAuthException
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    ConfigFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -28,6 +32,7 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -49,8 +54,15 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(account_data.account_id)
+                if self.source == SOURCE_RECONFIGURE:
+                    self._abort_if_unique_id_mismatch()
+                    return self.async_update_reload_and_abort(
+                        self._get_reconfigure_entry(), data_updates=user_input
+                    )
                 self._abort_if_unique_id_configured()
-                return self.async_create_entry(title="Aqvify", data=user_input)
+                return self.async_create_entry(
+                    title=account_data.name or "Aqvify", data=user_input
+                )
 
         return self.async_show_form(
             step_id="user",
@@ -96,3 +108,9 @@ class AqvifyConfigFlow(ConfigFlow, domain=DOMAIN):
             data_schema=STEP_USER_DATA_SCHEMA,
             errors=errors,
         )
+
+    async def async_step_reconfigure(
+        self, user_input: Mapping[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """User initiated reconfiguration."""
+        return await self.async_step_user()

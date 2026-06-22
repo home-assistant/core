@@ -3,7 +3,7 @@
 from collections import Counter
 import itertools
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -168,6 +168,7 @@ class LightGroup(GroupEntity, LightEntity):
         self._attr_color_mode = ColorMode.UNKNOWN
         self._attr_supported_color_modes = {ColorMode.ONOFF}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Forward the turn_on command to all lights in the light group."""
         data = {
@@ -185,6 +186,7 @@ class LightGroup(GroupEntity, LightEntity):
             context=self._context,
         )
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Forward the turn_off command to all lights in the light group."""
         data = {ATTR_ENTITY_ID: self._entity_ids}
@@ -201,6 +203,7 @@ class LightGroup(GroupEntity, LightEntity):
         )
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the light group state."""
         self._update_assumed_state_from_members()
