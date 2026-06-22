@@ -39,7 +39,7 @@ async def test_setup_entry_connect_failure_raises_not_ready(
     mock_synology_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """When the initial probe raises, the entry stays in SETUP_RETRY."""
+    """A non-auth probe failure puts the entry into SETUP_RETRY (no reauth)."""
     mock_synology_client.core.get_network_nsm_device.side_effect = (
         synology_srm.http.SynologyException(503, "down")
     )
@@ -47,6 +47,29 @@ async def test_setup_entry_connect_failure_raises_not_ready(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not any(
+        flow["context"].get("source") == "reauth"
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    )
+
+
+async def test_setup_entry_auth_failure_starts_reauth(
+    hass: HomeAssistant,
+    mock_synology_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """An auth probe failure surfaces as SETUP_ERROR and kicks off a reauth flow."""
+    mock_synology_client.core.get_network_nsm_device.side_effect = (
+        synology_srm.http.SynologyApiError(102, "bad auth")
+    )
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    assert any(
+        flow["context"].get("source") == "reauth"
+        for flow in hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    )
 
 
 async def test_setup_entry_skips_disable_https_verify_when_enabled(

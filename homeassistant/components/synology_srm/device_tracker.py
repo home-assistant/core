@@ -3,42 +3,15 @@
 from datetime import datetime
 from typing import Any
 
-import voluptuous as vol
-
-from homeassistant.components.device_tracker import (
-    DEFAULT_CONSIDER_HOME,
-    PLATFORM_SCHEMA as DEVICE_TRACKER_PLATFORM_SCHEMA,
-    ScannerEntity,
-)
+from homeassistant.components.device_tracker import DEFAULT_CONSIDER_HOME, ScannerEntity
 from homeassistant.components.device_tracker.const import SourceType
-from homeassistant.const import (
-    CONF_HOST,
-    CONF_PASSWORD,
-    CONF_PORT,
-    CONF_SSL,
-    CONF_USERNAME,
-    CONF_VERIFY_SSL,
-)
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util import dt as dt_util
 
 from . import SynologySRMConfigEntry, SynologySrmDeviceScanner
-from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_USERNAME, DEFAULT_VERIFY_SSL
-
-PLATFORM_SCHEMA = DEVICE_TRACKER_PLATFORM_SCHEMA.extend(
-    {
-        vol.Required(CONF_HOST): cv.string,
-        vol.Required(CONF_USERNAME, default=DEFAULT_USERNAME): cv.string,
-        vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-        vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
-        vol.Optional(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): cv.boolean,
-    }
-)
 
 ATTRIBUTE_ALIAS = {
     "band": None,
@@ -120,13 +93,11 @@ class SynologySRMScannerEntity(ScannerEntity):
         """Init a Synology SRM device."""
         self._scanner = scanner
         self._device = device
-        self._last_activity: datetime | None = None
         self._mac = format_mac(device["mac"])
         self._name = device.get("hostname", self._mac)
         self._connected = False
-        self._last_activity = None
+        self._last_activity: datetime | None = None
         self._attr_source_type = SourceType.ROUTER
-        self._attr_extra_state_attributes: dict[str, Any] = {}
 
     @property
     def name(self) -> str | None:
@@ -141,7 +112,7 @@ class SynologySRMScannerEntity(ScannerEntity):
     @property
     def ip_address(self) -> str | None:
         """Return the primary ip address of the device."""
-        return self._device["ip_addr"]
+        return self._device.get("ip_addr")
 
     @property
     def mac_address(self) -> str | None:
@@ -195,17 +166,13 @@ class SynologySRMScannerEntity(ScannerEntity):
     def async_on_demand_update(self) -> None:
         """Update the device information."""
         utc_point_in_time = dt_util.utcnow()
-        if self._scanner.devices[self._mac]:
-            self._device = self._scanner.devices[self._mac]
-            self._last_activity = self._device["last_activity"]
+        self._device = self._scanner.devices[self._mac]
+        self._last_activity = self._device["last_activity"]
 
         self._connected = (
             self._last_activity is not None
             and (utc_point_in_time - self._last_activity).total_seconds()
             < DEFAULT_CONSIDER_HOME.total_seconds()
         )
-
-        if not self._connected:
-            self._attr_extra_state_attributes = {}
 
         self.async_write_ha_state()

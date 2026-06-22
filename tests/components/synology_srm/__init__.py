@@ -39,7 +39,6 @@ DEVICE_2: dict[str, Any] = {
     "ip_addr": "192.168.1.11",
 }
 
-DEVICE_NO_HOSTNAME: dict[str, Any] = {
+DEVICE_SPARSE: dict[str, Any] = {
     "mac": "AA:BB:CC:DD:EE:03",
-    "ip_addr": "192.168.1.12",
 }

@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_component import EntityComponent
 
-from . import DEVICE_1, DEVICE_2, DEVICE_NO_HOSTNAME
+from . import DEVICE_1, DEVICE_2, DEVICE_SPARSE
 
 from tests.common import MockConfigEntry
 
@@ -95,13 +95,13 @@ async def test_entity_disconnect_wipes_attributes_and_swaps_icon(
     assert "is_banned" not in state.attributes
 
 
-async def test_entity_handles_missing_hostname(
+async def test_entity_handles_missing_optional_fields(
     hass: HomeAssistant,
     mock_synology_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A device without a hostname loads — the hostname property returns None safely."""
-    mock_synology_client.core.get_network_nsm_device.return_value = [DEVICE_NO_HOSTNAME]
+    """A device with only MAC (no hostname, no ip_addr) loads cleanly."""
+    mock_synology_client.core.get_network_nsm_device.return_value = [DEVICE_SPARSE]
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -110,6 +110,11 @@ async def test_entity_handles_missing_hostname(
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == "home"
+
+    component: EntityComponent = hass.data[DEVICE_TRACKER_DOMAIN]
+    entity = next(e for e in component.entities if e.unique_id == "aa:bb:cc:dd:ee:03")
+    assert entity.hostname is None
+    assert entity.ip_address is None
 
 
 async def test_new_device_appears_after_initial_setup(

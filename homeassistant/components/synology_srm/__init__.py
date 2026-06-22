@@ -19,7 +19,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
@@ -64,13 +64,8 @@ class SynologySrmDeviceScanner:
         """Set up the scanner."""
         _LOGGER.debug("Setting up Synology SRM device scanner")
 
-        self.success_init = await self.hass.async_add_executor_job(
-            self._check_success_init
-        )
-
-        if not self.success_init:
-            _LOGGER.error("Failed to connect to Synology SRM")
-            raise ConfigEntryNotReady
+        await self.hass.async_add_executor_job(self._check_success_init)
+        self.success_init = True
 
         self.async_on_close(
             async_track_time_interval(self.hass, self.scan_devices, self.scan_interval)
@@ -89,14 +84,17 @@ class SynologySrmDeviceScanner:
         """Scan for new devices and return a list with found device macs."""
         await self._update_info()
 
-    def _check_success_init(self) -> bool:
-        """Check if the scanner was initialized successfully."""
+    def _check_success_init(self) -> None:
+        """Probe the SRM. Raises an entry-state exception on failure."""
         try:
             self.client.core.get_network_nsm_device({"is_online": True})
+        except (
+            synology_srm.http.SynologyApiError,
+            synology_srm.http.SynologyHttpException,
+        ) as ex:
+            raise ConfigEntryAuthFailed from ex
         except synology_srm.http.SynologyException as ex:
-            _LOGGER.error("Error with the Synology SRM: %s", ex)
-            return False
-        return True
+            raise ConfigEntryNotReady from ex
 
     async def _update_info(self) -> None:
         """Check the router for connected devices."""
