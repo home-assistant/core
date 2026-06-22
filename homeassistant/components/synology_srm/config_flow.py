@@ -1,7 +1,5 @@
 """Config flow for Synology SRM integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 from typing import Any
@@ -10,28 +8,19 @@ import requests
 import synology_srm
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
     CONF_PORT,
-    CONF_SCAN_INTERVAL,
     CONF_SSL,
     CONF_USERNAME,
     CONF_VERIFY_SSL,
 )
-from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 
-from .device_tracker import (
-    DEFAULT_PORT,
-    DEFAULT_SCAN_INTERVAL,
-    DEFAULT_SSL,
-    DEFAULT_USERNAME,
-    DOMAIN,
-    SynologySRMConfigEntry,
-    get_api,
-)
+from . import get_api
+from .const import DEFAULT_PORT, DEFAULT_SSL, DEFAULT_USERNAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,14 +29,6 @@ class SynologySRMFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a Synology SRM config flow."""
 
     VERSION = 1
-
-    @staticmethod
-    @callback
-    def async_get_options_flow(
-        config_entry: SynologySRMConfigEntry,
-    ) -> SynologySRMOptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return SynologySRMOptionsFlowHandler()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -93,10 +74,6 @@ class SynologySRMFlowHandler(ConfigFlow, domain=DOMAIN):
                     vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
                     vol.Optional(CONF_SSL, default=DEFAULT_SSL): cv.boolean,
                     vol.Optional(CONF_VERIFY_SSL, default=False): cv.boolean,
-                    vol.Optional(
-                        CONF_SCAN_INTERVAL,
-                        default=DEFAULT_SCAN_INTERVAL.total_seconds(),
-                    ): vol.All(vol.Coerce(int), vol.Range(min=30)),
                 }
             ),
             errors=errors,
@@ -151,33 +128,4 @@ class SynologySRMFlowHandler(ConfigFlow, domain=DOMAIN):
                 }
             ),
             errors=errors,
-        )
-
-
-class SynologySRMOptionsFlowHandler(OptionsFlow):
-    """Handle Synology SRM options."""
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the Synology SRM options."""
-        return await self.async_step_device_tracker()
-
-    async def async_step_device_tracker(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the device tracker options."""
-        if user_input is not None:
-            return self.async_create_entry(data=user_input)
-
-        options = {
-            vol.Optional(
-                CONF_SCAN_INTERVAL,
-                default=self.config_entry.options.get(CONF_SCAN_INTERVAL)
-                or DEFAULT_SCAN_INTERVAL.total_seconds(),
-            ): vol.All(vol.Coerce(int), vol.Range(min=30)),
-        }
-
-        return self.async_show_form(
-            step_id="device_tracker", data_schema=vol.Schema(options)
         )

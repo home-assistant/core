@@ -1,11 +1,154 @@
 """The Synology SRM component."""
 
-from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
-from homeassistant.core import Event, HomeAssistant
+from collections.abc import Callable
+from datetime import datetime
+import logging
+from typing import Any
 
-from .device_tracker import SynologySRMConfigEntry, SynologySrmDeviceScanner, get_api
+import synology_srm
+
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
+    Platform,
+)
+from homeassistant.core import CALLBACK_TYPE, Event, HomeAssistant, callback
+from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.event import async_track_time_interval
+from homeassistant.util import dt as dt_util
+
+from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.DEVICE_TRACKER]
+
+type SynologySRMConfigEntry = ConfigEntry[SynologySrmDeviceScanner]
+
+
+def get_api(config: dict[str, Any]) -> synology_srm.Client:
+    """Validate the configuration and return Synology SRM API."""
+
+    client = synology_srm.Client(
+        host=config[CONF_HOST],
+        port=config[CONF_PORT],
+        username=config[CONF_USERNAME],
+        password=config[CONF_PASSWORD],
+        https=config[CONF_SSL],
+    )
+
+    if not config[CONF_VERIFY_SSL]:
+        client.http.disable_https_verify()
+
+    return client
+
+
+class SynologySrmDeviceScanner:
+    """Scanner to interact with Synology SRM API."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        api: synology_srm.Client,
+        config: SynologySRMConfigEntry,
+    ) -> None:
+        """Initialize the scanner."""
+        self.hass = hass
+        self._entry = config
+        self._host = config.data[CONF_HOST]
+        self._on_close: list[Callable] = []
+        self.client = api
+        self.scan_interval = DEFAULT_SCAN_INTERVAL
+        self.devices: dict[str, dict[str, Any]] = {}
+        self.success_init = False
+
+    async def setup(self) -> None:
+        """Set up the scanner."""
+        _LOGGER.debug("Setting up Synology SRM device scanner")
+
+        self.success_init = await self.hass.async_add_executor_job(
+            self._check_success_init
+        )
+
+        if not self.success_init:
+            _LOGGER.error("Failed to connect to Synology SRM")
+            raise ConfigEntryNotReady
+
+        self.async_on_close(
+            async_track_time_interval(self.hass, self.scan_devices, self.scan_interval)
+        )
+
+        await self.scan_devices()
+        _LOGGER.debug("Synology SRM device scanner setup complete")
+
+    async def close(self) -> None:
+        """Close the connection."""
+        for func in self._on_close:
+            func()
+        self._on_close.clear()
+
+    async def scan_devices(self, now: datetime | None = None) -> None:
+        """Scan for new devices and return a list with found device macs."""
+        await self._update_info()
+
+    def _check_success_init(self) -> bool:
+        """Check if the scanner was initialized successfully."""
+        try:
+            self.client.core.get_network_nsm_device({"is_online": True})
+        except synology_srm.http.SynologyException as ex:
+            _LOGGER.error("Error with the Synology SRM: %s", ex)
+            return False
+        return True
+
+    async def _update_info(self) -> None:
+        """Check the router for connected devices."""
+        _LOGGER.debug("Scanning for connected devices")
+        new_devices = False
+        try:
+            srm_devices = await self.hass.async_add_executor_job(
+                self.client.core.get_network_nsm_device, {"is_online": True}
+            )
+            for device in srm_devices:
+                device_mac = format_mac(device.get("mac"))
+                if device_mac not in self.devices:
+                    new_devices = True
+                    _LOGGER.debug("Found new device: %s", device_mac)
+                device["last_activity"] = dt_util.utcnow()
+                self.devices[device_mac] = device
+
+            if new_devices:
+                _LOGGER.debug("New devices found, updating entities")
+                async_dispatcher_send(self.hass, self.signal_device_new)
+
+            async_dispatcher_send(self.hass, self.signal_device_update)
+
+        except synology_srm.http.SynologyException as ex:
+            _LOGGER.error("Error with the Synology SRM: %s", ex)
+
+        _LOGGER.debug("Found %d device(s) connected to the router", len(self.devices))
+
+    @callback
+    def async_on_close(self, func: CALLBACK_TYPE) -> None:
+        """Add a function to call when synology srm is closed."""
+        self._on_close.append(func)
+
+    @property
+    def signal_device_new(self) -> str:
+        """Event specific per entry to signal new device."""
+        return f"{DOMAIN}-{self._host}-scanned-devices"
+
+    @property
+    def signal_device_update(self) -> str:
+        """Event specific per entry to signal updates in devices."""
+        return f"{DOMAIN}-{self._host}-device-update"
 
 
 async def async_setup_entry(
