@@ -21,7 +21,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     assert_numerical_condition_unit_conversion,
     other_states,
@@ -40,26 +39,6 @@ async def target_climates(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "climate")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "climate.is_off",
-        "climate.is_on",
-        "climate.is_cooling",
-        "climate.is_drying",
-        "climate.is_heating",
-        "climate.is_hvac_mode",
-        "climate.target_humidity",
-        "climate.target_temperature",
-    ],
-)
-async def test_climate_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the climate conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
 _HUMIDITY_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _TEMPERATURE_THRESHOLD = {
     "threshold": {
@@ -69,7 +48,6 @@ _TEMPERATURE_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -100,7 +78,6 @@ async def test_climate_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -168,7 +145,6 @@ async def test_climate_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -236,7 +212,6 @@ async def test_climate_state_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -284,7 +259,6 @@ async def test_climate_attribute_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -332,7 +306,6 @@ async def test_climate_attribute_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -378,7 +351,6 @@ async def test_climate_numerical_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -424,7 +396,6 @@ async def test_climate_numerical_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_climate_numerical_condition_unit_conversion(hass: HomeAssistant) -> None:
     """Test that the climate numerical condition converts units correctly."""
     _unit_celsius = {ATTR_UNIT_OF_MEASUREMENT: UnitOfTemperature.CELSIUS}

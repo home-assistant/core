@@ -6,14 +6,6 @@ import logging
 from typing import Any
 
 from homeassistant import config as conf_util
-from homeassistant.components.automation import (
-    DOMAIN as AUTOMATION_DOMAIN,
-    NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-)
-from homeassistant.components.labs import (
-    EventLabsUpdatedData,
-    async_subscribe_preview_feature,
-)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_DEVICE_ID,
@@ -91,21 +83,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
     async_register_admin_service(hass, DOMAIN, SERVICE_RELOAD, _reload_config)
 
-    async def _handle_new_triggers_conditions(
-        _event_data: EventLabsUpdatedData,
-    ) -> None:
-        """Handle new_triggers_conditions flag change."""
-        hass.async_create_task(
-            _reload_config(ServiceCall(hass, DOMAIN, SERVICE_RELOAD))
-        )
-
-    async_subscribe_preview_feature(
-        hass,
-        AUTOMATION_DOMAIN,
-        NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-        _handle_new_triggers_conditions,
-    )
-
     return True
 
 
@@ -130,18 +107,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(
         entry, (entry.options["template_type"],)
-    )
-
-    async def _handle_entry_reload(_event_data: EventLabsUpdatedData) -> None:
-        hass.config_entries.async_schedule_reload(entry.entry_id)
-
-    entry.async_on_unload(
-        async_subscribe_preview_feature(
-            hass,
-            AUTOMATION_DOMAIN,
-            NEW_TRIGGERS_CONDITIONS_FEATURE_FLAG,
-            _handle_entry_reload,
-        )
     )
 
     return True

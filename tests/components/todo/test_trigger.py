@@ -36,10 +36,7 @@ from homeassistant.setup import async_setup_component
 from . import MockTodoListEntity, create_mock_platform
 
 from tests.common import async_mock_service, mock_device_registry
-from tests.components.common import (
-    assert_trigger_gated_by_labs_flag,
-    assert_trigger_options_supported,
-)
+from tests.components.common import assert_trigger_options_supported
 
 TODO_ENTITY_ID1 = "todo.list_one"
 TODO_ENTITY_ID2 = "todo.list_two"
@@ -126,22 +123,6 @@ def service_calls(hass: HomeAssistant) -> list[ServiceCall]:
     return async_mock_service(hass, "test", "item_added")
 
 
-@pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "todo.item_added",
-        "todo.item_completed",
-        "todo.item_removed",
-    ],
-)
-async def test_todo_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the todo triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -265,7 +246,6 @@ async def _complete_item(hass: HomeAssistant, entity_id: str, item: str) -> None
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_item_change_triggers(
     hass: HomeAssistant, service_calls: list[ServiceCall]
 ) -> None:
@@ -331,7 +311,6 @@ async def test_item_change_triggers(
         (_remove_item, "loaded_item", "todo.item_removed"),
     ],
 )
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_item_change_triggers_ignore_initial_unknown(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -368,7 +347,7 @@ async def test_item_change_triggers_ignore_initial_unknown(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+@pytest.mark.usefixtures("target_todo_lists")
 @pytest.mark.parametrize(
     "included_target",
     [
@@ -439,7 +418,7 @@ async def test_item_change_trigger_does_not_fire_for_other_entity(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+@pytest.mark.usefixtures("target_todo_lists")
 async def test_new_entity_added_to_target_fires_triggers(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -491,7 +470,6 @@ async def test_new_entity_added_to_target_fires_triggers(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_trigger_skips_missing_entity(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -515,7 +493,7 @@ async def test_trigger_skips_missing_entity(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+@pytest.mark.usefixtures("target_todo_lists")
 async def test_entity_rejoining_label_does_not_fire_trigger(
     hass: HomeAssistant,
     service_calls: list[ServiceCall],
@@ -557,7 +535,7 @@ async def test_entity_rejoining_label_does_not_fire_trigger(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features", "target_todo_lists")
+@pytest.mark.usefixtures("target_todo_lists")
 @pytest.mark.parametrize(
     "trigger_target",
     [

@@ -20,7 +20,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     assert_numerical_condition_unit_conversion,
     parametrize_condition_states_all,
@@ -50,37 +49,6 @@ async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "sensor")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "air_quality.is_gas_detected",
-        "air_quality.is_gas_cleared",
-        "air_quality.is_co_detected",
-        "air_quality.is_co_cleared",
-        "air_quality.is_smoke_detected",
-        "air_quality.is_smoke_cleared",
-        "air_quality.is_co_value",
-        "air_quality.is_co2_value",
-        "air_quality.is_pm1_value",
-        "air_quality.is_pm25_value",
-        "air_quality.is_pm4_value",
-        "air_quality.is_pm10_value",
-        "air_quality.is_ozone_value",
-        "air_quality.is_voc_value",
-        "air_quality.is_voc_ratio_value",
-        "air_quality.is_no_value",
-        "air_quality.is_no2_value",
-        "air_quality.is_n2o_value",
-        "air_quality.is_so2_value",
-    ],
-)
-async def test_air_quality_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the air quality conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
 _PLAIN_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 _PPB_THRESHOLD = {
     "threshold": {
@@ -102,7 +70,6 @@ _UGM3_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -148,7 +115,6 @@ async def test_air_quality_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -221,7 +187,6 @@ async def test_air_quality_binary_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -294,7 +259,6 @@ async def test_air_quality_binary_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -369,7 +333,6 @@ async def test_air_quality_numerical_with_unit_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -444,7 +407,6 @@ async def test_air_quality_numerical_with_unit_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -510,7 +472,6 @@ async def test_air_quality_numerical_no_unit_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -576,7 +537,6 @@ async def test_air_quality_numerical_no_unit_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_air_quality_condition_unit_conversion_co(
     hass: HomeAssistant,
 ) -> None:
