@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from typing import Any, cast
-from urllib.parse import urlparse
+from urllib.parse import ParseResult, urlparse
 
 import voluptuous as vol
 
@@ -69,13 +69,44 @@ async def _async_discovered_igd_devices(
     ) + await ssdp.async_get_discovery_info_by_st(hass, ST_IGD_V2)
 
 
+def _redact_discovery_location(parsed_location: ParseResult) -> str:
+    """Redact credentials from a discovery location for logging."""
+    try:
+        hostname = parsed_location.hostname
+    except ValueError:
+        return "<invalid URL>"
+    if not parsed_location.netloc or hostname is None:
+        return "<invalid URL>"
+
+    netloc = parsed_location.netloc.rsplit("@", 1)[-1]
+    return parsed_location._replace(
+        netloc=netloc, path="", params="", query="", fragment=""
+    ).geturl()
+
+
 async def _async_mac_address_from_discovery(
     hass: HomeAssistant, discovery: SsdpServiceInfo
 ) -> str | None:
     """Get the mac address from a discovery."""
     location = get_preferred_location(discovery.ssdp_all_locations)
-    host = urlparse(location).hostname
-    assert host is not None
+    try:
+        parsed_location = urlparse(location)
+    except ValueError as err:
+        raise ValueError("Invalid UPnP discovery location: <invalid URL>") from err
+    redacted_location = _redact_discovery_location(parsed_location)
+    error_msg = f"Invalid UPnP discovery location: {redacted_location}"
+    try:
+        host = parsed_location.hostname
+        _ = parsed_location.port  # Validate invalid port values.
+    except ValueError as err:
+        raise ValueError(error_msg) from err
+    if host is None:
+        raise ValueError(error_msg)
+    host_with_optional_port = parsed_location.netloc.rsplit("@", 1)[-1]
+    if host_with_optional_port.count(
+        ":"
+    ) > 1 and not host_with_optional_port.startswith("["):
+        raise ValueError(error_msg)
     return await async_get_mac_address_from_host(hass, host)
 
 
@@ -194,7 +225,13 @@ class UpnpFlowHandler(ConfigFlow, domain=DOMAIN):
         # Ensure not already configuring/configured.
         unique_id = discovery_info.ssdp_usn
         await self.async_set_unique_id(unique_id)
-        mac_address = await _async_mac_address_from_discovery(self.hass, discovery_info)
+        try:
+            mac_address = await _async_mac_address_from_discovery(
+                self.hass, discovery_info
+            )
+        except ValueError as err:
+            LOGGER.debug("Invalid UPnP discovery location, ignoring: %s", err)
+            return self.async_abort(reason="invalid_discovery_info")
         host = discovery_info.ssdp_headers["_host"]
         self._abort_if_unique_id_configured(
             # Store mac address and other data for older entries.

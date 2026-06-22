@@ -2,6 +2,7 @@
 
 import copy
 from copy import deepcopy
+import logging
 from unittest.mock import patch
 
 import pytest
@@ -147,6 +148,62 @@ async def test_flow_ssdp_non_igd_device(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "non_igd_device"
+
+
+@pytest.mark.parametrize(
+    "bad_location",
+    [
+        pytest.param("http://fe80::1/rootDesc.xml", id="malformed_ipv6"),
+        pytest.param("http:///rootDesc.xml", id="missing_hostname"),
+    ],
+)
+async def test_flow_ssdp_invalid_discovery_location(
+    hass: HomeAssistant, bad_location: str
+) -> None:
+    """Test config flow aborts invalid SSDP discovery location."""
+    test_discovery = deepcopy(TEST_DISCOVERY)
+    test_discovery.ssdp_location = bad_location
+    test_discovery.ssdp_all_locations = {bad_location}
+    test_discovery.upnp["location"] = bad_location
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=test_discovery,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_flow_ssdp_invalid_discovery_location_redacts_credentials(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test config flow redacts credentials in invalid SSDP discovery logs."""
+    caplog.set_level(logging.DEBUG)
+    test_discovery = deepcopy(TEST_DISCOVERY)
+    bad_location = "http://user:pass@fe80::1/rootDesc.xml?token=abc"
+    test_discovery.ssdp_location = bad_location
+    test_discovery.ssdp_all_locations = {bad_location}
+    test_discovery.upnp["location"] = bad_location
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_SSDP},
+        data=test_discovery,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+    invalid_location_log = next(
+        record.getMessage()
+        for record in caplog.records
+        if "Invalid UPnP discovery location, ignoring" in record.getMessage()
+    )
+    assert "Invalid UPnP discovery location: http://fe80::1" in invalid_location_log
+    assert "user:pass" not in invalid_location_log
+    assert "rootDesc.xml" not in invalid_location_log
+    assert "token=abc" not in invalid_location_log
 
 
 @pytest.mark.usefixtures(
