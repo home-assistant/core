@@ -149,12 +149,11 @@ def _redundant_value_nodes(
         if not isinstance(method, nodes.FunctionDef | nodes.AsyncFunctionDef):
             continue
         if method.name == _PROPERTY_NAME:
-            if isinstance(method, nodes.FunctionDef):
-                hits.extend(
-                    ret.value
-                    for ret in method.nodes_of_class(nodes.Return)
-                    if ret.value is not None and check(ret.value)
-                )
+            hits.extend(
+                ret.value
+                for ret in method.nodes_of_class(nodes.Return)
+                if ret.value is not None and check(ret.value)
+            )
             continue
         for stmt in method.nodes_of_class((nodes.Assign, nodes.AnnAssign)):
             match stmt:
