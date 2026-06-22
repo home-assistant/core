@@ -123,7 +123,7 @@ async def test_number_entities_unavailable_on_error(
 
     await setup_integration(hass, mock_config_entry, [Platform.NUMBER])
 
-    mock_hdfury_client.get_info.side_effect = HDFuryError()
+    mock_hdfury_client.get_config.side_effect = HDFuryError()
 
     freezer.tick(timedelta(seconds=61))
     async_fire_time_changed(hass)

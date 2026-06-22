@@ -12,8 +12,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import HDFuryConfigEntry
 from .const import DOMAIN
-from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 1
@@ -141,12 +141,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up switches using the platform schema."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
         HDFurySwitch(coordinator, description)
         for description in SWITCHES
-        if description.key in coordinator.data.config
+        if description.key in coordinator.data
     )
 
 
@@ -159,7 +159,7 @@ class HDFurySwitch(HDFuryEntity, SwitchEntity):
     def is_on(self) -> bool:
         """Set Switch State."""
 
-        return self.coordinator.data.config.get(self.entity_description.key) == "1"
+        return self.coordinator.data.get(self.entity_description.key) == "1"
 
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Handle Switch On Event."""

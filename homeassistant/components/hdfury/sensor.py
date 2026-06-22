@@ -5,7 +5,7 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import HDFuryConfigEntry
+from . import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 0
@@ -102,12 +102,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors using the platform schema."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.info_coordinator
 
     async_add_entities(
         HDFurySensor(coordinator, description)
         for description in SENSORS
-        if description.key in coordinator.data.info
+        if description.key in coordinator.data
     )
 
 
@@ -120,4 +120,4 @@ class HDFurySensor(HDFuryEntity, SensorEntity):
     def native_value(self) -> str:
         """Set Sensor Value."""
 
-        return self.coordinator.data.info[self.entity_description.key]
+        return self.coordinator.data[self.entity_description.key]

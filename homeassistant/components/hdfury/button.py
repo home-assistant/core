@@ -15,8 +15,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import HDFuryConfigEntry
 from .const import DOMAIN
-from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 1
@@ -52,7 +52,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up buttons using the platform schema."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
         HDFuryButton(coordinator, description) for description in BUTTONS

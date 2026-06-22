@@ -44,7 +44,7 @@ def mock_hdfury_client() -> Generator[AsyncMock]:
             autospec=True,
         ) as mock_cf_client,
         patch(
-            "homeassistant.components.hdfury.coordinator.HDFuryAPI",
+            "homeassistant.components.hdfury.HDFuryAPI",
             autospec=True,
         ) as mock_coord_client,
     ):

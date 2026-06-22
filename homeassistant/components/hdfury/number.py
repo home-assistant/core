@@ -16,8 +16,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import HDFuryConfigEntry
 from .const import DOMAIN
-from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
 
 PARALLEL_UPDATES = 1
@@ -91,12 +91,12 @@ async def async_setup_entry(
 ) -> None:
     """Set up numbers using the platform schema."""
 
-    coordinator = entry.runtime_data
+    coordinator = entry.runtime_data.config_coordinator
 
     async_add_entities(
         HDFuryNumber(coordinator, description)
         for description in NUMBERS
-        if description.key in coordinator.data.config
+        if description.key in coordinator.data
     )
 
 
@@ -109,7 +109,7 @@ class HDFuryNumber(HDFuryEntity, NumberEntity):
     def native_value(self) -> float:
         """Return the current number value."""
 
-        return float(self.coordinator.data.config[self.entity_description.key])
+        return float(self.coordinator.data[self.entity_description.key])
 
     async def async_set_native_value(self, value: float) -> None:
         """Set Number Value Event."""
