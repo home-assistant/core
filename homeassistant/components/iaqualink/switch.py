@@ -2,7 +2,12 @@
 
 from typing import Any
 
-from iaqualink.device import AqualinkSwitch
+from iaqualink.device import (
+    AqualinkDevice,
+    AqualinkLight,
+    AqualinkSwitch,
+    AqualinkThermostat,
+)
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.core import HomeAssistant
@@ -22,12 +27,21 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered switches."""
-    async_add_entities(
-        HassAqualinkSwitch(
-            config_entry.runtime_data.coordinators[dev.system.serial], dev
-        )
-        for dev in config_entry.runtime_data.switches
-    )
+    for coordinator in config_entry.runtime_data.coordinators.values():
+
+        def _async_add_new_devices(
+            devices: list[AqualinkDevice],
+            _coordinator: AqualinkDataUpdateCoordinator = coordinator,
+        ) -> None:
+            async_add_entities(
+                HassAqualinkSwitch(_coordinator, dev)
+                for dev in devices
+                if isinstance(dev, AqualinkSwitch)
+                and not isinstance(dev, (AqualinkThermostat, AqualinkLight))
+            )
+
+        coordinator.new_device_callbacks.append(_async_add_new_devices)
+        _async_add_new_devices(list(coordinator.data.values()))
 
 
 class HassAqualinkSwitch(AqualinkEntity[AqualinkSwitch], SwitchEntity):

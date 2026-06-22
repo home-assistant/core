@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from iaqualink.device import AqualinkLight
+from iaqualink.device import AqualinkDevice, AqualinkLight
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -28,12 +28,20 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up discovered lights."""
-    async_add_entities(
-        HassAqualinkLight(
-            config_entry.runtime_data.coordinators[dev.system.serial], dev
-        )
-        for dev in config_entry.runtime_data.lights
-    )
+    for coordinator in config_entry.runtime_data.coordinators.values():
+
+        def _async_add_new_devices(
+            devices: list[AqualinkDevice],
+            _coordinator: AqualinkDataUpdateCoordinator = coordinator,
+        ) -> None:
+            async_add_entities(
+                HassAqualinkLight(_coordinator, dev)
+                for dev in devices
+                if isinstance(dev, AqualinkLight)
+            )
+
+        coordinator.new_device_callbacks.append(_async_add_new_devices)
+        _async_add_new_devices(list(coordinator.data.values()))
 
 
 class HassAqualinkLight(AqualinkEntity[AqualinkLight], LightEntity):
