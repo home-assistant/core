@@ -15,6 +15,10 @@ from homeassistant.helpers.condition import (
 from . import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED
 from .const import DOMAIN, MediaPlayerState
 
+VOLUME_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL),
+}
+
 
 class _MediaPlayerMutedConditionBase(EntityConditionBase):
     """Base class for media player is_muted/is_unmuted conditions."""
@@ -70,7 +74,7 @@ class MediaPlayerIsUnmutedCondition(_MediaPlayerMutedConditionBase):
 class MediaPlayerIsVolumeCondition(EntityNumericalConditionBase):
     """Condition for media player volume level with 0.0-1.0 to percentage conversion."""
 
-    _domain_specs = {DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL)}
+    _domain_specs = VOLUME_DOMAIN_SPECS
     _valid_unit = "%"
 
     def _get_tracked_value(self, entity_state: State) -> Any:

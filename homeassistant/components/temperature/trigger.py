@@ -25,7 +25,7 @@ from homeassistant.helpers.trigger import (
 )
 from homeassistant.util.unit_conversion import TemperatureConverter
 
-TEMPERATURE_DOMAIN_SPECS = {
+TEMPERATURE_DOMAIN_SPECS: dict[str, DomainSpec] = {
     CLIMATE_DOMAIN: DomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_TEMPERATURE,
     ),
