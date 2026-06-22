@@ -769,6 +769,9 @@
       "energy_usage_this_month": {
         "name": "Energy this month"
       },
+      "energy_usage_today": {
+        "name": "Energy today"
+      },
       "energy_usage_yesterday": {
         "name": "Energy yesterday"
       },
