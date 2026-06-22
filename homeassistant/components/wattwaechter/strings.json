@@ -2,7 +2,9 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "wrong_device": "The re-authenticated device does not match the original WattWächter Plus device."
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -18,6 +20,16 @@
           "token": "The API token for your WattWächter Plus device."
         },
         "title": "Authentication required"
+      },
+      "reauth_confirm": {
+        "data": {
+          "token": "[%key:common::config_flow::data::api_token%]"
+        },
+        "data_description": {
+          "token": "[%key:component::wattwaechter::config::step::auth::data_description::token%]"
+        },
+        "description": "The API token for {host} is no longer valid. Enter a new token to reconnect.",
+        "title": "Re-authenticate WattWächter Plus"
       },
       "user": {
         "data": {
