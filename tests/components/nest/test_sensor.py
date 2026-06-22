@@ -316,7 +316,7 @@ async def test_thermostat_fan_timer_sensor(
     assert fan_timer.attributes.get(ATTR_FRIENDLY_NAME) == "My Sensor Fan timer timeout"
 
     entry = entity_registry.async_get("sensor.my_sensor_fan_timer_timeout")
-    assert entry.unique_id == f"{DEVICE_ID}-timestamp"
+    assert entry.unique_id == f"{DEVICE_ID}-fan-timer"
     assert entry.domain == "sensor"
 
     device = device_registry.async_get(entry.device_id)

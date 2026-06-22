@@ -64,7 +64,6 @@ class SensorBase(SensorEntity):
         """Initialize the sensor."""
         self._device = device
         self._device_info = NestDeviceInfo(device)
-        self._attr_unique_id = f"{device.name}-{self.device_class}"
         self._attr_device_info = self._device_info.device_info
 
     @property
@@ -85,6 +84,11 @@ class TemperatureSensor(SensorBase):
     _attr_device_class = SensorDeviceClass.TEMPERATURE
     _attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
+    def __init__(self, device: Device) -> None:
+        """Initialize the sensor."""
+        super().__init__(device)
+        self._attr_unique_id = f"{device.name}-temperature"
+
     @property
     def native_value(self) -> float:
         """Return the state of the sensor."""
@@ -101,6 +105,11 @@ class HumiditySensor(SensorBase):
     _attr_device_class = SensorDeviceClass.HUMIDITY
     _attr_native_unit_of_measurement = PERCENTAGE
 
+    def __init__(self, device: Device) -> None:
+        """Initialize the sensor."""
+        super().__init__(device)
+        self._attr_unique_id = f"{device.name}-humidity"
+
     @property
     def native_value(self) -> int:
         """Return the state of the sensor."""
@@ -115,6 +124,11 @@ class FanTimerSensor(SensorBase):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
     _attr_state_class = None
     _attr_translation_key = "fan_timer_timeout"
+
+    def __init__(self, device: Device) -> None:
+        """Initialize the sensor."""
+        super().__init__(device)
+        self._attr_unique_id = f"{device.name}-fan-timer"
 
     @property
     def native_value(self) -> datetime | None:
