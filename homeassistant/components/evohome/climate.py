@@ -480,7 +480,7 @@ class EvoController(EvoClimateEntity):
         """Handle updated data from the coordinator."""
 
         self._device_state_attrs = {
-            "ActiveSystemFaults": _dt_to_iso(
+            "activeSystemFaults": _dt_to_iso(
                 self._evo_device.active_faults + self._evo_device.gateway.active_faults
             )
         }
