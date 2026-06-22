@@ -5,5 +5,18 @@
     'friendly_name': 'Station Somewhere Street 1 Status',
     'latitude': 51.1,
     'longitude': 13.1,
+    'opening_times': list([
+      dict({
+        'end': '22:00:00',
+        'start': '06:00:00',
+        'text': 'Mo-Fr',
+      }),
+      dict({
+        'end': '20:00:00',
+        'start': '08:00:00',
+        'text': 'Sa-So',
+      }),
+    ]),
+    'whole_day': True,
   })
 # ---
