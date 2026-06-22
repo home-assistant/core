@@ -11,7 +11,7 @@ on:
   pull_request:
     types: [opened, synchronize, reopened]
     paths:
-      - "**/requirements*.txt"
+      - "requirements*.txt"
       - "homeassistant/package_constraints.txt"
   workflow_dispatch:
     inputs:
