@@ -336,7 +336,7 @@ aiolyric==2.1.1
 aiomealie==1.2.4
 
 # homeassistant.components.melcloud_home
-aiomelcloudhome==0.1.8
+aiomelcloudhome==0.1.9
 
 # homeassistant.components.modern_forms
 aiomodernforms==0.1.8
@@ -800,7 +800,7 @@ crownstone-sse==2.0.5
 crownstone-uart==2.1.0
 
 # homeassistant.components.data_grand_lyon
-data-grand-lyon-ha==0.8.0
+data-grand-lyon-ha==0.9.0
 
 # homeassistant.components.datadog
 datadog==0.52.1
@@ -1377,7 +1377,7 @@ influxdb-client==1.50.0
 influxdb==5.3.2
 
 # homeassistant.components.infrared
-infrared-protocols==6.1.0
+infrared-protocols==6.3.0
 
 # homeassistant.components.inkbird
 inkbird-ble==1.4.4
@@ -1417,7 +1417,7 @@ jellyfin-apiclient-python==1.11.0
 
 # homeassistant.components.command_line
 # homeassistant.components.rest
-jsonpath==0.82.2
+jsonpath-python==1.1.6
 
 # homeassistant.components.justnimbus
 justnimbus==0.7.4
@@ -1631,7 +1631,7 @@ mozart-api==6.2.0.44.0
 mullvad-api==1.0.0
 
 # homeassistant.components.music_assistant
-music-assistant-client==1.3.5
+music-assistant-client==1.3.6
 
 # homeassistant.components.tts
 mutagen==1.47.0
@@ -1797,7 +1797,7 @@ openwrt-luci-rpc==1.1.17
 openwrt-ubus-rpc==0.0.3
 
 # homeassistant.components.opower
-opower==0.18.5
+opower==0.18.6
 
 # homeassistant.components.oralb
 oralb-ble==1.1.0
@@ -2030,7 +2030,7 @@ pyairobotrest==0.3.0
 pyairvisual==2023.08.1
 
 # homeassistant.components.anglian_water
-pyanglianwater==3.1.2
+pyanglianwater==3.2.2
 
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
@@ -2450,7 +2450,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.0.1
+pyoverkiz[nexity]==2.0.2
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
@@ -2633,7 +2633,7 @@ python-awair==0.2.5
 python-blockchain-api==0.0.2
 
 # homeassistant.components.bsblan
-python-bsblan==6.0.1
+python-bsblan==6.1.3
 
 # homeassistant.components.citybikes
 python-citybikes==0.3.3
@@ -3112,7 +3112,7 @@ statsd==3.2.1
 steamloop==1.2.1
 
 # homeassistant.components.steam_online
-steamodd==4.21
+steamodd==5.0
 
 # homeassistant.components.stookwijzer
 stookwijzer==1.6.1
@@ -3193,9 +3193,6 @@ thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.12
-
-# homeassistant.components.tikteck
-tikteck==0.4
 
 # homeassistant.components.tilt_ble
 tilt-ble==1.0.1
@@ -3411,7 +3408,7 @@ wyoming==1.9.0
 xiaomi-ble==1.11.0
 
 # homeassistant.components.knx
-xknx==3.15.0
+xknx==3.16.0
 
 # homeassistant.components.knx
 xknxproject==3.9.0

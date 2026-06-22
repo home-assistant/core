@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from yoto_api import YotoPlayer
 
@@ -82,6 +83,7 @@ class YotoBinarySensor(YotoPlayerEntity, BinarySensorEntity):
         self._attr_unique_id = f"{player.id}_{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the binary sensor state."""
         return self.entity_description.is_on_fn(self.player)

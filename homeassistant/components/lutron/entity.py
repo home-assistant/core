@@ -1,5 +1,7 @@
 """Base class for Lutron devices."""
 
+from typing import override
+
 from pylutron import Keypad, Lutron, LutronEntity, LutronEvent
 
 from homeassistant.const import ATTR_IDENTIFIERS, ATTR_VIA_DEVICE
@@ -23,6 +25,7 @@ class LutronBaseEntity(Entity):
         self._controller = controller
         self._area_name = area_name
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self._lutron_device.subscribe(self._update_callback, None)
@@ -41,6 +44,7 @@ class LutronBaseEntity(Entity):
         self.schedule_update_ha_state()
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         device_uuid = self._lutron_device.uuid or self._lutron_device.legacy_uuid

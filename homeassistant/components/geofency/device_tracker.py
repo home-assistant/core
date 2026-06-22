@@ -1,5 +1,7 @@
 """Support for the Geofency device tracker platform."""
 
+from typing import override
+
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
 from homeassistant.core import HomeAssistant, callback
@@ -73,6 +75,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
             name=device,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register state update callback."""
         await super().async_added_to_hass()
@@ -92,6 +95,7 @@ class GeofencyEntity(TrackerEntity, RestoreEntity):
         self._attr_latitude = attr.get(ATTR_LATITUDE)
         self._attr_longitude = attr.get(ATTR_LONGITUDE)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up after entity before removal."""
         await super().async_will_remove_from_hass()

@@ -4,6 +4,7 @@ from asyncio import sleep as asyncio_sleep
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
@@ -392,6 +393,7 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         for listener, _ in self._listeners.values():
             listener()
 
+    @override
     async def _async_update_data(self) -> HomeConnectApplianceData:
         """Fetch data from Home Connect."""
         while True:

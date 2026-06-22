@@ -1,6 +1,6 @@
 """Config flow for the energieleser integration."""
 
-from typing import Any
+from typing import Any, override
 
 from energieleser import (
     EnergieleserClient,
@@ -35,6 +35,7 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_device_type: str
     _discovered_sw_version: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -69,6 +70,7 @@ class EnergieleserConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

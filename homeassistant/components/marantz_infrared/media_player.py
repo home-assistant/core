@@ -1,7 +1,7 @@
 """Media player platform for Marantz IR integration."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from infrared_protocols.codes.marantz.audio import MarantzAudioCode
 
@@ -51,6 +51,7 @@ class _MarantzAmplifierExtraData(ExtraStoredData):
     source: str | None
     is_volume_muted: bool | None
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Serialize for the restore-state store."""
         return {"source": self.source, "is_volume_muted": self.is_volume_muted}
@@ -93,6 +94,7 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
         self._attr_supported_features = features
 
     @property
+    @override
     def extra_restore_state_data(self) -> ExtraStoredData:
         """Persist source and mute regardless of ON/OFF state."""
         return _MarantzAmplifierExtraData(
@@ -100,6 +102,7 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
             is_volume_muted=self._attr_is_volume_muted,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last known assumed state, source, and mute."""
         await super().async_added_to_hass()
@@ -116,26 +119,31 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
             if (muted := data.get("is_volume_muted")) is not None:
                 self._attr_is_volume_muted = bool(muted)
 
+    @override
     async def async_turn_on(self) -> None:
         """Send discrete power-on command."""
         await self._send_marantz_command(MarantzAudioCode.POWER_ON, repeat_count=5)
         self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Send discrete power-off command."""
         await self._send_marantz_command(MarantzAudioCode.POWER_OFF)
         self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
 
+    @override
     async def async_volume_up(self) -> None:
         """Send volume up command."""
         await self._send_marantz_command(MarantzAudioCode.VOLUME_UP)
 
+    @override
     async def async_volume_down(self) -> None:
         """Send volume down command."""
         await self._send_marantz_command(MarantzAudioCode.VOLUME_DOWN)
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send discrete mute-on or mute-off command."""
         await self._send_marantz_command(
@@ -144,6 +152,7 @@ class MarantzIrAmplifierMediaPlayer(MarantzIrEntity, MediaPlayerEntity, RestoreE
         self._attr_is_volume_muted = mute
         self.async_write_ha_state()
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select an input source."""
         await self._send_marantz_command(self._source_to_code[source])

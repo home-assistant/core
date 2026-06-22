@@ -3,7 +3,7 @@
 from collections.abc import Callable, Coroutine
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientConnectorError, ServerDisconnectedError
 from pyoverkiz.client import OverkizClient
@@ -87,6 +87,7 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             and device.ui_class not in IGNORED_OVERKIZ_DEVICES
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Device]:
         """Fetch Overkiz data via event listener."""
         try:

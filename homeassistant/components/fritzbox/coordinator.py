@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from pyfritzhome import Fritzhome, FritzhomeDevice, LoginError
 from pyfritzhome.devicetypes import FritzhomeTemplate, FritzhomeTrigger
@@ -181,6 +182,7 @@ class FritzboxDataUpdateCoordinator(DataUpdateCoordinator[FritzboxCoordinatorDat
             supported_color_properties=supported_color_properties,
         )
 
+    @override
     async def _async_update_data(self) -> FritzboxCoordinatorData:
         """Fetch all device data."""
         try:
