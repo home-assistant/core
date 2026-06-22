@@ -159,6 +159,51 @@ async def test_step_auth(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == "1601500000000000"
 
 
+async def test_step_auth_cannot_connect(hass: HomeAssistant) -> None:
+    """Test we get the authentication form with error if we can not connect to device."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            side_effect=MyPVAuthenticationError(),
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "127.0.0.1",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert not result["errors"]
+
+    with (
+        patch(
+            "homeassistant.components.my_pv.MyPVLocalDevice.connect",
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_PASSWORD: "test-password",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"]["base"] == "cannot_connect"
+
+
 async def test_step_dhcp(hass: HomeAssistant) -> None:
     """Test for DHCP discovery that does not require a password."""
 
