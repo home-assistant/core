@@ -8,10 +8,27 @@ from pydrawise import auth as pydrawise_auth, hybrid
 from pydrawise.exceptions import NotAuthorizedError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+)
 
-from .const import APP_ID, DOMAIN, LOGGER
+from .const import (
+    APP_ID,
+    CONF_GQL_TOKENS_PER_EPOCH,
+    DEFAULT_GQL_TOKENS_PER_EPOCH,
+    DOMAIN,
+    LOGGER,
+)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -30,6 +47,14 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
     MINOR_VERSION = 2
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> HydrawiseOptionsFlow:
+        """Get the options flow for this handler."""
+        return HydrawiseOptionsFlow()
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -94,6 +119,35 @@ class HydrawiseConfigFlow(ConfigFlow, domain=DOMAIN):
     def _show_reauth_form(self, errors: dict[str, str]) -> ConfigFlowResult:
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=STEP_REAUTH_DATA_SCHEMA, errors=errors
+        )
+
+
+class HydrawiseOptionsFlow(OptionsFlowWithReload):
+    """Handle Hydrawise options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the Hydrawise options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_GQL_TOKENS_PER_EPOCH,
+                        default=self.config_entry.options.get(
+                            CONF_GQL_TOKENS_PER_EPOCH, DEFAULT_GQL_TOKENS_PER_EPOCH
+                        ),
+                    ): NumberSelector(
+                        NumberSelectorConfig(
+                            min=1, max=30, step=1, mode=NumberSelectorMode.BOX
+                        )
+                    ),
+                }
+            ),
         )
 
 

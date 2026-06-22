@@ -8,7 +8,7 @@ from pydrawise.schema import User
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.hydrawise.const import DOMAIN
+from homeassistant.components.hydrawise.const import CONF_GQL_TOKENS_PER_EPOCH, DOMAIN
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -245,3 +245,25 @@ async def test_reauth_fails(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_added_config_entry: MockConfigEntry,
+) -> None:
+    """Test the options flow sets the GraphQL throttle limit."""
+    result = await hass.config_entries.options.async_init(
+        mock_added_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_GQL_TOKENS_PER_EPOCH: 15},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_GQL_TOKENS_PER_EPOCH: 15}
+    assert mock_added_config_entry.options == {CONF_GQL_TOKENS_PER_EPOCH: 15}

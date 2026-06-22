@@ -1,12 +1,18 @@
 """Support for Hydrawise cloud."""
 
 from pydrawise import auth, hybrid
+from pydrawise.hybrid import Throttler
 
 from homeassistant.const import CONF_API_KEY, CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 
-from .const import APP_ID
+from .const import (
+    APP_ID,
+    CONF_GQL_TOKENS_PER_EPOCH,
+    DEFAULT_GQL_TOKENS_PER_EPOCH,
+    GQL_THROTTLE_EPOCH,
+)
 from .coordinator import (
     HydrawiseConfigEntry,
     HydrawiseMainDataUpdateCoordinator,
@@ -32,6 +38,11 @@ async def async_setup_entry(
         # If we are missing any required authentication keys, trigger a reauth flow.
         raise ConfigEntryAuthFailed
 
+    tokens_per_epoch = int(
+        config_entry.options.get(
+            CONF_GQL_TOKENS_PER_EPOCH, DEFAULT_GQL_TOKENS_PER_EPOCH
+        )
+    )
     hydrawise = hybrid.HybridClient(
         auth.HybridAuth(
             config_entry.data[CONF_USERNAME],
@@ -39,6 +50,10 @@ async def async_setup_entry(
             config_entry.data[CONF_API_KEY],
         ),
         app_id=APP_ID,
+        gql_throttle=Throttler(
+            epoch_interval=GQL_THROTTLE_EPOCH,
+            tokens_per_epoch=tokens_per_epoch,
+        ),
     )
 
     main_coordinator = HydrawiseMainDataUpdateCoordinator(hass, config_entry, hydrawise)
