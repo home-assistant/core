@@ -142,6 +142,50 @@ async def test_flow_reauth(
     assert len(hass.config_entries.async_entries()) == 1
 
 
+@pytest.mark.parametrize(
+    ("side_effect", "error_msg"),
+    [
+        (steam.api.HTTPTimeoutError, "cannot_connect"),
+        (steam.api.HTTPError("403"), "invalid_auth"),
+        (ValueError, "unknown"),
+        ([{"response": {"players": {"player": [None]}}}], "invalid_account"),
+    ],
+)
+async def test_flow_reauth_errors(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    steam_api: MagicMock,
+    side_effect: Exception | dict[str, Any],
+    error_msg: str,
+) -> None:
+    """Test reauth step with errors."""
+    config_entry.add_to_hass(hass)
+
+    result = await config_entry.start_reauth_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    steam_api.return_value.GetPlayerSummaries.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "1234567890"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error_msg}
+
+    steam_api.return_value.GetPlayerSummaries.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "1234567890"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert config_entry.data == {**CONF_DATA, CONF_API_KEY: "1234567890"}
+
+    assert len(hass.config_entries.async_entries()) == 1
+
+
 @pytest.mark.usefixtures("steam_api")
 async def test_options_flow(
     hass: HomeAssistant,
