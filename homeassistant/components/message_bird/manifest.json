@@ -6,5 +6,5 @@
   "iot_class": "cloud_push",
   "loggers": ["messagebird"],
   "quality_scale": "legacy",
-  "requirements": ["messagebird==1.2.0"]
+  "requirements": ["messagebird==1.2.1"]
 }

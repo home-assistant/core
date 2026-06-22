@@ -520,6 +520,11 @@ ZEROCONF = {
             "domain": "freebox",
         },
     ],
+    "_gasleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast",
@@ -996,6 +1001,11 @@ ZEROCONF = {
             "domain": "cambridge_audio",
         },
     ],
+    "_stromleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
@@ -1035,6 +1045,21 @@ ZEROCONF = {
     "_viziocast._tcp.local.": [
         {
             "domain": "vizio",
+        },
+    ],
+    "_waermeleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
+    "_wasserleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
+    "_wattwaechter._tcp.local.": [
+        {
+            "domain": "wattwaechter",
         },
     ],
     "_wled._tcp.local.": [

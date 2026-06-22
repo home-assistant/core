@@ -122,6 +122,21 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_rexel_config_entry() -> MockConfigEntry:
+    """Return a Rexel config entry backed by an OAuth2 token bundle."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={
+            "auth_implementation": DOMAIN,
+            "token": {"access_token": "mock-access-token"},
+            "hub": "rexel",
+            "gateway_id": TEST_GATEWAY_ID,
+        },
+    )
+
+
+@pytest.fixture
 def mock_client() -> MockOverkizClient:
     """Return a configurable mock Overkiz client."""
     return MockOverkizClient()
