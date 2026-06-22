@@ -34,7 +34,7 @@
       ]),
       'operation_mode': 'off',
       'status': dict({
-        'active_faults': tuple(
+        'ActiveFaults': tuple(
         ),
         'dhw_id': '3933910',
         'setpoints': dict({
@@ -80,7 +80,7 @@
       ]),
       'operation_mode': 'off',
       'status': dict({
-        'active_faults': tuple(
+        'ActiveFaults': tuple(
         ),
         'dhw_id': '3933910',
         'setpoints': dict({

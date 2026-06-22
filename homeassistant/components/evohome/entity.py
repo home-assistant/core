@@ -185,7 +185,7 @@ class EvoChild(EvoEntity):
         """Handle updated data from the coordinator."""
 
         self._device_state_attrs = {
-            "active_faults": _dt_to_iso(self._evo_device.active_faults),
+            "ActiveFaults": _dt_to_iso(self._evo_device.active_faults),
             "setpoints": self.setpoints,
         }
 
