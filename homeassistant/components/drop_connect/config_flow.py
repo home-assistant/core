@@ -6,13 +6,13 @@ from typing import TYPE_CHECKING, Any
 from dropmqttapi.discovery import DropDiscovery
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.helpers.service_info.mqtt import MqttServiceInfo
 
 from .const import (
     CONF_COMMAND_TOPIC,
     CONF_DATA_TOPIC,
     CONF_DEVICE_DESC,
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_DEVICE_OWNER_ID,
     CONF_DEVICE_TYPE,

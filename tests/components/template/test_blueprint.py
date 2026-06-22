@@ -138,7 +138,7 @@ async def test_inverted_binary_sensor(
     ):
         assert await async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": [
                     {
@@ -396,7 +396,7 @@ async def test_trigger_event_sensor(
     """Test event sensor blueprint."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {
@@ -475,7 +475,7 @@ async def test_blueprint_template_override(
     """Test blueprint template where the template config overrides the blueprint."""
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {
@@ -591,7 +591,7 @@ async def test_invalid_blueprint(
     with blueprint_patch():
         assert await async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": [
                     {
@@ -617,7 +617,7 @@ async def test_no_blueprint(hass: HomeAssistant) -> None:
     ):
         assert await async_setup_component(
             hass,
-            "template",
+            DOMAIN,
             {
                 "template": [
                     {"binary_sensor": {"name": "test entity", "state": "off"}},
@@ -677,7 +677,7 @@ async def test_variables_for_entity(
 
     assert await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [
                 {

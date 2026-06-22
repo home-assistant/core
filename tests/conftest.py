@@ -1074,7 +1074,9 @@ def mqtt_client_mock(hass: HomeAssistant) -> Generator[MqttMockPahoClient]:
 
         @ha.callback
         def _async_fire_mqtt_message(topic, payload, qos, retain, properties=None):
-            async_fire_mqtt_message(hass, topic, payload or b"", qos, retain)
+            async_fire_mqtt_message(
+                hass, topic, payload or b"", qos, retain, properties=properties
+            )
             mid = get_mid()
             hass.loop.call_soon(
                 mock_client.on_publish, Mock(), 0, mid, MockMqttReasonCode(), None

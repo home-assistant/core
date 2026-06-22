@@ -9,7 +9,6 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.energyid.config_flow import EnergyIDConfigFlow
 from homeassistant.components.energyid.const import (
-    CONF_DEVICE_ID,
     CONF_DEVICE_NAME,
     CONF_PROVISIONING_KEY,
     CONF_PROVISIONING_SECRET,
@@ -18,6 +17,7 @@ from homeassistant.components.energyid.const import (
 from homeassistant.components.energyid.energyid_sensor_mapping_flow import (
     EnergyIDSensorMappingFlowHandler,
 )
+from homeassistant.const import CONF_DEVICE_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 

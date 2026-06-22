@@ -300,7 +300,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="battery_status.percentage",
+        ufp_public_value="wireless_connection_state.battery_status.percentage",
     ),
     ProtectSensorEntityDescription(
         key="light_level",
@@ -367,24 +367,6 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         ufp_value="mount_type",
         ufp_perm=PermRequired.NO_WRITE,
-    ),
-    ProtectSensorEntityDescription(
-        key="paired_camera",
-        translation_key="paired_camera",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        ufp_value="camera.display_name",
-        ufp_perm=PermRequired.NO_WRITE,
-    ),
-)
-
-DOORLOCK_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
-    ProtectSensorEntityDescription(
-        key="battery_level",
-        native_unit_of_measurement=PERCENTAGE,
-        device_class=SensorDeviceClass.BATTERY,
-        entity_category=EntityCategory.DIAGNOSTIC,
-        state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="battery_status.percentage",
     ),
     ProtectSensorEntityDescription(
         key="paired_camera",
@@ -581,7 +563,6 @@ _MODEL_DESCRIPTIONS: dict[ModelType, Sequence[ProtectEntityDescription]] = {
     ModelType.CAMERA: CAMERA_SENSORS + CAMERA_DISABLED_SENSORS,
     ModelType.SENSOR: SENSE_SENSORS,
     ModelType.LIGHT: LIGHT_SENSORS,
-    ModelType.DOORLOCK: DOORLOCK_SENSORS,
     ModelType.CHIME: CHIME_SENSORS,
     ModelType.VIEWPORT: VIEWER_SENSORS,
 }
@@ -666,7 +647,9 @@ class BaseProtectSensor(BaseProtectEntity, SensorEntity):
 
     def _async_update_device_from_protect(self, device: ProtectDeviceType) -> None:
         super()._async_update_device_from_protect(device)
-        self._attr_native_value = self.entity_description.get_ufp_value(self.device)
+        self._attr_native_value = self.entity_description.get_value(
+            self.device, self._ufp_public_obj
+        )
 
 
 class ProtectDeviceSensor(BaseProtectSensor, ProtectDeviceEntity):

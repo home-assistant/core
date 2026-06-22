@@ -6,7 +6,7 @@ from typing import Any, TypedDict
 import voluptuous as vol
 
 from homeassistant.components.script import CONF_MODE
-from homeassistant.const import CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
+from homeassistant.const import CONF_ACTION, CONF_DESCRIPTION, CONF_TYPE, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
@@ -29,8 +29,6 @@ CONF_INTENTS = "intents"
 CONF_SPEECH = "speech"
 CONF_REPROMPT = "reprompt"
 
-# pylint: disable-next=home-assistant-duplicate-const
-CONF_ACTION = "action"
 CONF_CARD = "card"
 CONF_TITLE = "title"
 CONF_CONTENT = "content"

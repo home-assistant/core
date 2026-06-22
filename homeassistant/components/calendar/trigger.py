@@ -27,7 +27,12 @@ from homeassistant.helpers.event import (
     async_track_time_interval,
 )
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
-from homeassistant.helpers.trigger import Trigger, TriggerActionRunner, TriggerConfig
+from homeassistant.helpers.trigger import (
+    Trigger,
+    TriggerActionRunner,
+    TriggerConfig,
+    TriggerNotTriggeredReporter,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -393,7 +398,9 @@ class SingleEntityEventTrigger(Trigger):
         self._options = config.options
 
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
@@ -444,7 +451,9 @@ class EventTrigger(Trigger):
         self._options = config.options
 
     async def async_attach_runner(
-        self, run_action: TriggerActionRunner
+        self,
+        run_action: TriggerActionRunner,
+        did_not_trigger: TriggerNotTriggeredReporter | None = None,
     ) -> CALLBACK_TYPE:
         """Attach a trigger."""
 
@@ -460,7 +469,7 @@ class EventTrigger(Trigger):
         listener = TargetCalendarEventListener(
             self._hass, target_selection, self._event_type, offset, run_action
         )
-        return listener.async_setup()
+        return await listener.async_setup()
 
 
 class EventStartedTrigger(EventTrigger):

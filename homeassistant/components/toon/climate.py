@@ -66,7 +66,7 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
             PRESET_SLEEP,
         ]
         self._attr_unique_id = (
-            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_climate"
+            f"{DOMAIN}_{coordinator.data.agreement.agreement_id}_climate"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         )
 
     @property
@@ -102,14 +102,12 @@ class ToonThermostatDevice(ToonDisplayDeviceEntity, ClimateEntity):
         """Return the current state of the burner."""
         return {"heating_type": self.coordinator.data.agreement.heating_type}
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Change the setpoint of the thermostat."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
         await self.coordinator.toon.set_current_setpoint(temperature)
 
-    # pylint: disable-next=home-assistant-action-swallowed-exception
     @toon_exception_handler
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""

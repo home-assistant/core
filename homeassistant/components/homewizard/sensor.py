@@ -633,6 +633,32 @@ SENSORS: Final[tuple[HomeWizardSensorEntityDescription, ...]] = (
         value_fn=lambda data: data.measurement.cycles,
     ),
     HomeWizardSensorEntityDescription(
+        key="battery_group_power_w",
+        translation_key="battery_group_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        has_fn=lambda data: data.batteries is not None,
+        value_fn=lambda data: (
+            data.batteries.power_w if data.batteries is not None else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
+        key="battery_group_target_power_w",
+        translation_key="battery_group_target_power_w",
+        native_unit_of_measurement=UnitOfPower.WATT,
+        device_class=SensorDeviceClass.POWER,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=0,
+        entity_registry_enabled_default=False,
+        has_fn=lambda data: data.batteries is not None,
+        value_fn=lambda data: (
+            data.batteries.target_power_w if data.batteries is not None else None
+        ),
+    ),
+    HomeWizardSensorEntityDescription(
         key="uptime",
         translation_key="uptime",
         device_class=SensorDeviceClass.UPTIME,
@@ -801,7 +827,7 @@ class HomeWizardExternalSensorEntity(HomeWizardEntity, SensorEntity):
         self.entity_description = description
         self._device_id = device_unique_id
         self._suggested_device_class = description.suggested_device_class
-        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"
+        self._attr_unique_id = f"{DOMAIN}_{device_unique_id}"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, device_unique_id)},
             name=description.device_name,

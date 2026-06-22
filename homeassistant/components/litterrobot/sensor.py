@@ -166,6 +166,22 @@ ROBOT_SENSOR_MAP: dict[
             value_fn=lambda robot: robot.pet_weight,
         ),
     ],
+    LitterRobot5: [
+        RobotSensorEntityDescription[LitterRobot5](
+            key="scoops_saved_count",
+            translation_key="scoops_saved_count",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            state_class=SensorStateClass.TOTAL_INCREASING,
+            value_fn=lambda robot: robot.scoops_saved_count,
+        ),
+        RobotSensorEntityDescription[LitterRobot5](
+            key="next_filter_replacement",
+            translation_key="next_filter_replacement",
+            device_class=SensorDeviceClass.TIMESTAMP,
+            entity_category=EntityCategory.DIAGNOSTIC,
+            value_fn=lambda robot: robot.next_filter_replacement_date,
+        ),
+    ],
     FeederRobot: [
         RobotSensorEntityDescription[FeederRobot](
             key="food_dispensed_today",

@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta
 from decimal import Decimal, InvalidOperation
 from enum import Enum
 import logging
@@ -49,6 +49,7 @@ from homeassistant.helpers.event import (
     async_track_state_report_event,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_MAX_SUB_INTERVAL,
@@ -339,7 +340,7 @@ class IntegrationSensor(RestoreSensor):
             else max_sub_interval
         )
         self._max_sub_interval_exceeded_callback: CALLBACK_TYPE = lambda *args: None
-        self._last_integration_time: datetime = datetime.now(tz=UTC)
+        self._last_integration_time: datetime = dt_util.utcnow()
         self._last_integration_trigger = _IntegrationTrigger.StateEvent
         self._attr_suggested_display_precision = round_digits or 2
 
@@ -498,7 +499,7 @@ class IntegrationSensor(RestoreSensor):
                 old_timestamp, new_timestamp, old_state, new_state
             )
             self._last_integration_trigger = _IntegrationTrigger.StateEvent
-            self._last_integration_time = datetime.now(tz=UTC)
+            self._last_integration_time = dt_util.utcnow()
         finally:
             # When max_sub_interval exceeds without state change the source is assumed
             # constant with the last known state (new_state).
@@ -606,7 +607,7 @@ class IntegrationSensor(RestoreSensor):
                 self._update_integral(area)
                 self.async_write_ha_state()
 
-                self._last_integration_time = datetime.now(tz=UTC)
+                self._last_integration_time = dt_util.utcnow()
                 self._last_integration_trigger = _IntegrationTrigger.TimeElapsed
 
                 self._schedule_max_sub_interval_exceeded_if_state_is_numeric(

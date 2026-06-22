@@ -5,7 +5,7 @@ Reads position data from PajGpsCoordinator and exposes it as a TrackerEntity.
 
 import logging
 
-from homeassistant.components.device_tracker.config_entry import TrackerEntity
+from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
