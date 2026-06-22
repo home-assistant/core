@@ -1631,7 +1631,7 @@ mozart-api==6.2.0.44.0
 mullvad-api==1.0.0
 
 # homeassistant.components.music_assistant
-music-assistant-client==1.3.5
+music-assistant-client==1.3.6
 
 # homeassistant.components.tts
 mutagen==1.47.0
@@ -3112,7 +3112,7 @@ statsd==3.2.1
 steamloop==1.2.1
 
 # homeassistant.components.steam_online
-steamodd==4.21
+steamodd==5.0
 
 # homeassistant.components.stookwijzer
 stookwijzer==1.6.1
@@ -3193,9 +3193,6 @@ thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.12
-
-# homeassistant.components.tikteck
-tikteck==0.4
 
 # homeassistant.components.tilt_ble
 tilt-ble==1.0.1
@@ -3411,7 +3408,7 @@ wyoming==1.9.0
 xiaomi-ble==1.11.0
 
 # homeassistant.components.knx
-xknx==3.15.0
+xknx==3.16.0
 
 # homeassistant.components.knx
 xknxproject==3.9.0
