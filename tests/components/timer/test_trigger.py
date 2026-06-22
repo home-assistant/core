@@ -59,7 +59,7 @@ async def target_timers(hass: HomeAssistant) -> dict[str, list[str]]:
         ("timer.paused", {}, True, True),
         ("timer.restarted", {}, True, True),
         ("timer.started", {}, True, True),
-        ("timer.time_remaining", {"remaining": {"hours": 1}}, False, False),
+        ("timer.remaining_time_reached", {"remaining": {"hours": 1}}, False, False),
     ],
 )
 async def test_timer_trigger_options_validation(
@@ -266,7 +266,7 @@ async def _arm_time_remaining_trigger(
         hass,
         [
             {
-                CONF_PLATFORM: "timer.time_remaining",
+                CONF_PLATFORM: "timer.remaining_time_reached",
                 CONF_TARGET: target or {CONF_ENTITY_ID: entity_id},
                 CONF_OPTIONS: {"remaining": remaining},
             }
@@ -299,7 +299,7 @@ async def test_time_remaining_trigger_validation(hass: HomeAssistant) -> None:
         hass,
         [
             {
-                CONF_PLATFORM: "timer.time_remaining",
+                CONF_PLATFORM: "timer.remaining_time_reached",
                 CONF_TARGET: {CONF_ENTITY_ID: "timer.test"},
                 CONF_OPTIONS: {"remaining": {"seconds": 30}},
             }
@@ -312,7 +312,7 @@ async def test_time_remaining_trigger_validation(hass: HomeAssistant) -> None:
             hass,
             [
                 {
-                    CONF_PLATFORM: "timer.time_remaining",
+                    CONF_PLATFORM: "timer.remaining_time_reached",
                     CONF_TARGET: {CONF_ENTITY_ID: "timer.test"},
                     CONF_OPTIONS: {},
                 }

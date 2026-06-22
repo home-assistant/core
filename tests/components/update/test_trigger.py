@@ -29,7 +29,7 @@ async def target_updates(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("update.update_became_available", {}, True, True),
+        ("update.became_available", {}, True, True),
     ],
 )
 async def test_update_trigger_options_validation(
@@ -57,7 +57,7 @@ async def test_update_trigger_options_validation(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="update.update_became_available",
+            trigger="update.became_available",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
@@ -94,7 +94,7 @@ async def test_update_state_trigger_behavior_each(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="update.update_became_available",
+            trigger="update.became_available",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),
@@ -131,7 +131,7 @@ async def test_update_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="update.update_became_available",
+            trigger="update.became_available",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
         ),

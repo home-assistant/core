@@ -51,8 +51,8 @@ _LEVEL_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 5
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("battery.low", {}, True, True),
-        ("battery.not_low", {}, True, True),
+        ("battery.became_low", {}, True, True),
+        ("battery.no_longer_low", {}, True, True),
         ("battery.started_charging", {}, True, True),
         ("battery.stopped_charging", {}, True, True),
         ("battery.level_changed", _LEVEL_CHANGED_THRESHOLD, False, False),
@@ -84,14 +84,14 @@ async def test_battery_trigger_options_validation(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="battery.low",
+            trigger="battery.became_low",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="battery.not_low",
+            trigger="battery.no_longer_low",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
@@ -144,14 +144,14 @@ async def test_battery_binary_sensor_trigger_behavior_each(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="battery.low",
+            trigger="battery.became_low",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="battery.not_low",
+            trigger="battery.no_longer_low",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
@@ -204,14 +204,14 @@ async def test_battery_binary_sensor_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="battery.low",
+            trigger="battery.became_low",
             target_states=[STATE_ON],
             other_states=[STATE_OFF],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},
             trigger_from_none=False,
         ),
         *parametrize_trigger_states(
-            trigger="battery.not_low",
+            trigger="battery.no_longer_low",
             target_states=[STATE_OFF],
             other_states=[STATE_ON],
             required_filter_attributes={ATTR_DEVICE_CLASS: "battery"},

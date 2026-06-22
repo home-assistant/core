@@ -64,7 +64,7 @@
   },
   "title": "Schedule",
   "triggers": {
-    "turned_off": {
+    "block_ended": {
       "description": "Triggers when a schedule block ends.",
       "fields": {
         "behavior": {
@@ -76,7 +76,7 @@
       },
       "name": "Schedule block ended"
     },
-    "turned_on": {
+    "block_started": {
       "description": "Triggers when a schedule block starts.",
       "fields": {
         "behavior": {

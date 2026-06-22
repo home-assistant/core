@@ -29,7 +29,7 @@ async def target_vacuums(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("vacuum.docked", {}, True, True),
+        ("vacuum.returned_to_dock", {}, True, True),
         ("vacuum.errored", {}, True, True),
         ("vacuum.paused_cleaning", {}, True, True),
         ("vacuum.started_cleaning", {}, True, True),
@@ -61,7 +61,7 @@ async def test_vacuum_trigger_options_validation(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="vacuum.docked",
+            trigger="vacuum.returned_to_dock",
             target_states=[VacuumActivity.DOCKED],
             other_states=other_states(VacuumActivity.DOCKED),
         ),
@@ -118,7 +118,7 @@ async def test_vacuum_state_trigger_behavior_each(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="vacuum.docked",
+            trigger="vacuum.returned_to_dock",
             target_states=[VacuumActivity.DOCKED],
             other_states=other_states(VacuumActivity.DOCKED),
         ),
@@ -175,7 +175,7 @@ async def test_vacuum_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="vacuum.docked",
+            trigger="vacuum.returned_to_dock",
             target_states=[VacuumActivity.DOCKED],
             other_states=other_states(VacuumActivity.DOCKED),
         ),

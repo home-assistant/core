@@ -113,7 +113,7 @@
   },
   "title": "Update",
   "triggers": {
-    "update_became_available": {
+    "became_available": {
       "description": "Triggers after one or more updates become available.",
       "fields": {
         "behavior": {

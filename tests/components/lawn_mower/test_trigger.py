@@ -29,7 +29,7 @@ async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
 @pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("lawn_mower.docked", {}, True, True),
+        ("lawn_mower.returned_to_dock", {}, True, True),
         ("lawn_mower.errored", {}, True, True),
         ("lawn_mower.paused_mowing", {}, True, True),
         ("lawn_mower.started_mowing", {}, True, True),
@@ -61,7 +61,7 @@ async def test_lawn_mower_trigger_options_validation(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="lawn_mower.docked",
+            trigger="lawn_mower.returned_to_dock",
             target_states=[LawnMowerActivity.DOCKED],
             other_states=other_states(LawnMowerActivity.DOCKED),
         ),
@@ -118,7 +118,7 @@ async def test_lawn_mower_state_trigger_behavior_each(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="lawn_mower.docked",
+            trigger="lawn_mower.returned_to_dock",
             target_states=[LawnMowerActivity.DOCKED],
             other_states=other_states(LawnMowerActivity.DOCKED),
         ),
@@ -175,7 +175,7 @@ async def test_lawn_mower_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="lawn_mower.docked",
+            trigger="lawn_mower.returned_to_dock",
             target_states=[LawnMowerActivity.DOCKED],
             other_states=other_states(LawnMowerActivity.DOCKED),
         ),

@@ -57,8 +57,8 @@ _TEMPERATURE_THRESHOLD = {
         ("climate.is_drying", {}, True, True),
         ("climate.is_heating", {}, True, True),
         ("climate.is_hvac_mode", {"hvac_mode": [HVACMode.HEAT]}, True, True),
-        ("climate.target_humidity", _HUMIDITY_THRESHOLD, True, True),
-        ("climate.target_temperature", _TEMPERATURE_THRESHOLD, True, True),
+        ("climate.is_target_humidity", _HUMIDITY_THRESHOLD, True, True),
+        ("climate.is_target_temperature", _TEMPERATURE_THRESHOLD, True, True),
     ],
 )
 async def test_climate_condition_options_validation(
@@ -314,13 +314,13 @@ async def test_climate_attribute_condition_behavior_all(
     ("condition", "condition_options", "states"),
     [
         *parametrize_numerical_attribute_condition_above_below_any(
-            "climate.target_humidity",
+            "climate.is_target_humidity",
             HVACMode.AUTO,
             ATTR_HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_any(
-            "climate.target_temperature",
+            "climate.is_target_temperature",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
@@ -359,13 +359,13 @@ async def test_climate_numerical_condition_behavior_any(
     ("condition", "condition_options", "states"),
     [
         *parametrize_numerical_attribute_condition_above_below_all(
-            "climate.target_humidity",
+            "climate.is_target_humidity",
             HVACMode.AUTO,
             ATTR_HUMIDITY,
             attribute_required=True,
         ),
         *parametrize_numerical_attribute_condition_above_below_all(
-            "climate.target_temperature",
+            "climate.is_target_temperature",
             HVACMode.AUTO,
             ATTR_TEMPERATURE,
             threshold_unit=UnitOfTemperature.CELSIUS,
@@ -404,7 +404,7 @@ async def test_climate_numerical_condition_unit_conversion(hass: HomeAssistant) 
 
     await assert_numerical_condition_unit_conversion(
         hass,
-        condition="climate.target_temperature",
+        condition="climate.is_target_temperature",
         entity_id="climate.test",
         pass_states=[{"state": HVACMode.AUTO, "attributes": {ATTR_TEMPERATURE: 25}}],
         fail_states=[

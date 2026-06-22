@@ -84,7 +84,7 @@
       },
       "name": "Thermostat is on"
     },
-    "target_humidity": {
+    "is_target_humidity": {
       "description": "Tests the humidity setpoint of one or more thermostats.",
       "fields": {
         "behavior": {
@@ -99,7 +99,7 @@
       },
       "name": "Thermostat target humidity"
     },
-    "target_temperature": {
+    "is_target_temperature": {
       "description": "Tests the temperature setpoint of one or more thermostats.",
       "fields": {
         "behavior": {
