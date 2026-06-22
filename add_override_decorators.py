@@ -12,12 +12,17 @@ import subprocess
 ERROR_RE = re.compile(r"^(.+?):(\d+): error:.*\[explicit-override\]")
 
 
-def decorator_stack_top(lines: list[str], def_idx: int) -> int:
-    """Return the index of the topmost decorator above the def at def_idx."""
-    i = def_idx - 1
-    while i >= 0 and lines[i].lstrip().startswith("@"):
-        i -= 1
-    return i + 1
+def def_line_index(lines: list[str], reported_idx: int) -> int:
+    """Return the index of the def line for the method reported at reported_idx.
+
+    mypy reports the `def` line, but guard against it pointing at a leading
+    decorator by walking down through any decorators to the def itself. This
+    keeps @override as the innermost decorator, directly above the def.
+    """
+    i = reported_idx
+    while i < len(lines) and lines[i].lstrip().startswith("@"):
+        i += 1
+    return i
 
 
 def main() -> None:
@@ -40,7 +45,7 @@ def main() -> None:
     for path, line_nums in by_file.items():
         lines = path.read_text().splitlines(keepends=True)
         for lineno in sorted(line_nums, reverse=True):
-            insert_idx = decorator_stack_top(lines, lineno - 1)
+            insert_idx = def_line_index(lines, lineno - 1)
             target = lines[insert_idx]
             indent = target[: len(target) - len(target.lstrip())]
             lines.insert(insert_idx, f"{indent}@override\n")
