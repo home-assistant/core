@@ -29,7 +29,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the light platform."""
-    entities = []
+    entities: list[LightSwitch | MotionDetectorLight] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     for light in (

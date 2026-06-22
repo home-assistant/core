@@ -896,7 +896,7 @@ class TwinguardSmokeAlarmSensor(SHCEntity, BinarySensorEntity):
         await self._device.async_smoketest_requested()
 
     @property
-    def extra_state_attributes(self) -> dict:
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return extra state attributes."""
         return {
             "alarm_state": self._tracker.alarm_state,

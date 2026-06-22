@@ -39,7 +39,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the SHC climate platform."""
-    entities = []
+    entities: list[ClimateControl | HeatingCircuit] = []
     session: SHCSession = hass.data[DOMAIN][config_entry.entry_id][DATA_SESSION]
 
     for climate in session.device_helper.climate_controls:
@@ -247,9 +247,10 @@ class ClimateControl(SHCEntity, ClimateEntity):
         # combined temperature+mode call from ECO state can exit ECO first
         # (async_set_hvac_mode clears low=False when in ECO; the device cache
         # reflects the change immediately after the await).
-        await self.async_set_hvac_mode(
-            kwargs.get(ATTR_HVAC_MODE)
-        )  # set_temperature args may provide HVAC mode as well
+        if (hvac_mode := kwargs.get(ATTR_HVAC_MODE)) is not None:
+            await self.async_set_hvac_mode(
+                hvac_mode
+            )  # set_temperature args may provide HVAC mode as well
 
         # P2-B: do NOT re-check preset_mode == PRESET_ECO here.
         # async_set_hvac_mode above already called device.low = False to exit ECO,
@@ -348,7 +349,7 @@ class ClimateControl(SHCEntity, ClimateEntity):
         "boost"  → boost_mode=True
         "eco"    → low=True  (only if device exposes `low`)
         """
-        if preset_mode not in self.preset_modes:
+        if self.preset_modes is None or preset_mode not in self.preset_modes:
             return
 
         try:
