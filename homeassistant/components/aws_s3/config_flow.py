@@ -1,6 +1,6 @@
 """Config flow for the AWS S3 integration."""
 
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aiobotocore.session import AioSession
@@ -46,6 +46,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class S3ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

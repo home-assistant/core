@@ -64,6 +64,12 @@ ATA_SENSORS: tuple[ATABinarySensorEntityDescription, ...] = (
         ),
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    ATABinarySensorEntityDescription(
+        key="holiday_mode",
+        translation_key="holiday_mode",
+        state_fn=lambda unit: unit.holiday_mode.enabled if unit.holiday_mode else None,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
 )
 
 ATW_SENSORS: tuple[ATWBinarySensorEntityDescription, ...] = (
@@ -84,6 +90,12 @@ ATW_SENSORS: tuple[ATWBinarySensorEntityDescription, ...] = (
         key="forced_hot_water",
         translation_key="forced_hot_water",
         state_fn=lambda unit: unit.forced_hot_water_mode,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ATWBinarySensorEntityDescription(
+        key="holiday_mode",
+        translation_key="holiday_mode",
+        state_fn=lambda unit: unit.holiday_mode.enabled if unit.holiday_mode else None,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )

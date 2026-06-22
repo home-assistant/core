@@ -1,6 +1,7 @@
 """Binary sensor platform for Compit integration."""
 
 from dataclasses import dataclass
+from typing import override
 
 from compit_inext_api.consts import CompitParameter
 
@@ -169,6 +170,7 @@ class CompitBinarySensor(
         self.parameter_code = parameter_code
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -177,6 +179,7 @@ class CompitBinarySensor(
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         value = self.coordinator.connector.get_current_value(
