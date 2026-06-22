@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
@@ -23,68 +24,83 @@ from . import setup_config_entry
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_load_switch.json", "status_prod_load_switch.json")],
+    indirect=True,
+)
 async def test_switch_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_load_switch: AsyncMock,
-    mock_hub_status_prod_load_switch: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a switch device is created correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_load_switch.mock_calls) == 1
-    assert len(mock_hub_status_prod_load_switch.mock_calls) >= 2
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) >= 2
 
     device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "499120")})
     assert device_entry is not None
     assert device_entry == snapshot
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_load_switch.json", "status_prod_load_switch.json")],
+    indirect=True,
+)
 async def test_switch_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_load_switch: AsyncMock,
-    mock_hub_status_prod_load_switch: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test that a switch entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_load_switch.mock_calls) == 1
-    assert len(mock_hub_status_prod_load_switch.mock_calls) >= 2
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) >= 2
 
     entity = hass.states.get("switch.terasse_heizung_links")
     assert entity is not None
     assert entity == snapshot
 
-    before = len(mock_hub_status_prod_load_switch.mock_calls)
+    before = len(mock_hub_status.mock_calls)
 
     # Move time to next update
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(mock_hub_status_prod_load_switch.mock_calls) > before
+    assert len(mock_hub_status.mock_calls) > before
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_load_switch.json", "status_prod_load_switch.json")],
+    indirect=True,
+)
 async def test_switch_turn_on_and_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_load_switch: AsyncMock,
-    mock_hub_status_prod_load_switch: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
 ) -> None:
     """Test that a switch entity is turned on and off correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_load_switch.mock_calls) == 1
-    assert len(mock_hub_status_prod_load_switch.mock_calls) >= 1
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) >= 1
 
     entity = hass.states.get("switch.terasse_heizung_links")
     assert entity is not None
@@ -94,7 +110,7 @@ async def test_switch_turn_on_and_off(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status_prod_load_switch.mock_calls)
+        before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -106,13 +122,13 @@ async def test_switch_turn_on_and_off(
         entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_ON
-        assert len(mock_hub_status_prod_load_switch.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before
 
     with patch(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status_prod_load_switch.mock_calls)
+        before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
             SWITCH_DOMAIN,
@@ -124,4 +140,4 @@ async def test_switch_turn_on_and_off(
         entity = hass.states.get("switch.terasse_heizung_links")
         assert entity is not None
         assert entity.state == STATE_OFF
-        assert len(mock_hub_status_prod_load_switch.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before

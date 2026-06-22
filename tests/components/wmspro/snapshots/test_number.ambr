@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_number_update[number.zonwering_begane_grond_keuken_alle_maximum_rotation]
+# name: test_number_update[config_prod_slat_rotate.json-status_prod_slat_rotate.json-number.zonwering_begane_grond_keuken_alle_maximum_rotation]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
@@ -17,7 +17,7 @@
     'state': '75',
   })
 # ---
-# name: test_number_update[number.zonwering_begane_grond_keuken_alle_minimum_rotation]
+# name: test_number_update[config_prod_slat_rotate.json-status_prod_slat_rotate.json-number.zonwering_begane_grond_keuken_alle_minimum_rotation]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',
@@ -35,7 +35,7 @@
     'state': '-75',
   })
 # ---
-# name: test_number_update[number.zonwering_begane_grond_keuken_alle_raw_rotation]
+# name: test_number_update[config_prod_slat_rotate.json-status_prod_slat_rotate.json-number.zonwering_begane_grond_keuken_alle_raw_rotation]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'attribution': 'Data provided by WMS WebControl pro API',

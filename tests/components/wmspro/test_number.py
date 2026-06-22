@@ -28,12 +28,17 @@ from tests.common import MockConfigEntry, async_fire_time_changed
         "number.zonwering_begane_grond_keuken_alle_maximum_rotation",
     ],
 )
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_slat_rotate.json", "status_prod_slat_rotate.json")],
+    indirect=True,
+)
 async def test_number_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_slat_rotate: AsyncMock,
-    mock_hub_status_prod_slat_rotate: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     freezer: FrozenDateTimeFactory,
     snapshot: SnapshotAssertion,
     entity_id: str,
@@ -41,8 +46,8 @@ async def test_number_update(
     """Test that a number entity is created and updated correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
-    assert len(mock_hub_status_prod_slat_rotate.mock_calls) == 7
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) == 7
 
     entity = hass.states.get(entity_id)
     assert entity is not None
@@ -53,7 +58,7 @@ async def test_number_update(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert len(mock_hub_status_prod_slat_rotate.mock_calls) >= 10
+    assert len(mock_hub_status.mock_calls) >= 10
 
 
 @pytest.mark.parametrize(
@@ -64,12 +69,17 @@ async def test_number_update(
         ("number.zonwering_begane_grond_keuken_alle_maximum_rotation", "75", "100"),
     ],
 )
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_slat_rotate.json", "status_prod_slat_rotate.json")],
+    indirect=True,
+)
 async def test_number_set_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_slat_rotate: AsyncMock,
-    mock_hub_status_prod_slat_rotate: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
     freezer: FrozenDateTimeFactory,
     entity_id: str,
@@ -79,8 +89,8 @@ async def test_number_set_value(
     """Test that a number entity is created and value set correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
-    assert len(mock_hub_status_prod_slat_rotate.mock_calls) == 7
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) == 7
 
     entity = hass.states.get(entity_id)
     assert entity is not None
@@ -90,7 +100,7 @@ async def test_number_set_value(
         "wmspro.destination.Destination.refresh",
         return_value=True,
     ):
-        before = len(mock_hub_status_prod_slat_rotate.mock_calls)
+        before = len(mock_hub_status.mock_calls)
 
         await hass.services.async_call(
             NUMBER_DOMAIN,
@@ -107,7 +117,7 @@ async def test_number_set_value(
         entity = hass.states.get(entity_id)
         assert entity is not None
         assert float(entity.state) == float(target_value)
-        assert len(mock_hub_status_prod_slat_rotate.mock_calls) == before
+        assert len(mock_hub_status.mock_calls) == before
 
 
 @pytest.mark.parametrize(
@@ -117,12 +127,17 @@ async def test_number_set_value(
         ("number.zonwering_begane_grond_keuken_alle_maximum_rotation", "75", "100"),
     ],
 )
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_slat_rotate.json", "status_prod_slat_rotate.json")],
+    indirect=True,
+)
 async def test_number_set_and_restore_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_slat_rotate: AsyncMock,
-    mock_hub_status_prod_slat_rotate: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     mock_action_call: AsyncMock,
     freezer: FrozenDateTimeFactory,
     entity_id: str,
@@ -132,8 +147,8 @@ async def test_number_set_and_restore_value(
     """Test that a number entity is created, value set, and restored correctly."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
-    assert len(mock_hub_status_prod_slat_rotate.mock_calls) == 7
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) == 7
 
     entity = hass.states.get(entity_id)
     assert entity is not None
@@ -158,19 +173,24 @@ async def test_number_set_and_restore_value(
     assert float(entity.state) == float(target_value)
 
 
+@pytest.mark.parametrize(
+    ("mock_hub_configuration", "mock_hub_status"),
+    [("config_prod_slat_rotate.json", "status_prod_slat_rotate.json")],
+    indirect=True,
+)
 async def test_number_update_handles_zero_value(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_hub_ping: AsyncMock,
-    mock_hub_configuration_prod_slat_rotate: AsyncMock,
-    mock_hub_status_prod_slat_rotate: AsyncMock,
+    mock_hub_configuration: AsyncMock,
+    mock_hub_status: AsyncMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test update path when native value is zero."""
     assert await setup_config_entry(hass, mock_config_entry)
     assert len(mock_hub_ping.mock_calls) == 1
-    assert len(mock_hub_configuration_prod_slat_rotate.mock_calls) == 1
-    assert len(mock_hub_status_prod_slat_rotate.mock_calls) >= 1
+    assert len(mock_hub_configuration.mock_calls) == 1
+    assert len(mock_hub_status.mock_calls) >= 1
 
     entity = hass.states.get(
         "number.zonwering_begane_grond_keuken_alle_minimum_rotation"
