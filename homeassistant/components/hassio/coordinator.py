@@ -100,7 +100,7 @@ class JobSubscription:
     and safe to call in the event loop.
     """
 
-    event_callback: Callable[[Job], Any]
+    event_callback: Callable[[Job], None]
     uuid: str | None = None
     name: str | None = None
     reference: str | None = None

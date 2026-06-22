@@ -14,6 +14,7 @@ from homeassistant.components.hassio.const import (
     JOBS_COORDINATOR,
     MAIN_COORDINATOR,
     REQUEST_REFRESH_DELAY,
+    SUPERVISOR_JOBS_UPDATE_INTERVAL,
 )
 from homeassistant.components.hassio.coordinator import (
     HassioMainDataUpdateCoordinator,
@@ -438,3 +439,55 @@ async def test_subscribe_returns_unsubscribe_when_job_already_matches(
     await hass.async_block_till_done()
 
     assert len(received) == 1
+
+
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_job_manager_periodic_refresh(
+    hass: HomeAssistant, jobs_info: AsyncMock
+) -> None:
+    """Test job manager performs periodic refresh as backstop for dropped WS events."""
+    jobs_info.return_value = JobsInfo(
+        ignore_conditions=[],
+        jobs=[
+            Job(
+                name="test_job",
+                reference="test",
+                uuid=uuid4(),
+                progress=0,
+                stage=None,
+                done=False,
+                errors=[],
+                created=datetime.now(),  # pylint: disable=home-assistant-enforce-naive-now
+                extra=None,
+                child_jobs=[],
+            )
+        ],
+    )
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+    jobs_info.assert_called_once()
+
+    jobs_coordinator: SupervisorJobsCoordinator = hass.data[JOBS_COORDINATOR]
+    assert len(jobs_coordinator.current_jobs) == 1
+
+    # Subscribe to job updates
+    job_data: Job | None = None
+
+    @callback
+    def mock_subscription_callback(job: Job) -> None:
+        nonlocal job_data
+        job_data = job
+
+    subscription = JobSubscription(mock_subscription_callback, name="test_job")
+    jobs_coordinator.subscribe(subscription)
+
+    # Reset mock to verify periodic refresh
+    jobs_info.reset_mock()
+
+    # Advance time past the SUPERVISOR_JOBS_UPDATE_INTERVAL to trigger periodic refresh
+    async_fire_time_changed(hass, dt_util.utcnow() + SUPERVISOR_JOBS_UPDATE_INTERVAL)
+    await hass.async_block_till_done()
+
+    # Periodic refresh should have called jobs_info
+    jobs_info.assert_called()
