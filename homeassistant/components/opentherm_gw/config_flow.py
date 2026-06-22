@@ -1,7 +1,7 @@
 """OpenTherm Gateway config flow."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 import pyotgw
 from pyotgw import vars as gw_vars
@@ -42,6 +42,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> OpenThermGwOptionsFlow:
@@ -85,6 +86,7 @@ class OpenThermGwConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._show_form()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
