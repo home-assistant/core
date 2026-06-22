@@ -39,9 +39,9 @@ CONTACT_SENSOR = FixtureDevice(
 )
 # Somfy IntelliTAG air tilt sensor (io:SomfyWindowStateSensor)
 TILT_SENSOR = FixtureDevice(
-    "setup/local_somfy_tahoma_switch_europe.json",
+    "setup/cloud_somfy_tahoma_intellitag_europe.json",
     "io://1234-5678-6508/8059108#1",
-    "binary_sensor.balcony_window_tilt",
+    "binary_sensor.my_house_balcony_window_tilt",
 )
 
 SNAPSHOT_FIXTURES = [
